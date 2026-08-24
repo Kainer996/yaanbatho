@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 
 
 def run_node(source: str):
@@ -85,7 +85,7 @@ def test_bottom_nav_has_an_empire_tab_the_badge_walker_reaches():
 def test_collectibles_counter_covers_every_strongbox():
     src = function_source(html_text(), "empireCollectiblesWaiting")
     assert "townHasAccruedTribute(settlement, now)" in src  # merged settlements
-    assert "empireVillageTributePeriods(v, now) > 0" in src  # lone villages
+    assert "Math.floor(empireVillageTributePeriods(v, now)) > 0" in src  # lone villages, WHOLE cycles only
     assert "empireTradeRoutePeriods(rec, now) > 0" in src  # caravan routes
 
 

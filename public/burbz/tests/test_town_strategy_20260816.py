@@ -366,7 +366,7 @@ def test_town_screen_exposes_strategy_economy_not_just_a_renamed_village():
         'data-action="town-policy"',
     ):
         assert contract in screen
-    assert "One collection every 8 hours, capped at 24 hours" in screen
+    assert "Collect whenever you like" in screen  # v310: continuous accrual
     assert "trade one advantage for another" in screen
 
 
@@ -667,7 +667,7 @@ def test_collection_scope_does_not_change_bonus_loot_or_stores_policy_math():
     stores = function_source(html, "empireBuildingOutputForLedger")
     assert "i < tributeChests" in realm_collect
     assert "Math.min(3, tributeChests)" not in realm_collect
-    assert "i < due.payingHoldings" in county_collect
+    assert "i < (due.wholeCycleHoldings || 0)" in county_collect
     assert "rollLoot('tribute'" in town_collect
     assert "townAdministrativeSeats(settlement).forEach" in stores
     assert "townApplySeatPolicyBundle(seat, raw)" in stores

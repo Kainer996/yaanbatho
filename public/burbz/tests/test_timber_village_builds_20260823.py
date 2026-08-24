@@ -12,9 +12,12 @@ villages at first can be built with timber."
 - The home now climbs in three steps: 🛖 Timber Cabin (6), 🏡 Timber Longhouse
   (12) — both coins and timber — then 🏠 Stone Cottage (18), which carries
   `townFromLevel: 3` and waits for a Town.
-- `settlementAllowsStep` gates that one STEP, not the whole card, so a
-  grandfathered town yard keeps its right to upgrade (that contract lives in
-  test_village_basics_town_industry_20260820.py and must stay green).
+- SUPERSEDED in part on 2026-08-24 by village-work-huts-v310: the Miners' Hut
+  lets a village dig its own stone, so the Stone Cottage is bought rather than
+  waited for. `townFromLevel` and `settlementAllowsStep` are retired; the stone
+  COST is now the only thing standing between a village and its stone homes.
+  What still holds, and what this file guards, is that no village build ever
+  COSTS stone -- with the Stone Cottage as the one deliberate exception.
 - The desk's shortfall line names the right source: birds fetch coins and
   timber, a Town quarry cuts stone. It used to say "Quarry Stone arrives every
   8h" under every shortage, which is what made a timber shortfall look like a
@@ -28,10 +31,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
-VILLAGE_TIER = {"cabin", "hut", "well", "cottages", "tavern", "storehouse"}
+VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
 
 
 def function_source(html: str, name: str) -> str:
@@ -67,7 +70,6 @@ def build_harness(driver: str) -> str:
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "settlementAllowsBuilding",
-            "settlementAllowsStep",
             "villageBuildDurationMs",
             "villageConstructions",
             "villageConstructionOf",
@@ -121,6 +123,8 @@ let villageActive = null, villageBuiltSeed = null, currentScreen = 'empire';
     return stubs + buildings + "\n" + functions + "\n" + driver
 
 
+
+
 # ---------------------------------------------------------------------------
 # 1. The bill: what a village is ever asked to pay
 # ---------------------------------------------------------------------------
@@ -132,12 +136,7 @@ const bills = {};
 EMPIRE_BUILDINGS.forEach(b => {
   if (b.tier === 'town') return;
   bills[b.id] = [];
-  for (let level = 0; level < b.maxLevel; level++) {
-    const cost = villageBuildingCost(b, level, rec.seed);
-    // A step the village cannot start yet is not a village bill.
-    if (!settlementAllowsStep(rec, b, level + 1)) continue;
-    bills[b.id].push(cost);
-  }
+  for (let level = 0; level < b.maxLevel; level++) bills[b.id].push(villageBuildingCost(b, level, rec.seed));
 });
 console.log(JSON.stringify(bills));
 """))
@@ -145,7 +144,12 @@ console.log(JSON.stringify(bills));
     for bid, steps in out.items():
         assert steps, bid
         for i, cost in enumerate(steps):
-            assert cost["stone"] == 0, f"{bid} level {i + 1} asks for {cost['stone']} stone"
+            # The Stone Cottage is the one deliberate exception: it BUYS stone,
+            # which a village now digs for itself in the Miners' Hut.
+            if bid == "cabin" and i == 2:
+                assert cost["stone"] > 0
+                continue
+            assert cost["stone"] == 0, "%s level %d asks for %s stone" % (bid, i + 1, cost["stone"])
             assert cost["coins"] > 0 and cost["branches"] > 0, bid
 
 
@@ -155,48 +159,32 @@ const cabin = EMPIRE_BUILDING_INDEX.cabin;
 console.log(JSON.stringify({
   costs: [0, 1, 2].map(level => villageBuildingCost(cabin, level, rec.seed)),
   names: [1, 2, 3].map(level => villageBuildingTier(cabin, level).name),
-  icons: [1, 2, 3].map(level => villageBuildingTier(cabin, level).icon),
   shelter: [1, 2, 3].map(level => cabin.perLevel * level),
-  maxLevel: cabin.maxLevel,
-  townFromLevel: cabin.townFromLevel
+  maxLevel: cabin.maxLevel
 }));
 """))
     assert out["names"] == ["Timber Cabin", "Timber Longhouse", "Stone Cottage"]
-    assert out["icons"] == ["🛖", "🏡", "🏠"]
     assert out["shelter"] == [6, 12, 18]
-    assert out["maxLevel"] == 3 and out["townFromLevel"] == 3
+    assert out["maxLevel"] == 3
     assert out["costs"][0] == {"coins": 25, "branches": 14, "stone": 0}
     assert out["costs"][1] == {"coins": 45, "branches": 20, "stone": 0}
     assert out["costs"][2]["stone"] > 0  # the stone rebuild, and only that
 
 
 # ---------------------------------------------------------------------------
-# 2. The step gate: one rung waits for a Town, the card does not
+# 2. The stone rung is bought now, not waited for
 # ---------------------------------------------------------------------------
 
-def test_the_step_gate_only_bites_on_town_from_level():
+def test_no_building_gates_a_step_on_a_town_any_more():
+    """village-work-huts-v310 retired townFromLevel and settlementAllowsStep."""
     html = HTML.read_text(encoding="utf-8")
-    step = function_source(html, "settlementAllowsStep")
-    assert "Number(building.townFromLevel)" in step
-    assert "empireSettlementOfSeed(rec && rec.seed)" in step
-    # A card without townFromLevel is waved straight through — that is what
-    # keeps a grandfathered town yard upgradeable in a lone village.
-    out = run_node(build_harness("""
-const waved = EMPIRE_BUILDINGS
-  .filter(b => !b.townFromLevel)
-  .every(b => [1, 2, 3].every(level => settlementAllowsStep(rec, b, level)));
-const cabin = EMPIRE_BUILDING_INDEX.cabin;
-const lone = [1, 2, 3].map(level => settlementAllowsStep(rec, cabin, level));
-merged = { id: 'town-1', tier: 'town', role: 'heart', heartSeed: 1111 };
-const town = [1, 2, 3].map(level => settlementAllowsStep(rec, cabin, level));
-console.log(JSON.stringify({ waved, lone, town }));
-"""))
-    assert out["waved"] is True
-    assert out["lone"] == [True, True, False]  # only the stone rung waits
-    assert out["town"] == [True, True, True]
+    assert "townFromLevel" not in html
+    assert "settlementAllowsStep" not in html
+    # The card-wide town gate is untouched: the real industry still waits.
+    assert "function settlementAllowsBuilding(rec, building) {" in html
 
 
-def test_a_lone_village_raises_the_longhouse_but_the_stone_rebuild_waits():
+def test_a_lone_village_raises_every_rung_of_its_own_home():
     out = run_node(build_harness("""
 const steps = [];
 const take = label => {
@@ -209,63 +197,46 @@ rec.economy.buildings.cabin = 1;
 empireBuildStructure(1111, 'cabin');                 // the longhouse: timber
 take('longhouse');
 rec.economy.buildings.cabin = 2;
-const timberSpent = 5000 - gameState.player.branches, stoneSpent = 5000 - gameState.player.stone;
-empireBuildStructure(1111, 'cabin');                 // the stone rebuild: refused
-take('stoneInVillage');
-merged = { id: 'town-1', tier: 'town', role: 'heart', heartSeed: 1111 };
-empireBuildStructure(1111, 'cabin', { townMode: true });
-take('stoneInTown');
-console.log(JSON.stringify({ steps, timberSpent, stoneSpent }));
+const timberAfterTwo = 5000 - gameState.player.branches, stoneAfterTwo = 5000 - gameState.player.stone;
+empireBuildStructure(1111, 'cabin');                 // the stone rebuild, still a lone village
+take('stoneRebuild');
+console.log(JSON.stringify({ steps, timberAfterTwo, stoneAfterTwo }));
 """))
-    cabin, longhouse, refused, town = out["steps"]
+    cabin, longhouse, stone = out["steps"]
     assert cabin["rising"] == 1
     assert longhouse["rising"] == 2
-    # Two homes raised, and not one flake of stone spent for them.
-    assert out["timberSpent"] == 14 + 20
-    assert out["stoneSpent"] == 0
-    # The stone rung says where it lives instead of quoting a bill nobody can pay.
-    assert refused["rising"] is None
-    assert "quarries are town works" in refused["toast"]
-    assert town["rising"] == 3
-
-
-def test_wholesale_orders_obey_the_step_gate_too():
-    plan = function_source(HTML.read_text(encoding="utf-8"), "wholesaleUpgradePlan")
-    assert "settlementAllowsStep(rec, b, level + 1)" in plan
+    # The two timber rungs cost timber and not one flake of stone.
+    assert out["timberAfterTwo"] == 14 + 20
+    assert out["stoneAfterTwo"] == 0
+    # And the third starts right there in the village -- the miners dig for it.
+    assert stone["rising"] == 3
 
 
 # ---------------------------------------------------------------------------
-# 3. The desk: honest buttons, honest shortfalls
+# 3. The desk: honest shortfalls
 # ---------------------------------------------------------------------------
-
-def test_the_desk_shows_the_stone_rung_as_town_work():
-    panel = function_source(HTML.read_text(encoding="utf-8"), "renderVillageManagePanel")
-    assert "const townStep = !maxed && !settlementAllowsStep(rec, b, level + 1);" in panel
-    assert "STONE REBUILD · TOWN WORK" in panel
-
 
 def test_the_shortfall_line_names_the_source_of_what_is_missing():
     """The bug behind Yaan's screenshot: a timber shortfall read as a stone wall."""
     panel = function_source(HTML.read_text(encoding="utf-8"), "renderVillageManagePanel")
     assert "Quarry Stone arrives every 8h" not in panel
-    assert "cost && stone < cost.stone ? '⛏️ stone is cut by a Town quarry'" in panel
-    assert "'🕊️ tap to send birds after it'" in panel
-    # A town-work rung shows no bill, so it shows no shortfall either.
-    assert "shortages.length && !locked && !townStep && slotsFree > 0" in panel
+    # v310: the village digs its own stone now, so the hint names the hut.
+    assert "post miners in your Miners" in panel
+    assert "tap to send birds after it" in panel
+    assert "shortages.length && !locked && slotsFree > 0" in panel
 
 
 def test_the_3d_village_reads_the_three_steps():
     html = HTML.read_text(encoding="utf-8")
     assert "villageMakeSettlerHome(er, pal, level >= 3)" in html
     assert "if (level === 2) home.scale.set(1, 1.12, 1.55);" in html
-    assert "level >= 3 ? '🏠 Stone Cottage' : (level === 2 ? '🏡 Timber Longhouse' : '🛖 Timber Cabin')" in html
+    assert "Timber Longhouse" in html
 
 
 def test_the_copy_stops_promising_stone_to_villages():
     html = HTML.read_text(encoding="utf-8")
-    assert "Every village build is bought with coins and timber alone — no stone, ever." in html
-    assert "Villages never do." in html
-    # The quarry's first cut bankrolls town yards now, not a village build.
+    assert "Every village build is bought with coins and timber alone" in html
+    # The quarry's first cut bankrolls town yards, not a village build.
     assert "enough for the first Grain Farm and Lumber Camp" in html
     assert "enough stone for Cottage Row" not in html
 
@@ -277,7 +248,7 @@ def test_the_copy_stops_promising_stone_to_villages():
 def test_release_stamp_reaches_runtime_and_service_worker():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
+    assert "const BURBZ_BUILD = '%s';" % CURRENT_BUILD in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept, never rewritten

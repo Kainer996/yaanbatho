@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
@@ -43,6 +43,7 @@ def provisions_harness(driver: str) -> str:
             "villageStoreCapacity",
             "villageProvisionRates",
             "villageWorkforce",
+            "villageCrewShare",
             "villageProductionSnapshot",
             "villageEconomySnapshot",
             "simulateVillageEconomy",
@@ -158,7 +159,7 @@ console.log(JSON.stringify({
     # Starvation empties a village twice as fast as mere gloom (6 -> 4 floor).
     assert out["pop"] == 4
     assert out["foodSat"] == 0
-    assert out["happiness"] == 0.25
+    assert round(out["happiness"], 4) == 0.2353  # v310: weighted needs, joy carries 1.25
     # The stubborn few still pay only a miserable trickle.
     assert out["taxes"] <= 4
     # And exactly one corner card points the governor at the hungry village.

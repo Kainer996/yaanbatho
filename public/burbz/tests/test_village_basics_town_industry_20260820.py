@@ -23,11 +23,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "timber-village-builds-v309-20260823"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+RELEASE = "village-work-huts-v310-20260824"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 
 TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market"}
-VILLAGE_TIER = {"cabin", "hut", "well", "cottages", "tavern", "storehouse"}
+VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
 
 
 def run_node(source: str) -> dict:
@@ -125,7 +125,6 @@ def build_harness(driver: str) -> str:
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "settlementAllowsBuilding",
-            "settlementAllowsStep",
             "villageBuildDurationMs",
             "villageConstructions",
             "villageConstructionOf",

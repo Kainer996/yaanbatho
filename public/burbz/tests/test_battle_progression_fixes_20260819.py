@@ -27,7 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=battle-progression-fixes-v286-20260819"
 
 
@@ -150,7 +150,7 @@ def test_liberation_toast_points_at_the_merge_star():
     html = HTML_PATH.read_text(encoding="utf-8")
     claim = function_source(html, "claimCurrentVillage")
     assert "merge star" in claim
-    assert "40 folk" in claim
+    assert "16 folk" in claim
     assert "settlementWardNames(foundedSettlement)" not in claim
     merge = function_source(html, "empireMergeVillages")
     assert "mc.nameList(names)" in merge  # the toast names the three wards

@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -182,7 +182,6 @@ def test_the_real_build_flow_charges_less_and_finishes_sooner_with_a_steward():
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "settlementAllowsBuilding",
-            "settlementAllowsStep",
             "villageBuildDurationMs",
             "villageConstructions",
             "villageConstructionOf",

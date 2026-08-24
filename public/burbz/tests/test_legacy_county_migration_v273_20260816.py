@@ -320,4 +320,4 @@ def test_resumed_legacy_route_cannot_be_offered_or_bought_a_second_time():
     assert "some(route => route.activeKey === candidate.key)" in opener
     assert "tradeRouteCost(empireTradeRouteInvestmentCount())" in panel
     assert "tradeRouteCost(empireTradeRouteInvestmentCount())" in opener
-    assert "if (empireTradeRoutePeriods(rec, now) > 0)" in collect
+    assert "empireTradeRoutePeriods(rec, now)" in collect

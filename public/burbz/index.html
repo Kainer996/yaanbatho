@@ -4820,7 +4820,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="loot_crafting_core.js?v=stores-market-project-manager-v295-20260820"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
-<script src="settlement_merge_core.js?v=merge-when-ready-v290-20260820"></script>
+<script src="settlement_merge_core.js?v=village-work-huts-v310-20260824"></script>
 <script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
@@ -21745,7 +21745,7 @@ function ensureEmpireState() {
   if (!gameState.empire.shopDiscoveries || typeof gameState.empire.shopDiscoveries !== 'object' || Array.isArray(gameState.empire.shopDiscoveries)) gameState.empire.shopDiscoveries = {};
   gameState.empire.townStrategyVersion = 1;
   // Signed merge charters. Since merge-when-ready-v290 no town or region
-  // forms on its own: villages earn a merge star (40 folk, 75% happiness),
+  // forms on its own: villages earn a merge star (16 folk, 75% happiness),
   // then the player presses Merge, and the signing lands here. Town charters
   // hold village seeds; region charters hold town heart seeds. City charters
   // exist only to grandfather pre-v290 automatic cities.
@@ -23116,7 +23116,7 @@ function empireRegionPopulation(region) {
 // ============================================================================
 // SETTLEMENTS — village → town, the street-level merge layer BELOW regions.
 // Since merge-when-ready-v290 the player signs every merge: a village earns
-// its ⭐ merge star at 40 folk and 75% happiness, and three starred villages
+// its ⭐ merge star at 16 folk and 75% happiness, and three starred villages
 // within 5 km merge into one permanent TOWN when the player presses Merge.
 // The signed charters live in empire.townCharters; deriveSettlements replays
 // them, so the same charters always rebuild the same towns. Pre-v290 Cities
@@ -23240,7 +23240,7 @@ function settlementBuildFactorForSeed(seed) {
 }
 // ---- Merge stars & signed merges --------------------------------------------
 // Since merge-when-ready-v290 nothing merges on its own. A village earns its
-// ⭐ merge star at 40 folk and 75% happiness; three starred villages within
+// ⭐ merge star at 16 folk and 75% happiness; three starred villages within
 // 5 km can be merged by the player into one Town. Towns earn their star at
 // 120 folk and 75% happiness; three starred towns within 150 km merge into
 // one County — the region desk. All the rules live in settlement_merge_core.
@@ -23309,7 +23309,7 @@ function maybeAwardMergeStar(rec) {
     kind: 'merge-star',
     icon: '⭐',
     title: rec.name + ' earns its merge star',
-    sub: '40 folk, 75% happy — ready to merge into a town. Tap to visit.',
+    sub: '16 folk, 75% happy — ready to merge into a town. Tap to visit.',
     target: { seed: rec.seed >>> 0 }
   });
   return true;
@@ -23430,7 +23430,8 @@ function empireTradeRouteIncome(a, b) {
 function empireTradeRoutePeriods(rec, nowValue) {
   const now = Number(nowValue) || Date.now();
   const base = Number(rec && rec.lastTradeAt) || Date.parse(rec && rec.openedAt) || now;
-  return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((now - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
+  // Fractional, like every other strongbox — a caravan is always part-way home.
+  return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, (now - base) / EMPIRE_TRIBUTE_INTERVAL_MS));
 }
 function empireTradeRouteInvestmentCount() {
   empireTradeRouteRecords(); // prune malformed/internal roads, retain dormants
@@ -23510,18 +23511,28 @@ const VILLAGE_MAX_POPULATION = 200;
 // point on it is earned by a building the governor raised.
 const VILLAGE_BASE_NEED_CAPACITY = { food: 0, water: 0, shelter: 0, joy: 0 };
 
+// `weight` is how much each need pulls on overall happiness. Bread, water and
+// a roof each carry one share; cheer carries a quarter more. Yaan's report
+// (2026-08-24): a fresh village read 75% happy for ever, because the relief
+// caravan covers food and water, the first cabin covers shelter, and joy sat
+// at a flat 0 — (1+1+1+0)/4 is exactly 0.75, which is also the merge-star bar,
+// so the star's happiness half passed for free with no Alehouse anywhere.
+// Weighting cheer puts a tavernless village at 71%: still growing (the band is
+// 65%), no longer star-worthy, and free to climb past 75% the day the ale flows.
 const EMPIRE_NEEDS = [
-  { id: 'food',    icon: '🍞', label: 'Food' },
-  { id: 'water',   icon: '💧', label: 'Water' },
-  { id: 'shelter', icon: '🏠', label: 'Shelter' },
-  { id: 'joy',     icon: '🎉', label: 'Joy' }
+  { id: 'food',    icon: '🍞', label: 'Food',    weight: 1 },
+  { id: 'water',   icon: '💧', label: 'Water',   weight: 1 },
+  { id: 'shelter', icon: '🏠', label: 'Shelter', weight: 1 },
+  { id: 'joy',     icon: '🎉', label: 'Joy',     weight: 1.25 }
 ];
 
 // `produces` is what the building actually ships home each tax cycle, on top
 // of coins and timber: `materials` land in the Fletcher's Forge stock, `larder`
 // in the Kitchen stores. Yards need hands: a building with `workers` stands
 // idle — no stone, no goods, no extra coins — until a villager lives here to
-// run it. An empty quarry is just a hole in a hill.
+// run it. An empty quarry is just a hole in a hill. `workers` is how many the
+// yard can hold, and output is the share it actually found: post two of the
+// Miners' Hut's three and it digs two thirds of the rock.
 const QUARRY_FIRST_CUT_STONE = 10;
 // unlockLevel mirrors the Academy's mid-game curve: the survival and resource
 // basics (shelter, food, water, timber, stone) carry no gate so a fresh
@@ -23530,28 +23541,34 @@ const QUARRY_FIRST_CUT_STONE = 10;
 // does. The Timber Cabin is the deliberate first build: it costs no stone at
 // all, so homes — and the villagers who work every yard — come before the
 // Quarry. `tiers` renames a building as it climbs (timber first, stone later);
-// `costLevels` prices each step on its own instead of the flat ×(level+1);
-// `townFromLevel` marks the rung where a build turns to stone and starts
-// waiting for a Town, so a lone village never sees a bill it cannot pay.
+// `costLevels` prices each step on its own instead of the flat ×(level+1).
+// Stone is no longer town-only: the Miners' Hut lets a village dig its own,
+// so the Stone Cottage is bought rather than waited for.
 // `workPriority` orders who gets scarce hands first: food, then timber and
-// stone, then trade, then the chapel.
+// stone, then trade, then the chapel. The village Lumberjack and Miners' Huts
+// sit alongside their town counterparts at timber and stone, so a small
+// village feeds itself before it fells or digs.
 // `buildMinutes` follows Yaan's pacing law (2026-08-20): the two survival
-// starters — the Timber Cabin and the Stone Well — rise in 4 minutes, then
+// starters — the Timber Cabin and the Timber Well — rise in 4 minutes, then
 // the clock climbs the list from a quarter-hour hut to a full 4 hours for
 // the Storehouse. Early shelter and water are instant fun; the late halls
 // are real projects worth appointing a Project Manager for.
 // `tier: 'town'` is Yaan's settlement law (village-basics-town-industry-v298):
 // a lone village keeps only the basics — home, hut, well, cottages, alehouse,
-// storehouse — and builds them from coins and timber alone, because the
-// stone economy itself is town work. The industry — Grain Farm, Lumber Camp,
-// Quarry, Chapel, Market Hall — opens when three starred villages merge into
-// a Town. Anything an older save already built is grandfathered: it keeps
+// storehouse, and its own Lumberjack and Miners' Huts — and builds every one
+// of them from coins and timber alone. A village can now WORK stone (the
+// Miners' Hut) without ever PAYING stone to build. The proper industry —
+// Grain Farm, Lumber Camp, Quarry, Chapel, Market Hall — is still what a Town
+// opens, and it is simply better: one villager in a Quarry out-digs three in
+// a Miners' Hut. Anything an older save already built is grandfathered: it keeps
 // working and may upgrade; only NEW town-tier builds gate on the merge.
 const EMPIRE_BUILDINGS = [
-  { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 3, townFromLevel: 3, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 20, stone: 0 }, { coins: 70, branches: 18, stone: 12 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Timber Longhouse', icon: '🏡', desc: 'The cabin stretched into a longhouse — coins and timber again, and room for 12 villagers.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The longhouse rebuilt in quarried stone — houses 18 villagers and shrugs off any storm. Town work: a village has no quarry.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
+  { id: 'cabin',   icon: '🛖', name: 'Timber Cabin', maxLevel: 3, cost: { coins: 25, branches: 14, stone: 0 }, costLevels: [{ coins: 25, branches: 14, stone: 0 }, { coins: 45, branches: 20, stone: 0 }, { coins: 70, branches: 18, stone: 12 }], buildMinutes: 4, need: 'shelter', perLevel: 6, tiers: [{ name: 'Timber Cabin', icon: '🛖', desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' }, { name: 'Timber Longhouse', icon: '🏡', desc: 'The cabin stretched into a longhouse — coins and timber again, and room for 12 villagers.' }, { name: 'Stone Cottage', icon: '🏠', desc: 'The longhouse rebuilt in cut stone — houses 18 villagers and shrugs off any storm. Your miners can dig the stone for it.' }], desc: 'A snug log home for 6 villagers — costs only coins and timber, so it can be your very first build.' },
   { id: 'hut',     icon: '🏹', name: 'Hunter-Gatherer Hut', maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 }, buildMinutes: 15, need: 'food', perLevel: 8, workers: 1, workPriority: 1, produces: { larder: { hedgerow_berries: 1, acorn_handful: 1 } }, desc: 'Hunters and foragers feed 8 villagers per level and bring home 🫐1 berries + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
   { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, tier: 'town', cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 30,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
-  { id: 'well',    icon: '⛲', name: 'Stone Well',   maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
+  { id: 'well',    icon: '🪣', name: 'Timber Well',  maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
+  { id: 'lumberhut', icon: '🪚', name: 'Lumberjack Hut', maxLevel: 3, cost: { coins: 35, branches: 12, stone: 0 }, buildMinutes: 35, branchesPerLevel: 5, workers: 3, workPriority: 2, produces: { materials: { oak_twig: 1 } }, desc: 'Post up to 3 lumberjacks to fell and split: +5 🪵 timber and 🪵1 Oak Twig per cycle per level at full crew. Half a crew cuts half the wood.' },
+  { id: 'minehut',  icon: '🪨', name: 'Miners’ Hut', maxLevel: 3, cost: { coins: 45, branches: 16, stone: 0 }, buildMinutes: 40, stonePerLevel: 6, workers: 3, workPriority: 3, produces: { materials: { iron_grit: 1 } }, desc: 'Post up to 3 miners to dig rock for building: +6 stone and ⚙️1 Iron Grit per cycle per level at full crew. Half a crew digs half the stone.' },
   { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 22, stone: 0 },  buildMinutes: 45,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
   { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 60,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
   { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, tier: 'town', cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
@@ -23836,7 +23853,7 @@ function villageNeedCapacity(rec, needId, crewOpt) {
       if (!crew) crew = villageWorkforce(rec);
       if (!crew.staffed[b.id]) return;
     }
-    cap += (b.perLevel || 0) * level;
+    cap += (b.perLevel || 0) * level * villageCrewShare(b, crew);
   });
   return cap;
 }
@@ -23859,7 +23876,7 @@ function villageProvisionRates(rec, crewOpt) {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
     if (b.workers && !crew.staffed[b.id]) return;
-    rates[b.need] += (b.perLevel || 0) * level;
+    rates[b.need] += (b.perLevel || 0) * level * villageCrewShare(b, crew);
   });
   return rates;
 }
@@ -23869,7 +23886,7 @@ function villageProvisionRates(rec, crewOpt) {
 // its farm before its chapel. Returns which buildings found their crew.
 function villageWorkforce(rec) {
   const eco = ensureVillageEconomy(rec);
-  const out = { available: eco ? eco.population : 0, required: 0, working: 0, staffed: {} };
+  const out = { available: eco ? eco.population : 0, required: 0, working: 0, staffed: {}, assigned: {} };
   if (!eco) return out;
   let free = out.available;
   EMPIRE_BUILDINGS
@@ -23877,9 +23894,24 @@ function villageWorkforce(rec) {
     .sort((a, b) => (a.workPriority || 99) - (b.workPriority || 99))
     .forEach(b => {
       out.required += b.workers;
-      if (free >= b.workers) { out.staffed[b.id] = true; out.working += b.workers; free -= b.workers; }
+      // A yard takes whatever hands are left, up to its full crew. `assigned`
+      // is the head count; `staffed` still means "somebody is working here",
+      // so every one-hand yard behaves exactly as it always did. The big huts
+      // are the reason this counts at all: post two of three miners and the
+      // hut cuts two thirds of the rock.
+      const got = Math.min(b.workers, free);
+      if (got > 0) { out.assigned[b.id] = got; out.staffed[b.id] = true; out.working += got; free -= got; }
     });
   return out;
+}
+// The share of a yard's output its crew actually earns. One-hand yards are all
+// or nothing, so this is 0 or 1 for every building that existed before the
+// Lumberjack and Miners' Huts. Fold it in BEFORE rounding, never after, or the
+// Stores ledger and the strongbox disagree.
+function villageCrewShare(building, crew) {
+  if (!building || !building.workers) return 1;
+  const got = (crew && crew.assigned && crew.assigned[building.id]) || 0;
+  return Math.max(0, Math.min(1, got / building.workers));
 }
 // What a province's yards, fields and mines ship home each tax cycle, on top
 // of coins and timber. Every yard needs its crew: a quarry or camp with no
@@ -23896,16 +23928,20 @@ function villageProductionSnapshot(rec) {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
     if (b.workers && !crew.staffed[b.id]) return; // nobody to work it — yard stands idle
-    out.stone += Math.round((b.stonePerLevel || 0) * level * steward);
+    const share = villageCrewShare(b, crew);
+    out.stone += Math.round((b.stonePerLevel || 0) * level * steward * share);
     if (eco.population <= 0 || !b.produces) return;
-    Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + Math.round(per * level * steward); });
-    Object.entries(b.produces.larder || {}).forEach(([id, per]) => { out.larder[id] = (out.larder[id] || 0) + Math.round(per * level * steward); });
+    Object.entries(b.produces.materials || {}).forEach(([id, per]) => { out.materials[id] = (out.materials[id] || 0) + Math.round(per * level * steward * share); });
+    Object.entries(b.produces.larder || {}).forEach(([id, per]) => { out.larder[id] = (out.larder[id] || 0) + Math.round(per * level * steward * share); });
   });
   return out;
 }
 function mergeResourceTotals(target, source, periods) {
-  const n = Math.max(1, Math.floor(Number(periods) || 1));
-  Object.entries(source || {}).forEach(([id, qty]) => { target[id] = (target[id] || 0) + qty * n; });
+  const n = Math.max(0, Number(periods) || 0);
+  Object.entries(source || {}).forEach(([id, qty]) => {
+    const earned = Math.floor(qty * n);
+    if (earned > 0) target[id] = (target[id] || 0) + earned;
+  });
   return target;
 }
 // One glance at a province: population, per-need satisfaction, overall
@@ -23936,7 +23972,7 @@ function villageEconomySnapshot(rec) {
     if (flow) {
       const onHand = flow.rate + flow.store;
       return {
-        id: n.id, icon: n.icon, label: n.label, cap: onHand,
+        id: n.id, icon: n.icon, label: n.label, weight: n.weight || 1, cap: onHand,
         served: Math.min(pop, onHand), sat: flow.eats > 0 ? Math.min(1, onHand / flow.eats) : 1,
         supplyServed: Math.min(pop, flow.rate),
         supplySat: flow.eats > 0 ? Math.min(1, flow.rate / flow.eats) : (flow.rate > 0 ? 1 : 0)
@@ -23945,17 +23981,21 @@ function villageEconomySnapshot(rec) {
     // Shelter and joy are standing services: built capacity IS the supply.
     const cap = villageNeedCapacity(rec, n.id, crew);
     const served = Math.min(pop, cap), sat = Math.min(1, cap / Math.max(1, pop));
-    return { id: n.id, icon: n.icon, label: n.label, cap, served, sat, supplyServed: served, supplySat: sat };
+    return { id: n.id, icon: n.icon, label: n.label, weight: n.weight || 1, cap, served, sat, supplyServed: served, supplySat: sat };
   });
-  const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;
+  // Weighted mean, not a plain one: see EMPIRE_NEEDS. Folk who are fed, watered
+  // and housed with nowhere to drink are content, not happy.
+  const needWeight = needs.reduce((sum, n) => sum + (n.weight || 1), 0) || 1;
+  const happiness = needs.reduce((sum, n) => sum + n.sat * (n.weight || 1), 0) / needWeight;
   let flatCoins = 0, flatBranches = 0, taxBoost = 0;
   EMPIRE_BUILDINGS.forEach(b => {
     const level = villageBuildingLevel(rec, b.id);
     if (!level) return;
     if (b.workers && !crew.staffed[b.id]) return;
-    flatCoins += (b.coinsPerLevel || 0) * level;
-    flatBranches += (b.branchesPerLevel || 0) * level;
-    taxBoost += (b.taxBoost || 0) * level;
+    const share = villageCrewShare(b, crew);
+    flatCoins += (b.coinsPerLevel || 0) * level * share;
+    flatBranches += (b.branchesPerLevel || 0) * level * share;
+    taxBoost += (b.taxBoost || 0) * level * share;
   });
   // An empty province pays nothing — taxes and timber need residents to raise
   // them. Miserable villagers still pay a trickle (0.35 floor); a content,
@@ -24050,17 +24090,6 @@ function settlementAllowsBuilding(rec, building) {
   if (!building || building.tier !== 'town') return true;
   return !!empireSettlementOfSeed(rec && rec.seed);
 }
-// A building can gate one STEP instead of the whole card. `townFromLevel` marks
-// the level a stone rebuild starts at: the Timber Cabin climbs to a Timber
-// Longhouse in any village, and only its Stone Cottage waits for a Town, because
-// stone is cut by a Quarry and a Quarry is town work. `toLevel` is the level
-// being raised TO. Every card without `townFromLevel` is waved straight through,
-// so a grandfathered town yard keeps its right to upgrade.
-function settlementAllowsStep(rec, building, toLevel) {
-  const from = (building && Number(building.townFromLevel)) || 0;
-  if (!from || (Number(toLevel) || 1) < from) return true;
-  return !!empireSettlementOfSeed(rec && rec.seed);
-}
 function villageBuildingCost(building, level, seed) {
   // A building can price each step on its own (`costLevels`): the Timber
   // Cabin is bought with coins and timber alone, and only its stone rebuild
@@ -24125,11 +24154,6 @@ function empireBuildStructure(seed, buildingId, options) {
   // already built keeps its right to upgrade.
   if (level === 0 && !settlementAllowsBuilding(rec, building)) {
     showToast('🏘️ The ' + building.name + ' is town work — merge three starred villages into a Town, then raise it from the Town Hall.');
-    return;
-  }
-  // A stone rebuild is town work too: a village has no quarry to cut from.
-  if (!settlementAllowsStep(rec, building, level + 1)) {
-    showToast('🏘️ Rebuilding the ' + building.name + ' in stone needs a quarry, and quarries are town works — merge three starred villages into a Town first.');
     return;
   }
   const trainerLevel = Number(gameState.player.level) || 1;
@@ -24235,25 +24259,43 @@ function empireSendSupplyCart(seed, options) {
   if (mergedSettlement || opts.townMode || (typeof currentScreen !== 'undefined' && currentScreen === 'town')) renderTownScreen(); else renderVillageManagePanel();
   renderEmpirePanel();
 }
-function empireVillageTributePeriods(v, now) {
-  const base = Number(v.lastTributeAt) || Date.parse(v.claimedAt) || now;
-  return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, Math.floor((now - base) / EMPIRE_TRIBUTE_INTERVAL_MS)));
+function empireVillageTributeBase(v, now) {
+  return Number(v && v.lastTributeAt) || Date.parse(v && v.claimedAt) || now;
 }
-// How many strongboxes wait across the realm: settlements, lone villages and
-// caravan routes with at least one full 8-hour cycle banked. The Empire tab's
-// red badge on the bottom nav reads this — it lights only when a collection
-// would actually pay out, and it clears the moment the taxes are taken.
+// Yaan's ask (2026-08-24): the player collects whenever they like. A holding is
+// always earning, so this returns a FRACTION of the 8-hour cycle — a quarter of
+// a cycle pays a quarter of the taxes. Leave it longer and you get more, up to
+// the same 24-hour cap the strongbox always had.
+function empireVillageTributePeriods(v, now) {
+  const base = empireVillageTributeBase(v, now);
+  return Math.max(0, Math.min(EMPIRE_TRIBUTE_MAX_PERIODS, (now - base) / EMPIRE_TRIBUTE_INTERVAL_MS));
+}
+// Advance a holding's clock by exactly the time it was just paid for, so the
+// sub-cycle remainder is carried forward instead of binned. The floor keeps a
+// long-idle holding from banking more than the 24-hour cap all over again.
+function empireAdvanceTributeClock(v, paidPeriods, now) {
+  const base = empireVillageTributeBase(v, now);
+  const paidMs = Math.max(0, Number(paidPeriods) || 0) * EMPIRE_TRIBUTE_INTERVAL_MS;
+  v.lastTributeAt = Math.max(base + paidMs, now - EMPIRE_TRIBUTE_MAX_PERIODS * EMPIRE_TRIBUTE_INTERVAL_MS);
+}
+// How many strongboxes hold a FULL 8-hour cycle. Taxes can be taken at any
+// moment now, so this is deliberately not "is anything owed" — that is true
+// every second and would pin the badge on for ever. It stays the nudge it
+// always was: a whole cycle has piled up, go and take it.
 function empireCollectiblesWaiting(nowValue) {
   const now = Number(nowValue) || Date.now();
   let waiting = 0;
   empireVisibleSettlements().forEach(settlement => { if (townHasAccruedTribute(settlement, now)) waiting += 1; });
-  empireStandaloneVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) waiting += 1; });
+  empireStandaloneVillages().forEach(v => { if (Math.floor(empireVillageTributePeriods(v, now)) > 0) waiting += 1; });
   empireTradeRouteRecords().forEach(({ rec }) => { if (empireTradeRoutePeriods(rec, now) > 0) waiting += 1; });
   return waiting;
 }
-function empireTributeReady() {
+function empireTributeReady(nowValue) {
   simulateAllVillageEconomies();
-  const now = Date.now();
+  // The caller threads its own `now` so the amount paid and the amount cleared
+  // are measured from the very same instant. With fractional periods even a
+  // few milliseconds of drift would short-change somebody.
+  const now = Number(nowValue) || Date.now();
   let coins = 0, branches = 0, stone = 0;
   const materials = {}, larder = {};
   let payingHoldings = 0;
@@ -24278,7 +24320,9 @@ function empireTributeReady() {
   const trade = empireTradeDue(now);
   coins += trade.coins;
   mergeResourceTotals(materials, trade.materials, 1);
-  return { coins, branches, stone, materials, larder, tradeCoins: trade.coins, payingHoldings };
+  // Whole coins, timber and stone only — a part-cycle pays what it has fully
+  // earned and the sliver rolls on inside the clock.
+  return { coins: Math.floor(coins), branches: Math.floor(branches), stone: Math.floor(stone), materials, larder, tradeCoins: trade.coins, payingHoldings, now };
 }
 // The whole realm's output in one object — the ledger the Royal Stores screen
 // reads. `perCycle` is what every province between them ships each 8 hours;
@@ -24310,12 +24354,16 @@ function empireLedger() {
 function villageBuildingOutputForLedger(rec, building) {
   const out = { stone:0, materials:{}, larder:{} };
   const level = villageBuildingLevel(rec, building.id);
-  if (!level || (building.workers && !villageWorkforce(rec).staffed[building.id])) return out;
+  const crew = building.workers ? villageWorkforce(rec) : null;
+  if (!level || (building.workers && !crew.staffed[building.id])) return out;
   const steward = villageRoleMultiplier(rec.seed);
-  out.stone = Math.round((building.stonePerLevel || 0) * level * steward);
+  // Same crew share as villageProductionSnapshot, folded in before the same
+  // rounding: the Stores row must never advertise more than the strongbox pays.
+  const share = villageCrewShare(building, crew);
+  out.stone = Math.round((building.stonePerLevel || 0) * level * steward * share);
   if (ensureVillageEconomy(rec).population <= 0) return out;
-  Object.entries((building.produces && building.produces.materials) || {}).forEach(([id, per]) => { out.materials[id] = Math.round(per * level * steward); });
-  Object.entries((building.produces && building.produces.larder) || {}).forEach(([id, per]) => { out.larder[id] = Math.round(per * level * steward); });
+  Object.entries((building.produces && building.produces.materials) || {}).forEach(([id, per]) => { out.materials[id] = Math.round(per * level * steward * share); });
+  Object.entries((building.produces && building.produces.larder) || {}).forEach(([id, per]) => { out.larder[id] = Math.round(per * level * steward * share); });
   return out;
 }
 // The Stores rows use the same public-holding projection and one-policy pass
@@ -24343,7 +24391,7 @@ function empireBuildingOutputForLedger(building) {
   return total;
 }
 function tributeHasAnything(due) {
-  return !!due && ((due.payingWards || 0) > 0 || (due.payingHoldings || 0) > 0 || due.coins > 0 || due.branches > 0 || due.stone > 0 ||
+  return !!due && (due.coins > 0 || due.branches > 0 || due.stone > 0 ||
     Object.keys(due.materials || {}).length > 0 || Object.keys(due.larder || {}).length > 0);
 }
 // Short "+2 🪙 +3 🪵 ⚙️4 🌻2" style summary of any production/tribute bundle.
@@ -24377,18 +24425,31 @@ function notePaidTribute() {
 
 function collectEmpireTribute() {
   const snapshot = snapshotGameState();
-  const due = empireTributeReady();
-  if (!tributeHasAnything(due)) { showToast('No taxes ready yet — provinces pay every 8 hours.'); return; }
   const now = Date.now();
+  const due = empireTributeReady(now);
+  if (!tributeHasAnything(due)) { showToast('Nothing has piled up yet — your holdings are still earning.'); return; }
+  // A forge chest per holding that banked a WHOLE cycle. Taxes come whenever
+  // you ask now, so counting any part-cycle here would hand out a free roll on
+  // every tap.
   let tributeChests = 0;
   empireVisibleSettlements().forEach(settlement => { if (townHasAccruedTribute(settlement, now)) tributeChests += 1; });
-  empireStandaloneVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) tributeChests += 1; });
-  // All source clocks reset in the same transaction, so Town, County and
-  // Realm collection are mutually exclusive without double-paying wards.
-  empireVillages().forEach(v => { if (empireVillageTributePeriods(v, now) > 0) v.lastTributeAt = now; });
-  // Caravans hand over their ledgers too — each open route resets its clock.
+  empireStandaloneVillages().forEach(v => { if (Math.floor(empireVillageTributePeriods(v, now)) > 0) tributeChests += 1; });
+  // All source clocks advance in the same transaction, so Town, County and
+  // Realm collection are mutually exclusive without double-paying wards. Each
+  // clock moves forward by exactly what it just paid for, so a player who
+  // collects often loses nothing.
+  empireVillages().forEach(v => {
+    const periods = empireVillageTributePeriods(v, now);
+    if (periods > 0) empireAdvanceTributeClock(v, periods, now);
+  });
+  // Caravans hand over their ledgers too — each open route advances the same way.
   const empireForTrade = ensureEmpireState();
-  if (empireForTrade) empireTradeRouteRecords().forEach(({ key, rec }) => { if (empireTradeRoutePeriods(rec, now) > 0) empireForTrade.tradeRoutes[key].lastTradeAt = now; });
+  if (empireForTrade) empireTradeRouteRecords().forEach(({ key, rec }) => {
+    const periods = empireTradeRoutePeriods(rec, now);
+    if (periods > 0) empireForTrade.tradeRoutes[key].lastTradeAt = Math.max(
+      (Number(rec.lastTradeAt) || Date.parse(rec.openedAt) || now) + periods * EMPIRE_TRIBUTE_INTERVAL_MS,
+      now - EMPIRE_TRIBUTE_MAX_PERIODS * EMPIRE_TRIBUTE_INTERVAL_MS);
+  });
   addCoins(due.coins);
   addBranches(due.branches);
   addStone(due.stone);
@@ -24450,9 +24511,9 @@ function claimCurrentVillage() {
     saveState();
   } catch (e) {}
   // Since merge-when-ready-v290 a liberation never merges anything. Every
-  // freed village starts its own road to the ⭐ merge star (40 folk, 75%
+  // freed village starts its own road to the ⭐ merge star (16 folk, 75%
   // happiness); merging is the player's own act on the Empire screen.
-  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty; your caravan leaves relief supplies, so build homes and residents will move in. Add a farm and well before supplies run out. Grow it to 40 folk at 75% happiness and it earns its ⭐ merge star. ' + count + ' holding' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
+  showToast('🕊️ ' + v.name + ' Village is liberated — its sanctuary wakes in green! The village stands empty; your caravan leaves relief supplies, so build homes and residents will move in. Add a farm and well before supplies run out. Grow it to 16 folk at 75% happiness and it earns its ⭐ merge star. ' + count + ' holding' + (count === 1 ? '' : 's') + ' · ' + empireCrownTitle() + claimLootText);
   setTimeout(() => openBirdKnowledgeQuiz({ context:'village_claim', seed:v.seed, source:v.name + ' elder asks a bird question...', rewardCoins:18 }), 900);
   liveMapVillageKey = null;
   scheduleVillageMarkerRefresh();
@@ -24583,9 +24644,6 @@ function renderVillageManagePanel() {
     const tier = villageBuildingTier(b, Math.max(1, level));
     const maxed = level >= b.maxLevel;
     const locked = level === 0 && (Number(gameState.player.level) || 1) < (Number(b.unlockLevel) || 1);
-    // The next step is a stone rebuild and this is still a lone village: show
-    // it as the town work it is instead of a bill nobody here can pay.
-    const townStep = !maxed && !settlementAllowsStep(rec, b, level + 1);
     const cost = maxed ? null : villageBuildingCost(b, level, rec.seed);
     const shortages = [];
     if (cost && wallet < cost.coins) shortages.push((cost.coins - wallet) + ' 🪙');
@@ -24606,7 +24664,6 @@ function renderVillageManagePanel() {
     if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
     else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></button>';
     else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
-    else if (townStep) btn = '<button class="province-build-btn locked" disabled>🏘️ STONE REBUILD · TOWN WORK</button>';
     // Short on coins or timber? The button stays live: tapping it opens the
     // shortfall prompt that sends birds out for the missing resource.
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')">' +
@@ -24614,16 +24671,19 @@ function renderVillageManagePanel() {
     // The crew line: a yard says plainly whether a villager is working it.
     let crewHtml = '';
     if (b.workers) {
-      if (level > 0 && crew.staffed[b.id]) crewHtml = '<div class="province-crew on">👷 ' + b.workers + ' villager works here</div>';
-      else if (level > 0) crewHtml = '<div class="province-crew off">👷 idle — needs ' + b.workers + ' villager · build homes so folk move in</div>';
-      else crewHtml = '<div class="province-crew">👷 needs ' + b.workers + ' villager to run</div>';
+      // A three-hand hut can be half-manned, so say who is really posted.
+      const posted = (crew.assigned && crew.assigned[b.id]) || 0;
+      if (level > 0 && posted >= b.workers) crewHtml = '<div class="province-crew on">👷 ' + villagerCount(posted) + ' at work</div>';
+      else if (level > 0 && posted > 0) crewHtml = '<div class="province-crew on">👷 ' + posted + ' of ' + b.workers + ' posted — build homes to fill the rest</div>';
+      else if (level > 0) crewHtml = '<div class="province-crew off">👷 idle — needs ' + villagerCount(b.workers) + ' · build homes so folk move in</div>';
+      else crewHtml = '<div class="province-crew">👷 needs ' + villagerCount(b.workers) + ' to run</div>';
     }
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
       '<div class="province-building-head"><span class="province-building-icon">' + tier.icon + '</span><span class="province-building-name">' + escapeHtml(tier.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
       '<div class="province-building-desc">' + escapeHtml(tier.desc) + '</div>' + crewHtml + btn +
-      (shortages.length && !locked && !townStep && slotsFree > 0
+      (shortages.length && !locked && slotsFree > 0
         ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · ' +
-          (cost && stone < cost.stone ? '⛏️ stone is cut by a Town quarry' : '🕊️ tap to send birds after it') + '</div>'
+          (cost && stone < cost.stone ? '🪨 post miners in your Miners’ Hut to dig it' : '🕊️ tap to send birds after it') + '</div>'
         : '') + '</div>';
   }).join('');
   // The settlement this province has merged into, if any: shown on the desk,
@@ -24632,7 +24692,7 @@ function renderVillageManagePanel() {
   const settleLine = settleHere
     ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Village centre of ' : 'Village district of ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
     : '';
-  // The road to the ⭐ merge star: 40 folk, 75% happiness. Once earned, the
+  // The road to the ⭐ merge star: 16 folk, 75% happiness. Once earned, the
   // Merge button lives on the Empire screen — this desk just shows the way.
   const mergeReady = settleHere ? null : villageMergeReady(rec);
   const mergeLine = mergeReady
@@ -24669,7 +24729,7 @@ function renderVillageManagePanel() {
     '<div class="province-needs">' + needsHtml + '</div>' +
     cartHtml +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or ⛲ Stone Well, or send a supply cart' : '') + '</div>'
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (crew.required > crew.working ? ' · 👷 <b>' + (crew.required - crew.working) + ' yard' + (crew.required - crew.working === 1 ? '' : 's') + ' stand' + (crew.required - crew.working === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or 🪣 Timber Well, or send a supply cart' : '') + '</div>'
       : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
@@ -24687,6 +24747,9 @@ function renderVillageManagePanel() {
   if (constructions.length) ensureProvinceCountdownTicker();
 }
 function happinessFace(h) { return h >= 0.9 ? '😊' : h >= 0.65 ? '🙂' : h >= 0.45 ? '😐' : '😟'; }
+// "1 villager" / "3 villagers". The work huts hold three, so every crew line
+// that used to hardcode the singular now counts through here.
+function villagerCount(n) { const c = Math.max(0, Math.round(Number(n) || 0)); return c + ' villager' + (c === 1 ? '' : 's'); }
 function renderEmpirePanel() {
   const panel = $('empirePanel');
   if (!panel) return;
@@ -24720,7 +24783,7 @@ function renderEmpirePanel() {
     '<div class="merge-banner-copy">' + copy + '</div>' +
     '<button type="button" class="merge-banner-btn" data-action="' + action + '" data-seeds="' + candidate.seeds.join(',') + '">' + button + '</button></div>';
   const townMergeBanners = townCandidates.map(c => mergeBannerHtml(c, 'merge-villages', '⭐ READY TO MERGE',
-    escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 40 folk each, 75% happy. Merge them and one Town rises, holding every building the three villages built.',
+    escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 16 folk each, 75% happy. Merge them and one Town rises, holding every building the three villages built.',
     '🏘️ MERGE INTO ONE TOWN')).join('');
   const regionMergeBanners = regionCandidates.map(c => mergeBannerHtml(c, 'merge-towns', '⭐ READY TO UNITE',
     escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 120 folk each, 75% happy. Merge them and a County rises: one desk for the whole region.',
@@ -24779,7 +24842,7 @@ function renderEmpirePanel() {
     const regionNudge = '<div class="realm-hint">⭐ A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.</div>';
     townsBody = '<div class="settlement-section">' + cityRows + townRows + regionNudge + '</div>';
   } else {
-    townsBody = '<div class="realm-hint">🏘️ No towns yet. Grow a village to 40 folk at 75% happiness and it earns its ⭐ merge star. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge on the Villages tab; nothing merges on its own.</div>';
+    townsBody = '<div class="realm-hint">🏘️ No towns yet. Grow a village to 16 folk at 75% happiness and it earns its ⭐ merge star. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge on the Villages tab; nothing merges on its own.</div>';
   }
   // ---- 🛡️ COUNTIES tab — counties, the feudal pyramid above them, and trade.
   // Until the player's liberations actually form a county the tab body just
@@ -24865,7 +24928,7 @@ function renderEmpirePanel() {
   // All closed by default; opening one folds the others. The ledger and its
   // stats moved below the tabs — navigation first, fluff after.
   const starHint = villages.length && !townCandidates.length
-    ? '<div class="realm-hint">⭐ A village earns its merge star at 40 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
+    ? '<div class="realm-hint">⭐ A village earns its merge star at 16 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
     : '';
   const villagesBody = villages.length
     ? townMergeBanners + starHint + '<div class="empire-village-list">' + rows + '</div>'
@@ -24874,7 +24937,7 @@ function renderEmpirePanel() {
     ? '<div class="empire-nav-tabs">' +
       empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) +
       empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', settlements.cityCount + settlements.towns.filter(t => !t.cityId).length, townsBody) +
-      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 40 folk, 75% happy', villages.length, villagesBody) +
+      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 16 folk, 75% happy', villages.length, villagesBody) +
       '</div>'
     : '';
   // ---- 📍 Locator strip — always answers "where am I, where is my town,
@@ -24901,9 +24964,9 @@ function renderEmpirePanel() {
     '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛖</span><span><b>Rebuild them.</b> Every village build is bought with coins and timber alone — no stone, ever. Start with a Timber Cabin, watch the first families move in, then stretch it into a Timber Longhouse for twice as many. The stone rebuild waits for a Town.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Each farm, lumber camp, quarry, market and chapel needs one villager to run — without a crew it produces nothing. More homes mean more workers.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🏹 Hunter-Gatherer Hut and ⛲ Stone Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch. Grain Farms and the other big yards open when villages merge into a Town.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🏹 Hunter-Gatherer Hut and 🪣 Timber Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch. Grain Farms and the other big yards open when villages merge into a Town.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> Stone is town business. The first Quarry costs no stone and its first cut pays for the first Grain Farm and Lumber Camp. After that the town yards — and the stone rebuild of your homes — spend stone alongside coins and timber. Villages never do.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">⭐</span><span><b>Earn the merge star.</b> A village wears its ⭐ at 40 folk and 75% happiness. Nothing merges on its own: three starred villages within 5 km show a Merge button — press it, and one Town rises with every building the three built.</span></div>' +
+    '<div class="empire-help-row"><span class="ehr-icon">⭐</span><span><b>Earn the merge star.</b> A village wears its ⭐ at 16 folk and 75% happiness. Nothing merges on its own: three starred villages within 5 km show a Merge button — press it, and one Town rises with every building the three built.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">⬆️</span><span><b>Upgrade the whole Town at once.</b> The Town Hall carries one Upgrade order that raises every home and yard across all wards — no ward micromanaging. Old villages stay visitable from the Hall, just to look.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>Merge 3 starred Towns into a County.</b> A town earns its ⭐ at 120 folk and 75% happiness. The County Hall runs the whole region: one chest, one Warden, one region-wide Upgrade order — and every town stays visitable.</span></div>' +
     '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
@@ -24941,7 +25004,7 @@ function renderEmpirePanel() {
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">2</span><span><b>Win its Liberation Battle</b> to scatter the darkness.</span></div>' +
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">3</span><span><b>Raise a birdhouse</b> and the village joins your empire — its daylight returns, and its taxes flow every 8 hours.</span></div>' +
         '<div class="empire-empty">Your whole empire will appear here: villages, towns, regions and trade.</div></div>') +
-    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ TAXES GROW EVERY 8 HOURS' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— NEXT IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
+    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ NOTHING BANKED YET' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— FULL CYCLE IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
     footerHtml;
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="merge-villages"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeVillages(btn.dataset.seeds); }));
@@ -24994,11 +25057,12 @@ function showRegionOnAtlas(regionId) {
 // this one lets a governor run one region of the map as its own economy.
 function regionTributeReady(region) {
   const now = Date.now();
-  const due = { coins: 0, branches: 0, stone:0, materials: {}, larder: {}, payingHoldings:0 };
+  const due = { coins: 0, branches: 0, stone:0, materials: {}, larder: {}, payingHoldings:0, wholeCycleHoldings:0 };
   empireRegionHoldings(region).forEach(holding => {
     if (holding.kind === 'settlement') {
       const townDue = townTributeBundle(holding.settlement, now);
       if (townDue.payingWards) due.payingHoldings += 1;
+      if (townHasAccruedTribute(holding.settlement, now)) due.wholeCycleHoldings += 1;
       due.coins += townDue.coins || 0; due.branches += townDue.branches || 0; due.stone += townDue.stone || 0;
       mergeResourceTotals(due.materials, townDue.materials, 1); mergeResourceTotals(due.larder, townDue.larder, 1);
       return;
@@ -25007,6 +25071,7 @@ function regionTributeReady(region) {
     const periods = empireVillageTributePeriods(v, now);
     if (!periods) return;
     due.payingHoldings += 1;
+    if (Math.floor(periods) > 0) due.wholeCycleHoldings += 1;
     const snap = villageEconomySnapshot(v);
     due.coins += periods * snap.taxes;
     due.branches += periods * snap.branches;
@@ -25014,6 +25079,7 @@ function regionTributeReady(region) {
     mergeResourceTotals(due.materials, snap.production.materials, periods);
     mergeResourceTotals(due.larder, snap.production.larder, periods);
   });
+  due.coins = Math.floor(due.coins); due.branches = Math.floor(due.branches); due.stone = Math.floor(due.stone);
   return due;
 }
 function collectRegionTribute(regionId) {
@@ -25021,20 +25087,25 @@ function collectRegionTribute(regionId) {
   if (!region) { renderRegionScreen(); return; }
   simulateAllVillageEconomies();
   const due = regionTributeReady(region);
-  if (!tributeHasAnything(due)) { showToast('No taxes ready in the ' + region.name + ' yet — sanctuaries pay every 8 hours.'); return; }
+  if (!tributeHasAnything(due)) { showToast('Nothing has piled up in the ' + region.name + ' yet — its holdings are still earning.'); return; }
   const now = Date.now();
   const before = snapshotGameState();
   let lootText = '';
   try {
     empireRegionHoldings(region).forEach(holding => {
       const records = holding.kind === 'settlement' ? townMemberRecords(holding.settlement) : [holding.village];
-      records.forEach(v => { if (empireVillageTributePeriods(v, now) > 0) v.lastTributeAt = now; });
+      records.forEach(v => {
+        const periods = empireVillageTributePeriods(v, now);
+        if (periods > 0) empireAdvanceTributeClock(v, periods, now);
+      });
     });
     addCoins(due.coins); addBranches(due.branches); addStone(due.stone);
     Object.entries(due.materials || {}).forEach(([id, qty]) => { if (qty > 0) gameState.inventory.items[id] = (gameState.inventory.items[id] || 0) + qty; });
     Object.entries(due.larder || {}).forEach(([id, qty]) => { if (qty > 0) addLarderIngredient(id, qty); });
     const drops = [];
-    for (let i = 0; i < due.payingHoldings; i++) drops.push(...lootCore().rollLoot('tribute', { rng:Math.random }));
+    // One chest per holding with a WHOLE cycle banked, so tapping COLLECT twice
+    // in a minute cannot farm the loot table.
+    for (let i = 0; i < (due.wholeCycleHoldings || 0); i++) drops.push(...lootCore().rollLoot('tribute', { rng:Math.random }));
     const lines = grantLootDrops(drops);
     if (lines.length) lootText = ' · ' + lootLinesToText(lines);
     durableSaveState({ throwOnFailure:true });
@@ -25140,7 +25211,7 @@ function renderRegionScreen() {
     '<div class="region-hall-unity">🤝 County unity: every holding here pays +' + Math.round((rc.regionUnityBonus ? rc.regionUnityBonus(region) : rc.REGION_TAX_BONUS) * 100) + '% taxes for standing together' + (liegeDuchy ? ' beneath the ' + escapeHtml((liegeKingdom || liegeDuchy).name) : '') + '.</div>' +
     ladderHtml +
     '<button class="empire-tribute-btn" data-action="region-collect"' + (hasDue ? '' : ' disabled') + '>' +
-    (hasDue ? '💰 COLLECT THIS COUNTY’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ COUNTY TAXES GROWING — CHECK BACK LATER') + '</button>' +
+    (hasDue ? '💰 COLLECT THIS COUNTY’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ NOTHING BANKED YET — THE COUNTY IS EARNING') + '</button>' +
     regionUpgradeSection +
     '<div class="realm-sub-title">🏘️ HOLDINGS OF THIS COUNTY · tap a town to visit and manage it</div>' +
     '<div class="empire-village-list">' + rows + '</div>' +
@@ -25330,9 +25401,13 @@ function townTributeBundle(settlement, nowValue) {
     total.coins += policy.coins || 0; total.branches += policy.branches || 0; total.stone += policy.stone || 0;
     mergeResourceTotals(total.materials, policy.materials, 1); mergeResourceTotals(total.larder, policy.larder, 1);
   });
+  total.coins = Math.floor(total.coins); total.branches = Math.floor(total.branches); total.stone = Math.floor(total.stone);
   return { ...total, payingWards, periods };
 }
-function townHasAccruedTribute(settlement, nowValue) { return townMemberRecords(settlement).some(rec => empireVillageTributePeriods(rec, Number(nowValue) || Date.now()) > 0); }
+// A WHOLE banked cycle, not merely "something is owed". This gates the Council
+// policy lock and the nav badge, and both would jam permanently on a continuous
+// accrual — the point of the lock is that a real haul is sitting unclaimed.
+function townHasAccruedTribute(settlement, nowValue) { return townMemberRecords(settlement).some(rec => Math.floor(empireVillageTributePeriods(rec, Number(nowValue) || Date.now())) > 0); }
 function townCanChangePolicy(settlement, nowValue) {
   const now = Number(nowValue) || Date.now(), core = townStrategyCore(), primary = townPrimarySeatRow(settlement);
   const rows = townSeatStateRows(settlement);
@@ -25474,15 +25549,19 @@ function setTownPolicy(settlementId, policyId) {
 }
 function collectTownTribute(settlementId) {
   const settlement = townSettlementByActiveId(settlementId); if (!settlement) return; simulateAllVillageEconomies();
-  const now = Date.now(), due = townTributeBundle(settlement, now); if (!due.payingWards) { showToast('No Town tribute is ready — the strongbox fills every 8 hours.'); return; }
+  const now = Date.now(), due = townTributeBundle(settlement, now); if (!tributeHasAnything(due)) { showToast('Nothing has piled up yet — the wards are still earning.'); return; }
   const before = snapshotGameState();
   let lootText = '';
   try {
-    townMemberRecords(settlement).forEach(rec => { if (empireVillageTributePeriods(rec, now) > 0) rec.lastTributeAt = now; });
+    townMemberRecords(settlement).forEach(rec => {
+      const periods = empireVillageTributePeriods(rec, now);
+      if (periods > 0) empireAdvanceTributeClock(rec, periods, now);
+    });
     addCoins(due.coins || 0); addBranches(due.branches || 0); addStone(due.stone || 0);
     Object.entries(due.materials || {}).forEach(([id, qty]) => { if (qty > 0) gameState.inventory.items[id] = townCostMaterialCount(id) + qty; });
     Object.entries(due.larder || {}).forEach(([id, qty]) => { if (qty > 0) addLarderIngredient(id, qty); });
-    const lines = grantLootDrops(lootCore().rollLoot('tribute', { rng:Math.random }));
+    // The forge chest rides a WHOLE banked cycle, never a part one.
+    const lines = townHasAccruedTribute(settlement, now) ? grantLootDrops(lootCore().rollLoot('tribute', { rng:Math.random })) : [];
     if (lines.length) lootText = ' · ' + lootLinesToText(lines);
     durableSaveState({ throwOnFailure:true });
   } catch (error) { restoreGameStateSnapshot(before); showToast('The strongbox could not be saved — nothing was collected.'); return; }
@@ -25540,7 +25619,6 @@ function wholesaleUpgradePlan(records) {
       // The settlement law holds for wholesale orders too: no new town-tier
       // industry on a ward that is not part of a merged settlement.
       if (level === 0 && !settlementAllowsBuilding(rec, b)) return;
-      if (!settlementAllowsStep(rec, b, level + 1)) return;
       const stepCost = villageBuildingCost(b, level, rec.seed);
       cost.coins += stepCost.coins; cost.branches += stepCost.branches; cost.stone += stepCost.stone;
       // Each ward's own Steward project-manages its part of the order; the
@@ -25740,7 +25818,7 @@ function renderTownScreen() {
   const development = townTotalDevelopment(settle), maxDevelopment = townMaxDevelopment(settle);
   const hall = core.hallLevelInfo(state.hallLevel), upgradeRow = townNextHallUpgradeRow(settle), next = upgradeRow && core.nextHallUpgrade(upgradeRow.state);
   const slots = townBuilderSlots(settle), activeProjects = townActiveProjectCount(settle);
-  const due = townTributeBundle(settle, now), hasDue = due.payingWards > 0;
+  const due = townTributeBundle(settle, now), hasDue = tributeHasAnything(due);
   const prosperity = core.townProsperity ? core.townProsperity({ population:snap.pop, happiness:snap.happiness, development, maxDevelopment }) : 0;
   const title = $('townScreenTitle'); if (title) title.textContent = settle.tier === 'city' ? 'CITY HALL' : 'TOWN HALL';
 
@@ -25844,7 +25922,7 @@ function renderTownScreen() {
     '<div class="town-nav"><button data-action="town-back">← ROYAL LEDGER</button><button data-action="town-atlas">🗺️ VIEW ON ATLAS</button></div>' +
     '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + (townReadiness && townReadiness.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
     '<div class="town-resource-grid"><div class="town-resource"><div class="town-resource-value">👥 ' + snap.pop + '/' + snap.housingCap + '</div><div class="town-resource-label">Residents / homes</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.taxes + ' 🪙</div><div class="town-resource-label">Taxes / 8h</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.branches + ' 🪵 · +' + snap.production.stone + ' stone</div><div class="town-resource-label">Building goods / 8h</div></div><div class="town-resource"><div class="town-resource-value">' + escapeHtml(empireResourceSummary({ materials:snap.production.materials, larder:snap.production.larder }, 4) || '—') + '</div><div class="town-resource-label">Goods / 8h</div></div></div>' +
-    '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox</div><div class="town-section-copy">One collection every 8 hours, capped at 24 hours. Town, County and Realm collection all use the same ward clocks.</div><button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
+    '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox</div><div class="town-section-copy">Collect whenever you like — the wards earn around the clock and the strongbox holds up to a full day. Town, County and Realm collection all share the same ward clocks.</div><button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
     upgradeSection +
     '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
     ruinsHtml +
@@ -26013,9 +26091,9 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
   const slots = townBuilderSlots(settle), activeProjects = townActiveProjectCount(settle);
   let crewHtml = '';
   if (building.workers) {
-    if (level && crew.staffed[building.id]) crewHtml = '<div class="town-sheet-crew">👷 ' + building.workers + ' villager works here</div>';
-    else if (level) crewHtml = '<div class="town-sheet-crew off">👷 idle — needs ' + building.workers + ' villager · build homes so folk move in</div>';
-    else crewHtml = '<div class="town-sheet-crew off">👷 needs ' + building.workers + ' villager to run</div>';
+    if (level && crew.staffed[building.id]) crewHtml = '<div class="town-sheet-crew">👷 ' + villagerCount(building.workers) + ' at work</div>';
+    else if (level) crewHtml = '<div class="town-sheet-crew off">👷 idle — needs ' + villagerCount(building.workers) + ' · build homes so folk move in</div>';
+    else crewHtml = '<div class="town-sheet-crew off">👷 needs ' + villagerCount(building.workers) + ' to run</div>';
   }
   const output = level ? townBuildingOutputText(building, level) : '';
   let action;
@@ -30112,7 +30190,7 @@ function buildVillageScene(v) {
     }
   }
 
-  // The square's centre stands bare until the governor builds the Stone Well —
+  // The square's centre stands bare until the governor builds the Timber Well —
   // the well the player raises becomes the village centrepiece (drawn with the
   // other constructions below). Nothing pre-built ever claims the spot.
 
@@ -30590,15 +30668,16 @@ function buildVillageScene(v) {
         if (level >= 2) { const hay = villageMakeHay(er, pal); hay.position.set(spot.x + 2.6, 0, spot.z + 1.2); villageScene.add(hay); }
         if (level >= 3) { const sc = villageMakeScarecrow(er, pal); sc.rotation.y = er() * Math.PI * 2; sc.position.set(spot.x - 2.2, 0, spot.z - 1.4); villageScene.add(sc); }
       } else if (b.id === 'well') {
-        // The Stone Well takes the centre of the square: it is the only
+        // The Timber Well takes the centre of the square: it is the only
         // centrepiece a village ever gets, and only the governor's own build
         // puts it there.
         const well = new THREE.Group();
         const body = new THREE.Group();
-        const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
-        const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), stoneMat);
-        ring.position.y = 0.28; body.add(ring);
         const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+        // A staved timber collar, not dressed stone — the well costs no stone,
+        // so it should not look as though it did.
+        const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0.03, -0.05) }));
+        ring.position.y = 0.28; body.add(ring);
         for (const sx of [-0.55, 0.55]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.25, 0.09), beamMat); post.position.set(sx, 0.85, 0); body.add(post); }
         const roof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.55, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
         roof.position.y = 1.68; roof.rotation.y = Math.PI / 4; body.add(roof);
@@ -30608,7 +30687,7 @@ function buildVillageScene(v) {
         well.add(body);
         well.add(villageBlobShadow(1.3));
         well.position.set(0, 0, 0);
-        econLabel(well, '⛲ Stone Well', 3.1);
+        econLabel(well, '🪣 Timber Well', 3.1);
         villageScene.add(well);
       } else if (b.id === 'cottages') {
         for (let i = 0; i < level; i++) {
@@ -30687,6 +30766,67 @@ function buildVillageScene(v) {
           crates.position.set(spot.x + Math.cos(i * 2.4) * 2.2, 0, spot.z + Math.sin(i * 2.4) * 2.2);
           villageScene.add(crates);
         }
+      } else if (b.id === 'lumberhut') {
+        // The village's own lumberjacks: a shelter of leaning poles, felled
+        // trunks stacked beside it and an axe left in the chopping block.
+        const spot = econScatter(11, 15, 2.4);
+        if (!spot) return;
+        const yard = new THREE.Group();
+        const timberMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+        const lean = new THREE.Mesh(new THREE.ConeGeometry(1.25, 1.8, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[1 % pal.roofs.length] }));
+        lean.position.set(0, 0.9, 0); lean.rotation.y = Math.PI / 4; yard.add(lean);
+        for (let i = 0; i <= level; i++) {
+          const pile = villageMakeLogPile(er, pal);
+          pile.rotation.y = er() * Math.PI;
+          pile.position.set(-1.6 - er() * 0.8, 0, (er() - 0.5) * 2.4);
+          yard.add(pile);
+        }
+        const block = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.38, 0.46, 8), timberMat);
+        block.position.set(1.35, 0.23, 0.5); yard.add(block);
+        const haft = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.8, 6), timberMat);
+        haft.position.set(1.35, 0.78, 0.5); haft.rotation.z = 0.5; yard.add(haft);
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.22, 0.06), new THREE.MeshLambertMaterial({ color: pal.stone }));
+        blade.position.set(1.15, 1.12, 0.5); blade.rotation.z = 0.5; yard.add(blade);
+        yard.add(villageBlobShadow(2.1));
+        yard.position.set(spot.x, 0, spot.z);
+        yard.rotation.y = -spot.a + (er() - 0.5) * 0.4;
+        econLabel(yard, '🪚 Lumberjack Hut', 2.2);
+        villageScene.add(yard);
+      } else if (b.id === 'minehut') {
+        // A working mine head, not a quarry: a timber A-frame over the shaft,
+        // spoil heaped beside it and a barrow waiting to be filled.
+        const spot = econScatter(12, 16, 2.5);
+        if (!spot) return;
+        const mine = new THREE.Group();
+        const timberMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+        const rockMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+        const spoil = new THREE.Mesh(new THREE.CircleGeometry(1.9, 14), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.stone).offsetHSL(0, -0.04, -0.05) }));
+        spoil.rotation.x = -Math.PI / 2; spoil.position.y = 0.012; mine.add(spoil);
+        // The A-frame headgear over the shaft mouth.
+        [-1, 1].forEach(side => {
+          const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 2.1, 6), timberMat);
+          leg.position.set(side * 0.52, 1.02, 0); leg.rotation.z = side * -0.28; mine.add(leg);
+        });
+        const beam = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.12, 0.16), timberMat);
+        beam.position.set(0, 2.02, 0); mine.add(beam);
+        const mouth = new THREE.Mesh(new THREE.CircleGeometry(0.42, 12), new THREE.MeshLambertMaterial({ color: 0x1a1410 }));
+        mouth.rotation.x = -Math.PI / 2; mouth.position.set(0, 0.02, 0.05); mine.add(mouth);
+        for (let i = 0; i < 3 + level * 2; i++) {
+          const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.2 + er() * 0.26, 0), rockMat);
+          rock.position.set(-1.5 + (er() - 0.5) * 1.1, 0.18 + er() * 0.2, (er() - 0.5) * 2.2);
+          rock.rotation.set(er() * 3, er() * 3, er() * 3);
+          mine.add(rock);
+        }
+        // The barrow: a box on a wheel, tipped on its handles.
+        const barrow = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.3, 0.42), timberMat);
+        barrow.position.set(1.5, 0.34, 0.4); mine.add(barrow);
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.08, 10), timberMat);
+        wheel.position.set(1.5, 0.17, 0.68); wheel.rotation.x = Math.PI / 2; mine.add(wheel);
+        mine.add(villageBlobShadow(2.2));
+        mine.position.set(spot.x, 0, spot.z);
+        mine.rotation.y = -spot.a + (er() - 0.5) * 0.4;
+        econLabel(mine, '🪨 Miners’ Hut', 2.3);
+        villageScene.add(mine);
       }
     });
   }
@@ -31328,9 +31468,9 @@ function townMakeEconBuilding(buildingId, level, dr, pal) {
     if (level >= 2) { const hay = villageMakeHay(dr, pal); hay.position.set(2.2, 0, 1.0); g.add(hay); }
     if (level >= 3) { const sc = villageMakeScarecrow(dr, pal); sc.rotation.y = dr() * Math.PI * 2; sc.position.set(-1.9, 0, -1.2); g.add(sc); }
   } else if (buildingId === 'well') {
-    const stoneMat = new THREE.MeshLambertMaterial({ color: pal.stone });
     const beamMat = new THREE.MeshLambertMaterial({ color: pal.timber });
-    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), stoneMat);
+    // A timber well: the collar is staved wood now, not dressed stone.
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.68, 0.55, 10), new THREE.MeshLambertMaterial({ color: new THREE.Color(pal.timber).offsetHSL(0, 0.03, -0.05) }));
     ring.position.y = 0.28; g.add(ring);
     for (const sx of [-0.55, 0.55]) { const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.25, 0.09), beamMat); post.position.set(sx, 0.85, 0); g.add(post); }
     const roof = new THREE.Mesh(new THREE.ConeGeometry(0.95, 0.55, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[0] }));
@@ -31364,6 +31504,30 @@ function townMakeEconBuilding(buildingId, level, dr, pal) {
   } else if (buildingId === 'storehouse') {
     g.add(villageMakeBuilding('storehouse', { icon: '🧺', name: 'Storehouse', roofColor: pal.roofs[2 % pal.roofs.length] }, dr, pal));
     for (let i = 0; i < level; i++) { const crates = villageMakeCrates(dr, pal); crates.position.set(Math.cos(i * 2.4) * 1.8, 0, Math.sin(i * 2.4) * 1.8); g.add(crates); }
+  } else if (buildingId === 'lumberhut') {
+    const timberMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+    const lean = new THREE.Mesh(new THREE.ConeGeometry(1.1, 1.6, 4), new THREE.MeshLambertMaterial({ color: pal.roofs[1 % pal.roofs.length] }));
+    lean.position.y = 0.8; lean.rotation.y = Math.PI / 4; g.add(lean);
+    for (let i = 0; i <= level; i++) { const pile = villageMakeLogPile(dr, pal); pile.rotation.y = dr() * Math.PI; pile.position.set(-1.4, 0, (i - 0.5) * 0.9); g.add(pile); }
+    const block = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, 0.42, 8), timberMat);
+    block.position.set(1.2, 0.21, 0.4); g.add(block);
+    g.add(villageBlobShadow(1.6));
+  } else if (buildingId === 'minehut') {
+    const timberMat = new THREE.MeshLambertMaterial({ color: pal.timber });
+    const rockMat = new THREE.MeshLambertMaterial({ color: pal.stone });
+    [-1, 1].forEach(side => {
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.9, 6), timberMat);
+      leg.position.set(side * 0.46, 0.92, 0); leg.rotation.z = side * -0.28; g.add(leg);
+    });
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.11, 0.14), timberMat);
+    beam.position.y = 1.82; g.add(beam);
+    for (let i = 0; i < 2 + level; i++) {
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.18 + dr() * 0.22, 0), rockMat);
+      rock.position.set(-1.3 + (dr() - 0.5) * 0.9, 0.16 + dr() * 0.18, (dr() - 0.5) * 1.8);
+      rock.rotation.set(dr() * 3, dr() * 3, dr() * 3);
+      g.add(rock);
+    }
+    g.add(villageBlobShadow(1.7));
   } else {
     return null; // homes (cabin, cottages) are the quarter's own cottages
   }
@@ -33357,7 +33521,7 @@ function renderStoresLedger() {
       (yardRows || '<div class="stores-hint">No working yards yet — build 🏹 Hunter-Gatherer Huts in your villages, and 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your Towns. Each needs a villager living there to run it, then it starts shipping goods here.</div>') +
       (idleYards.length ? '<div class="stores-hint">Not yet built anywhere: ' + idleYards.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>' : '') +
       '<button class="stores-collect-btn"' + (hasTribute ? '' : ' disabled') + ' onclick="collectEmpireTribute()">' +
-      (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ THE PROVINCES ARE STILL WORKING — CHECK BACK LATER') + '</button>' +
+      (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ NOTHING BANKED YET — THE PROVINCES ARE EARNING') + '</button>' +
       '</div>';
   }
 
@@ -37765,13 +37929,13 @@ const PLAYER_QUESTS = [
     measure:() => Object.keys((gameState.birdRoles && gameState.birdRoles.villages) || {}).length },
   { id:'pq_species_10',     name:'Budding ornithologist', desc:'Discover 10 different bird species', type:'discover', target:10, reward:90, coins:60, icon:'\u{1F989}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
-  { id:'pq_village_tax',    name:'Collect your taxes', desc:'Empty a strongbox — provinces pay every 8 hours', type:'tribute_collected', target:1, reward:85, branches:20, icon:'\u{1F451}', go:'village',
+  { id:'pq_village_tax',    name:'Collect your taxes', desc:'Empty a strongbox — collect whenever you like', type:'tribute_collected', target:1, reward:85, branches:20, icon:'\u{1F451}', go:'village',
     measure:() => Number(gameState.player && gameState.player.tributeCollections) || 0 },
   { id:'pq_build_workshop', name:'Build the Nest Workshop', desc:'Raise the Nest Workshop to toughen your flock', type:'build_workshop', target:1, reward:70, coins:35, icon:'\u{1F6E0}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('workshop') ? 1 : 0 },
   { id:'pq_liberate_3',     name:'Kingdom of the free', desc:'Liberate 3 real villages from the evil Burbz', type:'town_liberated', target:3, reward:150, coins:100, branches:40, icon:'\u{1F451}', go:'map',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
-  { id:'pq_merge_star',     name:'Earn a merge star', desc:'Grow a village to 40 folk and 75% happy', type:'merge_star', target:1, reward:120, coins:70, branches:30, icon:'\u{2B50}', go:'village',
+  { id:'pq_merge_star',     name:'Earn a merge star', desc:'Grow a village to 16 folk and 75% happy', type:'merge_star', target:1, reward:120, coins:70, branches:30, icon:'\u{2B50}', go:'village',
     measure:() => villageEconomies().filter(eco => eco.mergeStarSeen).length },
   { id:'pq_found_town',     name:'Found a Town', desc:'Merge three starred villages into one Town', type:'town_founded', target:1, reward:200, coins:120, branches:50, icon:'\u{1F3D8}\u{FE0F}', go:'village',
     measure:() => ((gameState.empire && gameState.empire.townCharters) || []).length },
@@ -38353,7 +38517,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'timber-village-builds-v309-20260823';
+const BURBZ_BUILD = 'village-work-huts-v310-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

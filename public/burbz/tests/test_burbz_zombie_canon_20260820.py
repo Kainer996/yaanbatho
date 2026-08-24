@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "timber-village-builds-v309-20260823"
+OWN_RELEASE_PIN = "village-work-huts-v310-20260824"
 
 
 def test_release_is_wired():

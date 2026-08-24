@@ -26,7 +26,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 
 
 def function_source(html: str, name: str) -> str:
@@ -54,14 +54,14 @@ def test_star_thresholds_are_forty_folk_and_seventy_five_happiness():
         "console.log(JSON.stringify({\n"
         "  pop:mc.TOWN_MERGE_MIN_POPULATION, happy:mc.TOWN_MERGE_MIN_HAPPINESS,\n"
         "  tPop:mc.REGION_MERGE_MIN_POPULATION, tHappy:mc.REGION_MERGE_MIN_HAPPINESS,\n"
-        "  ready:mc.villageMergeReadiness({population:40,happiness:0.75}).ready,\n"
-        "  short:mc.villageMergeReadiness({population:39,happiness:0.99}).ready,\n"
+        "  ready:mc.villageMergeReadiness({population:16,happiness:0.75}).ready,\n"
+        "  short:mc.villageMergeReadiness({population:15,happiness:0.99}).ready,\n"
         "  glum:mc.villageMergeReadiness({population:200,happiness:0.74}).ready,\n"
-        "  pct:mc.villageMergeReadiness({population:40,happiness:75}).ready,\n"
+        "  pct:mc.villageMergeReadiness({population:16,happiness:75}).ready,\n"
         "  town:mc.townMergeReadiness({population:120,happiness:0.75}).ready,\n"
         "  townShort:mc.townMergeReadiness({population:119,happiness:1}).ready}));"
     )
-    assert out["pop"] == 40 and out["happy"] == 0.75
+    assert out["pop"] == 16 and out["happy"] == 0.75  # v310: Yaan cut the village bar from 40
     assert out["tPop"] == 120 and out["tHappy"] == 0.75
     assert out["ready"] is True and out["town"] is True
     assert out["short"] is False and out["glum"] is False and out["townShort"] is False
@@ -265,7 +265,6 @@ def test_wholesale_plan_sums_costs_and_takes_the_longest_clock():
         "const villageBuildTimeMs=(b,level)=>Math.max(1,b.buildMinutes*(level+1))*60000;\n"
         "const villageStewardProject=()=>({staffed:false,buildFactor:1,costFactor:1});\n"
         "const settlementAllowsBuilding=()=>true;\n"
-        "const settlementAllowsStep=()=>true;\n"
         + src +
         "\nconst plan=wholesaleUpgradePlan([{seed:7},{seed:8}]);\n"
         "console.log(JSON.stringify(plan));"
@@ -330,8 +329,12 @@ def test_release_is_versioned_and_the_merge_core_shipped():
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line       # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    for core in ("settlement_merge_core.js", "empire_realm_core.js"):
-        pin = f"{core}?v={OWN_RELEASE_PIN}"
+    # Each core carries the pin of the release that last TOUCHED it, so a
+    # browser refetches only what actually changed. settlement_merge_core.js
+    # moved to v310 when Yaan cut the merge-star bar from 40 folk to 16.
+    for core, core_pin in (("settlement_merge_core.js", CURRENT_BUILD),
+                           ("empire_realm_core.js", OWN_RELEASE_PIN)):
+        pin = f"{core}?v={core_pin}"
         assert f'<script src="{pin}"></script>' in html
         assert sw.count(f"'./{pin}'") == 3
     assert MERGE_CORE_PATH.exists()

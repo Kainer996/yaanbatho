@@ -2,7 +2,7 @@
  *
  * Pure, deterministic rules for player-chosen settlement merges. Since
  * merge-when-ready-v290, three villages never grow into a town on their own:
- * each village must first EARN ITS MERGE STAR (40 folk, 75% happiness), and
+ * each village must first EARN ITS MERGE STAR (16 folk, 75% happiness), and
  * then the player presses Merge. Towns climb to a region the same way. The
  * browser owns persistence and UI; this module only heals charters and does
  * the maths, so the same rules run under Node.
@@ -20,12 +20,17 @@
   'use strict';
 
   const EARTH_RADIUS_KM = 6371.0088;
-  // A village is ready to merge once it houses this many folk...
-  const TOWN_MERGE_MIN_POPULATION = 40;
-  // ...and keeps them this happy (0..1 scale; 0.75 = 75%).
+  // A village is ready to merge once it houses this many folk. Yaan cut this
+  // from 40 to 16 (2026-08-24): 40 was a long wait for the first Town, and the
+  // happiness bar below is the half that should be earned, not the head count.
+  const TOWN_MERGE_MIN_POPULATION = 16;
+  // ...and keeps them this happy (0..1 scale; 0.75 = 75%). A village with no
+  // Alehouse now sits at 71%, so this bar means "build the tavern" — before
+  // the joy weighting it was reachable with no joy building at all.
   const TOWN_MERGE_MIN_HAPPINESS = 0.75;
   // A town is ready to merge into a region once its three wards together
-  // reach three ready villages' worth of folk, at the same happiness bar.
+  // reach this many folk, at the same happiness bar. Deliberately left at 120:
+  // a county should still be a real city's worth of people.
   const REGION_MERGE_MIN_POPULATION = 120;
   const REGION_MERGE_MIN_HAPPINESS = 0.75;
   // Every merge joins exactly three places.

@@ -29,7 +29,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "quest-zoom-lock-v282-20260818"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v310-20260824"
 
 CONSTANTS = ("QUEST_WALK_ZOOM_FLOOR", "QUEST_WALK_ZOOM_CEILING", "QUEST_WALK_FRAME_MIN_M")
 
