@@ -4844,7 +4844,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
-<script src="action_badge_core.js?v=battle-progression-fixes-v286-20260819"></script>
+<script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script>
@@ -20731,6 +20731,122 @@ function buildFallbackHabitatMarkers(lat, lon, source, presetSpawns) { const fal
 // ============================================================================
 // ACTIONABLE NAV BADGES
 // ============================================================================
+// A badge is a promise: something is finished, or something is going wrong.
+// Every count below clears the moment the player acts on it, so a red dot
+// never becomes wallpaper.
+
+// Hungry enough that quests and training start to suffer — the same bar the
+// Kitchen's own gauges use.
+function badgeHungerWarns(care, now) {
+  const core = dietHungerCore();
+  if (core && typeof core.hungerStatusForCare === 'function') return !!core.hungerStatusForCare(care, now).warnsWork;
+  return (Number(care && care.hunger) || 0) >= 70;
+}
+
+// Is there anything at all to serve? The pantry refills on its own clock and
+// the larder holds what the flock brings home.
+function kitchenHoldsFood() {
+  const pantry = (gameState && gameState.pantry) || {};
+  if (Object.keys(pantry).some(key => (Number(pantry[key]) || 0) > 0)) return true;
+  const larder = (gameState && gameState.inventory && gameState.inventory.larder) || {};
+  return Object.keys(larder).some(key => (Number(larder[key]) || 0) > 0);
+}
+
+// Kitchen dot: birds gone hungry, Merlin included. Silent when the shelves are
+// bare, because a badge you cannot act on is noise.
+function kitchenBirdsNeedingFood(nowValue) {
+  const now = Number(nowValue) || Date.now();
+  const flock = Array.isArray(gameState && gameState.flock) ? gameState.flock : [];
+  let hungry = flock.filter(bird => bird && badgeHungerWarns(bird.care, now)).length;
+  if (gameState && gameState.merlinCare && badgeHungerWarns(gameState.merlinCare, now)) hungry += 1;
+  return hungry && kitchenHoldsFood() ? hungry : 0;
+}
+
+// Hospital dot: birds hurt badly enough to want a bed who are not already in
+// one. A fainted bird is carried in automatically, so this catches the walking
+// wounded — hurt in a battle they survived, or hurt before the ward was built.
+const HOSPITAL_BADGE_HURT_RATIO = 0.5;
+function hospitalPatientsWaiting() {
+  if (typeof isAcademyRoomBuilt !== 'function' || !isAcademyRoomBuilt('hospital')) return 0;
+  const flock = Array.isArray(gameState && gameState.flock) ? gameState.flock : [];
+  return flock.filter(bird => {
+    if (!bird || !bird.id) return false;
+    if (bird.academy && bird.academy.room === 'hospital') return false;
+    const maxHp = Math.max(1, Number(bird.maxHp) || 100);
+    const hp = Number(bird.hp);
+    // A save with no HP written is read as hale, the way the rest of the game
+    // reads it — the ward never nags over a number nobody recorded.
+    if (!isFinite(hp) || hp >= maxHp * HOSPITAL_BADGE_HURT_RATIO) return false;
+    if (birdAssignedPost(bird.id)) return false;
+    return !birdHasActiveExpedition(bird.id) && !birdHasActiveTraining(bird.id);
+  }).length;
+}
+
+// Forge dot, second half: gear the stores can already pay for. Only pieces the
+// player does not own and has not queued count, so the dot means "something
+// new is within reach" rather than "you still own materials".
+function forgeCraftableNow() {
+  const L = lootCore();
+  if (!L || forgeQueueIsFull()) return 0;
+  const stock = (gameState.inventory && gameState.inventory.items) || {};
+  const coins = Number(gameState.player && gameState.player.coins) || 0;
+  const forgeLv = burbzForgeLevel();
+  const onAnvil = new Set(ensureForgeJobs().map(job => job.gearId));
+  const bag = (gameState.inventory && gameState.inventory.gear) || {};
+  const equipped = new Set();
+  Object.values((gameState.inventory && gameState.inventory.equipment) || {}).forEach(loadout => {
+    if (loadout && typeof loadout === 'object') Object.values(loadout).forEach(id => { if (id) equipped.add(id); });
+  });
+  return Object.keys(L.GEAR).filter(id => {
+    if (onAnvil.has(id) || equipped.has(id) || (Number(bag[id]) || 0) > 0) return false;
+    if (!L.canForgeAtLevel(id, forgeLv)) return false;
+    return L.canCraft(L.recipeFor(id), stock, coins).ok;
+  }).length;
+}
+
+// Empire dot, second half: buildings that have finished. A project past its
+// clock is folded into its town within the minute, and the corner card it
+// leaves behind carries the news until the player goes and looks — so the two
+// together cover the whole gap between "done" and "seen".
+function empireBuildingsComplete(nowValue) {
+  const now = Number(nowValue) || Date.now();
+  let done = 0;
+  empireVillages().forEach(rec => {
+    villageConstructions(rec).forEach(con => { if (con && now >= Number(con.endMs)) done += 1; });
+  });
+  (empireSettlementsInfo().towns || []).forEach(seat => {
+    const state = ensureTownSeatState(seat);
+    const build = state && state.hallConstruction;
+    if (build && now >= Number(build.endMs)) done += 1;
+  });
+  const notices = Array.isArray(gameState && gameState.completionNotices) ? gameState.completionNotices : [];
+  return done + notices.filter(notice => notice && notice.kind === 'empire-building').length;
+}
+
+// Stores dot: kit sitting in the armoury that a bird has a free slot for.
+// Counted once per spare piece, not once per bird, so one spare talon is one
+// dot however large the flock grows.
+function storesGearWaitingToEquip() {
+  const L = lootCore();
+  const flock = Array.isArray(gameState && gameState.flock) ? gameState.flock : [];
+  if (!L || !flock.length) return 0;
+  const equipment = (gameState.inventory && gameState.inventory.equipment) || {};
+  const emptySlots = {};
+  flock.forEach(bird => {
+    const loadout = (bird && bird.id && equipment[bird.id]) || {};
+    L.GEAR_SLOTS.forEach(slot => { if (!loadout[slot]) emptySlots[slot] = (emptySlots[slot] || 0) + 1; });
+  });
+  const spare = {};
+  const bag = (gameState.inventory && gameState.inventory.gear) || {};
+  Object.keys(bag).forEach(id => {
+    const qty = Math.max(0, Math.floor(Number(bag[id]) || 0));
+    const item = L.gearById(id);
+    if (!item || qty <= 0) return;
+    spare[item.slot] = (spare[item.slot] || 0) + qty;
+  });
+  return Object.keys(spare).reduce((sum, slot) => sum + Math.min(spare[slot], emptySlots[slot] || 0), 0);
+}
+
 function normalizeActionBadgeState(now = Date.now()) {
   const academyCore = window.BurbzAcademyCore;
   const expeditionRows = Array.isArray(gameState && gameState.birdExpeditions) ? gameState.birdExpeditions : [];
@@ -20771,6 +20887,22 @@ function normalizeActionBadgeState(now = Date.now()) {
   // The Empire tab lights up whenever provinces or caravans have taxes ready.
   let empireCollectCount = 0;
   try { empireCollectCount = typeof empireCollectiblesWaiting === 'function' ? empireCollectiblesWaiting(now) : 0; } catch (e) {}
+  // Every count below is wrapped: one broken save must never blank the whole
+  // dock, so a helper that throws simply contributes nothing.
+  let forgeCraftableCount = 0;
+  try { forgeCraftableCount = forgeCraftableNow(); } catch (e) {}
+  let buildingsCompleteCount = 0;
+  try { buildingsCompleteCount = empireBuildingsComplete(now); } catch (e) {}
+  let kitchenCount = 0;
+  try { kitchenCount = kitchenBirdsNeedingFood(now); } catch (e) {}
+  let hospitalCount = 0;
+  try { hospitalCount = hospitalPatientsWaiting(); } catch (e) {}
+  let storesCount = 0;
+  try { storesCount = storesGearWaitingToEquip(); } catch (e) {}
+  // The Training dock button opens a pop-up rather than a screen, so it rides
+  // the badge walker by its destination name.
+  let trainingCount = 0;
+  try { trainingCount = trainingHubSessions().filter(session => session.status === 'complete').length; } catch (e) {}
   return {
     questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
     quests: gameState && gameState.quests,
@@ -20780,8 +20912,33 @@ function normalizeActionBadgeState(now = Date.now()) {
     recruitableCount,
     careNeedsCount,
     forge: forgeReadyCount,
-    village: empireCollectCount
+    forgeCraftable: forgeCraftableCount,
+    village: empireCollectCount,
+    buildingsComplete: buildingsCompleteCount,
+    kitchen: kitchenCount,
+    hospital: hospitalCount,
+    training: trainingCount,
+    inventory: storesCount
   };
+}
+
+// What each red dot is actually telling the player. Screen readers get this
+// instead of a bare number, so "Kitchen, 2 birds to feed" reads the way the
+// dot looks.
+const ACTION_BADGE_WORDS = {
+  quests: ['reward to claim', 'rewards to claim'],
+  academy: ['bird needs you', 'birds need you'],
+  forge: ['piece ready to make or collect', 'pieces ready to make or collect'],
+  village: ['thing waiting in your empire', 'things waiting in your empire'],
+  kitchen: ['bird to feed', 'birds to feed'],
+  hospital: ['bird to treat', 'birds to treat'],
+  training: ['drill finished', 'drills finished'],
+  inventory: ['piece of kit to equip', 'pieces of kit to equip']
+};
+function actionBadgeText(count, screen) {
+  const words = ACTION_BADGE_WORDS[screen];
+  if (!words) return count + (count === 1 ? ' action available' : ' actions available');
+  return count + ' ' + words[count === 1 ? 0 : 1];
 }
 
 function updateActionBadges() {
@@ -20792,28 +20949,7 @@ function updateActionBadges() {
   if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
   if (!document || !document.querySelectorAll) return;
   const counts = core.computeActionBadgeCounts(normalizeActionBadgeState(Date.now()));
-  core.applyActionBadges(document, counts);
-  updateTrainingDockBadge();
-}
-
-// The Training dock button opens a pop-up, not a screen, so the shared badge
-// walker never reaches it. Count finished, unclaimed drills by hand.
-function updateTrainingDockBadge() {
-  const btn = document.querySelector('[data-quick-destination="training"]');
-  if (!btn) return;
-  let ready = 0;
-  try {
-    ready = trainingHubSessions().filter(s => s.status === 'complete').length;
-  } catch (e) {}
-  let badge = btn.querySelector('.training-ready-badge');
-  if (!ready) { if (badge) badge.remove(); return; }
-  if (!badge) {
-    badge = document.createElement('span');
-    badge.className = 'nav-action-badge training-ready-badge';
-    badge.setAttribute('aria-hidden', 'true');
-    btn.appendChild(badge);
-  }
-  badge.textContent = String(ready);
+  core.applyActionBadges(document, counts, { formatActionText: actionBadgeText });
 }
 
 let actionBadgeUpdateQueued = false;
@@ -38767,7 +38903,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-work-huts-v311-20260824';
+const BURBZ_BUILD = 'nav-action-badges-v312-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

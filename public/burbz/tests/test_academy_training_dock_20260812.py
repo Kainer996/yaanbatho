@@ -13,7 +13,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "academy-training-dock-v252-20260812"
 PREVIOUS_RELEASE_PIN = "hold-to-steer-v251-20260811"
-CURRENT_BUILD = "village-work-huts-v311-20260824"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
 
 
 def test_the_academy_title_is_just_academy():
@@ -74,10 +74,15 @@ def test_the_hub_shows_training_finished_empty_and_free_birds():
     assert "to claim</span>" in HTML
     assert "training-hub-room-state empty" in HTML
     assert "Needs training" in HTML
-    # The dock button wears its own count of finished, unclaimed drills.
-    assert "function updateTrainingDockBadge()" in HTML
-    assert "nav-action-badge training-ready-badge" in HTML
-    assert "updateTrainingDockBadge();" in HTML
+    # The dock button wears its count of finished, unclaimed drills. Since
+    # v312 that badge comes off the shared nav walker, which now reaches
+    # pop-up buttons by their destination — no hand-rolled badge of its own.
+    assert "training: trainingCount" in HTML
+    assert "trainingHubSessions().filter(session => session.status === 'complete').length" in HTML
+    assert "function updateTrainingDockBadge()" not in HTML
+    core = (ROOT / "action_badge_core.js").read_text(encoding="utf-8")
+    assert "'training'" in core
+    assert "data-quick-destination" in core
 
 
 def test_the_tutorial_pointer_tracks_the_destination_inside_the_unified_nav():

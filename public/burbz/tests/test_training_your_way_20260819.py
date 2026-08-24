@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "village-work-huts-v311-20260824"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 

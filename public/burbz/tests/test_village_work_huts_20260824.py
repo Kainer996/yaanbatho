@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERGE_CORE = ROOT / "settlement_merge_core.js"
-CURRENT_BUILD = "village-work-huts-v311-20260824"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
 # The release immediately before this one. Ava's walking-villagers work took
 # v310 on main while this branch was open, so this became v311.
 PREVIOUS_RELEASE_PIN = "walking-villagers-cottage-variety-v310-20260823"

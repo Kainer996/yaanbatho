@@ -26,7 +26,8 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "village-work-huts-v311-20260824"
+CURRENT_BUILD = "nav-action-badges-v312-20260824"
+MERGE_CORE_PIN = "village-work-huts-v311-20260824"  # last release to touch the core
 
 
 def function_source(html: str, name: str) -> str:
@@ -330,9 +331,9 @@ def test_release_is_versioned_and_the_merge_core_shipped():
     assert OWN_RELEASE_PIN in cache_line       # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     # Each core carries the pin of the release that last TOUCHED it, so a
-    # browser refetches only what actually changed. settlement_merge_core.js
-    # moved to v310 when Yaan cut the merge-star bar from 40 folk to 16.
-    for core, core_pin in (("settlement_merge_core.js", CURRENT_BUILD),
+    # browser refetches only what actually changed — the pin stays put while
+    # the head build moves past it.
+    for core, core_pin in (("settlement_merge_core.js", MERGE_CORE_PIN),
                            ("empire_realm_core.js", OWN_RELEASE_PIN)):
         pin = f"{core}?v={core_pin}"
         assert f'<script src="{pin}"></script>' in html
