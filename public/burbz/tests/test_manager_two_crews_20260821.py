@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "magpie-market-v316-20260824"
+RELEASE_PIN = "empire-village-declutter-v317-20260824"
 
 
 def function_source(name: str) -> str:
@@ -163,8 +163,9 @@ def test_the_yard_shows_its_crews_and_names_the_way_to_a_second():
     panel = panel[:panel.index("\nfunction ", 40)]
     assert "const buildSlots = villageBuildSlots(rec);" in panel
     assert "const slotsFree = villageBuildSlotsFree(rec);" in panel
-    assert "👷 CREWS ' + constructions.length + '/' + buildSlots" in panel
-    assert "📋 a Project Manager foremans a second crew" in panel
+    # v317 removed the yard heading that printed the crew tally and named the
+    # Project Manager. Both slot helpers above, and the gating below, still
+    # prove a second crew is real.
     # A free slot keeps the other build buttons live.
     assert "const busyElsewhere = !inProgress && slotsFree <= 0;" in panel
     # One progress card per crew at work.

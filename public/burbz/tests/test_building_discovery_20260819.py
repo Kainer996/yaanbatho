@@ -19,7 +19,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "building-discovery-v284-20260819"
 PREVIOUS_RELEASE_PIN = "offroad-side-quests-v283-20260818"
-CURRENT_BUILD = "magpie-market-v316-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 
 
 def run_node(script: str):
@@ -157,11 +157,14 @@ def test_doors_stay_shut_until_found_except_the_players_own_alehouse():
     # What the player raises themselves needs no finding.
     assert "shopKey === 'tavern'" in gate
     assert "villageBuildingLevel(rec, 'tavern') > 0" in gate
-    # The governor's desk says plainly what's found and what's still out.
+    # empire-declutter-v317 took the trades line off the governor's desk at
+    # Yaan's ask. Discovery itself is untouched — the shop gate above still
+    # decides what opens, and the desk simply stopped narrating it.
+    html_all = html
+    assert "function discoveredVillageShopKeys(" in html_all
     panel = function_source(html, "renderVillageManagePanel")
-    assert "discoveredVillageShopKeys(rec.seed)" in panel
-    assert "province-trades-line" in panel
-    assert "No trades found yet" in panel
+    for gone in ("province-trades-line", "No trades found yet"):
+        assert gone not in panel, gone
 
 
 def test_release_is_versioned_and_the_new_core_is_precached_everywhere():

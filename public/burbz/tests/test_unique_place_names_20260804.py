@@ -226,22 +226,14 @@ def test_cloud_imports_and_live_caches_use_the_same_place_migration():
 
 def test_mobile_ui_explicitly_names_village_town_county_and_player_title():
     html = HTML.read_text()
-    assert "MANAGE VILLAGE" in html
-    assert "HOME VILLAGE" in html
-    assert "YOUR TOWN" in html
-    assert "YOUR COUNTY" in html
+    # v317 removed the desk headline and the locator chips. Every tier is
+    # still named on screen — by the Empire nav tabs and the screen titles.
+    assert "'COUNTIES'" in html and "'TOWNS'" in html and "'VILLAGES'" in html
     assert "YOUR TITLE" in html
     assert "· VILLAGE" in html
     assert "Village centre of " in html
     assert "Village district of " in html
 
-
-def test_mobile_hierarchy_chips_wrap_long_generated_names_instead_of_hiding_them():
-    html = HTML.read_text()
-    css = html[html.index(".empire-locator-value"):html.index(".empire-locator-chip.is-empty")]
-    assert "white-space:normal" in css
-    assert "overflow-wrap:anywhere" in css
-    assert "text-overflow:ellipsis" not in css
 
 
 def test_map_labels_put_the_place_type_before_any_clipped_name():
