@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "honest-need-gauges-v296-20260820"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -51,6 +51,7 @@ def snapshot_harness(probe: str) -> str:
             "villageStoreCapacity",
             "villageProvisionRates",
             "villageWorkforce",
+            "villageCrewShare",
             "villageProductionSnapshot",
             "villageBuildingLevel",
             "mergeResourceTotals",
@@ -93,7 +94,7 @@ console.log(JSON.stringify({
     # Shelter reads the real cabin: 3 of 3 sheltered under 6 roofs.
     assert out["shelter"]["gauge"] == 1 and out["shelter"]["servedGauge"] == 3
     # Happiness still counts the meals (3 of 4 needs met; joy is 0).
-    assert out["happiness"] == 0.75
+    assert round(out["happiness"], 4) == 0.7059  # v310: joy weighs 1.25, so no tavern means no 75%
 
 
 def test_a_staffed_well_and_farm_fill_the_gauges_for_real():
@@ -127,7 +128,7 @@ def test_both_desks_draw_the_gauge_not_the_meal():
     assert "supplyServed" in town_snap and "supplySat" in town_snap
     # Happiness and the shortage warning still run on the meal truth.
     snap = function_source(html, "villageEconomySnapshot")
-    assert "const happiness = needs.reduce((sum, n) => sum + n.sat, 0) / needs.length;" in snap
+    assert "needs.reduce((sum, n) => sum + n.sat * (n.weight || 1), 0) / needWeight;" in snap
     assert "n.sat < 1" in village_panel
 
 

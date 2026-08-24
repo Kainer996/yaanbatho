@@ -29,7 +29,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
 
 

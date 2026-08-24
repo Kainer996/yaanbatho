@@ -128,7 +128,9 @@ def test_current_document_and_changed_runtimes_remain_installation_requirements(
     required = sw.split("const BURBZ_INSTALL_REQUIRED = [", 1)[1].split("];", 1)[0]
     assert "'./index.html'" in required
     assert "'./empire_realm_core.js?v=merge-when-ready-v290-20260820'" in required
-    assert "'./settlement_merge_core.js?v=merge-when-ready-v290-20260820'" in required
+    # settlement_merge_core.js moved to the v310 pin when the merge-star bar
+    # dropped from 40 folk to 16 — it must still be an install requirement.
+    assert "'./settlement_merge_core.js?v=village-work-huts-v311-20260824'" in required
     assert "'./town_strategy_core.js?v=town-strategy-v273-20260816'" in required
     validation = sw.split("function cacheHasCompleteFallback", 1)[1].split("self.addEventListener('install'", 1)[0]
     assert "Promise.all(BURBZ_CORE.map(asset" in validation

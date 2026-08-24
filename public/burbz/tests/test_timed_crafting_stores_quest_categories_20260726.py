@@ -215,7 +215,7 @@ def test_farms_lumber_camps_quarries_and_markets_all_produce_goods():
 
 def test_collecting_taxes_also_banks_what_the_provinces_produced():
     ready = function_source("empireTributeReady")
-    assert "snap.production.materials" in ready and "snap.production.larder" in ready
+    assert "mergeResourceTotals(materials, paid.materials, 1)" in ready and "mergeResourceTotals(larder, paid.larder, 1)" in ready
     collect = function_source("collectEmpireTribute")
     assert "due.materials" in collect and "due.larder" in collect
     assert "addLarderIngredient(id, qty)" in collect

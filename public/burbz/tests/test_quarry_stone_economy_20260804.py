@@ -33,11 +33,11 @@ def economy_harness(driver: str) -> str:
             "villageBuildingLevel",
             "villageBuildingTier",
             "villageWorkforce",
+            "villageCrewShare",
             "villageProductionSnapshot",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
             "settlementAllowsBuilding",
-            "settlementAllowsStep",
             "villageBuildDurationMs",
             "villageConstructions",
             "villageConstructionOf",
@@ -220,8 +220,8 @@ def test_stone_flows_through_tribute_collection_ledger_and_summary():
     has_any = function_source(html, "tributeHasAnything")
     summary = function_source(html, "empireResourceSummary")
     collect = function_source(html, "collectEmpireTribute")
-    assert "stone += periods * snap.production.stone" in ready
-    assert "return { coins, branches, stone, materials, larder" in ready
+    assert "coins += paid.coins; branches += paid.branches; stone += paid.stone" in ready
+    assert "return { coins: Math.floor(coins), branches: Math.floor(branches), stone: Math.floor(stone), materials, larder" in ready
     assert "stone: 0" in ledger and "ledger.stone += snap.production.stone" in ledger
     assert "due.stone > 0" in has_any
     assert "bundle.stone > 0" in summary
@@ -240,12 +240,12 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     assert "const stone = playerStone()" in manage
     assert "stone < cost.stone" in manage
     assert "cost.stone + ' stone ·" in manage
-    assert "its first cut pays for the first Grain Farm and Lumber Camp" in html
-    assert "the stone rebuild of your homes — spend stone alongside coins and timber. Villages never do." in html
+    assert "the first Quarry costs no stone at all" in html
+    assert "Everything else a village raises stays coins and timber." in html
     assert "· ' + stone + '" in manage
     ledger_output = function_source(html, "villageBuildingOutputForLedger")
     realm_output = function_source(html, "empireBuildingOutputForLedger")
-    assert "out.stone = Math.round((building.stonePerLevel || 0) * level * steward)" in ledger_output
+    assert "out.stone = Math.round((building.stonePerLevel || 0) * level * steward * share)" in ledger_output
     assert "townApplySeatPolicyBundle(seat, raw)" in realm_output
     empire = function_source(html, "renderEmpirePanel")
     realm_ledger = function_source(html, "empireLedger")

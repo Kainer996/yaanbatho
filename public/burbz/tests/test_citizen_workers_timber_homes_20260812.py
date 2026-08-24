@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -42,6 +42,7 @@ def economy_harness(driver: str) -> str:
             "villageBuildingTier",
             "villageNeedCapacity",
             "villageWorkforce",
+            "villageCrewShare",
             "villageProductionSnapshot",
             "empireHasQuarryInvestment",
             "villageBuildingCost",
@@ -102,8 +103,7 @@ console.log(JSON.stringify({
   tier1: villageBuildingTier(cabin, 1),
   tier2: villageBuildingTier(cabin, 2),
   tier3: villageBuildingTier(cabin, 3),
-  maxLevel: cabin.maxLevel,
-  townFromLevel: cabin.townFromLevel
+  maxLevel: cabin.maxLevel
 }));
 """)
     # The first home asks for no stone at all, so the Quarry no longer has to
@@ -111,9 +111,9 @@ console.log(JSON.stringify({
     assert out["first"] == {"coins": 25, "branches": 14, "stone": 0}
     # ...and neither does the step that doubles it: a village pays in timber.
     assert out["longhouse"] == {"coins": 45, "branches": 20, "stone": 0}
-    # Only the stone rebuild spends stone, and only a Town can start it.
+    # Only the stone rebuild spends stone; v310 lets the village mine it.
     assert out["stone"]["stone"] > 0
-    assert out["maxLevel"] == 3 and out["townFromLevel"] == 3
+    assert out["maxLevel"] == 3
     assert out["tier1"]["name"] == "Timber Cabin"
     assert out["tier2"]["name"] == "Timber Longhouse"
     assert out["tier3"]["name"] == "Stone Cottage"
@@ -155,7 +155,7 @@ console.log(JSON.stringify({ deserted, short, full }));
 """)
     # Nobody home: every yard is idle, nothing ships — not even quarry stone.
     assert out["deserted"]["production"] == {"stone": 0, "materials": {}, "larder": {}}
-    assert out["deserted"]["crew"] == {"available": 0, "required": 3, "working": 0, "staffed": {}}
+    assert out["deserted"]["crew"] == {"available": 0, "required": 3, "working": 0, "staffed": {}, "assigned": {}}
     # Two villagers: the farm (food first) and lumber camp staff, the quarry waits.
     assert out["short"]["crew"]["staffed"] == {"farm": True, "lumber": True}
     assert out["short"]["production"]["stone"] == 0
@@ -172,7 +172,7 @@ def test_flat_income_and_tax_boosts_also_wait_for_a_crew():
     assert "const crew = villageWorkforce(rec);" in snap
     assert "if (b.workers && !crew.staffed[b.id]) return;" in snap
     ledger_output = function_source(html, "villageBuildingOutputForLedger")
-    assert "building.workers && !villageWorkforce(rec).staffed[building.id]" in ledger_output
+    assert "building.workers && !crew.staffed[building.id]" in ledger_output
 
 
 def test_finished_homes_still_move_families_in_and_tier_names_reach_the_notices():
@@ -198,7 +198,12 @@ def test_the_copy_teaches_homes_first_and_villager_crews():
     assert "settlementWardNames" not in claim  # merging is the player's act now
     assert "Villagers work the yards.</b>" in html  # empire help drawer
     assert "yards crewed" in html  # governor's desk headline
-    assert "villager works here" in html and "needs ' + b.workers + ' villager" in html
+    # v310: the work huts hold three hands, so crew lines count and pluralise
+    # through villagerCount() instead of hardcoding the singular.
+    assert "function villagerCount(n)" in html
+    assert "villagerCount(posted) + ' at work" in html
+    assert "posted + ' of ' + b.workers + ' posted" in html
+    assert "needs ' + villagerCount(b.workers) + ' to run" in html
 
 
 def test_the_settler_home_rises_in_the_3d_village():

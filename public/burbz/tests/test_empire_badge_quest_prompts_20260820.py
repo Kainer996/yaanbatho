@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 
 
 def run_node(source: str):
@@ -85,8 +85,8 @@ def test_bottom_nav_has_an_empire_tab_the_badge_walker_reaches():
 def test_collectibles_counter_covers_every_strongbox():
     src = function_source(html_text(), "empireCollectiblesWaiting")
     assert "townHasAccruedTribute(settlement, now)" in src  # merged settlements
-    assert "empireVillageTributePeriods(v, now) > 0" in src  # lone villages
-    assert "empireTradeRoutePeriods(rec, now) > 0" in src  # caravan routes
+    assert "Math.floor(empireVillageTributePeriods(v, now)) > 0" in src  # lone villages, WHOLE cycles only
+    assert "Math.floor(empireTradeRoutePeriods(rec, now)) > 0" in src  # caravans, WHOLE cycles
 
 
 def test_badge_heartbeat_carries_the_empire_count():
@@ -185,7 +185,7 @@ def test_every_coin_and_timber_build_gate_offers_the_prompt():
     # Stone has no errand — quarries make it — so that gate keeps its toast
     # (v299 reworded it: quarries are town works now).
     build = function_source(html, "empireBuildStructure")
-    assert "Quarries are town works" in build
+    assert "Miners" in build and "Quarry once your villages merge" in build
 
 
 def test_short_build_buttons_stay_tappable():

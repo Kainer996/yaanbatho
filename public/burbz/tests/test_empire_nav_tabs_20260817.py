@@ -27,7 +27,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 
 
 def ledger(html: str) -> str:
@@ -85,7 +85,7 @@ def test_each_tier_has_a_body_even_when_empty():
     body = ledger(HTML.read_text(encoding="utf-8"))
     # Towns tab: rows when settlements exist, a forming hint otherwise.
     assert "let townsBody;" in body
-    assert "🏘️ No towns yet. Grow a village to 40 folk" in body  # v290: merge-when-ready
+    assert "🏘️ No towns yet. Grow a village to 16 folk" in body  # v290: merge-when-ready
     # Counties tab: the realm desk, or the next-rung explainer.
     assert "let countiesBody = '';" in body
     assert "🕊️ Your realm starts here." in body

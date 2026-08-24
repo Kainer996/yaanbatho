@@ -19,7 +19,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 
 
 def empire_logic(html: str) -> str:
@@ -41,7 +41,7 @@ def ledger(html: str) -> str:
 def test_only_standalone_villages_get_rows():
     body = ledger(HTML.read_text(encoding="utf-8"))
     assert "const villages = empireStandaloneVillages(sourceVillages)" in body
-    assert "'Grow each village to its ⭐ merge star: 40 folk, 75% happy'" in body  # v290 tab caption
+    assert "'Grow each village to its ⭐ merge star: 16 folk, 75% happy'" in body  # v290 tab caption
     assert "'YOUR VILLAGES'" not in body
 
 

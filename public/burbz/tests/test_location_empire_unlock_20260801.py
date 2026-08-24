@@ -302,7 +302,7 @@ def test_region_collection_resets_only_that_regions_clocks():
     # villages remain a one-record holding.
     assert "empireRegionHoldings(region).forEach" in collect
     assert "holding.kind === 'settlement' ? townMemberRecords(holding.settlement) : [holding.village]" in collect
-    assert "records.forEach(v =>" in collect and "v.lastTributeAt = now" in collect
+    assert "records.forEach(v =>" in collect and "empireAdvanceTributeClock(v, periods, now)" in collect
     assert "empireVillages().forEach" not in collect  # never the whole realm
 
 

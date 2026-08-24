@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "timber-village-builds-v309-20260823"
+CURRENT_BUILD = "village-work-huts-v311-20260824"
 
 
 def html_text() -> str:
@@ -132,7 +132,7 @@ console.log(JSON.stringify({{scheduled:scheduled.length, cleared, renders, ticki
         "scheduled": 1,
         "cleared": [77],
         "renders": 1,
-        "tickingText": "— NEXT IN 3000",
+        "tickingText": "— FULL CYCLE IN 3000",
         "timer": None,
     }
 
