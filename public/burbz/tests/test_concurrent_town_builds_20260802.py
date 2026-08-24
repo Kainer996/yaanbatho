@@ -132,7 +132,10 @@ def test_player_facing_copy_explains_loose_village_independence_and_town_slots()
     html = HTML.read_text(encoding="utf-8")
     # A still-loose village explains that its private timer does not block a
     # different loose holding.
-    assert "builders busy here — other villages can still build" in html
+    # v317 removed the Construction Yard heading that said so in words. The
+    # rule itself is on the buttons: a village with no free crew greys its own
+    # builds and leaves every other village's alone.
+    assert "const busyElsewhere = !inProgress && slotsFree <= 0;" in html
     # Once villages unite, the Town screen owns admission through explicit Hall
     # builder slots and tells the player how to unlock simultaneous projects.
     town_build = function_source(html, "townBuildNetwork")

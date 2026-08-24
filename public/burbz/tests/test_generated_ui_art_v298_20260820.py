@@ -27,7 +27,7 @@ UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 RELEASE = "generated-ui-art-v298-20260820"
 # Later releases move BURBZ_BUILD on; v298's own segment stays in the lineage.
-CURRENT_BUILD = "magpie-market-v316-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
 
 # Since the anchored dock (2026-08-20) the thirteen destinations split:

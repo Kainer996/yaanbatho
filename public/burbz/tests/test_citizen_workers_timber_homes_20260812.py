@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "magpie-market-v316-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -196,8 +196,11 @@ def test_the_copy_teaches_homes_first_and_villager_crews():
     # Since v290 a claim never merges anything — it teaches the merge star.
     assert "merge star" in claim
     assert "settlementWardNames" not in claim  # merging is the player's act now
-    assert "Villagers work the yards.</b>" in html  # empire help drawer
-    assert "yards crewed" in html  # governor's desk headline
+    # empire-declutter-v317 removed the HOW YOUR EMPIRE WORKS guide at Yaan's
+    # ask, so its wording is no longer pinned here. The mechanic below still is.
+    # empire-declutter-v317 cut the desk headline to its three readings:
+    # the crew count is still there, as 👷 crewed/worked, without the words.
+    assert "' · 👷 ' + (workedYards - idleYards) + '/' + workedYards" in html
     # v310: the work huts hold three hands, so crew lines count and pluralise
     # through villagerCount() instead of hardcoding the singular.
     assert "function villagerCount(n)" in html
