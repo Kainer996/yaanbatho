@@ -20,7 +20,7 @@ OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
 # The core itself moved again with mercy-streak-attack-preview-v287.
 CORE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 
 
 def run_node(script: str):

@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 
 
 def html_text() -> str:
@@ -29,112 +29,47 @@ def test_tap_cards_escape_content_and_both_village_hit_targets_share_them():
     assert html.count("showEmpireVillageMapCard(village);") == 2
 
 
-def test_home_village_and_town_or_city_locator_are_separate_targets():
+def test_the_strongbox_shows_what_is_banked_instead_of_a_countdown():
+    """empire-declutter-v317 retired the whole countdown.
+
+    Tribute has accrued continuously since village-work-huts-v311, so the
+    chest is never "not ready yet" — it holds whatever has built up, and the
+    player takes it whenever they like. The clock, the timer that drove it and
+    the two helpers that fed it are all gone.
+    """
     html = html_text()
+    # The clock, its timer and both helpers that fed it are gone for good.
+    for retired in ("empireCycleCountdownMs", "empireNextTributeCountdownMs",
+                    "empireTributeCountdownTimer", "ensureEmpireTributeCountdownTicker",
+                    "data-empire-tribute-countdown", "FULL CYCLE IN"):
+        assert retired not in html, retired
     render = function_slice(html, "renderEmpirePanel", "openEmpireRegion")
-    assert 'data-action="locator-home"' in render
-    assert 'data-action="locator-settlement"' in render
-    assert "frameEmpireSettlement(ev.currentTarget.dataset.settlement)" in render
-    assert "focusEmpireVillage(ev.currentTarget.dataset.seed)" in render
+    assert "empireTakingsSoFar(due)" in render
+    assert "COLLECT TAXES &amp; PRODUCE" in render
+    # The Empire chest never lectures the player about waiting. (The County
+    # Hall and the Royal Stores keep their own chests and their own wording.)
+    assert "NOTHING BANKED YET" not in render
 
 
-def test_cycle_countdown_handles_past_boundaries_and_future_device_clocks():
+def test_takings_read_zero_rather_than_blank_on_a_fresh_cycle():
+    """A just-emptied chest is worth nothing yet, and says so as a number."""
     html = html_text()
-    helper = function_slice(html, "empireCycleCountdownMs", "empireNextTributeCountdownMs")
-    interval = 8 * 60 * 60 * 1000
-    now = 10 * interval
-    script = (
-        f"const EMPIRE_TRIBUTE_INTERVAL_MS={interval};\n"
-        f"{helper}\n"
-        f"console.log(JSON.stringify(["
-        f"empireCycleCountdownMs({now},{now}),"
-        f"empireCycleCountdownMs({now - interval - 30_000},{now}),"
-        f"empireCycleCountdownMs({now + 3 * interval},{now})]));"
-    )
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
-    assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == [interval, interval - 30_000, 4 * interval]
-
-
-def test_strongbox_uses_the_earliest_village_or_caravan_clock():
-    html = html_text()
-    start = html.index("function empireCycleCountdownMs(")
-    end = html.index("\n// Keep the disabled strongbox button honest", start)
-    countdown_functions = html[start:end]
-    interval = 8 * 60 * 60 * 1000
-    now = 10 * interval
+    helper = function_slice(html, "empireTakingsSoFar", "tributeHasAnything")
+    summary = function_slice(html, "empireResourceSummary", "notePaidTribute")
     script = f"""
-const EMPIRE_TRIBUTE_INTERVAL_MS = {interval};
-let villages = [{{lastTributeAt:{now - 2 * 60 * 60 * 1000}}}];
-let routes = [{{rec:{{lastTradeAt:{now - 7 * 60 * 60 * 1000}}}}}];
-function empireVillages() {{ return villages; }}
-function empireTradeRouteRecords() {{ return routes; }}
-function realmCore() {{ return {{}}; }}
-{countdown_functions}
-const earliest = empireNextTributeCountdownMs({now});
-villages = [{{lastTributeAt:{now + 9 * 60 * 60 * 1000}}}];
-routes = [];
-const future = empireNextTributeCountdownMs({now});
-console.log(JSON.stringify([earliest, future]));
+function lootCore() {{ throw new Error('no core'); }}
+function kitchenIngredientById() {{ return null; }}
+{summary}
+{helper}
+console.log(JSON.stringify([
+  empireTakingsSoFar({{coins:0, branches:0, stone:0, materials:{{}}, larder:{{}}}}),
+  empireTakingsSoFar({{coins:8, branches:2, stone:0, materials:{{}}, larder:{{}}}}),
+  empireTakingsSoFar(null)
+]));
 """
     result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == [60 * 60 * 1000, 17 * 60 * 60 * 1000]
-
-
-def test_strongbox_countdown_includes_caravans_and_ticks_to_a_rerender():
-    html = html_text()
-    countdown_start = html.index("function empireNextTributeCountdownMs(")
-    countdown_end = html.index("\n// ============================================================================\n// REALMS & TRADE", countdown_start)
-    countdown = html[countdown_start:countdown_end]
-    assert "empireTradeRouteRecords().forEach" in countdown
-    assert "let empireTributeCountdownTimer = null" in countdown
-    assert "setInterval(() =>" in countdown
-    assert "renderEmpirePanel();" in countdown
-    render = function_slice(html, "renderEmpirePanel", "openEmpireRegion")
-    assert "data-empire-tribute-countdown" in render
-    assert "data-empire-tribute-at=" in render
-    assert "ensureEmpireTributeCountdownTicker()" in render
-    assert "stopEmpireTributeCountdownTicker()" in render
-
-
-def test_idle_countdown_starts_one_timer_and_rerenders_once_when_due():
-    html = html_text()
-    start = html.index("let empireTributeCountdownTimer = null")
-    end = html.index("\n// ============================================================================\n// REALMS & TRADE", start)
-    ticker = html[start:end]
-    script = f"""
-let scheduled = [];
-let cleared = [];
-let now = 1000;
-let renders = 0;
-let currentScreen = 'village';
-const label = {{dataset:{{empireTributeAt:'5000'}}, textContent:''}};
-const document = {{querySelector:() => label}};
-const Date = {{now:() => now}};
-function setInterval(fn) {{ scheduled.push(fn); return 77; }}
-function clearInterval(id) {{ cleared.push(id); }}
-function formatBuildCountdown(ms) {{ return String(ms); }}
-function renderEmpirePanel() {{ renders += 1; }}
-{ticker}
-ensureEmpireTributeCountdownTicker();
-ensureEmpireTributeCountdownTicker();
-now = 2000;
-scheduled[0]();
-const tickingText = label.textContent;
-now = 5000;
-scheduled[0]();
-console.log(JSON.stringify({{scheduled:scheduled.length, cleared, renders, tickingText, timer:empireTributeCountdownTimer}}));
-"""
-    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, encoding="utf-8", capture_output=True)
-    assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout) == {
-        "scheduled": 1,
-        "cleared": [77],
-        "renders": 1,
-        "tickingText": "— FULL CYCLE IN 3000",
-        "timer": None,
-    }
+    assert json.loads(result.stdout) == ["+0 \U0001fa99", "+8 \U0001fa99 +2 \U0001fab5", "+0 \U0001fa99"]
 
 
 def test_programmatic_map_focus_dismisses_stale_cards_and_the_key():

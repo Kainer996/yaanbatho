@@ -21,7 +21,9 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(script: str):
@@ -143,6 +145,6 @@ def test_release_is_versioned_and_the_new_core_is_precached():
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert f'<script src="touch_steer_core.js?v={OWN_RELEASE_PIN}"></script>' in HTML
     assert f"'./touch_steer_core.js?v={OWN_RELEASE_PIN}'" in SW
-    assert f'<script src="academy_3d_core.js?v={OWN_RELEASE_PIN}"></script>' in HTML
-    assert f"'./academy_3d_core.js?v={OWN_RELEASE_PIN}'" in SW
+    assert f'<script src="academy_3d_core.js?v={MAGPIE_CORE_PIN}"></script>' in HTML
+    assert f"'./academy_3d_core.js?v={MAGPIE_CORE_PIN}'" in SW
     assert '"touch_steer_core.js"' in UPDATER

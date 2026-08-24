@@ -190,6 +190,7 @@ Intelligence is coveted in the Kingdom, but **Charm (CHA)** is the fundamental s
 - **Charm is a core bird stat.** Famously confiding, winning species (the robin above all, the wren close behind) rate highest; shy skulkers and wary raptors rate lowest. Charm shows on bird cards beside HP, ATK and MAG.
 - **Diplomacy stays off the battlefield.** Parley — the old in-battle charm move — retired in v287: it confused players and rarely worked. In a fight, every turn is a fighting choice. Charm does its work on quests and at the bar instead.
 - **The Crowbar** — the Academy's bird bar — is the home of diplomacy. It is the room where Charm grows: regulars come out of their shells over elderberry cordial, and birds trained there earn more on diplomacy quests.
+- **The Magpie Market** — the Academy's trading post — is the other place charm pays in coin. Magpies drive a hard bargain, so the bird posted as Market Trader haggles: the more charming it is, the less every material costs to buy.
 - **Diplomacy quests** (marked 🕊️, like the Diplomacy Envoy) pay out on charm: charming birds talk squirrel markets, border flocks and passers-by into better deals, bonus coins and gifts.
 
 ## The Raven, and the law of weight and wit

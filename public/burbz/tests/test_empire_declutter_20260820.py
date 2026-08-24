@@ -36,31 +36,29 @@ def test_the_ledger_lives_in_a_tiny_button_beside_the_title():
     assert "aria-expanded" in wiring
 
 
-def test_locator_and_guide_are_quiet_popdowns_at_the_very_bottom():
+def test_the_screen_ends_at_the_tax_chest():
+    """empire-declutter-v317: FIND YOURSELF and HOW YOUR EMPIRE WORKS are gone.
+
+    v300 folded them into two quiet pop-downs at the very bottom. Yaan's ask
+    (2026-08-24) was to take them off the screen entirely, so the Empire panel
+    now ends at the tax chest and the footer is an empty string.
+    """
     block = panel_block()
-    # Footer last, after the tax chest; both drawers share one accordion name.
+    assert "const footerHtml = '';" in HTML
     assert block.index("empire-tribute-btn") < block.index("footerHtml")
-    footer = HTML[HTML.index("const footerHtml"):]
-    footer = footer[:footer.index("panel.innerHTML")]
-    assert "'locator', false, '📍', 'FIND YOURSELF'" in footer
-    assert footer.count('name="empire-footer"') == 2
-    assert "helpHtml" in footer
-    # The chips themselves survive inside the drawer, taps intact.
-    assert 'data-action="locator-me"' in HTML
-    assert 'class="empire-drawer is-footer"' in footer
-    # And the panel no longer carries the inline ledger block.
+    # Nothing builds either drawer any more. (The words survive only in the
+    # comment that records why they went, so this checks the code, not prose.)
+    for gone in ("'FIND YOURSELF'", "'HOW YOUR EMPIRE WORKS'", "locatorChipsHtml",
+                 'data-action="locator-me"', "empire-help-row", 'name="empire-footer"'):
+        assert gone not in HTML, gone
+    # And the panel still does not carry the inline ledger block v300 moved out.
     assert "ROYAL LEDGER" not in block
     assert "empire-stats-row" not in block
 
 
-def test_the_village_subtitle_is_one_line_not_a_lecture():
-    assert "Govern it below" not in HTML
-    assert "sub.textContent = 'Tap a building to step inside.'" in HTML
-    # The unliberated and in-ruins teachings survive untouched.
-    assert "The darkness left " in HTML
-    assert "Your village, still in ruins. " in HTML
-
-
 def test_the_footer_and_ledger_styles_exist():
-    for selector in (".empire-title-row", ".empire-ledger-btn", ".empire-ledger-pop", ".empire-footer", ".empire-drawer.is-footer"):
+    for selector in (".empire-title-row", ".empire-ledger-btn", ".empire-ledger-pop"):
         assert selector + " {" in HTML or selector + "[open]" in HTML, selector
+    # v317 removed the footer, so its rules must not linger as dead CSS.
+    for gone in (".empire-footer", ".empire-drawer.is-footer", ".empire-locator"):
+        assert gone not in HTML, gone

@@ -368,6 +368,38 @@
   }
 
   // ---------------------------------------------------------------------------
+  // The Magpie Market — buying materials back (v314)
+  // ---------------------------------------------------------------------------
+  // The Academy's trading post buys and sells the same shelf, and the gap
+  // between the two prices is the traders' cut. The markup widens with rarity
+  // on purpose: everyday timber and reed are pocket change, but a Phoenix
+  // Ember costs five times what a magpie will pay for one. Quests stay the
+  // best way to get the precious stuff — the market is the shortcut you pay
+  // for, never the cheap route.
+  const BUY_MARKUP = { common:2.5, uncommon:2.5, rare:3, epic:4, legendary:5 };
+  // Coins per unit to buy one material. Anything the market will not pay for
+  // it will not sell either, so an unsellable kind prices at 0 — unbuyable.
+  function buyValue(kind, rarity) {
+    const base = sellValue(kind, rarity);
+    if (!base) return 0;
+    const markup = BUY_MARKUP[String(rarity || '')] || BUY_MARKUP.common;
+    return Math.ceil(base * markup);
+  }
+  // The quote a BUY button shows: {each, qty, total, afford}. `afford` is how
+  // many the given purse actually covers, so a stale button can never overspend
+  // and a discount (a well-posted Market Trader) is applied to `each` before
+  // the sums — never after, which would let rounding leak a free unit.
+  function buyQuote(kind, rarity, coins, qty, discount) {
+    const listed = buyValue(kind, rarity);
+    const factor = Math.max(0.5, Math.min(1, Number(discount) || 1));
+    const each = listed ? Math.max(1, Math.round(listed * factor)) : 0;
+    const purse = Math.max(0, Math.floor(Number(coins) || 0));
+    const afford = each ? Math.floor(purse / each) : 0;
+    const count = Math.max(0, Math.min(afford, Math.floor(Number(qty) || 0)));
+    return { each, qty: count, total: each * count, afford };
+  }
+
+  // ---------------------------------------------------------------------------
   // Crafting — the Fletcher's Forge
   // ---------------------------------------------------------------------------
   // Every gear item is craftable from materials + coins; costs scale by rarity.
@@ -476,6 +508,7 @@
     equipmentBonuses, gearPowerScore, spellSkillFor, potionEffectFor,
     RARITY_WEIGHTS, PITY_RARE_CAP, pickRarity, rollGear, rollMaterials, rollLoot,
     SELL_PRICES, sellValue, sellQuote,
+    BUY_MARKUP, buyValue, buyQuote,
     CRAFT_COST_BY_RARITY, KIND_MATERIALS, recipeFor, allRecipes,
     FORGE_MAX_LEVEL, FORGE_LEVELS, normalizeForgeLevel, forgeLevelInfo,
     FORGE_LEVEL_BY_RARITY, minForgeLevelForRarity, canForgeAtLevel,

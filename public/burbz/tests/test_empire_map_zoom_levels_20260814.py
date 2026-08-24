@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 PREVIOUS_RELEASE_PIN = "player-built-village-v267-20260814"
 
 LIEGE, COUNTY, SETTLEMENT, VILLAGE = 0, 1, 2, 3

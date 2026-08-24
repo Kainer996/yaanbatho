@@ -24,7 +24,9 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -265,7 +267,11 @@ def test_the_steward_cards_tell_the_player_about_the_building_sites():
     html = HTML.read_text(encoding="utf-8")
     assert "runs the building sites and the ledger" in html
     assert "Vacant — appoint a bird: builds go faster and cheaper, taxes rise" in html
-    assert "Every build rises faster and costs a little less" in html
+    # project-manager-desk-v315: the card behind that line is a picker now, not
+    # a pamphlet — the prose was Yaan's to cut. The drawer line above still says
+    # what the post does, and the town desk reads bare like every village desk.
+    assert "const bare = scope === 'village';" in html
+    assert "Every build rises faster and costs a little less" not in html
 
 
 # ---------------------------------------------------------------------------
@@ -280,5 +286,5 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     # The edited roles core ships under the new tag everywhere it is loaded.
-    assert f"'./bird_roles_core.js?v={RELEASE}'" in sw
-    assert f'src="bird_roles_core.js?v={RELEASE}"' in html
+    assert f"'./bird_roles_core.js?v={MAGPIE_CORE_PIN}'" in sw
+    assert f'src="bird_roles_core.js?v={MAGPIE_CORE_PIN}"' in html

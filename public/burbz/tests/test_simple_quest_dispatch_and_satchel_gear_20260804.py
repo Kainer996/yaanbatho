@@ -13,6 +13,10 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+
+
 def _node(script: str):
     result = subprocess.run(
         ["node", "-e", script], cwd=ROOT, text=True, capture_output=True, timeout=60
@@ -139,9 +143,9 @@ def test_satchel_release_assets_are_versioned_for_installed_pwa():
     size_version = "raven-weight-and-wit-v255-20260812"
     loot_version = "stores-market-project-manager-v295-20260820"
     assert f"bird_size_core.js?v={size_version}" in HTML
-    assert f"loot_crafting_core.js?v={loot_version}" in HTML
+    assert f"loot_crafting_core.js?v={MAGPIE_CORE_PIN}" in HTML
     assert f"'./bird_size_core.js?v={size_version}'" in SW
-    assert f"'./loot_crafting_core.js?v={loot_version}'" in SW
+    assert f"'./loot_crafting_core.js?v={MAGPIE_CORE_PIN}'" in SW
     # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on,
     # but this release's own segment stays in the cache lineage forever.
     assert size_version in next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))

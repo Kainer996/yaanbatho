@@ -31,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
@@ -236,7 +236,8 @@ def test_the_3d_village_reads_the_three_steps():
 
 def test_the_copy_stops_promising_stone_to_villages():
     html = HTML.read_text(encoding="utf-8")
-    assert "Almost every village build is bought with coins and timber alone" in html
+    # empire-declutter-v317 removed the HOW YOUR EMPIRE WORKS guide at Yaan's
+    # ask, so its wording is no longer pinned here. The mechanic below still is.
     # The quarry's first cut bankrolls town yards, not a village build.
     assert "enough for the first Grain Farm and Lumber Camp" in html
     assert "enough stone for Cottage Row" not in html

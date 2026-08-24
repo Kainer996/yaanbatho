@@ -48,7 +48,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 
 OWN_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 PREVIOUS_RELEASE_PIN = "nav-action-badges-v312-20260824"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 
 STAT_ROW_CARDS = {
     "createBirdCardHTML": "the companion card",
@@ -310,11 +310,16 @@ def test_release_is_versioned():
 
 
 def test_no_core_pin_moved_because_no_core_changed():
-    """This release is index.html only — every `?v=` stays where it was."""
+    """v313 was index.html only — every `?v=` stayed where it was.
+
+    The check pins on this release's OWN name, not on the head of the line:
+    later releases do change cores, and their `?v=` bumps are none of v313's
+    business. What must stay true is that no core was ever pinned to v313.
+    """
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
     for pinned in (f"action_badge_core.js?v={PREVIOUS_RELEASE_PIN}",
                    "bird_size_core.js?v="):
         assert pinned in html
-    assert f"?v={CURRENT_BUILD}" not in html
-    assert f"?v={CURRENT_BUILD}" not in sw
+    assert f"?v={OWN_RELEASE_PIN}" not in html
+    assert f"?v={OWN_RELEASE_PIN}" not in sw

@@ -24,7 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 
 
 def _node(script: str):

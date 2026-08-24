@@ -146,8 +146,8 @@ def test_every_academy_room_has_a_place_on_the_tree():
         """
     )
     # Every buildable Academy room (all but the ground-level gardens) is placed.
-    expected = ["crowbar", "dorm", "hospital", "kitchen", "library", "nursery",
-                "observatory", "quest_roost", "tavern", "training", "workshop"]
+    expected = ["crowbar", "dorm", "hospital", "kitchen", "library", "magpie_market",
+                "nursery", "observatory", "quest_roost", "tavern", "training", "workshop"]
     assert out["anchors"] == expected
     assert out["styles"] == expected, "every anchored room needs a modelled building"
     assert out["finite"] and out["labelled"]

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
@@ -255,8 +255,10 @@ def test_the_desk_shows_granary_cistern_and_the_cart():
     assert "province-need-sub" in panel
     assert "'granary'" in panel and "'cistern'" in panel
     assert "villagers go hungry" in panel and "villagers go thirsty" in panel
-    assert "empireSendSupplyCart(" in panel
-    assert "SEND A SUPPLY CART" in panel
+    # v317 took the SEND A SUPPLY CART button off the desk at Yaan's ask. The
+    # relief mechanic itself is untouched and still reachable.
+    assert "function empireSendSupplyCart(" in html
+    assert "SEND A SUPPLY CART" not in panel
     assert "the stores run short</b>" in panel
     # v296: the gauge reads what the BUILT farms and wells supply (relief
     # stores keep folk fed, but they never fill the bar); the number beside
@@ -265,7 +267,8 @@ def test_the_desk_shows_granary_cistern_and_the_cart():
     assert "villagers live off the" in panel
     # And the styles for the new lines exist.
     assert ".province-need-sub" in html
-    assert ".province-cart-btn" in html
+    # v317 removed the cart button, so its rule must not linger as dead CSS.
+    assert ".province-cart-btn" not in html
 
 
 def test_the_hunger_notice_navigates_to_its_village():
@@ -277,7 +280,8 @@ def test_the_hunger_notice_navigates_to_its_village():
 
 def test_the_copy_teaches_the_provisions_loop():
     html = HTML.read_text(encoding="utf-8")
-    assert "Villages live off what they grow.</b>" in html  # empire help drawer
+    # empire-declutter-v317 removed the HOW YOUR EMPIRE WORKS guide at Yaan's
+    # ask, so its wording is no longer pinned here. The mechanic below still is.
     assert "your caravan leaves relief supplies" in html    # liberation toast
     assert "function villageMakeCrates(" in html
     assert "b.id === 'storehouse'" in html                  # the shed rises in 3D

@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "empire-village-declutter-v317-20260824"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
@@ -202,8 +202,8 @@ def test_the_royal_ledger_lists_the_pyramid_above_the_counties():
     assert "Your counties — tap one to run it from its County Hall" in logic
     # The plain-words help teaches the nested ladder, not the old size ladder.
     assert "Merge 3 starred Towns into a County" in logic  # v290 help copy
-    assert "Titles nest, Crusader-Kings style:" in logic
-    assert "Count → Duke → Monarch → Emperor" in logic
+    # empire-declutter-v317 removed the HOW YOUR EMPIRE WORKS guide at Yaan's
+    # ask, so its wording is no longer pinned here. The mechanic below still is.
     assert "a County, then a Duchy, then a Kingdom as it grows" not in html
     # Styling for the new rows exists.
     assert ".realm-liege-row.is-duchy" in html

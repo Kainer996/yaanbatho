@@ -240,9 +240,9 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     assert "const stone = playerStone()" in manage
     assert "stone < cost.stone" in manage
     assert "cost.stone + ' stone ·" in manage
-    assert "the first Quarry costs no stone at all" in html
-    assert "Everything else a village raises stays coins and timber." in html
-    assert "· ' + stone + '" in manage
+    # empire-declutter-v317 removed the guide and the Construction Yard's purse
+    # heading, which is where these two also read the stone tally. The build
+    # buttons and the shortage line above still prove stone reaches this panel.
     ledger_output = function_source(html, "villageBuildingOutputForLedger")
     realm_output = function_source(html, "empireBuildingOutputForLedger")
     assert "out.stone = Math.round((building.stonePerLevel || 0) * level * steward * share)" in ledger_output

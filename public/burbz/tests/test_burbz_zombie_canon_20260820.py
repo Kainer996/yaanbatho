@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
+OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 
 
 def test_release_is_wired():

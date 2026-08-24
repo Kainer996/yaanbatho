@@ -244,6 +244,32 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .src-sell-btn { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.04em; padding:4px 8px; border-radius:8px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(180deg,rgba(64,46,16,.85),rgba(26,17,5,.9)); color:#ffe9a8; cursor:pointer; }
 .src-sell-btn.all { border-color:rgba(240,199,103,.25); color:#d9c07f; }
 .src-sell-btn:active { transform:scale(.96); }
+/* The Magpie Market counter: the Stores' shelf card with a deal row on it. */
+.magpie-wallet { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:7px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:var(--text2); }
+.magpie-wallet b { color:var(--legendary); font-size:13px; }
+.magpie-haggle { color:var(--uncommon); }
+.magpie-haggle.vacant { color:var(--text3); }
+.magpie-note { font-size:9.5px; line-height:1.4; color:var(--text3); margin-bottom:9px; }
+.magpie-row { display:flex; align-items:flex-start; gap:9px; padding:9px; border-radius:12px; background:rgba(0,0,0,.26); border:1px solid rgba(255,255,255,.07); color:var(--text); }
+.magpie-row[data-rarity="uncommon"] { border-color:rgba(120,166,109,.28); }
+.magpie-row[data-rarity="rare"] { border-color:rgba(201,201,201,.30); }
+.magpie-row[data-rarity="epic"] { border-color:rgba(180,138,214,.34); }
+.magpie-row[data-rarity="legendary"] { border-color:rgba(240,199,103,.42); }
+.magpie-row .src-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:20px; border-radius:10px; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.06); }
+.magpie-row .src-main { flex:1; min-width:0; }
+.magpie-row .src-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; line-height:1.25; }
+.magpie-row .src-copy { font-size:9.5px; color:var(--text3); line-height:1.35; margin-top:1px; }
+.magpie-row .src-count { flex:none; font-family:'Russo One',sans-serif; font-size:18px; color:var(--legendary); min-width:26px; text-align:right; }
+.magpie-rarity { margin-left:6px; font-size:8.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text3); }
+.magpie-row[data-rarity="uncommon"] .magpie-rarity { color:var(--uncommon); }
+.magpie-row[data-rarity="rare"] .magpie-rarity { color:var(--rare); }
+.magpie-row[data-rarity="epic"] .magpie-rarity { color:var(--epic); }
+.magpie-row[data-rarity="legendary"] .magpie-rarity { color:var(--legendary); }
+.magpie-deals { display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
+.magpie-btn { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.04em; padding:4px 8px; border-radius:8px; border:1px solid rgba(120,166,109,.45); background:linear-gradient(180deg,rgba(34,58,30,.85),rgba(9,18,7,.9)); color:#cfe9c4; cursor:pointer; }
+.magpie-btn:active { transform:scale(.96); }
+.magpie-btn[disabled] { opacity:.38; filter:grayscale(.4); cursor:default; }
+.src-sell-btn[disabled] { opacity:.38; filter:grayscale(.4); cursor:default; }
 /* Bird picker for XP scrolls */
 .xp-picker-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 .xp-picker-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 10px; border-radius:14px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.28)); color:var(--text); cursor:pointer; }
@@ -870,8 +896,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
 /* MERGE WHEN READY — the ⭐ star and the player's own Merge button. */
 .merge-star { color:#ffd76a; filter:drop-shadow(0 0 5px rgba(255,215,106,.6)); }
-.merge-progress { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px dashed rgba(255,215,106,.4); background:rgba(30,23,7,.55); color:#e8d9a8; font-size:11px; line-height:1.5; }
-.merge-progress.is-ready { border-style:solid; border-color:rgba(255,215,106,.65); color:#ffe9a8; box-shadow:0 0 12px rgba(255,215,106,.12); }
 .merge-banner { margin:8px 0; padding:11px 12px; border-radius:12px; border:1.5px solid rgba(255,215,106,.6); background:linear-gradient(180deg,rgba(52,40,12,.7),rgba(20,14,4,.8)); box-shadow:0 0 18px rgba(255,215,106,.14); display:grid; gap:8px; }
 .merge-banner-title { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:.05em; color:#ffe9a8; }
 .merge-banner-copy { font-size:11px; line-height:1.5; color:#e8d9a8; }
@@ -966,14 +990,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-tapcard-btn:active { transform:scale(.98); }
 /* Locator strip is the explicit hierarchy: position, home village, merged
    town/city and county are separate cards, never one overloaded place name. */
-.empire-locator { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); align-items:stretch; gap:6px; margin:0 0 9px; }
-.empire-locator-chip { min-width:0; display:flex; flex-direction:column; gap:1px; padding:7px 9px; border-radius:11px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(36,25,10,.72),rgba(12,8,3,.82)); color:inherit; text-align:left; }
-.empire-locator-chip:active { transform:scale(.98); border-color:rgba(240,199,103,.7); }
-.empire-locator-chip.is-you { border-color:rgba(159,212,255,.55); }
-.empire-locator-label { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:8.5px; letter-spacing:.13em; color:var(--text3); text-transform:uppercase; }
-.empire-locator-value { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; line-height:1.12; color:var(--text); white-space:normal; overflow-wrap:anywhere; }
-.empire-locator-chip.is-empty .empire-locator-value { color:var(--text3); }
-@media (max-width:480px) { .empire-locator { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 /* Ledger drawers: the quest-board accordion, dressed for the throne room. */
 .empire-drawer { margin:0 0 9px; border-radius:14px; border:1px solid rgba(214,168,79,.26); background:linear-gradient(150deg,rgba(214,168,79,.08),rgba(0,0,0,.32)); overflow:hidden; }
 .empire-drawer[open] { border-color:rgba(240,199,103,.46); }
@@ -1004,9 +1020,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-onboarding-step { display:flex; align-items:flex-start; gap:9px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; line-height:1.45; color:var(--text2); }
 .empire-onboarding-step b { color:var(--text); }
 .empire-onboarding-num { flex:none; display:grid; place-items:center; width:22px; height:22px; border-radius:50%; border:1px solid rgba(240,199,103,.55); background:rgba(240,199,103,.12); font-family:'Russo One',sans-serif; font-size:11px; color:#ffe9a8; }
-.empire-help-row { display:flex; align-items:flex-start; gap:9px; padding:7px 9px; border-radius:10px; background:rgba(0,0,0,.25); border:1px solid rgba(240,199,103,.18); font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12px; line-height:1.45; color:var(--text2); }
-.empire-help-row .ehr-icon { flex:none; font-size:16px; }
-.empire-help-row b { color:var(--text); }
 /* ---- County Hall — run a whole county of the map --------------------------- */
 #regionHallPanel { padding:0 2px 14px; }
 .region-hall-nav { display:flex; justify-content:space-between; gap:8px; margin:4px 0 10px; }
@@ -1130,7 +1143,6 @@ svg.academy-room-bg { display:block; filter:none; }
 #villageManagePanel:empty { display:none; }
 .province-panel { border-radius:12px; border:1px solid rgba(240,199,103,.3); background:linear-gradient(180deg,rgba(30,21,9,.55),rgba(10,7,3,.7)); padding:11px; }
 .province-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:8px; }
-.province-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.08em; color:#ffe9a8; }
 .province-pop { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); }
 .province-needs { display:grid; grid-template-columns:repeat(2,1fr); gap:7px 10px; margin-bottom:10px; }
 .province-need { }
@@ -1141,11 +1153,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-need-fill.mid { background:linear-gradient(90deg,#a68b3f,#d3b96a); }
 .province-need-sub { margin-top:3px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:10px; letter-spacing:.03em; color:var(--text2); opacity:.8; }
 .province-need-sub.warn { color:#ffb08a; opacity:1; }
-.province-cart-btn { width:100%; margin:0 0 10px; min-height:36px; border-radius:9px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(180deg,rgba(58,42,14,.92),rgba(20,13,4,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11.5px; letter-spacing:.05em; }
-.province-cart-btn:active { transform:scale(.98); }
-.province-cart-btn:disabled { opacity:.5; }
 .province-income-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.22); background:rgba(0,0,0,.3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#e6d9ae; text-align:center; }
-.province-trades-line { margin:0 0 10px; padding:8px 10px; border-radius:9px; border:1px dashed rgba(240,199,103,.28); background:rgba(0,0,0,.26); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11.5px; color:#d8cba2; text-align:center; }
 .province-build-title { font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.14em; color:var(--text2); margin:2px 2px 7px; text-transform:uppercase; }
 
 /* Posts: the card that appoints a bird to run a room, a village or a region.
@@ -1173,6 +1181,12 @@ svg.academy-room-bg { display:block; filter:none; }
 .role-candidate-main { flex:1; min-width:0; }
 .role-candidate-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .role-candidate-meta { display:block; font-size:9.5px; color:var(--text3); }
+/* A project manager already running another village: gold-edged, with the
+   village they would leave named under their stats. */
+.role-candidate.is-serving { border-color:rgba(240,199,103,.45); background:rgba(240,199,103,.1); }
+.role-candidate-post { display:block; font-size:9.5px; color:var(--accent2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* The Project Manager desk carries no prose, so the title sits level with its icon. */
+.role-post-card.is-bare .role-post-head { align-items:center; }
 .role-candidate-gain { flex:none; font-family:'Russo One',sans-serif; font-size:12px; color:var(--legendary); }
 .role-empty { padding:9px; border-radius:10px; background:rgba(0,0,0,.28); font-size:10.5px; color:var(--text3); }
 
@@ -1189,7 +1203,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .province-building-pips { display:flex; gap:2px; }
 .province-pip { width:7px; height:7px; border-radius:2px; transform:rotate(45deg); background:rgba(255,255,255,.12); border:1px solid rgba(240,199,103,.3); }
 .province-pip.on { background:#f0c767; box-shadow:0 0 6px rgba(240,199,103,.7); }
-.province-building-desc { font-size:9.5px; line-height:1.4; color:var(--text3); min-height:26px; }
 .province-crew { font-size:9px; line-height:1.3; color:var(--text3); }
 .province-crew.on { color:#bfe8c4; }
 .province-crew.off { color:#ffc4a0; }
@@ -3057,6 +3070,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .treehouse-room-node[data-room="workshop"] { --th-tilt:2.2deg; --th-rock-dur:6.6s; --th-rock-delay:-.9s; }
 .treehouse-room-node[data-room="library"] { --th-tilt:-.8deg; --th-rock-dur:8.9s; --th-rock-delay:-3.7s; }
 .treehouse-room-node[data-room="observatory"] { --th-tilt:1.6deg; --th-rock-dur:9.4s; --th-rock-delay:-5.7s; }
+.treehouse-room-node[data-room="magpie_market"] { --th-tilt:1.2deg; --th-rock-dur:7.7s; --th-rock-delay:-2.1s; }
 .treehouse-room-name { position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); max-width:98px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .treehouse-room-meta { display:none; }
 .treehouse-room-count { position:absolute; right:-7px; top:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--legendary); color:#11100d; font-weight:900; font-size:11px; border:2px solid #11100d; }
@@ -3747,12 +3761,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .empire-ledger-pop { margin:8px 0 10px; padding:12px; border-radius:14px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(38,30,14,.97),rgba(20,15,8,.97)); box-shadow:0 10px 26px rgba(0,0,0,.55), inset 0 1px 0 rgba(240,199,103,.16); animation:ledgerPopIn .18s ease-out; }
 @keyframes ledgerPopIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
 .empire-ledger-pop .empire-rank { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:8px; }
-.empire-footer { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
-.empire-drawer.is-footer { border:1px solid rgba(240,199,103,.28); border-radius:12px; background:linear-gradient(180deg,rgba(34,27,13,.7),rgba(18,14,7,.7)); }
-.empire-drawer.is-footer > .empire-drawer-summary { padding:9px 12px; }
-.empire-drawer.is-footer .ed-label { font-size:12.5px; letter-spacing:.06em; }
-.empire-drawer.is-footer .ed-copy { font-size:11px; }
-.empire-drawer.is-footer[open] { border-color:rgba(240,199,103,.5); box-shadow:0 0 14px rgba(240,199,103,.14); }
 /* Tavern sheet */
 .tavern-lines { margin:8px 0 4px; }
 .tavern-line { margin:4px 0; }
@@ -4806,10 +4814,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=roost-retired-v302-20260820"></script>
-<script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
+<script src="academy_treehouse_core.js?v=magpie-market-v316-20260824"></script>
+<script src="academy_alive_core.js?v=magpie-market-v316-20260824"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
-<script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
+<script src="academy_3d_core.js?v=magpie-market-v316-20260824"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -4817,10 +4825,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=roost-retired-v302-20260820"></script>
+<script src="bird_roles_core.js?v=magpie-market-v316-20260824"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
-<script src="loot_crafting_core.js?v=stores-market-project-manager-v295-20260820"></script>
+<script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -11459,7 +11467,12 @@ function assignBirdRole(scope, key, birdId) {
   const bird = (gameState.flock || []).find(b => b && b.id === birdId);
   if (!core || !role || !bird) return;
   const currentPost = birdAssignedPost(bird.id);
-  if (currentPost && !(currentPost.scope === scope && String(currentPost.key) === String(key))) {
+  const samePost = !!currentPost && currentPost.scope === scope && String(currentPost.key) === String(key);
+  // A Project Manager can walk from one village site to the next: assignRole
+  // vacates the old desk as it fills this one. Capture the village being left
+  // before that happens, so the toast can name it.
+  const movesFrom = !samePost && birdCanMoveToVillagePost(scope, key, currentPost) ? birdPostLabel(bird) : null;
+  if (currentPost && !samePost && !movesFrom) {
     showToast(birdDisplayName(bird) + ' is already working as ' + currentPost.role.title + ' — stand them down first.');
     return;
   }
@@ -11481,7 +11494,8 @@ function assignBirdRole(scope, key, birdId) {
   saveState();
   if (scope === 'village' && typeof updateQuestProgress === 'function') updateQuestProgress('village_role_filled', 1);
   SFX.tap();
-  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%');
+  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' +
+    (movesFrom ? ' — ' + movesFrom.where + ' needs a new one' : ''));
   // Appointing a Head Chef unlocks whole-species table service — taught with a
   // tutorial tip the moment the post is filled, right when the perk is earned.
   if (scope === 'academy' && key === 'kitchen' && typeof showChefBulkFeedTip === 'function') showChefBulkFeedTip(bird);
@@ -11509,34 +11523,63 @@ function refreshRoleSurfaces() {
   try { if (currentScreen === 'town') renderTownScreen(); } catch (e) {}
 }
 
-// Birds free to take a post: in the flock, home, and not already posted here.
+// The one post a bird can take without standing down first (Yaan, 2026-08-24):
+// a Project Manager already running ANOTHER village. Village desks are one job
+// in many places, so the player moves the manager they want and the old site
+// falls vacant. Every other post still holds its bird until it is dismissed.
+function birdCanMoveToVillagePost(scope, key, post) {
+  return scope === 'village' && !!post && post.scope === 'village' && String(post.key) !== String(key);
+}
+
+// Birds free to take a post: in the flock, home, and not already posted here —
+// plus the project managers of other villages, who can move.
 function roleCandidateBirds(scope, key) {
   const core = birdRolesCore();
   const holder = core ? core.assignedBirdId(ensureRolesState(), scope, key) : null;
   return (gameState.flock || []).filter(b => {
-    if (!b || !b.id || b.id === holder || birdAssignedPost(b.id) || birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)) return false;
+    if (!b || !b.id || b.id === holder || birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)) return false;
+    const post = birdAssignedPost(b.id);
+    if (post && !birdCanMoveToVillagePost(scope, key, post)) return false;
     normalizeBirdCare(b);
     return !b.care.sleeping;
   });
 }
 
+// How many birds the picker offers, and how many of those seats the managers
+// of other villages may take before the free flock fills the rest.
+const ROLE_CANDIDATE_LIMIT = 8;
+const ROLE_SERVING_CANDIDATE_LIMIT = 5;
+
 // The shared card every posting is offered and displayed through, so the
 // Library, the Kitchen, a village hall and a region hall all read the same.
+// A village desk is the one exception (Yaan, 2026-08-24): the Project Manager
+// card is a picker, not a pamphlet, so it drops the prose and shows the title,
+// who holds it and the list. The post's own words still live in
+// bird_roles_core.js, where the Academy and region cards still read them.
 function rolePostCardHTML(scope, key, options = {}) {
   const core = birdRolesCore();
   const role = roleDefFor(scope, key);
   if (!core || !role) return '';
   const post = rolePostState(scope, key);
+  const bare = scope === 'village';
   const roleCopy = options.copy || role.copy;
   const effectCopy = options.effectCopy || role.effect.copy;
   const dataAttrs = ' data-role-scope="' + escapeHtml(scope) + '" data-role-key="' + escapeHtml(String(key)) + '"';
-  const candidates = core.rankCandidates(roleCandidateBirds(scope, key), role).slice(0, 8);
+  // Managers already running another village lead the list, so moving a proven
+  // one here is the first tap, not a hunt through the whole flock.
+  const ranked = core.rankCandidates(roleCandidateBirds(scope, key), role)
+    .map(c => Object.assign({}, c, { movesFrom: birdCanMoveToVillagePost(scope, key, birdAssignedPost(c.bird.id)) ? birdPostLabel(c.bird) : null }));
+  const candidates = ranked.filter(c => c.movesFrom).slice(0, ROLE_SERVING_CANDIDATE_LIMIT)
+    .concat(ranked.filter(c => !c.movesFrom))
+    .slice(0, ROLE_CANDIDATE_LIMIT);
   const optionsHtml = candidates.length
     ? candidates.map(c =>
-        '<button type="button" class="role-candidate" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
+        '<button type="button" class="role-candidate' + (c.movesFrom ? ' is-serving' : '') + '" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
           birdOnlyImgHTML(c.bird, 'role-candidate-art') +
           '<span class="role-candidate-main"><span class="role-candidate-name">' + escapeHtml(birdDisplayName(c.bird)) + '</span>' +
-          '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span></span>' +
+          '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span>' +
+          (c.movesFrom ? '<span class="role-candidate-post">' + role.icon + ' ' + escapeHtml(c.movesFrom.where) + ' · move here</span>' : '') +
+          '</span>' +
           '<span class="role-candidate-gain">+' + c.bonusPct + '%</span>' +
         '</button>').join('')
     : '<div class="role-empty">No companion is free for this post right now — recruit a bird, or wait for one to fly home.</div>';
@@ -11545,13 +11588,13 @@ function rolePostCardHTML(scope, key, options = {}) {
         '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
         '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(role.title) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
         '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
-        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b> — ' + escapeHtml(effectCopy) + '</div></div>' +
+        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b>' + (bare ? '' : ' — ' + escapeHtml(effectCopy)) + '</div></div>' +
         '<button type="button" class="role-dismiss" data-action="role-clear"' + dataAttrs + '>Stand down</button></div>'
-    : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(effectCopy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
-  return '<div class="role-post-card"' + dataAttrs + '>' +
+    : bare ? '' : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(effectCopy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
+  return '<div class="role-post-card' + (bare ? ' is-bare' : '') + '"' + dataAttrs + '>' +
     '<div class="role-post-head"><span class="role-post-icon">' + role.icon + '</span>' +
     '<div><div class="role-post-title">' + escapeHtml(options.titlePrefix ? options.titlePrefix + role.title : role.title) + '</div>' +
-    '<div class="role-post-copy">' + escapeHtml(roleCopy) + '</div></div></div>' +
+    (bare ? '' : '<div class="role-post-copy">' + escapeHtml(roleCopy) + '</div>') + '</div></div>' +
     held +
     '<div class="role-candidate-label">' + (post.staffed ? 'Replace with' : 'Appoint') + '</div>' +
     '<div class="role-candidate-list">' + optionsHtml + '</div>' +
@@ -12723,7 +12766,7 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', library:'assets/academy-buildings/library.svg' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', magpie_market:'assets/academy-buildings-manga/market.png', library:'assets/academy-buildings/library.svg' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
@@ -12738,6 +12781,7 @@ const ACADEMY_ROOMS = {
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
   library: { label:'THE LIBRARY', icon:'📚', buildingId:'library', desc:'The Academy reading room. Field guides, story scrolls and quiet candlelight — birds stationed among the stacks grow cleverer by the hour, and the Quiet Study drill teaches MIND battle moves.', perk:'Passive: +1 INT every 30 min', perches:[[75,29],[71,33],[79,33]] },
+  magpie_market: { label:'MAGPIE MARKET', icon:'⚖️', buildingId:'magpie_market', desc:'The Academy trading post. Magpies deal in everything the kingdom digs up — buy the material a recipe is short of, and sell whatever is piling up on the shelves.', perk:'Active: buy and sell every crafting material', perches:[] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
 let academySelectedRoom = 'outdoors';
@@ -14187,6 +14231,13 @@ function renderAcademyRoomPanel(birds) {
     return;
   }
 
+  // The market trades whether or not a companion stands at the counter, so it
+  // shows its stall here instead of the "no birds in this room" note.
+  if (academySelectedRoom === 'magpie_market') {
+    panel.innerHTML = html + renderMagpieMarketPanelHTML();
+    return;
+  }
+
   if (!birds || birds.length === 0) {
     html += '<div class="academy-empty">' + (gameState.flock.length === 0
       ? 'No birds yet — go scan some real birds and your captures will move in here.'
@@ -14518,6 +14569,7 @@ function academyMoveBird(birdId, room) {
   if (assignedPost) { showToast((bird.commonName || bird.species) + ' is working as ' + assignedPost.role.title + ' - stand them down before moving them.'); return; }
   if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
   if (room === 'kitchen') { showToast('The Kitchen is a feeding table — birds visit for meals, they do not lodge there. Open the Kitchen to feed your companions.'); return; }
+  if (room === 'magpie_market') { showToast('The Magpie Market is a trading counter — birds visit to deal, they do not lodge there. Open the Market to buy and sell.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
@@ -14561,7 +14613,7 @@ function cardSendBirdToRoom(birdId, room) {
 
 function academyRoomButtonsHTML(bird) {
   ensureBirdAcademy(bird);
-  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen').map(room => {
+  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen' && room !== 'magpie_market').map(room => {
     const cfg = ACADEMY_ROOMS[room];
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
@@ -16539,6 +16591,46 @@ const ACADEMY_ROOM_SVG_FALLBACKS = (() => {
       s += `<circle cx="400" cy="430" r="120" fill="url(#ri-gold)" opacity=".22"/>`;
       return s + motes();
     },
+    magpie_market() {
+      let s = wall() + beam() + runes(600, 16, 4);
+      s += bunting(74, 128);
+      // Back wall: three shelf planks of stock jars, priced by rarity colour.
+      const JARS = ['#6b8a4a', '#8a6a3a', '#2e5f66', '#8a2f2a', '#b48ad6', GOLD];
+      [[64, 196, 250], [500, 178, 236], [92, 320, 210]].forEach(([sx, sy, sw], row) => {
+        s += shelfPlank(sx, sy, sw);
+        let jx = sx + 12;
+        for (let i = 0; jx < sx + sw - 30; i++) {
+          const jw = 24 + ((row * 5 + i * 7) % 10);
+          const jh = 34 + ((row * 9 + i * 5) % 16);
+          s += jar(jx, sy - jh, jw, jh, JARS[(row * 2 + i) % JARS.length], i % 3 === 1 ? '#f0c76733' : '');
+          jx += jw + 12;
+        }
+      });
+      s += lantern(300, 92, .95, 46) + lantern(560, 96, .85, 42);
+      s += roundWindow(400, 176, 46);
+      s += lightShaft(400, 232, 120, 200);
+      s += floor(452);
+      // The counter, with the scales the price is settled on and a coin pile
+      // beside them. A magpie's own hoard sits on the end of the plank.
+      s += table(232, 424, 340, 40, 40);
+      s += `<g stroke="${INK}" stroke-width="2.6"><line x1="400" y1="424" x2="400" y2="366" stroke-width="4"/><path d="M330 372h140" stroke-width="4"/>` +
+        `<path d="M330 372l-24 30h48z" fill="${GOLDHI}"/><path d="M470 372l-24 30h48z" fill="${GOLD}"/>` +
+        `<circle cx="400" cy="362" r="7" fill="${GOLDHI}"/></g>`;
+      s += `<g><circle cx="286" cy="440" r="9" fill="${GOLDHI}" stroke="${INK}" stroke-width="2"/><circle cx="300" cy="446" r="9" fill="${GOLD}" stroke="${INK}" stroke-width="2"/><circle cx="292" cy="430" r="9" fill="${GOLDHI}" stroke="${INK}" stroke-width="2"/><circle cx="294" cy="438" r="30" fill="url(#ri-gold)" opacity=".7"/></g>`;
+      s += `<rect x="498" y="416" width="56" height="30" rx="5" fill="#4a3418" stroke="${INK}" stroke-width="2.6"/><path d="M498 430h56M526 416v30" stroke="#2b1e11" stroke-width="3"/>`;
+      // Crates, sacks and a barrel of loose stock stacked along the boards.
+      const crate = (x, y, w, h) =>
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#6b4a26" stroke="${INK}" stroke-width="2.8"/>` +
+        `<path d="M${x} ${y + h / 2}h${w}M${x + w / 2} ${y}v${h}" stroke="#4a3418" stroke-width="3"/>` +
+        `<path d="M${x} ${y}l${w} ${h}M${x + w} ${y}l${-w} ${h}" stroke="#57391c" stroke-width="2.2" opacity=".7"/>`;
+      s += crate(74, 486, 86, 68) + crate(96, 440, 62, 48);
+      s += `<path d="M672 502q-26 8-26 30t26 24 26-24-26-30z" fill="#b9a473" stroke="${INK}" stroke-width="2.8"/><path d="M660 500q12-16 24 0" stroke="${INK}" stroke-width="2.6" fill="none"/>`;
+      s += `<path d="M604 520q-22 6-22 24t22 20 22-20-22-24z" fill="#a28c60" stroke="${INK}" stroke-width="2.6"/>`;
+      s += `<ellipse cx="180" cy="556" rx="34" ry="11" fill="#4a3418" stroke="${INK}" stroke-width="2.6"/><path d="M146 556v-42q34-12 68 0v42" fill="#58402c" stroke="${INK}" stroke-width="2.8"/><ellipse cx="180" cy="514" rx="34" ry="11" fill="#6b4a26" stroke="${INK}" stroke-width="2.6"/>`;
+      s += perchBar(596, 372, 150);
+      s += ivy(24, 60);
+      return s + motes();
+    },
     quest_roost() {
       let s = wall() + beam() + runes(80, 16, 4);
       s += `<polygon points="60,64 60,168 96,140 132,168 132,64" fill="${GOLD}" opacity=".9" stroke="${INK}" stroke-width="2.6"/><polygon points="148,64 148,150 178,126 208,150 208,64" fill="${TEAL}" opacity=".9" stroke="${INK}" stroke-width="2.6"/>`;
@@ -16866,6 +16958,7 @@ function renderAcademyRoomInterior() {
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
+    const marketPanel = room === 'magpie_market' ? renderMagpieMarketPanelHTML() : '';
     // Every room can be run by a bird. Which bird decides how well the room
     // works — the Library by its Librarian, the Kitchen by its Head Chef.
     const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);
@@ -16873,14 +16966,20 @@ function renderAcademyRoomInterior() {
     // migration + move guards keep its stationed list empty), and there is no
     // "add a bird to this room" panel — the feeding roster replaces it.
     const flockCount = (gameState.flock || []).length;
+    // The Kitchen and the Market are counters you visit, not rooms a bird
+    // moves into: both skip the "add a bird" roster, and both describe
+    // themselves by what is on offer rather than by a head count.
+    const counterRoom = room === 'kitchen' || room === 'magpie_market';
     const roomSub = room === 'kitchen'
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
+      : room === 'magpie_market'
+      ? magpieMarketStock().length + ' materials traded · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
-    const roomAddPanel = room === 'kitchen' ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+    const roomAddPanel = counterRoom ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
     const stageBirds = academyRoomStageBirds(birds, room);
     const trainingMaster = room === 'training' ? trainingMasterActorHTML() : '';
     const trainingMasterPicker = room === 'training' ? trainingMasterPickerOverlayHTML() : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + rolePanel + trainingMasterPicker + trainingPanel + kitchenPanel + roomAddPanel;
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + rolePanel + trainingMasterPicker + trainingPanel + kitchenPanel + marketPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -23156,65 +23255,10 @@ function empireHomeVillageRec() {
   }
   return villages.slice().sort((a, b) => Date.parse(b.claimedAt || 0) - Date.parse(a.claimedAt || 0))[0];
 }
-// Milliseconds until one clock's NEXT cycle. A future timestamp can happen
-// after the device clock moves backwards; do not fold it through signed `%`
-// and accidentally promise taxes a whole cycle (or several) too early.
-function empireCycleCountdownMs(baseValue, nowValue) {
-  const base = Number(baseValue);
-  const now = Number(nowValue);
-  if (!Number.isFinite(base) || !Number.isFinite(now)) return null;
-  if (base > now) return (base - now) + EMPIRE_TRIBUTE_INTERVAL_MS;
-  const remainder = (now - base) % EMPIRE_TRIBUTE_INTERVAL_MS;
-  return remainder === 0 ? EMPIRE_TRIBUTE_INTERVAL_MS : EMPIRE_TRIBUTE_INTERVAL_MS - remainder;
-}
-// Milliseconds until the next tax OR caravan cycle lands anywhere in the
-// shared realm strongbox. Regional collections can desynchronise village and
-// trade clocks, so both must compete for the earliest countdown.
-function empireNextTributeCountdownMs(nowValue) {
-  const suppliedNow = Number(nowValue);
-  const now = Number.isFinite(suppliedNow) ? suppliedNow : Date.now();
-  let next = Infinity;
-  const epochMs = value => {
-    const numeric = Number(value);
-    if (Number.isFinite(numeric) && numeric > 0) return numeric;
-    const parsed = typeof value === 'string' ? Date.parse(value) : NaN;
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-  const consider = (lastAt, createdAt) => {
-    const base = epochMs(lastAt) ?? epochMs(createdAt) ?? now;
-    const remaining = empireCycleCountdownMs(base, now);
-    if (remaining !== null && remaining > 0 && remaining < next) next = remaining;
-  };
-  empireVillages().forEach(v => {
-    consider(v.lastTributeAt, v.claimedAt);
-  });
-  if (realmCore()) empireTradeRouteRecords().forEach(({ rec }) => consider(rec && rec.lastTradeAt, rec && rec.openedAt));
-  return Number.isFinite(next) ? next : null;
-}
-// Keep the disabled strongbox button honest while the Empire tab stays open.
-// The target time lives on the fresh DOM node, so a wholesale ledger re-render
-// updates the existing timer without stacking another interval.
-let empireTributeCountdownTimer = null;
-function stopEmpireTributeCountdownTicker() {
-  if (empireTributeCountdownTimer) clearInterval(empireTributeCountdownTimer);
-  empireTributeCountdownTimer = null;
-}
-function ensureEmpireTributeCountdownTicker() {
-  if (empireTributeCountdownTimer) return;
-  empireTributeCountdownTimer = setInterval(() => {
-    const label = document.querySelector('[data-empire-tribute-countdown]');
-    if (!label || currentScreen !== 'village') { stopEmpireTributeCountdownTicker(); return; }
-    const target = Number(label.dataset.empireTributeAt);
-    const remaining = target - Date.now();
-    if (!Number.isFinite(target)) { stopEmpireTributeCountdownTicker(); return; }
-    if (remaining <= 0) {
-      stopEmpireTributeCountdownTicker();
-      renderEmpirePanel();
-      return;
-    }
-    label.textContent = '— FULL CYCLE IN ' + formatBuildCountdown(remaining);
-  }, 1000);
-}
+// The realm strongbox has no countdown any more. Tribute accrues continuously
+// (village-work-huts-v311), so the chest is never "not ready yet" — it simply
+// holds whatever has built up. Yaan's ask (2026-08-24): show that number, not
+// a clock counting down to a cycle nobody has to wait for.
 // ============================================================================
 // REALMS & TRADE — the Crusader-Kings endgame, with the feudal ladder nested
 // the way Crusader Kings' actually is: 3 villages close together FOUND A
@@ -24592,6 +24636,13 @@ function empireBuildingOutputForLedger(building) {
   empireStandaloneVillages().forEach(rec => merge(villageBuildingOutputForLedger(rec, building)));
   return total;
 }
+// What the chest holds at this exact moment. Accrual is continuous, so there
+// is always an answer: a running total the player can take whenever they like.
+// A brand-new cycle really is worth nothing yet, and says so as a number
+// rather than as a lecture with a clock on it.
+function empireTakingsSoFar(due) {
+  return empireResourceSummary(due, 5) || '+0 🪙';
+}
 function tributeHasAnything(due) {
   return !!due && (due.coins > 0 || due.branches > 0 || due.stone > 0 ||
     Object.keys(due.materials || {}).length > 0 || Object.keys(due.larder || {}).length > 0);
@@ -24801,12 +24852,6 @@ function renderVillageManagePanel() {
     return '<div class="province-need"><div class="province-need-label"><span>' + n.icon + ' ' + n.label + '</span><span>' + Math.min(snap.pop, gaugeServed) + '/' + snap.pop + '</span></div>' +
       '<div class="province-need-bar"><div class="province-need-fill' + tone + '" style="width:' + pct + '%"></div></div>' + sub + '</div>';
   }).join('');
-  // The relief valve: while there is cellar space, coins can put provisions on
-  // the road at once — the classic city-builder answer to a hungry town.
-  const cartUseful = snap.provisions.food.store < snap.provisions.food.cap || snap.provisions.water.store < snap.provisions.water.cap;
-  const cartHtml = cartUseful
-    ? '<button class="province-cart-btn" onclick="empireSendSupplyCart(' + (rec.seed >>> 0) + ')"' + (wallet >= VILLAGE_SUPPLY_CART.coins ? '' : ' disabled') + '>🛒 SEND A SUPPLY CART · +' + VILLAGE_SUPPLY_CART.food + ' 🍞 +' + VILLAGE_SUPPLY_CART.water + ' 💧 · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button>'
-    : '';
   // Uncleared wrecks left by the darkness — quick to clear, each pays timber.
   const pendingRuins = (eco.ruins || []).map((ru, i) => ({ ru, i })).filter(x => !x.ru.cleared);
   const ruinsHtml = pendingRuins.length
@@ -24887,7 +24932,7 @@ function renderVillageManagePanel() {
     }
     return '<div class="province-building' + (level > 0 ? ' is-built' : '') + '">' +
       '<div class="province-building-head"><span class="province-building-icon">' + tier.icon + '</span><span class="province-building-name">' + escapeHtml(tier.name) + '</span><span class="province-building-pips">' + pips + '</span></div>' +
-      '<div class="province-building-desc">' + escapeHtml(tier.desc) + '</div>' + crewHtml + btn +
+      crewHtml + btn +
       (shortages.length && !locked && slotsFree > 0
         ? '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · ' +
           (cost && stone < cost.stone
@@ -24901,25 +24946,9 @@ function renderVillageManagePanel() {
   const settleLine = settleHere
     ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Village centre of ' : 'Village district of ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
     : '';
-  // The road to the ⭐ merge star: 16 folk, 75% happiness. Once earned, the
-  // Merge button lives on the Empire screen — this desk just shows the way.
-  const mergeReady = settleHere ? null : villageMergeReady(rec);
-  const mergeLine = mergeReady
-    ? (mergeReady.ready
-      ? '<div class="merge-progress is-ready">⭐ ' + escapeHtml(rec.name) + ' wears its merge star — ' + mergeReady.popGoal + ' folk and ' + Math.round(mergeReady.happyGoal * 100) + '% happiness reached. Star two more villages within 5 km, then press Merge on the Empire screen.</div>'
-      : '<div class="merge-progress">⭐ Merge star: 👥 ' + mergeReady.population + '/' + mergeReady.popGoal + ' folk · ' + happinessFace(mergeReady.happiness) + ' ' + Math.round(mergeReady.happiness * 100) + '% of ' + Math.round(mergeReady.happyGoal * 100) + '% happiness. Earn the star and three starred villages can merge into a town.</div>')
-    : '';
   // A town is run by a bird, not by the player alone: appoint a Project Manager here.
   // The full appointment card folds away behind one line, so the desk stays
   // about the village — the post is a tap away, not a wall in the middle.
-  // The trades of this land hide until found on a real walk. The desk says
-  // plainly what's open and what's still out on the paths.
-  const allTrades = villageShopKeysFor(rec.seed);
-  const foundTrades = discoveredVillageShopKeys(rec.seed);
-  const tradesLine = '<div class="province-trades-line">' + (foundTrades.length
-    ? '🧭 Trades found: ' + foundTrades.map(k => VILLAGE_SHOPS[k].icon + ' ' + escapeHtml(VILLAGE_SHOPS[k].name)).join(' · ') +
-      (foundTrades.length < allTrades.length ? ' · ' + (allTrades.length - foundTrades.length) + ' more wait' + (allTrades.length - foundTrades.length === 1 ? 's' : '') + ' on the paths' : '')
-    : '🧭 No trades found yet — walk a quest in this land and its shops will show themselves') + '</div>';
   const stewardCard = rolePostCardHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' });
   let stewardHtml = '';
   if (stewardCard) {
@@ -24930,22 +24959,14 @@ function renderVillageManagePanel() {
       stewardCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
   }
   panel.innerHTML = '<div class="province-panel">' +
-    '<div class="province-head"><div class="province-title">' + empireVillageCrest(rec.seed) + ' MANAGE VILLAGE · ' + escapeHtml(rec.name.toUpperCase()) + '</div>' +
-    '<div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (workedYards ? ' · 👷 ' + (workedYards - idleYards) + '/' + workedYards + ' yards crewed' : '') + '</div></div>' +
+    '<div class="province-head"><div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (workedYards ? ' · 👷 ' + (workedYards - idleYards) + '/' + workedYards : '') + '</div></div>' +
     settleLine +
-    mergeLine +
-    tradesLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
-    cartHtml +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (idleYards > 0 ? ' · 👷 <b>' + idleYards + ' yard' + (idleYards === 1 ? '' : 's') + ' stand' + (idleYards === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or 🪣 Timber Well, or send a supply cart' : '') + '</div>'
+      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (idleYards > 0 ? ' · 👷 <b>' + idleYards + ' yard' + (idleYards === 1 ? '' : 's') + ' stand' + (idleYards === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or 🪣 Timber Well' : '') + '</div>'
       : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
     ruinsHtml +
     constructionHtml +
-    '<div class="province-build-title">🔨 Construction Yard · 👷 CREWS ' + constructions.length + '/' + buildSlots +
-      ' · purse ' + wallet + ' 🪙 · ' + timber + ' 🪵 · ' + stone + ' stone' +
-      (slotsFree <= 0 ? ' · builders busy here — other villages can still build' : '') +
-      (buildSlots < 2 ? ' · 📋 a Project Manager foremans a second crew' : '') + '</div>' +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
     townWorksHtml +
     stewardHtml +
@@ -25142,47 +25163,18 @@ function renderEmpirePanel() {
   const villagesBody = villages.length
     ? townMergeBanners + starHint + '<div class="empire-village-list">' + rows + '</div>'
     : '<div class="realm-hint">🏡 Every free village has merged into a Town — run them from the Towns tab, or visit the old villages from each Town Hall.</div>';
+  // Yaan's ask (2026-08-24): a tab for a tier the player has not reached yet
+  // is a row that can only say "you have none". Counties and Towns wait until
+  // the first one exists; Villages is always there, because that is where
+  // every empire starts.
+  const townCount = settlements.cityCount + settlements.towns.filter(t => !t.cityId).length;
   const navTabsHtml = count
     ? '<div class="empire-nav-tabs">' +
-      empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) +
-      empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', settlements.cityCount + settlements.towns.filter(t => !t.cityId).length, townsBody) +
+      (regions.length ? empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) : '') +
+      (townCount ? empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townCount, townsBody) : '') +
       empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 16 folk, 75% happy', villages.length, villagesBody) +
       '</div>'
     : '';
-  // ---- 📍 Locator strip — always answers "where am I, where is my town,
-  // where is my region" with one glance and one tap each.
-  let locatorChipsHtml = '';
-  if (count) {
-    const home = empireHomeVillageRec();
-    const homeLink = home ? empireSettlementOfSeed(home.seed) : null;
-    const homeSettle = homeLink ? canonicalEmpireSettlement(empireSettlementById(homeLink.id)) : null;
-    const homeRegion = home ? empireRegionOfSeed(home.seed) : null;
-    locatorChipsHtml = '<div class="empire-locator">' +
-      '<button type="button" class="empire-locator-chip is-you" data-action="locator-me"><span class="empire-locator-label">📍 YOU</span><span class="empire-locator-value">Show on map</span></button>' +
-      (home && !homeSettle ? '<button type="button" class="empire-locator-chip" data-action="locator-home" data-seed="' + (home.seed >>> 0) + '"><span class="empire-locator-label">🏡 HOME VILLAGE</span><span class="empire-locator-value">' + escapeHtml(home.name) + '</span></button>' : '') +
-      (homeSettle
-        ? '<button type="button" class="empire-locator-chip" data-action="locator-settlement" data-settlement="' + escapeHtml(homeSettle.id) + '"><span class="empire-locator-label">' + homeSettle.icon + (homeSettle.tier === 'city' ? ' YOUR CITY' : ' YOUR TOWN') + '</span><span class="empire-locator-value">' + escapeHtml(townDisplayName(homeSettle)) + '</span></button>'
-        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🏘️ YOUR TOWN</span><span class="empire-locator-value">Not formed yet</span></div>') +
-      (homeRegion
-        ? '<button type="button" class="empire-locator-chip" data-action="locator-region" data-region="' + escapeHtml(homeRegion.id) + '"><span class="empire-locator-label">' + homeRegion.tierIcon + ' YOUR COUNTY</span><span class="empire-locator-value">' + escapeHtml(homeRegion.name) + '</span></button>'
-        : '<div class="empire-locator-chip is-empty"><span class="empire-locator-label">🛡️ YOUR COUNTY</span><span class="empire-locator-value">Not founded yet</span></div>') +
-      '</div>';
-  }
-  // ---- 📜 A plain-words guide to the whole ladder, folded away until asked.
-  const helpHtml = count ? empireDrawerHTML('help', false, '📜', 'HOW YOUR EMPIRE WORKS', 'The whole ladder, in plain words', null,
-    '<div class="empire-help-row"><span class="ehr-icon">⚔️</span><span><b>Free villages.</b> Walk near a dark village on the map, win its Liberation Battle, then raise a birdhouse to make it yours.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🛖</span><span><b>Rebuild them.</b> Almost every village build is bought with coins and timber alone. Start with a Timber Cabin, watch the first families move in, then stretch it into a Timber Longhouse for twice as many. Rebuilding that as a Stone Cottage is the one village build that spends stone — and a 🪨 Miners’ Hut digs it for you.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">👷</span><span><b>Villagers work the yards.</b> Every yard needs villagers to run — without a crew it produces nothing, and a half-manned one does half the work. The 🪚 Lumberjack Hut and 🪨 Miners’ Hut hold three each. More homes mean more workers.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🍞</span><span><b>Villages live off what they grow.</b> Fields bank their harvest in the granary, wells refill the cistern, and every villager eats and drinks each tax day. Liberation leaves relief supplies for the first days — then the stores must be earned. If they run dry, folk go hungry, pay less and drift away: raise a 🏹 Hunter-Gatherer Hut and 🪣 Timber Well early, a 🧺 Storehouse to hold more, or send a 🛒 supply cart in a pinch. Grain Farms and the other big yards open when villages merge into a Town.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏗️</span><span><b>Then dig for stone.</b> A 🪨 Miners’ Hut lets your village dig its own — enough to rebuild your homes as Stone Cottages. A Town does it properly: one villager in a ⛏️ Quarry out-digs three in a hut, and the first Quarry costs no stone at all. Everything else a village raises stays coins and timber.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">⭐</span><span><b>Earn the merge star.</b> A village wears its ⭐ at 16 folk and 75% happiness. Nothing merges on its own: three starred villages within 5 km show a Merge button — press it, and one Town rises with every building the three built.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">⬆️</span><span><b>Upgrade the whole Town at once.</b> The Town Hall carries one Upgrade order that raises every home and yard across all wards — no ward micromanaging. Old villages stay visitable from the Hall, just to look.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🛡️</span><span><b>Merge 3 starred Towns into a County.</b> A town earns its ⭐ at 120 folk and 75% happiness. The County Hall runs the whole region: one chest, one Warden, one region-wide Upgrade order — and every town stays visitable.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🏰</span><span><b>Titles nest, Crusader-Kings style:</b> 2 Counties within 600 km unite into a Duchy (+20% unity taxes), 2 Duchies within 2000 km proclaim a Kingdom (+25%), and 2 Kingdoms anywhere on Earth proclaim your Empire (+30%). Your crown grows the same way: Count → Duke → Monarch → Emperor.</span></div>' +
-    '<div class="empire-help-row"><span class="ehr-icon">🕊️</span><span><b>Two counties can trade.</b> Sky-caravans fly between their capitals and pay into every tax day. The farther apart, the richer the cargo.</span></div>') : '';
-  const tributeNow = Date.now();
-  const nextMs = hasTribute ? null : empireNextTributeCountdownMs(tributeNow);
-  const nextTributeAt = nextMs !== null ? tributeNow + nextMs : null;
   // The Royal Ledger lives in a tiny 👑 button beside the screen title now —
   // Yaan's ask (2026-08-20): the stats are reference, not the main event.
   const ledgerPop = $('empireLedgerPop');
@@ -25198,13 +25190,10 @@ function renderEmpirePanel() {
   // Order on screen: the tabs sit directly under the map, the tax chest under
   // them, and the reference bits — where am I, how it all works — wait at the
   // very bottom as two quiet pop-downs.
-  const footerHtml = count
-    ? '<div class="empire-footer">' +
-      empireDrawerHTML('locator', false, '📍', 'FIND YOURSELF', 'You, your town, your county — one tap each', null, locatorChipsHtml)
-        .replace('class="empire-drawer"', 'class="empire-drawer is-footer" name="empire-footer"') +
-      (helpHtml ? helpHtml.replace('class="empire-drawer"', 'class="empire-drawer is-footer" name="empire-footer"') : '') +
-      '</div>'
-    : '';
+  // Yaan's ask (2026-08-24): the Empire screen ends at the tax chest. The
+  // FIND YOURSELF locator and the HOW YOUR EMPIRE WORKS guide are both gone —
+  // the ladder teaches itself by being played.
+  const footerHtml = '';
   panel.innerHTML = navTabsHtml +
     (count
       ? ''
@@ -25213,7 +25202,7 @@ function renderEmpirePanel() {
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">2</span><span><b>Win its Liberation Battle</b> to scatter the darkness.</span></div>' +
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">3</span><span><b>Raise a birdhouse</b> and the village joins your empire — its daylight returns, and its taxes flow every 8 hours.</span></div>' +
         '<div class="empire-empty">Your whole empire will appear here: villages, towns, regions and trade.</div></div>') +
-    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>' + (hasTribute ? '💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ NOTHING BANKED YET' + (nextTributeAt ? ' <span data-empire-tribute-countdown data-empire-tribute-at="' + nextTributeAt + '">— FULL CYCLE IN ' + formatBuildCountdown(nextMs) + '</span>' : '')) + '</button>' : '') +
+    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireTakingsSoFar(due)) + '</button>' : '') +
     footerHtml;
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="merge-villages"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeVillages(btn.dataset.seeds); }));
@@ -25224,20 +25213,10 @@ function renderEmpirePanel() {
   panel.querySelectorAll('[data-action="empire-settlement"]').forEach(btn => btn.addEventListener('click', () => { openEmpireTown(btn.dataset.settlement); }));
   // Locator taps point at the map: scroll it into view, then frame the target.
   const scrollMapIntoView = () => $('empireMapCard')?.scrollIntoView({ behavior:'smooth', block:'center' });
-  panel.querySelector('[data-action="locator-me"]')?.addEventListener('click', () => { SFX.tap(); scrollMapIntoView(); empireMapUserAdjusted = true; frameEmpirePlayer(); });
-  panel.querySelector('[data-action="locator-home"]')?.addEventListener('click', ev => {
-    SFX.tap();
-    scrollMapIntoView();
-    focusEmpireVillage(ev.currentTarget.dataset.seed);
-  });
-  panel.querySelector('[data-action="locator-settlement"]')?.addEventListener('click', ev => { SFX.tap(); scrollMapIntoView(); frameEmpireSettlement(ev.currentTarget.dataset.settlement); });
-  panel.querySelector('[data-action="locator-region"]')?.addEventListener('click', ev => { SFX.tap(); frameEmpireRegion(ev.currentTarget.dataset.region); });
   // Drawers remember whether the player left them open, across re-renders.
   panel.querySelectorAll('details[data-empire-drawer]').forEach(drawer => {
     drawer.addEventListener('toggle', () => { empireDrawerOpenState[drawer.dataset.empireDrawer] = drawer.open; });
   });
-  if (nextTributeAt) ensureEmpireTributeCountdownTicker();
-  else stopEmpireTributeCountdownTicker();
 }
 
 // ============================================================================
@@ -26082,11 +26061,9 @@ function renderTownScreen() {
   const mixedPolicies = new Set(seatRows.map(row => row.state.policy)).size > 1;
   const policyNote = !policyUnlocked ? (settle.tier === 'city' ? 'Raise every Borough Hall to level 2 before holding a City-wide policy vote.' : 'Raise the Town Hall to level 2 to convene the Council.') : townHasAccruedTribute(settle, now) ? 'Collect the strongbox before changing policy, so old earnings cannot be repriced.' : mixedPolicies ? 'Borough policies remain separate until a City-wide vote. Choose one policy to unite them for at least 24 hours.' : 'Choose carefully. Every bonus has a real trade-off: policies trade one advantage for another and last at least 24 hours.';
   const storesFull = ['food','water'].every(kind => snap.provisions[kind].store >= snap.provisions[kind].cap);
-  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), {
-    titlePrefix:name + ' ',
-    copy:'Appoint a clever companion to run every project in the Town.',
-    effectCopy:'Every build rises faster and costs a little less — and the Town pays more taxes, timber, stone and goods.'
-  });
+  // A town desk is a village post at the settlement's heart, so it reads bare
+  // too: title, holder, list. No copy override — none of it would render.
+  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), { titlePrefix:name + ' ' });
   // The county is the rung above the Hall. Since merge-when-ready-v290 towns
   // never unite on their own: this section shows the town's own merge star,
   // the Merge button when three starred towns stand ready, and the door into
@@ -34339,6 +34316,133 @@ function storesSellRowHTML(kind, id) {
     '</div>';
 }
 
+// --- The Magpie Market: the Academy's trading post (v314) -------------------
+// The fifth building on the Academy ladder, and the only counter in the game
+// that sells materials back to the player. Selling reuses the Royal Stores'
+// shelf prices; buying pays a rarity-scaled markup on top (loot_crafting_core
+// .js). The spread means a round trip through the market always loses coins,
+// so quests stay the cheap way to get anything precious — the market is the
+// shortcut you pay for.
+const MAGPIE_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+// Every crafting material, cheapest first. The market deals in materials
+// only: the Royal Stores still handles food, gear and curios.
+function magpieMarketStock() {
+  let materials = {};
+  try { materials = lootCore().MATERIALS || {}; } catch (e) { return []; }
+  return Object.values(materials).slice().sort((a, b) => {
+    const byRarity = MAGPIE_RARITY_ORDER.indexOf(a.rarity) - MAGPIE_RARITY_ORDER.indexOf(b.rarity);
+    return byRarity !== 0 ? byRarity : String(a.label).localeCompare(String(b.label));
+  });
+}
+
+// The posted Market Trader haggles. Same shape as the Barracks' recruiting
+// discount, so a discount means the same thing wherever the player meets one:
+// a perfect bird takes about a quarter off, a vacant post pays full price.
+function magpieMarketDiscount() {
+  const mult = academyRoleMultiplier('magpie_market');
+  return mult > 1 ? 1 / (1 + (mult - 1) * 0.5) : 1;
+}
+
+function magpieMarketOwned(id) {
+  return Math.max(0, Math.floor(Number(gameState.inventory && gameState.inventory.items && gameState.inventory.items[id]) || 0));
+}
+
+function magpieMarketBuyQuote(id, qty) {
+  const mat = lootCore().materialById(id);
+  if (!mat) return { each: 0, qty: 0, total: 0, afford: 0 };
+  return lootCore().buyQuote('material', mat.rarity, gameState.player.coins || 0, qty, magpieMarketDiscount());
+}
+
+// Selling at the counter is the Royal Stores' own sale — same shelf, same
+// price — plus the two things only a deal with the magpies means: it counts
+// toward the chain, and it redraws the stall. Comparing the stack before and
+// after is what proves a sale happened, so a refused click counts for nothing.
+function magpieMarketSell(id, qty) {
+  const before = magpieMarketOwned(id);
+  storesSellItem('material', id, qty);
+  if (magpieMarketOwned(id) < before) magpieMarketRecordTrade();
+  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+}
+
+function magpieMarketRecordTrade() {
+  gameState.player.marketTrades = (Number(gameState.player.marketTrades) || 0) + 1;
+  updateQuestProgress('market_traded', 1);
+}
+
+function magpieMarketBuy(id, qty) {
+  const mat = lootCore().materialById(id);
+  if (!mat) return;
+  const quote = magpieMarketBuyQuote(id, qty);
+  if (!quote.each) { showToast('The magpies do not deal in that.'); return; }
+  if (!quote.qty) { showResourceQuestPrompt('coins', quote.each, 'a ' + mat.label); return; }
+  // Make somewhere to put the goods BEFORE taking the coins: a save with no
+  // item bag must never charge the player for a material it then drops.
+  if (!gameState.inventory || typeof gameState.inventory !== 'object') gameState.inventory = {};
+  if (!gameState.inventory.items || typeof gameState.inventory.items !== 'object') gameState.inventory.items = {};
+  addCoins(-quote.total);
+  gameState.inventory.items[id] = magpieMarketOwned(id) + quote.qty;
+  saveState();
+  SFX.questComplete();
+  vibrate(25);
+  magpieMarketRecordTrade();
+  showToast('⚖️ Bought ' + quote.qty + ' × ' + mat.label + ' for ' + quote.total + ' 🪙.');
+  updateHeader();
+  renderInventory();
+  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+}
+
+// One counter row per material: what it is, how many you hold, and the four
+// deals available on it. Buttons the purse or the shelf cannot cover render
+// disabled rather than vanishing, so the price stays readable.
+function magpieMarketRowHTML(mat) {
+  const owned = magpieMarketOwned(mat.id);
+  const one = magpieMarketBuyQuote(mat.id, 1);
+  const five = magpieMarketBuyQuote(mat.id, 5);
+  const buyFive = one.each * 5;
+  const sellOne = storesSellQuote('material', mat.id, 1);
+  const sellAll = storesSellQuote('material', mat.id, 'all');
+  const deals = [
+    one.qty
+      ? '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',1)">BUY 1 · −' + one.each + ' 🪙</button>'
+      : '<button type="button" class="magpie-btn buy" disabled>BUY 1 · −' + one.each + ' 🪙</button>',
+    five.qty >= 5
+      ? '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',5)">BUY 5 · −' + buyFive + ' 🪙</button>'
+      : '<button type="button" class="magpie-btn buy" disabled>BUY 5 · −' + buyFive + ' 🪙</button>',
+    sellOne.qty
+      ? '<button type="button" class="src-sell-btn" onclick="magpieMarketSell(\'' + mat.id + '\',1)">SELL 1 · +' + sellOne.each + ' 🪙</button>'
+      : '<button type="button" class="src-sell-btn" disabled>SELL 1 · +' + lootCore().sellValue('material', mat.rarity) + ' 🪙</button>',
+    sellAll.qty > 1
+      ? '<button type="button" class="src-sell-btn all" onclick="magpieMarketSell(\'' + mat.id + '\',\'all\')">ALL ' + sellAll.qty + ' · +' + sellAll.total + ' 🪙</button>'
+      : ''
+  ].join('');
+  return '<div class="magpie-row" data-rarity="' + escapeHtml(mat.rarity) + '">' +
+    '<div class="src-icon">' + mat.icon + '</div>' +
+    '<div class="src-main">' +
+      '<div class="src-name">' + escapeHtml(mat.label) + '<span class="magpie-rarity">' + escapeHtml(mat.rarity) + '</span></div>' +
+      '<div class="src-copy">' + escapeHtml(mat.copy) + '</div>' +
+      '<div class="magpie-deals">' + deals + '</div>' +
+    '</div>' +
+    '<div class="src-count">' + owned + '</div>' +
+  '</div>';
+}
+
+function renderMagpieMarketPanelHTML() {
+  const stock = magpieMarketStock();
+  if (!stock.length) return '<div class="stores-panel"><div class="inventory-empty">The stalls are still being set up — try again in a moment.</div></div>';
+  const discount = magpieMarketDiscount();
+  const savedPct = Math.round((1 - discount) * 100);
+  const haggle = savedPct > 0
+    ? '<span class="magpie-haggle">⚖️ Your Market Trader has talked ' + savedPct + '% off every price.</span>'
+    : '<span class="magpie-haggle vacant">Post a charming bird as Market Trader below and every price drops.</span>';
+  return '<div class="stores-panel magpie-panel">' +
+    '<div class="stores-panel-title">⚖️ The counter</div>' +
+    '<div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse' + haggle + '</div>' +
+    '<div class="magpie-note">Magpies buy anything and sell it dearer. Quests are still the cheapest way to a Phoenix Ember — this is the shortcut you pay for.</div>' +
+    '<div class="stores-res-grid">' + stock.map(magpieMarketRowHTML).join('') + '</div>' +
+  '</div>';
+}
+
 // --- Treasury banner: the grand-strategy resource bar -----------------------
 function renderStoresTreasury() {
   const el = $('storesTreasury');
@@ -38358,7 +38462,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -38798,6 +38902,10 @@ const PLAYER_QUESTS = [
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
     measure:() => Number(gameState.player.mealsServed) || 0 },
   { id:'pq_diet_badge',     name:'Feed a bird the right meal', desc:'Give any companion one of its proper foods', type:'proper_meal_fed', target:1, reward:60, coins:30, icon:'\u{1F37D}\u{FE0F}', go:'academy', focusRoom:'kitchen' },
+  { id:'pq_build_market',   name:'Build the Magpie Market', desc:'Raise the Academy trading post to buy and sell materials', type:'build_magpie_market', target:1, reward:55, coins:25, icon:'\u{2696}\u{FE0F}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('magpie_market') ? 1 : 0 },
+  { id:'pq_market_trade',   name:'Strike a deal', desc:'Buy or sell a material at the Magpie Market', type:'market_traded', target:1, reward:45, coins:20, icon:'\u{1FA99}', go:'academy', focusRoom:'magpie_market',
+    measure:() => Number(gameState.player && gameState.player.marketTrades) || 0 },
   { id:'pq_build_hospital', name:'Build the Bird Hospital', desc:'Raise the Bird Hospital at the Academy', type:'build_hospital', target:1, reward:55, coins:25, icon:'\u{1F3E5}', go:'academy',
     measure:() => isAcademyBuildingBuilt('hospital') ? 1 : 0 },
   { id:'pq_hospital_rest',  name:'Prescribe some rest', desc:'Station a companion in the Bird Hospital', type:'station_hospital', target:1, reward:45, coins:20, icon:'\u{1FA79}', go:'academy',
@@ -39409,7 +39517,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-card-carry-charm-v313-20260824';
+const BURBZ_BUILD = 'empire-village-declutter-v317-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
