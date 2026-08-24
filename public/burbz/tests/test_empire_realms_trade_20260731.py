@@ -210,7 +210,7 @@ def test_trade_routes_are_stored_healed_and_collected_with_tribute():
     assert "function empireTradeRouteRecords()" in logic
     assert "function empireOpenTradeRoute(" in logic
     assert "empireTradeDue(now)" in logic  # folded into empireTributeReady
-    assert "lastTradeAt = Math.max(" in logic  # collecting advances the caravan clock by what it paid
+    assert "lastTradeAt = now" in logic  # collecting clears the caravan clock
     # Routes between regions that merged into one are pruned, not left rotting.
     assert "a.id === b.id" in logic
 

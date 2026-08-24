@@ -538,6 +538,11 @@ function villageEconomySnapshot() {
   };
 }
 function empireVillageTributePeriods() { return 1; }
+function villageTributeTake(rec, periods, snap) {
+  return { coins: Math.floor(periods * snap.taxes), branches: Math.floor(periods * snap.branches),
+           stone: Math.floor(periods * snap.production.stone),
+           materials: snap.production.materials, larder: snap.production.larder };
+}
 
 const ledger = townEconomySnapshot(settlement);
 const ledgerResult = {

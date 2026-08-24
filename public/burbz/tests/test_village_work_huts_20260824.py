@@ -89,9 +89,9 @@ def test_both_huts_are_village_tier_three_hand_yards_bought_with_timber():
         assert "unlockLevel" not in line           # ungated: this is how a village bootstraps
         assert "maxLevel: 3" in line
     assert "name: 'Lumberjack Hut'" in lumber and "branchesPerLevel: 5" in lumber
-    assert "workPriority: 2" in lumber             # timber, beside the town Lumber Camp
+    assert "workPriority: 6" in lumber             # AFTER the town Lumber Camp, never before
     assert "name: 'Miners’ Hut'" in mine and "stonePerLevel: 6" in mine
-    assert "workPriority: 3" in mine               # stone, beside the town Quarry
+    assert "workPriority: 7" in mine               # AFTER the town Quarry, never before
 
 
 def test_the_town_industry_is_still_the_better_deal_per_villager():
@@ -189,6 +189,62 @@ console.log(JSON.stringify({
     assert out["clearedTo"] == 0           # paid in full, clock carried to now
 
 
+def test_a_long_idle_holding_cannot_bank_its_cap_twice():
+    """Regression: the clock must never land ON the cap, which re-banks it.
+
+    The first cut of this release cleared to max(base + paidMs, now - cap).
+    For a holding idle 48h+ those two are EQUAL, so a second tap in the same
+    second paid another full 24 hours -- 6 cycles for a day's accrual.
+    """
+    html = HTML.read_text(encoding="utf-8")
+    out = run_node("""
+const EMPIRE_TRIBUTE_INTERVAL_MS = 8 * 60 * 60 * 1000, EMPIRE_TRIBUTE_MAX_PERIODS = 3;
+%s
+const now = 1e12;
+const v = { lastTributeAt: now - 72 * 3600000 };   // three days, never collected
+let total = 0;
+for (let i = 0; i < 5; i++) {                      // five taps, same instant
+  const p = empireVillageTributePeriods(v, now);
+  total += p;
+  empireAdvanceTributeClock(v, p, now);
+}
+console.log(JSON.stringify({ total }));
+""" % "\n".join([function_source(html, "empireVillageTributeBase"),
+                 function_source(html, "empireVillageTributePeriods"),
+                 function_source(html, "empireAdvanceTributeClock")]))
+    assert out["total"] == 3   # the cap, once, however many times you tap
+
+
+def test_the_strongbox_keeps_the_change_so_frequent_collection_loses_nothing():
+    """A one-per-cycle material must survive being collected six times a day.
+
+    One clock cannot serve resources with different rates: advance it by what
+    the fastest earned and the slow ones are destroyed; advance it by the
+    slowest and the fast ones pay twice. So the holding banks the fraction.
+    """
+    html = HTML.read_text(encoding="utf-8")
+    out = run_node("""
+const ensureVillageEconomy = r => r.economy;
+%s
+%s
+const snap = { taxes: 10, branches: 7, production: { stone: 6, materials: { oak_twig: 1 }, larder: {} } };
+const mk = () => ({ economy: { tributeCarry: {} } });
+const sum = (a, b) => ({ coins: a.coins + b.coins, branches: a.branches + b.branches, stone: a.stone + b.stone,
+                         twig: a.twig + (b.materials.oak_twig || 0) });
+let often = { coins: 0, branches: 0, stone: 0, twig: 0 };
+const rec = mk();
+for (let i = 0; i < 6; i++) often = sum(often, villageTributeTake(rec, 0.5, snap, true));   // every 4h for a day
+const once = villageTributeTake(mk(), 3, snap, true);                                       // one collection at the cap
+console.log(JSON.stringify({ often, once: { coins: once.coins, branches: once.branches, stone: once.stone, twig: once.materials.oak_twig || 0 } }));
+""" % (function_source(html, "villageTributeCarry"), function_source(html, "villageTributeTake")))
+    # Six part-cycle collections earn exactly what one full collection earns.
+    assert out["often"] == out["once"]
+    assert out["once"] == {"coins": 30, "branches": 21, "stone": 18, "twig": 3}
+    # And a display pass must never bank anything.
+    take = function_source(html, "villageTributeTake")
+    assert "if (commit) { const eco = ensureVillageEconomy(rec); if (eco) eco.tributeCarry = next; }" in take
+
+
 def test_collecting_often_never_loses_time():
     """Collect twice in a cycle and the clock advances by exactly what it paid."""
     html = HTML.read_text(encoding="utf-8")
@@ -238,7 +294,7 @@ def test_the_badge_and_the_policy_lock_still_mean_a_whole_cycle():
 def test_one_timestamp_threads_through_ready_and_collect():
     """Fractional periods make even a few milliseconds of drift a real loss."""
     collect = function_source(HTML.read_text(encoding="utf-8"), "collectEmpireTribute")
-    assert "const now = Date.now();\n  const due = empireTributeReady(now);" in collect
+    assert "empireTributeReady(now, true)" in collect  # the paying pass banks the change
 
 
 # ---------------------------------------------------------------------------

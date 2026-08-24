@@ -132,7 +132,7 @@ console.log(JSON.stringify({{scheduled:scheduled.length, cleared, renders, ticki
         "scheduled": 1,
         "cleared": [77],
         "renders": 1,
-        "tickingText": "— NEXT IN 3000",
+        "tickingText": "— FULL CYCLE IN 3000",
         "timer": None,
     }
 

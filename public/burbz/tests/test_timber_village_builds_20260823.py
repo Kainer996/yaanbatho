@@ -221,7 +221,8 @@ def test_the_shortfall_line_names_the_source_of_what_is_missing():
     panel = function_source(HTML.read_text(encoding="utf-8"), "renderVillageManagePanel")
     assert "Quarry Stone arrives every 8h" not in panel
     # v310: the village digs its own stone now, so the hint names the hut.
-    assert "post miners in your Miners" in panel
+    assert "your miners are digging it" in panel
+    assert "raise a Miners" in panel  # ...and the honest prompt when there is no hut yet
     assert "tap to send birds after it" in panel
     assert "shortages.length && !locked && slotsFree > 0" in panel
 
@@ -235,7 +236,7 @@ def test_the_3d_village_reads_the_three_steps():
 
 def test_the_copy_stops_promising_stone_to_villages():
     html = HTML.read_text(encoding="utf-8")
-    assert "Every village build is bought with coins and timber alone" in html
+    assert "Almost every village build is bought with coins and timber alone" in html
     # The quarry's first cut bankrolls town yards, not a village build.
     assert "enough for the first Grain Farm and Lumber Camp" in html
     assert "enough stone for Cottage Row" not in html

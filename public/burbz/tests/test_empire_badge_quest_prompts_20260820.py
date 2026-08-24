@@ -86,7 +86,7 @@ def test_collectibles_counter_covers_every_strongbox():
     src = function_source(html_text(), "empireCollectiblesWaiting")
     assert "townHasAccruedTribute(settlement, now)" in src  # merged settlements
     assert "Math.floor(empireVillageTributePeriods(v, now)) > 0" in src  # lone villages, WHOLE cycles only
-    assert "empireTradeRoutePeriods(rec, now) > 0" in src  # caravan routes
+    assert "Math.floor(empireTradeRoutePeriods(rec, now)) > 0" in src  # caravans, WHOLE cycles
 
 
 def test_badge_heartbeat_carries_the_empire_count():
@@ -185,7 +185,7 @@ def test_every_coin_and_timber_build_gate_offers_the_prompt():
     # Stone has no errand — quarries make it — so that gate keeps its toast
     # (v299 reworded it: quarries are town works now).
     build = function_source(html, "empireBuildStructure")
-    assert "Quarries are town works" in build
+    assert "Miners" in build and "Quarry once your villages merge" in build
 
 
 def test_short_build_buttons_stay_tappable():

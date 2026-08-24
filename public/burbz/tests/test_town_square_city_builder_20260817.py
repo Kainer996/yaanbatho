@@ -113,8 +113,8 @@ def test_the_building_sheet_shows_stats_crew_and_network_standing():
     sheet = function_source(html, "townBuildingSheetHTML")
     assert "villageBuildingLevel(rec, building.id)" in sheet
     assert "villageBuildingTier(building, level)" in sheet
-    assert "townBuildingOutputText(building, level)" in sheet
-    assert "crew.staffed[building.id]" in sheet
+    assert "townBuildingOutputText(building, level, villageCrewShare(building, crew))" in sheet
+    assert "crew.assigned && crew.assigned[building.id]" in sheet
     assert "townNetworkLevel(settle, building.id)" in sheet
     assert "townBuilderSlots(settle)" in sheet
     assert 'data-action="sheet-build"' in sheet
