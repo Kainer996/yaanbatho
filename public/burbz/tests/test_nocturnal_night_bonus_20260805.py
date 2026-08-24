@@ -26,9 +26,9 @@ RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "magpie-market-v314-20260824"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 

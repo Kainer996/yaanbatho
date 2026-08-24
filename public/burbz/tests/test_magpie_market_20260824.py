@@ -1,6 +1,6 @@
 """The Magpie Market — the Academy's trading post.
 
-Yaan's ask (2026-08-24), pinned as `magpie-market-v314-20260824`:
+Yaan's ask (2026-08-24), pinned as `magpie-market-v316-20260824`:
 
 > "Can you add a building that can be built to the Academy, not much later on
 > in the levels, that is a trade building so that the player can buy and sell
@@ -30,7 +30,7 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 CORE_3D = ROOT / "academy_3d_core.js"
 ALIVE_CORE = ROOT / "academy_alive_core.js"
 
-OWN_RELEASE_PIN = "magpie-market-v314-20260824"
+OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 

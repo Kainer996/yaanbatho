@@ -58,7 +58,7 @@ def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
     # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue;
     # village-chain-v307 added six village links to the late chain, and
-    # magpie-market-v314 added the build-and-trade pair after the Kitchen.
+    # magpie-market-v316 added the build-and-trade pair after the Kitchen.
     assert len(quests) == 34
     types = [q["type"] for q in quests]
     for needed in (

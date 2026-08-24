@@ -125,13 +125,13 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     # The marker is kept for ever by the append-only BURBZ_CACHE lineage, which
     # is what actually refreshes an installed PWA. It is no longer in
     # index.html: it was only ever there as the alive core's `?v=` pin, and
-    # magpie-market-v314 re-pinned that core.
+    # magpie-market-v316 re-pinned that core.
     assert marker in SW
-    assert "academy_alive_core.js?v=magpie-market-v314-20260824" in HTML
+    assert "academy_alive_core.js?v=magpie-market-v316-20260824" in HTML
     # battle_core moved with v258 (Night Wings), then with v287 (attack preview);
     # the loot core moved with v295 (the Stores market).
     for asset, core_pin in (("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
-                            ("loot_crafting_core.js", "magpie-market-v314-20260824")):
+                            ("loot_crafting_core.js", "magpie-market-v316-20260824")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML
         assert f"'./{pin}'" in SW

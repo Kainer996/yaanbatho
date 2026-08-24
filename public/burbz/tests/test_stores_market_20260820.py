@@ -26,9 +26,9 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
 ROLES_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "magpie-market-v314-20260824"
-# magpie-market-v314 edited both cores, so both ship under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
+# magpie-market-v316 edited both cores, so both ship under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(source: str) -> dict:

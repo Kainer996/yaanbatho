@@ -10,8 +10,8 @@ CORE = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def _node(source: str):

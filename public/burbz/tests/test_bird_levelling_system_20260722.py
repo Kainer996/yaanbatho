@@ -24,8 +24,8 @@ SW_PATH = ROOT / "sw.js"
 QUEST_CORE_PATH = ROOT / "quest_core.js"
 QUEST_CORE_PIN = "ordered-quest-markers-v224-20260804"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def function_source(html: str, name: str) -> str:

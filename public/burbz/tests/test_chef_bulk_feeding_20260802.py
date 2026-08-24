@@ -24,10 +24,10 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def function_source(html: str, name: str) -> str:

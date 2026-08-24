@@ -303,7 +303,7 @@ def test_the_quest_board_renders_collapsible_category_drawers():
 
 def test_academy_core_and_loot_core_ship_fresh_pins_and_a_bumped_cache():
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    for pin in ("academy_treehouse_core.js?v=magpie-market-v314-20260824",):
+    for pin in ("academy_treehouse_core.js?v=magpie-market-v316-20260824",):
         assert pin in HTML, pin
         assert f"./{pin}" in sw, pin
     loot_match = re.search(r'loot_crafting_core\.js\?v=[^"\']+', HTML)

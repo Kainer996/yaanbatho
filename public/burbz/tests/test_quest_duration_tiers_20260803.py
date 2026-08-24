@@ -8,8 +8,8 @@ CORE = ROOT / "academy_treehouse_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "roost-retired-v302-20260820"
-# magpie-market-v314 edited the Academy core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+# magpie-market-v316 edited the Academy core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def node_json(source: str):

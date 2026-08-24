@@ -19,9 +19,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "magpie-market-v314-20260824"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
@@ -31,7 +31,7 @@ ACADEMY_UNLOCKS = {
     "training": 2,
     "quest_roost": 3,
     "kitchen": 4,
-    # magpie-market-v314: trade is the fifth room on the ladder, so the
+    # magpie-market-v316: trade is the fifth room on the ladder, so the
     # Hospital and The Crowbar each slipped one gate to make room.
     "magpie_market": 5,
     "hospital": 6,

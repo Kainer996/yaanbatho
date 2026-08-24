@@ -13,10 +13,10 @@ HTML = ROOT / "index.html"
 ROLES = ROOT / "bird_roles_core.js"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "chef-mastery-feed-all-v261-20260813"
-CURRENT_BUILD = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
 ROLES_PIN = "roost-retired-v302-20260820"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(script: str) -> dict:

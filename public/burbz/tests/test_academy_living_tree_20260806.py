@@ -33,9 +33,9 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # Later releases advance BURBZ_BUILD but academy_alive_core.js has not moved,
 # so the core keeps its own pin while the build tracks the current tag.
-CURRENT_BUILD = "magpie-market-v314-20260824"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 PLACEABLE_ROOMS = (
     "tavern", "quest_roost", "crowbar", "training", "kitchen",

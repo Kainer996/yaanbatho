@@ -19,9 +19,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "magpie-market-v314-20260824"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 

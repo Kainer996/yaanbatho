@@ -168,7 +168,7 @@ def test_drunk_potions_restock_from_the_bag():
 # ---------------------------------------------------------------------------
 
 def test_loot_core_version_is_bumped_and_consistent():
-    pin = 'loot_crafting_core.js?v=magpie-market-v314-20260824'
+    pin = 'loot_crafting_core.js?v=magpie-market-v316-20260824'
     assert pin in HTML
     assert f"'./{pin}'" in SW
     assert "fletchers-forge-20260719" not in HTML

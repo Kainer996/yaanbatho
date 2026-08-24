@@ -14,8 +14,8 @@ CORE_PATH = ROOT / "academy_treehouse_core.js"
 ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def _node_json(source: str):

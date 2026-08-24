@@ -23,9 +23,9 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 ROLE_CORE_PIN = "roost-retired-v302-20260820"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "magpie-market-v314-20260824"
-# magpie-market-v314 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(source: str) -> dict:

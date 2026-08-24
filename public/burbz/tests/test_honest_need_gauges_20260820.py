@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "honest-need-gauges-v296-20260820"
-CURRENT_BUILD = "magpie-market-v314-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
 
 
 def run_node(source: str) -> dict:
