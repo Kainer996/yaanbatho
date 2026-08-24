@@ -2229,6 +2229,20 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-unit.targetable { border-color:var(--hp-red); box-shadow:0 0 12px rgba(224,89,74,0.5); animation:targetPulse 0.9s ease-in-out infinite; cursor:crosshair; }
 @keyframes targetPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
 .arena-unit.shake { animation:arenaShake .4s ease; }
+/* A bird taking damage lights up and shakes, so the eye finds it without
+   reading the log — the same on both sides of the arena. */
+.arena-unit.hit { animation:arenaShake .4s ease, arenaHitFlash .5s ease; }
+@keyframes arenaHitFlash {
+  0%   { border-color:#fff; filter:brightness(1); box-shadow:0 0 0 rgba(255,120,110,0); }
+  18%  { border-color:#fff; filter:brightness(1.9); box-shadow:0 0 22px 5px rgba(255,120,110,.95); }
+  100% { filter:brightness(1); box-shadow:0 0 0 rgba(255,120,110,0); }
+}
+/* Any bird in the flock can take the turn that came up — the ones waiting
+   read as tappable. */
+.arena-squad.player .arena-unit.swappable { cursor:pointer; border-style:dashed; border-color:rgba(214,168,79,.62); }
+.arena-squad.player .arena-unit.swappable:hover,
+.arena-squad.player .arena-unit.swappable:focus-visible { border-style:solid; border-color:var(--accent); box-shadow:0 0 12px rgba(214,168,79,.5); transform:translateY(-2px); }
+.arena-unit .au-swap-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:7.5px; font-weight:800; letter-spacing:.06em; padding:1px 6px; border-radius:8px; background:rgba(214,168,79,.92); color:#000; z-index:3; white-space:nowrap; }
 .arena-unit.target-locked { border-color:#f0b429; box-shadow:0 0 14px rgba(240,180,41,0.65); animation:none; transform:scale(1.05); }
 .arena-unit .au-turn-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; letter-spacing:1px; padding:1px 7px; border-radius:8px; background:var(--accent); color:#000; z-index:3; }
 .arena-unit .au-target-flag { position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:8px; font-weight:800; letter-spacing:1px; padding:1px 7px; border-radius:8px; background:#f0b429; color:#000; z-index:4; white-space:nowrap; }
@@ -2238,8 +2252,18 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-unit .au-art { width:100%; aspect-ratio:1; border-radius:9px; object-fit:cover; background:var(--bg4); display:block; }
 .arena-unit .au-emoji { font-size:32px; line-height:52px; height:52px; }
 .arena-unit .au-name { font-size:9px; color:var(--text2); font-weight:700; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.arena-unit .au-hpbar { height:5px; border-radius:3px; background:var(--bg4); margin-top:3px; overflow:hidden; }
+.arena-unit .au-hpbar { position:relative; height:5px; border-radius:3px; background:var(--bg4); margin-top:3px; overflow:hidden; }
 .arena-unit .au-hpbar > div { height:100%; border-radius:3px; transition:width .45s ease, background .3s; }
+/* The blow before it lands: the slice of health a chosen move would take off
+   glows red on the target's own bar, so the cost is read on the bird rather
+   than off a number. */
+.arena-unit .au-hpbar.doomed { height:7px; margin-top:2px; box-shadow:0 0 10px 1px rgba(255,74,92,.95); border:1px solid rgba(255,120,110,.75); }
+/* The white tick is the point of it: that is where the bar will end. The red
+   slice to its right is what the blow takes, so even a graze reads. */
+.arena-unit .au-hpbar .au-hp-doom { position:absolute; top:0; height:100%; box-sizing:border-box; border-left:2px solid #fff6f4; border-radius:0 3px 3px 0; background:linear-gradient(180deg,#ff9d90,#e0392b); transition:width .25s ease, left .25s ease; animation:hpDoomPulse .85s ease-in-out infinite; }
+.arena-unit .au-hpbar.lethal { box-shadow:0 0 13px 2px rgba(255,45,26,1); }
+.arena-unit .au-hpbar.lethal .au-hp-doom { background:linear-gradient(180deg,#fff1ef,#ff2d1a); border-left-color:#fff; }
+@keyframes hpDoomPulse { 0%,100% { opacity:.62 } 50% { opacity:1 } }
 .arena-unit .au-crbar { height:3px; border-radius:2px; background:var(--bg4); margin-top:2px; overflow:hidden; }
 .arena-unit .au-crbar > div { height:100%; border-radius:2px; background:linear-gradient(90deg,#4aa8e0,#43c6a8); transition:width .3s ease; }
 .arena-unit .au-barrier { position:absolute; top:3px; right:3px; font-size:8px; font-weight:800; color:#8fd0ff; background:rgba(24,40,64,0.85); border-radius:8px; padding:1px 4px; z-index:2; }
@@ -3431,6 +3455,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .sr-only { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 @keyframes navActionPulse { 0%,100% { transform:scale(1); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 5px rgba(255,74,92,.35); } 50% { transform:scale(1.08); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 10px rgba(255,74,92,.58); } }
 @media (prefers-reduced-motion: reduce) { .nav-action-badge { animation:none; } }
+@media (prefers-reduced-motion: reduce) {
+  .arena-unit.hit { animation:arenaHitFlash .5s ease; }
+  .arena-unit .au-hpbar .au-hp-doom { animation:none; opacity:.95; }
+}
 /* Guided-flow pointer: a bouncing arrow above the next nav tab Merlin wants
    tapped, plus a red attention dot on the tab itself. */
 .tutorial-nav-pointer { position:fixed; z-index:1200; bottom:calc(var(--nav-height) + 10px + var(--safe-bottom)); left:50%; transform:translateX(-50%); display:none; flex-direction:column; align-items:center; gap:2px; pointer-events:none; }
@@ -4819,7 +4847,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=roost-retired-v302-20260820"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
+<script src="battle_core.js?v=battle-pick-your-bird-v314-20260824"></script>
 <script src="loot_crafting_core.js?v=stores-market-project-manager-v295-20260820"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
@@ -37410,6 +37438,7 @@ function arenaUnitHTML(f, side, index, opts) {
   if (o.acting) cls.push('acting');
   if (o.targetable) cls.push('targetable');
   if (o.locked) cls.push('target-locked');
+  if (o.swappable) cls.push('swappable');
   if (f.nightHunter && !f.fainted) cls.push('night-hunter-aura');
   // Honest odds on the card: while a move is chosen, every living rival
   // shows the damage that move would land — so the player can compare
@@ -37417,16 +37446,29 @@ function arenaUnitHTML(f, side, index, opts) {
   const preview = o.preview
     ? '<div class="au-dmg-preview' + (o.preview.mult > 1 ? ' se' : o.preview.mult < 1 ? ' nve' : '') + '">' +
       (o.preview.magic ? '✨' : '⚔️') + '−' + o.preview.min + (o.preview.max > o.preview.min ? '–' + o.preview.max : '') +
-      (o.preview.mult > 1 ? ' ▲' : o.preview.mult < 1 ? ' ▽' : '') + '</div>'
+      (o.preview.mult > 1 ? ' ▲' : o.preview.mult < 1 ? ' ▽' : '') + (o.preview.min >= f.hp ? ' · KO' : '') + '</div>'
     : '';
+  // Once the move is aimed, the health it would cost glows on the target's own
+  // bar: the slice from where the bar would end to where it ends now.
+  let hpBarCls = 'au-hpbar';
+  let doomSlice = '';
+  if (o.doomed && o.preview && !f.fainted) {
+    const doomHp = Math.max(0, Math.min(f.hp, Math.round(o.preview.avg)));
+    if (doomHp > 0) {
+      const doomPct = Math.round(clamp(doomHp / f.maxHp, 0, 1) * 100);
+      hpBarCls += ' doomed' + (o.preview.min >= f.hp ? ' lethal' : '');
+      doomSlice = '<div class="au-hp-doom" style="left:' + Math.max(0, pct - doomPct) + '%; width:' + Math.max(5, doomPct) + '%;"></div>';
+    }
+  }
   return '<button class="' + cls.join(' ') + '" id="unit_' + side + '_' + index + '" onclick="battleTargetPick(\'' + side + '\',' + index + ')">' +
     (o.acting ? '<div class="au-turn-flag">TURN</div>' : '') +
     preview +
     (o.locked ? '<div class="au-target-flag">🎯 TARGET</div>' : '') +
+    (o.swappable ? '<div class="au-swap-flag">SEND IN</div>' : '') +
     (f.nightHunter ? '<div class="au-night-moon" title="Night Wings — nocturnal battle boost">🌙</div>' : '') +
     fighterArtHTML(f, 'au') +
     '<div class="au-name">' + escapeHtml(f.name) + '</div>' +
-    '<div class="au-hpbar"><div style="width:' + pct + '%; background:' + hpBarColor(pct) + ';"></div></div>' +
+    '<div class="' + hpBarCls + '"><div class="au-hp-fill" style="width:' + pct + '%; background:' + hpBarColor(pct) + ';"></div>' + doomSlice + '</div>' +
     (f.barrier > 0 ? '<div class="au-barrier">🛡️' + Math.round(f.barrier) + '</div>' : '') +
     '<div class="au-crbar"><div style="width:' + crPct + '%;"></div></div>' +
     (status ? '<div class="au-status">' + status + '</div>' : '') +
@@ -37481,9 +37523,16 @@ function renderArena() {
     const host = $(side === 'opponent' ? 'arenaOppRow' : 'arenaPlayerRow');
     host.innerHTML = b.teams[side].map((f, i) => arenaUnitHTML(f, side, i, {
       acting: acting && acting.side === side && acting.index === i,
+      // Any bird still flying can be sent in on this turn — never the one
+      // already holding it, and never one that is down.
+      swappable: side === 'player' && playerActing && !f.fainted && acting.index !== i,
       targetable: choosingTarget && side === 'opponent' && !f.fainted,
       locked: choosingTarget && side === 'opponent' && battleState.pendingTargetIndex === i && !f.fainted,
-      preview: side === 'opponent' && previews && !f.fainted ? previews[i] : null
+      preview: side === 'opponent' && previews && !f.fainted ? previews[i] : null,
+      // The bar glows on the bird actually being aimed at; a move that hits
+      // the whole squad glows on all of them.
+      doomed: side === 'opponent' && !!pendingAct && !f.fainted &&
+        (pendingAct.skill.aoe || battleState.pendingTargetIndex === i)
     })).join('');
   });
 
@@ -37537,7 +37586,8 @@ function renderArena() {
   }
   actions.innerHTML =
     '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' +
-      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK') : ' — pick a move') + '</div>' +
+      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK')
+        : ' — pick a move, or tap another of your birds to send it in instead') + '</div>' +
     confirmBar +
     acts.map((a, i) => {
       const m = a.skill;
@@ -37624,6 +37674,23 @@ function battleSelectSkill(skillIndex) {
 
 function battleTargetPick(side, index) {
   if (!battleState || battleState.busy) return;
+  // Your own flock: tapping a bird sends it in on the turn that came up. The
+  // two trade places on the turn meter, so the swap costs the flock nothing
+  // and gains it nothing — it only decides who swings.
+  if (side === 'player') {
+    const core = battleCore();
+    const b = battleState.battle;
+    if (!core || typeof core.substituteActor !== 'function') return;
+    if (b.phase !== 'act' || !b.acting || b.acting.side !== 'player') return;
+    if (!core.substituteActor(b, index)) return;
+    // The move belonged to the bird that stepped aside, so the aim resets.
+    battleState.pendingSkillIndex = null;
+    battleState.pendingTargetIndex = null;
+    SFX.tap();
+    vibrate(15);
+    renderArena();
+    return;
+  }
   if (battleState.pendingSkillIndex == null || side !== 'opponent') return;
   const f = battleState.battle.teams.opponent[index];
   if (!f || f.fainted) return;
@@ -37701,6 +37768,7 @@ function playBattleEvents(events) {
     setTimeout(() => {
       if (!battleState) return;
       addBattleLog(battleLogClassFor(ev), ev.text);
+      let struck = null;
       if (ev.type === 'damage') {
         const idx = ev.targetIndex != null && ev.targetIndex >= 0 ? ev.targetIndex : fighterIndexByName(b, ev.side, ev.name);
         if (battleState.liberation) {
@@ -37708,8 +37776,10 @@ function playBattleEvents(events) {
         } else {
           spawnDamageFloat(ev.side, idx, '-' + ev.dmg, (ev.crit ? 'crit' : '') + (ev.magic ? ' magic' : ''));
         }
-        const card = $('unit_' + ev.side + '_' + idx);
-        if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+        // Marked here, lit after the re-render below. renderArena rewrites
+        // both rows, so a class set on the card that is about to be replaced
+        // dies with the element and the animation never plays at all.
+        struck = 'unit_' + ev.side + '_' + idx;
         if (ev.magic && SFX.specialHit) SFX.specialHit();
         else if (SFX.hit) SFX.hit();
       }
@@ -37726,6 +37796,11 @@ function playBattleEvents(events) {
       if (ev.type === 'surge' && SFX.specialHit) SFX.specialHit();
       if (ev.type === 'faint' && !battleState.liberation && SFX.defeat) SFX.defeat();
       renderArena();
+      // Light up and shake, whichever side took it — on the fresh card.
+      if (struck) {
+        const card = $(struck);
+        if (card) { card.classList.remove('hit'); void card.offsetWidth; card.classList.add('hit'); }
+      }
     }, delay);
     delay += ev.type === 'fact' ? 450 : ev.type === 'info' ? 380 : 620;
   });
@@ -38941,7 +39016,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-card-carry-charm-v313-20260824';
+const BURBZ_BUILD = 'battle-pick-your-bird-v314-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

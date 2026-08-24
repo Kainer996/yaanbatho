@@ -494,6 +494,40 @@
     return Math.max(5, Math.round(base * (1 + clamp(pct, -0.6, 0.8))));
   }
 
+  // A bird's cooldowns tick down at the start of its own turn. Remember which
+  // ones moved, so a substitution can hand the tick over intact — swapping
+  // birds back and forth must never bank a free cooldown.
+  function tickTurnCooldowns(battle, fighter) {
+    const ticked = [];
+    fighter.skills.forEach((s, i) => { if (s.cdLeft > 0) { s.cdLeft -= 1; ticked.push(i); } });
+    if (battle.acting) battle.acting.cdTicked = ticked;
+  }
+  function untickTurnCooldowns(battle, fighter) {
+    ((battle.acting && battle.acting.cdTicked) || []).forEach(i => {
+      if (fighter.skills[i]) fighter.skills[i].cdLeft += 1;
+    });
+  }
+
+  // Send a different bird in on the turn that has come up. The two trade
+  // places in the queue: readiness is SWAPPED, never granted, so the flock
+  // pays exactly what the original turn cost. Reset the substitute's meter
+  // instead and the ready bird would still be at 100, handing the player an
+  // endless run of turns. Player side only — the evil Burbz fly their own order.
+  function substituteActor(battle, index) {
+    if (!battle || battle.phase !== 'act' || !battle.acting || battle.acting.side !== 'player') return false;
+    const team = battle.teams.player;
+    const outgoing = team[battle.acting.index];
+    const incoming = team[index];
+    if (!outgoing || !incoming || incoming === outgoing || incoming.fainted) return false;
+    const readiness = outgoing.cr;
+    outgoing.cr = incoming.cr;
+    incoming.cr = readiness;
+    untickTurnCooldowns(battle, outgoing);
+    battle.acting = { side: 'player', index: index };
+    tickTurnCooldowns(battle, incoming);
+    return true;
+  }
+
   // Advance the Combat Readiness meter until one bird reaches 100 and becomes
   // the acting fighter. Returns {side, index, fighter} or null when over.
   function tickToNextTurn(battle) {
@@ -520,8 +554,7 @@
     battle.acting = { side: next.side, index: next.index };
     battle.phase = 'act';
     battle.turn += 1;
-    // Cooldowns tick down at the start of the bird's own turn.
-    next.f.skills.forEach(s => { if (s.cdLeft > 0) s.cdLeft -= 1; });
+    tickTurnCooldowns(battle, next.f);
     return { side: next.side, index: next.index, fighter: next.f };
   }
 
@@ -888,7 +921,7 @@
     ULTIMATE_CD, ULTIMATE_OPENING_CD, FOCUS_MAX, SURGE_COST,
     deriveMagic, deriveResist,
     disciplineTier, trainedMoves, buildFighter, buildOpponentFighter,
-    createBattle, tickToNextTurn, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,
+    createBattle, tickToNextTurn, substituteActor, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,
     actingFighter, livingFighters, teamAlive, effStat, skillUsable, canUsePotionEffect, applyPotionEffect,
     LEAGUE_TIERS, battleRewards, DAILY_FULL_REWARD_WINS,
     hashString, seededRandom

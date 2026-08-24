@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "battle-pick-your-bird-v314-20260824"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
@@ -158,12 +158,13 @@ def test_night_hunter_graphics_ship_in_the_stylesheet():
 def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    # bird_sleep_core still ships under this release; battle_core moved again
-    # with mercy-streak-attack-preview-v287, academy_treehouse_core with
+    # bird_sleep_core still ships under this release; battle_core moved on
+    # with mercy-streak-attack-preview-v287 and again with
+    # battle-pick-your-bird-v314, academy_treehouse_core with
     # training-your-way-v288.
     for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
                             ("academy_treehouse_core.js", "roost-retired-v302-20260820"),
-                            ("battle_core.js", "mercy-streak-attack-preview-v287-20260819")):
+                            ("battle_core.js", "battle-pick-your-bird-v314-20260824")):
         pin = f"{core}?v={pin_build}"
         assert pin in html, core
         assert sw.count(f"'./{pin}'") == 2, core

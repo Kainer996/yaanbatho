@@ -24,7 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "battle-pick-your-bird-v314-20260824"
 
 
 def _node(script: str):
@@ -169,8 +169,9 @@ def test_release_is_versioned_and_the_moved_cores_shipped():
     # battle_core (preview + parley) and walking_story_core (folio scroll)
     # changed in this release, so their cache pins moved everywhere.
     # academy_treehouse_core moved here too, then again with
-    # training-your-way-v288 — its pin lives in that release's suite now.
-    for core in ("battle_core.js", "walking_story_core.js"):
+    # training-your-way-v288 — its pin lives in that release's suite now, and
+    # battle_core has since moved on to battle-pick-your-bird-v314 the same way.
+    for core in ("walking_story_core.js",):
         pin = f"{core}?v={OWN_RELEASE_PIN}"
         assert f'<script src="{pin}"></script>' in html, core
         assert sw.count(f"'./{pin}'") == 2, core

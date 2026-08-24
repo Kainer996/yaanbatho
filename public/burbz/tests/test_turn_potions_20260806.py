@@ -124,9 +124,10 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     marker = "living-canopy-v236-20260806"
     assert marker in HTML
     assert marker in SW
-    # battle_core moved with v258 (Night Wings), then with v287 (attack preview);
-    # the loot core moved with v295 (the Stores market).
-    for asset, core_pin in (("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
+    # battle_core moved with v258 (Night Wings), v287 (attack preview) and
+    # again with v314 (pick your bird); the loot core with v295 (the Stores
+    # market).
+    for asset, core_pin in (("battle_core.js", "battle-pick-your-bird-v314-20260824"),
                             ("loot_crafting_core.js", "stores-market-project-manager-v295-20260820")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML

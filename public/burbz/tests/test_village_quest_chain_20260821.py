@@ -22,7 +22,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
+RELEASE_PIN = "battle-pick-your-bird-v314-20260824"
 OWN_RELEASE_PIN = "village-chain-v307-20260821"
 
 VILLAGE_LINKS = [
