@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "bird-card-carry-charm-v313-20260824"
+CURRENT_BUILD = "project-manager-desk-v315-20260824"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
