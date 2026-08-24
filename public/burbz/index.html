@@ -1469,6 +1469,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .card-back-title { min-width:0; font-family:'Russo One',sans-serif; font-size:11px; line-height:1.08; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .card-back-meta { color:var(--text3); font-family:'Rajdhani',sans-serif; font-size:7.5px; font-weight:800; line-height:1.15; text-align:right; text-transform:uppercase; white-space:nowrap; }
 .card-back-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
+/* Eight combat stats pair off two to a row; carrying is a different kind of
+   number, so it sits alone across the foot of the block. */
+.card-back-stat.is-carry { grid-column:1/-1; }
 .card-back-stat { display:grid; grid-template-columns:1fr auto; align-items:center; gap:2px 5px; min-width:0; min-height:34px; padding:4px 5px; border-radius:7px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.065); font-family:'Rajdhani',sans-serif; }
 .card-back-stat-label { color:var(--text3); font-size:8px; font-weight:900; letter-spacing:.05em; }
 .card-back-stat-value { color:var(--text); font-size:10px; font-weight:900; }
@@ -11255,6 +11258,29 @@ function birdCarryCapacity(bird) {
   const core = birdSizeCore();
   return core ? core.carryCapacity(bird) : 3;
 }
+// The card back draws CARRY as a bar, so it needs the number as a fraction of
+// the most any bird can haul. Read the ceiling off the core: raise
+// MAX_CARRY_UNITS there and every bar moves with it.
+function birdCardCarryPct(bird) {
+  const core = birdSizeCore();
+  const max = Math.max(1, Number(core && core.MAX_CARRY_UNITS) || 20);
+  return Math.min(100, Math.round((birdCardCarryCapacity(bird) / max) * 100));
+}
+
+// What a card shows under CARRY: loads the bird brings home. A companion's
+// satchel counts, because that is the load it actually flies with.
+// Only a bird in the flock can be wearing one. A Birdex preview is rebuilt on
+// every render with a throwaway id, so reading its kit would stamp a fresh
+// slot into the equipment ledger each time the codex draws.
+function birdCardCarryCapacity(bird) {
+  if (!bird) return 0;
+  const flock = Array.isArray(gameState && gameState.flock) ? gameState.flock : [];
+  if (bird.id && flock.some(member => member && member.id === bird.id)) {
+    const withKit = Number((birdSizeSummary(bird) || {}).capacity);
+    if (isFinite(withKit) && withKit > 0) return withKit;
+  }
+  return birdCarryCapacity(bird);
+}
 
 // ============================================================================
 // ROLES: every bird can be given a job.
@@ -20286,6 +20312,9 @@ function gearIconHTML(item) {
 // Per-bird equipped loadout {weapon, armour, trinket} lives in inventory.equipment.
 function birdLoadout(birdId) {
   if (!gameState || !gameState.inventory) return {};
+  // Birdex previews carry no id. Asking for their kit must not stamp an
+  // `undefined` slot into the equipment ledger.
+  if (!birdId) return {};
   const eq = gameState.inventory.equipment;
   if (!eq[birdId] || typeof eq[birdId] !== 'object') eq[birdId] = {};
   return eq[birdId];
@@ -35271,6 +35300,8 @@ function createBirdCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>${bird.cha || 0}</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>${birdCardCarryCapacity(bird)}</div>
             </div>
             <div class="card-info-hint" data-action="open-info" data-bird-id="${bird.id}">Tap for field guide · ✨MAG ${bird.mag || 0} · INT ${bird.int || 0} · STAM ${bird.stamina || 0}</div>
           </div>
@@ -35290,6 +35321,7 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-back-stat"><span class="card-back-stat-label">CHA</span><strong class="card-back-stat-value">${bird.cha || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.cha||40)/1.2)}%;background:var(--legendary)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">INT</span><strong class="card-back-stat-value">${bird.int || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.int||50)/1.2)}%;background:var(--rare)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">STAM</span><strong class="card-back-stat-value">${bird.stamina || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.stamina||50)/1.2)}%;background:var(--accent3)"></div></div></div>
+            <div class="card-back-stat is-carry" title="Loads this bird brings home from a quest"><span class="card-back-stat-label">CARRY</span><strong class="card-back-stat-value">${birdCardCarryCapacity(bird)}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${birdCardCarryPct(bird)}%;background:var(--hp-yellow)"></div></div></div>
           </div>
           <div class="card-back-special">&#10024; ${bird.specialMove || 'Unknown'}</div>
           <div class="card-back-section-label">Academy placement</div>
@@ -35354,6 +35386,8 @@ function createKnownSpeciesCardHTML(bird, idx) {
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk || 0}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def || 0}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd || 0}</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>${bird.cha || 0}</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>${birdCardCarryCapacity(bird)}</div>
             </div>
             <button type="button" class="recruit-btn" data-action="${recruitAction}" data-discovery-key="${key}" ${recruitDisabled ? 'disabled' : ''}>${recruitLabel}</button>
             <div class="card-info-hint">Tap card to learn about the real bird</div>
@@ -35410,6 +35444,8 @@ function createSilhouetteCard() {
               <div class="card-stat"><span class="card-stat-label">ATK</span>?</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>?</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>?</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>?</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>?</div>
             </div>
           </div>
         </div>
@@ -36811,6 +36847,8 @@ function showCaptureOverlay(bird) {
               <div class="card-stat"><span class="card-stat-label">ATK</span>${bird.atk}</div>
               <div class="card-stat"><span class="card-stat-label">DEF</span>${bird.def}</div>
               <div class="card-stat"><span class="card-stat-label">SPD</span>${bird.spd}</div>
+              <div class="card-stat"><span class="card-stat-label">CHA</span>${bird.cha || 0}</div>
+              <div class="card-stat" title="Loads this bird brings home from a quest"><span class="card-stat-label">CARRY</span>${birdCardCarryCapacity(bird)}</div>
             </div>
             <div class="card-info-hint">Unlocked into Companions · Academy ready</div>
           </div>
@@ -38903,7 +38941,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'nav-action-badges-v312-20260824';
+const BURBZ_BUILD = 'bird-card-carry-charm-v313-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
