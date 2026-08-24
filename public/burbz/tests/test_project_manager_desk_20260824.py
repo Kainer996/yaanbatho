@@ -30,7 +30,9 @@ SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
 RELEASE = "project-manager-desk-v315-20260824"
-CURRENT_BUILD = RELEASE
+# The head of the line, which later releases move. Not this release's
+# own name — magpie-market-v316 shipped after it.
+CURRENT_BUILD = "magpie-market-v316-20260824"
 
 
 def function_source(name: str) -> str:
@@ -326,6 +328,9 @@ def test_re_appointing_the_sitting_manager_to_their_own_desk_is_quiet():
 def test_release_is_versioned_for_service_worker_self_update():
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
+    assert RELEASE in cache_line, "this release keeps its place in the lineage"
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
-    # bird_roles_core.js is untouched this release, so its cache pin stays put.
-    assert "'./bird_roles_core.js?v=roost-retired-v302-20260820'" in SW
+    # bird_roles_core.js was untouched by v315, so v315 moved no pin on it.
+    # magpie-market-v316 then added the Market Trader post and re-pinned it.
+    assert f"'./bird_roles_core.js?v={CURRENT_BUILD}'" in SW
+    assert f"?v={RELEASE}" not in SW, "v315 changed no core, so it pins none"

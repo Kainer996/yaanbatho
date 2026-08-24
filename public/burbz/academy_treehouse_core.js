@@ -14,6 +14,12 @@
   // trainer level 12. Costs climb with the gates, so a newly unlocked room is
   // also a savings goal — there should always be a next building on the
   // horizon instead of the whole tree opening at once.
+  //
+  // The Magpie Market is the FIFTH room on that ladder (Barracks, Training
+  // Hall, Quest Roost, Kitchen, Market), so a player meets trade early. It
+  // costs 135 coins — above the Kitchen, below the Hospital — which keeps the
+  // coin ladder strictly rising by gate. The Hospital and The Crowbar each
+  // slipped one level to make room; nothing got dearer.
   // Default x/y sit each room on a painted bough of the 2026-08-06 tree
   // (assets/academy-tree-manga-20260806.webp). Player placements override
   // these, so retuning here only moves fresh or never-moved buildings.
@@ -21,9 +27,10 @@
     { id:'outdoors', label:'Aviary Gardens', icon:'🌱', cost:0, branches:0, unlockLevel:1, floor:0, branch:'trunk', x:50, y:92, role:'roam', effect:'Home itself: the flock lives in the tree. Free roaming, foraging, feeding, grooming and gentle rest.' },
     { id:'tavern', label:'Barracks', icon:'🪶', cost:60, branches:8, unlockLevel:1, floor:1, branch:'right', x:80, y:71, role:'recruitment', effect:'The Academy recruitment office: review discovered and befriended birds, inspect their full cards, and invite them into the flock.' },
     { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:75, y:58, role:'training', trainStat:'atk', effect:'Permanent stat drills, passive XP, and slow ATK growth for birds stationed here.' },
-    { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:5, floor:3, branch:'left', x:25, y:52, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
-    { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:190, branches:40, unlockLevel:6, floor:4, branch:'right', x:75, y:41, role:'social', trainStat:'cha', effect:'The bird bar and the home of Kingdom diplomacy: companions perched here grow Charm (CHA) and morale — charm pays out on diplomacy quests.' },
+    { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:6, floor:3, branch:'left', x:25, y:52, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
+    { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:190, branches:40, unlockLevel:7, floor:4, branch:'right', x:75, y:41, role:'social', trainStat:'cha', effect:'The bird bar and the home of Kingdom diplomacy: companions perched here grow Charm (CHA) and morale — charm pays out on diplomacy quests.' },
     { id:'kitchen', label:'Kitchen & Pantry', icon:'🥣', cost:130, branches:25, unlockLevel:4, floor:3, branch:'trunk', x:50, y:55, role:'food', trainStat:'stamina', effect:'The feeding table: serve each companion the food it really eats, and run the Pantry Gauntlet to grow Stamina.' },
+    { id:'magpie_market', label:'Magpie Market', icon:'⚖️', cost:135, branches:28, unlockLevel:5, floor:2, branch:'left', x:23, y:67, role:'trade', effect:'The Academy trading post: buy the materials a build is short of, sell the ones piling up. Post a charming bird as Market Trader and both prices move your way.' },
     { id:'workshop', label:'Nest Workshop', icon:'🛠️', cost:240, branches:55, unlockLevel:8, floor:5, branch:'left', x:29, y:30, role:'craft', trainStat:'def', effect:'Nest engineering: birds stationed here toughen up and grow DEF.' },
     { id:'library', label:'The Library', icon:'📚', cost:300, branches:70, unlockLevel:9, floor:5, branch:'right', x:74, y:26, role:'study', trainStat:'int', effect:'The Academy reading room: shelves of field guides and story scrolls. Birds stationed here sharpen their minds and grow INT.' },
     { id:'nursery', label:'Hatchery Nursery', icon:'🥚', cost:380, branches:85, unlockLevel:11, floor:6, branch:'left', x:35, y:16, role:'bond', effect:'Baby-bird care and bonding progression.' },

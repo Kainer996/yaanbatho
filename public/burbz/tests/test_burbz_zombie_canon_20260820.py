@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "project-manager-desk-v315-20260824"
+OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 
 
 def test_release_is_wired():

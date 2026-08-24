@@ -10,6 +10,10 @@ CORE = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+
+
 def _node(source: str):
     result = subprocess.run(
         ["node", "-e", source], cwd=ROOT, check=True, capture_output=True, text=True
@@ -28,9 +32,9 @@ console.log(JSON.stringify({
   allDetailed: styles.every(s => Array.isArray(s.details) && s.details.length >= 2)
 }));
 """)
-    assert out["rooms"] == 11
+    assert out["rooms"] == 12
     assert len(out["bodies"]) >= 6
-    assert len(set(out["signatures"])) == 11
+    assert len(set(out["signatures"])) == 12
     assert out["allDetailed"] is True
     for body in ("birdhouse", "pavilion", "longhall", "cross-gable", "cottage", "tower"):
         assert f"st.body === '{body}'" in CORE, f"{body} must alter rendered geometry"
@@ -153,6 +157,6 @@ def test_button_is_only_shown_in_3d_at_night_and_updates_engine():
 def test_release_and_academy_core_pin_advance_for_installed_pwa():
     marker = "hold-to-steer-v251-20260811"
     assert marker in HTML and marker in SW
-    pin = f"academy_3d_core.js?v={marker}"
+    pin = f"academy_3d_core.js?v={MAGPIE_CORE_PIN}"
     assert pin in HTML
     assert f"'./{pin}'" in SW

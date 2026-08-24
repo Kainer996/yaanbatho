@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "ordered-quest-markers-v224-20260804"
-CURRENT_BUILD = "project-manager-desk-v315-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
 
 
 def run_core(expression: str):

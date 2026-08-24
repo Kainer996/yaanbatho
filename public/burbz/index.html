@@ -244,6 +244,32 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .src-sell-btn { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.04em; padding:4px 8px; border-radius:8px; border:1px solid rgba(240,199,103,.45); background:linear-gradient(180deg,rgba(64,46,16,.85),rgba(26,17,5,.9)); color:#ffe9a8; cursor:pointer; }
 .src-sell-btn.all { border-color:rgba(240,199,103,.25); color:#d9c07f; }
 .src-sell-btn:active { transform:scale(.96); }
+/* The Magpie Market counter: the Stores' shelf card with a deal row on it. */
+.magpie-wallet { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-bottom:7px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:var(--text2); }
+.magpie-wallet b { color:var(--legendary); font-size:13px; }
+.magpie-haggle { color:var(--uncommon); }
+.magpie-haggle.vacant { color:var(--text3); }
+.magpie-note { font-size:9.5px; line-height:1.4; color:var(--text3); margin-bottom:9px; }
+.magpie-row { display:flex; align-items:flex-start; gap:9px; padding:9px; border-radius:12px; background:rgba(0,0,0,.26); border:1px solid rgba(255,255,255,.07); color:var(--text); }
+.magpie-row[data-rarity="uncommon"] { border-color:rgba(120,166,109,.28); }
+.magpie-row[data-rarity="rare"] { border-color:rgba(201,201,201,.30); }
+.magpie-row[data-rarity="epic"] { border-color:rgba(180,138,214,.34); }
+.magpie-row[data-rarity="legendary"] { border-color:rgba(240,199,103,.42); }
+.magpie-row .src-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:20px; border-radius:10px; background:rgba(0,0,0,.34); border:1px solid rgba(255,255,255,.06); }
+.magpie-row .src-main { flex:1; min-width:0; }
+.magpie-row .src-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; line-height:1.25; }
+.magpie-row .src-copy { font-size:9.5px; color:var(--text3); line-height:1.35; margin-top:1px; }
+.magpie-row .src-count { flex:none; font-family:'Russo One',sans-serif; font-size:18px; color:var(--legendary); min-width:26px; text-align:right; }
+.magpie-rarity { margin-left:6px; font-size:8.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--text3); }
+.magpie-row[data-rarity="uncommon"] .magpie-rarity { color:var(--uncommon); }
+.magpie-row[data-rarity="rare"] .magpie-rarity { color:var(--rare); }
+.magpie-row[data-rarity="epic"] .magpie-rarity { color:var(--epic); }
+.magpie-row[data-rarity="legendary"] .magpie-rarity { color:var(--legendary); }
+.magpie-deals { display:flex; gap:5px; margin-top:6px; flex-wrap:wrap; }
+.magpie-btn { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; letter-spacing:.04em; padding:4px 8px; border-radius:8px; border:1px solid rgba(120,166,109,.45); background:linear-gradient(180deg,rgba(34,58,30,.85),rgba(9,18,7,.9)); color:#cfe9c4; cursor:pointer; }
+.magpie-btn:active { transform:scale(.96); }
+.magpie-btn[disabled] { opacity:.38; filter:grayscale(.4); cursor:default; }
+.src-sell-btn[disabled] { opacity:.38; filter:grayscale(.4); cursor:default; }
 /* Bird picker for XP scrolls */
 .xp-picker-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 .xp-picker-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 10px; border-radius:14px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.28)); color:var(--text); cursor:pointer; }
@@ -3063,6 +3089,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .treehouse-room-node[data-room="workshop"] { --th-tilt:2.2deg; --th-rock-dur:6.6s; --th-rock-delay:-.9s; }
 .treehouse-room-node[data-room="library"] { --th-tilt:-.8deg; --th-rock-dur:8.9s; --th-rock-delay:-3.7s; }
 .treehouse-room-node[data-room="observatory"] { --th-tilt:1.6deg; --th-rock-dur:9.4s; --th-rock-delay:-5.7s; }
+.treehouse-room-node[data-room="magpie_market"] { --th-tilt:1.2deg; --th-rock-dur:7.7s; --th-rock-delay:-2.1s; }
 .treehouse-room-name { position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); max-width:98px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .treehouse-room-meta { display:none; }
 .treehouse-room-count { position:absolute; right:-7px; top:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--legendary); color:#11100d; font-weight:900; font-size:11px; border:2px solid #11100d; }
@@ -4812,10 +4839,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=roost-retired-v302-20260820"></script>
-<script src="academy_alive_core.js?v=living-canopy-v236-20260806"></script>
+<script src="academy_treehouse_core.js?v=magpie-market-v316-20260824"></script>
+<script src="academy_alive_core.js?v=magpie-market-v316-20260824"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
-<script src="academy_3d_core.js?v=hold-to-steer-v251-20260811"></script>
+<script src="academy_3d_core.js?v=magpie-market-v316-20260824"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -4823,10 +4850,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=roost-retired-v302-20260820"></script>
+<script src="bird_roles_core.js?v=magpie-market-v316-20260824"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
-<script src="loot_crafting_core.js?v=stores-market-project-manager-v295-20260820"></script>
+<script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -12764,7 +12791,7 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', library:'assets/academy-buildings/library.svg' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', magpie_market:'assets/academy-buildings-manga/market.png', library:'assets/academy-buildings/library.svg' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
@@ -12779,6 +12806,7 @@ const ACADEMY_ROOMS = {
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
   library: { label:'THE LIBRARY', icon:'📚', buildingId:'library', desc:'The Academy reading room. Field guides, story scrolls and quiet candlelight — birds stationed among the stacks grow cleverer by the hour, and the Quiet Study drill teaches MIND battle moves.', perk:'Passive: +1 INT every 30 min', perches:[[75,29],[71,33],[79,33]] },
+  magpie_market: { label:'MAGPIE MARKET', icon:'⚖️', buildingId:'magpie_market', desc:'The Academy trading post. Magpies deal in everything the kingdom digs up — buy the material a recipe is short of, and sell whatever is piling up on the shelves.', perk:'Active: buy and sell every crafting material', perches:[] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
 let academySelectedRoom = 'outdoors';
@@ -14228,6 +14256,13 @@ function renderAcademyRoomPanel(birds) {
     return;
   }
 
+  // The market trades whether or not a companion stands at the counter, so it
+  // shows its stall here instead of the "no birds in this room" note.
+  if (academySelectedRoom === 'magpie_market') {
+    panel.innerHTML = html + renderMagpieMarketPanelHTML();
+    return;
+  }
+
   if (!birds || birds.length === 0) {
     html += '<div class="academy-empty">' + (gameState.flock.length === 0
       ? 'No birds yet — go scan some real birds and your captures will move in here.'
@@ -14559,6 +14594,7 @@ function academyMoveBird(birdId, room) {
   if (assignedPost) { showToast((bird.commonName || bird.species) + ' is working as ' + assignedPost.role.title + ' - stand them down before moving them.'); return; }
   if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
   if (room === 'kitchen') { showToast('The Kitchen is a feeding table — birds visit for meals, they do not lodge there. Open the Kitchen to feed your companions.'); return; }
+  if (room === 'magpie_market') { showToast('The Magpie Market is a trading counter — birds visit to deal, they do not lodge there. Open the Market to buy and sell.'); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
@@ -14602,7 +14638,7 @@ function cardSendBirdToRoom(birdId, room) {
 
 function academyRoomButtonsHTML(bird) {
   ensureBirdAcademy(bird);
-  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen').map(room => {
+  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen' && room !== 'magpie_market').map(room => {
     const cfg = ACADEMY_ROOMS[room];
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
@@ -16580,6 +16616,46 @@ const ACADEMY_ROOM_SVG_FALLBACKS = (() => {
       s += `<circle cx="400" cy="430" r="120" fill="url(#ri-gold)" opacity=".22"/>`;
       return s + motes();
     },
+    magpie_market() {
+      let s = wall() + beam() + runes(600, 16, 4);
+      s += bunting(74, 128);
+      // Back wall: three shelf planks of stock jars, priced by rarity colour.
+      const JARS = ['#6b8a4a', '#8a6a3a', '#2e5f66', '#8a2f2a', '#b48ad6', GOLD];
+      [[64, 196, 250], [500, 178, 236], [92, 320, 210]].forEach(([sx, sy, sw], row) => {
+        s += shelfPlank(sx, sy, sw);
+        let jx = sx + 12;
+        for (let i = 0; jx < sx + sw - 30; i++) {
+          const jw = 24 + ((row * 5 + i * 7) % 10);
+          const jh = 34 + ((row * 9 + i * 5) % 16);
+          s += jar(jx, sy - jh, jw, jh, JARS[(row * 2 + i) % JARS.length], i % 3 === 1 ? '#f0c76733' : '');
+          jx += jw + 12;
+        }
+      });
+      s += lantern(300, 92, .95, 46) + lantern(560, 96, .85, 42);
+      s += roundWindow(400, 176, 46);
+      s += lightShaft(400, 232, 120, 200);
+      s += floor(452);
+      // The counter, with the scales the price is settled on and a coin pile
+      // beside them. A magpie's own hoard sits on the end of the plank.
+      s += table(232, 424, 340, 40, 40);
+      s += `<g stroke="${INK}" stroke-width="2.6"><line x1="400" y1="424" x2="400" y2="366" stroke-width="4"/><path d="M330 372h140" stroke-width="4"/>` +
+        `<path d="M330 372l-24 30h48z" fill="${GOLDHI}"/><path d="M470 372l-24 30h48z" fill="${GOLD}"/>` +
+        `<circle cx="400" cy="362" r="7" fill="${GOLDHI}"/></g>`;
+      s += `<g><circle cx="286" cy="440" r="9" fill="${GOLDHI}" stroke="${INK}" stroke-width="2"/><circle cx="300" cy="446" r="9" fill="${GOLD}" stroke="${INK}" stroke-width="2"/><circle cx="292" cy="430" r="9" fill="${GOLDHI}" stroke="${INK}" stroke-width="2"/><circle cx="294" cy="438" r="30" fill="url(#ri-gold)" opacity=".7"/></g>`;
+      s += `<rect x="498" y="416" width="56" height="30" rx="5" fill="#4a3418" stroke="${INK}" stroke-width="2.6"/><path d="M498 430h56M526 416v30" stroke="#2b1e11" stroke-width="3"/>`;
+      // Crates, sacks and a barrel of loose stock stacked along the boards.
+      const crate = (x, y, w, h) =>
+        `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="4" fill="#6b4a26" stroke="${INK}" stroke-width="2.8"/>` +
+        `<path d="M${x} ${y + h / 2}h${w}M${x + w / 2} ${y}v${h}" stroke="#4a3418" stroke-width="3"/>` +
+        `<path d="M${x} ${y}l${w} ${h}M${x + w} ${y}l${-w} ${h}" stroke="#57391c" stroke-width="2.2" opacity=".7"/>`;
+      s += crate(74, 486, 86, 68) + crate(96, 440, 62, 48);
+      s += `<path d="M672 502q-26 8-26 30t26 24 26-24-26-30z" fill="#b9a473" stroke="${INK}" stroke-width="2.8"/><path d="M660 500q12-16 24 0" stroke="${INK}" stroke-width="2.6" fill="none"/>`;
+      s += `<path d="M604 520q-22 6-22 24t22 20 22-20-22-24z" fill="#a28c60" stroke="${INK}" stroke-width="2.6"/>`;
+      s += `<ellipse cx="180" cy="556" rx="34" ry="11" fill="#4a3418" stroke="${INK}" stroke-width="2.6"/><path d="M146 556v-42q34-12 68 0v42" fill="#58402c" stroke="${INK}" stroke-width="2.8"/><ellipse cx="180" cy="514" rx="34" ry="11" fill="#6b4a26" stroke="${INK}" stroke-width="2.6"/>`;
+      s += perchBar(596, 372, 150);
+      s += ivy(24, 60);
+      return s + motes();
+    },
     quest_roost() {
       let s = wall() + beam() + runes(80, 16, 4);
       s += `<polygon points="60,64 60,168 96,140 132,168 132,64" fill="${GOLD}" opacity=".9" stroke="${INK}" stroke-width="2.6"/><polygon points="148,64 148,150 178,126 208,150 208,64" fill="${TEAL}" opacity=".9" stroke="${INK}" stroke-width="2.6"/>`;
@@ -16907,6 +16983,7 @@ function renderAcademyRoomInterior() {
     }).join('') : '<div class="inventory-empty">All recruited birds are already in this room, or you need to recruit more companions from the Birdex.</div>';
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
+    const marketPanel = room === 'magpie_market' ? renderMagpieMarketPanelHTML() : '';
     // Every room can be run by a bird. Which bird decides how well the room
     // works — the Library by its Librarian, the Kitchen by its Head Chef.
     const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);
@@ -16914,14 +16991,20 @@ function renderAcademyRoomInterior() {
     // migration + move guards keep its stationed list empty), and there is no
     // "add a bird to this room" panel — the feeding roster replaces it.
     const flockCount = (gameState.flock || []).length;
+    // The Kitchen and the Market are counters you visit, not rooms a bird
+    // moves into: both skip the "add a bird" roster, and both describe
+    // themselves by what is on offer rather than by a head count.
+    const counterRoom = room === 'kitchen' || room === 'magpie_market';
     const roomSub = room === 'kitchen'
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
+      : room === 'magpie_market'
+      ? magpieMarketStock().length + ' materials traded · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
-    const roomAddPanel = room === 'kitchen' ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
+    const roomAddPanel = counterRoom ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
     const stageBirds = academyRoomStageBirds(birds, room);
     const trainingMaster = room === 'training' ? trainingMasterActorHTML() : '';
     const trainingMasterPicker = room === 'training' ? trainingMasterPickerOverlayHTML() : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + rolePanel + trainingMasterPicker + trainingPanel + kitchenPanel + roomAddPanel;
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + rolePanel + trainingMasterPicker + trainingPanel + kitchenPanel + marketPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -33910,6 +33993,133 @@ function storesSellRowHTML(kind, id) {
     '</div>';
 }
 
+// --- The Magpie Market: the Academy's trading post (v314) -------------------
+// The fifth building on the Academy ladder, and the only counter in the game
+// that sells materials back to the player. Selling reuses the Royal Stores'
+// shelf prices; buying pays a rarity-scaled markup on top (loot_crafting_core
+// .js). The spread means a round trip through the market always loses coins,
+// so quests stay the cheap way to get anything precious — the market is the
+// shortcut you pay for.
+const MAGPIE_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+// Every crafting material, cheapest first. The market deals in materials
+// only: the Royal Stores still handles food, gear and curios.
+function magpieMarketStock() {
+  let materials = {};
+  try { materials = lootCore().MATERIALS || {}; } catch (e) { return []; }
+  return Object.values(materials).slice().sort((a, b) => {
+    const byRarity = MAGPIE_RARITY_ORDER.indexOf(a.rarity) - MAGPIE_RARITY_ORDER.indexOf(b.rarity);
+    return byRarity !== 0 ? byRarity : String(a.label).localeCompare(String(b.label));
+  });
+}
+
+// The posted Market Trader haggles. Same shape as the Barracks' recruiting
+// discount, so a discount means the same thing wherever the player meets one:
+// a perfect bird takes about a quarter off, a vacant post pays full price.
+function magpieMarketDiscount() {
+  const mult = academyRoleMultiplier('magpie_market');
+  return mult > 1 ? 1 / (1 + (mult - 1) * 0.5) : 1;
+}
+
+function magpieMarketOwned(id) {
+  return Math.max(0, Math.floor(Number(gameState.inventory && gameState.inventory.items && gameState.inventory.items[id]) || 0));
+}
+
+function magpieMarketBuyQuote(id, qty) {
+  const mat = lootCore().materialById(id);
+  if (!mat) return { each: 0, qty: 0, total: 0, afford: 0 };
+  return lootCore().buyQuote('material', mat.rarity, gameState.player.coins || 0, qty, magpieMarketDiscount());
+}
+
+// Selling at the counter is the Royal Stores' own sale — same shelf, same
+// price — plus the two things only a deal with the magpies means: it counts
+// toward the chain, and it redraws the stall. Comparing the stack before and
+// after is what proves a sale happened, so a refused click counts for nothing.
+function magpieMarketSell(id, qty) {
+  const before = magpieMarketOwned(id);
+  storesSellItem('material', id, qty);
+  if (magpieMarketOwned(id) < before) magpieMarketRecordTrade();
+  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+}
+
+function magpieMarketRecordTrade() {
+  gameState.player.marketTrades = (Number(gameState.player.marketTrades) || 0) + 1;
+  updateQuestProgress('market_traded', 1);
+}
+
+function magpieMarketBuy(id, qty) {
+  const mat = lootCore().materialById(id);
+  if (!mat) return;
+  const quote = magpieMarketBuyQuote(id, qty);
+  if (!quote.each) { showToast('The magpies do not deal in that.'); return; }
+  if (!quote.qty) { showResourceQuestPrompt('coins', quote.each, 'a ' + mat.label); return; }
+  // Make somewhere to put the goods BEFORE taking the coins: a save with no
+  // item bag must never charge the player for a material it then drops.
+  if (!gameState.inventory || typeof gameState.inventory !== 'object') gameState.inventory = {};
+  if (!gameState.inventory.items || typeof gameState.inventory.items !== 'object') gameState.inventory.items = {};
+  addCoins(-quote.total);
+  gameState.inventory.items[id] = magpieMarketOwned(id) + quote.qty;
+  saveState();
+  SFX.questComplete();
+  vibrate(25);
+  magpieMarketRecordTrade();
+  showToast('⚖️ Bought ' + quote.qty + ' × ' + mat.label + ' for ' + quote.total + ' 🪙.');
+  updateHeader();
+  renderInventory();
+  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+}
+
+// One counter row per material: what it is, how many you hold, and the four
+// deals available on it. Buttons the purse or the shelf cannot cover render
+// disabled rather than vanishing, so the price stays readable.
+function magpieMarketRowHTML(mat) {
+  const owned = magpieMarketOwned(mat.id);
+  const one = magpieMarketBuyQuote(mat.id, 1);
+  const five = magpieMarketBuyQuote(mat.id, 5);
+  const buyFive = one.each * 5;
+  const sellOne = storesSellQuote('material', mat.id, 1);
+  const sellAll = storesSellQuote('material', mat.id, 'all');
+  const deals = [
+    one.qty
+      ? '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',1)">BUY 1 · −' + one.each + ' 🪙</button>'
+      : '<button type="button" class="magpie-btn buy" disabled>BUY 1 · −' + one.each + ' 🪙</button>',
+    five.qty >= 5
+      ? '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',5)">BUY 5 · −' + buyFive + ' 🪙</button>'
+      : '<button type="button" class="magpie-btn buy" disabled>BUY 5 · −' + buyFive + ' 🪙</button>',
+    sellOne.qty
+      ? '<button type="button" class="src-sell-btn" onclick="magpieMarketSell(\'' + mat.id + '\',1)">SELL 1 · +' + sellOne.each + ' 🪙</button>'
+      : '<button type="button" class="src-sell-btn" disabled>SELL 1 · +' + lootCore().sellValue('material', mat.rarity) + ' 🪙</button>',
+    sellAll.qty > 1
+      ? '<button type="button" class="src-sell-btn all" onclick="magpieMarketSell(\'' + mat.id + '\',\'all\')">ALL ' + sellAll.qty + ' · +' + sellAll.total + ' 🪙</button>'
+      : ''
+  ].join('');
+  return '<div class="magpie-row" data-rarity="' + escapeHtml(mat.rarity) + '">' +
+    '<div class="src-icon">' + mat.icon + '</div>' +
+    '<div class="src-main">' +
+      '<div class="src-name">' + escapeHtml(mat.label) + '<span class="magpie-rarity">' + escapeHtml(mat.rarity) + '</span></div>' +
+      '<div class="src-copy">' + escapeHtml(mat.copy) + '</div>' +
+      '<div class="magpie-deals">' + deals + '</div>' +
+    '</div>' +
+    '<div class="src-count">' + owned + '</div>' +
+  '</div>';
+}
+
+function renderMagpieMarketPanelHTML() {
+  const stock = magpieMarketStock();
+  if (!stock.length) return '<div class="stores-panel"><div class="inventory-empty">The stalls are still being set up — try again in a moment.</div></div>';
+  const discount = magpieMarketDiscount();
+  const savedPct = Math.round((1 - discount) * 100);
+  const haggle = savedPct > 0
+    ? '<span class="magpie-haggle">⚖️ Your Market Trader has talked ' + savedPct + '% off every price.</span>'
+    : '<span class="magpie-haggle vacant">Post a charming bird as Market Trader below and every price drops.</span>';
+  return '<div class="stores-panel magpie-panel">' +
+    '<div class="stores-panel-title">⚖️ The counter</div>' +
+    '<div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse' + haggle + '</div>' +
+    '<div class="magpie-note">Magpies buy anything and sell it dearer. Quests are still the cheapest way to a Phoenix Ember — this is the shortcut you pay for.</div>' +
+    '<div class="stores-res-grid">' + stock.map(magpieMarketRowHTML).join('') + '</div>' +
+  '</div>';
+}
+
 // --- Treasury banner: the grand-strategy resource bar -----------------------
 function renderStoresTreasury() {
   const el = $('storesTreasury');
@@ -37929,7 +38139,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -38369,6 +38579,10 @@ const PLAYER_QUESTS = [
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
     measure:() => Number(gameState.player.mealsServed) || 0 },
   { id:'pq_diet_badge',     name:'Feed a bird the right meal', desc:'Give any companion one of its proper foods', type:'proper_meal_fed', target:1, reward:60, coins:30, icon:'\u{1F37D}\u{FE0F}', go:'academy', focusRoom:'kitchen' },
+  { id:'pq_build_market',   name:'Build the Magpie Market', desc:'Raise the Academy trading post to buy and sell materials', type:'build_magpie_market', target:1, reward:55, coins:25, icon:'\u{2696}\u{FE0F}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('magpie_market') ? 1 : 0 },
+  { id:'pq_market_trade',   name:'Strike a deal', desc:'Buy or sell a material at the Magpie Market', type:'market_traded', target:1, reward:45, coins:20, icon:'\u{1FA99}', go:'academy', focusRoom:'magpie_market',
+    measure:() => Number(gameState.player && gameState.player.marketTrades) || 0 },
   { id:'pq_build_hospital', name:'Build the Bird Hospital', desc:'Raise the Bird Hospital at the Academy', type:'build_hospital', target:1, reward:55, coins:25, icon:'\u{1F3E5}', go:'academy',
     measure:() => isAcademyBuildingBuilt('hospital') ? 1 : 0 },
   { id:'pq_hospital_rest',  name:'Prescribe some rest', desc:'Station a companion in the Bird Hospital', type:'station_hospital', target:1, reward:45, coins:20, icon:'\u{1FA79}', go:'academy',
@@ -38980,7 +39194,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'project-manager-desk-v315-20260824';
+const BURBZ_BUILD = 'magpie-market-v316-20260824';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

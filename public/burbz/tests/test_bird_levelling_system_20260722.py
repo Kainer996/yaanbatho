@@ -24,6 +24,8 @@ SW_PATH = ROOT / "sw.js"
 QUEST_CORE_PATH = ROOT / "quest_core.js"
 QUEST_CORE_PIN = "ordered-quest-markers-v224-20260804"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
+# magpie-market-v316 edited this core, so it ships under that tag now.
+MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def function_source(html: str, name: str) -> str:
@@ -190,7 +192,7 @@ def test_release_ships_with_a_fresh_offline_cache_version():
     assert "const BURBZ_CACHE = 'burbz-" in sw
     for marker in (
         f"quest_core.js?v={QUEST_CORE_PIN}",
-        f"academy_treehouse_core.js?v={ACADEMY_CORE_PIN}",
+        f"academy_treehouse_core.js?v={MAGPIE_CORE_PIN}",
     ):
         assert marker in html
         assert f"./{marker}" in sw

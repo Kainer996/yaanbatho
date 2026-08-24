@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "project-manager-desk-v315-20260824"
+CURRENT_BUILD = "magpie-market-v316-20260824"
 
 
 def run_core(expression: str):

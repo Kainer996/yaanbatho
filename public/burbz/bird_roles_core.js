@@ -113,6 +113,12 @@
       copy:'Patience and warmth, in that order. Chicks settle for a nanny they trust.'
     },
     {
+      id:'market_trader', title:'Market Trader', icon:'⚖️', scope:'academy', key:'magpie_market',
+      stats:{ cha:0.7, int:0.3 },
+      effect:{ id:'trade_terms', label:'Haggling', copy:'Materials cost fewer coins to buy at the Magpie Market.' },
+      copy:'Magpies drive a hard bargain. A charming bird with a head for numbers talks the traders down, so every purchase costs you less.'
+    },
+    {
       id:'quartermaster', title:'Quartermaster', icon:'🧭', scope:'academy', key:'quest_roost',
       stats:{ int:0.5, stamina:0.3, spd:0.2 },
       effect:{ id:'expedition_yield', label:'Expedition planning', copy:'Every expedition claimed pays more coins and timber.' },
