@@ -1,12 +1,9 @@
-"""Steward project management and the 4-minutes-to-4-hours build ladder.
+"""Steward project management and the village build ladder.
 
 Yaan's two asks on 2026-08-20, pinned as `steward-project-manager-v294`:
 
-1. **The build ladder.** The two survival starters — the Timber Cabin (the
-   first wooden home) and the Stone Well — rise in 4 minutes. Then the clock
-   climbs the building list: the Grain Farm takes half an hour, and every
-   later building takes longer, up to a full 4 hours for the Storehouse at
-   the bottom of the list.
+1. **The build ladder.** The two survival starters — the Timber Cabin and the
+   Timber Well — rise in 4 minutes. Then the clock climbs the building list.
 2. **The Steward is the project manager.** Appoint a bird as a village
    Steward and it runs the building sites too: the same wit-and-charm civic
    aptitude (INT + CHA, weighed down by size) cuts up to 30% off every build
@@ -14,6 +11,15 @@ Yaan's two asks on 2026-08-20, pinned as `steward-project-manager-v294`:
    charmers earn their keep — a robin or a songbird, no use in a battle
    line, out-manages a raven behind the site ledger. A vacant post changes
    nothing: both factors sit at exactly 1.
+
+**Re-tuned by `manager-builds-the-village-v324-20260825`.** Yaan moved the four
+hours: it is no longer the Storehouse alone, it is the WHOLE village. Every
+village-tier clock added together comes to exactly 240 minutes, so a player
+standing in the village with the materials raises the lot in four hours. The
+ladder still starts at 4 minutes and still climbs; only the numbers moved. The
+whole-village law, and the bird that builds it for you, are pinned by
+`test_manager_builds_the_village_20260825.py`. Point 2 above is unchanged: those
+two factors are the PLAYER's perk on the player's own taps.
 """
 import json
 import subprocess
@@ -24,10 +30,10 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
+CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
-ROLES_CORE_PIN = "empire-grid-v322-20260825"
+ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 
 
@@ -56,43 +62,72 @@ def building_line(html: str, building_id: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# 1. The build ladder: 4 minutes for the starters, 4 hours at the bottom
+# 1. The build ladder: 4 minutes for the starters, four hours for the village
 # ---------------------------------------------------------------------------
 
+# The clock every building carries, in minutes, for its first level.
 LADDER = {
+    # The village's own works. These eight add up to exactly 240 minutes.
     "cabin": 4,
     "well": 4,
     "hut": 15,
+    "lumberhut": 25,
+    "minehut": 32,
+    "cottages": 40,
+    "tavern": 50,
+    "storehouse": 70,
+    # The town works, which are bigger jobs and sit outside the village's four
+    # hours.
     "farm": 30,
-    "cottages": 45,
-    "tavern": 60,
     "chapel": 90,
     "lumber": 120,
     "quarry": 150,
     "market": 180,
-    "storehouse": 240,
+    "foundry": 200,
+    "entertainment": 210,
 }
+
+
+def building_rows(html: str):
+    block = html[html.index("const EMPIRE_BUILDINGS = ["):html.index("const EMPIRE_BUILDING_INDEX")]
+    rows = []
+    for line in block.splitlines():
+        if "buildMinutes:" not in line:
+            continue
+        bid = line.split("{ id: '", 1)[1].split("'", 1)[0]
+        rows.append((bid, int(line.split("buildMinutes:")[1].split(",")[0]), "tier: 'town'" in line))
+    return rows
 
 
 def test_every_building_carries_its_ladder_clock():
     html = HTML.read_text(encoding="utf-8")
     for building_id, minutes in LADDER.items():
         assert f"buildMinutes: {minutes}," in building_line(html, building_id), building_id
+    # And nothing else has crept in unpinned.
+    assert {bid for bid, _, _ in building_rows(html)} == set(LADDER)
 
 
-def test_the_ladder_starts_at_4_minutes_and_climbs_the_list_to_4_hours():
-    html = HTML.read_text(encoding="utf-8")
-    block = html[html.index("const EMPIRE_BUILDINGS = ["):html.index("const EMPIRE_BUILDING_INDEX")]
-    listed = [line for line in block.splitlines() if "buildMinutes:" in line]
-    minutes = [int(line.split("buildMinutes:")[1].split(",")[0]) for line in listed]
-    # The two 4-minute starters, then a strictly climbing clock ending at 4h.
-    ramp = [m for m in minutes if m != 4]
-    assert minutes.count(4) == 2  # Timber Cabin and Stone Well
-    assert ramp[0] == 15  # the Hunter-Gatherer Hut (v298), then farm at 30
-    assert ramp[1] == 30
+def test_the_village_ladder_starts_at_4_minutes_and_adds_up_to_four_hours():
+    rows = building_rows(HTML.read_text(encoding="utf-8"))
+    village = [(bid, mins) for bid, mins, town in rows if not town]
+    # Yaan's law: the whole village, raised by a player with the materials in
+    # hand, one crew, back to back — four hours.
+    assert sum(mins for _, mins in village) == 240
+    # The two survival starters are still the quick ones.
+    assert [bid for bid, mins in village if mins == 4] == ["cabin", "well"]
+    # Everything after them climbs the list, no two the same, ending on the
+    # Storehouse.
+    ramp = [mins for bid, mins in village if mins != 4]
     assert ramp == sorted(ramp) and len(set(ramp)) == len(ramp)
-    assert ramp[-1] == 240  # the last and longest: 4 hours
-    assert minutes[-1] == 240  # ...and it sits at the bottom of the list
+    assert ramp[0] == 15  # the Hunter-Gatherer Hut (v298)
+    assert village[-1] == ("storehouse", 70)
+
+
+def test_the_town_works_climb_their_own_ladder_above_the_village():
+    rows = building_rows(HTML.read_text(encoding="utf-8"))
+    town = [mins for _, mins, is_town in rows if is_town]
+    assert town == sorted(town) and len(set(town)) == len(town)
+    assert town[0] == 30 and town[-1] == 210
 
 
 # ---------------------------------------------------------------------------
@@ -140,8 +175,8 @@ def test_the_steward_role_copy_names_the_project_manager_job():
     # (grander civic titles — Lord Mayors, Councillors — come later).
     core = CORE.read_text(encoding="utf-8")
     assert "title:'Project Manager'" in core
-    assert "Two builds can rise at once here." in core
-    assert "Every build is faster and costs a little less" in core
+    assert "Two builds can rise at once here: the manager’s site and yours." in core
+    assert "Your own builds are faster and cost a little less" in core
 
 
 # ---------------------------------------------------------------------------

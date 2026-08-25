@@ -1238,6 +1238,9 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
    village they would leave named under their stats. */
 .role-candidate-post { display:block; font-size:9.5px; color:var(--accent2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* The Project Manager desk carries no prose, so the title sits level with its icon. */
+/* How long this bird would take over the whole village. It is the number the
+   player is really choosing between, so it sits on its own line. */
+.role-candidate-clock { display:block; font-size:9.5px; color:var(--accent); }
 .role-candidate-gain { flex:none; font-family:'Russo One',sans-serif; font-size:12px; color:var(--legendary); }
 .role-empty { padding:9px; border-radius:10px; background:rgba(0,0,0,.28); font-size:10.5px; color:var(--text3); }
 
@@ -1275,6 +1278,8 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .province-clear-btn:active { transform:scale(.97); }
 .province-construction { margin:0 0 10px; padding:9px 10px; border-radius:10px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(48,34,12,.7),rgba(14,9,3,.82)); }
 .province-construction-head { display:flex; align-items:center; justify-content:space-between; gap:8px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:#ffe9a8; margin-bottom:5px; }
+/* Whose crew is on this site: the Project Manager's own, or yours. */
+.province-construction-crew { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; color:var(--accent); }
 .province-construction-eta { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; color:#f0c767; white-space:nowrap; }
 .province-construction-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#c89a3f,#f0c767); transition:width .9s linear; }
 @keyframes pickupBob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-5px); } }
@@ -4876,7 +4881,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=empire-grid-v322-20260825"></script>
+<script src="bird_roles_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
@@ -4885,6 +4890,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
 <script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
 <script src="empire_grid_core.js?v=empire-grid-v322-20260825"></script>
+<script src="village_manager_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
@@ -11485,14 +11491,16 @@ function regionRoleMultiplier(regionId) { return roleMultiplier('region', String
 // lives in bird_roles_core.js; a vacant post returns factors of exactly 1.
 function villageStewardProject(seed) {
   const core = birdRolesCore();
-  const idle = { staffed:false, bird:null, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 };
+  const idle = { staffed:false, bird:null, aptitude:0, buildFactor:1, costFactor:1, speedPct:0, discountPct:0 };
   if (!core || !core.stewardProjectFactors) return idle;
   const link = typeof empireSettlementOfSeed === 'function' ? empireSettlementOfSeed(seed) : null;
   const settlement = link && typeof empireSettlementById === 'function' ? canonicalEmpireSettlement(empireSettlementById(link.id)) : null;
   const stewardSeed = settlement ? settlement.heartSeed : seed;
   const post = rolePostState('village', String(Number(stewardSeed) >>> 0));
   if (!post.staffed || !post.bird) return idle;
-  return { staffed:true, bird:post.bird, ...core.stewardProjectFactors(post.aptitude) };
+  // `aptitude` rides along because the manager's own building programme
+  // (villageManagerFactor) reads the raw number, not the player-facing factors.
+  return { staffed:true, bird:post.bird, aptitude:post.aptitude, ...core.stewardProjectFactors(post.aptitude) };
 }
 
 // The post this bird currently holds, phrased for a card: "📚 Librarian · The Library".
@@ -11557,16 +11565,35 @@ function assignBirdRole(scope, key, birdId) {
   // stationed in either, so their heads keep their own perch.
   if (scope === 'academy' && key !== 'kitchen' && key !== 'tavern') { ensureBirdAcademy(bird); bird.academy.room = key; }
   const fx = core.roleEffectiveness(bird, role);
+  // A village post is a building contract, and it starts the moment it is
+  // signed — not the next time the player happens to open the village. The
+  // bird's crew is back-dated to this timestamp, so an appointment made at
+  // bedtime has really been working by morning.
+  if (scope === 'village' && typeof startVillageManagerClock === 'function') startVillageManagerClock(key);
   saveState();
   if (scope === 'village' && typeof updateQuestProgress === 'function') updateQuestProgress('village_role_filled', 1);
   SFX.tap();
   const postTitle = typeof empirePostTitleFor === 'function' ? empirePostTitleFor(scope, key) : role.title;
+  const villageSpan = scope === 'village' && typeof villageManagerSpan === 'function' ? villageManagerSpan(fx.aptitude) : '';
   showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + postTitle + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' +
+    (villageSpan ? ' — it builds the whole village on its own, in about ' + villageSpan : '') +
     (movesFrom ? ' — ' + movesFrom.where + ' has no ' + movesFrom.title + ' now' : ''));
   // Appointing a Head Chef unlocks whole-species table service — taught with a
   // tutorial tip the moment the post is filled, right when the perk is earned.
   if (scope === 'academy' && key === 'kitchen' && typeof showChefBulkFeedTip === 'function') showChefBulkFeedTip(bird);
   refreshRoleSurfaces();
+}
+
+// The bird takes the desk now. Anything the last manager was waiting for or
+// had got to is forgotten — this is a new contract.
+function startVillageManagerClock(key) {
+  const empire = typeof ensureEmpireState === 'function' ? ensureEmpireState() : null;
+  const rec = empire && empire.villages ? empire.villages[String(key)] : null;
+  const eco = rec && typeof ensureVillageEconomy === 'function' ? ensureVillageEconomy(rec) : null;
+  if (!eco) return;
+  eco.managerFrom = Date.now();
+  delete eco.managerFreeAt;
+  delete eco.managerShort;
 }
 
 function clearBirdRole(scope, key) {
@@ -11789,6 +11816,7 @@ function rolePostCardHTML(scope, key, options = {}) {
       '<span class="role-candidate-nameline"><span class="role-candidate-name">' + escapeHtml(birdDisplayName(c.bird)) + '</span>' +
         (c.posted ? '<span class="role-candidate-duty">ON DUTY</span>' : '') + '</span>' +
       '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span>' +
+      roleCandidateClockHTML(scope, c.aptitude) +
       (c.posted ? '<span class="role-candidate-post">' + c.posted.icon + ' ' + escapeHtml(c.posted.title) + ' · ' + escapeHtml(c.posted.where) + ' — moves here</span>' : '') +
       '</span>' +
       '<span class="role-candidate-gain">+' + c.bonusPct + '%</span>' +
@@ -11802,7 +11830,8 @@ function rolePostCardHTML(scope, key, options = {}) {
         '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
         '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(rolePostTitle(scope, key, role)) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
         '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
-        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b></div></div>' +
+        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b></div>' +
+        roleCandidateClockHTML(scope, post.aptitude) + '</div>' +
         '<button type="button" class="role-dismiss" data-action="role-clear"' + dataAttrs + '>Stand down</button></div>'
     : '';
   return '<div class="role-post-card"' + dataAttrs + '>' +
@@ -11810,6 +11839,30 @@ function rolePostCardHTML(scope, key, options = {}) {
     '<div class="role-candidate-label">' + (post.staffed ? 'Replace with' : 'Appoint') + '</div>' +
     '<div class="role-candidate-list">' + optionsHtml + '</div>' +
   '</div>';
+}
+
+// A village post is a building contract, so every row answers the question the
+// player is actually asking: how long would THIS bird take over the whole
+// village? Six hours for a grandmaster songbird, days for a dull heavyweight.
+// Every other post says nothing here.
+function roleCandidateClockHTML(scope, aptitude) {
+  const span = scope === 'village' ? villageManagerSpan(aptitude) : '';
+  return span ? '<span class="role-candidate-clock">🏗️ builds the village in ' + span + '</span>' : '';
+}
+// "7h" / "2.6 days". Hours read fine up to a couple of days; past that nobody
+// counts in hours. Guarded by `typeof`, not by a call: the appointment sheet is
+// shared code and several suites lift it into a bare context with no empire
+// around it, where the honest answer is to say nothing at all.
+function villageManagerSpan(aptitude) {
+  if (typeof villageManagerVillageMs !== 'function') return '';
+  const ms = villageManagerVillageMs(aptitude);
+  return ms > 0 ? formatManagerSpan(ms) : '';
+}
+function formatManagerSpan(ms) {
+  const hours = Math.max(1, Math.round(Number(ms) / 3600000));
+  if (hours < 48) return hours + 'h';
+  const days = Math.round(Number(ms) / 8640000) / 10;   // 8 640 000 ms is a tenth of a day
+  return (Number.isInteger(days) ? days : days.toFixed(1)) + ' days';
 }
 
 // "INT 180" / "INT 180 · CHA 90" — the stats this particular job is judged on.
@@ -23581,7 +23634,7 @@ function empireVillageTile(v) {
     need: gc ? gc.holdingNeed({
       pop:snap.pop, happiness:snap.happiness,
       posted: !!(post && post.staffed), postTitle,
-      freeCrews: villageBuildSlotsFree(v),
+      freeCrews: villageIdleCrews(v),
       building: !!villageConstructionFor(v),
       mergeReady: !!(ready && ready.ready),
       // A whole cycle banked, exactly as the nav badge counts it — not "a
@@ -24161,11 +24214,15 @@ const QUARRY_FIRST_CUT_STONE = 10;
 // Miners' Huts. They come last on purpose: they are the crude version of the
 // Lumber Camp and the Quarry, so in a merged Town the efficient yards must
 // take their one villager each before a three-hand hut swallows the rest.
-// `buildMinutes` follows Yaan's pacing law (2026-08-20): the two survival
-// starters — the Timber Cabin and the Timber Well — rise in 4 minutes, then
-// the clock climbs the list from a quarter-hour hut to a full 4 hours for
-// the Storehouse. Early shelter and water are instant fun; the late halls
-// are real projects worth appointing a Project Manager for.
+// `buildMinutes` follows Yaan's pacing law (manager-builds-the-village-v324,
+// 2026-08-25): a player standing in the village with every material to hand
+// raises EVERY one of its buildings in FOUR HOURS. So the village-tier clocks
+// add up to exactly 240 minutes — the two survival starters (Timber Cabin,
+// Timber Well) at 4 minutes each, then the clock climbing the list to 70
+// minutes for the Storehouse. That total is the yardstick a Project Manager's
+// own clock is measured against (VILLAGE_PLAYER_BUDGET_MS below), so it must
+// stay at four hours; a test pins it. The town works are bigger jobs and sit
+// outside the village's four hours, climbing 30 minutes to 210.
 // `tier: 'town'` is Yaan's settlement law (village-basics-town-industry-v298):
 // a lone village keeps only the basics — home, hut, well, cottages, alehouse,
 // storehouse, and its own Lumberjack and Miners' Huts — and builds every one
@@ -24180,17 +24237,17 @@ const EMPIRE_BUILDINGS = [
   { id: 'hut',     icon: '🏹', name: 'Hunter-Gatherer Hut', maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 }, buildMinutes: 15, need: 'food', perLevel: 8, workers: 1, workPriority: 1, produces: { larder: { hedgerow_berries: 1, acorn_handful: 1 } }, desc: 'Hunters and foragers feed 8 villagers per level and bring home 🫐1 berries + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
   { id: 'farm',    icon: '🌾', name: 'Grain Farm',   maxLevel: 3, tier: 'town', cost: { coins: 40, branches: 10, stone: 5 },  buildMinutes: 30,  need: 'food',    perLevel: 14, workers: 1, workPriority: 1, produces: { larder: { sunflower_seeds: 2, acorn_handful: 1 } }, desc: 'Feeds 14 villagers per level and harvests 🌻2 seed + 🌰1 mast per cycle per level. Needs 1 villager to run.' },
   { id: 'well',    icon: '🪣', name: 'Timber Well',  maxLevel: 3, cost: { coins: 30, branches: 10, stone: 0 },  buildMinutes: 4,  need: 'water',   perLevel: 16, desc: 'Fresh water for 16 villagers per level.' },
-  { id: 'lumberhut', icon: '🪚', name: 'Lumberjack Hut', maxLevel: 3, cost: { coins: 35, branches: 12, stone: 0 }, buildMinutes: 35, branchesPerLevel: 5, workers: 3, workPriority: 6, produces: { materials: { oak_twig: 1 } }, desc: 'Up to 3 villagers fell and split here: +5 🪵 timber and 🪵1 Oak Twig per cycle per level at full crew. Half a crew cuts half the wood — build homes and the rest move in.' },
-  { id: 'minehut',  icon: '🪨', name: 'Miners’ Hut', maxLevel: 3, cost: { coins: 45, branches: 16, stone: 0 }, buildMinutes: 40, stonePerLevel: 6, workers: 3, workPriority: 7, produces: { materials: { iron_grit: 1 } }, desc: 'Up to 3 villagers dig rock for building here: +6 stone and ⚙️1 Iron Grit per cycle per level at full crew. Half a crew digs half the stone — build homes and the rest move in.' },
-  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 22, stone: 0 },  buildMinutes: 45,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 60,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'lumberhut', icon: '🪚', name: 'Lumberjack Hut', maxLevel: 3, cost: { coins: 35, branches: 12, stone: 0 }, buildMinutes: 25, branchesPerLevel: 5, workers: 3, workPriority: 6, produces: { materials: { oak_twig: 1 } }, desc: 'Up to 3 villagers fell and split here: +5 🪵 timber and 🪵1 Oak Twig per cycle per level at full crew. Half a crew cuts half the wood — build homes and the rest move in.' },
+  { id: 'minehut',  icon: '🪨', name: 'Miners’ Hut', maxLevel: 3, cost: { coins: 45, branches: 16, stone: 0 }, buildMinutes: 32, stonePerLevel: 6, workers: 3, workPriority: 7, produces: { materials: { iron_grit: 1 } }, desc: 'Up to 3 villagers dig rock for building here: +6 stone and ⚙️1 Iron Grit per cycle per level at full crew. Half a crew digs half the stone — build homes and the rest move in.' },
+  { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 22, stone: 0 },  buildMinutes: 40,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
+  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 50,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
   { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, tier: 'town', cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, tier: 'town', cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, tier: 'town', cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
   { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, tier: 'town', cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
-  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 20, stone: 0 }, buildMinutes: 240, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' },
+  { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 20, stone: 0 }, buildMinutes: 70, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' },
   { id: 'foundry', icon: '⚒️', name: 'Iron Foundry', maxLevel: 3, tier: 'town', cost: { coins: 110, branches: 30, stone: 18 }, costLevels: [{ coins: 110, branches: 30, stone: 18 }, { coins: 190, branches: 44, stone: 26 }, { coins: 300, branches: 60, stone: 38 }], buildMinutes: 200, workers: 2, workPriority: 6, produces: { materials: { iron_ingot: 1 } }, unlockLevel: 9, desc: 'Two smiths smelt the Miners’ iron grit into ⚙️1 Iron Ingot per cycle per level — the clean metal the Fletcher’s Forge craves for finer gear.' },
-  { id: 'entertainment', icon: '🎭', name: 'Entertainment House', maxLevel: 3, tier: 'town', cost: { coins: 95, branches: 28, stone: 8 }, costLevels: [{ coins: 95, branches: 28, stone: 8 }, { coins: 160, branches: 40, stone: 14 }, { coins: 260, branches: 55, stone: 22 }], buildMinutes: 170, need: 'joy', perLevel: 14, coinsPerLevel: 3, workers: 1, workPriority: 5, unlockLevel: 7, tiers: [{ name: 'Tavern & Games Yard', icon: '🍻', desc: 'Skittles, darts and decent ale — cheer for 14 villagers and +3 🪙 taxes per level.' }, { name: 'Inn & Playhouse', icon: '🎭', desc: 'A proper stage: travelling bards play to 28 happy villagers and +6 🪙 taxes per level.' }, { name: 'Grand Music Hall', icon: '🎶', desc: 'The whole realm talks about this stage — 42 cheerful villagers and +9 🪙 taxes per level.' }], desc: 'Invest in fun: every level raises a livelier hall — alehouse games, then a bard’s stage, then a grand music hall — cheering 14 villagers and earning +3 🪙 taxes per level. Needs 1 host.' }
+  { id: 'entertainment', icon: '🎭', name: 'Entertainment House', maxLevel: 3, tier: 'town', cost: { coins: 95, branches: 28, stone: 8 }, costLevels: [{ coins: 95, branches: 28, stone: 8 }, { coins: 160, branches: 40, stone: 14 }, { coins: 260, branches: 55, stone: 22 }], buildMinutes: 210, need: 'joy', perLevel: 14, coinsPerLevel: 3, workers: 1, workPriority: 5, unlockLevel: 7, tiers: [{ name: 'Tavern & Games Yard', icon: '🍻', desc: 'Skittles, darts and decent ale — cheer for 14 villagers and +3 🪙 taxes per level.' }, { name: 'Inn & Playhouse', icon: '🎭', desc: 'A proper stage: travelling bards play to 28 happy villagers and +6 🪙 taxes per level.' }, { name: 'Grand Music Hall', icon: '🎶', desc: 'The whole realm talks about this stage — 42 cheerful villagers and +9 🪙 taxes per level.' }], desc: 'Invest in fun: every level raises a livelier hall — alehouse games, then a bard’s stage, then a grand music hall — cheering 14 villagers and earning +3 🪙 taxes per level. Needs 1 host.' }
 ];
 const EMPIRE_BUILDING_INDEX = Object.fromEntries(EMPIRE_BUILDINGS.map(b => [b.id, b]));
 
@@ -24288,22 +24345,37 @@ function empireCompleteConstructions(now) {
   const t = Number(now) || Date.now();
   let snapshot = null;
   const notices = [];
+  // What each village's own Project Manager raised while nobody was watching,
+  // tallied per village. A player who has been away two days comes home to one
+  // warm line per village instead of twenty toasts.
+  const managerRuns = new Map();
   let completed = false;
+  let started = false;
   let levelledUp = false;
-  empireVillages().forEach(rec => {
+  const takeSnapshot = () => { if (!snapshot) snapshot = snapshotGameState(); };
+  // Finish every site whose clock has run out. True when anything finished.
+  const finishDue = () => {
+    let any = false;
+    empireVillages().forEach(rec => {
     const eco = ensureVillageEconomy(rec);
     // Copy first: finished projects are lifted out of the live list as we go.
     villageConstructions(rec).slice().forEach(con => {
       const building = EMPIRE_BUILDING_INDEX[con.id];
       if (!building) { eco.constructions = eco.constructions.filter(x => x !== con); return; }
       if (t < Number(con.endMs)) return;
-      if (!snapshot) snapshot = snapshotGameState();
+      takeSnapshot();
       const isFirstRealmQuarry = building.id === 'quarry' && (eco.buildings.quarry || 0) === 0 &&
         !empireVillages().some(other => other !== rec && villageBuildingLevel(other, 'quarry') > 0);
       const level = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(con.toLevel) || ((eco.buildings[building.id] || 0) + 1)));
       eco.buildings[building.id] = level;
       eco.constructions = eco.constructions.filter(x => x !== con);
       completed = true;
+      any = true;
+      // The manager's own crew is free again the moment it downs tools, not the
+      // moment the player happens to open the game. That one line is what lets
+      // a village catch up on a whole night's work in a single pass.
+      const byManager = con.by === 'manager';
+      if (byManager) eco.managerFreeAt = Math.max(Number(eco.managerFreeAt) || 0, Number(con.endMs) || t);
       levelledUp = applyPlayerXpState(12) || levelledUp;
       // The first quarry still bootstraps the stone economy: its opening cut is
       // enough for the first Grain Farm and Lumber Camp. After that it digs
@@ -24328,6 +24400,13 @@ function empireCompleteConstructions(now) {
       const publicSettlement = mergedLink ? canonicalEmpireSettlement(empireSettlementById(mergedLink.id)) : null;
       const publicName = publicSettlement ? townDisplayName(publicSettlement) : rec.name;
       const publicSeed = publicSettlement ? publicSettlement.heartSeed : (rec.seed >>> 0);
+      if (byManager) {
+        const run = managerRuns.get(publicSeed) || { seed: publicSeed, name: publicName, bird: villageStewardProject(rec.seed).bird, raised: [], movedIn: 0 };
+        run.raised.push(doneTier);
+        run.movedIn += movedIn;
+        managerRuns.set(publicSeed, run);
+        return;
+      }
       notices.push({ seed: publicSeed, text: '🏗️ ' + doneTier.icon + ' ' + doneTier.name + (level <= 1 ? ' finished' : (building.tiers ? ' rebuilt' : ' raised to level ' + level)) + ' in ' + publicName + '!' + (firstCutStone ? ' First cut: +' + firstCutStone + ' stone — enough for the first Grain Farm and Lumber Camp.' : '') + (movedIn ? ' 👥 ' + movedIn + ' new resident' + (movedIn === 1 ? '' : 's') + ' move in!' : '') });
       // Queued inside the same commit as the build itself, so a failed save
       // rolls the corner card back along with the finished building.
@@ -24339,8 +24418,35 @@ function empireCompleteConstructions(now) {
         target: { seed: publicSeed }
     });
     });
+    });
+    return any;
+  };
+  finishDue();
+  // Then the Project Managers. Each takes its next site; anything the bird
+  // would already have finished is finished; round again — so a village nobody
+  // has opened since Tuesday lands exactly where it should.
+  for (let pass = 0; pass < MANAGER_CATCHUP_PASSES; pass += 1) {
+    let took = false;
+    empireVillages().forEach(rec => { if (empireManagerTakeSite(rec, t, { snapshot: takeSnapshot })) took = true; });
+    if (!took) break;
+    started = true;
+    if (!finishDue()) break;
+  }
+  // One line per village whose manager worked while you were away.
+  managerRuns.forEach(run => {
+    const first = run.raised[0];
+    const many = run.raised.length > 1;
+    const what = many ? run.raised.length + ' buildings' : first.icon + ' ' + first.name;
+    notices.push({ seed: run.seed, text: '📋 ' + (run.bird ? birdDisplayName(run.bird) : 'Your Project Manager') + ' raised ' + what + ' in ' + run.name + '.' + (run.movedIn ? ' 👥 ' + run.movedIn + ' new resident' + (run.movedIn === 1 ? '' : 's') + ' move in!' : '') });
+    queueCompletionNotice({
+      kind: 'empire-building',
+      icon: many ? '📋' : first.icon,
+      title: many ? run.raised.length + ' buildings raised' : first.name + ' finished',
+      sub: run.name + ' — tap to manage',
+      target: { seed: run.seed }
+    });
   });
-  if (!completed) return false;
+  if (!completed && !started) return false;
   try {
     durableSaveState({ throwOnFailure:true });
   } catch (error) {
@@ -24359,7 +24465,10 @@ function empireCompleteConstructions(now) {
     showToast(notice.text);
     if (villageActive && (villageActive.seed >>> 0) === notice.seed) villageBuiltSeed = null;
   });
-  SFX.questComplete(); vibrate(35);
+  // A manager that only STARTED something spends your coins without finishing
+  // anything, so the purse in the header has to be told either way.
+  if (typeof updateHeader === 'function') updateHeader();
+  if (completed) { SFX.questComplete(); vibrate(35); }
   return true;
 }
 function tickEmpireConstruction() {
@@ -24735,6 +24844,190 @@ function villageBuildingCost(building, level, seed) {
 function villageBuildDurationMs(seed, building, level) {
   const factor = settlementBuildFactorForSeed(seed) * villageStewardProject(seed).buildFactor;
   return Math.max(30000, Math.round(villageBuildTimeMs(building, level) * factor));
+}
+// ============================================================================
+// THE PROJECT MANAGER'S OWN BUILDING PROGRAMME
+// (manager-builds-the-village-v324 — Yaan, 2026-08-25)
+// ============================================================================
+// Appoint a bird as a village's Project Manager and the bird builds the
+// village. All of it, on its own, while you are somewhere else entirely. With
+// the desk empty nothing here runs and the player raises every building
+// themselves, exactly as they always have.
+//
+// The clock belongs to the bird. A player standing in the village with every
+// material to hand does the whole place in four hours — that is what the
+// `buildMinutes` ladder adds up to. A grandmaster songbird takes six hours; a
+// dull, heavy bird of prey takes three real days. The maths lives in
+// village_manager_core.js and reads one number: civic aptitude, which is INT
+// and CHA weighed down by the bird's own size. Time in the Library and time in
+// the Crowbar is what turns a robin into the best builder in the realm.
+function villageManagerCore() {
+  return typeof BurbzVillageManager !== 'undefined' ? BurbzVillageManager : null;
+}
+// How many rounds of "finish what is due, take the next site" one catch-up may
+// run. A village holds 23 builds; the cap only stops a broken clock spinning.
+const MANAGER_CATCHUP_PASSES = 200;
+// Every building a lone village may raise, in the order a manager raises them:
+// a roof first, then the larder, then the well, then the yards.
+function villageTierBuildings() {
+  return EMPIRE_BUILDINGS.filter(b => b.tier !== 'town');
+}
+// The four-hour yardstick: one player, one crew, every village building raised
+// once, back to back, with the materials already in hand.
+function villagePlayerBudgetMs() {
+  const core = villageManagerCore();
+  return core ? core.playerVillageBudgetMs(villageTierBuildings()) : 4 * 60 * 60 * 1000;
+}
+// What this village's build clocks are multiplied by when the manager's own
+// crew runs the site. A vacant desk returns 0 — none of this runs at all.
+function villageManagerFactor(seed) {
+  const core = villageManagerCore();
+  const project = villageStewardProject(seed);
+  if (!core || !project.staffed) return 0;
+  return core.managerBuildFactor(project.aptitude, villagePlayerBudgetMs());
+}
+// How long a bird of this aptitude would take over a whole village — the one
+// number the appointment sheet shows against every candidate.
+function villageManagerVillageMs(aptitude) {
+  const core = villageManagerCore();
+  return core ? core.managerVillageMs(aptitude) : 0;
+}
+// One site, on the manager's clock. The post's 30% site-planning discount is
+// the PLAYER's perk on the player's own taps (villageBuildDurationMs); the
+// bird's own crew works to the bird's own pace, so it is never applied twice.
+function villageManagerBuildDurationMs(seed, building, level) {
+  const factor = settlementBuildFactorForSeed(seed) * villageManagerFactor(seed);
+  return Math.max(30000, Math.round(villageBuildTimeMs(building, level) * factor));
+}
+// The village as the manager reads it: one row per building — what stands,
+// what is rising, and whether this settlement and this trainer level allow it.
+function villageManagerRows(rec, now) {
+  const t = Number(now) || Date.now();
+  const trainerLevel = Number(gameState.player.level) || 1;
+  return EMPIRE_BUILDINGS.map(b => {
+    const rising = villageConstructionOf(rec, b.id);
+    // The TRUE level, not the level a site is rising to: a cabin still under
+    // scaffolding is not a cabin yet, and the outlook must not count it as one.
+    // `rising` is what keeps the programme from taking the same site twice.
+    const level = villageBuildingLevel(rec, b.id);
+    // Both gates guard raising a NEW structure only: anything an older save
+    // already built keeps its right to be upgraded.
+    const buildable = level > 0 || !!rising || (settlementAllowsBuilding(rec, b) && trainerLevel >= (Number(b.unlockLevel) || 1));
+    const row = { id: b.id, minutes: b.buildMinutes || 0, level, maxLevel: b.maxLevel, buildable, rising: !!rising };
+    if (rising) row.risingMsLeft = Math.max(0, Number(rising.endMs) - t);
+    return row;
+  });
+}
+function villageManagerNextStep(rec) {
+  const core = villageManagerCore();
+  return core ? core.nextManagerStep(villageManagerRows(rec)) : null;
+}
+// Where the village has got to and when it will stand: raised / total, the
+// time left, and what the crew is waiting for if the purse ran dry.
+function villageManagerOutlook(rec) {
+  const core = villageManagerCore();
+  if (!core || !rec) return null;
+  const eco = ensureVillageEconomy(rec);
+  return core.villageRaiseOutlook(villageManagerRows(rec), villageManagerFactor(rec.seed), {
+    waitingFor: eco && eco.managerShort ? eco.managerShort : null
+  });
+}
+// One line under the Project Manager's row: what the bird is doing about this
+// village, or — with the desk empty — what a bird would do about it.
+function villageManagerLineHTML(rec) {
+  const outlook = villageManagerOutlook(rec);
+  if (!outlook || !outlook.total) return '';
+  const project = villageStewardProject(rec.seed);
+  if (!project.staffed) {
+    return '<div class="province-need-sub">📋 No Project Manager — you raise every building here yourself. Appoint a bird and it builds the whole village on its own.</div>';
+  }
+  const name = escapeHtml(birdDisplayName(project.bird));
+  const short = outlook.waitingFor;
+  if (short) {
+    const waited = EMPIRE_BUILDING_INDEX[short.id];
+    const wants = [short.coins ? short.coins + ' 🪙' : '', short.branches ? short.branches + ' 🪵' : '', short.stone ? short.stone + ' stone' : ''].filter(Boolean).join(' + ');
+    return '<div class="province-need-sub warn">📋 ' + name + '’s crew has downed tools on the ' + escapeHtml(waited ? waited.name : 'next build') + ' — short ' + wants + '.</div>';
+  }
+  if (!villageManagerNextStep(rec)) {
+    // "Finished" must mean finished. A village whose last halls are still
+    // behind a trainer gate is not complete, and saying so would be a lie.
+    const trainerLevel = Number(gameState.player.level) || 1;
+    const locked = villageTierBuildings().filter(b => villageBuildingLevel(rec, b.id) < b.maxLevel && trainerLevel < (Number(b.unlockLevel) || 1));
+    if (locked.length) {
+      const nextGate = Math.min.apply(null, locked.map(b => Number(b.unlockLevel) || 1));
+      return '<div class="province-need-sub">📋 ' + name + ' has raised everything open to you here — reach trainer level ' + nextGate + ' and it starts on the rest.</div>';
+    }
+    return '<div class="province-need-sub">📋 ' + name + ' is finished — ' + escapeHtml(rec.name) + ' stands complete.</div>';
+  }
+  if (outlook.built) {
+    return '<div class="province-need-sub">📋 ' + name + ' has ' + escapeHtml(rec.name) + ' built, and is working through the upgrades.</div>';
+  }
+  return '<div class="province-need-sub">📋 ' + name + ' is building ' + escapeHtml(rec.name) + ' — ' + outlook.raised + ' of ' + outlook.total + ' up, about ' + formatBuildDuration(outlook.remainingMs) + ' to go.</div>';
+}
+// Crews standing idle, which is not the same as crews free. A Project Manager's
+// own crew is never idle — it is working its way down the village list — so a
+// managed village reports nothing idle at all, and its Empire square reads
+// "Building" rather than "a crew is free". The one exception is a manager that
+// has downed tools for want of materials: that yard really has stopped, and the
+// square should send the player over.
+function villageIdleCrews(rec) {
+  const free = villageBuildSlotsFree(rec);
+  if (!free) return 0;
+  const project = villageStewardProject(rec && rec.seed);
+  if (!project.staffed) return free;
+  const eco = ensureVillageEconomy(rec);
+  return eco && eco.managerShort ? free : 0;
+}
+// One Project Manager, one crew of its own. The bird takes the next building in
+// the village's own order, pays the haggled bill out of your purse, and gets on
+// with it. The second build slot stays yours: appointing a manager never takes
+// the hammer out of the player's hand. Returns true when a site was taken.
+// `ctx.snapshot()` runs before anything is spent, so a whole catch-up rolls
+// back as one if the save fails.
+function empireManagerTakeSite(rec, now, ctx) {
+  if (!rec) return false;
+  // A merged ward is run from its Town Hall, not from a village desk.
+  if (empireSettlementOfSeed(rec.seed)) return false;
+  const eco = ensureVillageEconomy(rec);
+  if (!eco) return false;
+  const project = villageStewardProject(rec.seed);
+  if (!project.staffed) {
+    // The desk fell vacant. Forget where the last manager had got to, so the
+    // next bird starts its own clock from the day it takes the job.
+    delete eco.managerFrom; delete eco.managerFreeAt; delete eco.managerShort;
+    return false;
+  }
+  const t = Number(now) || Date.now();
+  if (!Number.isFinite(Number(eco.managerFrom))) eco.managerFrom = t;
+  if (villageConstructions(rec).some(con => con && con.by === 'manager')) return false;
+  if (villageBuildSlotsFree(rec) <= 0) return false;
+  const step = villageManagerNextStep(rec);
+  if (!step) { delete eco.managerShort; return false; }
+  const building = EMPIRE_BUILDING_INDEX[step.id];
+  if (!building) return false;
+  const cost = villageBuildingCost(building, step.level, rec.seed);
+  const short = {
+    coins: Math.max(0, cost.coins - (gameState.player.coins || 0)),
+    branches: Math.max(0, cost.branches - playerBranches()),
+    stone: Math.max(0, cost.stone - playerStone())
+  };
+  if (short.coins || short.branches || short.stone) {
+    // Down tools rather than half-build. The desk says what the yard wants.
+    eco.managerShort = { id: building.id, coins: short.coins, branches: short.branches, stone: short.stone };
+    return false;
+  }
+  delete eco.managerShort;
+  if (ctx && typeof ctx.snapshot === 'function') ctx.snapshot();
+  addCoins(-cost.coins);
+  addBranches(-cost.branches);
+  addStone(-cost.stone);
+  // Back-dated to the moment the last crew knocked off, so a village nobody has
+  // opened for two days catches up to exactly where it should be.
+  const freeAt = Math.max(Number(eco.managerFrom) || t, Number(eco.managerFreeAt) || 0);
+  const startMs = Math.min(t, freeAt || t);
+  const buildMs = villageManagerBuildDurationMs(rec.seed, building, step.level);
+  eco.constructions.push({ id: building.id, toLevel: step.level + 1, startMs, endMs: startMs + buildMs, by: 'manager' });
+  return true;
 }
 function empireBuildStructure(seed, buildingId, options) {
   const opts = options || {};
@@ -25269,12 +25562,15 @@ function renderVillageManagePanel() {
     : '';
   // Active building sites: name, animated progress bar and a live countdown,
   // one card per crew at work.
+  const managerBird = villageStewardProject(rec.seed).bird;
   const constructionHtml = constructions.map(con => {
     const cb = EMPIRE_BUILDING_INDEX[con.id];
     const cbTier = cb ? villageBuildingTier(cb, con.toLevel) : null;
     const pct = Math.round(constructionProgress(con, now) * 100);
+    // Two crews can be at work here, so each card says whose it is.
+    const crewTag = con.by === 'manager' && managerBird ? ' <span class="province-construction-crew">📋 ' + escapeHtml(birdDisplayName(managerBird)) + '</span>' : '';
     return '<div class="province-construction">' +
-      '<div class="province-construction-head"><span>🏗️ ' + (cbTier ? cbTier.icon + ' ' + escapeHtml(cbTier.name) : 'Construction') + (con.toLevel > 1 && !(cb && cb.tiers) ? ' → level ' + con.toLevel : '') + '</span>' +
+      '<div class="province-construction-head"><span>🏗️ ' + (cbTier ? cbTier.icon + ' ' + escapeHtml(cbTier.name) : 'Construction') + (con.toLevel > 1 && !(cb && cb.tiers) ? ' → level ' + con.toLevel : '') + crewTag + '</span>' +
       '<span class="province-construction-eta" data-build-end="' + con.endMs + '">⏳ ' + formatBuildCountdown(con.endMs - now) + '</span></div>' +
       '<div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + con.startMs + '" data-build-end="' + con.endMs + '" style="width:' + pct + '%"></div></div>' +
       '</div>';
@@ -25351,7 +25647,8 @@ function renderVillageManagePanel() {
     : '';
   // A village is run by a bird, not by the player alone. One row says who has
   // the job; tapping it opens the same appointment sheet as every other post.
-  const stewardHtml = rolePostRowHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' });
+  const stewardHtml = rolePostRowHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' }) +
+    villageManagerLineHTML(rec);
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (workedYards ? ' · 👷 ' + (workedYards - idleYards) + '/' + workedYards : '') + '</div></div>' +
     settleLine +
@@ -39894,7 +40191,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'forge-opens-on-the-anvil-v323-20260825';
+const BURBZ_BUILD = 'manager-builds-the-village-v324-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

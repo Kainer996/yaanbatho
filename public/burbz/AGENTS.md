@@ -315,6 +315,46 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 
 ## 9. Review log
 
+- **2026-08-25 — the Project Manager builds the village (Claude).** Release
+  `manager-builds-the-village-v324-20260825`, from Yaan's ask: appoint a bird to
+  a village and it raises every building on its own; six hours for a clever,
+  charming songbird, three real days for a dull heavyweight; four hours if the
+  player does it themselves; and no bird means no building.
+  - **Two numbers is one number too many, so derive one from the other.** The
+    six-hour promise only holds while the ladder really is four hours, so
+    `managerBuildFactor` takes the measured budget rather than a constant, and a
+    test adds up the real `buildMinutes` and asserts 240. Re-tuning the ladder
+    can now change the pacing but can never quietly break the promise.
+  - **Count what stands, not what is scaffolded.** `villageManagerRows` first
+    reported a rising site's `toLevel` as its level. The programme worked, but
+    the desk said "1 of 8 up" over an empty field and left the site's remaining
+    time out of the estimate. The true level plus a `rising` flag answers both
+    questions; one field cannot.
+  - **Back-date the crew, or offline time is silently lost.** A build must start
+    when the last one *finished*, not when the player next opens the app.
+    `eco.managerFreeAt` is written from `con.endMs` on every completion, and the
+    catch-up loop alternates finish/take-site until it reaches now — which is
+    what makes two days away land exactly where the clock says.
+  - **The appointment sheet is shared code; guard with `typeof`, not a call.**
+    Four suites lift `rolePostCardHTML` and `assignBirdRole` into a bare Node
+    context with no empire around them. `!villageManagerCore()` throws there;
+    `typeof villageManagerVillageMs !== 'function'` returns the honest empty
+    string. Same lesson as the Stores' harness in v316.
+  - **One crew is the manager's, one stays the player's.** Taking both slots
+    would have made appointing a bird *remove* a control the player had. The
+    manager checks for a site of its own (`con.by === 'manager'`) before it
+    checks free slots, so the second crew can never be swallowed.
+  - **"Finished" has to mean finished.** With cottages, alehouse and storehouse
+    behind trainer gates, the manager legitimately runs out of work — and the
+    first draft of the line called that village complete. It now names the gate.
+  - **Round the value, not the rounded value.** `formatManagerSpan` computed
+    days from already-rounded hours, so 61.44h printed as 2.5 days instead of
+    2.6. Two roundings in a row is one too many.
+  - **A blanket pin sweep is still the tax on every release.** 77 test files pin
+    the head build and nine pin `bird_roles_core.js`. Sweep the assignment
+    lines, then run the previous release's own file — v323's suite asserts it is
+    the head, and that assertion has to become "keeps its place in the lineage".
+
 - **2026-08-25 — the Forge opens on its anvil (Claude).** Release
   `forge-opens-on-the-anvil-v323-20260825`.
   - **A default landing tab belongs on the route every entry shares.** The dock

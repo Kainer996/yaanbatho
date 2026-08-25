@@ -135,15 +135,20 @@
     // charmer at the door, not a shadow over the market square.
     {
       // The village post is the PROJECT MANAGER (Yaan, 2026-08-20): the bird
-      // that runs the building sites and keeps the ledger. The same post at a
+      // that runs the building sites and keeps the ledger. Since
+      // manager-builds-the-village-v324 it runs them WITHOUT the player: the
+      // appointed bird raises every building in the village on its own, and
+      // the same aptitude below decides how long that takes — six hours for a
+      // grandmaster songbird, three days for a dull heavyweight. The clock
+      // itself lives in village_manager_core.js. The same post at a
       // merged settlement's heart wears the LORD MAYOR's chain (Yaan,
       // 2026-08-25): one role, one save slot, and index.html titles it by
       // where the seed actually sits. Councillors for counties come later.
       // The id stays 'steward' so old saves keep their appointee.
       id:'steward', title:'Project Manager', icon:'📋', scope:'village', key:null,
       stats:{ int:0.5, cha:0.5 }, civic:true,
-      effect:{ id:'village_yield', label:'Project management', copy:'Two builds can rise at once here. Every build is faster and costs a little less — and the village pays more taxes, timber and goods.' },
-      copy:'One bird runs every project in the village: it plans the scaffolds, sweet-talks the masons, haggles the timber yard and keeps the tax ledger straight. A foreman on site means a second crew can work in parallel, so two builds rise at once. Wit and charm do the work, and the lighter the bird, the easier the folk take to it. A robin melts the market square; a raven empties it.'
+      effect:{ id:'village_yield', label:'Project management', copy:'This bird builds the whole village on its own, one building at a time, while you are elsewhere. Two builds can rise at once here: the manager’s site and yours. Your own builds are faster and cost a little less, and the village pays more taxes, timber and goods.' },
+      copy:'One bird runs every project in the village. Appoint it and you never have to tap BUILD again: it plans the scaffolds, sweet-talks the masons, haggles the timber yard and works down the list until the whole village stands. A foreman on site also means a second crew can work in parallel, so two builds rise at once — one of them yours. Wit and charm do the work, and the lighter the bird, the easier the folk take to it. A grandmaster songbird raises a village in six hours; a dull heavyweight takes days. A robin melts the market square; a raven empties it.'
     },
     {
       id:'region_warden', title:'Warden of the Region', icon:'👑', scope:'region', key:null,
@@ -194,6 +199,12 @@
   // line, become the best project managers in the realm. A perfect appointee
   // takes 30% off every build clock and 15% off the bill. An empty post
   // changes nothing: both factors sit at exactly 1.
+  //
+  // These two are the PLAYER's perk: they apply to the builds the player taps
+  // out themselves, on the crew the manager leaves free. The manager's own
+  // building programme runs to a different, much longer clock — six hours to
+  // three days for a whole village — and that one lives in
+  // village_manager_core.js. Never apply both to the same site.
   const STEWARD_MAX_BUILD_SPEEDUP = 0.30;
   const STEWARD_MAX_COST_DISCOUNT = 0.15;
   function stewardProjectFactors(aptitude) {

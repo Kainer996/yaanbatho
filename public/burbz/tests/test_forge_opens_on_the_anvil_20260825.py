@@ -26,6 +26,9 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "one-tap-appointments-v320-20260824"
+# The head build has moved past this release; its own marker stays in the
+# lineage for ever, and the newest one goes on the end.
+CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
 
 
 def function_source(name: str) -> str:
@@ -124,10 +127,11 @@ def test_the_entry_tab_is_spent_once_and_never_sticks():
 # ---------------------------------------------------------------------------
 
 def test_release_is_versioned_so_a_refresh_lands_the_new_default():
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(l for l in SW.splitlines() if l.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN), "this release goes on the end"
+    assert OWN_RELEASE_PIN in cache_line, "and this release keeps its place in it"
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest marker goes last"
 
 
 def test_this_release_edited_no_core_so_it_pins_none():

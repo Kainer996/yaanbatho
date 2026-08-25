@@ -23,10 +23,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "forge-opens-on-the-anvil-v323-20260825"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
+RELEASE = "manager-builds-the-village-v324-20260825"
+CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
 
-TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market"}
+# The Iron Foundry and the Entertainment House are town industry too — they
+# arrived with the towns-3D release and the pin had not been told.
+TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market", "foundry", "entertainment"}
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
 
 

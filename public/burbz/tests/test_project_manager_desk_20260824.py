@@ -39,10 +39,10 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
+CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
 # The release that last edited bird_roles_core.js — free-birds-v318, which
 # retired the Head Gardener when the Aviary Gardens stopped being a room.
-ROLES_CORE_PIN = "empire-grid-v322-20260825"
+ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
 
 
 def function_source(name: str) -> str:
@@ -171,7 +171,7 @@ def test_a_staffed_village_desk_keeps_the_number_and_drops_the_sentence():
     html = out["html"]
     assert 'class="role-holder"' in html
     assert "Project management <b>+" in html          # the number survives
-    assert "Every build is faster and costs a little less" not in html
+    assert "Your own builds are faster and cost a little less" not in html
     assert "Stand down" in html
     assert '<div class="role-candidate-label">Replace with</div>' in html
 
@@ -199,13 +199,13 @@ def test_every_post_reads_bare_now_and_the_words_moved_into_the_sheet():
     assert "Birds stationed in the Library learn INT faster." in out["librarySheet"]
     assert '<div class="role-picker-title">Librarian</div>' in out["librarySheet"]
     assert '<div class="role-picker-title">Kestrelby’s Project Manager</div>' in out["villageSheet"]
-    assert "Every build is faster and costs a little less" in out["villageSheet"]
+    assert "Your own builds are faster and cost a little less" in out["villageSheet"]
 
 
 def test_the_words_still_live_in_the_roles_core():
     # Stripping the card did not strip the post's description from the game.
     assert "One bird runs every project in the village" in ROLES_CORE
-    assert "Two builds can rise at once here." in ROLES_CORE
+    assert "Two builds can rise at once here: the manager’s site and yours." in ROLES_CORE
 
 
 def test_the_row_the_player_taps_says_who_holds_the_post():

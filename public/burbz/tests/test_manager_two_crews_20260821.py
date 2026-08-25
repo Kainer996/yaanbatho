@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
+RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 
 
 def function_source(name: str) -> str:
@@ -180,7 +180,7 @@ def test_both_scenes_raise_one_scaffold_per_crew():
 
 
 def test_the_post_card_promises_the_second_crew():
-    assert "Two builds can rise at once here." in ROLES_CORE
+    assert "Two builds can rise at once here: the manager’s site and yours." in ROLES_CORE
     assert "a second crew can work in parallel, so two builds rise at once" in ROLES_CORE
 
 
