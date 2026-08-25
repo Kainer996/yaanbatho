@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
+CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
@@ -41,7 +41,17 @@ ACADEMY_UNLOCKS = {
     "nursery": 11,
     "observatory": 12,
 }
-EMPIRE_UNLOCKS = {"storehouse": 4, "cottages": 5, "tavern": 6, "chapel": 8, "market": 10}
+# The Entertainment House and the Iron Foundry joined the list with the towns-3D
+# release and carry their own gates; the pin had not been told.
+EMPIRE_UNLOCKS = {
+    "storehouse": 4,
+    "cottages": 5,
+    "tavern": 6,
+    "entertainment": 7,
+    "chapel": 8,
+    "foundry": 9,
+    "market": 10,
+}
 EMPIRE_ALWAYS_OPEN = {"farm", "well", "lumber", "quarry"}
 
 

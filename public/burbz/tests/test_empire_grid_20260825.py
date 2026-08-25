@@ -40,7 +40,7 @@ CORE = ROOT / "empire_grid_core.js"
 OWN_RELEASE_PIN = "empire-grid-v322-20260825"
 # Later releases ship over the top. This one edited bird_roles_core.js, so its
 # own tag stays on that core while the head build moves on without it.
-CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
+CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
 PREVIOUS_RELEASE_PIN = "free-birds-v318-20260824"
 
 
@@ -303,7 +303,11 @@ def test_the_square_says_who_runs_it_out_loud_for_a_screen_reader():
 def test_a_village_square_reads_folk_crews_stars_and_a_full_cycle():
     tile = function_source(html_text(), "empireVillageTile")
     assert "pop:snap.pop, happiness:snap.happiness" in tile
-    assert "freeCrews: villageBuildSlotsFree(v)" in tile
+    # Idle crews, not free ones (manager-builds-the-village-v324): a Project
+    # Manager's own crew is never idle, so a village that is quietly building
+    # itself reads "Building" rather than "a crew is free".
+    assert "freeCrews: villageIdleCrews(v)" in tile
+    assert "villageBuildSlotsFree(rec)" in function_source(html_text(), "villageIdleCrews")
     assert "building: !!villageConstructionFor(v)" in tile
     assert "mergeReady: !!(ready && ready.ready)" in tile
     # A WHOLE cycle banked, the same test the nav badge uses. "Something has
