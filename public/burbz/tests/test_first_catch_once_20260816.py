@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

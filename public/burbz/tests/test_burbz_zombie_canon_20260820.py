@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "one-tap-appointments-v320-20260824"
+OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v321-20260825"
 
 
 def test_release_is_wired():

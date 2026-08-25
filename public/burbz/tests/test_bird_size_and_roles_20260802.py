@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "free-birds-v318-20260824"

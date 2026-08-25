@@ -24,7 +24,7 @@ SW = ROOT / "sw.js"
 LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
 # magpie-market-v316 edited both cores; free-birds-v318 then edited the roles
 # core again, retiring the Head Gardener. A core ships under the tag of the
 # release that last touched it, so the two pins have parted company.

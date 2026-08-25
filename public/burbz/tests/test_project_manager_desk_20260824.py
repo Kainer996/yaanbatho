@@ -15,7 +15,7 @@ Two changes, one desk.
    here. Village desks are one job in many places, so the manager moves and the
    old site falls vacant.
 
-**Amended by `one-tap-appointments-v320-20260824`.** Yaan widened both halves:
+**Amended by `forge-opens-on-the-anvil-v321-20260825`.** Yaan widened both halves:
 ANY posted bird can now be moved to ANY post from wherever the player is
 standing, and the birds who already have a job are offered at the BOTTOM of
 the list, not the top. The tests below that pinned the narrower rule are
@@ -39,7 +39,7 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
 # The release that last edited bird_roles_core.js — free-birds-v318, which
 # retired the Head Gardener when the Aviary Gardens stopped being a room.
 ROLES_CORE_PIN = "free-birds-v318-20260824"

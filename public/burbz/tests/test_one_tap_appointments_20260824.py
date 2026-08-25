@@ -37,6 +37,9 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (ROOT / "bird_roles_core.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "one-tap-appointments-v320-20260824"
+# A later release ships over the top; this one changed no core either, so only
+# the head build moves on.
+CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
 PREVIOUS_RELEASE_PIN = "villages-first-county-merge-v319-20260824"
 
 
@@ -263,10 +266,11 @@ def test_the_things_that_still_stop_an_appointment_are_untouched():
 # ---------------------------------------------------------------------------
 
 def test_release_is_versioned_so_a_refresh_lands_the_new_screens():
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(l for l in SW.splitlines() if l.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN), "this release goes on the end"
+    assert OWN_RELEASE_PIN in cache_line, "and this release keeps its place in it"
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest marker goes last"
 
 
 def test_this_release_edited_no_core_so_it_pins_none():

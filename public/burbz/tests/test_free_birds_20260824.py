@@ -35,7 +35,7 @@ BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "free-birds-v318-20260824"
 # Later releases ship over the top. This one edited bird_roles_core.js, so its
 # own pin stays on that core while the head build moves on without it.
-CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The release that last edited bird_roles_core.js — this one, which retired
 # the Head Gardener.
@@ -202,7 +202,7 @@ def test_every_assignment_picker_offers_free_birds_first():
 
 
 def test_a_role_post_offers_free_birds_first_and_posted_birds_last():
-    """Amended by `one-tap-appointments-v320-20260824`.
+    """Amended by `forge-opens-on-the-anvil-v321-20260825`.
 
     This release put serving village managers at the TOP of a role post, ahead
     of the free flock. Yaan reversed that the same day — "show the birds that

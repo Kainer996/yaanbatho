@@ -4087,7 +4087,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="sq-board">
           <div class="sq-board-head">
             <span class="sq-board-title">Your squad</span>
-            <button class="sq-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">Gear up</button>
+            <button class="sq-forge-btn" id="battleForgeBtn" onclick="openForge('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">Gear up</button>
           </div>
           <div class="sq-slots" id="battleSquadSlots"></div>
           <div class="battle-synergy-preview" id="battleSynergyPreview">✨ Three birds from one family add a +25% squad bonus.</div>
@@ -4376,8 +4376,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="screen-title">FLETCHER'S FORGE</div>
       <div class="forge-intro">Loot found on your walks becomes weapons, armour, satchels, trinkets, spells and battle potions here. Equip each bird at the Forge; its potion can be drunk on that bird’s turn, and satchels let it carry more home from quests.</div>
       <div class="forge-tabs">
-        <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
-        <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
+        <button class="forge-tab" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
+        <button class="forge-tab active" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
         <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">MATERIALS</button>
       </div>
       <div id="forgeBody"></div>
@@ -21335,7 +21335,11 @@ function switchScreen(name) {
   if (name === 'town') { renderTownScreen(); setTimeout(onTownResize, 60); }
   if (name === 'county') renderCountyMapScreen();
   if (name === 'inventory') renderInventory();
-  if (name === 'forge') renderForge();
+  if (name === 'forge') {
+    forgeApplyTab(forgeEntryTab || FORGE_DEFAULT_TAB);
+    forgeEntryTab = null;
+    renderForge();
+  }
   if (name === 'quests') renderQuests();
   if (name === 'diary') renderDiary();
   if (name === 'leaderboards') renderLeaderboards();
@@ -34801,7 +34805,7 @@ function renderStoresArmoury() {
           '<div class="src-copy">' + forgeGearStatLine(item) + '</div>' + storesSellRowHTML('gear', item.id) + '</div>' +
           '<div class="src-count">' + count + '</div></div>';
       }).join('') + '</div></div>';
-  }).join('') + '<button class="stores-collect-btn" onclick="switchScreen(\'forge\')">🛡️ EQUIP YOUR FLOCK AT THE FORGE</button>';
+  }).join('') + '<button class="stores-collect-btn" onclick="openForge(\'equip\')">🛡️ EQUIP YOUR FLOCK AT THE FORGE</button>';
 }
 
 // --- Curios tab: XP scrolls, keepsakes and everything else on the shelf ----
@@ -34868,7 +34872,16 @@ function renderInventory() {
 // ============================================================================
 // FLETCHER'S FORGE — equip gear, craft from loot, manage materials
 // ============================================================================
-let forgeState = { tab: 'equip', birdId: null, slotPicker: null };
+// Yaan's ask (2026-08-25): the Forge opens on its anvil. Crafting is what the
+// room is FOR; equipping is something you do to a bird, and it is one tap away.
+// A caller may still ask for another tab by name — the two buttons that promise
+// equipping in their own words do exactly that.
+const FORGE_DEFAULT_TAB = 'craft';
+const FORGE_TABS = ['equip', 'craft', 'materials'];
+let forgeState = { tab: FORGE_DEFAULT_TAB, birdId: null, slotPicker: null };
+// Set by openForge() and spent by the next switchScreen('forge'), so the dock —
+// which routes generically — still lands on the anvil.
+let forgeEntryTab = null;
 
 const FORGE_SLOT_META = {
   weapon:  { label: 'Weapon',      empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
@@ -34878,15 +34891,32 @@ const FORGE_SLOT_META = {
   potion:  { label: 'Potion',      empty: '🧪', hint: 'Drink on this bird’s turn · does not replace its move' }
 };
 
-function forgeSetTab(tab) {
-  forgeState.tab = tab;
+function forgeApplyTab(tab) {
+  forgeState.tab = FORGE_TABS.includes(tab) ? tab : FORGE_DEFAULT_TAB;
   forgeState.slotPicker = null;
-  ['equip', 'craft', 'materials'].forEach(t => {
+  FORGE_TABS.forEach(t => {
     const el = $('forgeTab' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (el) el.classList.toggle('active', t === tab);
+    if (el) el.classList.toggle('active', t === forgeState.tab);
   });
+}
+function forgeSetTab(tab) {
+  forgeApplyTab(tab);
   SFX.tap();
   renderForge();
+}
+// Every way into the Forge lands on the anvil unless the caller names a tab.
+// switchScreen returns early when the screen is already open, so a caller
+// standing in the Forge has to be honoured here rather than through the route.
+function openForge(tab) {
+  forgeEntryTab = FORGE_TABS.includes(tab) ? tab : null;
+  if (currentScreen === 'forge') {
+    forgeApplyTab(forgeEntryTab || FORGE_DEFAULT_TAB);
+    forgeEntryTab = null;
+    SFX.tap();
+    renderForge();
+    return;
+  }
+  switchScreen('forge');
 }
 
 function forgeGearStatLine(item) {
@@ -38660,7 +38690,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -39715,7 +39745,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'one-tap-appointments-v320-20260824';
+const BURBZ_BUILD = 'forge-opens-on-the-anvil-v321-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
