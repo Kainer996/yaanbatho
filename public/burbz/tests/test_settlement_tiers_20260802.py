@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -360,7 +360,7 @@ def test_royal_ledger_lists_unified_towns_instead_of_absorbed_villages():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     # Towns and cities are squares in the 🏘️ TOWNS tier under the Empire map
-    # (empire-grid-v320-20260825 replaced the nav tab and its row list; before
+    # (empire-grid-v322-20260825 replaced the nav tab and its row list; before
     # that, empire-nav-tabs-v275-20260817 renamed the TOWNS & CITIES drawer).
     assert "empireTierHTML('tier-towns', '🏘️', 'TOWNS'" in html
     assert "function empireTownTile(settlement) {" in html

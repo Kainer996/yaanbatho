@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Browser evidence for empire-grid-v320-20260825: the Empire screen is a box
+// Browser evidence for empire-grid-v322-20260825: the Empire screen is a box
 // of boxes. Boots the REAL game in Chromium, plants a save with five villages
 // in five different states and a bird holding one of the desks, then proves:
 //

@@ -25,12 +25,12 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
-ROLES_CORE_PIN = "empire-grid-v320-20260825"
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 
 
 def run_node(source: str) -> dict:
@@ -177,7 +177,7 @@ def test_the_village_post_is_titled_project_manager_with_the_old_save_key():
 def test_every_surface_wears_the_new_nameplate():
     html = HTML.read_text(encoding="utf-8")
     assert "'PROJECT MANAGER'" in html                      # the province drawer
-    # empire-grid-v320-20260825 handed the promised chain over: the same post
+    # empire-grid-v322-20260825 handed the promised chain over: the same post
     # at a town's heart is titled Lord Mayor, and the village keeps its own.
     assert "🏛️ Lord Mayor" in html                       # the Town section
     assert "title:EMPIRE_POST_TITLES.town" in html

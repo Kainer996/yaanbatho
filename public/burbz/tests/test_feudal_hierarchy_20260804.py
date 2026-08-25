@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
@@ -199,7 +199,7 @@ def test_the_royal_ledger_lists_the_pyramid_above_the_counties():
     assert "realm-liege-row is-" in logic
     assert "realm-empire-banner" in logic
     assert "function frameEmpireLiege(" in logic
-    # empire-grid-v320-20260825: the counties are squares now and caption
+    # empire-grid-v322-20260825: the counties are squares now and caption
     # themselves, so the pyramid sits UNDER them beneath its own heading.
     assert "'<div class=\"realm-sub-title\">👑 SWORN TO</div>'" in logic
     # The plain-words help teaches the nested ladder, not the old size ladder.

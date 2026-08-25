@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 
 
@@ -117,7 +117,7 @@ def test_the_whole_countdown_apparatus_is_gone():
 # ---------------------------------------------------------------------------
 
 def test_counties_and_towns_wait_until_the_player_has_one():
-    # empire-grid-v320-20260825 turned the tabs into tiers of squares; the
+    # empire-grid-v322-20260825 turned the tabs into tiers of squares; the
     # gate Yaan asked for here is unchanged, and counties gained one honest
     # exception — a ready merge brings the tier back, because the MERGE INTO
     # ONE COUNTY banner lives inside it.

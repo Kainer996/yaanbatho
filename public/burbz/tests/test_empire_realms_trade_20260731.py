@@ -219,7 +219,7 @@ def test_royal_ledger_renders_realm_and_trade_sections():
     html = HTML.read_text(encoding="utf-8")
     assert 'class="realm-section"' in html
     # The realm lives under the 🛡️ COUNTIES squares below the Empire map
-    # (empire-grid-v320-20260825 — before that, a nav tab; before that, the
+    # (empire-grid-v322-20260825 — before that, a nav tab; before that, the
     # YOUR REALM dropdown).
     assert "empireTierHTML('tier-counties', '🛡️', 'COUNTIES'" in html
     assert "TRADE ROUTES" in html

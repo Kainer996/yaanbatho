@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Empire screen is a box of boxes now (empire-grid-v320-20260825).
+"""The Empire screen is a box of boxes now (empire-grid-v322-20260825).
 
 Yaan's ask, from a screenshot of the Empire screen:
 
@@ -37,8 +37,8 @@ HTML_PATH = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "empire_grid_core.js"
 
-OWN_RELEASE_PIN = "empire-grid-v320-20260825"
-CURRENT_BUILD = "empire-grid-v320-20260825"
+OWN_RELEASE_PIN = "empire-grid-v322-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 PREVIOUS_RELEASE_PIN = "free-birds-v318-20260824"
 
 

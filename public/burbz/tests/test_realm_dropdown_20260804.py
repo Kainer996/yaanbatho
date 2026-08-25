@@ -19,7 +19,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 
 
 def empire_logic(html: str) -> str:
@@ -46,7 +46,7 @@ def test_only_standalone_villages_get_rows():
 
 
 def test_the_order_runs_top_down_counties_then_towns_then_villages():
-    # empire-grid-v320-20260825 replaced the drop-down tabs with a box of boxes:
+    # empire-grid-v322-20260825 replaced the drop-down tabs with a box of boxes:
     # one square per holding under a plain tier heading.
     body = ledger(HTML.read_text(encoding="utf-8"))
     start = body.index("const tiersHtml")
@@ -75,7 +75,7 @@ def test_the_counties_body_still_lists_the_pyramid_counties_and_trade():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
     # The county squares caption themselves now, so the old lead line and its
-    # .realm-lead rule went with the drop-down (empire-grid-v320-20260825).
+    # .realm-lead rule went with the drop-down (empire-grid-v322-20260825).
     assert "Your counties — tap one to run it from its County Hall" not in logic
     assert ".realm-lead" not in html
     assert "'COUNTIES', 'Merge 3 starred Towns into a County" in logic

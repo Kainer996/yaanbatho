@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "empire-grid-v320-20260825"
+RELEASE_PIN = "empire-grid-v322-20260825"
 # This release's own cache marker stays in the lineage; later releases move
 # BURBZ_BUILD on.
 OWN_RELEASE_PIN = "hospital-auto-discharge-v239-20260809"

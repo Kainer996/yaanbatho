@@ -14,7 +14,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 
 
 def panel_block() -> str:
-    # empire-grid-v320-20260825 lifted the tax chest to the top of the panel,
+    # empire-grid-v322-20260825 lifted the tax chest to the top of the panel,
     # so the assignment no longer opens on the tier markup.
     start = HTML.index("  panel.innerHTML =\n")
     return HTML[start:HTML.index("panel.querySelectorAll", start)]
@@ -47,7 +47,7 @@ def test_the_screen_ends_at_the_tax_chest():
     """
     block = panel_block()
     assert "const footerHtml = '';" in HTML
-    # empire-grid-v320-20260825 lifted the chest ABOVE the boxes at Yaan's ask,
+    # empire-grid-v322-20260825 lifted the chest ABOVE the boxes at Yaan's ask,
     # so the chest now opens the panel — but nothing still follows the footer.
     assert block.index("empire-tribute-btn") < block.index("footerHtml")
     assert block.index("empire-tribute-btn") < block.index("tiersHtml")

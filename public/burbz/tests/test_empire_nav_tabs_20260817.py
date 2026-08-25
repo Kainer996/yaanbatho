@@ -8,7 +8,7 @@ tabs — counties above towns, villages below towns — so they walk their
 whole empire by pressing the tab buttons.
 
 This release (empire-nav-tabs-v275-20260817) pinned three drop-down tabs in
-ladder order under the map. empire-grid-v320-20260825 kept the ladder and
+ladder order under the map. empire-grid-v322-20260825 kept the ladder and
 threw the drop-down away — Yaan's ask, from a screenshot: "each village will
 have a little square", one tap straight into it. So what this file pins now is
 what SURVIVED that change:
@@ -29,7 +29,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 
 
 def ledger(html: str) -> str:

@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # five cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -47,7 +47,7 @@ EDITED_CORES = (
 # bird_roles_core.js was edited by this release too, but free-birds-v318 then
 # retired the Head Gardener and re-pinned it. A core carries the tag of the
 # release that last touched it, so it is checked separately below.
-ROLES_CORE_PIN = "empire-grid-v320-20260825"
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 
 
 def html_text() -> str:
