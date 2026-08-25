@@ -24,12 +24,13 @@ SW = ROOT / "sw.js"
 LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
-# magpie-market-v316 edited both cores; free-birds-v318 then edited the roles
-# core again, retiring the Head Gardener. A core ships under the tag of the
-# release that last touched it, so the two pins have parted company.
+# roost-retired-v302 moved the roles core on; the loot core stays with v295.
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
+# magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
-ROLES_CORE_PIN = "free-birds-v318-20260824"
+# bird_roles_core.js last changed in free-birds-v318, which retired the Head
+# Gardener. A core ships under the tag of the release that last touched it.
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 
 
 def run_node(source: str) -> dict:
@@ -170,17 +171,21 @@ def test_the_village_post_is_titled_project_manager_with_the_old_save_key():
     core = ROLES_CORE.read_text(encoding="utf-8")
     assert "title:'Project Manager'" in core
     assert "id:'steward', title:'Project Manager'" in core  # save-compat id kept
-    assert "Lord Mayors for towns, Councillors for counties" in core
+    assert "Councillors for counties come later" in core
 
 
 def test_every_surface_wears_the_new_nameplate():
     html = HTML.read_text(encoding="utf-8")
-    # v319 retired the province drawer; the desk row reads the post's real
-    # title straight from the roles core, so the nameplate can never drift.
-    assert "'PROJECT MANAGER'" not in html
-    assert "escapeHtml(prefix + role.title)" in html         # the desk row
-    assert "Town Project Manager" in html                   # the Town section
-    assert "Lord Mayor’s chain comes later" in html
+    # The province drawer went with v319 and the card's head with v320, so the
+    # nameplate is derived now rather than written: rolePostTitle asks
+    # empirePostTitleFor, and every surface — badge, desk row, sheet head,
+    # holder line — reads the same answer. empire-grid-v322's Lord Mayor
+    # arrives through that one door instead of a per-caller override.
+    assert "'PROJECT MANAGER'" not in html                   # the retired drawer
+    assert "EMPIRE_POST_TITLES = { village:'Project Manager', town:'Lord Mayor'" in html
+    assert "function rolePostTitle(scope, key, role)" in html
+    assert "escapeHtml(prefix + title)" in html              # the desk row
+    assert "title:EMPIRE_POST_TITLES.town" not in html       # no caller passes it
     assert "your Project Manager is raising it by" in html  # the income line
     assert "'STEWARD'" not in html                          # the old tab is gone
 

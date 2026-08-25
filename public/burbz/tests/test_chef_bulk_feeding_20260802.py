@@ -24,11 +24,11 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
-ROLES_CORE_PIN = "free-birds-v318-20260824"
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 
 

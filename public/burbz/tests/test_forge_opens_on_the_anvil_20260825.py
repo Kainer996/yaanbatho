@@ -1,6 +1,6 @@
 """The Forge opens on its anvil, not on the rack.
 
-Yaan's ask (2026-08-25), pinned as `forge-opens-on-the-anvil-v321-20260825`:
+Yaan's ask (2026-08-25), pinned as `forge-opens-on-the-anvil-v323-20260825`:
 
 > "Can you also make it so that when the player clicks to enter the forge, that
 > forge screen opens on the Crafting tab please, not on the Equip tab?"
@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
-OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v321-20260825"
+OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "one-tap-appointments-v320-20260824"
 
 

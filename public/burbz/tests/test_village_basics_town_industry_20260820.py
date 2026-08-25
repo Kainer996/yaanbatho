@@ -23,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "forge-opens-on-the-anvil-v321-20260825"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
+RELEASE = "forge-opens-on-the-anvil-v323-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 
 TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market"}
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}

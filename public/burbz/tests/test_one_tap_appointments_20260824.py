@@ -39,7 +39,7 @@ ROLES_CORE = (ROOT / "bird_roles_core.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "one-tap-appointments-v320-20260824"
 # A later release ships over the top; this one changed no core either, so only
 # the head build moves on.
-CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "villages-first-county-merge-v319-20260824"
 
 
@@ -101,7 +101,9 @@ def test_the_badge_sits_in_the_top_left_of_the_room_art():
 
 def test_the_badge_says_what_it_will_do_and_shows_who_holds_the_post():
     src = function_source("rolePostBadgeHTML")
-    assert "(post.staffed ? 'Change ' : 'Appoint a ') + prefix + role.title" in src
+    # The title is derived, not read off the role: a Town's heart is the Lord
+    # Mayor's desk (empire-grid-v322) and the badge must say so too.
+    assert "(post.staffed ? 'Change ' : 'Appoint a ') + prefix + rolePostTitle(scope, key, role)" in src
     assert "aria-label=" in src and "title=" in src
     assert "roleSymbolSVG(role, 'role-badge-symbol')" in src
     assert "post.staffed ? birdOnlyImgHTML(post.bird, 'role-badge-art') : ''" in src

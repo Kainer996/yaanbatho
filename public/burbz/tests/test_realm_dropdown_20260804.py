@@ -19,7 +19,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 
 
 def empire_logic(html: str) -> str:
@@ -46,12 +46,15 @@ def test_only_standalone_villages_get_rows():
 
 
 def test_the_order_runs_bottom_up_villages_then_towns_then_counties():
-    # v318, Yaan's ask: villages at the top of the Empire screen.
+    # empire-grid-v322-20260825 replaced the drop-down tabs with a box of
+    # boxes: one square per holding under a plain tier heading. The ladder
+    # reads upward now — Yaan asked for villages at the top (2026-08-24),
+    # because they are the whole empire until a Town rises.
     body = ledger(HTML.read_text(encoding="utf-8"))
-    start = body.index("const navTabsHtml")
+    start = body.index("const tiersHtml")
     block = body[start:body.index("// Order on screen", start)]
-    assert block.index("'nav-villages'") < block.index("'nav-towns'")
-    assert block.index("'nav-towns'") < block.index("'nav-counties'")
+    assert block.index("'tier-villages'") < block.index("'tier-towns'")
+    assert block.index("'tier-towns'") < block.index("'tier-counties'")
 
 
 def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():
@@ -73,9 +76,11 @@ def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():
 def test_the_counties_body_still_lists_the_pyramid_counties_and_trade():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
-    assert "Your counties — tap one to run it from its County Hall" in logic
-    assert 'class="realm-lead"' in logic
-    assert ".realm-lead {" in html
+    # The county squares caption themselves now, so the old lead line and its
+    # .realm-lead rule went with the drop-down (empire-grid-v322-20260825).
+    assert "Your counties — tap one to run it from its County Hall" not in logic
+    assert ".realm-lead" not in html
+    assert "'COUNTIES', 'Merge 3 starred Towns into a County" in logic
     # The realm layer still only builds when a county actually exists.
     assert "if (regions.length && rc) {" in logic
     assert '<div class="realm-section">' in logic
@@ -93,7 +98,7 @@ def test_a_lone_village_still_opens_on_something_that_explains_the_ladder():
 def test_onboarding_still_greets_a_player_with_no_villages():
     body = ledger(HTML.read_text(encoding="utf-8"))
     assert "🕊️ FREE YOUR FIRST VILLAGE" in body
-    assert "const navTabsHtml = count" in body
+    assert "const tiersHtml = count" in body
 
 
 # ---------------------------------------------------------------------------

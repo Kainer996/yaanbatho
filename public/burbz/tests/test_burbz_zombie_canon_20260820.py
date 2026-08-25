@@ -19,16 +19,17 @@ HTML = ROOT / "index.html"
 STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
-OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v321-20260825"
+OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 
 
 def test_release_is_wired():
     html = HTML.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in html
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     sw = SW.read_text(encoding="utf-8")
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
-    assert OWN_RELEASE_PIN in cache_line
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN)
+    assert OWN_RELEASE_PIN in cache_line  # this canon's own segment, kept for ever
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
 
 
 def test_story_opens_with_the_first_law():

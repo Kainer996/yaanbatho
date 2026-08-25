@@ -33,13 +33,16 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 
 OWN_RELEASE_PIN = "free-birds-v318-20260824"
-# Later releases ship over the top. This one edited bird_roles_core.js, so its
-# own pin stays on that core while the head build moves on without it.
-CURRENT_BUILD = "forge-opens-on-the-anvil-v321-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The release that last edited bird_roles_core.js — this one, which retired
 # the Head Gardener.
-ROLES_CORE_PIN = OWN_RELEASE_PIN
+# v318 edited bird_roles_core.js, so its tag moved to v318. v320 edited it
+# again (the village post now names a town’s desk Lord Mayor), so the tag
+# tracks the head build — the invariant is that it never lags behind.
+# NOT CURRENT_BUILD: a core ships under the tag of the release that last
+# EDITED it, and the head has moved on twice since without touching this one.
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 
 
 def html_text() -> str:
@@ -202,7 +205,7 @@ def test_every_assignment_picker_offers_free_birds_first():
 
 
 def test_a_role_post_offers_free_birds_first_and_posted_birds_last():
-    """Amended by `forge-opens-on-the-anvil-v321-20260825`.
+    """Amended by `forge-opens-on-the-anvil-v323-20260825`.
 
     This release put serving village managers at the TOP of a role post, ahead
     of the free flock. Yaan reversed that the same day — "show the birds that
@@ -266,12 +269,17 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert "const BURBZ_BUILD = '%s';" % CURRENT_BUILD in html
     cache_line = next(l for l in sw.splitlines() if l.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
-    assert OWN_RELEASE_PIN in cache_line, "and this release keeps its place in it"
-    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest marker goes last"
+    assert OWN_RELEASE_PIN in cache_line, "this release's own segment stays"
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
 
 
 def test_the_one_edited_core_ships_under_this_release():
-    """bird_roles_core.js lost the Head Gardener, so its `?v=` moves with it."""
+    """bird_roles_core.js lost the Head Gardener, so its `?v=` moves with it.
+
+    It has moved again since. What this pins is the rule, not the release: an
+    edited core carries the CURRENT tag everywhere it is loaded, with no stale
+    copy left behind in either the page or the worker.
+    """
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
     assert "bird_roles_core.js?v=%s" % ROLES_CORE_PIN in html
