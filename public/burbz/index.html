@@ -2813,6 +2813,27 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .intro-cutscene-sound { position:absolute; left:50%; transform:translateX(-50%); top:calc(18px + var(--safe-top)); z-index:2; display:none; min-height:40px; padding:8px 22px; border-radius:999px; border:1px solid rgba(214,168,79,.55); background:rgba(8,8,8,.55); backdrop-filter:blur(8px); color:var(--legendary); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; text-transform:uppercase; letter-spacing:.1em; }
 .intro-cutscene-overlay.muted .intro-cutscene-sound { display:block; }
 
+/* Every quest sheet in the game builds its buttons with this class and nothing
+   ever styled it, so they rendered as bare inline text — the Side Quest intro,
+   its log, the finish sheet and now the Trail Mode card. One rule, in the same
+   language as the village claim bar, fixes all of them. */
+.wq-detail-start { display:block; width:100%; min-height:54px; margin-top:10px; padding:0 14px; border-radius:15px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg,rgba(63,44,21,.92),rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:13.5px; line-height:1.25; letter-spacing:.05em; text-align:center; box-shadow:0 10px 24px rgba(0,0,0,.4); }
+.wq-detail-start:active { transform:scale(.98); }
+.wq-detail-start[disabled] { opacity:.55; }
+.wq-attribution { margin-top:12px; color:var(--text3); font-size:10.5px; line-height:1.4; text-align:center; }
+
+/* ========== TRAIL MODE ========== */
+.settings-note { display:block; margin-top:2px; color:var(--text3); font-size:10.5px; font-weight:500; letter-spacing:0; text-transform:none; }
+.trail-card-hero { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.trail-card-glyph { flex:none; width:52px; height:52px; display:grid; place-items:center; font-size:28px; border-radius:15px; border:1px solid rgba(240,199,103,.42); background:linear-gradient(150deg,rgba(46,36,16,.95),rgba(12,20,14,.95)); }
+.trail-card-title { font-family:'Russo One',sans-serif; font-size:17px; color:var(--accent2); }
+.trail-card-sub { margin-top:3px; color:var(--text3); font-size:11.5px; }
+.trail-care { margin:0 0 12px; padding:10px 12px; border-radius:13px; border:1px solid rgba(255,196,120,.4); background:rgba(60,38,12,.5); color:#ffd9a0; font:800 12.5px/1.4 'Rajdhani',sans-serif; letter-spacing:.02em; }
+.trail-point { display:flex; gap:9px; margin-bottom:9px; color:var(--text2); font-size:12.5px; line-height:1.45; }
+.trail-point b { color:var(--text); }
+.trail-point-icon { flex:none; font-size:15px; line-height:1.3; }
+.trail-pocket-note { margin-top:2px; padding:9px 11px; border-radius:12px; border:1px solid rgba(105,224,184,.3); background:rgba(10,21,17,.72); color:#9be8cd; font:800 11.5px/1.4 'Rajdhani',sans-serif; }
+
 /* ========== MERLIN TUTORIAL ========== */
 .merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
 .merlin-tutorial-overlay.show { display:block; }
@@ -4616,6 +4637,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="settings-toggle on" id="toggleVibration"></div>
       </div>
       <div class="settings-row">
+        <div class="settings-label">Trail Mode<span class="settings-note">Open questing by itself when you start walking</span></div>
+        <div class="settings-toggle on" id="toggleTrailMode"></div>
+      </div>
+      <div class="settings-row">
         <a class="settings-label" href="privacy.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Privacy Policy</a>
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
@@ -4905,6 +4930,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
 <script src="walking_story_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
+<script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"></script>
@@ -4921,7 +4947,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=burbz-map-music-fade-v187-20260731"></script>
+<script src="audio_core.js?v=trail-mode-v329-20260825"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
@@ -5778,6 +5804,46 @@ function playTone(freq, duration, type, vol, ramp) {
   } catch(e) {}
 }
 
+// A soft mallet, built rather than sampled. Two sine partials — a fundamental
+// and a quiet upper — through a gentle lowpass, with a 3 ms attack and an
+// exponential decay. That shape is what a struck wooden or glass thing does,
+// and it is why this reads as an instrument instead of a beep. Every strike is
+// detuned a few cents so repeated taps never come out identical.
+function playPluck(freq, opts) {
+  if (!sfxEnabled) return;
+  const o = opts || {};
+  try {
+    const ctx = getAudioCtx();
+    const t0 = ctx.currentTime + (Number(o.delay) || 0);
+    const decay = Number(o.decay) || 0.09;
+    const gainPeak = Number(o.gain) || 0.05;
+    const detune = 1 + ((Math.random() * 2 - 1) * (Number(o.drift) || 0.03));
+    const tone = Math.max(60, freq * detune);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(Math.min(12000, tone * 6), t0);
+    filter.Q.setValueAtTime(0.7, t0);
+    const out = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, t0);
+    out.gain.exponentialRampToValueAtTime(gainPeak, t0 + 0.003);
+    out.gain.exponentialRampToValueAtTime(0.0001, t0 + decay);
+    filter.connect(out);
+    out.connect(ctx.destination);
+    // The upper partial is what gives the strike its wood; kept quiet so the
+    // tap stays a tick rather than a chime.
+    [[1, 1], [Number(o.partial) || 2.76, Number(o.partialGain) || 0.28]].forEach(([mult, level]) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(tone * mult, t0);
+      g.gain.setValueAtTime(level, t0);
+      osc.connect(g); g.connect(filter);
+      osc.start(t0);
+      osc.stop(t0 + decay + 0.02);
+    });
+  } catch (e) {}
+}
+
 const oscillatorSfxFallback = {
   capture() {
     playTone(880, 0.1, 'sine', 0.2);
@@ -5805,7 +5871,8 @@ const oscillatorSfxFallback = {
     playTone(400, 0.3, 'sine', 0.15, 150);
     setTimeout(() => playTone(300, 0.4, 'sine', 0.12, 100), 300);
   },
-  tap() { playTone(600, 0.05, 'sine', 0.05); },
+  // A wooden tick, not a beep: quiet, quick, and a little different every time.
+  tap() { playPluck(1180, { decay: 0.075, gain: 0.045, drift: 0.05 }); },
   levelUp() {
     [523, 659, 784, 1047, 1319].forEach((n, i) => setTimeout(() => playTone(n, 0.2, 'sine', 0.12), i * 100));
   },
@@ -5814,10 +5881,18 @@ const oscillatorSfxFallback = {
     setTimeout(() => playTone(900, 0.15, 'sine', 0.15), 120);
     setTimeout(() => playTone(1200, 0.25, 'sine', 0.12), 250);
   },
-  page() { this.tap(); },
-  unlock() { this.capture(); },
-  coins() { this.tap(); },
-  build() { playTone(180, 0.12, 'triangle', 0.08, 110); },
+  // A page turn is the same wood struck lower and left to ring a touch longer.
+  page() { playPluck(760, { decay: 0.14, gain: 0.05, drift: 0.03, partial: 2.1 }); },
+  unlock() {
+    playPluck(520, { decay: 0.1, gain: 0.05, drift: 0.02 });
+    playPluck(880, { decay: 0.16, gain: 0.04, delay: 0.07, drift: 0.02 });
+  },
+  // Two small bright strikes, a fifth apart — coins landing on coins.
+  coins() {
+    playPluck(1560, { decay: 0.11, gain: 0.04, drift: 0.05, partial: 3.1 });
+    playPluck(2340, { decay: 0.14, gain: 0.028, delay: 0.055, drift: 0.05, partial: 3.1 });
+  },
+  build() { playPluck(240, { decay: 0.16, gain: 0.06, drift: 0.03, partial: 1.8, partialGain: 0.4 }); },
   bird() { this.capture(); },
   owl() { playTone(300, 0.3, 'sine', 0.08, 180); },
   error() { this.hit(); },
@@ -6102,7 +6177,7 @@ const DEFAULT_STATE = {
   forgeJobs: [], // commissions on the Fletcher's anvil: { id, gearId, startMs, endMs }
   quests: {},
   questsLastReset: null,
-  settings: { sfx: true, music: true, particles: true, vibration: true },
+  settings: { sfx: true, music: true, particles: true, vibration: true, trailMode: true },
   badges: {},
   merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE },
   birdCare: defaultBirdCare(), // Default per-bird care state
@@ -19325,6 +19400,164 @@ function sideQuestPocketAlert() {
   try { if (sideQuestChimeEl) { sideQuestChimeEl.currentTime = 0; sideQuestChimeEl.volume = 1; sideQuestChimeEl.play().catch(() => {}); } } catch (e) {}
 }
 
+// ============================================================================
+// TRAIL MODE — Burbz notices you have gone out.
+// When the live map sees a real, sustained walk, the game stops waiting to be
+// asked: it opens questing by itself, pulls the camera back so the trail ahead
+// is visible, and says the one thing that matters out there — look up.
+// Everything from that moment is charted and saved, and the phone is worth
+// more in a pocket than in a hand: time with the screen away pays a Trail
+// Bonus at the end of the wander.
+// trail_mode_core.js decides whether this is a walk; this wiring only acts.
+// ============================================================================
+const TRAIL_MODE_ZOOM = 15.2;            // pulled back far enough to read the way ahead
+const TRAIL_MODE_MUTE_MS = 2 * 60 * 60 * 1000;  // "not now" holds for two hours
+
+function trailModeCore() { return window.BurbzTrailModeCore || null; }
+
+function trailModeState() {
+  if (!gameState.trailMode || typeof gameState.trailMode !== 'object' || Array.isArray(gameState.trailMode)) {
+    gameState.trailMode = { mutedUntil: 0, entries: 0 };
+  }
+  if (!Number.isFinite(Number(gameState.trailMode.mutedUntil))) gameState.trailMode.mutedUntil = 0;
+  if (!Number.isFinite(Number(gameState.trailMode.entries))) gameState.trailMode.entries = 0;
+  return gameState.trailMode;
+}
+
+let trailWalkDetector = null;
+let trailModeOffered = false;   // once per app session, until the walk ends
+
+function trailModeDetector() {
+  const core = trailModeCore();
+  if (!core) return null;
+  if (!trailWalkDetector) trailWalkDetector = core.createWalkDetector();
+  return trailWalkDetector;
+}
+
+// Everything that means "not now". Taking over the screen is a strong move, so
+// each of these is a hard no rather than a nudge.
+function trailModeBlockedReason() {
+  if (gameState.settings && gameState.settings.trailMode === false) return 'off';
+  if (Date.now() < Number(trailModeState().mutedUntil || 0)) return 'muted';
+  if (trailModeOffered) return 'offered';
+  if (sideQuestActive() || activeWalkingQuest()) return 'questing';      // already out there
+  if (typeof battleState !== 'undefined' && battleState && !battleState.completed) return 'battle';
+  if (typeof merlinTutActive !== 'undefined' && merlinTutActive) return 'tutorial';
+  if (document.querySelector('.intro-cutscene-overlay.show')) return 'cutscene';
+  return null;
+}
+
+function trailModeOnPositionFix(lat, lon, accuracy) {
+  const detector = trailModeDetector();
+  if (!detector) return;
+  const reading = detector.push({ lat, lon, accuracy, at: Date.now() });
+  if (!reading.walking) {
+    // Standing still again ends the offer, so a second walk can open it afresh.
+    if (trailModeOffered && !sideQuestActive() && reading.fixes > 2 && reading.seconds > 60) trailModeOffered = false;
+    return;
+  }
+  if (trailModeBlockedReason()) return;
+  enterTrailMode(reading);
+}
+
+function enterTrailMode(reading) {
+  trailModeOffered = true;
+  const state = trailModeState();
+  state.entries = Number(state.entries || 0) + 1;
+  // The wander itself is what makes the walk worth anything: it charts the
+  // trail, and it is what holds every discovery until the player ends it.
+  if (!sideQuestActive()) startSideQuest({ auto: true, quiet: true });
+  switchScreen('map');
+  setQuestOverview(false);
+  try {
+    if (liveMap && liveMapLastPosition) {
+      liveMapUserMoved = false;
+      liveMap.flyTo({
+        center: [liveMapLastPosition.lon, liveMapLastPosition.lat],
+        zoom: TRAIL_MODE_ZOOM, pitch: burbzPitchForZoom(TRAIL_MODE_ZOOM),
+        bearing: liveMap.getBearing() || -24, duration: 1400
+      });
+    }
+  } catch (e) {}
+  saveState();
+  SFX.questComplete();
+  vibrate(QUEST_BUZZ.start);
+  openTrailModeSheet(reading);
+}
+
+function openTrailModeSheet(reading) {
+  const core = trailModeCore();
+  const pace = reading && reading.speedMps
+    ? (reading.speedMps * 3.6).toFixed(1) + ' km/h'
+    : 'on the move';
+  const bonus = core ? Math.round(core.POCKET_BONUS_MAX * 100) : 50;
+  const el = walkQuestSheetEl();
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="dismissTrailMode()" aria-label="Close">✕</button>' +
+    '<div class="trail-card-hero"><div class="trail-card-glyph">🌿</div><div>' +
+    '<div class="trail-card-title">Eyes on the trail</div>' +
+    '<div class="trail-card-sub">Burbz sees you walking — ' + escapeHtml(pace) + '</div></div></div>' +
+    '<div class="trail-care">Be careful out there. Look up, watch the road, and let the phone do the questing.</div>' +
+    '<div class="trail-point"><span class="trail-point-icon">🎒</span><span><b>You are in questing mode.</b> Every step from here is charted onto your own trail.</span></div>' +
+    '<div class="trail-point"><span class="trail-point-icon">💾</span><span><b>This is saved.</b> Your trail, every bird you meet on the way and everything waiting at the end of the quest is kept.</span></div>' +
+    '<div class="trail-point"><span class="trail-point-icon">📱</span><span><b>Pocket the phone.</b> Burbz keeps questing with the screen off, and buzzes when you stumble across something.</span></div>' +
+    '<div class="trail-pocket-note">🏅 TRAIL BONUS — every minute the phone spends in your pocket pays more XP at the end, up to +' + bonus + '%.</div>' +
+    '<button class="wq-detail-start" onclick="closeWalkQuestSheet()">📱 POCKET IT — I AM WALKING</button>' +
+    '<button class="wq-detail-start" style="background:rgba(255,255,255,.08);" onclick="dismissTrailMode({ mute:true })">NOT NOW</button>' +
+    '<div class="wq-attribution">Real-world walking — stay aware, follow signs and respect private land.</div></div>';
+  el.classList.add('open');
+}
+
+// "Not now" ends the wander Trail Mode opened and holds it off for a while.
+// A wander the player started themselves is never cancelled from here.
+function dismissTrailMode(opts = {}) {
+  closeWalkQuestSheet();
+  if (opts.mute) {
+    trailModeState().mutedUntil = Date.now() + TRAIL_MODE_MUTE_MS;
+    const active = sideQuestActive();
+    if (active && active.auto && !active.discoveries.length && active.distanceM < 50) {
+      ensureSideQuestState().active = null;
+      stopSideQuestPocketMode();
+      clearSideQuestFromMap();
+      updateWalkQuestHud();
+    }
+    saveState();
+    showToast('Trail Mode paused for a couple of hours. Turn it off for good in Settings.');
+  }
+}
+
+// --- Pocket time -------------------------------------------------------------
+// The bonus is paid for the phone being AWAY, so it only counts while the page
+// is hidden — screen off, or Burbz in the background — and only while a wander
+// is actually running.
+let trailPocketSince = null;
+function trailPocketAccrue() {
+  const active = sideQuestActive();
+  if (!active || trailPocketSince === null) { trailPocketSince = null; return; }
+  const spent = Date.now() - trailPocketSince;
+  trailPocketSince = null;
+  if (spent <= 0) return;
+  active.pocketMs = Math.max(0, Number(active.pocketMs) || 0) + spent;
+  saveState();
+}
+function trailPocketVisibilityChanged() {
+  if (document.hidden) {
+    if (sideQuestActive()) trailPocketSince = Date.now();
+    return;
+  }
+  trailPocketAccrue();
+}
+document.addEventListener('visibilitychange', trailPocketVisibilityChanged);
+
+function sideQuestPocketReading(active) {
+  const core = trailModeCore();
+  if (!core || !active) return { share: 0, multiplier: 1, pocketMinutes: 0, earned: false };
+  let pocketMs = Math.max(0, Number(active.pocketMs) || 0);
+  // Count the stretch still in progress, so the log reads true mid-walk.
+  if (trailPocketSince !== null) pocketMs += Math.max(0, Date.now() - trailPocketSince);
+  const startedAt = Date.parse(active.startedAt || '') || Date.now();
+  return core.pocketBonus(pocketMs, Math.max(1, Date.now() - startedAt));
+}
+
 // --- Intro sheet -------------------------------------------------------------
 function openSideQuestIntroSheet() {
   SFX.tap();
@@ -19343,27 +19576,32 @@ function openSideQuestIntroSheet() {
   el.classList.add('open');
 }
 
-function startSideQuest() {
-  if (activeWalkingQuest()) { showToast('Finish or abandon your current quest first'); return; }
-  if (sideQuestActive()) { openSideQuestLogSheet(); return; }
-  if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location is needed before a Side Quest can chart your trail'); return; }
+// opts.auto  — opened by Trail Mode rather than by the player
+// opts.quiet — Trail Mode brings its own card, screen and camera move
+function startSideQuest(opts = {}) {
+  if (activeWalkingQuest()) { if (!opts.quiet) showToast('Finish or abandon your current quest first'); return; }
+  if (sideQuestActive()) { if (!opts.quiet) openSideQuestLogSheet(); return; }
+  if (!liveMapHasPrecisePosition || !liveMapLastPosition) { if (!opts.quiet) showToast('Location is needed before a Side Quest can chart your trail'); return; }
   const sq = ensureSideQuestState();
   const { lat, lon } = liveMapLastPosition;
   sq.active = {
     id: 'sq_' + Date.now().toString(36),
-    name: 'Side Quest',
+    name: opts.auto ? 'Trail' : 'Side Quest',
+    trailMode: !!opts.auto,
     startedAt: new Date().toISOString(),
     path: [[lat, lon, Date.now()]],
     distanceM: 0,
+    pocketMs: 0,
     nextFindAtM: SIDE_QUEST_FIRST_FIND_M,
     discoveries: []
   };
   saveState();
-  closeWalkQuestSheet();
-  setQuestOverview(false);
   startSideQuestPocketMode();
   drawSideQuestOnMap();
   updateWalkQuestHud();
+  if (opts.quiet) return;
+  closeWalkQuestSheet();
+  setQuestOverview(false);
   switchScreen('map');
   SFX.levelUp();
   vibrate(QUEST_BUZZ.start);
@@ -19620,11 +19858,15 @@ function openSideQuestLogSheet() {
   const active = sideQuestActive();
   if (!active) { openQuestBoard(); return; }
   const found = active.discoveries.length, unclaimed = active.discoveries.filter(d => !d.claimed).length;
+  const livePocket = sideQuestPocketReading(active);
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
     '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🎒</div><div><div class="quest-board-title">Side Quest — exploring</div><div class="quest-board-intro">' +
     (active.distanceM / 1000).toFixed(2) + ' km wandered · ' + found + ' discover' + (found === 1 ? 'y' : 'ies') + (unclaimed ? ' · ' + unclaimed + ' waiting on the map!' : '') + '</div></div></div>' +
     '<div class="quest-desc" style="line-height:1.5;">Keep the phone in your pocket and keep exploring — it will buzz and chirp when you stumble across something. Ending the quest keeps everything you found, and you can turn the wander into a real quest for others.</div>' +
+    (livePocket.earned
+      ? '<div class="trail-pocket-note">🏅 TRAIL BONUS ×' + livePocket.multiplier.toFixed(2) + ' so far — ' + livePocket.pocketMinutes + ' minute' + (livePocket.pocketMinutes === 1 ? '' : 's') + ' pocketed.</div>'
+      : '<div class="trail-pocket-note">📱 Pocket the phone as you walk to start earning a Trail Bonus — up to half as much XP again.</div>') +
     '<button class="wq-detail-start" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">🗺️ VIEW MY TRAIL</button>' +
     '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'active\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" style="background:linear-gradient(135deg,#a78335,#74541d);" onclick="endSideQuest()">🏁 END SIDE QUEST</button></div>';
@@ -19643,11 +19885,18 @@ async function endSideQuest() {
       return;
     }
   } // nothing found is ever lost
-  const xp = Math.min(200, 25 + Math.round(active.distanceM / 40));
+  trailPocketAccrue();  // bank the stretch still running when the walk ends
+  const pocket = sideQuestPocketReading(active);
+  const baseXp = Math.min(200, 25 + Math.round(active.distanceM / 40));
+  // The Trail Bonus is paid on top of the cap, not squeezed under it: a walk
+  // done properly, with the phone away, is worth more than the same walk done
+  // staring at the screen.
+  const xp = Math.round(baseXp * pocket.multiplier);
   addPlayerXp(xp);
   const summary = {
-    id: active.id, kind: 'side-quest', name: 'Side Quest', startedAt: active.startedAt, endedAt: new Date().toISOString(),
+    id: active.id, kind: 'side-quest', name: active.name || 'Side Quest', startedAt: active.startedAt, endedAt: new Date().toISOString(),
     distanceM: active.distanceM, discoveries: active.discoveries.length, xp,
+    pocketMs: Math.max(0, Number(active.pocketMs) || 0), pocketMultiplier: pocket.multiplier,
     path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
     sharedDraft: false
   };
@@ -19666,6 +19915,9 @@ async function endSideQuest() {
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
     '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🏁</div><div><div class="quest-board-title">Side Quest complete!</div><div class="quest-board-intro">' +
     (summary.distanceM / 1000).toFixed(2) + ' km wandered · ' + summary.discoveries + ' discover' + (summary.discoveries === 1 ? 'y' : 'ies') + ' · +' + xp + ' XP</div></div></div>' +
+    (pocket.earned
+      ? '<div class="trail-pocket-note">🏅 TRAIL BONUS ×' + pocket.multiplier.toFixed(2) + ' — the phone stayed in your pocket for ' + pocket.pocketMinutes + ' minute' + (pocket.pocketMinutes === 1 ? '' : 's') + ' of this walk. ' + baseXp + ' XP became ' + xp + '.</div>'
+      : '<div class="trail-pocket-note">📱 No Trail Bonus this time — pocket the phone while you walk and the next wander pays up to half as much again.</div>') +
     '<div class="quest-desc" style="line-height:1.5;">Your whole wander is charted and saved. Turn it into a real quest so other players can walk your trail in the future?</div>' +
     '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'summary\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" onclick="shareSideQuestDraft(\'' + summary.id + '\')">🤝 TURN INTO A QUEST FOR OTHERS</button>' +
@@ -20471,6 +20723,7 @@ function handleLivePosition(pos, fly) {
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy });
   try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
   try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
+  try { trailModeOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ trail mode fix failed', err); }
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
@@ -40314,7 +40567,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'wand-button-leads-v328-20260825';
+const BURBZ_BUILD = 'trail-mode-v329-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -41162,6 +41415,17 @@ $('toggleVibration').addEventListener('click', () => {
   saveState();
 });
 
+$('toggleTrailMode').addEventListener('click', () => {
+  const el = $('toggleTrailMode');
+  el.classList.toggle('on');
+  gameState.settings.trailMode = el.classList.contains('on');
+  if (gameState.settings.trailMode) trailModeState().mutedUntil = 0;
+  saveState();
+  showToast(gameState.settings.trailMode
+    ? '🌿 Trail Mode on — Burbz opens questing when you start walking.'
+    : 'Trail Mode off — start a wander yourself from the map.');
+});
+
 // Start New Game: the full restart used for testing playthroughs. Rides the
 // same ?reset flow as the reset link, so local progress, Burbz caches and the
 // old service worker are all cleared before the fresh game boots — the intro
@@ -41450,6 +41714,7 @@ function init() {
   if (!gameState.settings.music) $('toggleMusic').classList.remove('on');
   if (!gameState.settings.particles) $('toggleParticles').classList.remove('on');
   if (!gameState.settings.vibration) $('toggleVibration').classList.remove('on');
+  if (gameState.settings.trailMode === false) $('toggleTrailMode').classList.remove('on');
 
   // File-backed audio was gesture-primed above; the AudioContext is created
   // only if the safe oscillator fallback is actually needed.

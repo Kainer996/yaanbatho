@@ -40,6 +40,7 @@ FILES=(
   "quest_core.js"
   "walking_story_core.js"
   "side_trail_core.js"
+  "trail_mode_core.js"
   "building_discovery_core.js"
   "village_variation_core.js"
   "settlement_scene_core.js"
