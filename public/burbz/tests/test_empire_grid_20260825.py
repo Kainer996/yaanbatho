@@ -220,11 +220,13 @@ def test_the_three_tiers_are_grids_of_squares_in_ladder_order():
     panel = empire_panel()
     block = panel[panel.index("const tiersHtml"):panel.index("// Order on screen")]
     assert '<div class="empire-tiers">' in block
-    for tier in ("'tier-counties', '🛡️', 'COUNTIES'",
+    for tier in ("'tier-villages', '🏡', 'VILLAGES'",
                  "'tier-towns', '🏘️', 'TOWNS'",
-                 "'tier-villages', '🏡', 'VILLAGES'"):
+                 "'tier-counties', '🛡️', 'COUNTIES'"):
         assert tier in block, tier
-    assert block.index("'tier-counties'") < block.index("'tier-towns'") < block.index("'tier-villages'")
+    # # Yaan asked for villages first (2026-08-24): they are the whole empire
+    # until a Town rises, and still the rung you visit most after one does.
+    assert block.index("'tier-villages'") < block.index("'tier-towns'") < block.index("'tier-counties'")
     # Every tier is built from tiles, never from rows.
     for tiles in ("countyTiles", "townTiles", "villageTiles"):
         assert tiles in block, tiles

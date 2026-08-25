@@ -45,14 +45,16 @@ def test_only_standalone_villages_get_rows():
     assert "'YOUR VILLAGES'" not in body
 
 
-def test_the_order_runs_top_down_counties_then_towns_then_villages():
-    # empire-grid-v322-20260825 replaced the drop-down tabs with a box of boxes:
-    # one square per holding under a plain tier heading.
+def test_the_order_runs_bottom_up_villages_then_towns_then_counties():
+    # empire-grid-v322-20260825 replaced the drop-down tabs with a box of
+    # boxes: one square per holding under a plain tier heading. The ladder
+    # reads upward now — Yaan asked for villages at the top (2026-08-24),
+    # because they are the whole empire until a Town rises.
     body = ledger(HTML.read_text(encoding="utf-8"))
     start = body.index("const tiersHtml")
     block = body[start:body.index("// Order on screen", start)]
-    assert block.index("'tier-counties'") < block.index("'tier-towns'")
-    assert block.index("'tier-towns'") < block.index("'tier-villages'")
+    assert block.index("'tier-villages'") < block.index("'tier-towns'")
+    assert block.index("'tier-towns'") < block.index("'tier-counties'")
 
 
 def test_consumed_villages_cannot_be_reopened_from_the_ledger_or_direct_route():

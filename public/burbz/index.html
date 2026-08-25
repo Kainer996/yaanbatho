@@ -25346,10 +25346,12 @@ function renderEmpirePanel() {
     // something that explains where the crown is heading.
     countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages and grow each to its ⭐ merge star; merge three stars into a Town, three starred Towns into a County, and on to Duchies and Kingdoms.</div>';
   }
-  // ---- The boxes of boxes, directly under the map: 🛡️ COUNTIES on top,
-  // 🏘️ TOWNS beneath, 🏡 VILLAGES under that — the same ladder order the
-  // tabs walked, with nothing left to unfold. Every square is on screen at
-  // once, so one tap reaches any holding in the realm.
+  // ---- The boxes of boxes, directly under the map: 🏡 VILLAGES on top,
+  // 🏘️ TOWNS beneath, 🛡️ COUNTIES under that. Yaan asked for villages first
+  // (2026-08-24) and he is right — villages ARE the whole empire until a Town
+  // rises, and they stay the rung you visit most long after one does. Nothing
+  // is left to unfold: every square is on screen at once, so one tap reaches
+  // any holding in the realm.
   const starHint = villages.length && !townCandidates.length
     ? '<div class="realm-hint">⭐ A village earns its merge star at 16 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
     : '';
@@ -25365,9 +25367,9 @@ function renderEmpirePanel() {
   const showCounties = !!(regions.length || regionCandidates.length);
   const tiersHtml = count
     ? '<div class="empire-tiers">' +
-      (showCounties ? empireTierHTML('tier-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', countyTiles, { lead:regionMergeBanners, extra:countiesBody }) : '') +
-      (townCount ? empireTierHTML('tier-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townTiles, { extra:townsExtra }) : '') +
       empireTierHTML('tier-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 16 folk, 75% happy', villageTiles, { lead:townMergeBanners, extra:villagesExtra }) +
+      (townCount ? empireTierHTML('tier-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townTiles, { extra:townsExtra }) : '') +
+      (showCounties ? empireTierHTML('tier-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', countyTiles, { lead:regionMergeBanners, extra:countiesBody }) : '') +
       empireGridKeyHTML() +
       '</div>'
     : '';

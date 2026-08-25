@@ -129,8 +129,8 @@ def test_counties_and_towns_wait_until_the_player_has_one():
     # Villages is unconditional — it is where every empire starts.
     village_tier = tabs[tabs.index("'tier-villages'") - 40:tabs.index("'tier-villages'")]
     assert "?" not in village_tier
-    # Order on screen is unchanged: counties, towns, villages.
-    assert tabs.index("'tier-counties'") < tabs.index("'tier-towns'") < tabs.index("'tier-villages'")
+    # Order on screen reads upward: villages, towns, counties (Yaan, 2026-08-24).
+    assert tabs.index("'tier-villages'") < tabs.index("'tier-towns'") < tabs.index("'tier-counties'")
 
 
 def test_the_town_count_still_covers_cities_and_uncityed_towns():

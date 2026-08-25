@@ -46,12 +46,14 @@ def test_three_nav_tabs_stand_in_ladder_order():
     body = ledger(HTML.read_text(encoding="utf-8"))
     start = body.index("const tiersHtml")
     block = body[start:body.index("// Order on screen", start)]
-    assert "'tier-counties', '🛡️', 'COUNTIES'" in block
-    assert "'tier-towns', '🏘️', 'TOWNS'" in block
     assert "'tier-villages', '🏡', 'VILLAGES'" in block
-    # Counties above towns, villages below towns — Yaan's exact order.
-    assert block.index("'tier-counties'") < block.index("'tier-towns'")
-    assert block.index("'tier-towns'") < block.index("'tier-villages'")
+    assert "'tier-towns', '🏘️', 'TOWNS'" in block
+    assert "'tier-counties', '🛡️', 'COUNTIES'" in block
+    # v275 ran counties → towns → villages. Yaan asked for villages at the top
+    # (2026-08-24): "hide it when empty" only LOOKS like "put it first", until
+    # a Town rises and villages drop to the bottom again.
+    assert block.index("'tier-villages'") < block.index("'tier-towns'")
+    assert block.index("'tier-towns'") < block.index("'tier-counties'")
     assert '<div class="empire-tiers">' in block
     # Every tab caption survived the change into a tier subtitle.
     assert "'Merge 3 starred Towns into a County — titles and trade live here'" in block
