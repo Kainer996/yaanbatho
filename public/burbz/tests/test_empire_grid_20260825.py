@@ -38,7 +38,9 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "empire_grid_core.js"
 
 OWN_RELEASE_PIN = "empire-grid-v322-20260825"
-CURRENT_BUILD = "empire-grid-v322-20260825"
+# Later releases ship over the top. This one edited bird_roles_core.js, so its
+# own tag stays on that core while the head build moves on without it.
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "free-birds-v318-20260824"
 
 
@@ -419,12 +421,16 @@ def test_the_caption_each_tab_carried_survived_as_a_tier_subtitle():
 def test_a_town_desk_is_the_lord_mayors_and_a_village_desk_is_not():
     html = html_text()
     assert "const EMPIRE_POST_TITLES = { village:'Project Manager', town:'Lord Mayor', county:'Warden' };" in html
-    # The card takes the title from its caller, so one role serves both desks.
-    card = function_source(html, "rolePostCardHTML")
-    assert "const roleTitle = options.title || role.title;" in card
-    assert "escapeHtml(roleTitle)" in card
-    assert "title:EMPIRE_POST_TITLES.town" in html          # the Town Hall desk
-    assert "'PROJECT MANAGER'" in html                       # the village desk
+    # one-tap-appointments-v320 took the head off the card and put it in the
+    # shared sheet, so the title is DERIVED now rather than passed by each
+    # caller: rolePostTitle asks empirePostTitleFor, and the badge, the desk
+    # row, the sheet head and the holder line all read the one answer. The
+    # chain is unchanged — a Town's heart is still the Lord Mayor's desk.
+    assert "function rolePostTitle(scope, key, role)" in html
+    assert "empirePostTitleFor(scope, key)" in function_source(html, "rolePostTitle")
+    assert "title:EMPIRE_POST_TITLES.town" not in html       # no caller passes it
+    for surface in ("rolePostBadgeHTML", "rolePostRowHTML", "rolePickerSheetHTML"):
+        assert "rolePostTitle(scope, key, role)" in function_source(html, surface), surface
 
 
 def test_one_role_and_one_save_slot_still_serve_both_desks():
@@ -434,9 +440,10 @@ def test_one_role_and_one_save_slot_still_serve_both_desks():
     assert "scope:'village'" in core
     assert "'Lord Mayor'" not in core.split("const ROLES", 1)[1].split("]", 1)[0]
     html = html_text()
-    # Both desks still address the same bucket, keyed by seed.
-    assert "rolePostCardHTML('village', String(rec.seed >>> 0)" in html
-    assert "rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0)" in html
+    # Both desks still address the same bucket, keyed by seed — through the
+    # one-tap row since v320, which opens the shared sheet.
+    assert "rolePostRowHTML('village', String(rec.seed >>> 0)" in html
+    assert "rolePostRowHTML('village', String(Number(settle.heartSeed) >>> 0)" in html
 
 
 def test_every_line_that_names_the_post_says_the_same_thing():

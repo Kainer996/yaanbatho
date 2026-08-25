@@ -25,7 +25,7 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "empire-grid-v322-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
@@ -176,11 +176,16 @@ def test_the_village_post_is_titled_project_manager_with_the_old_save_key():
 
 def test_every_surface_wears_the_new_nameplate():
     html = HTML.read_text(encoding="utf-8")
-    assert "'PROJECT MANAGER'" in html                      # the province drawer
-    # empire-grid-v322-20260825 handed the promised chain over: the same post
-    # at a town's heart is titled Lord Mayor, and the village keeps its own.
-    assert "🏛️ Lord Mayor" in html                       # the Town section
-    assert "title:EMPIRE_POST_TITLES.town" in html
+    # The province drawer went with v319 and the card's head with v320, so the
+    # nameplate is derived now rather than written: rolePostTitle asks
+    # empirePostTitleFor, and every surface — badge, desk row, sheet head,
+    # holder line — reads the same answer. empire-grid-v322's Lord Mayor
+    # arrives through that one door instead of a per-caller override.
+    assert "'PROJECT MANAGER'" not in html                   # the retired drawer
+    assert "EMPIRE_POST_TITLES = { village:'Project Manager', town:'Lord Mayor'" in html
+    assert "function rolePostTitle(scope, key, role)" in html
+    assert "escapeHtml(prefix + title)" in html              # the desk row
+    assert "title:EMPIRE_POST_TITLES.town" not in html       # no caller passes it
     assert "your Project Manager is raising it by" in html  # the income line
     assert "'STEWARD'" not in html                          # the old tab is gone
 

@@ -29,7 +29,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "empire-grid-v322-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 
 
 def ledger(html: str) -> str:
@@ -42,7 +42,7 @@ def ledger(html: str) -> str:
 # The three tabs, in ladder order, directly under the map
 # ---------------------------------------------------------------------------
 
-def test_three_nav_tabs_stand_in_ladder_order():
+def test_the_three_nav_tabs_stand_villages_first():
     body = ledger(HTML.read_text(encoding="utf-8"))
     start = body.index("const tiersHtml")
     block = body[start:body.index("// Order on screen", start)]

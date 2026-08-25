@@ -27,7 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "empire-grid-v322-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=nav-action-badges-v312-20260824"  # moved on in v312
 
 
@@ -277,7 +277,10 @@ def test_bottom_nav_carries_a_forge_tab():
     assert nav.index('data-screen="forge"') < nav.index('data-screen="battle"')
     assert 'data-screen="academy"' in html[html.index('bottom-dock-anchor'):]
     # switchScreen already renders the forge on entry — the tab rides that.
-    assert "if (name === 'forge') renderForge();" in html
+    # v321 gave the Forge an entry tab, so the route does a little more than
+    # render — it still renders, and the dock is still what reaches it.
+    assert "if (name === 'forge') {" in html
+    assert "renderForge();" in html
 
 
 def test_ready_forge_commissions_badge_the_tab():

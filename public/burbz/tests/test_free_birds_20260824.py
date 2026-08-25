@@ -33,14 +33,16 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 
 OWN_RELEASE_PIN = "free-birds-v318-20260824"
-CURRENT_BUILD = "empire-grid-v322-20260825"
+CURRENT_BUILD = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The release that last edited bird_roles_core.js — this one, which retired
 # the Head Gardener.
 # v318 edited bird_roles_core.js, so its tag moved to v318. v320 edited it
 # again (the village post now names a town’s desk Lord Mayor), so the tag
 # tracks the head build — the invariant is that it never lags behind.
-ROLES_CORE_PIN = CURRENT_BUILD
+# NOT CURRENT_BUILD: a core ships under the tag of the release that last
+# EDITED it, and the head has moved on twice since without touching this one.
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 
 
 def html_text() -> str:
@@ -195,15 +197,30 @@ def test_every_assignment_picker_offers_free_birds_first():
     interior = function_source(html, "renderAcademyRoomInterior")
     assert "freeBirdsFirst(others)" in interior, "the add-a-bird roster"
     role = function_source(html, "rolePostCardHTML")
-    assert "rest.filter(c => birdIsFree(c.bird))" in role, "role posts"
+    # one-tap-appointments-v320 rewrote this card, but kept the rule: inside the
+    # group of birds with no post, a bird with nothing at all to do leads one
+    # merely stationed in a room.
+    assert "unposted.filter(c => birdIsFree(c.bird))" in role, "role posts"
+    assert "unposted.filter(c => !birdIsFree(c.bird))" in role, "role posts"
 
 
-def test_a_role_post_keeps_serving_managers_first_then_free_then_stationed():
+def test_a_role_post_offers_free_birds_first_and_posted_birds_last():
+    """Amended by `forge-opens-on-the-anvil-v323-20260825`.
+
+    This release put serving village managers at the TOP of a role post, ahead
+    of the free flock. Yaan reversed that the same day — "show the birds that
+    have been assigned to other roles at the bottom of the list" — so a bird
+    with a job is now offered last whatever job it is. What free-birds actually
+    argued for survives untouched: among the birds with no post, the one with
+    nothing at all to do leads the one merely stationed in a room.
+    """
     role = function_source(html_text(), "rolePostCardHTML")
-    block = role[role.index("const rest = ranked.filter"):role.index("const optionsHtml")]
-    # Three tiers, in this order, then one cap over the whole list.
-    assert block.index("c.movesFrom") < block.index("birdIsFree(c.bird)") < block.index("!birdIsFree(c.bird)")
-    assert "ROLE_SERVING_CANDIDATE_LIMIT" in block and "ROLE_CANDIDATE_LIMIT" in block
+    block = role[role.index("const unposted = ranked.filter"):role.index("const optionsHtml")]
+    assert block.index("unposted.filter(c => birdIsFree(c.bird))") < block.index("unposted.filter(c => !birdIsFree(c.bird))")
+    # Posted birds are a second group with its own cap, beneath the first.
+    assert block.index("const available") < block.index("const posted")
+    assert "ROLE_CANDIDATE_LIMIT" in block and "ROLE_POSTED_CANDIDATE_LIMIT" in block
+    assert "ROLE_SERVING_CANDIDATE_LIMIT" not in role
 
 
 def test_the_hospital_still_sorts_by_who_is_hurt():

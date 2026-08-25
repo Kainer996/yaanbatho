@@ -308,13 +308,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .training-master-role { display:block; margin-top:2px; color:var(--accent2); font-size:9px; letter-spacing:.08em; text-transform:uppercase; }
 .training-master-vacant { position:absolute; left:5%; bottom:7%; z-index:5; display:flex; align-items:center; gap:7px; padding:8px 11px; border-radius:12px; border:1px solid rgba(214,168,79,.48); background:rgba(15,10,4,.84); color:var(--accent2); font-size:11px; font-weight:900; pointer-events:auto; box-shadow:0 6px 18px rgba(0,0,0,.45); }
 .training-master-vacant-symbol { font-size:20px; line-height:1; }
-.training-master-picker { position:fixed; inset:0; z-index:10050; display:none; align-items:flex-end; justify-content:center; padding:18px 12px calc(84px + env(safe-area-inset-bottom)); }
-.training-master-picker.is-open { display:flex; }
-.training-master-picker-backdrop { position:absolute; inset:0; border:0; background:rgba(0,0,0,.76); }
-.training-master-picker-sheet { position:relative; z-index:1; width:min(100%,560px); max-height:min(72vh,680px); overflow:auto; padding:12px; border-radius:18px; border:1px solid rgba(214,168,79,.42); background:#100c06; box-shadow:0 18px 55px rgba(0,0,0,.7); }
-.training-master-picker-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:2px 4px 7px; font-family:'Russo One',sans-serif; color:var(--accent2); font-size:14px; }
-.training-master-picker-close { width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:#fff; font-size:20px; }
-.training-master-picker .role-post-card { margin:0; }
 @media(max-width:420px){.training-master-actor{left:3%;bottom:3%;}.training-master-sprite{width:clamp(112px,34vw,148px);height:clamp(122px,38vw,158px);}.training-master-nameplate{max-width:150px;font-size:11px;}}
 .academy-room-topbar { position:absolute; left:12px; right:12px; top:12px; z-index:3; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
 .academy-room-title-card { padding:10px 12px; border-radius:15px; background:rgba(0,0,0,.58); border:1px solid rgba(214,168,79,.26); backdrop-filter:blur(10px); }
@@ -1040,6 +1033,50 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .empire-onboarding-step { display:flex; align-items:flex-start; gap:9px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; line-height:1.45; color:var(--text2); }
 .empire-onboarding-step b { color:var(--text); }
 .empire-onboarding-num { flex:none; display:grid; place-items:center; width:22px; height:22px; border-radius:50%; border:1px solid rgba(240,199,103,.55); background:rgba(240,199,103,.12); font-family:'Russo One',sans-serif; font-size:11px; color:#ffe9a8; }
+/* ---- Appointments: one symbol, one pop-up (Yaan, 2026-08-24) --------------
+   Every post in the game is offered the same way now. A room wears a small
+   symbol in the corner of its own picture; a village or county desk wears a
+   one-line row. Both open the same sheet, which is the only place the job is
+   ever explained. Nothing about a post sits on a screen any more. */
+.role-badge { position:relative; flex:none; width:46px; height:46px; display:grid; place-items:center; border-radius:14px; border:1px solid rgba(214,168,79,.5); background:rgba(0,0,0,.58); color:var(--accent2); backdrop-filter:blur(10px); box-shadow:0 6px 16px rgba(0,0,0,.45); }
+.role-badge:active { transform:scale(.95); }
+.role-badge.is-vacant { border-style:dashed; border-color:rgba(240,199,103,.6); animation:rolebadgeWaiting 2.6s ease-in-out infinite; }
+.role-badge-symbol { width:24px; height:24px; display:block; }
+.role-badge-art { position:absolute; right:-5px; bottom:-5px; width:22px; height:22px; border-radius:50%; object-fit:cover; background:rgba(0,0,0,.6); border:1px solid rgba(240,199,103,.55); }
+.role-badge-dot { position:absolute; left:-3px; top:-3px; width:9px; height:9px; border-radius:50%; background:#f0c767; box-shadow:0 0 7px rgba(240,199,103,.8); }
+.role-badge.is-staffed .role-badge-dot { display:none; }
+@keyframes rolebadgeWaiting { 0%,100% { box-shadow:0 6px 16px rgba(0,0,0,.45); } 50% { box-shadow:0 6px 16px rgba(0,0,0,.45), 0 0 14px rgba(240,199,103,.45); } }
+@media (prefers-reduced-motion:reduce) { .role-badge.is-vacant { animation:none; } }
+.academy-room-topbar-left { display:flex; align-items:flex-start; gap:8px; min-width:0; }
+/* The desk version: a village or county post is a row, not a corner. */
+.role-post-row { width:100%; display:flex; align-items:center; gap:10px; margin:8px 0 2px; padding:10px 11px; border-radius:14px; border:1px solid rgba(214,168,79,.3); background:linear-gradient(150deg,rgba(214,168,79,.09),rgba(0,0,0,.32)); color:inherit; text-align:left; }
+.role-post-row:active { transform:scale(.99); }
+.role-post-row.is-staffed { border-color:rgba(240,199,103,.46); }
+.role-post-row-symbol { flex:none; width:26px; height:26px; color:var(--accent2); }
+.role-post-row-main { flex:1; min-width:0; }
+.role-post-row-title { display:block; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.05em; color:var(--legendary); }
+.role-post-row-sub { display:block; margin-top:2px; font-size:10.5px; line-height:1.35; color:var(--text3); overflow-wrap:anywhere; }
+.role-post-row-art { flex:none; width:30px; height:30px; border-radius:50%; object-fit:cover; background:rgba(0,0,0,.4); }
+.role-post-row-chevron { flex:none; font-family:'Russo One',sans-serif; font-size:17px; color:var(--accent); }
+/* The sheet itself: title, what the job does, who holds it, who could. */
+.role-picker { position:fixed; inset:0; z-index:10060; display:none; align-items:flex-end; justify-content:center; padding:18px 12px calc(84px + env(safe-area-inset-bottom)); }
+.role-picker.is-open { display:flex; }
+.role-picker-backdrop { position:absolute; inset:0; border:0; background:rgba(0,0,0,.76); }
+.role-picker-sheet { position:relative; z-index:1; width:min(100%,560px); max-height:min(76vh,700px); overflow:auto; padding:12px; border-radius:18px; border:1px solid rgba(214,168,79,.42); background:#100c06; box-shadow:0 18px 55px rgba(0,0,0,.7); }
+.role-picker-head { display:flex; align-items:flex-start; gap:10px; padding:2px 2px 8px; }
+.role-picker-symbol { flex:none; width:30px; height:30px; color:var(--accent2); }
+.role-picker-heading { flex:1; min-width:0; }
+.role-picker-title { font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.04em; color:var(--accent2); overflow-wrap:anywhere; }
+.role-picker-effect { margin-top:3px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; letter-spacing:.04em; color:var(--text3); }
+.role-picker-effect b { color:#ffe9a8; }
+.role-picker-close { flex:none; width:34px; height:34px; border-radius:50%; border:1px solid rgba(255,255,255,.18); background:rgba(255,255,255,.07); color:#fff; font-size:20px; }
+.role-picker-copy { margin:0 2px 10px; padding:9px 11px; border-radius:12px; background:rgba(0,0,0,.3); border:1px solid rgba(240,199,103,.2); font-size:11.5px; line-height:1.5; color:var(--text2); }
+.role-picker .role-post-card { margin:0; border:0; background:none; padding:0; }
+.role-picker .role-candidate-list { max-height:none; overflow:visible; }
+/* A bird who already has a job: offered last, and honest about what it leaves. */
+.role-candidate.is-posted { border-color:rgba(255,255,255,.14); background:rgba(255,255,255,.03); }
+.role-candidate-duty { flex:none; display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.12); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:8.5px; letter-spacing:.1em; color:#e8d9a8; vertical-align:middle; }
+.role-candidate-label.is-sub { margin-top:9px; opacity:.75; }
 /* ---- County Hall — run a whole county of the map --------------------------- */
 #regionHallPanel { padding:0 2px 14px; }
 .region-hall-nav { display:flex; justify-content:space-between; gap:8px; margin:4px 0 10px; }
@@ -1180,11 +1217,6 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
    One set of rules for all three so the Library, the Kitchen, a town hall and
    a region hall all read the same way. */
 .role-post-card { margin:10px 0; padding:11px; border-radius:14px; border:1px solid rgba(214,168,79,.28); background:linear-gradient(160deg,rgba(48,36,14,.62),rgba(10,8,4,.78)); }
-.role-post-head { display:flex; gap:10px; align-items:flex-start; margin-bottom:9px; }
-.role-post-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:21px; border-radius:11px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.3), rgba(0,0,0,.45)); border:1px solid rgba(214,168,79,.3); }
-.role-post-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; color:var(--legendary); }
-.role-post-copy { font-size:10.5px; line-height:1.45; color:var(--text3); margin-top:2px; }
-.role-vacant { padding:9px 10px; border-radius:11px; border:1px dashed rgba(214,168,79,.42); background:rgba(0,0,0,.3); font-size:11px; line-height:1.45; color:var(--text2); }
 .role-holder { display:flex; gap:9px; align-items:flex-start; padding:9px; border-radius:11px; border:1px solid rgba(240,199,103,.3); background:rgba(240,199,103,.09); }
 .role-holder-art { width:44px; height:44px; flex:none; border-radius:10px; object-fit:cover; background:rgba(0,0,0,.32); }
 .role-holder-main { flex:1; min-width:0; }
@@ -1199,14 +1231,13 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .role-candidate { display:flex; gap:8px; align-items:center; width:100%; padding:6px 8px; border-radius:10px; border:1px solid rgba(255,255,255,.09); background:rgba(0,0,0,.3); color:var(--text); text-align:left; font:inherit; }
 .role-candidate-art { width:32px; height:32px; flex:none; border-radius:8px; object-fit:cover; background:rgba(0,0,0,.3); }
 .role-candidate-main { flex:1; min-width:0; }
-.role-candidate-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.role-candidate-nameline { display:flex; align-items:center; gap:6px; min-width:0; }
+.role-candidate-name { flex:1; min-width:0; display:block; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .role-candidate-meta { display:block; font-size:9.5px; color:var(--text3); }
 /* A project manager already running another village: gold-edged, with the
    village they would leave named under their stats. */
-.role-candidate.is-serving { border-color:rgba(240,199,103,.45); background:rgba(240,199,103,.1); }
 .role-candidate-post { display:block; font-size:9.5px; color:var(--accent2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 /* The Project Manager desk carries no prose, so the title sits level with its icon. */
-.role-post-card.is-bare .role-post-head { align-items:center; }
 .role-candidate-gain { flex:none; font-family:'Russo One',sans-serif; font-size:12px; color:var(--legendary); }
 .role-empty { padding:9px; border-radius:10px; background:rgba(0,0,0,.28); font-size:10.5px; color:var(--text3); }
 
@@ -4076,7 +4107,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="sq-board">
           <div class="sq-board-head">
             <span class="sq-board-title">Your squad</span>
-            <button class="sq-forge-btn" id="battleForgeBtn" onclick="switchScreen('forge')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">Gear up</button>
+            <button class="sq-forge-btn" id="battleForgeBtn" onclick="openForge('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">Gear up</button>
           </div>
           <div class="sq-slots" id="battleSquadSlots"></div>
           <div class="battle-synergy-preview" id="battleSynergyPreview">✨ Three birds from one family add a +25% squad bonus.</div>
@@ -4365,8 +4396,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="screen-title">FLETCHER'S FORGE</div>
       <div class="forge-intro">Loot found on your walks becomes weapons, armour, satchels, trinkets, spells and battle potions here. Equip each bird at the Forge; its potion can be drunk on that bird’s turn, and satchels let it carry more home from quests.</div>
       <div class="forge-tabs">
-        <button class="forge-tab active" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
-        <button class="forge-tab" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
+        <button class="forge-tab" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
+        <button class="forge-tab active" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
         <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">MATERIALS</button>
       </div>
       <div id="forgeBody"></div>
@@ -11503,14 +11534,10 @@ function assignBirdRole(scope, key, birdId) {
   if (!core || !role || !bird) return;
   const currentPost = birdAssignedPost(bird.id);
   const samePost = !!currentPost && currentPost.scope === scope && String(currentPost.key) === String(key);
-  // A Project Manager can walk from one village site to the next: assignRole
-  // vacates the old desk as it fills this one. Capture the village being left
-  // before that happens, so the toast can name it.
-  const movesFrom = !samePost && birdCanMoveToVillagePost(scope, key, currentPost) ? birdPostLabel(bird) : null;
-  if (currentPost && !samePost && !movesFrom) {
-    showToast(birdDisplayName(bird) + ' is already working as ' + currentPost.role.title + ' — stand them down first.');
-    return;
-  }
+  // Any posted bird can walk straight to another job: core.assignRole vacates
+  // the old one as it fills this one. Capture the post being left BEFORE that
+  // happens — birdPostLabel reads live state — so the toast can name it.
+  const movesFrom = birdMovesFromPost(scope, key, currentPost) ? birdPostLabel(bird) : null;
   // A bird cannot hold a post and be away at the same time — the job is the
   // point of it being here.
   if (birdHasActiveExpedition(bird.id)) { showToast(birdDisplayName(bird) + ' is away on a quest — call them home first.'); return; }
@@ -11519,6 +11546,10 @@ function assignBirdRole(scope, key, birdId) {
   if (bird.care.sleeping) { showToast(birdDisplayName(bird) + ' is fast asleep — wait until they wake.'); return; }
   const previousHolder = scope === 'academy' && key === 'kitchen' ? rolePostState('academy', 'kitchen').bird : null;
   if (previousHolder && String(previousHolder.id) !== String(bird.id)) pauseHeadChefCareer(previousHolder.id);
+  // …and a Head Chef who walks out of the Kitchen to take another job stops
+  // earning as one. Without this, assignRole vacates the post but the career
+  // keeps running with nobody at the stove.
+  if (currentPost && currentPost.scope === 'academy' && currentPost.key === 'kitchen' && !samePost) pauseHeadChefCareer(bird.id);
   gameState.birdRoles = core.assignRole(ensureRolesState(), scope, key, bird.id);
   if (scope === 'academy' && key === 'kitchen') startHeadChefCareer(bird.id);
   // An Academy post means the bird lives in that room — except the Kitchen and
@@ -11531,7 +11562,7 @@ function assignBirdRole(scope, key, birdId) {
   SFX.tap();
   const postTitle = typeof empirePostTitleFor === 'function' ? empirePostTitleFor(scope, key) : role.title;
   showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + postTitle + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' +
-    (movesFrom ? ' — ' + movesFrom.where + ' needs a new one' : ''));
+    (movesFrom ? ' — ' + movesFrom.where + ' has no ' + movesFrom.title + ' now' : ''));
   // Appointing a Head Chef unlocks whole-species table service — taught with a
   // tutorial tip the moment the post is filled, right when the perk is earned.
   if (scope === 'academy' && key === 'kitchen' && typeof showChefBulkFeedTip === 'function') showChefBulkFeedTip(bird);
@@ -11553,6 +11584,7 @@ function clearBirdRole(scope, key) {
 
 // One redraw for every screen a posting can be visible on.
 function refreshRoleSurfaces() {
+  try { refreshRolePicker(); } catch (e) {}
   try { if (currentScreen === 'academy-room') renderAcademyRoomInterior(); } catch (e) {}
   try { if (currentScreen === 'academy') renderAcademy(); } catch (e) {}
   try { if (currentScreen === 'village') { renderVillageManagePanel(); renderEmpirePanel(); } } catch (e) {}
@@ -11560,84 +11592,220 @@ function refreshRoleSurfaces() {
   try { if (currentScreen === 'town') renderTownScreen(); } catch (e) {}
 }
 
-// The one post a bird can take without standing down first (Yaan, 2026-08-24):
-// a Project Manager already running ANOTHER village. Village desks are one job
-// in many places, so the player moves the manager they want and the old site
-// falls vacant. Every other post still holds its bird until it is dismissed.
-function birdCanMoveToVillagePost(scope, key, post) {
-  return scope === 'village' && !!post && post.scope === 'village' && String(post.key) !== String(key);
+// One hand-drawn glyph per post, so a room is known by its trade rather than
+// by a paragraph about it. Stroked on a 24x24 box in currentColor; a post with
+// no drawing falls back to its own emoji, so adding a role never breaks a
+// screen. Yaan asked for the chef's hat by name — the rest follow its line.
+const ROLE_SYMBOLS = {
+  head_chef: '<path d="M6.8 16.3a4.4 4.4 0 0 1-1.2-8.2 4 4 0 0 1 6.4-2.9 4 4 0 0 1 6.4 2.9 4.4 4.4 0 0 1-1.2 8.2Z"/><path d="M7 19.7h10"/><path d="M12 12.6v3.7M9.4 13.3v3M14.6 13.3v3"/>',
+  librarian: '<path d="M3.6 5.6h5.1A2.8 2.8 0 0 1 12 8.3v10a2.4 2.4 0 0 0-2.2-1.5H3.6Z"/><path d="M20.4 5.6h-5.1A2.8 2.8 0 0 0 12 8.3v10a2.4 2.4 0 0 1 2.2-1.5h6.2Z"/>',
+  star_charter: '<path d="M4 13.7 16.3 5.5l2.4 3.6L6.4 17.3Z"/><path d="m7.7 16.5-2.1 4.3M14.3 11.7l2.3 3.5"/>',
+  drill_master: '<path d="M4 9.6v4.8M7 7.6v8.8M17 7.6v8.8M20 9.6v4.8M7 12h10"/>',
+  nest_architect: '<path d="M14.4 3.9 20 9.5l-2.7 2.7-1.7-1.7-7.9 7.9a1.9 1.9 0 0 1-2.6-2.6l7.9-7.9-1.3-1.3Z"/>',
+  innkeeper: '<path d="M6.6 6.6h8.8v12.8H6.6Z"/><path d="M15.4 9.2h2.5a2 2 0 0 1 0 4h-2.5"/><path d="M6.6 10.2h8.8"/>',
+  head_healer: '<path d="M10.1 4.2h3.8v5.9h5.9v3.8h-5.9v5.9h-3.8v-5.9H4.2v-3.8h5.9Z"/>',
+  nest_nanny: '<path d="M12 3.7c3.3 0 5.9 4.9 5.9 8.6a5.9 5.9 0 0 1-11.8 0c0-3.7 2.6-8.6 5.9-8.6Z"/>',
+  market_trader: '<path d="M12 4.2v15.6M7.2 19.8h9.6M4.2 8.2h15.6"/><path d="m4.2 8.2-2.3 4.9a2.6 2.6 0 0 0 4.6 0Z"/><path d="m19.8 8.2-2.3 4.9a2.6 2.6 0 0 0 4.6 0Z"/>',
+  quartermaster: '<circle cx="12" cy="12" r="8.3"/><path d="m15.1 8.9-2 5.1-5.1 2 2-5.1Z"/>',
+  recruiting_officer: '<path d="M4.2 19.8c-1.4-6.4 3-13.8 15.6-15.6C20.9 15 14.4 20 4.2 19.8Z"/><path d="m4.2 19.8 6.4-6.4"/>',
+  steward: '<path d="M9.2 4.4h5.6v3H9.2Z"/><path d="M14.8 5.9h2.6A1.6 1.6 0 0 1 19 7.5v11.4a1.6 1.6 0 0 1-1.6 1.6H6.6A1.6 1.6 0 0 1 5 18.9V7.5a1.6 1.6 0 0 1 1.6-1.6h2.6"/><path d="M8.6 11.6h6.8M8.6 15.4h4.4"/>',
+  region_warden: '<path d="M12 3.6 19.4 6v6c0 4.4-3 7.6-7.4 9-4.4-1.4-7.4-4.6-7.4-9V6Z"/><path d="m9 12 2.2 2.2 4.2-4.2"/>'
+};
+function roleSymbolSVG(role, cls) {
+  const body = role && ROLE_SYMBOLS[role.id];
+  if (!body) return '<span class="' + cls + ' is-emoji">' + ((role && role.icon) || '🪶') + '</span>';
+  return '<svg class="' + cls + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + body + '</svg>';
 }
 
-// Birds free to take a post: in the flock, home, and not already posted here —
-// plus the project managers of other villages, who can move.
+// The corner symbol on a room's own picture. Filled posts wear the holder's
+// face; a vacant one breathes, so an empty job is noticed without a sentence.
+function rolePostBadgeHTML(scope, key, options = {}) {
+  const role = roleDefFor(scope, key);
+  if (!role) return '';
+  const post = rolePostState(scope, key);
+  const prefix = options.titlePrefix || '';
+  const label = (post.staffed ? 'Change ' : 'Appoint a ') + prefix + rolePostTitle(scope, key, role);
+  return '<button type="button" class="role-badge' + (post.staffed ? ' is-staffed' : ' is-vacant') + '"' +
+    roleOpenAttrs(scope, key, prefix) +
+    ' aria-label="' + escapeHtml(label) + '" title="' + escapeHtml(label) + '">' +
+    roleSymbolSVG(role, 'role-badge-symbol') +
+    (post.staffed ? birdOnlyImgHTML(post.bird, 'role-badge-art') : '') +
+    '<span class="role-badge-dot"></span>' +
+  '</button>';
+}
+
+// The desk version: a village or county post has no picture to sit on, so it
+// gets one row that says who holds it and opens the same sheet.
+function rolePostRowHTML(scope, key, options = {}) {
+  const role = roleDefFor(scope, key);
+  if (!role) return '';
+  const post = rolePostState(scope, key);
+  const prefix = options.titlePrefix || '';
+  const title = rolePostTitle(scope, key, role);
+  const sub = post.staffed
+    ? birdDisplayName(post.bird) + ' · ' + role.effect.label + ' +' + post.bonusPct + '%'
+    : 'Vacant — tap to appoint a bird';
+  return '<button type="button" class="role-post-row' + (post.staffed ? ' is-staffed' : '') + '"' +
+    roleOpenAttrs(scope, key, prefix) + '>' +
+    roleSymbolSVG(role, 'role-post-row-symbol') +
+    '<span class="role-post-row-main"><span class="role-post-row-title">' + escapeHtml(prefix + title) + '</span>' +
+    '<span class="role-post-row-sub">' + escapeHtml(sub) + '</span></span>' +
+    (post.staffed ? birdOnlyImgHTML(post.bird, 'role-post-row-art') : '') +
+    '<span class="role-post-row-chevron">›</span>' +
+  '</button>';
+}
+
+// A village post and a Town Hall post share one role id and one save slot, so
+// the title cannot come from the role alone: a village keeps its Project
+// Manager, a Town's heart is the Lord Mayor's desk (empire-grid-v322). Derived
+// in one place, so no surface can forget and a new one gets it for free.
+function rolePostTitle(scope, key, role) {
+  const def = role || roleDefFor(scope, key);
+  if (typeof empirePostTitleFor === 'function') {
+    const derived = empirePostTitleFor(scope, key);
+    if (derived) return derived;
+  }
+  return def ? def.title : '';
+}
+
+function roleOpenAttrs(scope, key, prefix) {
+  return ' data-action="role-open" data-role-scope="' + escapeHtml(scope) + '"' +
+    ' data-role-key="' + escapeHtml(String(key)) + '"' +
+    (prefix ? ' data-role-prefix="' + escapeHtml(prefix) + '"' : '');
+}
+
+// ---- The one appointment sheet in the game ---------------------------------
+// It lives on the body, not inside a screen, so it survives every re-render
+// and opens from wherever the player happens to be standing.
+let rolePickerOpen = null;
+function rolePickerSheetHTML(scope, key, prefix) {
+  const role = roleDefFor(scope, key);
+  if (!role) return '';
+  const post = rolePostState(scope, key);
+  const title = (prefix || '') + rolePostTitle(scope, key, role);
+  return '<button type="button" class="role-picker-backdrop" data-action="role-picker-close" aria-label="Close"></button>' +
+    '<div class="role-picker-sheet" role="dialog" aria-modal="true" aria-label="' + escapeHtml(title) + '">' +
+      '<div class="role-picker-head">' + roleSymbolSVG(role, 'role-picker-symbol') +
+        '<div class="role-picker-heading"><div class="role-picker-title">' + escapeHtml(title) + '</div>' +
+        '<div class="role-picker-effect">' + escapeHtml(role.effect.label) +
+          (post.staffed ? ' <b>+' + post.bonusPct + '%</b>' : '') + '</div></div>' +
+        '<button type="button" class="role-picker-close" data-action="role-picker-close" aria-label="Close">×</button>' +
+      '</div>' +
+      '<div class="role-picker-copy">' + escapeHtml(role.effect.copy) + '</div>' +
+      rolePostCardHTML(scope, key) +
+    '</div>';
+}
+function rolePickerRoot() {
+  let el = document.getElementById('rolePicker');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'rolePicker';
+    el.className = 'role-picker';
+    el.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function openRolePicker(scope, key, prefix) {
+  if (!roleDefFor(scope, key)) return;
+  rolePickerOpen = { scope, key: String(key), prefix: prefix || '' };
+  const el = rolePickerRoot();
+  el.innerHTML = rolePickerSheetHTML(scope, key, rolePickerOpen.prefix);
+  el.classList.add('is-open');
+  el.setAttribute('aria-hidden', 'false');
+  SFX.tap();
+}
+function closeRolePicker() {
+  rolePickerOpen = null;
+  const el = document.getElementById('rolePicker');
+  if (!el) return;
+  el.classList.remove('is-open');
+  el.setAttribute('aria-hidden', 'true');
+  el.innerHTML = '';
+}
+// Appointing from inside the sheet must redraw the sheet, or the player is
+// left looking at the list they just acted on.
+function refreshRolePicker() {
+  if (!rolePickerOpen) return;
+  const el = document.getElementById('rolePicker');
+  if (!el || !el.classList.contains('is-open')) return;
+  el.innerHTML = rolePickerSheetHTML(rolePickerOpen.scope, rolePickerOpen.key, rolePickerOpen.prefix);
+}
+
+// A bird already holding a post is not blocked from taking another (Yaan,
+// 2026-08-24): they move, and the job they leave falls vacant. This names the
+// post being left so the toast can say which one.
+function birdMovesFromPost(scope, key, post) {
+  return !!post && !(post.scope === scope && String(post.key) === String(key));
+}
+
+// Birds the sheet may offer: in the flock, home, awake, and not already
+// holding THIS post. A bird posted elsewhere is offered too — at the bottom —
+// because the player should be able to move anyone from wherever they stand.
 function roleCandidateBirds(scope, key) {
   const core = birdRolesCore();
   const holder = core ? core.assignedBirdId(ensureRolesState(), scope, key) : null;
   return (gameState.flock || []).filter(b => {
     if (!b || !b.id || b.id === holder || birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)) return false;
-    const post = birdAssignedPost(b.id);
-    if (post && !birdCanMoveToVillagePost(scope, key, post)) return false;
     normalizeBirdCare(b);
     return !b.care.sleeping;
   });
 }
 
-// How many birds the picker offers, and how many of those seats the managers
-// of other villages may take before the free flock fills the rest.
+// How many free birds the sheet offers, and how many already-posted ones ride
+// beneath them. Both are ranked, so the best of each group leads its half.
 const ROLE_CANDIDATE_LIMIT = 8;
-const ROLE_SERVING_CANDIDATE_LIMIT = 5;
+const ROLE_POSTED_CANDIDATE_LIMIT = 6;
 
-// The shared card every posting is offered and displayed through, so the
-// Library, the Kitchen, a village hall and a region hall all read the same.
-// A village desk is the one exception (Yaan, 2026-08-24): the Project Manager
-// card is a picker, not a pamphlet, so it drops the prose and shows the title,
-// who holds it and the list. The post's own words still live in
-// bird_roles_core.js, where the Academy and region cards still read them.
+// The body of the appointment sheet: who holds the post, and who could. The
+// title and the explanation are the sheet's own head, so this card carries no
+// prose at all — every screen in the game reaches it through openRolePicker.
 function rolePostCardHTML(scope, key, options = {}) {
   const core = birdRolesCore();
   const role = roleDefFor(scope, key);
   if (!core || !role) return '';
   const post = rolePostState(scope, key);
-  const bare = scope === 'village';
-  // A village post and a town post share one role id ('steward') and one save
-  // slot, so the desk at a Town's heart is titled by its caller, not by the
-  // role: the village keeps its Project Manager, the Town gets its Lord Mayor.
-  const roleTitle = options.title || role.title;
-  const roleCopy = options.copy || role.copy;
-  const effectCopy = options.effectCopy || role.effect.copy;
   const dataAttrs = ' data-role-scope="' + escapeHtml(scope) + '" data-role-key="' + escapeHtml(String(key)) + '"';
-  // Managers already running another village lead the list, so moving a proven
-  // one here is the first tap, not a hunt through the whole flock.
+  // Free birds first, best suited at the top. Birds who already have a job are
+  // offered underneath them, each naming the post it would leave — the player
+  // can move anyone from wherever they are standing (Yaan, 2026-08-24).
   const ranked = core.rankCandidates(roleCandidateBirds(scope, key), role)
-    .map(c => Object.assign({}, c, { movesFrom: birdCanMoveToVillagePost(scope, key, birdAssignedPost(c.bird.id)) ? birdPostLabel(c.bird) : null }));
-  const rest = ranked.filter(c => !c.movesFrom);
-  const candidates = ranked.filter(c => c.movesFrom).slice(0, ROLE_SERVING_CANDIDATE_LIMIT)
-    .concat(rest.filter(c => birdIsFree(c.bird)))
-    .concat(rest.filter(c => !birdIsFree(c.bird)))
+    .map(c => Object.assign({}, c, { posted: birdAssignedPost(c.bird.id) ? birdPostLabel(c.bird) : null }));
+  // Two groups, and the order inside each merges two asks. Birds with no post
+  // come first (Yaan, 2026-08-24: already-posted birds ride at the bottom), and
+  // within them a bird with nothing at all to do leads a bird merely stationed
+  // in a room — free-birds-v318's rule that free birds lead every list handing
+  // out work. `birdIsFree` is stricter than "has no post", which is why both
+  // filters are needed and not just one.
+  const unposted = ranked.filter(c => !c.posted);
+  const available = unposted.filter(c => birdIsFree(c.bird))
+    .concat(unposted.filter(c => !birdIsFree(c.bird)))
     .slice(0, ROLE_CANDIDATE_LIMIT);
-  const optionsHtml = candidates.length
-    ? candidates.map(c =>
-        '<button type="button" class="role-candidate' + (c.movesFrom ? ' is-serving' : '') + '" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
-          birdOnlyImgHTML(c.bird, 'role-candidate-art') +
-          '<span class="role-candidate-main"><span class="role-candidate-name">' + escapeHtml(birdDisplayName(c.bird)) + '</span>' +
-          '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span>' +
-          (c.movesFrom ? '<span class="role-candidate-post">' + role.icon + ' ' + escapeHtml(c.movesFrom.where) + ' · move here</span>' : '') +
-          '</span>' +
-          '<span class="role-candidate-gain">+' + c.bonusPct + '%</span>' +
-        '</button>').join('')
+  const posted = ranked.filter(c => c.posted).slice(0, ROLE_POSTED_CANDIDATE_LIMIT);
+  const row = c =>
+    '<button type="button" class="role-candidate' + (c.posted ? ' is-posted' : '') + '" data-action="role-assign"' + dataAttrs + ' data-bird-id="' + escapeHtml(c.bird.id) + '">' +
+      birdOnlyImgHTML(c.bird, 'role-candidate-art') +
+      '<span class="role-candidate-main">' +
+      '<span class="role-candidate-nameline"><span class="role-candidate-name">' + escapeHtml(birdDisplayName(c.bird)) + '</span>' +
+        (c.posted ? '<span class="role-candidate-duty">ON DUTY</span>' : '') + '</span>' +
+      '<span class="role-candidate-meta">' + c.rank.icon + ' ' + escapeHtml(c.rank.label) + ' · ' + roleStatLine(role, c.bird) + '</span>' +
+      (c.posted ? '<span class="role-candidate-post">' + c.posted.icon + ' ' + escapeHtml(c.posted.title) + ' · ' + escapeHtml(c.posted.where) + ' — moves here</span>' : '') +
+      '</span>' +
+      '<span class="role-candidate-gain">+' + c.bonusPct + '%</span>' +
+    '</button>';
+  const optionsHtml = (available.length || posted.length)
+    ? available.map(row).join('') +
+      (posted.length ? '<div class="role-candidate-label is-sub">Already posted elsewhere</div>' + posted.map(row).join('') : '')
     : '<div class="role-empty">No companion is free for this post right now — recruit a bird, or wait for one to fly home.</div>';
   const held = post.staffed
     ? '<div class="role-holder" data-bird-info="' + escapeHtml(post.bird.id) + '">' + birdOnlyImgHTML(post.bird, 'role-holder-art') +
         '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
-        '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(roleTitle) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
+        '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(rolePostTitle(scope, key, role)) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
         '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
-        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b>' + (bare ? '' : ' — ' + escapeHtml(effectCopy)) + '</div></div>' +
+        '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b></div></div>' +
         '<button type="button" class="role-dismiss" data-action="role-clear"' + dataAttrs + '>Stand down</button></div>'
-    : bare ? '' : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(effectCopy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
-  return '<div class="role-post-card' + (bare ? ' is-bare' : '') + '"' + dataAttrs + '>' +
-    '<div class="role-post-head"><span class="role-post-icon">' + role.icon + '</span>' +
-    '<div><div class="role-post-title">' + escapeHtml(options.titlePrefix ? options.titlePrefix + roleTitle : roleTitle) + '</div>' +
-    (bare ? '' : '<div class="role-post-copy">' + escapeHtml(roleCopy) + '</div>') + '</div></div>' +
+    : '';
+  return '<div class="role-post-card"' + dataAttrs + '>' +
     held +
     '<div class="role-candidate-label">' + (post.staffed ? 'Replace with' : 'Appoint') + '</div>' +
     '<div class="role-candidate-list">' + optionsHtml + '</div>' +
@@ -11653,9 +11821,23 @@ function roleStatLine(role, bird) {
     .join(' · ');
 }
 
-// One delegated listener for every posting card in the game.
+// One delegated listener for every posting in the game: the corner symbols
+// and desk rows that open the sheet, and the buttons inside it.
 document.addEventListener('click', event => {
-  const btn = event.target && event.target.closest ? event.target.closest('[data-action="role-assign"],[data-action="role-clear"]') : null;
+  const target = event.target && event.target.closest ? event.target : null;
+  if (!target) return;
+  if (target.closest('[data-action="role-picker-close"]')) {
+    event.preventDefault(); event.stopPropagation();
+    closeRolePicker();
+    return;
+  }
+  const opener = target.closest('[data-action="role-open"]');
+  if (opener) {
+    event.preventDefault(); event.stopPropagation();
+    openRolePicker(opener.dataset.roleScope, opener.dataset.roleKey, opener.dataset.rolePrefix || '');
+    return;
+  }
+  const btn = target.closest('[data-action="role-assign"],[data-action="role-clear"]');
   if (!btn) return;
   const scope = btn.dataset.roleScope;
   const key = btn.dataset.roleKey;
@@ -11664,6 +11846,10 @@ document.addEventListener('click', event => {
   event.stopPropagation();
   if (btn.dataset.action === 'role-clear') clearBirdRole(scope, key);
   else assignBirdRole(scope, key, btn.dataset.birdId);
+});
+// Escape closes the sheet, like every other overlay in the game.
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && rolePickerOpen) closeRolePicker();
 });
 
 // Exported for QA harnesses and evidence scripts (the game script is an IIFE),
@@ -11678,6 +11864,10 @@ Object.assign(window, {
     assign: (scope, key, birdId) => assignBirdRole(scope, key, birdId),
     clear: (scope, key) => clearBirdRole(scope, key),
     postCardHTML: (scope, key) => rolePostCardHTML(scope, key),
+    sheetHTML: (scope, key, prefix) => rolePickerSheetHTML(scope, key, prefix || ''),
+    badgeHTML: (scope, key) => rolePostBadgeHTML(scope, key),
+    rowHTML: (scope, key, prefix) => rolePostRowHTML(scope, key, { titlePrefix: prefix || '' }),
+    openPicker: (scope, key, prefix) => openRolePicker(scope, key, prefix || ''),
     sizePanelHTML: bird => renderBirdSizePanel(bird),
     planExpedition: (quest, bird) => applyExpeditionCarryLimit(applyQuartermasterPlanning(quest), bird),
     mealRewards: verdict => feedRewardsForVerdict(verdict),
@@ -16964,10 +17154,10 @@ function trainingMasterActorHTML() {
   const post = rolePostState('academy', 'training');
   if (!post || !post.role) return '';
   if (!post.staffed || !post.bird) {
-    return '<button type="button" class="training-master-vacant" data-action="training-master-change" aria-label="Appoint Drill Master"><span class="training-master-vacant-symbol">↻</span><span>Appoint Drill Master</span></button>';
+    return '<button type="button" class="training-master-vacant"' + roleOpenAttrs('academy', 'training', '') + ' aria-label="Appoint Drill Master"><span class="training-master-vacant-symbol">↻</span><span>Appoint Drill Master</span></button>';
   }
   return '<div class="training-master-actor">' +
-    '<button type="button" class="training-master-change" data-action="training-master-change" aria-label="Change Drill Master" title="Change Drill Master">↻</button>' +
+    '<button type="button" class="training-master-change"' + roleOpenAttrs('academy', 'training', '') + ' aria-label="Change Drill Master" title="Change Drill Master">↻</button>' +
     birdOnlyImgHTML(post.bird, 'training-master-sprite') +
     '<div class="training-master-nameplate">' + escapeHtml(birdDisplayName(post.bird)) + '<span class="training-master-role">' + escapeHtml(post.role.title) + '</span></div>' +
   '</div>';
@@ -16982,19 +17172,6 @@ function academyRoomStageBirds(birds, room) {
   return birds.filter(bird => bird && bird.id !== post.bird.id);
 }
 
-// Candidate choices are temporary UI now: they appear only after the player
-// taps the change symbol above the Drill Master, never permanently below the
-// Training Hall art.
-function trainingMasterPickerOverlayHTML() {
-  return '<div class="training-master-picker" id="trainingMasterPicker" aria-hidden="true">' +
-    '<button type="button" class="training-master-picker-backdrop" data-action="training-master-picker-close" aria-label="Close Drill Master picker"></button>' +
-    '<div class="training-master-picker-sheet" role="dialog" aria-modal="true" aria-label="Choose Drill Master">' +
-      '<div class="training-master-picker-head"><span>Choose Drill Master</span><button type="button" class="training-master-picker-close" data-action="training-master-picker-close" aria-label="Close">×</button></div>' +
-      rolePostCardHTML('academy', 'training') +
-    '</div>' +
-  '</div>';
-}
-
 function renderAcademyRoomInterior() {
   const root = $('academyRoomInterior');
   if (!root) return;
@@ -17007,8 +17184,7 @@ function renderAcademyRoomInterior() {
     const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
     if (room === 'tavern') {
       const waiting = barracksRecruitCandidates().length;
-      root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML([], room) + '</div></div>' +
-        rolePostCardHTML('academy', 'tavern') +
+      root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + rolePostBadgeHTML('academy', 'tavern') + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML([], room) + '</div></div>' +
         '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
       $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
       root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
@@ -17047,9 +17223,10 @@ function renderAcademyRoomInterior() {
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
     const marketPanel = room === 'magpie_market' ? renderMagpieMarketPanelHTML() : '';
-    // Every room can be run by a bird. Which bird decides how well the room
-    // works — the Library by its Librarian, the Kitchen by its Head Chef.
-    const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);
+    // Every room can be run by a bird — the Library by its Librarian, the
+    // Kitchen by its Head Chef. The post is a symbol in the corner of the
+    // room's own picture now; tapping it opens the one appointment sheet.
+    const roleBadge = rolePostBadgeHTML('academy', room);
     // The Kitchen is a feeding table: birds never lodge or wander there (the
     // migration + move guards keep its stationed list empty), and there is no
     // "add a bird to this room" panel — the feeding roster replaces it.
@@ -17066,8 +17243,7 @@ function renderAcademyRoomInterior() {
     const roomAddPanel = counterRoom ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
     const stageBirds = academyRoomStageBirds(birds, room);
     const trainingMaster = room === 'training' ? trainingMasterActorHTML() : '';
-    const trainingMasterPicker = room === 'training' ? trainingMasterPickerOverlayHTML() : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + rolePanel + trainingMasterPicker + trainingPanel + kitchenPanel + marketPanel + roomAddPanel;
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + roleBadge + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + trainingPanel + kitchenPanel + marketPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -17078,17 +17254,6 @@ function renderAcademyRoomInterior() {
   }
   $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
   root.querySelectorAll('[data-action="room-add-bird"]').forEach(btn => btn.addEventListener('click', () => { academyMoveBird(btn.dataset.birdId, room); renderAcademyRoomInterior(); }));
-  const masterPicker = root.querySelector('#trainingMasterPicker');
-  root.querySelectorAll('[data-action="training-master-change"]').forEach(btn => btn.addEventListener('click', () => {
-    if (!masterPicker) return;
-    masterPicker.classList.add('is-open');
-    masterPicker.setAttribute('aria-hidden', 'false');
-  }));
-  root.querySelectorAll('[data-action="training-master-picker-close"]').forEach(btn => btn.addEventListener('click', () => {
-    if (!masterPicker) return;
-    masterPicker.classList.remove('is-open');
-    masterPicker.setAttribute('aria-hidden', 'true');
-  }));
 }
 
 function wireAcademyZones() {
@@ -21221,7 +21386,11 @@ function switchScreen(name) {
   if (name === 'town') { renderTownScreen(); setTimeout(onTownResize, 60); }
   if (name === 'county') renderCountyMapScreen();
   if (name === 'inventory') renderInventory();
-  if (name === 'forge') renderForge();
+  if (name === 'forge') {
+    forgeApplyTab(forgeEntryTab || FORGE_DEFAULT_TAB);
+    forgeEntryTab = null;
+    renderForge();
+  }
   if (name === 'quests') renderQuests();
   if (name === 'diary') renderDiary();
   if (name === 'leaderboards') renderLeaderboards();
@@ -25180,18 +25349,9 @@ function renderVillageManagePanel() {
   const settleLine = settleHere
     ? '<div class="province-settlement is-' + settleHere.tier + '">' + settleHere.icon + ' ' + (settleHere.role === 'heart' ? 'Village centre of ' : 'Village district of ') + escapeHtml(settleHere.label) + ' · +' + Math.round((snap.merged - 1) * 100) + '% taxes · guilds build ' + Math.round((1 - settlementBuildFactorForSeed(rec.seed)) * 100) + '% faster</div>'
     : '';
-  // A town is run by a bird, not by the player alone: appoint a Project Manager here.
-  // The full appointment card folds away behind one line, so the desk stays
-  // about the village — the post is a tap away, not a wall in the middle.
-  const stewardCard = rolePostCardHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' });
-  let stewardHtml = '';
-  if (stewardCard) {
-    let stewardPost = null;
-    try { stewardPost = rolePostState('village', String(rec.seed >>> 0)); } catch (e) {}
-    stewardHtml = empireDrawerHTML('steward-' + (rec.seed >>> 0), false, '📋', 'PROJECT MANAGER',
-      stewardPost && stewardPost.staffed ? escapeHtml(birdDisplayName(stewardPost.bird)) + ' runs the building sites and the ledger — tap to manage' : 'Vacant — appoint a bird: builds go faster and cheaper, taxes rise', null,
-      stewardCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
-  }
+  // A village is run by a bird, not by the player alone. One row says who has
+  // the job; tapping it opens the same appointment sheet as every other post.
+  const stewardHtml = rolePostRowHTML('village', String(rec.seed >>> 0), { titlePrefix: rec.name + '’s ' });
   panel.innerHTML = '<div class="province-panel">' +
     '<div class="province-head"><div class="province-pop">👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + (snap.pop > 0 ? happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' : '🏚️ no residents yet') + (workedYards ? ' · 👷 ' + (workedYards - idleYards) + '/' + workedYards : '') + '</div></div>' +
     settleLine +
@@ -25571,16 +25731,8 @@ function renderRegionScreen() {
       }).join('')
     : '<div class="realm-hint">🧭 No caravan roads touch this county yet — open trade routes from the Counties tab once a second county stands.</div>';
   // One bird holds the whole county: the Warden rides between its villages.
-  // Like the village Project Manager, the appointment card folds behind one line.
-  const wardenCard = rolePostCardHTML('region', String(region.id));
-  let wardenHtml = '';
-  if (wardenCard) {
-    let wardenPost = null;
-    try { wardenPost = rolePostState('region', String(region.id)); } catch (e) {}
-    wardenHtml = empireDrawerHTML('warden-' + region.id, false, '🦅', 'WARDEN',
-      wardenPost && wardenPost.staffed ? escapeHtml(birdDisplayName(wardenPost.bird)) + ' keeps the roads — tap to manage' : 'Vacant — appoint a bird and the whole county prospers', null,
-      wardenCard).replace('class="empire-drawer"', 'class="empire-drawer is-sub"');
-  }
+  // Same one row, same sheet as every other post.
+  const wardenHtml = rolePostRowHTML('region', String(region.id));
   panel.innerHTML =
     '<div class="region-hall-nav"><button type="button" class="region-hall-back" data-action="region-back">← ROYAL LEDGER</button><button type="button" class="region-hall-atlas" data-action="region-map">📜 COUNTY MAP</button><button type="button" class="region-hall-atlas" data-action="region-atlas">🗺️ VIEW ON ROYAL ATLAS</button></div>' +
     '<div class="region-hall-head"><div class="region-hall-crest">' + region.tierIcon + '</div><div class="region-hall-titles"><div class="region-hall-name">' + escapeHtml(region.name) + '</div>' +
@@ -26258,10 +26410,11 @@ function renderTownScreen() {
   const mixedPolicies = new Set(seatRows.map(row => row.state.policy)).size > 1;
   const policyNote = !policyUnlocked ? (settle.tier === 'city' ? 'Raise every Borough Hall to level 2 before holding a City-wide policy vote.' : 'Raise the Town Hall to level 2 to convene the Council.') : townHasAccruedTribute(settle, now) ? 'Collect the strongbox before changing policy, so old earnings cannot be repriced.' : mixedPolicies ? 'Borough policies remain separate until a City-wide vote. Choose one policy to unite them for at least 24 hours.' : 'Choose carefully. Every bonus has a real trade-off: policies trade one advantage for another and last at least 24 hours.';
   const storesFull = ['food','water'].every(kind => snap.provisions[kind].store >= snap.provisions[kind].cap);
-  // A town desk is a village post at the settlement's heart, so it reads bare
-  // too: title, holder, list. No copy override — none of it would render.
-  // The title IS overridden: the chain the Town Hall kept promising is here.
-  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), { titlePrefix:name + ' ', title:EMPIRE_POST_TITLES.town });
+  // A Town Hall desk is the village post at the settlement's heart, offered
+  // through the same row and the same sheet. Its title is derived, not passed:
+  // empirePostTitleFor turns a village seed inside a settlement into the Lord
+  // Mayor, so every surface says it without any caller remembering to.
+  const steward = rolePostRowHTML('village', String(Number(settle.heartSeed) >>> 0), { titlePrefix:name + ' ' });
   // The county is the rung above the Hall. Since merge-when-ready-v290 towns
   // never unite on their own: this section shows the town's own merge star,
   // the Merge button when three starred towns stand ready, and the door into
@@ -34801,7 +34954,7 @@ function renderStoresArmoury() {
           '<div class="src-copy">' + forgeGearStatLine(item) + '</div>' + storesSellRowHTML('gear', item.id) + '</div>' +
           '<div class="src-count">' + count + '</div></div>';
       }).join('') + '</div></div>';
-  }).join('') + '<button class="stores-collect-btn" onclick="switchScreen(\'forge\')">🛡️ EQUIP YOUR FLOCK AT THE FORGE</button>';
+  }).join('') + '<button class="stores-collect-btn" onclick="openForge(\'equip\')">🛡️ EQUIP YOUR FLOCK AT THE FORGE</button>';
 }
 
 // --- Curios tab: XP scrolls, keepsakes and everything else on the shelf ----
@@ -34868,7 +35021,16 @@ function renderInventory() {
 // ============================================================================
 // FLETCHER'S FORGE — equip gear, craft from loot, manage materials
 // ============================================================================
-let forgeState = { tab: 'equip', birdId: null, slotPicker: null };
+// Yaan's ask (2026-08-25): the Forge opens on its anvil. Crafting is what the
+// room is FOR; equipping is something you do to a bird, and it is one tap away.
+// A caller may still ask for another tab by name — the two buttons that promise
+// equipping in their own words do exactly that.
+const FORGE_DEFAULT_TAB = 'craft';
+const FORGE_TABS = ['equip', 'craft', 'materials'];
+let forgeState = { tab: FORGE_DEFAULT_TAB, birdId: null, slotPicker: null };
+// Set by openForge() and spent by the next switchScreen('forge'), so the dock —
+// which routes generically — still lands on the anvil.
+let forgeEntryTab = null;
 
 const FORGE_SLOT_META = {
   weapon:  { label: 'Weapon',      empty: '🗡️', hint: 'Talons boost ATK · wands boost MAG' },
@@ -34878,15 +35040,32 @@ const FORGE_SLOT_META = {
   potion:  { label: 'Potion',      empty: '🧪', hint: 'Drink on this bird’s turn · does not replace its move' }
 };
 
-function forgeSetTab(tab) {
-  forgeState.tab = tab;
+function forgeApplyTab(tab) {
+  forgeState.tab = FORGE_TABS.includes(tab) ? tab : FORGE_DEFAULT_TAB;
   forgeState.slotPicker = null;
-  ['equip', 'craft', 'materials'].forEach(t => {
+  FORGE_TABS.forEach(t => {
     const el = $('forgeTab' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (el) el.classList.toggle('active', t === tab);
+    if (el) el.classList.toggle('active', t === forgeState.tab);
   });
+}
+function forgeSetTab(tab) {
+  forgeApplyTab(tab);
   SFX.tap();
   renderForge();
+}
+// Every way into the Forge lands on the anvil unless the caller names a tab.
+// switchScreen returns early when the screen is already open, so a caller
+// standing in the Forge has to be honoured here rather than through the route.
+function openForge(tab) {
+  forgeEntryTab = FORGE_TABS.includes(tab) ? tab : null;
+  if (currentScreen === 'forge') {
+    forgeApplyTab(forgeEntryTab || FORGE_DEFAULT_TAB);
+    forgeEntryTab = null;
+    SFX.tap();
+    renderForge();
+    return;
+  }
+  switchScreen('forge');
 }
 
 function forgeGearStatLine(item) {
@@ -38660,7 +38839,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -39715,7 +39894,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-grid-v322-20260825';
+const BURBZ_BUILD = 'forge-opens-on-the-anvil-v323-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
