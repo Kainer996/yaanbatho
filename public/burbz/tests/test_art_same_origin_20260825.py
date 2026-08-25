@@ -52,7 +52,7 @@ SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "art-same-origin-v325-20260825"
-CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
+CURRENT_BUILD = "free-your-first-village-v327-20260825"
 PREVIOUS_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 
 GITHUB_HOSTS = ("github.com/Kainer996", "raw.githubusercontent.com")

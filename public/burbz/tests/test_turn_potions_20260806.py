@@ -130,7 +130,7 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     assert "academy_alive_core.js?v=magpie-market-v316-20260824" in HTML
     # battle_core moved with v258 (Night Wings), then with v287 (attack preview);
     # the loot core moved with v295 (the Stores market).
-    for asset, core_pin in (("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
+    for asset, core_pin in (("battle_core.js", "free-your-first-village-v327-20260825"),
                             ("loot_crafting_core.js", "magpie-market-v316-20260824")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML

@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
+CURRENT_BUILD = "free-your-first-village-v327-20260825"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
@@ -353,12 +353,18 @@ def test_role_holders_are_reserved_from_quests_training_and_battles():
     assert "!birdHasActiveTraining(b.id)" in html
     assert "!birdHasActiveExpedition(b.id)" in html
     assert "return !b.care.sleeping;" in html
-    assert "const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);" in html
-    assert "const posted = team.find(b => birdAssignedPost(b.id));" in html
+    # The battle picker reads the same rule through one helper, and Merlin —
+    # who holds no post, drill or errand slot — is its only exemption.
+    assert "!birdAssignedPost(bird.id) && !birdHasActiveTraining(bird.id) &&" in html
+    assert "!birdHasActiveExpedition(bird.id) && !sleepReadinessForBird(bird, now).sleeping" in html
+    assert "const flock = roster.filter(b => birdBattleAvailable(b));" in html
+    assert "const posted = team.find(b => !isMerlinCompanion(b) && birdAssignedPost(b.id));" in html
     # Role holders cannot silently move into a second post; stand them down first.
     assert "const currentPost = birdAssignedPost(bird.id);" in html
     assert "No companion is free for this post right now" in html
-    assert html.count("!birdAssignedPost(b.id)") >= 3
+    # Quests, training and battle each keep their own guard; the battle one now
+    # reads `bird` rather than `b` because it lives in birdBattleAvailable.
+    assert html.count("!birdAssignedPost(b.id)") + html.count("!birdAssignedPost(bird.id)") >= 3
     # A bird cannot be appointed while another timed activity still owns it.
     assert "if (birdHasActiveTraining(bird.id))" in html
 

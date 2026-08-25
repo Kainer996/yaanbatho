@@ -1801,12 +1801,15 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 }
 
 /* ========== SCAN SCREEN ========== */
+/* Merlin perches against the right edge, 108px wide. The toggle stops well
+   short of him, so neither button ever hides under a falcon. */
 .scan-mode-toggle {
   display: flex; background: var(--bg2); border-radius: 10px; padding: 4px;
   margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.05);
+  justify-content: flex-start; width: fit-content; max-width: calc(100% - 116px);
 }
 .scan-mode-btn {
-  flex: 1; padding: 10px; text-align: center; border-radius: 8px;
+  flex: 0 0 auto; padding: 10px 16px; text-align: center; border-radius: 8px;
   font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px;
   text-transform: uppercase; letter-spacing: 1px; color: var(--text3);
   transition: all 0.25s ease; min-height: 44px;
@@ -1858,11 +1861,9 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .merlin-listener-stage.possible-bird .merlin-wand-tip { transform:translate(-50%,-50%) scale(1.34); background:#fff0a9; box-shadow:0 0 0 8px rgba(91,224,185,.22),0 0 24px #69ebc2,0 0 44px rgba(240,199,103,.9); }
 @keyframes merlinWandGlow { 0%,100%{filter:brightness(.92)} 50%{filter:brightness(1.35)} }
 @keyframes merlinSoundRing { 0%{opacity:.78;transform:rotate(45deg) scale(.45)} 100%{opacity:0;transform:rotate(45deg) scale(2.1)} }
-.merlin-listener-copy { position:absolute; right:12px; bottom:12px; width:54%; padding:11px 12px; border-radius:16px; background:linear-gradient(150deg,rgba(8,17,14,.92),rgba(19,29,22,.88)); border:1px solid rgba(105,224,184,.34); box-shadow:0 8px 22px rgba(0,0,0,.42); }
-.merlin-listener-kicker { color:#78e2bd; font:900 9px/1 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; }
-.merlin-listener-status { margin-top:5px; color:#fff1c5; font:900 14px/1.08 'Russo One',sans-serif; }
-.merlin-listener-activity { margin-top:6px; min-height:31px; color:#c7c1b2; font-size:11px; line-height:1.35; }
-.merlin-listener-privacy { margin-top:7px; color:#9be8cd; font:800 9px/1.25 'Rajdhani',sans-serif; letter-spacing:.04em; text-transform:uppercase; }
+.merlin-listener-line { max-width:430px; margin:0 auto 10px; text-align:center; }
+.merlin-listener-status { color:#fff1c5; font:900 14px/1.08 'Russo One',sans-serif; }
+.merlin-listener-activity { margin-top:4px; color:#c7c1b2; font-size:11px; line-height:1.35; }
 .merlin-data-note { margin:16px 0 12px; padding:9px 11px; border:1px solid rgba(105,224,184,.24); border-radius:13px; background:rgba(10,21,17,.76); color:#bdb7a7; font-size:10px; line-height:1.35; }
 /* Session shelf: a compact grid of every bird discovered this listening
    session, sitting where the data note used to be (the note now lives below
@@ -1921,7 +1922,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   animation: birdPickupPulse 1s ease-in-out infinite;
 }
 @keyframes birdPickupPulse { 0%,100%{box-shadow:0 4px 18px rgba(214,168,79,0.35)} 50%{box-shadow:0 4px 28px rgba(214,168,79,0.70)} }
-@media (max-width:380px) { .merlin-listener-stage{min-height:305px} .merlin-listener-copy{width:57%;right:9px;bottom:9px} }
+@media (max-width:380px) { .merlin-listener-stage{min-height:305px} }
 @media (prefers-reduced-motion:reduce) { .merlin-listener-stage.listening .merlin-wand-tip,.merlin-listener-stage.listening .merlin-wand-tip::before,.merlin-listener-stage.listening .merlin-wand-tip::after { animation:none !important; } }
 
 .scan-result { margin-top:16px; display:none; }
@@ -4007,25 +4008,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
 
     <!-- SCAN SCREEN -->
-    <div class="screen camera-mode" id="screen-scan" data-scan-path="camera-only">
+    <div class="screen" id="screen-scan" data-scan-path="camera-only">
       <div class="screen-title">SCAN</div>
+      <!-- Sound leads: the screen opens on Merlin's wand. Both mode buttons keep
+           to the left so Merlin's perch, pinned to the right edge, never sits on
+           top of them. -->
       <div class="scan-mode-toggle">
-        <button class="scan-mode-btn active" id="scanImageBtn" data-mode="image"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">Camera</button>
-        <button class="scan-mode-btn" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
+        <button class="scan-mode-btn active" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
+        <button class="scan-mode-btn" id="scanImageBtn" data-mode="image"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">Camera</button>
       </div>
 
       <!-- Sound scan area -->
-      <div id="soundScanArea" style="display:none;">
+      <div id="soundScanArea">
         <div class="merlin-listener-stage" id="merlinListenerStage">
           <img class="merlin-listener-art" src="assets/ui/merlin-wand-listener.webp" alt="Merlin holding his glowing listening wand">
           <div class="merlin-wand-tip" id="merlinWandTip" aria-hidden="true"></div>
           <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Possible birdsong</div>
-          <div class="merlin-listener-copy">
-            <div class="merlin-listener-kicker">Merlin’s wand</div>
-            <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
-            <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
-            <div class="merlin-listener-privacy">Microphone active only while the green listening light is shown</div>
-          </div>
+        </div>
+        <div class="merlin-listener-line">
+          <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
+          <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
         </div>
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
@@ -4036,14 +4038,14 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="sound-session-shelf-empty" id="soundSessionShelfEmpty">No birds yet — start Merlin&rsquo;s wand and every bird you discover will perch here.</div>
         </div>
         <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
-        <div class="merlin-data-note" id="merlinDataNote">Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
+        <div class="merlin-data-note" id="merlinDataNote">Microphone active only while the green listening light is shown. Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
           <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
         </div>
       </div>
 
       <!-- Image scan area -->
-      <div id="imageScanArea">
+      <div id="imageScanArea" style="display:none;">
         <div class="camera-viewfinder" id="cameraViewfinder">
           <video id="cameraVideo" autoplay playsinline></video>
           <div class="vf-corner tl"></div>
@@ -4883,7 +4885,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
+<script src="battle_core.js?v=free-your-first-village-v327-20260825"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
@@ -21412,7 +21414,7 @@ function switchScreen(name) {
   if (name === 'academy') { wireAcademyZones(); renderAcademy(); applyAcademyView(); }
   else academyViewPause();
   if (name === 'academy-room') renderAcademyRoomInterior();
-  if (name === 'village') { renderVillage(); setTimeout(onVillageResize, 60); }
+  if (name === 'village') { markEmpireMapOpened(); renderVillage(); setTimeout(onVillageResize, 60); }
   if (name === 'region') renderRegionScreen();
   if (name === 'town') { renderTownScreen(); setTimeout(onTownResize, 60); }
   if (name === 'county') renderCountyMapScreen();
@@ -22096,7 +22098,65 @@ const VILLAGE_CELL_DEG = 0.02; // ~2.2 km cells; ~1 in 3 hosts a village
 const VILLAGE_BLOCK_CELLS = 3;
 let liveMapVillageMarkers = [], liveMapVillageRefreshTimer = null;
 
+// THE CRADLE — the first village stands within sight of the player.
+// The procedural grid drops a settlement roughly every 2.2 km, which can leave
+// a brand new player's nearest village a couple of kilometres off. So while the
+// whole world is still dark, one village is planted a short walk from wherever
+// the atlas first found them. It is a real village in every other way: it takes
+// its own map cell's seed, so its name, layout, trades and garrison come from
+// the same scheme as everywhere else — and it REPLACES whatever that cell had
+// rolled, so no two places ever share a seed.
+const CRADLE_VILLAGE_OFFSET_DEG = 0.0011;   // ~120 m north of where you stand
+let cradleSiteCache;                        // undefined = unread, null = none
+
+function empireCradleSite() {
+  if (cradleSiteCache !== undefined) return cradleSiteCache;
+  // The seeded-village pipeline is otherwise pure — it runs in bare Node for
+  // the map tests. With no save in reach there is no cradle, and the
+  // procedural grid answers on its own, exactly as it always did.
+  if (typeof ensureEmpireState !== 'function') return (cradleSiteCache = null);
+  const empire = ensureEmpireState();
+  const raw = empire && empire.cradleSite;
+  const lat = raw ? normaliseVillageCoordinate(raw.lat, -90, 90) : null;
+  const lon = raw ? normaliseVillageCoordinate(raw.lon, -180, 180) : null;
+  const seed = raw ? Number(raw.seed) : NaN;
+  cradleSiteCache = (lat !== null && lon !== null && Number.isFinite(seed) && seed >= 0)
+    ? { seed: seed >>> 0, name: villageNameFromSeed(seed >>> 0), lat, lon,
+        cellI: Math.floor(lat / VILLAGE_CELL_DEG), cellJ: Math.floor(lon / VILLAGE_CELL_DEG) }
+    : null;
+  return cradleSiteCache;
+}
+
+// Plant it the first time the atlas knows where the player is, and only while
+// they hold nothing at all. An empire that already owns land keeps the map it
+// earned; a cradle already planted never moves again.
+function ensureEmpireCradleSite() {
+  const empire = ensureEmpireState();
+  if (!empire) return null;
+  if (empire.cradleSite) return empireCradleSite();
+  if (Object.keys(empire.liberationVictories).length || Object.keys(empire.villages).length) return null;
+  const here = empirePlayerPosition();
+  if (!here) return null;
+  const cosLat = Math.max(0.2, Math.cos(Number(here.lat) * Math.PI / 180));
+  const lat = normaliseVillageCoordinate(Number(here.lat) + CRADLE_VILLAGE_OFFSET_DEG, -90, 90);
+  const lon = normaliseVillageCoordinate(Number(here.lon) + (CRADLE_VILLAGE_OFFSET_DEG * 0.6) / cosLat, -180, 180);
+  if (lat === null || lon === null) return null;
+  const core = globalThis.BurbzEmpireRealmCore;
+  const seed = core && typeof core.villageCellSeed === 'function'
+    ? core.villageCellSeed(Math.floor(lat / VILLAGE_CELL_DEG), Math.floor(lon / VILLAGE_CELL_DEG))
+    : null;
+  if (seed === null || seed === undefined) return null;
+  empire.cradleSite = { seed: seed >>> 0, lat, lon, plantedAt: new Date().toISOString() };
+  cradleSiteCache = undefined;
+  saveState();
+  return empireCradleSite();
+}
+
 function villageInCell(i, j) {
+  const cradle = empireCradleSite();
+  if (cradle && cradle.cellI === i && cradle.cellJ === j) {
+    return { seed: cradle.seed, name: cradle.name, lat: cradle.lat, lon: cradle.lon };
+  }
   const core = globalThis.BurbzEmpireRealmCore;
   const seed = core && typeof core.villageCellSeed === 'function' ? core.villageCellSeed(i, j) : null;
   if (seed === null || seed === undefined) return null;
@@ -22160,6 +22220,7 @@ const VILLAGE_VISITABLE_COUNT = 3;
 const VILLAGE_VISIT_RANGE_M = 1200;
 function drawVillageMarkers(lat, lon) {
   if (!liveMap || !window.maplibregl) return;
+  ensureEmpireCradleSite();
   // Zoomed out, the player can survey more of the realm — reveal more distant
   // villages, but they can only be *entered* once they're in the vicinity
   // (walk there). At the natural zoom only the nearest few show, all enterable.
@@ -22267,9 +22328,17 @@ function currentVillage() {
     gameState.lastVillage = null;
     saveState();
   }
+  // Coordinates travel with the village. Without them the Liberation Battle
+  // refuses the claim as an unreal place, which is what used to block the very
+  // first liberation whenever the village screen picked the nearest settlement
+  // itself instead of being walked into from a map banner.
   if (liveMapLastPosition) {
     const near = nearestVillageTo(liveMapLastPosition.lat, liveMapLastPosition.lon);
-    if (near) { villageActive = { seed: near.seed, name: near.name }; return villageActive; }
+    if (near) {
+      villageActive = { seed: near.seed, name: near.name,
+        lat: normaliseVillageCoordinate(near.lat, -90, 90), lon: normaliseVillageCoordinate(near.lon, -180, 180) };
+      return villageActive;
+    }
   }
   villageActive = { seed: 1206870301, name: villageNameFromSeed(1206870301) };
   return villageActive;
@@ -22417,7 +22486,9 @@ function beginVillageLiberation(village) {
     showToast('Open a real village from the Map tab to begin its Liberation Battle.');
     return;
   }
-  if (!Array.isArray(gameState.flock) || !gameState.flock.length) {
+  // Merlin always answers the call to arms, so the first Liberation Battle can
+  // be fought before a single bird has been recruited.
+  if (!getBattleFlock().length) {
     showToast('Befriend a bird first — your flock will help liberate this village.');
     return;
   }
@@ -23286,6 +23357,7 @@ function refreshEmpireMap(options = {}) {
   // The sovereign's banner and the frontier: wherever the player actually is,
   // the atlas shows them standing there — and the nearest still-shadowed
   // settlements fly dark banners, each one a tap away from joining the empire.
+  ensureEmpireCradleSite();
   const here = empirePlayerPosition();
   empireFrontierVillages = [];
   if (here) {
@@ -36720,7 +36792,7 @@ $('burbzModeTabs')?.addEventListener('click', e => {
 // ============================================================================
 // SCAN SCREEN
 // ============================================================================
-let scanMode = 'image';
+let scanMode = 'sound';   // the Scan screen opens on Merlin's wand
 let isRecording = false;
 let mediaRecorder = null;
 let soundRecorderLanes = [];
@@ -38213,7 +38285,46 @@ function ensureLeagueState() {
   return gameState.league;
 }
 
-function getBattleFlock() { return Array.isArray(gameState.flock) ? gameState.flock.map(ensureBirdAcademy) : []; }
+// MERLIN FIGHTS — the wizard falcon is not a recruited companion, so he has no
+// post, no drills, no errand roster and no bedtime to keep him off the field.
+// He is always the first bird on the squad sheet, which is what lets a brand
+// new player free their first village before they have recruited anyone.
+// He is rebuilt fresh for each fight and never written back to: a battle costs
+// him no health and no supper.
+function merlinBattleBird() {
+  const stats = generateBirdStats(MERLIN_GUIDE.species, MERLIN_GUIDE.power, 'rare') || {};
+  const bird = {
+    ...stats,
+    id: MERLIN_GUIDE.id,
+    species: MERLIN_GUIDE.species,
+    commonName: MERLIN_GUIDE.commonName,
+    scientificName: MERLIN_GUIDE.scientificName,
+    rarity: 'rare',
+    // The wizard grows with the player, so he stays worth picking all game.
+    level: Math.max(1, Math.round(Number(gameState.player && gameState.player.level) || 1)),
+    artUrl: MERLIN_GUIDE.artUrl
+  };
+  bird.maxHp = Math.max(60, Number(bird.maxHp) || 80);
+  bird.hp = bird.maxHp;
+  return ensureBirdAcademy(bird);
+}
+
+function getBattleFlock() {
+  const flock = Array.isArray(gameState.flock) ? gameState.flock.map(ensureBirdAcademy) : [];
+  return [merlinBattleBird()].concat(flock.filter(b => b && b.id !== MERLIN_GUIDE.id));
+}
+
+// Merlin answers every call to arms. Every other bird still has to be free,
+// awake and fed.
+function birdBattleAvailable(bird, now = Date.now()) {
+  if (!bird) return false;
+  if (isMerlinCompanion(bird)) return true;
+  return !birdAssignedPost(bird.id) && !birdHasActiveTraining(bird.id) &&
+    !birdHasActiveExpedition(bird.id) && !sleepReadinessForBird(bird, now).sleeping;
+}
+function birdBattleReady(bird) {
+  return !!bird && (isMerlinCompanion(bird) || birdWorkReadiness(bird, 'battle').ok);
+}
 
 function typeChipHTML(typeId) {
   const t = battleCore().BIRD_TYPES[typeId] || battleCore().BIRD_TYPES.songbird;
@@ -38232,20 +38343,22 @@ function isFirstLiberationBattle() {
   if (!empire) return false;
   return Object.keys(empire.liberationVictories || {}).length === 0 && empireVillages().length === 0;
 }
-// The garrison holding the player's first town is a weary token force — two
-// feeble guards at a fraction of their strength — so the opening Liberation
-// Battle is effectively guaranteed to be won even by a single fresh bird.
+// The garrison holding the player's first village is a weary token force: two
+// guards, and their numbers are fixed rather than scaled, so the opening
+// Liberation Battle cannot be lost — not by Merlin alone, not by one untrained
+// level-1 bird with no gear. Whichever evil Burbz the roster picks, this is
+// what stands in the village. It is the player's first taste of winning.
+const FIRST_GARRISON_SIZE = 2;
+const FIRST_GARRISON_HP = 20;
+const FIRST_GARRISON_STAT = 4;
 function weakenFirstGarrison(opponents) {
-  return opponents.slice(0, 2).map(b => {
-    const wearyHp = Math.max(24, Math.round(b.maxHp * 0.25));
-    return {
-      ...b, level: 1, maxHp: wearyHp, hp: wearyHp,
-      atk: Math.max(5, Math.round(b.atk * 0.12)), def: Math.max(5, Math.round(b.def * 0.12)),
-      spd: Math.max(5, Math.round(b.spd * 0.15)), int: Math.max(5, Math.round(b.int * 0.2)),
-      cha: Math.max(5, Math.round(b.cha * 0.3)), mag: Math.max(5, Math.round(b.mag * 0.12)),
-      stamina: Math.max(5, Math.round(b.stamina * 0.3))
-    };
-  });
+  return opponents.slice(0, FIRST_GARRISON_SIZE).map(b => ({
+    ...b, level: 1,
+    maxHp: FIRST_GARRISON_HP, hp: FIRST_GARRISON_HP,
+    atk: FIRST_GARRISON_STAT, def: FIRST_GARRISON_STAT, spd: FIRST_GARRISON_STAT,
+    int: FIRST_GARRISON_STAT, cha: FIRST_GARRISON_STAT, mag: FIRST_GARRISON_STAT,
+    stamina: FIRST_GARRISON_STAT
+  }));
 }
 // MERCY RULE — the evil Burbz only fight at full strength once the player
 // has earned it. Until the flock takes four wins in a row, every squad is a
@@ -38369,8 +38482,8 @@ function renderBattleSelect() {
   const league = ensureLeagueState();
   const tier = core.LEAGUE_TIERS[league.tier];
   const roster = getBattleFlock();
-  const flock = roster.filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
-  const pickable = flock.filter(b => birdWorkReadiness(b, 'battle').ok);
+  const flock = roster.filter(b => birdBattleAvailable(b));
+  const pickable = flock.filter(birdBattleReady);
   const liberation = pendingEmpireLiberation();
   const leagueHeader = $('leagueHeader');
   if (leagueHeader) leagueHeader.hidden = !!liberation;
@@ -38472,7 +38585,8 @@ function renderBattleSelect() {
       const nightWings = !!nocturnalNightBattleBoostFor(b);
       return '<button class="pick-card' + (order >= 0 ? ' picked' : '') + (hpPct < 30 ? ' tired' : '') + (readiness.warning ? ' hungry-warn' : '') + (nightWings ? ' night-hunter-aura' : '') + '" data-hunger-surface="battle-readiness" data-hunger-state="' + readiness.status.level + '" onclick="battlePickToggle(\'' + b.id + '\')">' +
         (order >= 0 ? '<div class="pk-order">' + (order + 1) + '</div>' : '') +
-        '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>' +
+        // Merlin carries his own magic; he has no equipment card to open.
+        (isMerlinCompanion(b) ? '' : '<span class="pk-equip" title="Equipment" onclick="event.stopPropagation(); openBirdEquip(\'' + b.id + '\')">⚔️</span>') +
         fighterArtHTML(b, 'pk') +
         '<div class="pk-name">' + escapeHtml(b.commonName || b.species) + '</div>' +
         '<div class="pk-meta">Lv ' + (b.level || 1) + ' · ' + (moves ? moves + ' trained move' + (moves > 1 ? 's' : '') : 'untrained') + escapeHtml(hungerMeta) + '</div>' +
@@ -38513,7 +38627,7 @@ function renderBattleSelect() {
       ? previewSynergies.map(s => '<strong>' + s.icon + ' ' + escapeHtml(s.title) + '</strong>' + escapeHtml(s.copy)).join('<br>')
       : '✨ Three birds from one family — or three Birds of Prey — add a +25% squad bonus.';
   }
-  const hungerBlocked = selectedBattleBirds.some(b => !birdWorkReadiness(b, 'battle').ok);
+  const hungerBlocked = selectedBattleBirds.some(b => !birdBattleReady(b));
   $('battleStartBtn').disabled = !pickable.length || battleSelectedIds.length < need || hungerBlocked;
   $('battleStartBtn').textContent = !roster.length ? 'SCAN A BIRD FIRST'
     : !pickable.length ? 'EVERY BIRD IS BUSY'
@@ -38524,13 +38638,13 @@ function renderBattleSelect() {
 }
 
 function battlePickToggle(birdId) {
-  const flock = getBattleFlock().filter(b => !birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && !birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping);
+  const flock = getBattleFlock().filter(b => birdBattleAvailable(b));
   const bird = flock.find(b => b.id === birdId);
   if (!bird) return;
   const idx = battleSelectedIds.indexOf(birdId);
   if (idx >= 0) battleSelectedIds.splice(idx, 1);
   else {
-    if (!birdWorkReadiness(bird, 'battle').ok) { showToast('🍽️ ' + birdDisplayName(bird) + ' needs food before battle.'); return; }
+    if (!birdBattleReady(bird)) { showToast('🍽️ ' + birdDisplayName(bird) + ' needs food before battle.'); return; }
     if (battleSelectedIds.length >= 4) battleSelectedIds.shift();
     battleSelectedIds.push(birdId);
   }
@@ -38546,18 +38660,18 @@ function startPerchBattle() {
   const flock = getBattleFlock();
   const team = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
   if (!team.length) return;
-  const posted = team.find(b => birdAssignedPost(b.id));
+  const posted = team.find(b => !isMerlinCompanion(b) && birdAssignedPost(b.id));
   if (posted) { const post = birdAssignedPost(posted.id); showToast(birdDisplayName(posted) + ' is working as ' + post.role.title + ' — stand them down first.'); renderBattleSelect(); return; }
-  const busy = team.find(b => birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id));
+  const busy = team.find(b => !isMerlinCompanion(b) && (birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)));
   if (busy) { showToast(birdDisplayName(busy) + ' is already busy with ' + (birdHasActiveTraining(busy.id) ? 'training' : 'a quest') + ' - finish that activity first.'); renderBattleSelect(); return; }
-  const blocked = team.find(b => !birdWorkReadiness(b, 'battle').ok);
+  const blocked = team.find(b => !birdBattleReady(b));
   if (blocked) {
     const readiness = birdWorkReadiness(blocked, 'battle');
     showToast((readiness.sleepBlocked ? '💤 ' + birdDisplayName(blocked) + ' is sleeping or needs The Roost.' : '🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'));
     renderBattleSelect();
     return;
   }
-  const warningStates = team.map(b => birdWorkReadiness(b, 'battle')).filter(r => r.warning);
+  const warningStates = team.filter(b => !isMerlinCompanion(b)).map(b => birdWorkReadiness(b, 'battle')).filter(r => r.warning);
   if (warningStates.length) showToast(warningStates.some(r => r.sleep && r.sleep.warning) ? '🥱 One or more selected birds are getting tired — let them rest after this battle.' : '🍽️ One or more selected birds are hungry — feed them after this battle.');
   const liberation = pendingEmpireLiberation();
   const rival = leagueRivalOpponents();
@@ -38579,7 +38693,10 @@ function startPerchBattle() {
   const family = birdFamilyCore();
   const playerSynergies = family ? family.applyTeamSynergies(playerFighters) : [];
   const opponentSynergies = family ? family.applyTeamSynergies(opponentFighters) : [];
-  const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier });
+  // Merlin's blessing runs to the end of the story's first liberation: that one
+  // fight cannot be lost, so a brand new player always takes their first village.
+  const battle = core.createBattle({ playerFighters, opponentFighters, seed: 'perch_' + rival.key + '_' + Date.now(), tier: league.tier,
+    unloseable: !!(liberation && isFirstLiberationBattle()) });
   battle.synergies = { player: playerSynergies, opponent: opponentSynergies };
   battle.activityId = 'battle_' + battle.seed;
   battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, pendingTargetIndex: null, surgeArmed: false };
@@ -39514,16 +39631,23 @@ function villagesFedAndWatered() {
 }
 
 const PLAYER_QUESTS = [
-  // The chain mirrors Merlin's guided tutorial: send him on his first errand,
-  // welcome him home, raise The Roost — then out into the world for a real
-  // bird. Merlin can lead starter errands, so the first mission flies before
-  // the Barracks exists and the player tastes the expedition loop right away.
+  // Straight out of Merlin's tutorial the player gets the game's biggest
+  // promise, in three moves: see the darkened world, take a village back from
+  // it with Merlin at their side, then go outside and find a real bird. The
+  // first village stands right where they are and its garrison is a token
+  // force, so this opening is a win, not a wall.
+  { id:'pq_open_empire',    name:'Open your Empire map', desc:'Tap Empire and look at the world in darkness', type:'empire_opened', target:1, reward:30, coins:20, icon:'\u{1F5FA}\u{FE0F}', go:'village',
+    measure:() => empireMapOpenCount() },
+  { id:'pq_liberate',       name:'Liberate a village', desc:'Send Merlin to free the village nearest you', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'village',
+    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to discover any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  // Merlin can lead starter errands, so the expedition loop opens before the
+  // Barracks exists.
   { id:'pq_expedition',     name:'Send a bird on a mission', desc:'Send Merlin out on a Kingdom Errand', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
     measure:() => (gameState.birdExpeditions || []).length + claimedExpeditionCount() },
   { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
     measure:() => claimedExpeditionCount() },
-  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to discover any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
-    measure:() => discoveredSpeciesSet().size },
   { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
   { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
@@ -39568,8 +39692,6 @@ const PLAYER_QUESTS = [
     measure:() => ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length + ((gameState.sideQuest && gameState.sideQuest.history) || []).length },
   { id:'pq_quiz',           name:'Bird Wisdom Check', desc:'Answer a bird knowledge question correctly', type:'bird_quiz_correct', target:1, reward:45, coins:20, icon:'\u{1F9E0}', go:'quests',
     measure:() => Number(gameState.knowledgeQuiz && gameState.knowledgeQuiz.correct) || 0 },
-  { id:'pq_liberate',       name:'Liberate a village', desc:'Free a real village from the evil Burbz', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'map',
-    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
   { id:'pq_village_build',  name:'Raise your first building', desc:'Order a building at your village desk', type:'village_built', target:1, reward:80, coins:40, icon:'\u{1F3D7}\u{FE0F}', go:'village',
     measure:() => villageBuildingLevels() },
   { id:'pq_craft_gear',     name:'Commission the smith', desc:'Forge a piece of gear at the Fletcher’s Forge', type:'gear_crafted', target:1, reward:70, coins:40, icon:'\u{2692}\u{FE0F}', go:'forge' },
@@ -39592,6 +39714,19 @@ const PLAYER_QUESTS = [
   { id:'pq_found_town',     name:'Found a Town', desc:'Merge three starred villages into one Town', type:'town_founded', target:1, reward:200, coins:120, branches:50, icon:'\u{1F3D8}\u{FE0F}', go:'village',
     measure:() => ((gameState.empire && gameState.empire.townCharters) || []).length },
 ];
+
+// How many times the player has opened the Empire map. The first open is the
+// first link in the player quest chain, so it is recorded on the save.
+function empireMapOpenCount() {
+  return Math.max(0, Number(gameState.player && gameState.player.empireMapOpens) || 0);
+}
+function markEmpireMapOpened() {
+  if (!gameState || !gameState.player) return;
+  gameState.player.empireMapOpens = empireMapOpenCount() + 1;
+  if (typeof syncActivePlayerQuest === 'function') syncActivePlayerQuest();
+  saveState();
+  if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
+}
 
 function activePlayerQuest() {
   return PLAYER_QUESTS.find(q => !(gameState.quests && gameState.quests[q.id] && gameState.quests[q.id].claimed)) || null;
@@ -40169,7 +40304,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'iron-ingot-errand-v326-20260825';
+const BURBZ_BUILD = 'free-your-first-village-v327-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -40251,8 +40386,8 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — Discovery: taught the first time the Scan screen opens.
   { chapterId:'scan', chapter:'Discovery', title:'Two ways to discover', screen:'scan', target:'.scan-mode-toggle', text:'Discover birds with Camera or Sound. Only a real, recognised bird counts \u2014 that is what powers the tablet\u2019s magic.' },
-  { chapterId:'scan', chapter:'Discovery', title:'Camera', screen:'scan', target:'#scanImageBtn', text:'Snap a photo of the bird, then confirm the match. Every discovery is added to your Birdex.' },
   { chapterId:'scan', chapter:'Discovery', title:'Sound', screen:'scan', target:'#scanSoundBtn', text:'Sound listens for bird song with your microphone. Short clips are uploaded for bird-sound analysis only. Location help is optional.' },
+  { chapterId:'scan', chapter:'Discovery', title:'Camera', screen:'scan', target:'#scanImageBtn', text:'Snap a photo of the bird, then confirm the match. Every discovery is added to your Birdex.' },
 
   // — Collection: taught the first time the Birdex opens.
   { chapterId:'birdex', chapter:'Collection', title:'Your Birdex', screen:'birdex', target:'#burbzModeTabs', text:'Every discovery is recorded here with real facts about the species. Companions shows the birds already in your flock.' },
@@ -41240,6 +41375,18 @@ function addDemoBirds() {
 // ============================================================================
 // INITIALIZATION
 // ============================================================================
+// Burbz opens where the game begins: Merlin's wand, listening for real birds.
+// The microphone stays off until the player asks for it — landing on the tab
+// only shows the wand. A walk already underway keeps the map instead, and
+// Merlin's own tutorial pulls the screen it needs a moment later.
+function landOnSoundScanScreen() {
+  try {
+    if (typeof sideQuestActive === 'function' && sideQuestActive()) return;
+    if (typeof activeWalkingQuest === 'function' && activeWalkingQuest()) return;
+    switchScreen('scan');
+  } catch (e) {}
+}
+
 function init() {
   loadState();
   armBurbzBackGuard(); // back never quits the game — see the ANDROID BACK section
@@ -41258,6 +41405,7 @@ function init() {
   queueActionBadgeUpdate();
   setInterval(queueActionBadgeUpdate, 30000);
   renderPetCompanion();
+  landOnSoundScanScreen();
   const buildLine = $('settingsBuildLine');
   if (buildLine) buildLine.textContent = 'Build ' + BURBZ_BUILD;
   maybeShowIntroCutscene();

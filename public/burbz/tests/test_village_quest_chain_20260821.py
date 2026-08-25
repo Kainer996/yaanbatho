@@ -5,9 +5,11 @@ Before this the chain only ever mentioned villages twice — liberate one, then
 liberate three — and never once asked the player to build in one, feed it,
 staff it, tax it or merge it. Six links now cover that arc.
 
-They start the moment a village is yours (right after "Liberate a village")
-and interleave with the Academy and collecting goals, so the late chain never
-runs six village errands back to back. The two long ones close the chain: a
+They start the moment a village is yours and interleave with the Academy and
+collecting goals, so the late chain never runs six village errands back to
+back. (Since free-your-first-village-v327 the liberation itself opens the
+chain, so the arc no longer sits immediately behind it — the Academy and
+collecting goals come between.) The two long ones close the chain: a
 merge star, then a town charter — which needs three villages, so they sit
 after "Kingdom of the free".
 
@@ -22,7 +24,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "iron-ingot-errand-v326-20260825"
+RELEASE_PIN = "free-your-first-village-v327-20260825"
 OWN_RELEASE_PIN = "village-chain-v307-20260821"
 
 VILLAGE_LINKS = [
@@ -61,8 +63,8 @@ def test_the_village_arc_opens_the_moment_a_village_is_yours():
     liberate = ids.index("pq_liberate")
     for link in VILLAGE_LINKS:
         assert ids.index(link) > liberate, link
-    # The first of them follows the liberation directly.
-    assert ids[liberate + 1] == "pq_village_build"
+    # Building in a village leads the arc.
+    assert ids.index("pq_village_build") == min(ids.index(link) for link in VILLAGE_LINKS)
 
 
 def test_the_arc_is_interleaved_not_a_run_of_six_errands():

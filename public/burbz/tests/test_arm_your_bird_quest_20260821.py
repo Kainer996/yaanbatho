@@ -20,7 +20,7 @@ HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 LOOT_CORE = (BURBZ / "loot_crafting_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "iron-ingot-errand-v326-20260825"
+RELEASE_PIN = "free-your-first-village-v327-20260825"
 OWN_RELEASE_PIN = "arm-your-bird-v306-20260821"
 
 
@@ -50,7 +50,7 @@ def test_the_bird_is_armed_before_its_first_battle():
     # Still one chain with no duplicate ids; the length grew where
     # village-chain-v307 added its links, and again where the Magpie Market
     # added its build-and-trade pair — both well after this one.
-    assert len(ids) == 34 == len(set(ids))
+    assert len(ids) == 35 == len(set(ids))
 
 
 def test_the_roost_pays_the_gear_the_next_link_needs():

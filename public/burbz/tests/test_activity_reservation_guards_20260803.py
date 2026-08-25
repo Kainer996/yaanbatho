@@ -67,12 +67,17 @@ console.log(JSON.stringify({room:bird.academy.room, buildCalls, saves, toast}));
 
 
 def test_training_and_questing_birds_are_absent_from_every_battle_picker():
+    # One rule, read by both pickers. Merlin is the single exemption: he is not
+    # a recruited companion, so he holds no post, no drill and no errand slot.
     required_filter = (
-        "!birdAssignedPost(b.id) && !birdHasActiveTraining(b.id) && "
-        "!birdHasActiveExpedition(b.id) && !sleepReadinessForBird(b, Date.now()).sleeping"
+        "!birdAssignedPost(bird.id) && !birdHasActiveTraining(bird.id) &&\n"
+        "    !birdHasActiveExpedition(bird.id) && !sleepReadinessForBird(bird, now).sleeping"
     )
-    assert required_filter in function_source("renderBattleSelect")
-    assert required_filter in function_source("battlePickToggle")
+    available = function_source("birdBattleAvailable")
+    assert required_filter in available
+    assert "if (isMerlinCompanion(bird)) return true;" in available
+    assert "birdBattleAvailable(b)" in function_source("renderBattleSelect")
+    assert "birdBattleAvailable(b)" in function_source("battlePickToggle")
 
 
 def test_start_battle_rejects_a_stale_busy_selection_before_creating_battle():
@@ -92,6 +97,8 @@ function getBattleFlock() { return [busyBird]; }
 function birdAssignedPost() { return null; }
 function birdHasActiveTraining(id) { return id === 'busy'; }
 function birdHasActiveExpedition() { return false; }
+function isMerlinCompanion(bird) { return !!bird && bird.id === 'merlin-guide'; }
+function birdBattleReady() { return true; }
 function birdDisplayName(bird) { return bird.commonName; }
 function showToast(value) { toast = value; }
 function renderBattleSelect() { rendered += 1; }
