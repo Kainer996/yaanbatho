@@ -22,7 +22,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "manager-builds-the-village-v324-20260825"
+RELEASE_PIN = "art-same-origin-v325-20260825"
 OWN_RELEASE_PIN = "village-chain-v307-20260821"
 
 VILLAGE_LINKS = [

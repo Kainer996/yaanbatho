@@ -40,14 +40,20 @@ def generated_art_urls():
     )
 
 
-def test_all_generated_paintings_are_wired_after_legacy_art_routing():
+def test_all_generated_paintings_override_the_built_in_map():
     html = HTML.read_text(encoding="utf-8")
     assert '<script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>' in html
     assert "const GENERATED_ART_COMPLETION = window.BURBZ_GENERATED_ART_COMPLETION_20260726 || {};" in html
     assert "document.documentElement.dataset.burbzGeneratedArtCount" in html
-    routing = html.index("for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART))")
+    # The claim that matters is the ORDER: these paintings must be applied after
+    # BUILT_IN_BIRD_ART is built, so they win wherever both name a species.
+    # Retargeted by art-same-origin-v325-20260825 — this used to be phrased as
+    # "after the legacy GitHub routing pass", and that pass no longer exists.
+    definition = html.index("const BUILT_IN_BIRD_ART = {")
     override = html.index("Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);")
-    assert routing < override
+    assert definition < override
+    # Nothing may run after the override and rewrite these local paths away.
+    assert "for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART))" not in html
 
 
 def test_generated_painting_manifest_is_complete_and_every_file_is_real_webp():

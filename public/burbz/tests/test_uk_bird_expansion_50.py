@@ -316,13 +316,22 @@ def test_art_provenance_is_complete_and_matches_the_final_cards():
             assert str(source[field]).strip(), (bird["name"], field)
 
 
-def test_service_worker_precaches_remote_lfs_resolved_cards_and_cutouts():
+def test_service_worker_precaches_every_card_and_cutout_same_origin():
+    # Retargeted by art-same-origin-v325-20260825. The claim this test always
+    # made — the service worker precaches a card AND a cutout for every bird in
+    # this expansion — is unchanged. Only where they come from changed: they
+    # were fetched from the GitHub LFS endpoint, which spent one download of a
+    # 1 GB/month allowance per file per install, for every player.
     sw = SW_PATH.read_text(encoding="utf-8")
     for marker in (
         "importScripts('./uk_bird_expansion_50.js?v=uk50-source-backed-20260713');",
-        "UK50_REMOTE_ART",
-        "UK50_REMOTE_CUTOUTS",
-        "BURBZ_ASSETS.push(...UK50_REMOTE_ART, ...UK50_REMOTE_CUTOUTS, ...NEW_LOCAL_ART, ...NEW_LOCAL_CUTOUTS);",
+        "UK50_LOCAL_ART",
+        "UK50_LOCAL_CUTOUTS",
+        "BURBZ_ASSETS.push(...UK50_LOCAL_ART, ...UK50_LOCAL_CUTOUTS, ...NEW_LOCAL_ART, ...NEW_LOCAL_CUTOUTS);",
+        # The fetch handler may still CACHE github.com art for one release, so a
+        # client mid-update is not broken. Nothing here FETCHES it any more.
         "url.hostname === 'github.com'",
     ):
         assert marker in sw
+    assert "UK50_REMOTE_ART" not in sw
+    assert "BIRD_ART_GITHUB_RAW_BASE" not in sw

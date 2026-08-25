@@ -21,11 +21,12 @@
 set -euo pipefail
 
 BASE="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/public/burbz"
-# LFS-tracked files MUST come from this endpoint instead: raw.githubusercontent
-# answers 200 with the ~130-byte pointer text for LFS blobs in this repo, while
-# github.com/raw redirects to media.githubusercontent and serves the real bytes
-# (same endpoint index.html's BIRD_ART_GITHUB_RAW_BASE relies on).
-LFS_BASE="https://github.com/Kainer996/yaanbatho/raw/refs/heads/main/public/burbz"
+# Art is NEVER downloaded. GitHub's free Git LFS allowance is 1 GB of storage
+# and 1 GB of download a month, and this repo holds ~1.6 GB of paintings — a
+# single deploy that pulled them all used the whole month's quota and blocked
+# every other LFS download, including the Pages build. Art is copied from a
+# local source instead: the live directory as it stands, or the repo checkout
+# this script is running from. Full backup: /var/backups/burbz-art/.
 LFS_FILES=(
   "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
   "bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png"
@@ -338,59 +339,102 @@ for f in "${FILES[@]}"; do
   mkdir -p "$TMP/$(dirname "$f")"
   curl -fsSL "$BASE/$f" -o "$TMP/$f" || die "Download failed: $f"
 done
+# ----------------------------------------------------------------
+# 3a. Art comes from a local source, never from GitHub
+# ----------------------------------------------------------------
+# Preference order: the repo checkout this script sits in (if there is one and
+# git-lfs has hydrated it), then the art already on the live server. A file
+# found only on the live server needs no staging — it is already in place.
+REPO_SRC=""
+if [[ -n "${BASH_SOURCE[0]:-}" && -f "${BASH_SOURCE[0]}" ]]; then
+  candidate="$(cd "$(dirname "${BASH_SOURCE[0]}")/../public/burbz" 2>/dev/null && pwd || true)"
+  [[ -n "$candidate" && -f "$candidate/index.html" ]] && REPO_SRC="$candidate"
+fi
+if [[ -n "$REPO_SRC" ]]; then
+  log "Local art source: $REPO_SRC (repo checkout)"
+else
+  log "Local art source: $ROOT (live directory) — not running from a checkout"
+fi
+
+is_lfs_pointer() {
+  # A hydrated image is megabytes; a pointer is ~132 bytes of text starting
+  # with the spec line. Never let one reach the live site.
+  [[ "$(wc -c < "$1")" -le 300 ]] && return 0
+  head -c 45 "$1" | grep -q '^version https://git-lfs.github.com/spec/v1' && return 0
+  return 1
+}
+
+pointer_die() {
+  die "$1 is a Git LFS pointer, not an image. git-lfs is not hydrated here.
+     Fix it one of these ways, then re-run:
+       git lfs install --local && git lfs pull       (in the repo checkout)
+       restore from the backup: /var/backups/burbz-art/burbz-art-<date>/
+     Refusing to deploy a pointer — the live site is untouched."
+}
+
+# Stage one art file from a local source. Files already correct on the live
+# server are left alone (nothing to copy). Never downloads.
+stage_art_file() {
+  local f="$1"
+  [[ -n "$f" && -z "${SEEN_ART[$f]:-}" ]] || return 0
+  SEEN_ART["$f"]=1
+  if [[ -n "$REPO_SRC" && -f "$REPO_SRC/$f" ]]; then
+    ! is_lfs_pointer "$REPO_SRC/$f" || pointer_die "$REPO_SRC/$f"
+    mkdir -p "$TMP/$(dirname "$f")"
+    cp "$REPO_SRC/$f" "$TMP/$f"
+    FILES+=("$f")
+    ART_STAGED=$((ART_STAGED + 1))
+    return 0
+  fi
+  if [[ -f "$ROOT/$f" ]]; then
+    ! is_lfs_pointer "$ROOT/$f" || pointer_die "$ROOT/$f"
+    ART_KEPT=$((ART_KEPT + 1))
+    return 0
+  fi
+  die "Art file missing from every local source: $f
+     It is in neither the repo checkout nor $ROOT. Restore it from
+     /var/backups/burbz-art/burbz-art-<date>/ (or hydrate git-lfs in a
+     checkout and re-run). Aborting, live site untouched."
+}
+
+declare -A SEEN_ART=()
+for managed_file in "${FILES[@]}"; do
+  SEEN_ART["$managed_file"]=1
+done
+ART_STAGED=0
+ART_KEPT=0
+
 for f in "${LFS_FILES[@]}"; do
-  mkdir -p "$TMP/$(dirname "$f")"
-  curl -fsSL "$LFS_BASE/$f" -o "$TMP/$f" || die "Download failed (LFS): $f"
-  [[ "$(wc -c < "$TMP/$f")" -gt 300 ]] || die "LFS download is still a pointer: $f"
-  ! grep -q '^version https://git-lfs.github.com/spec/v1$' "$TMP/$f" || die "LFS pointer reached staging: $f"
-  FILES+=("$f")
+  stage_art_file "$f"
 done
 curl -fsSL "$BIRDNET_INSTALLER_URL" -o "$TMP/install-birdnet-v3.sh" \
   || die "Download failed: scripts/install-birdnet-v3.sh"
 bash -n "$TMP/install-birdnet-v3.sh" \
   || die "Downloaded BirdNET installer failed its shell syntax check"
-# The two art modules are manifests for LFS-backed paintings. Download through
-# the LFS endpoint, including v204's portrait + transparent-cutout pairs and
-# its habitat backgrounds; raw.githubusercontent would silently return pointer
-# text for these files.
-declare -A SEEN_ART=()
-for managed_file in "${FILES[@]}"; do
-  SEEN_ART["$managed_file"]=1
-done
-download_lfs_art() {
-  local f="$1"
-  [[ -n "$f" && -z "${SEEN_ART[$f]:-}" ]] || return
-  mkdir -p "$TMP/$(dirname "$f")"
-  curl -fsSL "$LFS_BASE/$f" -o "$TMP/$f" || die "Download failed (LFS art): $f"
-  if [[ "$(wc -c < "$TMP/$f")" -le 300 ]]; then
-    rm -f "$TMP/$f"
-    die "LFS art is still a pointer: $f"
-  fi
-  SEEN_ART["$f"]=1
-  FILES+=("$f")
-}
-
+# The two art modules are manifests for the paintings. Enumerate exactly the
+# same set the game can request — v204's portrait + transparent-cutout pairs and
+# its habitat backgrounds included — and source every one of them locally.
 while IFS= read -r art_url; do
-  download_lfs_art "${art_url#/burbz/}"
+  stage_art_file "${art_url#/burbz/}"
 done < <(grep -o '/burbz/bird-art-cache/completion-20260726/[^"]*' "$TMP/bird_art_release_20260727.js" | sort -u)
 
 # Index and the service worker also own hundreds of older literal PNG paths.
 # Discover them from the staged release so a clean server gets the same art as
 # an existing one instead of depending on files left behind by an old deploy.
 while IFS= read -r art_url; do
-  download_lfs_art "${art_url#/burbz/}"
+  stage_art_file "${art_url#/burbz/}"
 done < <(grep -hoE '/burbz/bird-art-cache/[a-zA-Z0-9_./-]+\.(png|webp)' "$TMP/index.html" "$TMP/sw.js" | sort -u)
 
 while IFS= read -r slug; do
   [[ "$slug" =~ ^[a-z0-9_]+$ ]] || continue
-  download_lfs_art "bird-art-cache/${slug}_burbz_manga_warrior_20260802.png"
-  download_lfs_art "bird-art-cache/cutouts/${slug}_burbz_manga_warrior_20260802_cutout.png"
+  stage_art_file "bird-art-cache/${slug}_burbz_manga_warrior_20260802.png"
+  stage_art_file "bird-art-cache/cutouts/${slug}_burbz_manga_warrior_20260802_cutout.png"
 done < <(awk '/const warriorSlugs = new Set\(`/ { capture=1; next } /`\.trim\(\)\.split/ { capture=0 } capture { print }' "$TMP/bird_art_release_20260803.js" | tr '[:space:]' '\n' | sed '/^$/d')
 
 while IFS= read -r art_url; do
-  download_lfs_art "${art_url#/burbz/}"
+  stage_art_file "${art_url#/burbz/}"
 done < <(grep -oE '/burbz/bird-art-cache/habitat-backgrounds/[a-z0-9_./-]+' "$TMP/bird_art_release_20260803.js" | sort -u)
-log "Downloaded ${#FILES[@]} files from GitHub"
+log "Staged ${#FILES[@]} files ($ART_STAGED art files copied locally, $ART_KEPT already correct on the server, 0 art downloads)"
 
 # sanity-check before touching the live site
 grep -q 'screen-village' "$TMP/index.html"  || die "index.html doesn't contain the village — aborting, live site untouched"
@@ -400,10 +444,14 @@ for piece in back body wing head; do
   [[ "$(head -c 4 "$TMP/assets/merlin/merlin-$piece.webp")" == "RIFF" ]] \
     || die "Merlin's $piece layer is not a WebP — aborting, live site untouched"
 done
-# LFS downloads can silently yield the ~130-byte pointer text with HTTP 200 if
-# the endpoint or quota misbehaves — a black intro for every player. Real MP4s
-# are megabytes and carry 'ftyp' at byte offset 4.
-INTRO_MP4="$TMP/assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
+# An unhydrated checkout yields the ~130-byte pointer text where the video
+# should be — a black intro for every player. Real MP4s are megabytes and carry
+# 'ftyp' at byte offset 4. The file is verified wherever it is coming from:
+# freshly staged, or already correct on the server.
+INTRO_REL="assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
+INTRO_MP4="$TMP/$INTRO_REL"
+[[ -f "$INTRO_MP4" ]] || INTRO_MP4="$ROOT/$INTRO_REL"
+[[ -f "$INTRO_MP4" ]] || die "Intro cutscene is in neither the staging area nor $ROOT — aborting, live site untouched"
 [[ "$(wc -c < "$INTRO_MP4")" -gt 1000000 ]] \
   || die "Intro cutscene is tiny (LFS pointer, not video?) — aborting, live site untouched"
 [[ "$(dd if="$INTRO_MP4" bs=1 skip=4 count=4 2>/dev/null)" == "ftyp" ]] \
