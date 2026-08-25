@@ -1861,8 +1861,15 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .merlin-listener-stage.possible-bird .merlin-wand-tip { transform:translate(-50%,-50%) scale(1.34); background:#fff0a9; box-shadow:0 0 0 8px rgba(91,224,185,.22),0 0 24px #69ebc2,0 0 44px rgba(240,199,103,.9); }
 @keyframes merlinWandGlow { 0%,100%{filter:brightness(.92)} 50%{filter:brightness(1.35)} }
 @keyframes merlinSoundRing { 0%{opacity:.78;transform:rotate(45deg) scale(.45)} 100%{opacity:0;transform:rotate(45deg) scale(2.1)} }
-.merlin-listener-line { max-width:430px; margin:0 auto 10px; text-align:center; }
+.scan-btn-lead { margin-bottom:14px; }
+/* The wand says its own state — START MERLIN’S WAND, OPENING MICROPHONE…,
+   STOP LISTENING — so this line stays out of the player’s way: a live region
+   for screen readers, and nothing to read on screen until something goes
+   wrong and they need to know why. */
+.merlin-listener-line { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.merlin-listener-line.is-error { position:static; width:auto; height:auto; max-width:430px; margin:0 auto 12px; padding:0; overflow:visible; clip-path:none; white-space:normal; text-align:center; }
 .merlin-listener-status { color:#fff1c5; font:900 14px/1.08 'Russo One',sans-serif; }
+.merlin-listener-line.is-error .merlin-listener-status { color:#ffcf8a; }
 .merlin-listener-activity { margin-top:4px; color:#c7c1b2; font-size:11px; line-height:1.35; }
 .merlin-data-note { margin:16px 0 12px; padding:9px 11px; border:1px solid rgba(105,224,184,.24); border-radius:13px; background:rgba(10,21,17,.76); color:#bdb7a7; font-size:10px; line-height:1.35; }
 /* Session shelf: a compact grid of every bird discovered this listening
@@ -4025,7 +4032,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="merlin-wand-tip" id="merlinWandTip" aria-hidden="true"></div>
           <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Possible birdsong</div>
         </div>
-        <div class="merlin-listener-line">
+        <button class="scan-btn scan-btn-lead" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
+        <div class="merlin-listener-line" id="merlinListenerLine">
           <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
           <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
         </div>
@@ -4037,7 +4045,6 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="sound-session-shelf-grid" id="soundSessionShelfGrid" aria-label="Birds discovered this listening session"></div>
           <div class="sound-session-shelf-empty" id="soundSessionShelfEmpty">No birds yet — start Merlin&rsquo;s wand and every bird you discover will perch here.</div>
         </div>
-        <button class="scan-btn" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
         <div class="merlin-data-note" id="merlinDataNote">Microphone active only while the green listening light is shown. Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
           <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
@@ -36920,6 +36927,9 @@ function updateMerlinListeningUI() {
       : active ? 'Listening live' : 'Ready to listen';
   }
   if (activity) activity.textContent = soundListenerDetail;
+  // Two of the listener’s error paths raise no toast, so the reason a wand
+  // stopped is written here rather than lost.
+  $('merlinListenerLine')?.classList.toggle('is-error', soundListenerState === 'error');
   if (button) {
     button.disabled = soundListenerState === 'requesting';
     button.textContent = active ? 'STOP LISTENING' : (soundListenerState === 'requesting' ? 'OPENING MICROPHONE…' : 'START MERLIN’S WAND');
@@ -40304,7 +40314,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'free-your-first-village-v327-20260825';
+const BURBZ_BUILD = 'wand-button-leads-v328-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

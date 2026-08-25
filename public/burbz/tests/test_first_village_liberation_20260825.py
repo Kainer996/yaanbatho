@@ -251,5 +251,9 @@ console.log(JSON.stringify({ losses }));
 
 def test_release_is_pinned_in_the_service_worker_and_the_build_line():
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert OWN_RELEASE_PIN in sw
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in HTML
+    cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
+    # This release's own segment stays in the cache lineage for good, and the
+    # build line names whichever release now leads that lineage.
+    assert OWN_RELEASE_PIN in cache_line
+    head = re.search(r"const BURBZ_BUILD = '([^']+)';", HTML).group(1)
+    assert cache_line.rstrip("';").endswith(head)
