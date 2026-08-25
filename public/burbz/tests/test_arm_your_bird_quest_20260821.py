@@ -20,7 +20,7 @@ HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 LOOT_CORE = (BURBZ / "loot_crafting_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "free-birds-v318-20260824"
+RELEASE_PIN = "empire-grid-v320-20260825"
 OWN_RELEASE_PIN = "arm-your-bird-v306-20260821"
 
 

@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v320-20260825"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
@@ -359,10 +359,12 @@ def test_liberation_never_merges_but_the_signed_merge_announces_itself():
 def test_royal_ledger_lists_unified_towns_instead_of_absorbed_villages():
     html = HTML.read_text(encoding="utf-8")
     logic = empire_logic(html)
-    assert 'class="settlement-section"' in html
-    # Towns and cities list inside the 🏘️ TOWNS nav tab under the Empire map
-    # (empire-nav-tabs-v275-20260817 renamed the old TOWNS & CITIES drawer).
-    assert "'nav-towns', '🏘️', 'TOWNS'" in html
+    # Towns and cities are squares in the 🏘️ TOWNS tier under the Empire map
+    # (empire-grid-v320-20260825 replaced the nav tab and its row list; before
+    # that, empire-nav-tabs-v275-20260817 renamed the TOWNS & CITIES drawer).
+    assert "empireTierHTML('tier-towns', '🏘️', 'TOWNS'" in html
+    assert "function empireTownTile(settlement) {" in html
+    assert "settlement-section" not in html  # the row list left no dead CSS
     assert "empireStandaloneVillages" in logic
     assert "empireVisibleSettlements" in logic
     assert 'data-action="empire-settlement"' in html

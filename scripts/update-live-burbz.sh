@@ -46,6 +46,7 @@ FILES=(
   "empire_realm_core.js"
   "settlement_merge_core.js"
   "town_strategy_core.js"
+  "empire_grid_core.js"
   "daylight_core.js"
   "academy_treehouse_core.js"
   "academy_alive_core.js"

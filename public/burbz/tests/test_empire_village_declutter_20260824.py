@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v320-20260825"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 
 
@@ -117,24 +117,30 @@ def test_the_whole_countdown_apparatus_is_gone():
 # ---------------------------------------------------------------------------
 
 def test_counties_and_towns_wait_until_the_player_has_one():
+    # empire-grid-v320-20260825 turned the tabs into tiers of squares; the
+    # gate Yaan asked for here is unchanged, and counties gained one honest
+    # exception — a ready merge brings the tier back, because the MERGE INTO
+    # ONE COUNTY banner lives inside it.
     panel = empire_panel()
-    tabs = panel[panel.index("const navTabsHtml"):panel.index("panel.innerHTML")]
-    # Each of the two upper tiers is behind its own count.
-    assert "(regions.length ? empireNavTabHTML('nav-counties'" in tabs
-    assert "(townCount ? empireNavTabHTML('nav-towns'" in tabs
+    tabs = panel[panel.index("const tiersHtml"):panel.index("panel.innerHTML")]
+    assert "(showCounties ? empireTierHTML('tier-counties'" in tabs
+    assert "(townCount ? empireTierHTML('tier-towns'" in tabs
+    assert "const showCounties = !!(regions.length || regionCandidates.length);" in panel
     # Villages is unconditional — it is where every empire starts.
-    village_tab = tabs[tabs.index("'nav-villages'") - 40:tabs.index("'nav-villages'")]
-    assert "?" not in village_tab
+    village_tier = tabs[tabs.index("'tier-villages'") - 40:tabs.index("'tier-villages'")]
+    assert "?" not in village_tier
     # Order on screen is unchanged: counties, towns, villages.
-    assert tabs.index("'nav-counties'") < tabs.index("'nav-towns'") < tabs.index("'nav-villages'")
+    assert tabs.index("'tier-counties'") < tabs.index("'tier-towns'") < tabs.index("'tier-villages'")
 
 
 def test_the_town_count_still_covers_cities_and_uncityed_towns():
     tabs = empire_panel()
     assert "const townCount = settlements.cityCount + settlements.towns.filter(t => !t.cityId).length;" in tabs
-    # The same count feeds the tab's own badge, so the gate and the number
-    # can never disagree.
-    assert "empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townCount" in tabs
+    # The squares themselves are now the count, and they are built from the
+    # same two lists the gate reads — so the gate and the number cannot
+    # disagree: no towns to draw means no tier at all.
+    assert "const townTiles = settlements.cities.concat(settlements.towns.filter(t => !t.cityId)).map(empireTownTile);" in tabs
+    assert "empireTierHTML('tier-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townTiles" in tabs
 
 
 # ---------------------------------------------------------------------------

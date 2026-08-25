@@ -26,7 +26,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v320-20260825"
 MERGE_CORE_PIN = "village-work-huts-v311-20260824"  # last release to touch the core
 
 
@@ -226,7 +226,12 @@ def test_star_badges_and_merge_buttons_reach_the_ui():
     assert "MERGE INTO ONE COUNTY" in panel
     assert 'data-action="merge-villages"' in panel
     assert 'data-action="merge-towns"' in panel
-    assert "ready to merge" in panel
+    # empire-grid-v320-20260825: a starred village used to say "⭐ ready to
+    # merge" in its row. The row is a square now, so the star IS the square —
+    # gold border, ⭐ pip, "Ready to merge" from the grid core.
+    tile = function_source(html, "empireVillageTile")
+    assert "const ready = villageMergeReady(v);" in tile
+    assert "mergeReady: !!(ready && ready.ready)" in tile
     # v317 removed the merge-star progress line from the governor's desk at
     # Yaan's ask. The star is still earned and still shown where the player
     # acts on it: the Empire banners above, and the atlas below.

@@ -23,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "free-birds-v318-20260824"
-CURRENT_BUILD = "free-birds-v318-20260824"
+RELEASE = "empire-grid-v320-20260825"
+CURRENT_BUILD = "empire-grid-v320-20260825"
 
 TOWN_TIER = {"farm", "lumber", "quarry", "chapel", "market"}
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}

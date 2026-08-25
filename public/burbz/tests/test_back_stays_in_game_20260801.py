@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "free-birds-v318-20260824"
+RELEASE_PIN = "empire-grid-v320-20260825"
 PREVIOUS_RELEASE_PIN = "back-guard-gesture-v195-20260802"
 
 

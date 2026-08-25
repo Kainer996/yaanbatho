@@ -14,7 +14,9 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 
 
 def panel_block() -> str:
-    start = HTML.index("panel.innerHTML = navTabsHtml")
+    # empire-grid-v320-20260825 lifted the tax chest to the top of the panel,
+    # so the assignment no longer opens on the tier markup.
+    start = HTML.index("  panel.innerHTML =\n")
     return HTML[start:HTML.index("panel.querySelectorAll", start)]
 
 
@@ -45,7 +47,10 @@ def test_the_screen_ends_at_the_tax_chest():
     """
     block = panel_block()
     assert "const footerHtml = '';" in HTML
+    # empire-grid-v320-20260825 lifted the chest ABOVE the boxes at Yaan's ask,
+    # so the chest now opens the panel — but nothing still follows the footer.
     assert block.index("empire-tribute-btn") < block.index("footerHtml")
+    assert block.index("empire-tribute-btn") < block.index("tiersHtml")
     # Nothing builds either drawer any more. (The words survive only in the
     # comment that records why they went, so this checks the code, not prose.)
     for gone in ("'FIND YOURSELF'", "'HOW YOUR EMPIRE WORKS'", "locatorChipsHtml",

@@ -32,10 +32,10 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v320-20260825"
 # The release that last edited bird_roles_core.js — free-birds-v318, which
 # retired the Head Gardener when the Aviary Gardens stopped being a room.
-ROLES_CORE_PIN = "free-birds-v318-20260824"
+ROLES_CORE_PIN = "empire-grid-v320-20260825"
 
 
 def function_source(name: str) -> str:
