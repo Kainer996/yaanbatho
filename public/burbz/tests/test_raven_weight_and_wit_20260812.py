@@ -25,10 +25,10 @@ RELEASE = "raven-weight-and-wit-v255-20260812"
 # The roles core moved on with chef mastery (v261); the size core stays ours.
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
-ROLES_CORE_PIN = "free-birds-v318-20260824"
+ROLES_CORE_PIN = "empire-grid-v322-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 
 

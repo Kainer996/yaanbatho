@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 PREVIOUS_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 
 
 def function_source(html: str, name: str) -> str:

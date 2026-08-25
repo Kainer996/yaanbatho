@@ -135,9 +135,11 @@
     // charmer at the door, not a shadow over the market square.
     {
       // The village post is the PROJECT MANAGER (Yaan, 2026-08-20): the bird
-      // that runs the building sites and keeps the ledger. Grander civic
-      // titles — Lord Mayors for towns, Councillors for counties — come
-      // later. The id stays 'steward' so old saves keep their appointee.
+      // that runs the building sites and keeps the ledger. The same post at a
+      // merged settlement's heart wears the LORD MAYOR's chain (Yaan,
+      // 2026-08-25): one role, one save slot, and index.html titles it by
+      // where the seed actually sits. Councillors for counties come later.
+      // The id stays 'steward' so old saves keep their appointee.
       id:'steward', title:'Project Manager', icon:'📋', scope:'village', key:null,
       stats:{ int:0.5, cha:0.5 }, civic:true,
       effect:{ id:'village_yield', label:'Project management', copy:'Two builds can rise at once here. Every build is faster and costs a little less — and the village pays more taxes, timber and goods.' },

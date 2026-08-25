@@ -874,23 +874,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .trade-route-meta { font-size:10.5px; color:var(--text3); }
 .trade-route-cost { text-align:right; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; letter-spacing:.08em; color:#ffe9a8; line-height:1.4; white-space:nowrap; }
 .trade-route-cost.is-open { color:#8ee39a; }
-.realm-lead { margin:0 2px 2px; font-size:10.5px; line-height:1.45; color:var(--text3); }
 .realm-hint { padding:10px 12px; border-radius:11px; border:1px dashed rgba(240,199,103,.35); background:rgba(24,17,7,.5); color:#d9c893; font-size:11px; line-height:1.55; }
 
-/* TOWNS & CITIES — the merge desk: 3 neighbouring villages make a town,
-   3 neighbouring towns make a city. Green for towns, gold for cities. */
-.settlement-section { margin:10px 0; padding:10px; border-radius:12px; border:1px solid rgba(142,227,154,.4); background:linear-gradient(180deg,rgba(20,36,18,.55),rgba(6,14,6,.72)); box-shadow:inset 0 0 22px rgba(142,227,154,.05); display:grid; gap:8px; }
-.settlement-row { width:100%; display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:11px; border:1px solid rgba(142,227,154,.4); background:linear-gradient(180deg,rgba(22,40,20,.62),rgba(6,12,5,.72)); color:inherit; text-align:left; }
-.settlement-row.is-city { border-color:rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(46,36,12,.62),rgba(14,10,3,.72)); box-shadow:0 0 14px rgba(240,199,103,.12); }
-.settlement-row:active { transform:scale(.99); border-color:rgba(142,227,154,.7); }
-.settlement-row.is-city:active { border-color:rgba(240,199,103,.8); }
-.settlement-icon { display:grid; place-items:center; width:34px; height:38px; font-size:18px; border-radius:7px 7px 50% 50% / 7px 7px 60% 60%; border:1.5px solid rgba(142,227,154,.8); background:linear-gradient(160deg,#2c5226 0%,#152a10 70%); box-shadow:inset 0 1px 0 rgba(220,255,220,.3); }
-.settlement-row.is-city .settlement-icon { border-color:rgba(240,199,103,.85); background:linear-gradient(160deg,#6a5220 0%,#3a2b0e 70%); box-shadow:inset 0 1px 0 rgba(255,240,200,.3), 0 0 10px rgba(240,199,103,.35); }
-.settlement-main { flex:1; min-width:0; }
-.settlement-name { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:14px; color:var(--text); letter-spacing:.04em; }
-.settlement-meta { font-size:10.5px; color:var(--text3); }
-.settlement-tier { font-family:'Russo One',sans-serif; font-size:9px; letter-spacing:.14em; color:#8ee39a; }
-.settlement-tier.is-city { color:#f0c767; }
 /* The governor's desk line naming the settlement a province belongs to */
 .province-settlement { margin:6px 0 2px; padding:7px 10px; border-radius:10px; border:1px solid rgba(142,227,154,.45); background:rgba(16,30,14,.55); color:#bfe9c2; font-size:11px; line-height:1.5; font-family:'Rajdhani',sans-serif; font-weight:700; letter-spacing:.03em; }
 .province-settlement.is-city { border-color:rgba(240,199,103,.55); background:rgba(36,28,9,.55); color:#ffe9a8; }
@@ -1004,17 +989,52 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-drawer[open] .ed-chevron { transform:rotate(90deg); }
 .empire-drawer-body { padding:2px 9px 10px; border-top:1px solid rgba(214,168,79,.18); display:grid; gap:8px; }
 .empire-drawer.is-sub { margin:6px 0 4px; border-radius:11px; }
-.empire-nav-tabs { display:grid; gap:8px; margin:0 0 12px; }
-.empire-nav-tabs .empire-drawer { margin:0; }
-.empire-drawer.is-nav-tab .empire-drawer-summary { padding:12px; }
-.empire-drawer.is-nav-tab .ed-label { font-size:13.5px; letter-spacing:.07em; }
-.empire-drawer.is-nav-tab[open] { box-shadow:0 10px 24px rgba(0,0,0,.35); }
+/* THE BOX OF BOXES — one little square per holding, under the map. The bird
+   that runs the place is painted inside; the border says what the place
+   wants. Yaan's ask (2026-08-25): no drop-down, one tap, straight there. */
+.empire-tiers { display:grid; gap:14px; margin:0 0 12px; }
+.empire-tier { display:grid; gap:8px; }
+.empire-tier-head { display:flex; align-items:center; gap:8px; }
+.empire-tier-icon { flex:none; font-size:15px; line-height:1; }
+.empire-tier-main { flex:1; min-width:0; }
+.empire-tier-label { display:block; font-family:'Russo One',sans-serif; font-size:12.5px; letter-spacing:.07em; color:var(--legendary); }
+.empire-tier-copy { display:block; margin-top:2px; font-size:9.5px; line-height:1.35; color:var(--text3); }
+.empire-tier-count { flex:none; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
+.empire-tier-count.wants { color:#ffd76a; }
+.empire-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:7px; }
+/* The colour has to carry across a room, not reward a squint — the wash is
+   the message, the border only sharpens it. */
+.empire-tile { --tile-line:rgba(240,199,103,.5); --tile-wash:#2a1e0c; --tile-glow:rgba(240,199,103,.2);
+  position:relative; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:1px;
+  padding:4px 3px 3px; border-radius:12px; border:2px solid var(--tile-line);
+  background:linear-gradient(165deg,var(--tile-wash),rgba(0,0,0,.72)); color:inherit; overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 0 10px var(--tile-glow), 0 4px 12px rgba(0,0,0,.45); }
+.empire-tile:active { transform:scale(.96); }
+.empire-tile.is-active { box-shadow:0 0 0 2px rgba(255,247,222,.9), 0 0 14px var(--tile-glow), 0 6px 16px rgba(0,0,0,.55); }
+.empire-tile.is-red { --tile-line:#ff8b8b; --tile-wash:#8e1f1f; --tile-glow:rgba(255,107,107,.4); }
+.empire-tile.is-violet { --tile-line:#cba6ff; --tile-wash:#4b2a80; --tile-glow:rgba(180,138,214,.45); }
+.empire-tile.is-gold { --tile-line:#ffe08a; --tile-wash:#9a7614; --tile-glow:rgba(255,215,106,.5); }
+.empire-tile.is-blue { --tile-line:#8fc0ff; --tile-wash:#1d4478; --tile-glow:rgba(122,178,255,.4); }
+.empire-tile.is-green { --tile-line:#9ceaa8; --tile-wash:#1e6b2a; --tile-glow:rgba(142,227,154,.35); }
+.empire-tile-art { flex:1; min-height:0; width:100%; display:grid; place-items:center; }
+img.empire-tile-bird { max-width:100%; max-height:100%; height:100%; width:auto; object-fit:contain; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
+span.empire-tile-bird { font-size:22px; line-height:1; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
+span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.4); }
+.empire-tile-need { position:absolute; top:2px; right:3px; font-size:11px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
+.empire-tile-coin { position:absolute; top:2px; left:3px; font-size:9px; line-height:1; opacity:.9; filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
+/* The name sits on its own dark strip, so it stays readable on gold. */
+.empire-tile-name { max-width:calc(100% + 6px); width:calc(100% + 6px); margin:0 -3px -3px; padding:2px 3px 3px; background:rgba(0,0,0,.55);
+  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.04em; text-transform:uppercase; color:#fff8e6;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; text-shadow:0 1px 2px rgba(0,0,0,.95); }
+.empire-grid-key { display:flex; flex-wrap:wrap; gap:4px 10px; padding:1px 2px 0; font-size:9px; line-height:1.5; color:var(--text3); }
+.egk-item { display:inline-flex; align-items:center; gap:4px; }
+.egk-dot { width:8px; height:8px; flex:none; border-radius:3px; border:1px solid rgba(0,0,0,.55); }
+.egk-dot.is-red { background:#ff6b6b; }
+.egk-dot.is-violet { background:#b48ad6; }
+.egk-dot.is-gold { background:#ffd76a; }
+.egk-dot.is-blue { background:#7ab2ff; }
+.egk-dot.is-green { background:#8ee39a; }
 @media (prefers-reduced-motion:reduce) { .empire-drawer-summary .ed-chevron { transition:none; } .empire-map-marker.is-player .empire-map-marker-icon::after { animation:none; opacity:0; } }
-.empire-group-title { display:flex; align-items:center; gap:6px; margin:4px 2px 0; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; letter-spacing:.12em; color:#d9c893; text-transform:uppercase; }
-.empire-group-title::after { content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(240,199,103,.35),transparent); }
-.evr-badges { display:inline-flex; gap:4px; vertical-align:middle; }
-.evr-badge { display:inline-grid; place-items:center; min-width:17px; height:17px; padding:0 3px; border-radius:5px; border:1px solid rgba(240,199,103,.35); background:rgba(240,199,103,.1); font-size:10px; line-height:1; }
-.region-ready-chip { flex:none; margin-left:4px; padding:3px 8px; border-radius:999px; border:1px solid rgba(142,227,154,.6); background:rgba(38,64,32,.7); color:#cfe9b6; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9px; letter-spacing:.07em; white-space:nowrap; }
 .empire-onboarding { padding:13px; border-radius:14px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(160deg,rgba(46,32,12,.6),rgba(14,9,3,.8)); display:grid; gap:9px; }
 .empire-onboarding-title { font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.05em; color:#ffe9a8; }
 .empire-onboarding-step { display:flex; align-items:flex-start; gap:9px; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; line-height:1.45; color:var(--text2); }
@@ -4825,7 +4845,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
-<script src="bird_roles_core.js?v=free-birds-v318-20260824"></script>
+<script src="bird_roles_core.js?v=empire-grid-v322-20260825"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
@@ -4833,6 +4853,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
 <script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
+<script src="empire_grid_core.js?v=empire-grid-v322-20260825"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
@@ -11388,6 +11409,19 @@ function roleDefFor(scope, key) {
   return null;
 }
 
+// What this post is called where it actually sits. A village and the town it
+// merged into share one role id ('steward') and one save slot — only the seed
+// says which. A seed that is a merged settlement's heart wears the Lord
+// Mayor's chain, so every line that names the post says the same thing.
+function empirePostTitleFor(scope, key) {
+  const role = roleDefFor(scope, key);
+  if (!role) return '';
+  if (scope === 'village' && typeof empireSettlementOfSeed === 'function') {
+    try { if (empireSettlementOfSeed(Number(key) >>> 0)) return EMPIRE_POST_TITLES.town; } catch (e) {}
+  }
+  return role.title;
+}
+
 // Who holds this post, and how well they hold it. `staffed:false` means the
 // building works exactly as it always did — a posting is upside only.
 function rolePostState(scope, key) {
@@ -11447,7 +11481,8 @@ function birdPostLabel(bird) {
     const region = empireRegionById(post.key);
     where = region ? region.name : 'a region';
   }
-  return { icon: role.icon, title: role.title, where, scope: post.scope, key: post.key, role };
+  const title = typeof empirePostTitleFor === 'function' ? empirePostTitleFor(post.scope, post.key) : role.title;
+  return { icon: role.icon, title, where, scope: post.scope, key: post.key, role };
 }
 
 // A posted bird is working: the assignment owns that bird until it stands
@@ -11494,7 +11529,8 @@ function assignBirdRole(scope, key, birdId) {
   saveState();
   if (scope === 'village' && typeof updateQuestProgress === 'function') updateQuestProgress('village_role_filled', 1);
   SFX.tap();
-  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + role.title + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' +
+  const postTitle = typeof empirePostTitleFor === 'function' ? empirePostTitleFor(scope, key) : role.title;
+  showToast(role.icon + ' ' + birdDisplayName(bird) + ' is now ' + postTitle + ' · ' + fx.rank.label + ' · +' + fx.bonusPct + '%' +
     (movesFrom ? ' — ' + movesFrom.where + ' needs a new one' : ''));
   // Appointing a Head Chef unlocks whole-species table service — taught with a
   // tutorial tip the moment the post is filled, right when the perk is earned.
@@ -11510,7 +11546,8 @@ function clearBirdRole(scope, key) {
   gameState.birdRoles = core.unassignRole(ensureRolesState(), scope, key);
   saveState();
   SFX.tap();
-  if (before.bird && before.role) showToast(before.role.icon + ' ' + birdDisplayName(before.bird) + ' stands down as ' + before.role.title + '.');
+  const stoodDownAs = before.role && typeof empirePostTitleFor === 'function' ? empirePostTitleFor(scope, key) : (before.role && before.role.title);
+  if (before.bird && before.role) showToast(before.role.icon + ' ' + birdDisplayName(before.bird) + ' stands down as ' + stoodDownAs + '.');
   refreshRoleSurfaces();
 }
 
@@ -11562,6 +11599,10 @@ function rolePostCardHTML(scope, key, options = {}) {
   if (!core || !role) return '';
   const post = rolePostState(scope, key);
   const bare = scope === 'village';
+  // A village post and a town post share one role id ('steward') and one save
+  // slot, so the desk at a Town's heart is titled by its caller, not by the
+  // role: the village keeps its Project Manager, the Town gets its Lord Mayor.
+  const roleTitle = options.title || role.title;
   const roleCopy = options.copy || role.copy;
   const effectCopy = options.effectCopy || role.effect.copy;
   const dataAttrs = ' data-role-scope="' + escapeHtml(scope) + '" data-role-key="' + escapeHtml(String(key)) + '"';
@@ -11588,14 +11629,14 @@ function rolePostCardHTML(scope, key, options = {}) {
   const held = post.staffed
     ? '<div class="role-holder" data-bird-info="' + escapeHtml(post.bird.id) + '">' + birdOnlyImgHTML(post.bird, 'role-holder-art') +
         '<div class="role-holder-main"><div class="role-holder-name">' + escapeHtml(birdDisplayName(post.bird)) + '</div>' +
-        '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(role.title) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
+        '<div class="role-holder-rank">' + post.rank.icon + ' ' + escapeHtml(post.rank.label) + ' ' + escapeHtml(roleTitle) + ' · ' + roleStatLine(role, post.bird) + '</div>' +
         '<div class="role-holder-bar"><div class="role-holder-fill" style="width:' + clamp(post.aptitude, 0, 100) + '%"></div></div>' +
         '<div class="role-holder-effect">' + escapeHtml(role.effect.label) + ' <b>+' + post.bonusPct + '%</b>' + (bare ? '' : ' — ' + escapeHtml(effectCopy)) + '</div></div>' +
         '<button type="button" class="role-dismiss" data-action="role-clear"' + dataAttrs + '>Stand down</button></div>'
     : bare ? '' : '<div class="role-vacant">🪧 <b>Vacant.</b> ' + escapeHtml(effectCopy) + ' Appoint a bird below — the better suited it is, the more the post is worth.</div>';
   return '<div class="role-post-card' + (bare ? ' is-bare' : '') + '"' + dataAttrs + '>' +
     '<div class="role-post-head"><span class="role-post-icon">' + role.icon + '</span>' +
-    '<div><div class="role-post-title">' + escapeHtml(options.titlePrefix ? options.titlePrefix + role.title : role.title) + '</div>' +
+    '<div><div class="role-post-title">' + escapeHtml(options.titlePrefix ? options.titlePrefix + roleTitle : roleTitle) + '</div>' +
     (bare ? '' : '<div class="role-post-copy">' + escapeHtml(roleCopy) + '</div>') + '</div></div>' +
     held +
     '<div class="role-candidate-label">' + (post.staffed ? 'Replace with' : 'Appoint') + '</div>' +
@@ -23283,13 +23324,153 @@ function empireDrawerHTML(id, openDefault, icon, label, copy, count, bodyHtml) {
     '<div class="empire-drawer-body">' + bodyHtml + '</div>' +
   '</details>';
 }
-// One navigation tab under the Empire map — COUNTIES, TOWNS or VILLAGES.
-// Yaan's ask (2026-08-17): map first, then plain tabs to walk the realm
-// top-down, with the ledger below them. Same details/summary bones as the
-// drawers; a shared name means opening one tab folds the others away.
-function empireNavTabHTML(id, icon, label, copy, count, bodyHtml) {
-  return empireDrawerHTML(id, false, icon, label, copy, count, bodyHtml)
-    .replace('class="empire-drawer"', 'class="empire-drawer is-nav-tab" name="empire-nav"');
+// ============================================================================
+// THE BOX OF BOXES — one little square per holding, under the Empire map
+// ============================================================================
+// Yaan's ask (2026-08-25, from a screenshot): the tiers were drop-downs. Press
+// the count, a list unfolds, press a row, the village opens. Three taps to
+// stand somewhere. Make them boxes of boxes instead — one square per holding,
+// the bird that runs it painted inside, the square's colour saying what the
+// place wants. One tap opens it, right below the boxes. The same for Towns and
+// Counties, with their own bird in charge.
+//
+// The reading lives in empire_grid_core.js; everything here is drawing.
+function empireGridCore() { return window.BurbzEmpireGrid || null; }
+
+// What the bird in charge is called at each rung. The village post keeps its
+// save id ('steward') and its Project Manager name; the desk at a Town's heart
+// is the Lord Mayor's chain, which the Town Hall promised and now hands over.
+const EMPIRE_POST_TITLES = { village:'Project Manager', town:'Lord Mayor', county:'Warden' };
+
+// The bird painted inside a square. A staffed post shows the bird itself; an
+// empty desk shows the holding's own banner, greyed, so "nobody runs this"
+// reads from the picture as well as from the colour.
+function empireTileArtHTML(post, fallbackIcon) {
+  if (post && post.staffed && post.bird) return birdOnlyImgHTML(post.bird, 'empire-tile-bird');
+  return '<span class="empire-tile-bird is-vacant">' + (fallbackIcon || '🕊️') + '</span>';
+}
+
+// One square. Who runs it, what it wants, whether its strongbox is full.
+function empireTileHTML(tile) {
+  const need = tile.need;
+  const who = tile.post && tile.post.staffed && tile.post.bird ? birdDisplayName(tile.post.bird) : 'nobody yet';
+  const label = tile.name + ' · ' + need.label + ' · ' + tile.postTitle + ': ' + who;
+  return '<button type="button" class="empire-tile is-' + need.tone + (tile.active ? ' is-active' : '') + '"' +
+    ' data-action="' + tile.action + '" ' + tile.dataAttr +
+    ' title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '">' +
+    '<span class="empire-tile-art">' + empireTileArtHTML(tile.post, tile.crest) + '</span>' +
+    '<span class="empire-tile-need" aria-hidden="true">' + need.icon + '</span>' +
+    (need.tributeReady ? '<span class="empire-tile-coin" aria-hidden="true">💰</span>' : '') +
+    '<span class="empire-tile-name">' + escapeHtml(tile.name) + '</span>' +
+  '</button>';
+}
+
+// One tier of the empire: a title line, the squares, and whatever else that
+// tier has to say. `lead` sits above the grid — merge banners belong there,
+// because signing one is the whole point of the screen. `extra` waits below.
+// The `copy` line is the same sentence the old drop-down tab carried: the
+// boxes replaced the tab, they did not have to unteach the ladder.
+function empireTierHTML(id, icon, label, copy, tiles, parts = {}) {
+  const gc = empireGridCore();
+  const rows = Array.isArray(tiles) ? tiles : [];
+  const summary = gc ? gc.tierSummary(rows.map(t => t.need)) : { total:rows.length, wanting:0 };
+  const count = summary.wanting
+    ? '<span class="empire-tier-count wants">' + summary.wanting + ' want you</span>'
+    : '<span class="empire-tier-count">' + summary.total + '</span>';
+  return '<section class="empire-tier" data-empire-tier="' + id + '">' +
+    '<div class="empire-tier-head"><span class="empire-tier-icon">' + icon + '</span>' +
+      '<span class="empire-tier-main"><span class="empire-tier-label">' + label + '</span>' +
+      (copy ? '<span class="empire-tier-copy">' + copy + '</span>' : '') + '</span>' + count + '</div>' +
+    (parts.lead || '') +
+    (rows.length ? '<div class="empire-grid">' + rows.map(empireTileHTML).join('') + '</div>' : '') +
+    (parts.extra || '') +
+  '</section>';
+}
+
+// The one-line key under the boxes. Five colours, five plain words — the
+// player should never have to guess what a red square is asking for.
+function empireGridKeyHTML() {
+  const gc = empireGridCore();
+  if (!gc) return '';
+  return '<div class="empire-grid-key">' + gc.TONE_LEGEND.map(row =>
+    '<span class="egk-item"><span class="egk-dot is-' + row.tone + '"></span>' + escapeHtml(row.label) + '</span>').join('') + '</div>';
+}
+
+// ---- One square each, per rung of the ladder -------------------------------
+// Every builder reads the same shape: who holds the desk, what the place is
+// called, and the plain facts the grid core turns into a colour.
+function empireVillageTile(v) {
+  const gc = empireGridCore();
+  const snap = villageEconomySnapshot(v) || { pop:0, happiness:1 };
+  const ready = villageMergeReady(v);
+  const post = rolePostState('village', String(v.seed >>> 0));
+  const postTitle = EMPIRE_POST_TITLES.village;
+  return {
+    action:'empire-village', dataAttr:'data-seed="' + (v.seed >>> 0) + '"',
+    name:v.name, crest:empireVillageCrest(v.seed), post, postTitle,
+    active: !!(villageActive && String(villageActive.seed >>> 0) === String(v.seed >>> 0)),
+    need: gc ? gc.holdingNeed({
+      pop:snap.pop, happiness:snap.happiness,
+      posted: !!(post && post.staffed), postTitle,
+      freeCrews: villageBuildSlotsFree(v),
+      building: !!villageConstructionFor(v),
+      mergeReady: !!(ready && ready.ready),
+      // A whole cycle banked, exactly as the nav badge counts it — not "a
+      // coin has accrued", which is true every second of every day.
+      tributeReady: Math.floor(empireVillageTributePeriods(v, Date.now())) > 0
+    }) : { id:'well', tone:'green', icon:'✅', label:'All is well', tributeReady:false }
+  };
+}
+
+function empireTownTile(settlement) {
+  const gc = empireGridCore();
+  const s = canonicalEmpireSettlement(settlement);
+  const snap = townEconomySnapshot(s);
+  const ready = townMergeReady(s);
+  // A merged holding keeps ONE civic desk, at its heart (see ensureTownSteward).
+  const post = rolePostState('village', String(Number(s.heartSeed) >>> 0));
+  const postTitle = EMPIRE_POST_TITLES.town;
+  const busy = townActiveProjectCount(s);
+  return {
+    action:'empire-settlement', dataAttr:'data-settlement="' + escapeHtml(s.id) + '"',
+    name:townDisplayName(s), crest:s.icon, post, postTitle,
+    active: String(townActiveId || '') === String(s.id),
+    need: gc ? gc.holdingNeed({
+      pop:snap.pop, happiness:snap.happiness,
+      posted: !!(post && post.staffed), postTitle,
+      freeCrews: Math.max(0, townBuilderSlots(s) - busy),
+      building: busy > 0,
+      mergeReady: !!(ready && ready.ready),
+      tributeReady: townHasAccruedTribute(s, Date.now())
+    }) : { id:'well', tone:'green', icon:'✅', label:'All is well', tributeReady:false }
+  };
+}
+
+function empireCountyTile(region) {
+  const gc = empireGridCore();
+  const post = rolePostState('region', String(region.id));
+  const postTitle = EMPIRE_POST_TITLES.county;
+  // A county has no crews and no yards of its own — it is the sum of what it
+  // holds. Folk and cheer come weighted by population, so one thriving town
+  // cannot paper over a starving hamlet.
+  let pop = 0, weight = 0, cheer = 0;
+  empireRegionHoldings(region).forEach(holding => {
+    const snap = holding.kind === 'settlement' ? townEconomySnapshot(holding.settlement) : villageEconomySnapshot(holding.village);
+    if (!snap) return;
+    pop += snap.pop;
+    const w = Math.max(1, snap.pop);
+    weight += w; cheer += snap.happiness * w;
+  });
+  return {
+    action:'empire-region', dataAttr:'data-region="' + escapeHtml(region.id) + '"',
+    name:region.properName || region.name, crest:region.tierIcon, post, postTitle,
+    active: String(regionHallActiveId || '') === String(region.id),
+    need: gc ? gc.holdingNeed({
+      pop, happiness: weight ? cheer / weight : 1,
+      posted: !!(post && post.staffed), postTitle,
+      tributeReady: (regionTributeReady(region).wholeCycleHoldings || 0) > 0
+    }) : { id:'well', tone:'green', icon:'✅', label:'All is well', tributeReady:false }
+  };
 }
 // The village the player calls home: the liberated village nearest to where
 // they are standing, falling back to the most recently freed one. This anchors
@@ -25071,67 +25252,39 @@ function renderEmpirePanel() {
   const regionMergeBanners = regionCandidates.map(c => mergeBannerHtml(c, 'merge-towns', '⭐ READY TO UNITE',
     escapeHtml(mc.nameList(c.names)) + ' all wear the merge star — 120 folk each, 75% happy. Merge them and a County rises: one desk for the whole region.',
     '🛡️ MERGE INTO ONE COUNTY')).join('');
-  const villageRow = v => {
-    const snap = villageEconomySnapshot(v);
-    const ready = villageMergeReady(v);
-    const badges = (ready && ready.ready ? '<span class="evr-badge merge-star" title="Ready to merge">⭐</span>' : '') +
-      (villageConstructionFor(v) ? '<span class="evr-badge" title="Building">🏗️</span>' : '');
-    const starMeta = ready && ready.ready ? ' · <span class="merge-star">⭐ ready to merge</span>' : '';
-    return '<button type="button" class="empire-village-row" data-action="empire-village" data-seed="' + (v.seed >>> 0) + '">' +
-      '<span class="empire-village-flag">' + empireVillageCrest(v.seed) + '</span>' +
-      '<span class="empire-village-main"><span class="empire-village-name">' + escapeHtml(v.name) + (badges ? ' <span class="evr-badges">' + badges + '</span>' : '') + '</span><br>' +
-      '<span class="empire-village-meta">' + (snap.pop > 0 ? '👥 ' + snap.pop + ' · ' + happinessFace(snap.happiness) + ' ' + Math.round(snap.happiness * 100) + '%' + starMeta : '🏚️ empty · build homes') + '</span></span>' +
-      '<span class="empire-village-income">+' + snap.taxes + ' 🪙<br>+' + snap.branches + ' 🪵' + (snap.production.stone ? '<br>+' + snap.production.stone + ' stone' : '') + '</span></button>';
-  };
-  let rows;
+  // The squares, in an order the grid itself teaches: villages sworn to a
+  // county sit together, county by county, and the ones farther afield follow.
+  // No headings between them — a row of headings in a box of boxes is the
+  // clutter the boxes were meant to replace.
+  let orderedVillages = villages;
   if (regions.length) {
-    // Grouped by region, so the list itself teaches which villages belong where.
-    const grouped = new Set();
-    rows = regions.map(r => {
-      r.villages.forEach(v => grouped.add(String(v.seed >>> 0)));
-      const members = villages.filter(v => r.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0)));
-      return '<div class="empire-group-title">' + r.tierIcon + ' ' + escapeHtml(r.name) + '</div>' + members.map(villageRow).join('');
-    }).join('');
-    const scattered = villages.filter(v => !grouped.has(String(v.seed >>> 0)));
-    if (scattered.length) rows += '<div class="empire-group-title">🧭 Farther afield</div>' + scattered.map(villageRow).join('');
-  } else {
-    rows = villages.map(villageRow).join('');
+    const seen = new Set();
+    const grouped = [];
+    regions.forEach(r => {
+      villages.forEach(v => {
+        const key = String(v.seed >>> 0);
+        if (seen.has(key)) return;
+        if (!r.villages.some(x => (x.seed >>> 0) === (v.seed >>> 0))) return;
+        seen.add(key); grouped.push(v);
+      });
+    });
+    orderedVillages = grouped.concat(villages.filter(v => !seen.has(String(v.seed >>> 0))));
   }
-  // ---- 🏘️ TOWNS tab — the street-level merge layer. Grow villages to their
-  // ⭐ merge star, then press Merge: three starred villages make one town.
-  // The tab always stands, so the ladder is visible from the first village;
-  // until a town exists its body simply explains how one forms.
-  let townsBody;
-  if (visibleSettlements.length && rcTiers && rcTiers.settlementTierInfo) {
-    const cityTier = rcTiers.settlementTierInfo('city'), townTier = rcTiers.settlementTierInfo('town');
-    const cityRows = settlements.cities.map(c => {
-      const snap = townEconomySnapshot(c);
-      return '<button type="button" class="settlement-row is-city" data-action="empire-settlement" data-settlement="' + escapeHtml(c.id) + '">' +
-        '<span class="settlement-icon">' + c.icon + '</span>' +
-        '<span class="settlement-main"><span class="settlement-name">' + escapeHtml(townDisplayName(c)) + '</span><br>' +
-        '<span class="settlement-meta">🏘️ ' + c.villageCount + ' united wards · 👥 ' + snap.pop + ' · +' + Math.round(cityTier.taxBonus * 100) + '% taxes</span></span>' +
-        '<span class="settlement-tier is-city">CITY</span></button>';
-    }).join('');
-    const townRows = settlements.towns.filter(t => !t.cityId).map(t => {
-      const snap = townEconomySnapshot(t);
-      const ready = townMergeReady(t);
-      const starMeta = ready && ready.ready ? ' · <span class="merge-star">⭐ ready for a county</span>' : '';
-      return '<button type="button" class="settlement-row is-town" data-action="empire-settlement" data-settlement="' + escapeHtml(t.id) + '">' +
-        '<span class="settlement-icon">' + t.icon + '</span>' +
-        '<span class="settlement-main"><span class="settlement-name">' + (ready && ready.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(townDisplayName(t)) + '</span><br>' +
-        '<span class="settlement-meta">🏘️ ' + t.villageCount + ' united wards · 👥 ' + snap.pop + ' · +' + Math.round(townTier.taxBonus * 100) + '% taxes' + starMeta + '</span></span>' +
-        '<span class="settlement-tier">TOWN</span></button>';
-    }).join('');
-    const regionNudge = '<div class="realm-hint">⭐ A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.</div>';
-    townsBody = '<div class="settlement-section">' + cityRows + townRows + regionNudge + '</div>';
-  } else {
-    townsBody = '<div class="realm-hint">🏘️ No towns yet. Grow a village to 16 folk at 75% happiness and it earns its ⭐ merge star. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge on the Villages tab; nothing merges on its own.</div>';
-  }
-  // ---- 🛡️ COUNTIES tab — counties, the feudal pyramid above them, and trade.
-  // Until the player's liberations actually form a county the tab body just
-  // points at the next rung; from the first county on, this is the
-  // Crusader-Kings desk. The pyramid nests upward: counties unite into
-  // duchies, duchies into kingdoms, kingdoms into the empire.
+  const villageTiles = orderedVillages.map(empireVillageTile);
+  // ---- 🏘️ TOWNS — the street-level merge layer. Grow villages to their ⭐
+  // merge star, then press Merge: three starred villages make one town. Cities
+  // lead the row, then the towns no city has swallowed yet.
+  const townTiles = settlements.cities.concat(settlements.towns.filter(t => !t.cityId)).map(empireTownTile);
+  const townsExtra = townTiles.length && rcTiers
+    ? '<div class="realm-hint">⭐ A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.</div>'
+    : '';
+  // ---- 🛡️ COUNTIES — counties, the feudal pyramid above them, and trade.
+  // The squares are the counties themselves; the pyramid, the ladder nudge and
+  // the caravan roads follow underneath. Until the first county stands, the
+  // section is just the merge banner and a line pointing at the next rung —
+  // and it must still stand, because the MERGE INTO ONE COUNTY button lives
+  // inside it: hide the section and the first county can never be founded.
+  const countyTiles = regions.map(empireCountyTile);
   let countiesBody = '';
   if (regions.length && rc) {
     // The higher rungs first — empire banner, kingdoms, duchies — each row
@@ -25147,19 +25300,8 @@ function renderEmpirePanel() {
       ? '<div class="realm-empire-banner">☀️ <b>' + escapeHtml(realm.empire.name) + '</b> — ' + realm.empire.kingdomCount + ' free kingdoms under one crown</div>'
       : '';
     const pyramidHtml = (empireBanner || pyramid)
-      ? empireBanner + pyramid + '<div class="realm-sub-title">🛡️ COUNTIES · tap one to run it from its County Hall</div>'
+      ? '<div class="realm-sub-title">👑 SWORN TO</div>' + empireBanner + pyramid
       : '';
-    const regionRows = regions.map(r => {
-      const regionHoldings = empireRegionHoldings(r);
-      const pop = regionHoldings.reduce((sum, holding) => sum + (holding.kind === 'settlement' ? townEconomySnapshot(holding.settlement).pop : villageEconomySnapshot(holding.village).pop), 0);
-      const regionDue = tributeHasAnything(regionTributeReady(r));
-      return '<button type="button" class="realm-region-row" data-action="empire-region" data-region="' + escapeHtml(r.id) + '">' +
-        '<span class="realm-region-icon">' + r.tierIcon + '</span>' +
-        '<span class="realm-region-main"><span class="realm-region-name">' + escapeHtml(r.name) + '</span><br>' +
-        '<span class="realm-region-meta">🏘️ ' + regionHoldings.length + ' holdings · 👥 ' + pop + ' · capital ' + escapeHtml(empireRegionSeatName(r)) + '</span></span>' +
-        '<span class="realm-region-tier">' + escapeHtml(r.tierLabel.toUpperCase()) + '</span>' +
-        (regionDue ? '<span class="region-ready-chip">💰 READY</span>' : '') + '</button>';
-    }).join('');
     let tradeHtml = '';
     if (regions.length >= 2) {
       const open = empireTradeRouteRecords();
@@ -25191,10 +25333,9 @@ function renderEmpirePanel() {
       else if ((realm.duchies || []).length && !(realm.kingdoms || []).length) ladderNudge = '<div class="realm-hint">👑 Unite a second Duchy within ' + rc.KINGDOM_RADIUS_KM + ' km and a Kingdom is proclaimed — you become a Monarch, and its villages pay +25% unity taxes.</div>';
       else if ((realm.kingdoms || []).length) ladderNudge = '<div class="realm-hint">☀️ Proclaim a second Kingdom anywhere on Earth and the Empire of the Liberated Skies rises — you become Emperor, and every village pays +30% unity taxes.</div>';
     }
-    // The pyramid header already captions the county rows, so the lead line
-    // only speaks up when there is no pyramid above them yet.
-    countiesBody = (pyramidHtml ? '' : '<div class="realm-lead">Your counties — tap one to run it from its County Hall</div>') +
-      '<div class="realm-section">' + regionMergeBanners + pyramidHtml + regionRows + ladderNudge + tradeHtml + '</div>';
+    // The squares above are the counties themselves, so what is left below
+    // them is everything they are sworn to and everything they trade with.
+    countiesBody = '<div class="realm-section">' + pyramidHtml + ladderNudge + tradeHtml + '</div>';
   } else if (count >= 2 && rc) {
     const readyTowns = settlements.towns.filter(t => { const r = townMergeReady(t); return r && r.ready; }).length;
     countiesBody = regionMergeBanners || (settlements.townCount
@@ -25205,27 +25346,31 @@ function renderEmpirePanel() {
     // something that explains where the crown is heading.
     countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages and grow each to its ⭐ merge star; merge three stars into a Town, three starred Towns into a County, and on to Duchies and Kingdoms.</div>';
   }
-  // ---- The nav tabs, directly under the map. Yaan's ask (2026-08-17): nice
-  // and clean — 🛡️ COUNTIES on top, 🏘️ TOWNS beneath it, 🏡 VILLAGES under
-  // that, so the player walks the whole empire by pressing the tab buttons.
-  // All closed by default; opening one folds the others. The ledger and its
-  // stats moved below the tabs — navigation first, fluff after.
+  // ---- The boxes of boxes, directly under the map: 🏡 VILLAGES on top,
+  // 🏘️ TOWNS beneath, 🛡️ COUNTIES under that. Yaan asked for villages first
+  // (2026-08-24) and he is right — villages ARE the whole empire until a Town
+  // rises, and they stay the rung you visit most long after one does. Nothing
+  // is left to unfold: every square is on screen at once, so one tap reaches
+  // any holding in the realm.
   const starHint = villages.length && !townCandidates.length
     ? '<div class="realm-hint">⭐ A village earns its merge star at 16 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
     : '';
-  const villagesBody = villages.length
-    ? townMergeBanners + starHint + '<div class="empire-village-list">' + rows + '</div>'
-    : '<div class="realm-hint">🏡 Every free village has merged into a Town — run them from the Towns tab, or visit the old villages from each Town Hall.</div>';
-  // Yaan's ask (2026-08-24): a tab for a tier the player has not reached yet
-  // is a row that can only say "you have none". Counties and Towns wait until
-  // the first one exists; Villages is always there, because that is where
-  // every empire starts.
+  const villagesExtra = villages.length
+    ? starHint
+    : '<div class="realm-hint">🏡 Every free village has merged into a Town — run them from the Towns boxes, or visit the old villages from each Town Hall.</div>';
+  // A tier the player has not reached yet is a title that can only say "you
+  // have none" (Yaan, 2026-08-24), so Counties and Towns wait until the first
+  // one exists. Counties make one exception: the MERGE INTO ONE COUNTY banner
+  // renders inside them, so a ready merge must bring the section back or the
+  // first county can never be founded.
   const townCount = settlements.cityCount + settlements.towns.filter(t => !t.cityId).length;
-  const navTabsHtml = count
-    ? '<div class="empire-nav-tabs">' +
-      (regions.length ? empireNavTabHTML('nav-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', regions.length, countiesBody) : '') +
-      (townCount ? empireNavTabHTML('nav-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townCount, townsBody) : '') +
-      empireNavTabHTML('nav-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 16 folk, 75% happy', villages.length, villagesBody) +
+  const showCounties = !!(regions.length || regionCandidates.length);
+  const tiersHtml = count
+    ? '<div class="empire-tiers">' +
+      empireTierHTML('tier-villages', '🏡', 'VILLAGES', 'Grow each village to its ⭐ merge star: 16 folk, 75% happy', villageTiles, { lead:townMergeBanners, extra:villagesExtra }) +
+      (townCount ? empireTierHTML('tier-towns', '🏘️', 'TOWNS', 'Merge 3 starred villages into a Town — you choose when', townTiles, { extra:townsExtra }) : '') +
+      (showCounties ? empireTierHTML('tier-counties', '🛡️', 'COUNTIES', 'Merge 3 starred Towns into a County — titles and trade live here', countyTiles, { lead:regionMergeBanners, extra:countiesBody }) : '') +
+      empireGridKeyHTML() +
       '</div>'
     : '';
   // The Royal Ledger lives in a tiny 👑 button beside the screen title now —
@@ -25240,14 +25385,14 @@ function renderEmpirePanel() {
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branchesPerCycle + ' 🪵</div><div class="empire-stat-label">Timber / 8h</div></div>' +
       '<div class="empire-stat-chip"><div class="empire-stat-value">+' + stonePerCycle + ' stone</div><div class="empire-stat-label">Stone / 8h</div></div>' +
       '</div>' : '<div class="realm-hint">Free your first village and the ledger fills with holdings, subjects and taxes.</div>');
-  // Order on screen: the tabs sit directly under the map, the tax chest under
-  // them, and the reference bits — where am I, how it all works — wait at the
-  // very bottom as two quiet pop-downs.
-  // Yaan's ask (2026-08-24): the Empire screen ends at the tax chest. The
-  // FIND YOURSELF locator and the HOW YOUR EMPIRE WORKS guide are both gone —
-  // the ladder teaches itself by being played.
+  // Order on screen: the tax chest first, then the boxes, then nothing.
+  // Yaan's ask (2026-08-25): move COLLECT TAXES & PRODUCE above the boxes —
+  // you empty the chest, then you go somewhere. The chest was under them, so
+  // every visit meant scrolling past the whole realm to bank a day's takings.
   const footerHtml = '';
-  panel.innerHTML = navTabsHtml +
+  panel.innerHTML =
+    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireTakingsSoFar(due)) + '</button>' : '') +
+    tiersHtml +
     (count
       ? ''
       : '<div class="empire-onboarding"><div class="empire-onboarding-title">🕊️ FREE YOUR FIRST VILLAGE</div>' +
@@ -25255,7 +25400,6 @@ function renderEmpirePanel() {
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">2</span><span><b>Win its Liberation Battle</b> to scatter the darkness.</span></div>' +
         '<div class="empire-onboarding-step"><span class="empire-onboarding-num">3</span><span><b>Raise a birdhouse</b> and the village joins your empire — its daylight returns, and its taxes flow every 8 hours.</span></div>' +
         '<div class="empire-empty">Your whole empire will appear here: villages, towns, regions and trade.</div></div>') +
-    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireTakingsSoFar(due)) + '</button>' : '') +
     footerHtml;
   panel.querySelectorAll('[data-action="empire-village"]').forEach(row => row.addEventListener('click', () => openEmpireVillage(row.dataset.seed)));
   panel.querySelectorAll('[data-action="merge-villages"]').forEach(btn => btn.addEventListener('click', () => { SFX.tap(); empireMergeVillages(btn.dataset.seeds); }));
@@ -26116,7 +26260,8 @@ function renderTownScreen() {
   const storesFull = ['food','water'].every(kind => snap.provisions[kind].store >= snap.provisions[kind].cap);
   // A town desk is a village post at the settlement's heart, so it reads bare
   // too: title, holder, list. No copy override — none of it would render.
-  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), { titlePrefix:name + ' ' });
+  // The title IS overridden: the chain the Town Hall kept promising is here.
+  const steward = rolePostCardHTML('village', String(Number(settle.heartSeed) >>> 0), { titlePrefix:name + ' ', title:EMPIRE_POST_TITLES.town });
   // The county is the rung above the Hall. Since merge-when-ready-v290 towns
   // never unite on their own: this section shows the town's own merge star,
   // the Merge button when three starred towns stand ready, and the door into
@@ -26173,7 +26318,7 @@ function renderTownScreen() {
     '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy</div><div class="town-section-copy">' + escapeHtml(policyNote) + '</div><div class="town-policy-grid">' + policies + '</div></div>' +
     countyHtml +
     visitSection +
-    '<div class="town-section"><div class="town-section-title">📋 Town Project Manager</div><div class="town-section-copy">One bird runs every project across the merged settlement; absorbed ward posts are retired. A Lord Mayor’s chain comes later.</div>' + steward + '</div>';
+    '<div class="town-section"><div class="town-section-title">🏛️ Lord Mayor</div><div class="town-section-copy">One bird wears the chain for the whole settlement and runs every project in it. Absorbed ward posts are retired.</div>' + steward + '</div>';
   panel.querySelector('[data-action="town-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="town-atlas"]')?.addEventListener('click', () => { SFX.tap(); showTownOnAtlas(settle.id); });
   panel.querySelector('[data-action="town-rename"]')?.addEventListener('click', () => renameTown(settle.id));
@@ -39570,7 +39715,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'free-birds-v318-20260824';
+const BURBZ_BUILD = 'empire-grid-v322-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

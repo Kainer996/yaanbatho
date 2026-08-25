@@ -218,9 +218,10 @@ def test_trade_routes_are_stored_healed_and_collected_with_tribute():
 def test_royal_ledger_renders_realm_and_trade_sections():
     html = HTML.read_text(encoding="utf-8")
     assert 'class="realm-section"' in html
-    # The realm lives in the 🛡️ COUNTIES navigation tab under the Empire map
-    # (empire-nav-tabs-v275-20260817 — before that, the YOUR REALM dropdown).
-    assert "'nav-counties', '🛡️', 'COUNTIES'" in html
+    # The realm lives under the 🛡️ COUNTIES squares below the Empire map
+    # (empire-grid-v322-20260825 — before that, a nav tab; before that, the
+    # YOUR REALM dropdown).
+    assert "empireTierHTML('tier-counties', '🛡️', 'COUNTIES'" in html
     assert "TRADE ROUTES" in html
     assert 'data-action="open-trade"' in html
     assert 'data-action="empire-region"' in html

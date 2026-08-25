@@ -7,17 +7,19 @@ that to the bottom. Directly under the map, give the player three clean
 tabs — counties above towns, villages below towns — so they walk their
 whole empire by pressing the tab buttons.
 
-This release (empire-nav-tabs-v275-20260817) pins:
+This release (empire-nav-tabs-v275-20260817) pinned three drop-down tabs in
+ladder order under the map. empire-grid-v322-20260825 kept the ladder and
+threw the drop-down away — Yaan's ask, from a screenshot: "each village will
+have a little square", one tap straight into it. So what this file pins now is
+what SURVIVED that change:
 
-- three nav tabs directly under the map, in ladder order: 🛡️ COUNTIES,
-  🏘️ TOWNS, 🏡 VILLAGES — each a closed drawer that unfolds its list,
-- the tabs share one `name`, so opening one folds the others (exclusive,
-  accordion-style — only ever one list on screen),
-- every tab always stands: an empty tier explains how to fill it instead
-  of disappearing,
-- the reference bits (locator strip, ledger stats, tribute
-  button, help scroll) renders AFTER the tabs, at the bottom,
-- the old YOUR REALM dropdown and its sub-drawer helper are gone.
+- three tiers directly under the map, in ladder order: 🛡️ COUNTIES,
+  🏘️ TOWNS, 🏡 VILLAGES, each one a heading over a grid of squares,
+- each tier keeps the caption the tab carried, so nothing stopped teaching,
+- a tier the player has not reached does not appear at all,
+- the old YOUR REALM dropdown and its sub-drawer helper are gone,
+- and no drawer bones are left behind: no accordion, no chevron, no
+  empireNavTabHTML.
 """
 from pathlib import Path
 
@@ -27,7 +29,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "free-birds-v318-20260824"
+CURRENT_BUILD = "empire-grid-v322-20260825"
 
 
 def ledger(html: str) -> str:
@@ -42,56 +44,77 @@ def ledger(html: str) -> str:
 
 def test_three_nav_tabs_stand_in_ladder_order():
     body = ledger(HTML.read_text(encoding="utf-8"))
-    start = body.index("const navTabsHtml")
+    start = body.index("const tiersHtml")
     block = body[start:body.index("// Order on screen", start)]
-    assert "'nav-counties', '🛡️', 'COUNTIES'" in block
-    assert "'nav-towns', '🏘️', 'TOWNS'" in block
-    assert "'nav-villages', '🏡', 'VILLAGES'" in block
-    # Counties above towns, villages below towns — Yaan's exact order.
-    assert block.index("'nav-counties'") < block.index("'nav-towns'")
-    assert block.index("'nav-towns'") < block.index("'nav-villages'")
-    assert '<div class="empire-nav-tabs">' in block
+    assert "'tier-villages', '🏡', 'VILLAGES'" in block
+    assert "'tier-towns', '🏘️', 'TOWNS'" in block
+    assert "'tier-counties', '🛡️', 'COUNTIES'" in block
+    # v275 ran counties → towns → villages. Yaan asked for villages at the top
+    # (2026-08-24): "hide it when empty" only LOOKS like "put it first", until
+    # a Town rises and villages drop to the bottom again.
+    assert block.index("'tier-villages'") < block.index("'tier-towns'")
+    assert block.index("'tier-towns'") < block.index("'tier-counties'")
+    assert '<div class="empire-tiers">' in block
+    # Every tab caption survived the change into a tier subtitle.
+    assert "'Merge 3 starred Towns into a County — titles and trade live here'" in block
+    assert "'Merge 3 starred villages into a Town — you choose when'" in block
+    assert "'Grow each village to its ⭐ merge star: 16 folk, 75% happy'" in block
 
 
-def test_the_tabs_render_first_and_the_reference_bits_wait_at_the_bottom():
-    # Since empire-declutter (2026-08-20) the ledger lives in the 👑 pill's
-    # pop-down, and the locator + guide fold into footer pop-downs at the
-    # very bottom. In the panel itself: tabs, then the tax chest, then footer.
+def test_the_tax_chest_opens_the_panel_and_the_boxes_follow():
+    # v275 put the chest under the tabs. Yaan's ask (2026-08-25) turned that
+    # round: you empty the chest, THEN you go somewhere, so the chest is the
+    # first thing in the panel and the boxes come after it.
     body = ledger(HTML.read_text(encoding="utf-8"))
-    start = body.index("panel.innerHTML = navTabsHtml")
+    start = body.index("  panel.innerHTML =\n")
     block = body[start:body.index("panel.querySelectorAll", start)]
-    assert block.index("navTabsHtml") < block.index("empire-tribute-btn")
-    assert block.index("empire-tribute-btn") < block.index("footerHtml")
+    assert block.index("empire-tribute-btn") < block.index("tiersHtml")
+    assert block.index("tiersHtml") < block.index("footerHtml")
     assert "ROYAL LEDGER" not in block
     assert "empire-stats-row" not in block
 
 
-def test_the_tabs_are_exclusive_one_open_folds_the_others():
+def test_no_tab_is_left_to_unfold_and_no_drawer_bones_remain():
+    """Deleting a control is half the job — the markup it needed goes too."""
     html = HTML.read_text(encoding="utf-8")
-    assert "function empireNavTabHTML(" in html
-    # The shared details `name` is what makes the accordion exclusive.
-    assert "'class=\"empire-drawer is-nav-tab\" name=\"empire-nav\"'" in html
-    # Closed by default — the false openDefault keeps the screen clean.
-    assert "empireDrawerHTML(id, false, icon, label, copy, count, bodyHtml)" in html
-    assert ".empire-nav-tabs {" in html
-    assert ".empire-drawer.is-nav-tab" in html
+    assert "function empireTierHTML(" in html
+    assert ".empire-tiers {" in html and ".empire-tier-head {" in html
+    # Nothing under the map opens, closes, or folds anything else away.
+    for gone in ("empireNavTabHTML", "empire-nav-tabs", "is-nav-tab",
+                 'name="empire-nav"'):
+        assert gone not in html, gone
+    # The sub-drawers on the village, town and county desks are untouched.
+    assert "function empireDrawerHTML(" in html
+    assert ".empire-drawer.is-sub {" in html
 
 
 # ---------------------------------------------------------------------------
 # Every tab always stands — empty tiers teach, they do not vanish
 # ---------------------------------------------------------------------------
 
-def test_each_tier_has_a_body_even_when_empty():
+def test_each_tier_still_says_something_under_its_squares():
     body = ledger(HTML.read_text(encoding="utf-8"))
-    # Towns tab: rows when settlements exist, a forming hint otherwise.
-    assert "let townsBody;" in body
-    assert "🏘️ No towns yet. Grow a village to 16 folk" in body  # v290: merge-when-ready
-    # Counties tab: the realm desk, or the next-rung explainer.
+    # Towns: the county road, once a town exists to walk it.
+    assert "const townsExtra = townTiles.length && rcTiers" in body
+    assert "A town earns its merge star at 120 folk" in body
+    # Counties: the realm desk, or the next-rung explainer.
     assert "let countiesBody = '';" in body
     assert "🕊️ Your realm starts here." in body
-    # Villages tab: the standalone list, or where they all went.
-    assert "const villagesBody = villages.length" in body
+    # Villages: the star road, or where every village went.
+    assert "const villagesExtra = villages.length" in body
     assert "Every free village has merged into a Town" in body
+
+
+def test_the_counties_tier_stands_whenever_a_merge_is_ready_to_sign():
+    """The MERGE INTO ONE COUNTY banner renders inside the Counties tier.
+
+    Hide the tier on `regions.length` alone and the button goes with it, so
+    the first county could never be founded. The gate reads BOTH.
+    """
+    body = ledger(HTML.read_text(encoding="utf-8"))
+    assert "const showCounties = !!(regions.length || regionCandidates.length);" in body
+    assert "lead:regionMergeBanners" in body
+    assert "🛡️ MERGE INTO ONE COUNTY" in body
 
 
 def test_the_old_realm_dropdown_is_gone_for_good():
