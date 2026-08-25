@@ -19,9 +19,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
@@ -169,8 +169,8 @@ def test_village_growth_halls_gate_on_trainer_level_but_survival_never_does():
 def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f'academy_treehouse_core.js?v={MAGPIE_CORE_PIN}' in html
-    assert f"./academy_treehouse_core.js?v={MAGPIE_CORE_PIN}" in sw
+    assert f'academy_treehouse_core.js?v={ACADEMY_CORE_PIN}' in html
+    assert f"./academy_treehouse_core.js?v={ACADEMY_CORE_PIN}" in sw
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert MIDGAME_RELEASE in cache_line

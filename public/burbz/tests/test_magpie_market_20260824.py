@@ -32,14 +32,13 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
-# five cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+# cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
 # Every core this release edited, and therefore re-pinned.
 EDITED_CORES = (
-    "academy_treehouse_core.js",
     "academy_alive_core.js",
     "academy_3d_core.js",
     "loot_crafting_core.js",
@@ -48,6 +47,9 @@ EDITED_CORES = (
 # retired the Head Gardener and re-pinned it. A core carries the tag of the
 # release that last touched it, so it is checked separately below.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
+# academy_treehouse_core.js the same story: iron-ingot-errand-v326 added the
+# Foundry Ingot Pour errand to it, so it now carries that tag instead.
+ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
 
 def html_text() -> str:
@@ -413,6 +415,7 @@ def test_every_core_this_release_edited_ships_under_its_new_tag():
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
     assert "bird_roles_core.js?v=%s" % ROLES_CORE_PIN in html
+    assert "academy_treehouse_core.js?v=%s" % ACADEMY_CORE_PIN in html
     for core in EDITED_CORES:
         pin = "%s?v=%s" % (core, OWN_RELEASE_PIN)
         assert pin in html, core

@@ -31,7 +31,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # The build has moved on (sleep-retired-v238) but the canopy cores have not,
 # so they keep their own pin while the build tracks the current tag.
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
@@ -168,7 +168,7 @@ def test_release_is_pinned_and_shipped():
     # academy_treehouse_core moved with v258, then again with v287
     # (training statBonus); the alive core still ships under this release.
     for core, pin in (("academy_alive_core.js", MAGPIE_CORE_PIN),
-                      ("academy_treehouse_core.js", "magpie-market-v316-20260824")):
+                      ("academy_treehouse_core.js", "iron-ingot-errand-v326-20260825")):
         assert f"{core}?v={pin}" in HTML, core
         assert f"./{core}?v={pin}" in SW, core
     for name in BRANCH_SPRITES:

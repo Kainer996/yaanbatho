@@ -17,7 +17,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "offroad-side-quests-v283-20260818"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 
 
 def run_node(script: str):

@@ -9,7 +9,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "roost-retired-v302-20260820"
 # magpie-market-v316 edited the Academy core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
 
 def node_json(source: str):
@@ -116,7 +116,7 @@ def test_release_is_cache_busted_in_html_and_service_worker():
     # `?v=` pin of each core, so a later release re-pinning a core is expected.
     assert RELEASE in sw
     assert "const BURBZ_BUILD = '" in html
-    assert f"academy_treehouse_core.js?v={MAGPIE_CORE_PIN}" in html
+    assert f"academy_treehouse_core.js?v={ACADEMY_CORE_PIN}" in html
 
 
 def test_tutorial_errand_remains_seconds_long_and_has_no_duration_picker():
