@@ -38,7 +38,10 @@ def test_academy_room_chips_use_compact_text_with_full_accessible_labels():
     start = HTML.index("function academyRoomButtonsHTML")
     end = HTML.index("// ---- Diet-aware feeding", start)
     fn = HTML[start:end]
-    assert "const shortLabel = current ? cfg.icon + ' Here' : built ? cfg.icon + ' Send' : '🔒 ' + cfg.icon;" in fn
+    # free-birds-v318 added the "set free" case: standing a bird down is not
+    # sending it to a room, so it gets its own compact word.
+    assert "const shortLabel = current ? cfg.icon + (free ? ' Free' : ' Here') : free ? cfg.icon + ' Free' : built ? cfg.icon + ' Send' : '🔒 ' + cfg.icon;" in fn
+    assert "const free = room === FREE_BIRD_ROOM;" in fn
     assert "aria-label=\"' + escapeHtml(label) + '\"" in fn
 
 

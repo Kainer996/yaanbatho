@@ -1,7 +1,7 @@
 """Villages lead the Empire tabs, and the county merge stays reachable.
 
 Two follow-ups to `empire-village-declutter-v317-20260824`, pinned as
-`villages-first-county-merge-v318-20260824`.
+`villages-first-county-merge-v319-20260824`.
 
 **Villages at the top.** Yaan's words were "on that screen have villages at
 the top". v317 hid the empty COUNTIES and TOWNS tabs, which looks right on a
@@ -26,10 +26,10 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
-OWN_RELEASE_PIN = "villages-first-county-merge-v318-20260824"
+OWN_RELEASE_PIN = "villages-first-county-merge-v319-20260824"
 # A later release ships over the top; this one changed no core either, so only
 # the head build moves on.
-CURRENT_BUILD = "one-tap-appointments-v319-20260824"
+CURRENT_BUILD = "one-tap-appointments-v320-20260824"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 
 

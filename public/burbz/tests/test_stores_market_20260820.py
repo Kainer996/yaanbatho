@@ -24,11 +24,12 @@ SW = ROOT / "sw.js"
 LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
-# roost-retired-v302 moved the roles core on; the loot core stays with v295.
-ROLES_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "one-tap-appointments-v319-20260824"
-# magpie-market-v316 edited both cores, so both ship under that tag now.
+CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+# magpie-market-v316 edited both cores; free-birds-v318 then edited the roles
+# core again, retiring the Head Gardener. A core ships under the tag of the
+# release that last touched it, so the two pins have parted company.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+ROLES_CORE_PIN = "free-birds-v318-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -196,6 +197,6 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     # Each edited core ships under the tag of the release that last touched it.
-    for core, pin in (("bird_roles_core.js", MAGPIE_CORE_PIN), ("loot_crafting_core.js", MAGPIE_CORE_PIN)):
+    for core, pin in (("bird_roles_core.js", ROLES_CORE_PIN), ("loot_crafting_core.js", MAGPIE_CORE_PIN)):
         assert f"'./{core}?v={pin}'" in sw, core
         assert f'src="{core}?v={pin}"' in html, core

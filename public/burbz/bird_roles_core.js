@@ -130,12 +130,6 @@
       effect:{ id:'recruit_discount', label:'Recruiting', copy:'Birds join the flock for fewer coins.' },
       copy:'Talking strangers into a life of adventure is a charm job with a head for numbers.'
     },
-    {
-      id:'head_gardener', title:'Head Gardener', icon:'🌱', scope:'academy', key:'outdoors',
-      stats:{ stamina:0.5, int:0.5 },
-      effect:{ id:'care_rate', label:'Foraging grounds', copy:'Birds roaming the Aviary Gardens stay happier and go hungry slower.' },
-      copy:'Knowing which beds to let run wild and which to keep cropped is how the Gardens feed themselves.'
-    },
     // ---- The realm --------------------------------------------------------
     // Civic posts: weight counts against the ledger. A village trusts a
     // charmer at the door, not a shadow over the market square.

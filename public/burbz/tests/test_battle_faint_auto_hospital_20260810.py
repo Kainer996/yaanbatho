@@ -13,7 +13,7 @@ SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
 # This release's own cache marker; later releases move BURBZ_BUILD on.
 PREVIOUS_RELEASE_PIN = "early-game-easy-battles-v240-20260810"
-CURRENT_BUILD = "one-tap-appointments-v319-20260824"
+CURRENT_BUILD = "one-tap-appointments-v320-20260824"
 
 
 def function_source(html: str, name: str) -> str:
@@ -55,7 +55,9 @@ def test_battle_end_admits_every_fainted_fighter_automatically():
     assert "hospitalAdmissions.push" in end
     # The result screen says who was carried to the ward.
     assert "carried to the Bird Hospital" in end
-    assert "Aviary Gardens" in end
+    # free-birds-v318 retired the Aviary Gardens: a bird with no ward to go
+    # to now rests free in the tree, and the note says so.
+    assert "hurt and free in the tree" in end
 
 
 def test_release_is_versioned_for_service_worker_self_update():

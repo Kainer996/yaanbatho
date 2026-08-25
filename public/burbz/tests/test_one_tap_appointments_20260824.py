@@ -1,7 +1,7 @@
 """Every post in the game is one symbol and one sheet.
 
 Yaan's ask (2026-08-24), from a screenshot of the Kitchen, pinned as
-`one-tap-appointments-v319-20260824`:
+`one-tap-appointments-v320-20260824`:
 
 > "Where it says 'Head Chef, the kitchen wants a thinker' — remove that. Remove
 > the paragraph underneath. Remove the grid where it says 'Appoint' and instead
@@ -36,8 +36,8 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (ROOT / "bird_roles_core.js").read_text(encoding="utf-8")
 
-OWN_RELEASE_PIN = "one-tap-appointments-v319-20260824"
-PREVIOUS_RELEASE_PIN = "villages-first-county-merge-v318-20260824"
+OWN_RELEASE_PIN = "one-tap-appointments-v320-20260824"
+PREVIOUS_RELEASE_PIN = "villages-first-county-merge-v319-20260824"
 
 
 def function_source(name: str) -> str:
@@ -54,10 +54,12 @@ def test_every_post_in_the_game_has_a_drawn_symbol():
     the roles core rather than against itself."""
     symbols = HTML[HTML.index("const ROLE_SYMBOLS = {"):]
     symbols = symbols[:symbols.index("\n};")]
+    # (No head_gardener: free-birds-v318 retired the post with the Aviary
+    # Gardens, and a glyph for a post that no longer exists is dead weight.)
     for role_id in ("head_chef", "librarian", "star_charter", "drill_master",
                     "nest_architect", "innkeeper", "head_healer", "nest_nanny",
                     "market_trader", "quartermaster", "recruiting_officer",
-                    "head_gardener", "steward", "region_warden"):
+                    "steward", "region_warden"):
         assert f"id:'{role_id}'" in ROLES_CORE, role_id      # still a real post
         assert f"{role_id}:" in symbols, role_id
 
@@ -183,9 +185,14 @@ def test_appointing_from_inside_the_sheet_redraws_the_sheet():
 def test_posted_birds_are_offered_last_under_their_own_label():
     card = function_source("rolePostCardHTML")
     assert "posted: birdAssignedPost(c.bird.id) ? birdPostLabel(c.bird) : null" in card
-    assert "const free = ranked.filter(c => !c.posted).slice(0, ROLE_CANDIDATE_LIMIT);" in card
+    assert "const unposted = ranked.filter(c => !c.posted);" in card
     assert "const posted = ranked.filter(c => c.posted).slice(0, ROLE_POSTED_CANDIDATE_LIMIT);" in card
-    assert "free.map(row).join('')" in card
+    assert "available.map(row).join('')" in card
+    # Merged with free-birds-v318: inside the unposted group, a bird with
+    # nothing at all to do leads one merely stationed in a room.
+    assert "unposted.filter(c => birdIsFree(c.bird))" in card
+    assert card.index("unposted.filter(c => birdIsFree(c.bird))") < card.index("unposted.filter(c => !birdIsFree(c.bird))")
+    assert card.index("const available") < card.index("const posted")
     assert '<div class="role-candidate-label is-sub">Already posted elsewhere</div>' in card
     # Each row shows its rank, its stats and what the post would be worth.
     assert "roleStatLine(role, c.bird)" in card

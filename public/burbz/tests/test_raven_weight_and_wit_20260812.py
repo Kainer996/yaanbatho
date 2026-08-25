@@ -23,12 +23,13 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 RELEASE = "raven-weight-and-wit-v255-20260812"
 # The roles core moved on with chef mastery (v261); the size core stays ours.
-ROLES_CORE_PIN = "roost-retired-v302-20260820"
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "one-tap-appointments-v319-20260824"
+CURRENT_BUILD = "one-tap-appointments-v320-20260824"
+# bird_roles_core.js last changed in free-birds-v318, which retired the Head
+# Gardener. A core ships under the tag of the release that last touched it.
+ROLES_CORE_PIN = "free-birds-v318-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
 
 def run_node(source: str) -> dict:
@@ -192,6 +193,6 @@ def test_release_is_versioned_for_service_worker_self_update():
     assert RELEASE in cache_line  # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     assert f"'./bird_size_core.js?v={RELEASE}'" in sw
-    assert f"'./bird_roles_core.js?v={MAGPIE_CORE_PIN}'" in sw
+    assert f"'./bird_roles_core.js?v={ROLES_CORE_PIN}'" in sw
     assert f'src="bird_size_core.js?v={RELEASE}"' in html
-    assert f'src="bird_roles_core.js?v={MAGPIE_CORE_PIN}"' in html
+    assert f'src="bird_roles_core.js?v={ROLES_CORE_PIN}"' in html
