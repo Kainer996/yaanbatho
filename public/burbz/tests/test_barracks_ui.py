@@ -100,7 +100,9 @@ def test_every_mapped_bird_has_a_real_transparent_cutout():
     import re
     from PIL import Image
 
-    block = HTML[HTML.index("const BUILT_IN_BIRD_ART = {"):HTML.index("// Bird art is stored through")]
+    # Anchor moved by art-same-origin-v325-20260825: the comment that used to
+    # end this map explained the GitHub rerouting, which is gone.
+    block = HTML[HTML.index("const BUILT_IN_BIRD_ART = {"):HTML.index("// Every bird painting is served same-origin")]
     final_paths = {}
     for line in block.splitlines():
         match = re.search(r'^\s*(["\'])(.*?)\1\s*:\s*(["\'])(.*?)\3\s*,?\s*$', line)

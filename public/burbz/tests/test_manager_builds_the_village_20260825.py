@@ -44,7 +44,10 @@ ROLES_CORE = ROLES_CORE_PATH.read_text(encoding="utf-8")
 MANAGER_CORE_PATH = BURBZ / "village_manager_core.js"
 UPDATER = (BURBZ.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "manager-builds-the-village-v324-20260825"
+RELEASE_PIN = "art-same-origin-v325-20260825"  # the head build, whatever it is now
+# This release's OWN tag. The two cores it edited still ship under it — a later
+# release that touches neither must not move their ?v= busters.
+OWN_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 HOUR_MS = 3600000
 
 # The village's own works, in the order the manager raises them.
@@ -733,14 +736,18 @@ def test_the_construction_marker_survives_a_save_round_trip():
 def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
-    assert cache_line.rstrip("';").endswith(RELEASE_PIN), "the newest marker goes last"
+    # This release is no longer the head; it is a segment of an append-only
+    # lineage, and its own marker must survive every release that follows.
+    assert OWN_RELEASE_PIN in cache_line, "the lineage is append-only"
     assert "forge-opens-on-the-anvil-v323-20260825" in cache_line, "the lineage is append-only"
-    # The new core ships from the page and from every service-worker list.
-    assert f'src="village_manager_core.js?v={RELEASE_PIN}"' in HTML
-    assert SW.count(f"'./village_manager_core.js?v={RELEASE_PIN}'") == 3
+    assert cache_line.rstrip("';").endswith(RELEASE_PIN), "the newest marker goes last"
+    # The new core ships from the page and from every service-worker list, still
+    # under THIS release's tag — nothing since has edited it.
+    assert f'src="village_manager_core.js?v={OWN_RELEASE_PIN}"' in HTML
+    assert SW.count(f"'./village_manager_core.js?v={OWN_RELEASE_PIN}'") == 3
     # bird_roles_core.js was edited this release, so it re-pins here.
-    assert f'src="bird_roles_core.js?v={RELEASE_PIN}"' in HTML
-    assert f"'./bird_roles_core.js?v={RELEASE_PIN}'" in SW
+    assert f'src="bird_roles_core.js?v={OWN_RELEASE_PIN}"' in HTML
+    assert f"'./bird_roles_core.js?v={OWN_RELEASE_PIN}'" in SW
     # And the VPS updater ships the file at all.
     assert '"village_manager_core.js"' in UPDATER
     assert MANAGER_CORE_PATH.exists()

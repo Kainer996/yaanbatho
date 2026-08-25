@@ -23,8 +23,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "manager-builds-the-village-v324-20260825"
-CURRENT_BUILD = "manager-builds-the-village-v324-20260825"
+RELEASE = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "art-same-origin-v325-20260825"
 
 # The Iron Foundry and the Entertainment House are town industry too — they
 # arrived with the towns-3D release and the pin had not been told.

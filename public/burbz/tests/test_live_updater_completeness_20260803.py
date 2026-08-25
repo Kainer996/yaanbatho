@@ -46,7 +46,15 @@ def test_every_install_icon_is_in_the_updater():
     assert all(f'"{path}"' in UPDATER for path in paths)
 
 
-def test_manga_portraits_cutouts_and_habitats_use_the_lfs_endpoint():
+def test_manga_portraits_cutouts_and_habitats_reach_the_live_server():
+    # Renamed and retargeted by art-same-origin-v325-20260825. The claim is
+    # unchanged — the updater must ship all 143 warrior portraits, all 143
+    # cutouts and all 8 habitat backgrounds — but they are no longer downloaded
+    # from the GitHub LFS endpoint. A deploy ran several times a day and pulled
+    # ~1.6 GB each time, against a 1 GB/month allowance, which is what blocked
+    # the Pages build. They are sourced locally now, with the pointer guard
+    # kept so an unhydrated checkout fails loudly instead of shipping 132-byte
+    # text where a painting should be.
     match = re.search(r"const warriorSlugs = new Set\(`(.*?)`\.trim", ART_RELEASE, re.S)
     assert match
     slugs = match.group(1).split()
@@ -57,8 +65,13 @@ def test_manga_portraits_cutouts_and_habitats_use_the_lfs_endpoint():
     assert "bird-art-cache/${slug}_burbz_manga_warrior_20260802.png" in UPDATER
     assert "bird-art-cache/cutouts/${slug}_burbz_manga_warrior_20260802_cutout.png" in UPDATER
     assert "habitat-backgrounds" in UPDATER
-    assert 'curl -fsSL "$LFS_BASE/$f"' in UPDATER
-    assert UPDATER.index('for managed_file in "${FILES[@]}"') < UPDATER.index("download_lfs_art()")
+    # Sourced locally, never downloaded, and a pointer never reaches the site.
+    assert "$LFS_BASE" not in UPDATER
+    assert "stage_art_file()" in UPDATER
+    assert "version https://git-lfs.github.com/spec/v1" in UPDATER
+    assert UPDATER.index('for managed_file in "${FILES[@]}"') < UPDATER.index(
+        'while IFS= read -r slug; do'
+    )
 
     habitat_paths = set(re.findall(r"/burbz/(bird-art-cache/habitat-backgrounds/[a-z0-9_./-]+)", ART_RELEASE))
     assert len(habitat_paths) == 8

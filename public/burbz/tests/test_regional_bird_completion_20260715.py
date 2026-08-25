@@ -174,17 +174,23 @@ def test_placeholders_are_honest_unique_usable_cards_and_transparent_cutouts():
     assert len(hashes) == 85
 
 
-def test_placeholder_cutouts_use_the_same_origin_offline_cache_path():
+def test_every_cutout_uses_the_same_origin_offline_cache_path():
+    # Widened by art-same-origin-v325-20260825. The placeholder half of this
+    # test is untouched. The established-painting half used to expect a GitHub
+    # URL — a per-player LFS download against a 1 GB/month allowance — and now
+    # expects the same local path the placeholders always took. Both cutouts
+    # come from one branch of birdCutoutUrlFor, so there is nothing left to
+    # tell apart.
     html = HTML.read_text()
     start = html.index("function birdCutoutUrlFor(art)")
     end = html.index("// Delegated <img> error handling", start)
     function_source = html[start:end]
-    source = "const BIRD_ART_GITHUB_RAW_BASE='https://github.example/raw';" + function_source + "console.log(JSON.stringify([birdCutoutUrlFor('/burbz/bird-art-cache/red_capped_plover_burbz_placeholder_20260715.png'),birdCutoutUrlFor('/burbz/bird-art-cache/robin_yaan_20260608.png')]));"
+    source = function_source + "console.log(JSON.stringify([birdCutoutUrlFor('/burbz/bird-art-cache/red_capped_plover_burbz_placeholder_20260715.png'),birdCutoutUrlFor('/burbz/bird-art-cache/robin_yaan_20260608.png')]));"
     result = subprocess.run(["node", "-e", source], cwd=ROOT, text=True, capture_output=True)
     assert result.returncode == 0, result.stderr
     placeholder, established = json.loads(result.stdout)
     assert placeholder == "/burbz/bird-art-cache/cutouts/red_capped_plover_burbz_placeholder_20260715_cutout.png"
-    assert established == "https://github.example/raw/public/burbz/bird-art-cache/cutouts/robin_yaan_20260608_cutout.png"
+    assert established == "/burbz/bird-art-cache/cutouts/robin_yaan_20260608_cutout.png"
 
 
 def test_no_new_common_or_scientific_name_collides_with_existing_catalog():

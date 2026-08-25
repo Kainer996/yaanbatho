@@ -12550,19 +12550,10 @@ Object.assign(BUILT_IN_BIRD_ART, {
   "Wood Duck": "/burbz/bird-art-cache/wood_duck_burbz_manga_rpg_20260711.png"
 });
 
-// Bird art is stored through a mixture of Git LFS and regular Git blobs. The
-// github.com raw endpoint resolves both kinds to real image bytes, unlike the
-// VPS source-archive deploy (LFS pointer text) or the media-only endpoint
-// (404 for regular blobs). Route every mapped raster through this one endpoint.
-const BIRD_ART_GITHUB_RAW_BASE = 'https://github.com/Kainer996/yaanbatho/raw/refs/heads/main';
-for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
-  // Honest 20260715 placeholders are served locally; only real paintings are routed through GitHub/LFS.
-  if (/^\/burbz\/bird-art-cache\/[^?#]+\.(?:png|jpe?g|webp)$/i.test(artUrl) && !/placeholder_20260715/i.test(artUrl)) {
-    BUILT_IN_BIRD_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
-  }
-}
-// These recovered built-in ImageGen paintings ship locally with this release,
-// so apply them after the GitHub/LFS routing pass.
+// Every bird painting is served same-origin from /burbz/bird-art-cache/. The
+// server holds the real image bytes, so nothing here is rewritten to a remote
+// host: a rewrite would spend GitHub's LFS download quota once per player, and
+// exhausting it takes the art down for everybody at once.
 Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 
 // Cards keep the original complete paintings, including each bird's own
@@ -12571,11 +12562,6 @@ Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 const BUILT_IN_BIRD_CARD_ART = Object.freeze({ ...BUILT_IN_BIRD_ART });
 if (window.applyBurbzMangaWarriorArt20260803) {
   window.applyBurbzMangaWarriorArt20260803(BUILT_IN_BIRD_ART);
-  for (const [species, artUrl] of Object.entries(BUILT_IN_BIRD_ART)) {
-    if (/^\/burbz\/bird-art-cache\/[^?#]+_manga_warrior_20260802\.png$/i.test(artUrl)) {
-      BUILT_IN_BIRD_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
-    }
-  }
 }
 
 function birdHabitatArtKey(bird) {
@@ -12744,10 +12730,7 @@ function birdCutoutUrlFor(art) {
   if (!art || typeof art !== 'string' || !art.includes('/bird-art-cache/') || art.includes('/cutouts/')) return null;
   const file = art.split('/').pop();
   if (!/\.png$/i.test(file)) return null;
-  if (file.includes('placeholder_20260715')) {
-    return '/burbz/bird-art-cache/cutouts/' + file.replace(/\.png$/i, '_cutout.png');
-  }
-  return BIRD_ART_GITHUB_RAW_BASE + '/public/burbz/bird-art-cache/cutouts/' + file.replace(/\.png$/i, '_cutout.png');
+  return '/burbz/bird-art-cache/cutouts/' + file.replace(/\.png$/i, '_cutout.png');
 }
 
 // Delegated <img> error handling (capture phase catches load failures):
@@ -12889,11 +12872,6 @@ const MAP_BIRD_CUTOUT_ART = {
   'Greylag Goose': '/burbz/bird-art-cache/greylag_goose_burbz_manga_upload_20260707.png',
   'Lapwing': '/burbz/bird-art-cache/lapwing_burbz_manga_upload_20260707.png'
 };
-for (const [species, artUrl] of Object.entries(MAP_BIRD_CUTOUT_ART)) {
-  if (/^\/burbz\/bird-art-cache\/[^?#]+\.(?:png|jpe?g|webp)$/i.test(artUrl)) {
-    MAP_BIRD_CUTOUT_ART[species] = BIRD_ART_GITHUB_RAW_BASE + artUrl.replace(/^\/burbz\//, '/public/burbz/');
-  }
-}
 
 
 function syncBirdArtUrl(bird) {
@@ -40191,7 +40169,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'manager-builds-the-village-v324-20260825';
+const BURBZ_BUILD = 'art-same-origin-v325-20260825';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
