@@ -1,12 +1,13 @@
 """Player Quests: the guided chain that starts where the tutorial ends.
 
 Classic mobile-game progression — one clear goal at a time, pinned to the
-top of the Quests tab, so a new player never wonders what to do next. The
-chain mirrors Merlin's guided tutorial: send Merlin on an errand, welcome
-him home, build The Roost, then out into the world for a first real bird —
-and on through the Barracks, recruiting, feeding, battling and liberation.
-Player quests are the PLAYER'S goals — different from bird expeditions and
-daily/weekly boards.
+top of the Quests tab, so a new player never wonders what to do next.
+
+The chain opens on the game's biggest promise (free-your-first-village-v327):
+open the Empire map, take the nearest village back from the darkness with
+Merlin, then go outside and find a real bird. Merlin's errands, the Barracks,
+recruiting, feeding and battling follow. Player quests are the PLAYER'S goals —
+different from bird expeditions and daily/weekly boards.
 """
 import json
 import subprocess
@@ -33,19 +34,19 @@ def test_chain_mirrors_the_guided_tutorial_flow():
     quests = player_quests()
     ids = [q["id"] for q in quests]
     assert len(ids) == len(set(ids))
-    # The guided-flow opening: send Merlin on an errand (he leads starter
-    # errands, so no Barracks is needed yet), claim it, build The Roost,
-    # then find a first real bird, then the Barracks and the recruit.
-    # The Roost retired (2026-08-20): the Barracks is the tutorial build now.
-    assert ids[:5] == [
-        "pq_expedition", "pq_claim_errand",
-        "pq_first_bird", "pq_build_barracks", "pq_recruit",
+    # Straight out of the tutorial: the Empire map, the first liberation, the
+    # first real bird — then Merlin's errands and the Barracks.
+    assert ids[:6] == [
+        "pq_open_empire", "pq_liberate", "pq_first_bird",
+        "pq_expedition", "pq_claim_errand", "pq_build_barracks",
     ]
-    assert quests[0]["type"] == "expedition_sent"
-    assert quests[1]["type"] == "expedition_claimed"
+    assert quests[0]["type"] == "empire_opened"
+    assert quests[1]["type"] == "town_liberated"
     assert quests[2]["type"] == "discover"
     assert quests[2]["name"] == "Find your first bird"
-    assert quests[3]["type"] == "build_tavern"
+    assert quests[3]["type"] == "expedition_sent"
+    assert quests[4]["type"] == "expedition_claimed"
+    assert quests[5]["type"] == "build_tavern"
     # Every link is a complete, navigable goal.
     for q in quests:
         assert q["name"] and q["desc"] and q["icon"] and q["go"], q["id"]
@@ -57,9 +58,10 @@ def test_chain_mirrors_the_guided_tutorial_flow():
 def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
     # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue;
-    # village-chain-v307 added six village links to the late chain, and
-    # magpie-market-v316 added the build-and-trade pair after the Kitchen.
-    assert len(quests) == 34
+    # village-chain-v307 added six village links to the late chain,
+    # magpie-market-v316 added the build-and-trade pair after the Kitchen, and
+    # free-your-first-village-v327 opened the chain with the Empire map.
+    assert len(quests) == 35
     types = [q["type"] for q in quests]
     for needed in (
         # The original loop…

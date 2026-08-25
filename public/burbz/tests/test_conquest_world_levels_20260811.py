@@ -19,7 +19,7 @@ SW_PATH = ROOT / "sw.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "conquest-world-levels-v248-20260811"
 PREVIOUS_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
-CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
+CURRENT_BUILD = "free-your-first-village-v327-20260825"
 
 
 def run_node(script: str):
@@ -224,7 +224,7 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     # and the loot core with v295 (the Stores market); the world-level core
     # still ships under this release.
     for asset, core_pin in (("world_level_core.js", OWN_RELEASE_PIN),
-                            ("battle_core.js", "mercy-streak-attack-preview-v287-20260819"),
+                            ("battle_core.js", "free-your-first-village-v327-20260825"),
                             ("loot_crafting_core.js", "magpie-market-v316-20260824")):
         pin = f"{asset}?v={core_pin}"
         assert pin in html, pin

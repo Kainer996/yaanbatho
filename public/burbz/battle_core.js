@@ -468,7 +468,10 @@
       focus: { player: n(config.playerFocusStart, 0), opponent: 0 },
       acting: null,        // {side, index} once the meter fills
       phase: 'tick',       // tick | act | over
-      winner: null
+      winner: null,
+      // Set for the story's first Liberation Battle: the player's birds cannot
+      // be knocked out, so that fight can only end one way. See handleFaint.
+      unloseable: !!config.unloseable
     };
   }
 
@@ -689,6 +692,16 @@
 
   function handleFaint(battle, defender, defSide, side, events) {
     if (defender.hp > 0 || defender.fainted) return;
+    // An unloseable battle is a promise, not a test. The story's first
+    // Liberation Battle is fought under it: a player's bird beaten to nothing
+    // stays on its feet with a sliver of health, so the opening village is
+    // always freed. Evil Burbz never get this.
+    if (battle.unloseable && defSide === 'player') {
+      defender.hp = 1;
+      events.push({ type:'rally', side: defSide, name: defender.name,
+        text: defender.name + ' will not fall — Merlin\'s blessing holds them up!' });
+      return;
+    }
     defender.fainted = true;
     defender.cr = 0;
     addFocus(battle, side, 2);
