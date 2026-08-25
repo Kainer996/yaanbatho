@@ -27,6 +27,9 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "villages-first-county-merge-v318-20260824"
+# A later release ships over the top; this one changed no core either, so only
+# the head build moves on.
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 
 
@@ -89,10 +92,11 @@ def test_both_merge_banners_come_from_the_same_candidate_lists():
 # ---------------------------------------------------------------------------
 
 def test_release_is_versioned_so_a_refresh_lands_the_new_order():
-    assert f"const BURBZ_BUILD = '{OWN_RELEASE_PIN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(l for l in SW.splitlines() if l.startswith("const BURBZ_CACHE"))
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN), "this release goes on the end"
+    assert OWN_RELEASE_PIN in cache_line, "this release stays in the lineage"
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest release goes on the end"
 
 
 def test_this_release_edited_no_core_so_it_pins_none():

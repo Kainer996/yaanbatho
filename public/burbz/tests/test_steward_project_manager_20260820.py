@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
@@ -263,14 +263,17 @@ console.log(JSON.stringify({ vacant, managed }));
     assert "30% faster, 15% cheaper" in out["managed"]["toast"]
 
 
-def test_the_steward_cards_tell_the_player_about_the_building_sites():
+def test_the_steward_row_tells_the_player_who_runs_the_building_sites():
     html = HTML.read_text(encoding="utf-8")
-    assert "runs the building sites and the ledger" in html
-    assert "Vacant — appoint a bird: builds go faster and cheaper, taxes rise" in html
-    # project-manager-desk-v315: the card behind that line is a picker now, not
-    # a pamphlet — the prose was Yaan's to cut. The drawer line above still says
-    # what the post does, and the town desk reads bare like every village desk.
-    assert "const bare = scope === 'village';" in html
+    # v319 replaced the drawer with one row, and moved the words into the
+    # sheet it opens. The row names the holder and the bonus; the sheet says
+    # what the job is for. Nothing about the post became unknowable.
+    row = HTML.read_text(encoding="utf-8")
+    assert "Vacant — tap to appoint a bird" in row
+    assert "role.effect.label + ' +' + post.bonusPct + '%'" in row
+    assert "'<div class=\"role-picker-copy\">' + escapeHtml(role.effect.copy) + '</div>'" in html
+    # The Project Manager's own words are still the roles core's to own.
+    assert "runs the building sites and the ledger" not in html
     assert "Every build rises faster and costs a little less" not in html
 
 

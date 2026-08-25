@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

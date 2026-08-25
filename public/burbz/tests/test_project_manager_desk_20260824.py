@@ -13,8 +13,15 @@ Two changes, one desk.
 
 2. A bird already project-managing ANOTHER village can be appointed straight
    here. Village desks are one job in many places, so the manager moves and the
-   old site falls vacant. Those birds head the list. Every other post — a
-   Librarian, a Warden — still has to stand down first.
+   old site falls vacant.
+
+**Amended by `one-tap-appointments-v319-20260824`.** Yaan widened both halves:
+ANY posted bird can now be moved to ANY post from wherever the player is
+standing, and the birds who already have a job are offered at the BOTTOM of
+the list, not the top. The tests below that pinned the narrower rule are
+inverted, not deleted — each says which release changed it and why. Rule 1 got
+stronger, not weaker: every post in the game renders bare now, because the
+title and the explanation moved into the shared appointment sheet.
 
 These tests run the REAL functions lifted out of index.html against the real
 `bird_roles_core.js`, in the harness style of test_manager_two_crews_20260821.
@@ -32,7 +39,7 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 # The release that last edited bird_roles_core.js.
 ROLES_CORE_PIN = "magpie-market-v316-20260824"
 
@@ -52,8 +59,8 @@ def slab(start: str, end: str) -> str:
 
 
 DESK_SLAB = slab(
-    "// The one post a bird can take without standing down first",
-    "// One delegated listener for every posting card in the game.",
+    "// One hand-drawn glyph per post",
+    "// One delegated listener for every posting in the game",
 )
 
 STUBS = """
@@ -78,6 +85,14 @@ const toasts = [];
 const showToast = t => toasts.push(t);
 const saveState = () => {};
 const SFX = { tap() {} };
+// The slab defines the sheet's open/close plumbing; nothing here calls it, but
+// a bare Node context still needs the names to exist.
+const document = {
+  getElementById: () => null,
+  createElement: () => ({ setAttribute() {}, classList: { add() {}, remove() {}, contains: () => false } }),
+  body: { appendChild() {} },
+  addEventListener() {}
+};
 const refreshRoleSurfaces = () => {};
 const updateQuestProgress = () => {};
 const pauseHeadChefCareer = () => {};
@@ -136,9 +151,10 @@ def test_a_vacant_village_desk_is_a_picker_not_a_pamphlet():
     assert "One bird runs every project in the village" not in html
     assert "Two builds can rise at once here" not in html
     assert "the better suited it is, the more the post is worth" not in html
-    # What is left is the post, the label and the birds.
-    assert 'class="role-post-card is-bare"' in html
-    assert "Kestrelby’s Project Manager" in html
+    # v319: the title went the same way — the sheet's own head carries it, so
+    # the card is nothing but the holder, the label and the birds.
+    assert 'class="role-post-card"' in html
+    assert "Project Manager" not in html
     assert '<div class="role-candidate-label">Appoint</div>' in html
     assert candidate_names(html) == ["Jackdaw", "Robin"]
 
@@ -158,20 +174,30 @@ def test_a_staffed_village_desk_keeps_the_number_and_drops_the_sentence():
     assert '<div class="role-candidate-label">Replace with</div>' in html
 
 
-def test_the_academy_and_the_region_keep_their_words():
+def test_every_post_reads_bare_now_and_the_words_moved_into_the_sheet():
+    """v319: what v315 did to the village desk, Yaan asked for everywhere.
+
+    The Academy and the region cards lost their prose too — but nothing became
+    unknowable, because the sheet that opens above them explains the job.
+    """
     out = run_js("""
       gameState.flock = [bird('b1', 'Jackdaw', 105, 80, 38)];
       console.log(JSON.stringify({
         library: rolePostCardHTML('academy', 'library'),
-        region: rolePostCardHTML('region', 'r1')
+        region: rolePostCardHTML('region', 'r1'),
+        librarySheet: rolePickerSheetHTML('academy', 'library', ''),
+        villageSheet: rolePickerSheetHTML('village', '101', 'Kestrelby\u2019s ')
       }));
     """)
     for html in (out["library"], out["region"]):
-        assert 'class="role-post-copy"' in html
-        assert 'class="role-vacant"' in html
-        assert 'class="role-post-card"' in html       # not bare
-    assert "The Library runs on one thing" in out["library"]
-    assert "A region is too big for one town hall" in out["region"]
+        assert 'class="role-post-copy"' not in html
+        assert 'class="role-vacant"' not in html
+        assert 'class="role-post-card"' in html
+    # The sheet is where a post is explained, once, for the whole game.
+    assert "Birds stationed in the Library learn INT faster." in out["librarySheet"]
+    assert '<div class="role-picker-title">Librarian</div>' in out["librarySheet"]
+    assert '<div class="role-picker-title">Kestrelby’s Project Manager</div>' in out["villageSheet"]
+    assert "Every build is faster and costs a little less" in out["villageSheet"]
 
 
 def test_the_words_still_live_in_the_roles_core():
@@ -180,18 +206,22 @@ def test_the_words_still_live_in_the_roles_core():
     assert "Two builds can rise at once here." in ROLES_CORE
 
 
-def test_the_drawer_line_above_the_desk_still_says_what_the_post_does():
-    # The one-line summary the player taps to open the desk is untouched, so
-    # nothing about the post became unknowable.
-    assert "runs the building sites and the ledger — tap to manage" in HTML
-    assert "Vacant — appoint a bird: builds go faster and cheaper, taxes rise" in HTML
+def test_the_row_the_player_taps_says_who_holds_the_post():
+    """v319 replaced the drawer with one row that opens the shared sheet."""
+    row = function_source("rolePostRowHTML")
+    assert "data-action=\"role-open\"" in function_source("roleOpenAttrs")
+    assert "birdDisplayName(post.bird) + ' · ' + role.effect.label + ' +' + post.bonusPct + '%'" in row
+    assert "Vacant — tap to appoint a bird" in row
+    assert "roleSymbolSVG(role, 'role-post-row-symbol')" in row
+    # The old drawer copy is gone with the drawer.
+    assert "runs the building sites and the ledger — tap to manage" not in HTML
 
 
 # ---------------------------------------------------------------------------
 # 2. Managers of other villages, at the top of the list
 # ---------------------------------------------------------------------------
 
-def test_another_villages_manager_is_offered_first_and_names_their_village():
+def test_another_villages_manager_is_offered_last_and_names_their_village():
     out = run_js("""
       gameState.flock = [
         bird('free', 'Goldcrest', 250, 250, 10),   // the best bird in the flock
@@ -202,15 +232,21 @@ def test_another_villages_manager_is_offered_first_and_names_their_village():
       console.log(JSON.stringify({ html }));
     """)
     html = out["html"]
-    # Serving managers lead, even past a better-suited free bird.
-    assert candidate_names(html) == ["Jackdaw", "Goldcrest"]
-    assert 'class="role-candidate is-serving"' in html
-    # And the row says which village they would leave.
-    assert '<span class="role-candidate-post">\U0001F4CB Foxholt · move here</span>' in html
+    # v319 turned this over: a bird with a job is offered BENEATH the free
+    # flock, under its own label, because taking them costs another post.
+    assert candidate_names(html) == ["Goldcrest", "Jackdaw"]
+    assert 'class="role-candidate is-posted"' in html
+    assert '<div class="role-candidate-label is-sub">Already posted elsewhere</div>' in html
+    # And the row still says which village they would leave.
+    assert '<span class="role-candidate-post">\U0001F4CB Project Manager · Foxholt — moves here</span>' in html
     assert html.count('class="role-candidate-post"') == 1
+    assert html.count('class="role-candidate-duty"') == 1
 
 
-def test_only_village_managers_move_and_only_to_another_village():
+def test_every_posted_bird_is_offered_to_every_post():
+    """v319 inverted v315's narrow rule: Yaan asked to be able to appoint the
+    bird he wants from whatever screen he is on. A Librarian can take a
+    village, a manager can take a room, and a Warden can take either."""
     out = run_js("""
       gameState.flock = [
         bird('lib', 'Owl', 200, 60, 30),
@@ -227,14 +263,15 @@ def test_only_village_managers_move_and_only_to_another_village():
         region: rolePostCardHTML('region', 'r2')
       }));
     """)
-    # A village desk offers the other village's manager — and nobody else posted.
-    assert candidate_names(out["village"]) == ["Jackdaw"]
-    # An Academy room and a region hall offer nobody who already holds a post.
-    assert candidate_names(out["kitchen"]) == []
-    assert "No companion is free for this post right now" in out["kitchen"]
-    assert candidate_names(out["region"]) == []
-    # The Librarian's own card still offers nobody else (its holder is excluded).
-    assert candidate_names(out["library"]) == []
+    # Every post offers every posted bird; only its own holder is left out.
+    assert sorted(candidate_names(out["village"])) == ["Jackdaw", "Owl", "Raven"]
+    assert sorted(candidate_names(out["kitchen"])) == ["Jackdaw", "Owl", "Raven"]
+    assert sorted(candidate_names(out["region"])) == ["Jackdaw", "Owl", "Raven"]
+    assert sorted(candidate_names(out["library"])) == ["Jackdaw", "Raven"]   # not Owl
+    # Every one of them is marked, and every one names the job it would leave.
+    for html in (out["village"], out["kitchen"], out["region"]):
+        assert html.count('class="role-candidate-duty"') == 3
+        assert "No companion is free for this post right now" not in html
 
 
 def test_the_manager_of_this_very_village_is_not_offered_to_itself():
@@ -248,7 +285,9 @@ def test_the_manager_of_this_very_village_is_not_offered_to_itself():
     assert "No companion is free for this post right now" in out["html"]
 
 
-def test_serving_managers_never_crowd_the_free_flock_out_of_the_list():
+def test_the_free_flock_is_never_crowded_out_by_birds_who_have_jobs():
+    """v319: the two groups have their own caps, so a large empire full of
+    posted birds can never push the free ones off the list."""
     out = run_js("""
       const flock = [];
       const seeds = ['202', '303', '404', '505', '606', '707'];
@@ -256,19 +295,19 @@ def test_serving_managers_never_crowd_the_free_flock_out_of_the_list():
         flock.push(bird('m' + i, 'Manager' + i, 120 - i, 90, 30));
         gameState.birdRoles.villages[seed] = 'm' + i;
       });
-      for (let i = 0; i < 6; i++) flock.push(bird('f' + i, 'Free' + i, 80, 80, 30));
+      for (let i = 0; i < 10; i++) flock.push(bird('f' + i, 'Free' + i, 80 - i, 80, 30));
       gameState.flock = flock;
       const html = rolePostCardHTML('village', '101');
-      console.log(JSON.stringify({ names: [], html }));
+      console.log(JSON.stringify({ html }));
     """)
     names = candidate_names(out["html"])
-    assert len(names) == 8                                    # ROLE_CANDIDATE_LIMIT
-    assert [n for n in names if n.startswith("Manager")] == [
-        "Manager0", "Manager1", "Manager2", "Manager3", "Manager4"
-    ]                                                          # ROLE_SERVING_CANDIDATE_LIMIT
-    assert len([n for n in names if n.startswith("Free")]) == 3
+    # Eight free birds first, then six of the posted ones — in that order.
+    assert len(names) == 14
+    assert all(n.startswith("Free") for n in names[:8])       # ROLE_CANDIDATE_LIMIT
+    assert all(n.startswith("Manager") for n in names[8:])    # ROLE_POSTED_CANDIDATE_LIMIT
+    assert names[8:] == ["Manager0", "Manager1", "Manager2", "Manager3", "Manager4", "Manager5"]
     assert "const ROLE_CANDIDATE_LIMIT = 8;" in HTML
-    assert "const ROLE_SERVING_CANDIDATE_LIMIT = 5;" in HTML
+    assert "const ROLE_POSTED_CANDIDATE_LIMIT = 6;" in HTML
 
 
 # ---------------------------------------------------------------------------
@@ -285,31 +324,45 @@ def test_appointing_another_villages_manager_moves_them_and_empties_the_old_desk
     assert out["villages"] == {"101": "mgr"}          # Foxholt is vacant again
     assert len(out["toasts"]) == 1
     assert "Jackdaw is now Project Manager" in out["toasts"][0]
-    assert "Foxholt needs a new one" in out["toasts"][0]
+    assert "Foxholt has no Project Manager now" in out["toasts"][0]
 
 
-def test_a_librarian_still_has_to_stand_down_before_taking_a_village():
+def test_a_librarian_walks_straight_onto_a_village_desk():
+    """v319 inverted this. v315 refused it with 'stand them down first'."""
     out = run_js("""
       gameState.flock = [bird('lib', 'Owl', 200, 60, 30)];
       gameState.birdRoles.academy.library = 'lib';
       assignBirdRole('village', '101', 'lib');
       console.log(JSON.stringify({ roles: gameState.birdRoles, toasts }));
     """)
-    assert out["roles"]["villages"] == {}
-    assert out["roles"]["academy"] == {"library": "lib"}
-    assert out["toasts"] == ["Owl is already working as Librarian — stand them down first."]
+    assert out["roles"]["villages"] == {"101": "lib"}
+    assert out["roles"]["academy"] == {}                      # the Library is empty now
+    assert "Owl is now Project Manager" in out["toasts"][0]
+    assert "The Library has no Librarian now" in out["toasts"][0]
+    assert "stand them down first" not in out["toasts"][0]
 
 
-def test_a_village_manager_still_has_to_stand_down_before_taking_a_room():
+def test_a_village_manager_walks_straight_into_a_room():
+    """The other half of the same inversion, in the other direction."""
     out = run_js("""
       gameState.flock = [bird('mgr', 'Jackdaw', 105, 80, 38)];
       gameState.birdRoles.villages['202'] = 'mgr';
       assignBirdRole('academy', 'library', 'mgr');
       console.log(JSON.stringify({ roles: gameState.birdRoles, toasts }));
     """)
-    assert out["roles"]["academy"] == {}
-    assert out["roles"]["villages"] == {"202": "mgr"}
-    assert out["toasts"] == ["Jackdaw is already working as Project Manager — stand them down first."]
+    assert out["roles"]["academy"] == {"library": "mgr"}
+    assert out["roles"]["villages"] == {}                     # Foxholt is empty now
+    assert "Jackdaw is now Librarian" in out["toasts"][0]
+    assert "Foxholt has no Project Manager now" in out["toasts"][0]
+
+
+def test_nobody_is_ever_refused_for_already_having_a_job():
+    """The refusal is gone from the code, not merely unreachable."""
+    assign = function_source("assignBirdRole")
+    assert "stand them down first" not in assign
+    assert "is already working as" not in assign
+    assert "birdCanMoveToVillagePost" not in HTML
+    assert "function birdMovesFromPost(scope, key, post)" in HTML
 
 
 def test_re_appointing_the_sitting_manager_to_their_own_desk_is_quiet():
@@ -320,7 +373,7 @@ def test_re_appointing_the_sitting_manager_to_their_own_desk_is_quiet():
       console.log(JSON.stringify({ villages: gameState.birdRoles.villages, toasts }));
     """)
     assert out["villages"] == {"101": "mgr"}
-    assert "needs a new one" not in out["toasts"][0]
+    assert "has no Project Manager now" not in out["toasts"][0]
 
 
 # ---------------------------------------------------------------------------

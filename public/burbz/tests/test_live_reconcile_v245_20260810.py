@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
@@ -67,11 +67,11 @@ def test_distributed_hud_routes_every_control_through_one_helper():
 def test_training_hall_drill_master_stands_in_the_scene():
     html = HTML.read_text(encoding="utf-8")
     assert "training-master-actor" in html
-    assert "training-master-picker" in html
-    # The Training Hall's role card lives in the picker sheet, other rooms
-    # keep their inline panel.
-    assert "const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);" in html
-    assert "rolePostCardHTML('academy', 'training')" in html
+    # v319: the Hall's bespoke picker retired into the shared appointment
+    # sheet, so the actor's ↻ now opens the same sheet as every other post.
+    assert "training-master-picker" not in html
+    assert "roleOpenAttrs('academy', 'training', '')" in html
+    assert "const roleBadge = rolePostBadgeHTML('academy', room);" in html
 
 
 def test_birdex_recruits_directly_once_the_barracks_stands():

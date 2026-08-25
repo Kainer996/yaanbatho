@@ -23,7 +23,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 ROLE_CORE_PIN = "roost-retired-v302-20260820"
 SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
@@ -296,21 +296,33 @@ def test_posts_are_wired_into_the_things_they_claim_to_improve():
     assert "const wardens = (regionRoleMultiplier(a.id) + regionRoleMultiplier(b.id)) / 2;" in html
 
 
-def test_the_appointment_card_is_reachable_from_every_surface():
+def test_the_appointment_sheet_is_reachable_from_every_surface():
     html = HTML.read_text(encoding="utf-8")
     assert "function rolePostCardHTML(scope, key" in html
-    # Academy room interiors (including the Barracks, which renders early).
-    # training-master-room-actor-v243 (live line): the Training Hall's card
-    # moved into the Drill Master picker sheet; every other room keeps the
-    # inline panel.
-    assert "const rolePanel = room === 'training' ? '' : rolePostCardHTML('academy', room);" in html
-    assert "rolePostCardHTML('academy', 'training')" in html
-    assert "rolePostCardHTML('academy', 'tavern')" in html
-    # A village's own hall, and a region's.
-    assert "rolePostCardHTML('village', String(rec.seed >>> 0)" in html
-    assert "rolePostCardHTML('region', String(region.id))" in html
+    # one-tap-appointments-v319: no surface carries the card inline any more.
+    # Every Academy room wears a symbol in the corner of its own picture, and
+    # every desk wears a row; both open the one shared sheet.
+    assert "function rolePostBadgeHTML(scope, key" in html
+    assert "function rolePostRowHTML(scope, key" in html
+    assert "function openRolePicker(scope, key, prefix)" in html
+    assert "const roleBadge = rolePostBadgeHTML('academy', room);" in html
+    assert "rolePostBadgeHTML('academy', 'tavern')" in html
+    assert "roleOpenAttrs('academy', 'training', '')" in html      # the Drill Master actor
+    # A village's own hall, a Town Hall's heart village, and a region's.
+    assert "rolePostRowHTML('village', String(rec.seed >>> 0)" in html
+    assert "rolePostRowHTML('village', String(Number(settle.heartSeed) >>> 0)" in html
+    assert "rolePostRowHTML('region', String(region.id))" in html
+    # The sheet is the only place the card is built for a player to see; the
+    # other call is the QA debug hook, which renders nothing on a screen.
+    sheet = html[html.index("function rolePickerSheetHTML("):]
+    assert "rolePostCardHTML(scope, key) +" in sheet[:sheet.index("\nfunction ")]
+    for renderer in ("renderAcademyRoomInterior", "renderVillageManagePanel", "renderRegionScreen", "renderTownScreen"):
+        body = html[html.index("function " + renderer + "("):]
+        body = body[:body.index("\nfunction ")]
+        assert "rolePostCardHTML(" not in body, renderer
     # Assignment runs through one delegated listener, not per-card onclicks.
     assert 'data-action="role-assign"' in html and 'data-action="role-clear"' in html
+    assert 'data-action="role-open"' in html and 'data-action="role-picker-close"' in html
     # And the bird's own card says what it is and what it does.
     assert "function renderBirdSizePanel(bird)" in html
     assert "function renderBirdPostLine(bird)" in html

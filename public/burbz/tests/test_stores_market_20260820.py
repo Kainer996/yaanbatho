@@ -26,7 +26,7 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
 ROLES_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 
@@ -174,7 +174,10 @@ def test_the_village_post_is_titled_project_manager_with_the_old_save_key():
 
 def test_every_surface_wears_the_new_nameplate():
     html = HTML.read_text(encoding="utf-8")
-    assert "'PROJECT MANAGER'" in html                      # the province drawer
+    # v319 retired the province drawer; the desk row reads the post's real
+    # title straight from the roles core, so the nameplate can never drift.
+    assert "'PROJECT MANAGER'" not in html
+    assert "escapeHtml(prefix + role.title)" in html         # the desk row
     assert "Town Project Manager" in html                   # the Town section
     assert "Lord Mayor’s chain comes later" in html
     assert "your Project Manager is raising it by" in html  # the income line

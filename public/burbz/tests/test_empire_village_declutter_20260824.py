@@ -36,7 +36,7 @@ SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # A later release ships over the top; this one changed no core, so its own pin
 # never becomes a `?v=` and only the head build moves on.
-CURRENT_BUILD = "villages-first-county-merge-v318-20260824"
+CURRENT_BUILD = "one-tap-appointments-v319-20260824"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 
 
