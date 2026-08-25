@@ -2,8 +2,12 @@
 
 Burbz opens on the Scan screen with Merlin's wand ready to listen. Both mode
 buttons keep to the left, clear of the falcon perched against the right edge,
-and the listener panel that used to sit across his portrait is gone — his state
-reads as one quiet line beneath the art instead.
+and the listener panel that used to sit across his portrait is gone.
+
+START MERLIN'S WAND follows the painting directly. The button already says what
+the wand is doing — START, OPENING MICROPHONE…, STOP LISTENING — so the state
+line behind it is a live region for screen readers and shows on screen only
+when something has gone wrong and the player needs to read why.
 
 The microphone is never opened by landing here. It still takes the player's own
 tap on Sound or on START MERLIN'S WAND.
@@ -62,14 +66,32 @@ def test_merlins_listener_art_carries_no_text():
     assert "merlin-listener-privacy" not in HTML
     stage = HTML.split('id="merlinListenerStage"', 1)[1].split("</div>", 1)[0]
     assert "merlinListenStatus" not in stage
-    # The wand still reports what it is doing — below the painting, not across it.
-    assert 'class="merlin-listener-line"' in HTML
     assert 'id="merlinListenStatus"' in HTML
     assert 'id="merlinListenActivity"' in HTML
     # The microphone disclosure stays on the screen, under the start button.
     note = HTML.split('id="merlinDataNote"', 1)[1].split("</div>", 1)[0]
     assert "Microphone active only while the green listening light is shown" in note
     assert "Sound windows are sent to the Burbz server for bird-sound analysis" in note
+
+
+def test_the_start_button_stands_where_the_ready_to_listen_line_was():
+    area = HTML.split('id="soundScanArea"', 1)[1].split('id="imageScanArea"', 1)[0]
+    assert area.index('id="merlinListenerStage"') < area.index('id="scanBtn"') < area.index('id="waveformContainer"')
+    assert 'class="scan-btn scan-btn-lead" id="scanBtn"' in area
+
+
+def test_the_state_line_is_silent_on_screen_until_something_goes_wrong():
+    line = HTML.split(".merlin-listener-line {", 1)[1].split("}", 1)[0]
+    # Off-screen for sighted players, still announced by aria-live.
+    assert "clip-path:inset(50%)" in line
+    assert 'aria-live="polite"' in HTML.split('id="merlinListenStatus"', 1)[0][-120:] \
+        or 'id="merlinListenStatus" aria-live="polite"' in HTML
+    shown = HTML.split(".merlin-listener-line.is-error {", 1)[1].split("}", 1)[0]
+    assert "position:static" in shown and "clip-path:none" in shown
+    # Two of the listener's error paths raise no toast, so the class must be
+    # driven by the real listener state.
+    ui = HTML.split("function updateMerlinListeningUI() {", 1)[1].split("\nfunction ", 1)[0]
+    assert "$('merlinListenerLine')?.classList.toggle('is-error', soundListenerState === 'error')" in ui
 
 
 def test_the_game_lands_on_the_sound_tab_without_opening_the_microphone():

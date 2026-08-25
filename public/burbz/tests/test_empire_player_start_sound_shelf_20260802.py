@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "free-your-first-village-v327-20260825"
+RELEASE_PIN = "wand-button-leads-v328-20260825"
 # This release's own marker stays on the cache lineage even after later
 # releases move BURBZ_BUILD on.
 OWN_RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
@@ -73,16 +73,19 @@ def test_late_first_gps_fix_glides_to_the_player_zoom():
 # 2. Sound screen: session shelf where the data note was
 # ---------------------------------------------------------------------------
 
-def test_sound_scan_area_orders_shelf_then_button_then_data_note():
+def test_sound_scan_area_leads_with_the_button_then_shelf_then_data_note():
     html = HTML.read_text(encoding="utf-8")
     area = html[html.index('id="soundScanArea"'):html.index('id="imageScanArea"')]
+    stage = area.index('id="merlinListenerStage"')
     shelf = area.index('id="soundSessionShelf"')
     grid = area.index('id="soundSessionShelfGrid"')
     button = area.index('id="scanBtn"')
     note = area.index('id="merlinDataNote"')
-    # The discovered-birds grid sits where the BirdNET note used to be; the
-    # note now lives below the start button, much further down the screen.
-    assert shelf < grid < button < note
+    # The discovered-birds grid still sits where the BirdNET note used to be,
+    # and the note is still well below the start button. What moved (Yaan's
+    # ask, 2026-08-25) is the button itself: it now follows Merlin's painting
+    # directly, in place of the "Ready to listen" line that stood there.
+    assert stage < button < shelf < grid < note
     assert 'id="soundSessionShelfCount"' in area
     assert 'id="soundSessionShelfEmpty"' in area
     # The privacy/BirdNET copy itself is unchanged, just relocated.
