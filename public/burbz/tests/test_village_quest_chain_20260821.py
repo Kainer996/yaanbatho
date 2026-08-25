@@ -22,7 +22,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "art-same-origin-v325-20260825"
+RELEASE_PIN = "iron-ingot-errand-v326-20260825"
 OWN_RELEASE_PIN = "village-chain-v307-20260821"
 
 VILLAGE_LINKS = [

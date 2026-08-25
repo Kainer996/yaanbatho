@@ -52,7 +52,7 @@ SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "art-same-origin-v325-20260825"
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 PREVIOUS_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 
 GITHUB_HOSTS = ("github.com/Kainer996", "raw.githubusercontent.com")
@@ -193,7 +193,11 @@ def test_the_vps_art_checker_ships_with_the_repo():
 def test_release_is_versioned_and_the_lineage_is_append_only():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
-    assert cache_line.rstrip("';").endswith(OWN_RELEASE_PIN), "the newest marker goes last"
+    # The newest marker is the CURRENT head, not this release's own — the
+    # lineage keeps growing after v325, and every later marker must land after
+    # it without dropping anything already in the chain.
+    assert cache_line.rstrip("';").endswith(CURRENT_BUILD), "the newest marker goes last"
+    assert OWN_RELEASE_PIN in cache_line, "the lineage is append-only"
     assert PREVIOUS_RELEASE_PIN in cache_line, "the lineage is append-only"
     assert "forge-opens-on-the-anvil-v323-20260825" in cache_line, "the lineage is append-only"
 

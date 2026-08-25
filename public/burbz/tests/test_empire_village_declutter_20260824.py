@@ -35,8 +35,9 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
+ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
 
 def html_text() -> str:
@@ -262,5 +263,8 @@ def test_no_core_pin_moved_because_no_core_changed():
     # The Magpie Market's cores are still on the release that changed them.
     # (bird_roles_core.js has since moved to free-birds-v318, which retired the
     # Head Gardener — a later release re-pinning a core is expected.)
-    for core in ("academy_treehouse_core.js", "loot_crafting_core.js"):
+    # (academy_treehouse_core.js has likewise moved to iron-ingot-errand-v326,
+    # which gave the Iron Ingot its own errand.)
+    for core in ("loot_crafting_core.js",):
         assert "%s?v=%s" % (core, PREVIOUS_RELEASE_PIN) in html, core
+    assert "academy_treehouse_core.js?v=%s" % ACADEMY_CORE_PIN in html

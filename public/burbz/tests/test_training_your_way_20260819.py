@@ -19,9 +19,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "art-same-origin-v325-20260825"
+CURRENT_BUILD = "iron-ingot-errand-v326-20260825"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 
@@ -165,6 +165,6 @@ def test_release_is_versioned_and_the_academy_core_shipped():
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line       # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    pin = f"academy_treehouse_core.js?v={MAGPIE_CORE_PIN}"
+    pin = f"academy_treehouse_core.js?v={ACADEMY_CORE_PIN}"
     assert f'<script src="{pin}"></script>' in html
     assert sw.count(f"'./{pin}'") == 2

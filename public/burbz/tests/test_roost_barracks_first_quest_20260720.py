@@ -15,7 +15,7 @@ ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
 
 def _node_json(source: str):
@@ -267,6 +267,6 @@ console.log(JSON.stringify({missingBoth,barracksOnly,established}));
 def test_onboarding_release_is_query_busted_and_offline():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
-    assert f'academy_treehouse_core.js?v={MAGPIE_CORE_PIN}' in html
-    assert f"./academy_treehouse_core.js?v={MAGPIE_CORE_PIN}" in sw
+    assert f'academy_treehouse_core.js?v={ACADEMY_CORE_PIN}' in html
+    assert f"./academy_treehouse_core.js?v={ACADEMY_CORE_PIN}" in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
