@@ -8,25 +8,80 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
   'use strict';
 
+  // THE INTERFACE PALETTE.
+  // Every one of these was chosen by measuring the file, not by its filename.
+  // A tap wants its whole body inside about 50 ms and to be gone inside 200 ms;
+  // anything that rings on is what makes an interface feel heavy. Measured with
+  // decodeAudioData, "body" is the point by which 90% of the sound's energy has
+  // passed and "tail" is the last sample above 1% of peak:
+  //
+  //   sfx-ui-tap.mp3   body 111 ms, tail 999 ms   <- rang for a full second
+  //   ui-wood.mp3      body  47 ms, tail 200 ms   <- a wooden tick, and done
+  //   ui-lock.mp3      body  67 ms, tail 150 ms
+  //   ui-coins.mp3     body 281 ms, tail 448 ms
+  //   ui-spell.mp3     body 247 ms, tail 507 ms
+  //   sfx-resource.mp3 body 726 ms                <- far too long for a pickup
+  //
+  // So the short, characterful pack carries the interface — wood for a tap, a
+  // lock for an unlock, coins for coins, a spell accent for magic — and the
+  // bespoke one-second Burbz sounds keep the big moments, where a tail belongs.
   var DEFAULT_SOUND_MANIFEST = Object.freeze({
-    tap: 'assets/audio/sfx-ui-tap.mp3',
+    tap: 'assets/audio/ui-wood.mp3',
     page: 'assets/audio/sfx-page-wing.mp3',
     capture: 'assets/audio/sfx-capture.mp3',
     hit: 'assets/audio/sfx-battle-hit.mp3',
-    specialHit: 'assets/audio/sfx-battle-magic.mp3',
+    specialHit: 'assets/audio/ui-spell.mp3',
     defend: 'assets/audio/sfx-battle-defend.mp3',
     victory: 'assets/audio/sfx-victory.mp3',
     defeat: 'assets/audio/sfx-defeat-error.mp3',
-    levelUp: 'assets/audio/sfx-level-up.mp3',
+    levelUp: 'assets/audio/reward-level-up.mp3',
     questComplete: 'assets/audio/sfx-quest-complete.mp3',
-    unlock: 'assets/audio/sfx-capture.mp3',
-    coins: 'assets/audio/sfx-resource.mp3',
+    unlock: 'assets/audio/ui-lock.mp3',
+    coins: 'assets/audio/ui-coins.mp3',
     build: 'assets/audio/sfx-build.mp3',
     error: 'assets/audio/sfx-defeat-error.mp3'
   });
 
+  // How loud each role sits. The files were mastered at wildly different levels
+  // (measured RMS ran from -21 dB to -33 dB), so without this the interface
+  // shouts and the rewards whisper. A tap should be felt more than heard.
+  var DEFAULT_VOLUMES = Object.freeze({
+    tap: 0.3,
+    page: 0.38,
+    capture: 0.8,
+    hit: 0.55,
+    specialHit: 0.6,
+    defend: 0.5,
+    victory: 0.9,
+    defeat: 0.65,
+    levelUp: 0.85,
+    questComplete: 0.9,
+    unlock: 0.5,
+    coins: 0.45,
+    build: 0.55,
+    error: 0.45
+  });
+
+  // A button that returns the identical pitch on every press reads as a machine.
+  // A few per cent of drift, chosen fresh each time, is the whole difference
+  // between a wooden interface that sounds handmade and one that sounds sampled.
+  // Rewards are left alone: a fanfare that wobbles sounds broken, not handmade.
+  var DEFAULT_PITCH_DRIFT = Object.freeze({
+    tap: 0.06,
+    page: 0.035,
+    hit: 0.05,
+    specialHit: 0.04,
+    defend: 0.04,
+    unlock: 0.04,
+    coins: 0.05,
+    build: 0.045,
+    error: 0.03
+  });
+
+  // A tap is over inside 200 ms now, so it can answer the finger sooner without
+  // ever stacking into mush.
   var DEFAULT_COOLDOWNS = Object.freeze({
-    tap: 90,
+    tap: 65,
     page: 140,
     capture: 250,
     hit: 55,
@@ -73,6 +128,8 @@
       : (options.audioFactory || (root && root.Audio));
     var manifest = Object.assign({}, DEFAULT_SOUND_MANIFEST, options.manifest || {});
     var cooldowns = Object.assign({}, DEFAULT_COOLDOWNS, options.cooldowns || {});
+    var volumes = Object.assign({}, DEFAULT_VOLUMES, options.volumes || {});
+    var pitchDrift = Object.assign({}, DEFAULT_PITCH_DRIFT, options.pitchDrift || {});
     var random = typeof options.random === 'function' ? options.random : Math.random;
     var now = typeof options.now === 'function' ? options.now : Date.now;
     var schedule = typeof options.setTimeout === 'function'
@@ -181,8 +238,16 @@
         return Promise.resolve(false);
       }
 
-      var volume = hasOwn.call(playOptions, 'volume') ? Number(playOptions.volume) : 1;
-      var rate = hasOwn.call(playOptions, 'playbackRate') ? Number(playOptions.playbackRate) : 1;
+      var volume = hasOwn.call(playOptions, 'volume')
+        ? Number(playOptions.volume)
+        : (hasOwn.call(volumes, name) ? Number(volumes[name]) : 1);
+      var rate;
+      if (hasOwn.call(playOptions, 'playbackRate')) {
+        rate = Number(playOptions.playbackRate);
+      } else {
+        var drift = Math.max(0, Math.min(0.4, Number(pitchDrift[name]) || 0));
+        rate = drift > 0 ? 1 + (random() * 2 - 1) * drift : 1;
+      }
       try { audio.volume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 1)); } catch (_) {}
       try { audio.playbackRate = Number.isFinite(rate) && rate > 0 ? rate : 1; } catch (_) {}
       try { audio.preload = 'auto'; } catch (_) {}

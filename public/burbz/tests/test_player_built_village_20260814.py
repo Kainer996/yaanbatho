@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "wand-button-leads-v328-20260825"
+CURRENT_BUILD = "trail-mode-v329-20260825"
 PREVIOUS_RELEASE_PIN = "night-veil-removed-v266-20260813"
 
 
