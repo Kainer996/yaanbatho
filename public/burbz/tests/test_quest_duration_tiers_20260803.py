@@ -102,7 +102,9 @@ def test_send_sheet_has_mobile_duration_choices_and_dispatches_selected_tier():
     assert "durationMinutes: questSendState.durationMinutes" in function_source(html, "confirmQuestSend")
     sheet = function_source(html, "renderQuestSendSheet")
     assert "getQuestDurationOptions" in sheet
-    assert "Quick quests pay best per hour" in sheet
+    # v331 dropped the prose note: it explained in a paragraph what each tile
+    # already prints in numbers, and the sheet has to hold the whole errand.
+    assert "Quick quests pay best per hour" not in sheet
     assert "7 durations" in html
     assert ".quest-duration-grid" in html
     assert "grid-template-columns:repeat(2,minmax(0,1fr))" in html.replace(" ", "")

@@ -105,8 +105,13 @@ def test_liberation_battle_removes_league_chrome_and_reaches_the_playable_arena(
     assert "applyTeamSynergies(playerFighters)" in start
     assert "applyTeamSynergies(opponentFighters)" in start
     assert "battle.synergies = { player: playerSynergies, opponent: opponentSynergies }" in start
-    assert start.index("battle.synergies =") < start.index("battle.synergies.player")
-    assert start.index("battle.synergies.player") < start.index("battleAdvance()")
+    assert start.index("battle.synergies =") < start.index("battleAdvance()")
+    # v331 retired the opening log dump, so squad bonuses are no longer read out
+    # before the fight — they ride the arena banner, which stays put instead of
+    # scrolling away, and stands down entirely when there is no bonus to name.
+    render = html[html.index("function renderArena("):html.index("function battleUsePotion(")]
+    assert "b.synergies.player" in render and "b.synergies.opponent" in render
+    assert "arenaSynergy.style.display = lines.length ? '' : 'none';" in render
 
 
 def test_story_canon_connects_real_world_liberation_to_the_kingdom_of_burbz():

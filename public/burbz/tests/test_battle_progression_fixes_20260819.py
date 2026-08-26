@@ -27,7 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "field-any-bird-v330-20260826"
+CURRENT_BUILD = "quiet-arena-v331-20260826"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=nav-action-badges-v312-20260824"  # moved on in v312
 
 
@@ -120,7 +120,9 @@ def test_victory_screen_frees_a_village_not_a_town():
     assert "TOWN LIBERATED" not in end
     assert "liberatedVillage" in end
     start = function_source(html, "startPerchBattle")
-    assert "Free the village!" in start
+    # v331: the reassurance moved off the battle log and onto the select
+    # screen's liberation banner, where it is read before the fight starts.
+    assert "Free the village!" in html
     assert "Free the town!" not in start
 
 

@@ -2105,6 +2105,37 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 /* ========== BATTLE SCREEN ========== */
 .battle-select { display: block; }
 .battle-arena { display: none; }
+/* One screenful, always. The arena is exactly as tall as the screen's content
+   box; every block keeps its natural height and the log alone gives ground,
+   growing with the fight until the space runs out and then scrolling inside
+   itself. That way the moves can never be pushed below the fold, on any
+   phone, however long the fight runs. */
+.battle-arena.live { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.battle-arena.live > * { flex: 0 0 auto; }
+.battle-arena.live > .battle-log { flex: 0 1 auto; min-height: 0; max-height: none; }
+/* The TURN tab hangs off the top of its card, so your row needs a little
+   air under the log for it to sit in. The log gives up the pixels. */
+.battle-arena.live > .arena-squad.player { margin-top: 9px; }
+/* Short phones. Measured on the real screen: at 360x667 the fight ran 13px
+   past the nav bar once the ATTACK bar appeared. So the strip that only
+   forecasts the meter stands down, the pictures come in, and the buttons
+   tighten — none of which a 780px-tall phone ever sees. */
+@media (max-height: 740px) {
+  .battle-arena.live .arena-timeline { display: none; }
+  .battle-arena.live .arena-unit .au-art { max-height: 56px; }
+  .battle-arena.live .arena-unit .au-emoji { height: 56px; line-height: 56px; font-size: 26px; }
+  .battle-arena.live .arena-squad { gap: 5px; margin-bottom: 6px; }
+  .battle-arena.live .move-btn { min-height: 46px; padding: 7px 10px; }
+  .battle-arena.live .battle-log { margin-top: 6px; }
+}
+@media (max-height: 640px) {
+  .battle-arena.live .arena-unit .au-art { max-height: 42px; }
+  .battle-arena.live .arena-unit .au-emoji { height: 42px; line-height: 42px; font-size: 20px; }
+  .battle-arena.live .arena-unit .au-name { height: 1.2em; -webkit-line-clamp: 1; }
+  .battle-arena.live .move-btn { min-height: 40px; }
+  .battle-arena.live .move-btn .mv-meta { display: none; }
+  .battle-arena.live .battle-log { display: none; }
+}
 .battle-result-screen { display: none; }
 /* Squad board — four slots the player fills from the roster below. */
 .sq-board { padding:12px; background:linear-gradient(180deg, var(--bg2), rgba(20,17,12,.9)); border:1px solid rgba(214,168,79,.22); border-radius:16px; margin-bottom:4px; }
@@ -2184,8 +2215,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .battle-start-btn:disabled { background: linear-gradient(135deg, #4d3f20, #3a3019); color: rgba(255,255,255,.62); box-shadow: 0 6px 24px rgba(0,0,0,.45); pointer-events: none; }
 .battle-match-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 8px; color: var(--text2); font-size: 12px; }
 .battle-scoreboard { display:flex; gap:8px; align-items:center; justify-content:center; font-family:'Russo One',sans-serif; font-size: 22px; color: var(--accent); }
-.battle-log { margin-top: 12px; padding: 12px; background: var(--bg2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); max-height: 150px; overflow-y: auto; }
-.battle-log-entry { font-size: 12px; color: var(--text2); margin-bottom: 4px; padding: 5px 8px; border-radius: 6px; animation: slideUp 0.2s ease; }
+.battle-log { margin-top: 10px; padding: 6px 8px; background: var(--bg2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); max-height: 150px; overflow-y: auto; overscroll-behavior: contain; }
+.battle-log-entry { font-size: 11px; line-height: 1.3; color: var(--text2); margin-bottom: 3px; padding: 3px 7px; border-radius: 6px; animation: slideUp 0.2s ease; }
 .battle-log-entry.player-action { background: rgba(214,168,79,0.08); border-left: 2px solid var(--accent2); }
 .battle-log-entry.enemy-action { background: rgba(224,57,43,0.08); border-left: 2px solid #e0392b; }
 .battle-log-entry.system-msg { background: rgba(255,212,59,0.06); border-left: 2px solid var(--legendary); color: var(--legendary); }
@@ -2335,13 +2366,6 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-unit .au-status span { font-size:7px; padding:0 4px; border-radius:6px; background:var(--bg4); }
 .arena-unit .au-status .buff { color:#7fdcc6; }
 .arena-unit .au-status .debuff { color:#e0857a; }
-.arena-focus { display:flex; justify-content:space-between; gap:10px; margin-top:8px; padding:7px 10px; background:var(--bg2); border-radius:10px; border:1px solid rgba(255,255,255,0.06); }
-.focus-side { display:flex; align-items:center; gap:7px; }
-.focus-side span { font-size:8px; letter-spacing:1px; font-weight:800; color:var(--text3); }
-.focus-pips { display:flex; gap:2px; }
-.focus-pips i { width:7px; height:11px; border-radius:2px; background:var(--bg4); }
-.focus-pips i.lit { background:linear-gradient(180deg,#f0b429,#e0594a); box-shadow:0 0 5px rgba(240,180,41,0.6); }
-.focus-side.rival .focus-pips i.lit { background:linear-gradient(180deg,#e0392b,#6b1210); box-shadow:0 0 5px rgba(224,57,43,0.65); }
 .arena-waiting { grid-column:1/-1; text-align:center; padding:14px 0; color:var(--text3); font-size:12px; }
 .arena-turn-banner { grid-column:1/-1; text-align:center; font-size:11px; font-weight:800; letter-spacing:0.5px; color:var(--accent2); padding:2px 0; }
 .move-btn.pending { border-color:var(--hp-red); box-shadow:0 0 10px rgba(224,89,74,0.4); }
@@ -2350,9 +2374,6 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .move-btn.attack-confirm-btn.waiting { animation:none; border-color:rgba(255,255,255,0.16); background:var(--bg2); }
 .move-btn.attack-confirm-btn.waiting .mv-name { color:var(--text3); }
 .move-btn .mv-cost.cd { color:var(--text3); }
-.move-btn.surge-btn { border-color:rgba(240,180,41,0.45); text-align:center; }
-.move-btn.surge-btn .mv-name { color:#f0b429; }
-.move-btn.surge-btn.armed { background:linear-gradient(180deg, rgba(240,180,41,0.22), var(--bg2)); box-shadow:0 0 12px rgba(240,180,41,0.4); }
 .move-btn.potion-btn { grid-column:1/-1; border-color:rgba(67,198,168,0.5); background:linear-gradient(180deg,rgba(67,198,168,.14),var(--bg2)); }
 .move-btn.potion-btn .mv-name { color:#7fdcc6; }
 .move-btn.potion-btn.used { border-color:rgba(255,255,255,.12); background:var(--bg2); }
@@ -3386,15 +3407,33 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 /* Quest overlay (send sheet + adventure log) */
 .quest-overlay { position:fixed; inset:0; z-index:600; display:none; align-items:flex-end; justify-content:center; background:rgba(4,6,5,.72); backdrop-filter:blur(4px); }
 .quest-overlay.open { display:flex; }
-.quest-overlay-panel { position:relative; width:100%; max-width:520px; max-height:82vh; overflow-y:auto; border-radius:22px 22px 0 0; padding:18px 16px calc(18px + var(--safe-bottom, 0px)); background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); border-bottom:none; box-shadow:0 -14px 44px rgba(0,0,0,.6); animation:questSheetUp .28s ease-out; }
+.quest-overlay-panel { position:relative; width:100%; max-width:520px; max-height:calc(100dvh - var(--burbz-header-h, 92px) - 6px); overflow-y:auto; border-radius:22px 22px 0 0; padding:18px 16px calc(18px + var(--safe-bottom, 0px)); background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); border-bottom:none; box-shadow:0 -14px 44px rgba(0,0,0,.6); animation:questSheetUp .28s ease-out; }
 @keyframes questSheetUp { from { transform:translateY(48px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+.quest-overlay-panel.is-send { height:calc(100dvh - var(--burbz-header-h, 92px) - 6px); max-height:none; display:flex; flex-direction:column; }
+.quest-overlay-panel.is-send > * { flex:0 0 auto; }
+.quest-overlay-panel.is-send > .quest-send-btn { margin-top:auto; }
+/* Short phones. Measured on the real sheet: at 360x667 the errand ran 66px
+   past the screen. Nothing is dropped — the copy, the icon, the tiles and the
+   bird chips all come in a little, and the whole errand still lands in one
+   look. A 780px-tall phone never sees any of this. */
+@media (max-height: 740px) {
+  .quest-overlay-panel.is-send { padding-top:12px; padding-bottom:calc(12px + var(--safe-bottom, 0px)); }
+  .quest-overlay-panel.is-send .quest-overlay-icon { width:42px; height:42px; font-size:22px; }
+  .quest-overlay-panel.is-send .quest-overlay-copy { font-size:11.5px; line-height:1.35; margin-bottom:6px; }
+  .quest-overlay-panel.is-send .quest-overlay-label { margin:6px 0 3px; }
+  .quest-overlay-panel.is-send .quest-duration-choice { padding:5px 7px; }
+  .quest-overlay-panel.is-send .quest-duration-choice strong { font-size:13px; }
+  .quest-overlay-panel.is-send .quest-bird-chip { width:76px; padding:5px 4px; gap:3px; }
+  .quest-overlay-panel.is-send .quest-bird-chip-art { width:38px; height:38px; }
+  .quest-overlay-panel.is-send .quest-send-btn { padding:10px; }
+}
 .quest-overlay-close { position:absolute; top:12px; right:12px; width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.4); color:var(--text3); font-size:14px; }
 .quest-overlay-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
 .quest-overlay-icon { width:52px; height:52px; display:grid; place-items:center; font-size:28px; border-radius:15px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.3), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.35); flex:none; }
 .quest-overlay-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:19px; letter-spacing:.04em; color:#f4ead4; text-transform:uppercase; }
 .quest-overlay-sub { font-size:12px; color:var(--text3); margin-top:2px; }
 .quest-overlay-copy { font-size:12.5px; line-height:1.45; color:var(--text2); margin-bottom:10px; }
-.quest-overlay-label { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); margin:12px 0 6px; }
+.quest-overlay-label { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); margin:8px 0 4px; }
 .quest-overlay-hint { font-size:10px; color:var(--text3); text-transform:none; letter-spacing:.02em; font-weight:600; }
 .quest-bird-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch; }
 .quest-bird-chip { flex:none; width:86px; display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 6px; border-radius:14px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.3); color:var(--text2); transition:border-color .15s ease, transform .15s ease; }
@@ -3404,17 +3443,16 @@ img.quest-bird-chip-art, .quest-bird-chip-art { width:44px; height:44px; border-
 .quest-bird-chip-name { font-size:10.5px; font-weight:700; color:#f4ead4; text-align:center; line-height:1.15; max-width:100%; overflow:hidden; text-overflow:ellipsis; }
 .quest-bird-chip-note { font-size:9px; font-weight:800; letter-spacing:.06em; color:var(--text3); text-transform:uppercase; }
 .quest-equip-row { display:flex; flex-wrap:wrap; gap:6px; }
-.quest-duration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:4px 0 12px;}
-.quest-duration-choice{min-width:0;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:var(--text2);text-align:left;}
+.quest-duration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:2px 0 8px;}
+.quest-duration-choice{min-width:0;padding:7px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:var(--text2);text-align:left;}
 .quest-duration-choice.selected{border-color:var(--accent);background:rgba(214,168,79,.18);box-shadow:0 0 12px rgba(214,168,79,.2);}
-.quest-duration-choice strong{display:block;color:#ffe9ad;font-family:'Rajdhani',sans-serif;font-size:15px;line-height:1.1;}
-.quest-duration-choice span{display:block;margin-top:3px;color:var(--text3);font-size:10px;line-height:1.25;overflow-wrap:anywhere;}
-.quest-duration-economy-note{margin:-2px 0 8px;color:#d8bd7b;font-size:11px;line-height:1.35;}
+.quest-duration-choice strong{display:block;color:#ffe9ad;font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.05;}
+.quest-duration-choice span{display:block;margin-top:2px;color:var(--text3);font-size:9.5px;line-height:1.2;overflow-wrap:anywhere;}
 .quest-equip-chip { padding:7px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.12); background:rgba(0,0,0,.3); color:var(--text2); font-size:12px; font-weight:700; transition:border-color .15s ease; }
 .quest-equip-chip.selected { border-color:var(--accent); background:rgba(214,168,79,.18); color:#ffe9ad; box-shadow:0 0 10px rgba(214,168,79,.25); }
 .quest-equip-count { font-size:10px; color:var(--text3); }
 .quest-equip-none { font-size:11.5px; color:var(--text3); padding:4px 2px; }
-.quest-send-btn { width:100%; margin-top:16px; padding:14px; border-radius:15px; border:none; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:16px; letter-spacing:.08em; color:#241a08; background:linear-gradient(135deg,#f0c767,#c99a3f); box-shadow:0 6px 18px rgba(214,168,79,.3); }
+.quest-send-btn { width:100%; margin-top:10px; padding:12px; border-radius:15px; border:none; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:16px; letter-spacing:.08em; color:#241a08; background:linear-gradient(135deg,#f0c767,#c99a3f); box-shadow:0 6px 18px rgba(214,168,79,.3); }
 .quest-send-btn:disabled { opacity:.45; box-shadow:none; }
 .quest-send-btn.claim { animation:claimPulse 1.6s ease-in-out infinite; }
 /* Adventure log */
@@ -4163,14 +4201,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
 
       <!-- Skyclash squad arena: whole squads on the field, Combat Readiness
-           turn meter, skill cooldowns, ultimates and the shared Focus pool. -->
+           turn meter, skill cooldowns and ultimates. -->
       <div class="battle-arena" id="battleArena">
         <div class="arena-synergy-banner" id="arenaSynergyBanner"></div>
         <div class="arena-timeline" id="arenaTimeline"></div>
         <div class="arena-squad opponent" id="arenaOppRow"></div>
         <div class="battle-log" id="battleLog"></div>
         <div class="arena-squad player" id="arenaPlayerRow"></div>
-        <div class="arena-focus" id="arenaFocus"></div>
         <div class="arena-actions" id="arenaActions"></div>
       </div>
 
@@ -4928,7 +4965,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=field-any-bird-v330-20260826"></script>
+<script src="battle_core.js?v=quiet-arena-v331-20260826"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
@@ -14331,7 +14368,22 @@ function scheduleQuestBoardRefresh() {
 // ---- Send sheet: pick a bird and duration -----------------------------------
 let questSendState = { templateId: null, durationMinutes: 5, birdId: null };
 
+// The quest sheet opens to just under the coins, so the whole errand — every
+// duration tier and every bird — is there in one look. The header is laid out
+// by its own content (safe-area inset, chips that wrap on a narrow phone), so
+// its height is measured and published for the CSS to cap against rather than
+// guessed at with a magic number.
+function syncHeaderHeightVar() {
+  const header = document.querySelector('.header');
+  if (!header) return;
+  const h = Math.round(header.getBoundingClientRect().height);
+  if (h > 0) document.documentElement.style.setProperty('--burbz-header-h', h + 'px');
+}
+window.addEventListener('resize', syncHeaderHeightVar);
+window.addEventListener('orientationchange', syncHeaderHeightVar);
+
 function questOverlayEl() {
+  syncHeaderHeightVar();
   let el = document.getElementById('questOverlay');
   if (!el) {
     el = document.createElement('div');
@@ -14417,14 +14469,14 @@ function renderQuestSendSheet() {
   }).join('') : '<div class="academy-empty">No flock companions are ready for this expedition yet.</div>';
 
 
-  el.innerHTML = '<div class="quest-overlay-panel" data-hunger-surface="expedition-dispatch">' +
+  el.innerHTML = '<div class="quest-overlay-panel is-send" data-hunger-surface="expedition-dispatch">' +
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
       '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') +
       (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: TRIPLE coins and XP, double timber and two guaranteed extra finds.</span>' : '') + '</div>' +
-    (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-economy-note">Quick quests pay best per hour; longer quests bring home much bigger totals while you are away.</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
+    (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
 
@@ -38756,6 +38808,7 @@ function renderBattleSelect() {
   if (resumedLiberation && empireHasLiberationVictory(resumedLiberation.seed)) { returnToLiberatedVillage(); return; }
   $('battleSelect').style.display = 'block';
   $('battleArena').style.display = 'none';
+  $('battleArena').classList.remove('live');
   $('battleResult').style.display = 'none';
   if (!window.BurbzBattleCore) { $('leagueHeader').innerHTML = '<div class="league-tier-copy">Battle scrolls still loading — try again in a moment.</div>'; return; }
   const core = battleCore();
@@ -38769,7 +38822,12 @@ function renderBattleSelect() {
   if (leagueHeader) leagueHeader.hidden = !!liberation;
   const liberationBanner = $('liberationBattleBanner');
   if (liberationBanner) liberationBanner.innerHTML = liberation
-    ? '<div class="liberation-head"><button type="button" class="liberation-cancel-btn" id="liberationCancelBtn" aria-label="Leave this village battle">‹ Leave</button><div><div class="liberation-head-title">🕊️ Free ' + escapeHtml(liberation.name) + '</div><div class="liberation-head-sub">Beat the garrison to liberate the village.</div></div></div>'
+    ? '<div class="liberation-head"><button type="button" class="liberation-cancel-btn" id="liberationCancelBtn" aria-label="Leave this village battle">‹ Leave</button><div><div class="liberation-head-title">🕊️ Free ' + escapeHtml(liberation.name) + '</div><div class="liberation-head-sub">' +
+      // The opening beat cannot be lost. Saying so belongs here, before the
+      // fight, not in a log line over the top of the fight itself.
+      (isFirstLiberationBattle()
+        ? 'Only a weary token garrison holds it. Free the village!'
+        : 'Beat the garrison to liberate the village.') + '</div></div></div>'
     : '';
   $('liberationCancelBtn')?.addEventListener('click', cancelEmpireLiberation, { once:true });
 
@@ -38979,21 +39037,15 @@ function startPerchBattle() {
     unloseable: !!(liberation && isFirstLiberationBattle()) });
   battle.synergies = { player: playerSynergies, opponent: opponentSynergies };
   battle.activityId = 'battle_' + battle.seed;
-  battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, pendingTargetIndex: null, surgeArmed: false };
+  battleState = { battle, busy: false, liberation: liberation ? { ...liberation } : null, pendingSkillIndex: null, pendingTargetIndex: null };
   $('battleSelect').style.display = 'none';
   $('battleResult').style.display = 'none';
-  $('battleArena').style.display = 'block';
+  $('battleArena').style.display = '';
+  $('battleArena').classList.add('live');
   $('battleLog').innerHTML = '';
-  const tier = core.LEAGUE_TIERS[league.tier];
-  addBattleLog('system-msg', liberation ? '🕊️ Liberation Battle for ' + liberation.name + ' — scatter the evil Burbz garrison, the dark force\'s shadow-bound occupying flock, and break the usurper\'s hold!' : tier.icon + ' ' + tier.label + ' — a squad of evil Burbz descends on the perch!');
-  if (liberation && isFirstLiberationBattle()) addBattleLog('system-msg', '🌅 The usurper left only a weary token garrison here — your flock has the clear upper hand. Free the village!');
-  addBattleLog('system-msg', '⚔️ Skyclash: both squads fight at once. The Speed meter decides who acts — burn Focus to Surge your skills!');
-  const nightHunters = playerFighters.filter(f => f.nightHunter);
-  if (nightHunters.length) addBattleLog('system-msg', '🌙 NIGHT WINGS! ' + nightHunters.map(f => f.name).join(', ') + (nightHunters.length > 1 ? ' fight' : ' fights') + ' under the moon — half again as fast and as fierce, tougher, and striking true out of the dark.');
-  (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
-  (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
-  addBattleLog('system-msg', '🎯 Pick a move, tap the evil Burb you want to hit, and check the damage on the ATTACK button before you strike.');
-  addBattleLog('system-msg', '\u{1FAB6} Any bird, any turn — tap one of your flock to send it in. The same bird can fight every turn if you like.');
+  // No opening narration. A fight that has to explain itself in eight lines of
+  // text has already pushed the fight off the screen — everything the player
+  // needs is on the cards and the buttons. The log fills as blows land.
   SFX.tap();
   battleAdvance();
 }
@@ -39011,7 +39063,6 @@ function battleAdvance() {
   if (!turn) { endPerchBattle(); return; }
   battleState.pendingSkillIndex = null;
   battleState.pendingTargetIndex = null;
-  battleState.surgeArmed = false;
   renderArena();
   if (turn.side === 'opponent') {
     battleState.busy = true;
@@ -39064,7 +39115,7 @@ function renderArena() {
   const playerActing = acting && acting.side === 'player' && !battleState.busy && b.phase === 'act';
   // The aim-then-strike flow: a chosen move projects its damage onto every
   // living rival, the tapped rival locks as the target, and the ATTACK
-  // button lands the blow. Surge is priced into the numbers while armed.
+  // button lands the blow.
   let pendingAct = null;
   let previews = null;
   if (playerActing && battleState.pendingSkillIndex != null) {
@@ -39076,23 +39127,29 @@ function renderArena() {
       const living = b.teams.opponent.map((f, i) => ({ f, i })).filter(x => !x.f.fainted);
       previews = {};
       living.forEach(x => {
-        previews[x.i] = core.previewDamage(me, x.f, a.skill, {
-          surge: battleState.surgeArmed && a.skill.school !== 'basic' && b.focus.player >= core.SURGE_COST,
-          aoeSplit: a.skill.aoe && living.length > 1
-        });
+        previews[x.i] = core.previewDamage(me, x.f, a.skill, { aoeSplit: a.skill.aoe && living.length > 1 });
       });
     }
   }
   const choosingTarget = !!pendingAct && !pendingAct.skill.aoe;
 
+  // One banner, and only when it has something to say. A Liberation Battle
+  // names the village it is freeing; a squad with a family bonus names it.
+  // Otherwise the banner stands down rather than announcing that nothing is
+  // happening — it used to print a no-bonus notice over every ordinary fight.
   const arenaSynergy = $('arenaSynergyBanner');
   if (arenaSynergy) {
     const yours = (b.synergies && b.synergies.player) || [];
     const rivals = (b.synergies && b.synergies.opponent) || [];
-    arenaSynergy.classList.toggle('mega', yours.length > 0 || rivals.length > 0);
-    arenaSynergy.innerHTML = yours.length || rivals.length
-      ? yours.map(s => '<strong>' + s.icon + ' YOUR ' + escapeHtml(s.title) + '</strong>' + escapeHtml(s.copy)).join('') + rivals.map(s => '<strong>😈 RIVAL ' + escapeHtml(s.title) + '</strong>').join('')
-      : '<strong>NO TYPE TRIO</strong>No mega family bonus in this squad.';
+    const lib = battleState.liberation;
+    const lines = [];
+    if (lib) lines.push('<strong>🕊️ LIBERATE ' + escapeHtml(String(lib.name || 'this village').toUpperCase()) + '</strong>' +
+      'Scatter the evil Burbz garrison — the shadow-bound occupying flock — and break the usurper\'s hold.');
+    yours.forEach(s => lines.push('<strong>' + s.icon + ' YOUR ' + escapeHtml(s.title) + '</strong>' + escapeHtml(s.copy)));
+    rivals.forEach(s => lines.push('<strong>😈 RIVAL ' + escapeHtml(s.title) + '</strong>'));
+    arenaSynergy.classList.toggle('mega', lines.length > 0);
+    arenaSynergy.style.display = lines.length ? '' : 'none';
+    arenaSynergy.innerHTML = lines.join('');
   }
 
   // Turn-order forecast strip — who flies next, from live speeds.
@@ -39111,12 +39168,6 @@ function renderArena() {
     })).join('');
   });
 
-  // Shared Focus pool — earned by basics, crits and knockouts; spent on Surges.
-  const pips = n => Array.from({ length: core.FOCUS_MAX }, (_, i) => '<i class="' + (i < n ? 'lit' : '') + '"></i>').join('');
-  $('arenaFocus').innerHTML =
-    '<div class="focus-side"><span>YOUR FOCUS</span><div class="focus-pips">' + pips(b.focus.player) + '</div></div>' +
-    '<div class="focus-side rival"><span>EVIL BURBZ</span><div class="focus-pips">' + pips(b.focus.opponent) + '</div></div>';
-
   const actions = $('arenaActions');
   if (b.phase === 'over') { actions.innerHTML = ''; return; }
   const playerTurn = acting && acting.side === 'player' && !battleState.busy;
@@ -39128,18 +39179,14 @@ function renderArena() {
   const acts = core.availableActions(b);
   // Anyone else still on their feet can take this turn instead.
   const bench = core.livingFighters(b, 'player').filter(x => x.i !== acting.index).length;
-  const canSurge = b.focus.player >= core.SURGE_COST;
+  // An empty potion slot used to take a whole row to say it was empty. The
+  // button now turns up only when this bird is actually carrying one.
   const potion = me.potion || null;
   const potionReady = !!(potion && !potion.used && core.canUsePotionEffect(me, potion.effect));
-  const potionName = potion
-    ? gearIconHTML(potion) + '<span>' + escapeHtml(potion.label) + '</span>'
-    : '<span>🧪 POTION</span>';
-  const potionMeta = !potion ? 'No potion equipped · equip one at the Forge'
-    : potion.used ? 'Potion already used this battle'
-    : potionReady ? 'Drink as a bonus action · then choose a move'
-    : 'No healing needed yet';
-  const potionButton = '<button class="move-btn potion-btn' + (potion && potion.used ? ' used' : '') + '"' + (!potionReady ? ' disabled' : '') + ' onclick="battleUsePotion()">' +
-    '<div class="mv-name">' + potionName + '</div><div class="mv-meta">' + potionMeta + '</div></button>';
+  const potionButton = !potion ? ''
+    : '<button class="move-btn potion-btn' + (potion.used ? ' used' : '') + '"' + (!potionReady ? ' disabled' : '') + ' onclick="battleUsePotion()">' +
+      '<div class="mv-name">' + gearIconHTML(potion) + '<span>' + escapeHtml(potion.label) + '</span></div>' +
+      '<div class="mv-meta">' + (potion.used ? 'Already drunk' : potionReady ? 'Drink, then still move' : 'Not needed yet') + '</div></button>';
   // The strike plan reads back before it lands: chosen move, chosen target,
   // the damage on the button. Nothing happens until the player presses ATTACK.
   let confirmBar = '';
@@ -39162,25 +39209,24 @@ function renderArena() {
     }
   }
   actions.innerHTML =
-    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is up!' +
-      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK')
-        : bench ? ' — pick a move, or tap another of your birds to send it in' : ' — pick a move') + '</div>' +
+    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is up' +
+      (pendingAct ? (pendingAct.skill.aoe ? ' — hit ATTACK' : ' — tap an evil Burb')
+        : bench ? ' — pick a move, or tap another bird' : ' — pick a move') + '</div>' +
     confirmBar +
     acts.map((a, i) => {
       const m = a.skill;
       const moveIcon = m.gearId ? gearIconHTML({ id:m.gearId, icon:m.icon }) : escapeHtml(m.icon || '🐤');
       const metaLine = m.kind === 'attack'
-        ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'steal' ? ' · steals Focus' : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
+        ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
         : m.kind === 'barrier' ? 'Barrier ' + Math.round(m.barrierPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '')
         : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '') + (m.cleanse ? ' · cleanse' : '')
         : 'Squad rally' + (m.healPct ? ' + heal' : '');
       return '<button class="move-btn' + (m.ultimate ? ' signature' : '') + (battleState.pendingSkillIndex === i ? ' pending' : '') + '"' + (!a.usable ? ' disabled' : '') + ' onclick="battleSelectSkill(' + i + ')">' +
         '<div class="mv-name">' + moveIcon + ' <span>' + escapeHtml(m.label) + (m.tier ? ' ' + ['I','II','III'][m.tier - 1] : '') + '</span></div>' +
         '<div class="mv-meta">' + metaLine + '</div>' +
-        (a.usable ? (m.focusGain ? '<div class="mv-cost">+' + m.focusGain + ' Focus</div>' : (m.cd ? '<div class="mv-cost">CD ' + m.cd + '</div>' : '')) : '<div class="mv-cost cd">🕐 ' + m.cdLeft + '</div>') +
+        (a.usable ? (m.cd ? '<div class="mv-cost">CD ' + m.cd + '</div>' : '') : '<div class="mv-cost cd">🕐 ' + m.cdLeft + '</div>') +
         '</button>';
-    }).join('') + potionButton +
-    '<button class="move-btn surge-btn' + (battleState.surgeArmed ? ' armed' : '') + '" style="grid-column:1/-1;"' + (!canSurge ? ' disabled' : '') + ' onclick="battleToggleSurge()"><div class="mv-name">🔥 SURGE' + (battleState.surgeArmed ? ' ARMED — next skill +40%' : ' · spend ' + core.SURGE_COST + ' Focus to empower the next skill') + '</div></button>';
+    }).join('') + potionButton;
 }
 
 function battleUsePotion() {
@@ -39299,22 +39345,11 @@ function battleConfirmAttack() {
 function battleResolvePlayer(skillIndex, targetIndex) {
   const core = battleCore();
   const b = battleState.battle;
-  const surge = battleState.surgeArmed;
   battleState.pendingSkillIndex = null;
   battleState.pendingTargetIndex = null;
-  battleState.surgeArmed = false;
   try {
-    playBattleEvents(core.resolveAction(b, { skillIndex, targetIndex, surge }));
+    playBattleEvents(core.resolveAction(b, { skillIndex, targetIndex }));
   } catch (e) { showToast('That move fizzled — try another.'); battleState.busy = false; renderArena(); }
-}
-
-function battleToggleSurge() {
-  if (!battleState || battleState.busy) return;
-  const core = battleCore();
-  if (battleState.battle.focus.player < core.SURGE_COST) return;
-  battleState.surgeArmed = !battleState.surgeArmed;
-  SFX.tap();
-  renderArena();
 }
 
 function battleLogClassFor(ev) {
@@ -39370,7 +39405,6 @@ function playBattleEvents(events) {
         spawnDamageFloat(ev.side, swayIdx, '🕊️ won over!', 'heal');
         if (SFX.capture) SFX.capture({ volume:0.75 });
       }
-      if (ev.type === 'surge' && SFX.specialHit) SFX.specialHit();
       if (ev.type === 'faint' && !battleState.liberation && SFX.defeat) SFX.defeat();
       renderArena();
     }, delay);
@@ -39472,6 +39506,7 @@ function endPerchBattle() {
   saveState();
 
   $('battleArena').style.display = 'none';
+  $('battleArena').classList.remove('live');
   $('battleResult').style.display = 'block';
   $('battleResultTitle').textContent = liberatedVillage ? 'VILLAGE LIBERATED!' : won ? 'VICTORY!' : 'DEFEAT';
   $('battleResultTitle').className = 'battle-result-title ' + (won ? 'victory' : 'defeat');
@@ -39526,7 +39561,7 @@ function addBattleLog(type, text) {
   entry.className = 'battle-log-entry ' + type;
   entry.textContent = liberationFriendlyBattleText(text);
   log.insertBefore(entry, log.firstChild);
-  while (log.children.length > 24) log.removeChild(log.lastChild);
+  while (log.children.length > 8) log.removeChild(log.lastChild);
 }
 
 $('battleStartBtn').addEventListener('click', () => { if (battleSelectedIds.length) startPerchBattle(); });
@@ -39537,7 +39572,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, battleToggleSurge, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -40610,7 +40645,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'field-any-bird-v330-20260826';
+const BURBZ_BUILD = 'quiet-arena-v331-20260826';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -40702,7 +40737,7 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
   { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'The Burbz are zombie birds \u2014 the Z is for zombie. You only fight them, never free living birds. A green Counter tag marks the birds that beat them.' },
-  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Basic moves build Focus; spend it to Surge a skill. Pick a move, tap your target, and the ATTACK button shows the damage before you strike.' },
+  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Pick a move, then tap the evil Burb you want to hit — the ATTACK button shows the damage first. Any of your birds can take the turn: just tap it.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.

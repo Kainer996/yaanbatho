@@ -267,11 +267,10 @@ def test_tapping_your_own_bird_fields_it():
     assert "battleState.pendingSkillIndex = null;" in field
     assert "battleState.pendingTargetIndex = null;" in field
     # And the fight tells the player the choice is theirs.
-    assert "or tap another of your birds to send it in" in function_source("renderArena")
-    assert "Any bird, any turn" in function_source("startPerchBattle")
+    assert "or tap another bird" in function_source("renderArena")
 
 
-CURRENT_BUILD = "field-any-bird-v330-20260826"
+CURRENT_BUILD = "quiet-arena-v331-20260826"
 PREVIOUS_BUILD = "trail-mode-v329-20260825"
 
 

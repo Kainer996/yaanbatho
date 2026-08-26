@@ -70,10 +70,14 @@ def test_equipped_potions_are_carried_until_their_birds_turn():
     assert "potionSips" not in HTML
 
 
-def test_potion_button_explains_empty_used_and_ready_states():
-    assert "No potion equipped · equip one at the Forge" in HTML
-    assert "Potion already used this battle" in HTML
-    assert "Drink as a bonus action · then choose a move" in HTML
+def test_potion_button_appears_only_when_a_bird_carries_one():
+    """v331: an empty slot used to spend a whole row saying it was empty."""
+    assert "No potion equipped · equip one at the Forge" not in HTML
+    render = HTML[HTML.index("function renderArena("):HTML.index("function battleUsePotion(")]
+    assert "const potionButton = !potion ? ''" in render
+    # The two states a carried potion can be in still read plainly.
+    assert "Already drunk" in render
+    assert "Drink, then still move" in render
 
 
 def test_inline_potion_handler_is_exported_for_the_button():
@@ -129,8 +133,8 @@ def test_release_marker_and_potion_core_pin_are_advanced():
     assert marker in SW
     assert "academy_alive_core.js?v=magpie-market-v316-20260824" in HTML
     # battle_core moved with v258 (Night Wings), v287 (attack preview) and now
-    # v330 (field any bird); the loot core moved with v295 (the Stores market).
-    for asset, core_pin in (("battle_core.js", "field-any-bird-v330-20260826"),
+    # v331 (the quiet arena); the loot core moved with v295 (the Stores market).
+    for asset, core_pin in (("battle_core.js", "quiet-arena-v331-20260826"),
                             ("loot_crafting_core.js", "magpie-market-v316-20260824")):
         pin = f"{asset}?v={core_pin}"
         assert pin in HTML

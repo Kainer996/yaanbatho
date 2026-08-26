@@ -15,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "field-any-bird-v330-20260826"
+CURRENT_BUILD = "quiet-arena-v331-20260826"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 

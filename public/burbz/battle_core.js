@@ -1,8 +1,8 @@
 // Burbz Battle Core v3 — "Skyclash"
 // A squad-based battle engine modelled on the genre's top-rated systems:
 // every bird fights on the field at once, turn order runs on a speed-driven
-// Combat Readiness meter, skills run on cooldowns, signatures are ultimates,
-// and a shared team Focus pool can be burned to Surge a skill. Physical
+// Combat Readiness meter, skills run on cooldowns, and signatures are
+// ultimates. Physical
 // attacks scale off ATK against DEF; spells scale off MAG against RES —
 // small birds carry the magic of the Kingdom, so a goldcrest has a way to
 // hurt an eagle. It is an edge, not an equaliser: since the size rule landed
@@ -166,17 +166,19 @@
     ]
   };
 
-  // Basic attacks (s1): no cooldown, feed the team Focus pool. Every bird
-  // carries both and auto-leads with whichever side of it is stronger.
-  const PECK  = { id:'peck',  label:'Peck',  icon:'🐤', school:'basic', stat:'atk', power:42, cd:0, kind:'attack', focusGain:1, copy:'Reliable jab that builds team Focus.' };
-  const SPARK = { id:'spark', label:'Spark', icon:'✨', school:'basic', stat:'mag', power:42, cd:0, kind:'attack', focusGain:1, copy:'A dart of kingdom magic that builds team Focus.' };
+  // Basic attacks (s1): no cooldown, always available. Every bird carries
+  // both and auto-leads with whichever side of it is stronger.
+  const PECK  = { id:'peck',  label:'Peck',  icon:'🐤', school:'basic', stat:'atk', power:42, cd:0, kind:'attack', copy:'A reliable jab that never needs recharging.' };
+  const SPARK = { id:'spark', label:'Spark', icon:'✨', school:'basic', stat:'mag', power:42, cd:0, kind:'attack', copy:'A dart of kingdom magic that never needs recharging.' };
 
   // ---------------------------------------------------------------------------
   // Signature moves — curated, real-behaviour flavoured, per famous species.
   // In Skyclash the signature is the bird's ULTIMATE (s3): big cooldown, big hit.
   // ---------------------------------------------------------------------------
-  // rider kinds: debuff (enemy), buff (self), steal (focus), heal (self),
-  // pierce (ignores barriers), crit (bonus crit chance).
+  // rider kinds: debuff (enemy), buff (self), heal (self), pierce (ignores
+  // barriers), crit (bonus crit chance). The thieves among these birds knock
+  // their mark down the Speed meter with crShred — a snatched moment, which is
+  // what a magpie or a frigatebird really takes.
   const SIGNATURES = [
     { match:['peregrine'], label:'Hunting Stoop', power:118, rider:{ kind:'crit', bonus:0.25 }, fact:'Peregrines dive at over 300 km/h — the fastest animal on Earth.' },
     { match:['golden_eagle'], label:'Sky Hammer', power:126, fact:'Golden eagles knock prey off cliffsides with 2-metre wings.' },
@@ -196,17 +198,17 @@
     { match:['frogmouth'], label:'Statue Strike', power:94, rider:{ kind:'crit', bonus:0.3 }, fact:'Tawny frogmouths freeze like broken branches, then lunge.' },
     { match:['crow','raven','rook','jackdaw'], label:'Mob Rule', power:84, aoe:true, rider:{ kind:'debuff', stat:'atk', pct:0.2, turns:2 }, fact:'Corvids recruit the whole neighbourhood to drive off raptors.' },
     { match:['australian_magpie'], label:'Swoop Season', power:94, crShred:0.2, fact:'Australian magpies dive-bomb anyone near the nest each spring.' },
-    { match:['magpie'], label:'Shiny Snatch', power:78, rider:{ kind:'steal', focus:3 }, fact:'Magpies are bold enough to raid anything left glittering.' },
+    { match:['magpie'], label:'Shiny Snatch', power:78, crShred:0.22, fact:'Magpies are bold enough to raid anything left glittering.' },
     { match:['jay'], label:'Acorn Cache', power:76, rider:{ kind:'heal', pct:0.18 }, fact:'A jay buries thousands of acorns a year — and remembers them.' },
-    { match:['drongo'], label:'False Alarm', power:72, rider:{ kind:'steal', focus:4 }, fact:'Drongos mimic alarm calls to scare others off their food — real con artists.' },
+    { match:['drongo'], label:'False Alarm', power:72, crShred:0.28, fact:'Drongos mimic alarm calls to scare others off their food — real con artists.' },
     { match:['lyrebird'], label:'Perfect Mimic', power:80, rider:{ kind:'debuff', stat:'def', pct:0.25, turns:2 }, fact:'Lyrebirds imitate chainsaws, camera shutters and other birds flawlessly.' },
     { match:['mockingbird'], label:'Two Hundred Songs', power:78, rider:{ kind:'debuff', stat:'atk', pct:0.2, turns:2 }, fact:'A mockingbird can learn over 200 different songs.' },
     { match:['cuckoo','koel'], label:'Nest Trick', power:82, rider:{ kind:'debuff', stat:'def', pct:0.22, turns:2 }, fact:'Cuckoos fool other species into raising their chicks.' },
     { match:['kea'], label:'Puzzle Break', power:84, rider:{ kind:'pierce' }, fact:'Keas solve multi-step puzzles — and dismantle parked cars.' },
     { match:['cockatoo','corella','galah'], label:'Crest Riot', power:86, rider:{ kind:'pierce' }, fact:'Cockatoos learn to open bins — and teach the trick to others.' },
     { match:['parrot','macaw','parakeet','lorikeet','budgerigar','cockatiel','rosella'], label:'Vice Grip', power:86, rider:{ kind:'pierce' }, fact:'A big parrot\'s bill cracks nuts no human hand could open.' },
-    { match:['bowerbird'], label:'Blue Heist', power:76, rider:{ kind:'steal', focus:3 }, fact:'Satin bowerbirds steal anything blue to decorate their bowers.' },
-    { match:['frigatebird'], label:'Pirate Chase', power:82, rider:{ kind:'steal', focus:4 }, fact:'Frigatebirds harass other seabirds until they drop their catch.' },
+    { match:['bowerbird'], label:'Blue Heist', power:76, crShred:0.22, fact:'Satin bowerbirds steal anything blue to decorate their bowers.' },
+    { match:['frigatebird'], label:'Pirate Chase', power:82, crShred:0.28, fact:'Frigatebirds harass other seabirds until they drop their catch.' },
     { match:['toucan'], label:'Bill Toss', power:84, fact:'Toucans toss fruit — and raid nests — with that giant bill.' },
     { match:['wren'], label:'Thunder Song', power:72, rider:{ kind:'debuff', stat:'atk', pct:0.2, turns:2 }, fact:'Gram for gram, the wren has one of the loudest songs of any bird.' },
     { match:['robin'], label:'Winter Carol', power:70, rider:{ kind:'buff', stat:'mag', pct:0.2, turns:2 }, fact:'Robins sing through winter and defend territory ferociously.' },
@@ -223,7 +225,7 @@
     { match:['sparrow'], label:'Street Gang', power:74, rider:{ kind:'buff', stat:'atk', pct:0.18, turns:2 }, fact:'House sparrows squabble in gangs and fear almost nothing.' },
     { match:['swift'], label:'Scythe Wings', power:86, crPushSelf:0.3, fact:'Swifts eat, drink and sleep on the wing for ten months straight.' },
     { match:['swallow','martin'], label:'Skimming Strike', power:80, crPushSelf:0.25, fact:'Swallows drink by skimming ponds at full speed.' },
-    { match:['hummingbird'], label:'Blur Wings', power:76, crPushSelf:0.3, rider:{ kind:'steal', focus:2 }, fact:'Hummingbirds beat their wings 50 times a second and fly backwards.' },
+    { match:['hummingbird'], label:'Blur Wings', power:76, crPushSelf:0.3, crShred:0.16, fact:'Hummingbirds beat their wings 50 times a second and fly backwards.' },
     { match:['wagtail'], label:'Tail Feint', power:72, crShred:0.2, fact:'Willie wagtails fearlessly harass eagles a hundred times their size.' },
     { match:['fantail'], label:'Fan Dance', power:70, crShred:0.2, fact:'Fantails flush insects by flashing their tail like a fan.' },
     { match:['bee_eater'], label:'Sting Snip', power:78, fact:'Bee-eaters wipe a bee\'s sting off on a branch before eating it.' },
@@ -233,7 +235,7 @@
     { match:['kingfisher'], label:'Plunge Dive', power:94, rider:{ kind:'crit', bonus:0.25 }, fact:'Kingfishers hit the water at speeds that would blind other birds.' },
     { match:['pelican'], label:'Scoop Gulp', power:92, rider:{ kind:'heal', pct:0.18 }, fact:'A pelican\'s pouch holds three times more than its stomach.' },
     { match:['shoebill'], label:'Guillotine Bill', power:114, fact:'Shoebills decapitate lungfish with one snap of that colossal bill.' },
-    { match:['gull','kittiwake'], label:'Chip Raid', power:78, rider:{ kind:'steal', focus:3 }, fact:'Herring gulls time their swoops to steal food from your hand.' },
+    { match:['gull','kittiwake'], label:'Chip Raid', power:78, crShred:0.22, fact:'Herring gulls time their swoops to steal food from your hand.' },
     { match:['tern'], label:'Arctic Arrow', power:82, crPushSelf:0.25, fact:'Arctic terns fly from pole to pole every single year.' },
     { match:['albatross'], label:'Endless Glide', power:86, rider:{ kind:'heal', pct:0.2 }, fact:'Albatrosses glide 1,000 km a day without flapping.' },
     { match:['penguin'], label:'Torpedo Slide', power:98, fact:'Penguins rocket through water at over 30 km/h.' },
@@ -262,7 +264,7 @@
   // Per-class fallback signatures for species without a curated entry.
   const CLASS_SIGNATURES = {
     raptor:     { label:'Talon Ambush',   power:100, fact:'Raptors strike from above with locked talons.' },
-    trickster:  { label:'Clever Heist',   power:80, rider:{ kind:'steal', focus:3 }, fact:'Clever birds turn a rival\'s strength against them.' },
+    trickster:  { label:'Clever Heist',   power:80, crShred:0.22, fact:'Clever birds turn a rival\'s strength against them.' },
     songbird:   { label:'Territory Song', power:74, rider:{ kind:'buff', stat:'mag', pct:0.18, turns:2 }, fact:'A singing bird is a bird claiming ground.' },
     skydancer:  { label:'Aerial Loop',    power:80, crPushSelf:0.25, fact:'Aerial specialists attack where they can\'t be answered.' },
     waterbird:  { label:'Wing Slap',      power:90, fact:'Big waterbirds settle arguments with heavy wings.' },
@@ -372,7 +374,7 @@
 
   // Gear bonuses: pass the summed stat bonuses of equipped items on
   // bird.gear (or opts.gear), e.g. { atk:8, mag:0, def:5, res:3, spd:2,
-  // maxHp:20, critBonus:0.05, focusStart:1 }. BurbzLootCore.equipmentBonuses
+  // maxHp:20, critBonus:0.05 }. BurbzLootCore.equipmentBonuses
   // produces this shape from an equipped loadout.
   function buildFighter(bird, options) {
     const opts = options || {};
@@ -448,8 +450,6 @@
   // ---------------------------------------------------------------------------
   // Skyclash squad battle state machine
   // ---------------------------------------------------------------------------
-  const FOCUS_MAX = 10;
-  const SURGE_COST = 4;   // burn Focus to Surge a skill: +40% output, +15% crit
 
   function createBattle(config) {
     const player = (config.playerFighters || []).filter(Boolean).slice(0, 4);
@@ -465,7 +465,6 @@
       tier: n(config.tier, 0),
       turn: 0,
       teams: { player, opponent },
-      focus: { player: n(config.playerFocusStart, 0), opponent: 0 },
       acting: null,        // {side, index} — the bird that swings this turn
       turnHolder: null,    // {side, index} — the bird whose meter bought it
       phase: 'tick',       // tick | act | over
@@ -582,13 +581,8 @@
       skill: s,
       usable: skillUsable(f, s),
       needsTarget: s.kind === 'attack' && !s.aoe,
-      targets: s.kind === 'attack' ? targets : allies,
-      canSurge: battle.focus[battle.acting.side] >= SURGE_COST && s.school !== 'basic'
+      targets: s.kind === 'attack' ? targets : allies
     }));
-  }
-
-  function addFocus(battle, side, amount) {
-    battle.focus[side] = clamp(battle.focus[side] + amount, 0, FOCUS_MAX);
   }
 
   function computeDamage(battle, attacker, defender, skill, opts) {
@@ -600,13 +594,11 @@
     const { mult, fact } = effectiveness(attacker.type, defender.type);
     let critChance = clamp(0.08 + effStat(attacker, 'int') / 800 + (attacker.critBonus || 0), 0.05, 0.5);
     if (skill.rider && skill.rider.kind === 'crit') critChance = clamp(critChance + skill.rider.bonus, 0, 0.65);
-    if (o.surge) critChance = clamp(critChance + 0.15, 0, 0.8);
     const crit = battleRng(battle) < critChance;
     const stab = skill.stab ? 1.2 : 1;
     const variance = 0.9 + battleRng(battle) * 0.2;
     const pierce = !!(skill.rider && skill.rider.kind === 'pierce');
     let raw = (4 + skill.power * (attStat / ((defStat + 70) * 1.6))) * mult * stab * variance * (crit ? 1.5 : 1);
-    if (o.surge) raw *= 1.4;
     if (o.aoeSplit) raw *= 0.72;
     let absorbed = 0;
     if (defender.barrier > 0 && !pierce) {
@@ -632,7 +624,6 @@
     const stab = skill.stab ? 1.2 : 1;
     const pierce = !!(skill.rider && skill.rider.kind === 'pierce');
     let base = (4 + skill.power * (attStat / ((defStat + 70) * 1.6))) * mult * stab;
-    if (o.surge) base *= 1.4;
     if (o.aoeSplit) base *= 0.72;
     const barrier = pierce ? 0 : Math.max(0, defender.barrier || 0);
     const land = raw => {
@@ -699,11 +690,6 @@
       attacker.mods.push({ stat: rider.stat, pct: rider.pct, turns: rider.turns });
       events.push({ type:'buff', side, name: attacker.name, stat: rider.stat,
         text: attacker.name + '\'s ' + rider.stat.toUpperCase() + ' rises ' + Math.round(rider.pct * 100) + '%!' });
-    } else if (rider.kind === 'steal') {
-      const stolen = Math.min(rider.focus || 2, battle.focus[defSide]);
-      battle.focus[defSide] -= stolen;
-      addFocus(battle, side, stolen);
-      if (stolen > 0) events.push({ type:'steal', side, text: attacker.name + ' steals ' + stolen + ' Focus!' });
     } else if (rider.kind === 'heal') {
       const healed = applyHeal(attacker, attacker.maxHp * rider.pct);
       if (healed > 0) events.push({ type:'heal', side, name: attacker.name, healed, hp: attacker.hp, maxHp: attacker.maxHp,
@@ -726,7 +712,6 @@
     }
     defender.fainted = true;
     defender.cr = 0;
-    addFocus(battle, side, 2);
     // Beaten evil Burbz are never killed: the usurper's magic simply unravels.
     events.push({ type:'faint', side: defSide, name: defender.name,
       text: defSide === 'opponent'
@@ -735,7 +720,7 @@
   }
 
   // Resolve the acting fighter's chosen action.
-  // action: { skillIndex, targetIndex?, surge? }
+  // action: { skillIndex, targetIndex? }
   function resolveAction(battle, action) {
     if (battle.phase !== 'act' || !battle.acting) throw new Error('No fighter is ready to act');
     const side = battle.acting.side;
@@ -744,13 +729,7 @@
     const events = [];
     let skill = attacker.skills[action.skillIndex] || attacker.skills[0];
     if (!skillUsable(attacker, skill)) skill = attacker.skills[0];
-    let surge = !!action.surge && skill.school !== 'basic' && battle.focus[side] >= SURGE_COST;
-    if (surge) {
-      battle.focus[side] -= SURGE_COST;
-      events.push({ type:'surge', side, name: attacker.name, text: attacker.name + ' surges with the flock\'s Focus!' });
-    }
     skill.cdLeft = skill.cd || 0;
-    if (skill.focusGain) addFocus(battle, side, skill.focusGain);
 
     events.push({ type:'move', side, name: attacker.name, move: skill.label, school: skill.school, ultimate: !!skill.ultimate,
       text: attacker.name + ' uses ' + skill.label + '!' });
@@ -765,7 +744,7 @@
       }
       let anyCrit = false;
       targets.forEach(defender => {
-        const res = computeDamage(battle, attacker, defender, skill, { surge, aoeSplit: skill.aoe && targets.length > 1 });
+        const res = computeDamage(battle, attacker, defender, skill, { aoeSplit: skill.aoe && targets.length > 1 });
         defender.hp = Math.max(0, defender.hp - res.dmg);
         anyCrit = anyCrit || res.crit;
         events.push({ type:'damage', side: defSide, name: defender.name, targetIndex: battle.teams[defSide].indexOf(defender),
@@ -778,13 +757,12 @@
         if (skill.crShred) { defender.cr = clamp(defender.cr - skill.crShred * 100, 0, 100); events.push({ type:'cr', side: defSide, name: defender.name, text: defender.name + ' is knocked down the turn meter!' }); }
         handleFaint(battle, defender, defSide, side, events);
         if (!defender.fainted) applyRider(battle, skill, attacker, defender, events, side, defSide);
-        else if (skill.rider && (skill.rider.kind === 'heal' || skill.rider.kind === 'buff' || skill.rider.kind === 'steal')) applyRider(battle, skill, attacker, null, events, side, defSide);
+        else if (skill.rider && (skill.rider.kind === 'heal' || skill.rider.kind === 'buff')) applyRider(battle, skill, attacker, null, events, side, defSide);
       });
-      if (anyCrit) addFocus(battle, side, 1);
       if (skill.ultimate && skill.fact && battle.turn <= 14) events.push({ type:'fact', side, text: skill.fact });
       if (skill.crPushSelf) { pushCr(attacker, skill.crPushSelf); events.push({ type:'cr', side, name: attacker.name, text: attacker.name + ' races back up the turn meter!' }); }
     } else if (skill.kind === 'barrier') {
-      const scale = surge ? 1.4 : 1;
+      const scale = 1;
       const strength = f => Math.round(f.maxHp * skill.barrierPct * scale);
       const allies = skill.teamWide ? livingFighters(battle, side).map(x => x.f) : [attacker];
       allies.forEach(f => { f.barrier = Math.max(f.barrier, strength(f)); });
@@ -792,7 +770,7 @@
         text: (skill.teamWide ? 'The whole flock is wrapped in a woven barrier!' : attacker.name + ' weaves a barrier of feathers and light!') });
       applyRider(battle, skill, attacker, null, events, side, defSide);
     } else if (skill.kind === 'heal') {
-      const scale = (surge ? 1.4 : 1) * (0.75 + effStat(attacker, 'mag') / 220);
+      const scale = 0.75 + effStat(attacker, 'mag') / 220;
       const allies = skill.teamWide ? livingFighters(battle, side).map(x => x.f) : [attacker];
       allies.forEach(f => {
         const healed = applyHeal(f, f.maxHp * skill.healPct * scale);
@@ -804,8 +782,8 @@
       const allies = skill.teamWide ? livingFighters(battle, side).map(x => x.f) : [attacker];
       allies.forEach(f => {
         if (skill.rider) {
-          f.mods.push({ stat: skill.rider.stat, pct: skill.rider.pct * (surge ? 1.3 : 1), turns: skill.rider.turns });
-          if (skill.alsoStat) f.mods.push({ stat: skill.alsoStat, pct: skill.rider.pct * (surge ? 1.3 : 1), turns: skill.rider.turns });
+          f.mods.push({ stat: skill.rider.stat, pct: skill.rider.pct, turns: skill.rider.turns });
+          if (skill.alsoStat) f.mods.push({ stat: skill.alsoStat, pct: skill.rider.pct, turns: skill.rider.turns });
         }
         if (skill.healPct) applyHeal(f, f.maxHp * skill.healPct);
       });
@@ -866,7 +844,7 @@
           if (s.aoe) score *= 0.72 * foes.length;
           if (x.f.hp < score * 1.15) score *= 2.2; // go for the finish
           if (x.f.barrier > 0 && !(s.rider && s.rider.kind === 'pierce')) score *= 0.8;
-          consider({ skillIndex: i, targetIndex: x.i, surge: battle.focus[side] >= SURGE_COST + 2 && s.school !== 'basic' }, score);
+          consider({ skillIndex: i, targetIndex: x.i }, score);
         });
       } else if (s.kind === 'heal') {
         const hurt = allies.filter(x => x.f.hp < x.f.maxHp * 0.5).length;
@@ -932,7 +910,7 @@
   return {
     BIRD_TYPES, TYPE_CHART, TYPE_FACTS, effectiveness, classifySpecies, speciesKey,
     MOVE_SCHOOLS, MOVE_LINES, TIER_THRESHOLDS, PECK, SPARK, SIGNATURES, CLASS_SIGNATURES, signatureFor,
-    ULTIMATE_CD, ULTIMATE_OPENING_CD, FOCUS_MAX, SURGE_COST,
+    ULTIMATE_CD, ULTIMATE_OPENING_CD,
     deriveMagic, deriveResist,
     disciplineTier, trainedMoves, buildFighter, buildOpponentFighter,
     createBattle, tickToNextTurn, chooseActingFighter, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,

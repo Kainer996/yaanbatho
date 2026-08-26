@@ -6,7 +6,9 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Current release: 2026-08-26 (`field-any-bird-v330-20260826`) — **any bird, any turn, on cards that are all the same size.** Two complaints from one screenshot of a live fight. **(1) The Great Spotted Woodpecker's card was nearly twice as wide as its squadmates'.** `.arena-squad` was `repeat(4, 1fr)`, and plain `1fr` is `minmax(auto, 1fr)` — a track can never shrink below its item's own content. The name is `white-space:nowrap`, so the longest bird name in the UK list simply pushed its track open and took the width off the other three; because `.au-art` is `aspect-ratio:1`, the wider card also drew a far bigger picture. Measured in real Chromium at 390 px: **67.0 / 68.5 / 125.9 / 82.0 px before, 85 / 85 / 85 / 85 after.** Every name was doing it, not just the woodpecker's. Fix is `minmax(0, 1fr)` plus `min-width:0` on the card, and the name became a fixed-height two-line clamp so long names read in full and the HP bars still line up. **(2) The turn meter decided which bird you were allowed to use.** Now the meter decides WHEN the flock acts and the player decides WHO swings: tap any living bird in your row and it takes the turn, as often as you like. The balance hinges on one line — `battle.turnHolder` is the bird whose meter bought the turn, and `resolveAction` empties **its** meter, not the one you fielded. Fielding a favourite therefore costs the flock exactly one turn, the same as before; a test runs 60 turns both ways and pins the identical player/opponent split. Cooldowns tick once per turn via a `cdTurn` stamp (swapping back and forth five times used to be five ticks), and buff durations run down on both birds so a rally cannot be parked on a bird that never holds the meter. Suite 1755 passed; browser evidence drives the real Battle screen end to end.
+Current release: 2026-08-26 (`quiet-arena-v331-20260826`) — **the fight fits on one screen, and the errand sheet opens to the coins.** Four asks from two screenshots. **(1) The writing goes.** Every fight opened with eight lines of narration — the tier name, how Skyclash works, what the Speed meter does, how to aim — which pushed the game itself below the fold. `startPerchBattle` no longer calls `addBattleLog` at all. What the player actually needs is on the cards and the buttons; the log fills as blows land. **(2) Focus is gone, mechanic and all.** Yaan: "I don't even know what that is as a mechanic so I won't miss it." Out went `FOCUS_MAX`, `SURGE_COST`, `battle.focus`, `addFocus`, `focusGain`, the surge multipliers in `computeDamage`/`previewDamage`, the AI's surge bid, the rail and the SURGE button. The eight signature moves that stole Focus — magpie, drongo, frigatebird, gull — now knock their mark down the Speed meter with `crShred`, which is closer to what those birds actually do. **(3) One screenful, by construction.** Not by counting pixels: the arena is a flex column exactly as tall as the screen's content box, every block keeps its natural height, and the log alone gives ground. Measured in real Chromium at 360x780: **927px of content into a 711px screen before, 711 into 711 after.** The measuring caught what counting would have missed — at 360x667 the ATTACK bar still ran 13px past the nav bar, so short screens get a tightening block, and the arena scrolls internally rather than ever clipping a button. **24 checks across three phone sizes.** **(4) The errand sheet opens to just under the coins**, pinned with a *measured* header height rather than the old `82vh`, with SEND at the bottom under the thumb. Suite 1775 passed.
+
+Previous release: 2026-08-26 (`field-any-bird-v330-20260826`) — **any bird, any turn, on cards that are all the same size.** Two complaints from one screenshot of a live fight. **(1) The Great Spotted Woodpecker's card was nearly twice as wide as its squadmates'.** `.arena-squad` was `repeat(4, 1fr)`, and plain `1fr` is `minmax(auto, 1fr)` — a track can never shrink below its item's own content. The name is `white-space:nowrap`, so the longest bird name in the UK list simply pushed its track open and took the width off the other three; because `.au-art` is `aspect-ratio:1`, the wider card also drew a far bigger picture. Measured in real Chromium at 390 px: **67.0 / 68.5 / 125.9 / 82.0 px before, 85 / 85 / 85 / 85 after.** Every name was doing it, not just the woodpecker's. Fix is `minmax(0, 1fr)` plus `min-width:0` on the card, and the name became a fixed-height two-line clamp so long names read in full and the HP bars still line up. **(2) The turn meter decided which bird you were allowed to use.** Now the meter decides WHEN the flock acts and the player decides WHO swings: tap any living bird in your row and it takes the turn, as often as you like. The balance hinges on one line — `battle.turnHolder` is the bird whose meter bought the turn, and `resolveAction` empties **its** meter, not the one you fielded. Fielding a favourite therefore costs the flock exactly one turn, the same as before; a test runs 60 turns both ways and pins the identical player/opponent split. Cooldowns tick once per turn via a `cdTurn` stamp (swapping back and forth five times used to be five ticks), and buff durations run down on both birds so a rally cannot be parked on a bird that never holds the meter. Suite 1755 passed; browser evidence drives the real Battle screen end to end.
 
 Previous release: 2026-08-25 (`trail-mode-v329-20260825`) — **Burbz notices you have gone out, and the interface stops beeping.** Two asks from Yaan. **(1) Trail Mode.** When the live map sees a real walk, the game opens questing by itself, pulls the camera back to z15.2, and says the one thing that matters out there: eyes on the trail, be careful. Everything from that moment is charted and saved, and time with the phone in a pocket pays a Trail Bonus of up to +50% XP. New pure core `trail_mode_core.js`. **The judgement is the whole feature**, and it is deliberately hard to convince, because a missed walk costs nothing while a false positive takes over the screen of someone sitting still. Three things make it hold: ground covered is the NET displacement of each 30-second slice and never a sum of consecutive hops (summing hops turned a phone jittering on a table into 755 m of "walking" in the very first test); every slice is discounted by half the accuracy the device itself reports; and the distance bar rises with that accuracy (80 m at a 10 m fix, 150 m at 25 m). Anything above 6 m/s is a vehicle, not a wander. Measured over 300 synthetic traces per case: **0/300 stationary phones judged walking at every accepted accuracy, 300/300 real walks caught from a 0.9 m/s dawdle to a 3.2 m/s jog, 0/300 vehicles.** **(2) Delicate UI sound.** Every candidate was decoded with `decodeAudioData` and measured rather than picked by filename: `sfx-ui-tap.mp3` put 90% of its energy in 111 ms but **rang for a full second**, and with a 90 ms cooldown up to six of them overlapped — that was the mush. `ui-wood.mp3` (body 47 ms, gone by 200 ms) takes the tap; `ui-lock` takes unlock, `ui-coins` coins, `ui-spell` magic, `reward-level-up` the level sting. The bespoke one-second Burbz sounds keep the big moments, where a tail belongs. New per-role `DEFAULT_VOLUMES` (a tap at 0.30, measured RMS ran -21 to -33 dB so without this the interface shouted) and `DEFAULT_PITCH_DRIFT` (±6% on a tap, none on the fanfares — a wobbling fanfare sounds broken). The oscillator fallback's bare 600 Hz sine is now a two-partial mallet through a lowpass: rendered offline it measures body 16 ms, tail 59 ms. **Two bugs fell out.** `.wq-detail-start` is used by nine quest sheets and **had no CSS rule at all** — every Side Quest button in the game rendered as bare inline text. And `scripts/update-live-burbz.sh` needed the new core adding to its hardcoded list, exactly as its own header warns; without that the VPS would have served an index.html whose `trail_mode_core.js` 404s. Its completeness test caught it.
 
@@ -349,6 +351,61 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
 ---
 
 ## 9. Review log
+
+- **2026-08-26 — the quiet arena, and an errand sheet that opens to the coins (Claude).**
+  Release `quiet-arena-v331-20260826`. Four asks from two screenshots of the
+  live game.
+  - **The narration.** Every fight opened with eight `addBattleLog('system-msg')`
+    lines: the league tier, how Skyclash works, what the Speed meter does, how
+    to aim, plus a line per squad bonus. Yaan named them one by one.
+    `startPerchBattle` now calls `addBattleLog` zero times. Two of those lines
+    carried real information and moved rather than died: the first Liberation
+    Battle's "only a weary token garrison" reassurance is on the select
+    screen's banner, read *before* the fight; the Liberation Battle's own story
+    line is a persistent one-line arena banner that names the village instead
+    of a paragraph that scrolls away. Night Wings was already a moon badge and
+    an aura on the card, so the shout was redundant.
+  - **Focus, removed entirely.** `FOCUS_MAX`, `SURGE_COST`, `battle.focus`,
+    `addFocus`, `focusGain`, the `canSurge` flag, the ×1.4 surge multipliers in
+    `computeDamage` and `previewDamage`, the crit bonus, the AI's surge bid,
+    the rail, the SURGE button, `surgeArmed`, `battleToggleSurge`. **The one
+    thing that needed a real decision was the `steal` rider** — eight signature
+    moves (magpie's Shiny Snatch, the frigatebird's Pirate Chase, the gull's
+    Chip Raid) existed to steal Focus. Deleting the rider would have left them
+    as plain attacks with a thief's name. They now carry `crShred` and knock
+    the mark down the Speed meter, which is nearer what those birds do anyway.
+    A stale `{surge:true}` from any caller is now inert rather than a hidden
+    multiplier, and there is a test pinning that.
+  - **One screenful, by construction — not by counting pixels.** `.battle-arena.live`
+    is a flex column at `height:100%` of the screen's content box; every block
+    is `flex:0 0 auto` and the log alone is `flex:0 1 auto; min-height:0`, so it
+    grows with the fight and then gives its space back rather than pushing the
+    moves under the nav bar. Measured at 360x780: **927px into a 711px screen
+    before, 711 into 711 after.**
+  - **The measuring is the point.** The flex layout passed on Yaan's phone
+    first try. On 360x667 the ATTACK bar still finished **13px past the nav
+    bar**, and on 320x568 by **92px** — and because the first draft used
+    `overflow:hidden` the box reported "no scroll" while quietly clipping the
+    buttons, which is worse than scrolling. Hence a `max-height:740px` block
+    that stands the meter-forecast strip down and brings the pictures and
+    buttons in, a `640px` block that goes further, and `overflow-y:auto` so the
+    worst case is ever a scroll and never a hidden button.
+    `tests/run_battle_fits_one_screen_evidence.js` plays four real turns
+    through the real buttons on three phone sizes: 24 checks.
+  - **The errand sheet.** `.quest-overlay-panel` was capped at `82vh`, so the
+    dispatch sheet opened into a box you scrolled twice. The cap is now
+    `calc(100dvh - var(--burbz-header-h) - 6px)` against a header height that
+    is **measured**, because `.header` wraps its chips and takes a safe-area
+    inset — a magic number drifts by phone. The dispatch sheet alone is pinned
+    to that full height (`.is-send`) with SEND at the bottom under the thumb;
+    every other sheet still sizes to its content. The prose note explaining
+    that quick quests pay best per hour is gone: each tile already prints the
+    numbers, and it cost 38px of a sheet that has to hold the whole errand.
+    **755px of content into a 704px sheet before; 704 into 704 after**, with
+    all seven durations and the whole flock in one look.
+  - Suite: 1775 passed, 25 skipped; the two `settlement_scene` failures are
+    pre-existing on main (verified on a clean tree) and untouched. Three
+    browser evidence scripts, 48 checks, all through the handlers a thumb hits.
 
 - **2026-08-26 — any bird, any turn, on cards that are all the same size (Claude).**
   Release `field-any-bird-v330-20260826`. Both asks came from one screenshot of
