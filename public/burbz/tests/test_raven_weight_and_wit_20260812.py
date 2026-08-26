@@ -25,7 +25,7 @@ RELEASE = "raven-weight-and-wit-v255-20260812"
 # The roles core moved on with chef mastery (v261); the size core stays ours.
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "quiet-arena-v331-20260826"
+CURRENT_BUILD = "village-swipe-v332-20260826"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"

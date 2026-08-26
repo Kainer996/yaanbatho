@@ -814,6 +814,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .empire-travel-sub { margin-top:4px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; letter-spacing:.18em; color:#c8b98f; text-transform:uppercase; }
 .empire-village-hub { margin:14px 12px; padding:12px; border-radius:14px; border:2px solid #7a5a28; background:rgba(12,9,4,.72); box-shadow:0 0 0 1px rgba(240,199,103,.4), inset 0 0 26px rgba(240,199,103,.05); }
 .empire-village-hub-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
+.village-swipe-pager { display:flex; align-items:center; justify-content:center; gap:8px; margin:4px 0 2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
+.village-swipe-pager .bep-arrow { color:var(--accent2); font-size:13px; }
+.village-swipe-pager[hidden] { display:none !important; }
 
 .liberation-head { display:flex; align-items:center; gap:10px; margin:0 0 12px; padding:12px 14px; border-radius:14px; border:1px solid rgba(214,168,79,.35); background:linear-gradient(135deg,rgba(46,36,16,.92),rgba(20,15,8,.94)); }
 .liberation-head-title { font-family:'Russo One',sans-serif; font-size:15px; color:var(--accent2); text-shadow:0 2px 10px rgba(214,168,79,.25); }
@@ -4311,6 +4314,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="empire-village-hub" id="empireVillageHub">
         <div class="empire-village-hub-title" id="villageTitle">BURB VILLAGE</div>
         <div class="village-sub" id="villageSub"></div>
+        <div class="village-swipe-pager" id="villagePager" hidden></div>
         <div id="villageTownLink"></div>
         <div id="villageClaimBar"></div>
         <div class="village-stage settlement-stage" id="villageStage" role="application" tabindex="0" aria-label="Living 3D village. Hold then drag to look around, pinch to zoom, use arrow keys to orbit, and tap a shop or resident to interact.">
@@ -27944,6 +27948,106 @@ function townSceneContextInfo(object) {
   return null;
 }
 
+// ---- Swipe between your villages (village-swipe-v332) ----------------------
+// On the village screen a horizontal swipe slides this village away and the
+// next of your villages glides in from the other side — walking the same
+// order as the Empire boxes, wrapping at the ends. The 3D stage keeps its own
+// drags (look around, wander), so a swipe must begin outside it; a vertical
+// drag still scrolls the page.
+const VILLAGE_SWIPE_COMMIT_PX = 70; // drag this far to change village
+const VILLAGE_SWIPE_AXIS_PX = 14;   // drift before the axis locks
+let villageSwipeBound = false;
+let villageSwipeAnimating = false;
+
+// Your villages, in the order the Empire boxes draw them. A ward folded into
+// a Town governs from its Hall, so it is not on this road.
+function villageSwipeRoster() {
+  return empireStandaloneVillages();
+}
+// The village `delta` steps away, wrapping around. Only a village you own is
+// on the carousel — a darkened village you are visiting swipes nowhere.
+function villageSwipeNeighbour(delta) {
+  const roster = villageSwipeRoster();
+  if (roster.length < 2 || !villageActive) return null;
+  const at = roster.findIndex(v => String(v.seed >>> 0) === String(villageActive.seed >>> 0));
+  if (at < 0) return null;
+  return roster[((at + delta) % roster.length + roster.length) % roster.length];
+}
+// Commit a swipe: slide this village out, travel, slide the next one in from
+// the opposite side. delta 1 = swiped left = the next village.
+function villageSwipeTo(delta) {
+  const next = villageSwipeNeighbour(delta);
+  const hub = $('empireVillageHub');
+  if (!next || !hub || villageSwipeAnimating) return false;
+  villageSwipeAnimating = true;
+  const dir = delta > 0 ? 1 : -1;
+  villageVisitingWard = false;
+  empireLedgerOnlyMode = false;
+  villageActive = { seed: next.seed >>> 0, name: next.name,
+    lat: normaliseVillageCoordinate(next.lat, -90, 90), lon: normaliseVillageCoordinate(next.lon, -180, 180) };
+  if (gameState) { gameState.lastVillage = villageActive; saveState(); }
+  SFX.tap();
+  vibrate(12);
+  hub.style.transition = 'transform .16s ease-in, opacity .16s ease-in';
+  hub.style.transform = 'translateX(' + (-dir * 55) + '%)';
+  hub.style.opacity = '0';
+  setTimeout(() => {
+    renderVillage();
+    focusEmpireVillage(next.seed);
+    hub.style.transition = 'none';
+    hub.style.transform = 'translateX(' + (dir * 55) + '%)';
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      hub.style.transition = 'transform .2s ease-out, opacity .2s ease-out';
+      hub.style.transform = 'translateX(0)';
+      hub.style.opacity = '1';
+      setTimeout(() => { villageSwipeAnimating = false; hub.style.transition = ''; }, 220);
+    }));
+  }, 160);
+  return true;
+}
+function bindVillageSwipe() {
+  if (villageSwipeBound) return;
+  const hub = $('empireVillageHub');
+  if (!hub) return;
+  villageSwipeBound = true;
+  let startX = 0, startY = 0, dx = 0, axis = null, tracking = false;
+  hub.addEventListener('touchstart', e => {
+    if (villageSwipeAnimating || !e.touches.length) return;
+    // The 3D stage owns its own drags — the camera stays the camera.
+    if (e.target && e.target.closest && e.target.closest('#villageStage')) return;
+    tracking = true; axis = null; dx = 0;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+  }, { passive: true });
+  hub.addEventListener('touchmove', e => {
+    if (!tracking || !e.touches.length) return;
+    dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    // Lock the gesture to one axis after a little drift, then let a
+    // horizontal drag pull the village with the finger.
+    if (!axis) {
+      if (Math.abs(dx) < VILLAGE_SWIPE_AXIS_PX && Math.abs(dy) < VILLAGE_SWIPE_AXIS_PX) return;
+      axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    }
+    if (axis !== 'x') return;
+    e.preventDefault();
+    hub.style.transition = 'none';
+    hub.style.transform = 'translateX(' + dx + 'px)';
+    hub.style.opacity = String(Math.max(0.55, 1 - Math.abs(dx) / 420));
+  }, { passive: false });
+  const settle = () => {
+    if (!tracking) return;
+    tracking = false;
+    if (axis !== 'x') return;
+    if (Math.abs(dx) >= VILLAGE_SWIPE_COMMIT_PX && villageSwipeTo(dx < 0 ? 1 : -1)) return;
+    // Not far enough — or this is your only village: spring back home.
+    hub.style.transition = 'transform .18s ease-out, opacity .18s ease-out';
+    hub.style.transform = 'translateX(0)';
+    hub.style.opacity = '1';
+  };
+  hub.addEventListener('touchend', settle);
+  hub.addEventListener('touchcancel', settle);
+}
+
 function renderVillage() {
   const stage = $('villageStage');
   if (!stage) return;
@@ -27986,6 +28090,16 @@ function renderVillage() {
     else if (dev <= 0) sub.textContent = 'Your village, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
     else sub.textContent = 'Tap a building to step inside.' + (ruinsLeft ? ' Old wrecks still await clearing.' : '') + settleNote;
   }
+  // The pager teaches the swipe: it stands only when there is somewhere to go.
+  const pager = $('villagePager');
+  if (pager) {
+    const roster = villageSwipeRoster();
+    const at = roster.findIndex(r => String(r.seed >>> 0) === String(v.seed >>> 0));
+    const canSwipe = owned && at >= 0 && roster.length >= 2;
+    pager.hidden = !canSwipe;
+    if (canSwipe) pager.innerHTML = '<span class="bep-arrow">‹</span> ' + (at + 1) + ' of ' + roster.length + ' villages — swipe for the next <span class="bep-arrow">›</span>';
+  }
+  bindVillageSwipe();
   // A village inside a merged town or city links straight to its square.
   const townLink = $('villageTownLink');
   if (townLink) {
@@ -40645,7 +40759,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'quiet-arena-v331-20260826';
+const BURBZ_BUILD = 'village-swipe-v332-20260826';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
