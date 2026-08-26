@@ -60,7 +60,8 @@ console.log(JSON.stringify({{ a: run(), b: run() }}));
     assert payload["a"]["turns"] > 4  # squads trade several actions, not one alpha strike
 
 
-def test_turn_meter_favors_faster_birds_and_focus_surge_costs():
+def test_turn_meter_favors_faster_birds():
+    """v331 retired Focus and Surge — the meter is the whole turn economy now."""
     payload = _node("""
 const core = require('./battle_core.js');
 const fast = core.buildFighter({ id:'f', species:'Barn Swallow', maxHp:80, hp:80, atk:40, def:40, spd:90, int:50, cha:50, stamina:50 });
@@ -68,11 +69,13 @@ const slow = core.buildFighter({ id:'s', species:'Common Pheasant', maxHp:120, h
 const battle = core.createBattle({ playerFighters:[fast], opponentFighters:[slow], seed:'meter' });
 const first = core.tickToNextTurn(battle);
 console.log(JSON.stringify({ firstSide: first.side, surgeCost: core.SURGE_COST, focusMax: core.FOCUS_MAX,
-  forecast: core.forecastTurnOrder(battle, 4).map(t => t.side) }));
+  focusPool: battle.focus, forecast: core.forecastTurnOrder(battle, 4).map(t => t.side) }));
 """)
     assert payload["firstSide"] == "player"  # 90 SPD outruns 30 SPD on the meter
     assert payload["forecast"].count("player") > payload["forecast"].count("opponent")
-    assert 0 < payload["surgeCost"] <= payload["focusMax"]
+    # JSON drops undefined keys entirely — that absence is the assertion.
+    assert "surgeCost" not in payload and "focusMax" not in payload
+    assert "focusPool" not in payload
 
 
 def test_equipment_bonuses_feed_fighters_and_recipes_are_craftable():
@@ -120,10 +123,11 @@ def test_index_wires_skyclash_forge_and_magic_stat():
     html = INDEX.read_text(encoding="utf-8")
     # squad arena + forge screens exist and scripts are loaded
     assert 'id="arenaTimeline"' in html
-    assert 'id="arenaFocus"' in html
     assert 'id="screen-forge"' in html
     assert "loot_crafting_core.js" in html
-    assert "battleToggleSurge" in html
+    # The Focus rail and its Surge button were retired in v331.
+    assert 'id="arenaFocus"' not in html
+    assert "battleToggleSurge" not in html
     # magic stat generated from biology and shown on cards
     assert "mag: clamp(mag, 10, 999)" in html
     assert 'card-back-stat-label">MAG' in html

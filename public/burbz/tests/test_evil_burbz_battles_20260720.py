@@ -82,13 +82,17 @@ def test_opponent_generation_draws_from_the_evil_roster_not_free_birds():
 
 def test_battle_copy_frames_every_fight_against_the_evil_burbz():
     html = HTML.read_text(encoding="utf-8")
-    assert "a squad of evil Burbz descends on the perch!" in html
     assert "evil Burbz squad prowls this perch" in html
     assert "The occupying evil Burbz" in html
-    assert "scatter the evil Burbz garrison" in html
-    assert "<span>EVIL BURBZ</span>" in html
-    # v287: attacks aim first — the banner walks the player through the flow.
-    assert "tap an evil Burb, check the damage, then press ATTACK" in html
+    assert "Scatter the evil Burbz garrison" in html
+    # v331 emptied the opening log — the fight has to fit one screen — and
+    # retired the Focus rail whose rival half was labelled EVIL BURBZ. The
+    # framing now rides the select screen, the arena banner and the buttons,
+    # which is where a player actually reads it.
+    assert "a squad of evil Burbz descends on the perch!" not in html
+    assert "<span>EVIL BURBZ</span>" not in html
+    # v287: attacks aim first — the banner still walks the player through it.
+    assert "tap an evil Burb" in html
     assert "Today's rival flock" not in html
     core = (ROOT / "battle_core.js").read_text(encoding="utf-8")
     assert "The evil Burbz squad breaks" in core

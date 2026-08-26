@@ -24,7 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
-CURRENT_BUILD = "trail-mode-v329-20260825"
+CURRENT_BUILD = "quiet-arena-v331-20260826"
 
 
 def _node(script: str):
@@ -80,13 +80,14 @@ console.log(JSON.stringify({ preview, untouched, inBand, crits, total }));
     assert payload["crits"] < payload["total"]             # sample saw both kinds
 
 
-def test_preview_prices_surge_split_and_barriers():
+def test_preview_prices_split_and_barriers():
     payload = _node("""
 const core = require('./battle_core.js');
 const att = core.buildFighter({ id:'a', species:'Eurasian Sparrowhawk', maxHp:130, hp:130, atk:82, def:56, spd:70, int:55, cha:40, stamina:55, mag:30 });
 const foe = core.buildFighter({ id:'d', species:'Common Blackbird', maxHp:95, hp:95, atk:44, def:40, spd:52, int:48, cha:52, stamina:45, mag:66 });
 const skill = att.skills[0];
 const plain = core.previewDamage(att, foe, skill, {});
+// v331 retired Surge; the option is inert rather than a secret multiplier.
 const surged = core.previewDamage(att, foe, skill, { surge:true });
 const split = core.previewDamage(att, foe, skill, { aoeSplit:true });
 foe.barrier = 9999;
@@ -94,7 +95,7 @@ const walled = core.previewDamage(att, foe, skill, {});
 const pierced = core.previewDamage(att, foe, { ...skill, rider:{ kind:'pierce' } }, {});
 console.log(JSON.stringify({ plain, surged, split, walled, pierced, barrierIntact: foe.barrier === 9999 }));
 """)
-    assert payload["surged"]["avg"] > payload["plain"]["avg"]   # +40% priced in
+    assert payload["surged"]["avg"] == payload["plain"]["avg"]  # Surge is gone
     assert payload["split"]["avg"] < payload["plain"]["avg"]    # AoE split priced in
     assert payload["walled"]["blocked"] is True
     assert payload["walled"]["max"] == 0                        # a full wall soaks it all
@@ -142,8 +143,11 @@ def test_arena_shows_the_damage_before_the_blow():
     # The preview badge and confirm button are styled.
     for cls in (".arena-unit .au-dmg-preview", ".arena-unit.target-locked", ".move-btn.attack-confirm-btn"):
         assert cls in html, cls
-    # The battle intro teaches the new flow.
-    assert "check the damage on the ATTACK button" in html
+    # v331 retired the eight-line battle intro: the ATTACK button itself carries
+    # the damage, so the flow no longer needs narrating before the fight starts.
+    assert "check the damage on the ATTACK button" not in html
+    render = function_source(html, "renderArena")
+    assert "⚔️ ATTACK " in render and "dmgWord" in render
 
 
 def test_resolving_or_advancing_clears_the_aim():
