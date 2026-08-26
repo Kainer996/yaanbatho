@@ -466,7 +466,8 @@
       turn: 0,
       teams: { player, opponent },
       focus: { player: n(config.playerFocusStart, 0), opponent: 0 },
-      acting: null,        // {side, index} once the meter fills
+      acting: null,        // {side, index} — the bird that swings this turn
+      turnHolder: null,    // {side, index} — the bird whose meter bought it
       phase: 'tick',       // tick | act | over
       winner: null,
       // Set for the story's first Liberation Battle: the player's birds cannot
@@ -523,9 +524,30 @@
     battle.acting = { side: next.side, index: next.index };
     battle.phase = 'act';
     battle.turn += 1;
-    // Cooldowns tick down at the start of the bird's own turn.
-    next.f.skills.forEach(s => { if (s.cdLeft > 0) s.cdLeft -= 1; });
+    battle.turnHolder = { side: next.side, index: next.index };
+    startFighterTurn(battle, next.f);
     return { side: next.side, index: next.index, fighter: next.f };
+  }
+
+  // Cooldowns tick down at the start of a bird's own turn. The stamp keeps that
+  // to once per turn however often the player changes who is swinging.
+  function startFighterTurn(battle, fighter) {
+    if (fighter.cdTurn === battle.turn) return;
+    fighter.cdTurn = battle.turn;
+    fighter.skills.forEach(s => { if (s.cdLeft > 0) s.cdLeft -= 1; });
+  }
+
+  // Field whichever bird the player wants. The meter still decides WHEN the
+  // flock acts; this decides WHO swings. The bird whose meter bought the turn
+  // still pays for it (see resolveAction), so a favourite can fight every turn
+  // without earning the flock a single extra one.
+  function chooseActingFighter(battle, index) {
+    if (battle.phase !== 'act' || !battle.acting || battle.acting.side !== 'player') return false;
+    const pick = battle.teams.player[index];
+    if (!pick || pick.fainted || battle.acting.index === index) return false;
+    battle.acting = { side: 'player', index };
+    startFighterTurn(battle, pick);
+    return true;
   }
 
   // Turn-order forecast for the UI timeline strip (next `count` turns).
@@ -791,10 +813,22 @@
         text: (skill.teamWide ? 'The whole flock rallies to ' + attacker.name + '\'s song!' : attacker.name + ' rallies!') });
     }
 
-    // End of the acting bird's turn: tick its effect durations, reset meter.
-    attacker.mods = (attacker.mods || []).map(m => ({ ...m, turns: m.turns - 1 })).filter(m => m.turns > 0);
-    attacker.cr = clamp(n(attacker.potionCrCarry, 0), 0, 99.5);
-    delete attacker.potionCrCarry;
+    // End of the turn. The bird that swung spends its effect durations; the
+    // bird whose meter bought the turn drops back down the meter. They are the
+    // same bird unless the player fielded someone else — and then both settle
+    // up, so choosing a favourite costs the flock exactly one turn, as always.
+    // Turn-meter brews keep a slice of readiness instead of being wasted at 100.
+    const holder = battle.turnHolder ? battle.teams[battle.turnHolder.side][battle.turnHolder.index] : attacker;
+    const tickMods = f => { f.mods = (f.mods || []).map(m => ({ ...m, turns: m.turns - 1 })).filter(m => m.turns > 0); };
+    tickMods(attacker);
+    if (holder !== attacker) tickMods(holder);
+    holder.cr = clamp(n(holder.potionCrCarry, 0), 0, 99.5);
+    delete holder.potionCrCarry;
+    if (attacker !== holder) {
+      attacker.cr = Math.max(attacker.cr, clamp(n(attacker.potionCrCarry, 0), 0, 99.5));
+      delete attacker.potionCrCarry;
+    }
+    battle.turnHolder = null;
     battle.acting = null;
     battle.phase = 'tick';
 
@@ -901,7 +935,7 @@
     ULTIMATE_CD, ULTIMATE_OPENING_CD, FOCUS_MAX, SURGE_COST,
     deriveMagic, deriveResist,
     disciplineTier, trainedMoves, buildFighter, buildOpponentFighter,
-    createBattle, tickToNextTurn, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,
+    createBattle, tickToNextTurn, chooseActingFighter, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,
     actingFighter, livingFighters, teamAlive, effStat, skillUsable, canUsePotionEffect, applyPotionEffect,
     LEAGUE_TIERS, battleRewards, DAILY_FULL_REWARD_WINS,
     hashString, seededRandom

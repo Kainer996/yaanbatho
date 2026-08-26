@@ -28,7 +28,7 @@ OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "one-tap-appointments-v320-20260824"
 # The head build has moved past this release; its own marker stays in the
 # lineage for ever, and the newest one goes on the end.
-CURRENT_BUILD = "trail-mode-v329-20260825"
+CURRENT_BUILD = "field-any-bird-v330-20260826"
 
 
 def function_source(name: str) -> str:

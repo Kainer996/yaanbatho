@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERGE_CORE = ROOT / "settlement_merge_core.js"
-CURRENT_BUILD = "trail-mode-v329-20260825"
+CURRENT_BUILD = "field-any-bird-v330-20260826"
 # The release immediately before this one. Ava's walking-villagers work took
 # v310 on main while this branch was open, so this became v311.
 PREVIOUS_RELEASE_PIN = "walking-villagers-cottage-variety-v310-20260823"

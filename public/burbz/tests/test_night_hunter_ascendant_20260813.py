@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "trail-mode-v329-20260825"
+CURRENT_BUILD = "field-any-bird-v330-20260826"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
@@ -159,11 +159,11 @@ def test_release_is_query_busted_everywhere():
     html = HTML_PATH.read_text(encoding="utf-8")
     sw = SW_PATH.read_text(encoding="utf-8")
     # bird_sleep_core still ships under this release; battle_core moved again
-    # with mercy-streak-attack-preview-v287, academy_treehouse_core with
-    # training-your-way-v288.
+    # with field-any-bird-v330, academy_treehouse_core with
+    # iron-ingot-errand-v326.
     for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
                             ("academy_treehouse_core.js", "iron-ingot-errand-v326-20260825"),
-                            ("battle_core.js", "free-your-first-village-v327-20260825")):
+                            ("battle_core.js", "field-any-bird-v330-20260826")):
         pin = f"{core}?v={pin_build}"
         assert pin in html, core
         assert sw.count(f"'./{pin}'") == 2, core

@@ -2296,12 +2296,21 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .tl-chip.player { border-color:rgba(214,168,79,0.7); }
 .tl-chip.opponent { border-color:rgba(224,57,43,0.75); }
 .tl-chip.now { box-shadow:0 0 10px rgba(255,255,255,0.35); transform:scale(1.12); }
-.arena-squad { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin-bottom:8px; }
-.arena-unit { position:relative; text-align:center; padding:6px 4px 7px; background:var(--bg2); border-radius:12px; border:1.5px solid rgba(255,255,255,0.08); overflow:visible; transition:transform .15s, border-color .2s, box-shadow .2s; }
+/* Four equal cards, whatever the birds are called. Plain `1fr` means
+   `minmax(auto, 1fr)` — a card can never shrink below its own content — so a
+   long name like Great Spotted Woodpecker used to steal width from its
+   squadmates and blow its own picture up with it. `minmax(0, 1fr)` holds the
+   four tracks level and the names wrap inside them. */
+.arena-squad { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; margin-bottom:8px; }
+.arena-unit { position:relative; min-width:0; text-align:center; padding:6px 4px 7px; background:var(--bg2); border-radius:12px; border:1.5px solid rgba(255,255,255,0.08); overflow:visible; transition:transform .15s, border-color .2s, box-shadow .2s; }
 .arena-squad.player .arena-unit { border-color:rgba(214,168,79,0.3); }
 .arena-squad.opponent .arena-unit { border-color:rgba(224,57,43,0.38); background:linear-gradient(180deg,rgba(26,8,10,0.85),rgba(10,4,6,0.92)); }
 .arena-unit.acting { border-color:var(--accent); box-shadow:0 0 14px rgba(214,168,79,0.4); transform:translateY(-3px); }
 .arena-squad.opponent .arena-unit.acting { border-color:#e0392b; box-shadow:0 0 14px rgba(224,57,43,0.55); }
+/* Any living bird in your row can take the turn, so the ones you can tap wear
+   a dashed gold edge. */
+.arena-squad.player .arena-unit.pickable { cursor:pointer; border-style:dashed; border-color:rgba(214,168,79,0.6); }
+.arena-squad.player .arena-unit.pickable:active { transform:scale(0.96); }
 .arena-unit.fainted { opacity:0.32; filter:grayscale(.9); }
 .arena-unit.targetable { border-color:var(--hp-red); box-shadow:0 0 12px rgba(224,89,74,0.5); animation:targetPulse 0.9s ease-in-out infinite; cursor:crosshair; }
 @keyframes targetPulse { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
@@ -2314,7 +2323,9 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .arena-unit .au-dmg-preview.nve { color:var(--text3); border-color:rgba(255,255,255,0.18); }
 .arena-unit .au-art { width:100%; aspect-ratio:1; border-radius:9px; object-fit:cover; background:var(--bg4); display:block; }
 .arena-unit .au-emoji { font-size:32px; line-height:52px; height:52px; }
-.arena-unit .au-name { font-size:9px; color:var(--text2); font-weight:700; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Two lines, always the same height: a long name reads in full and every
+   card's HP bar still sits level with its neighbours'. */
+.arena-unit .au-name { font-size:9px; color:var(--text2); font-weight:700; margin-top:3px; line-height:1.15; height:2.3em; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
 .arena-unit .au-hpbar { height:5px; border-radius:3px; background:var(--bg4); margin-top:3px; overflow:hidden; }
 .arena-unit .au-hpbar > div { height:100%; border-radius:3px; transition:width .45s ease, background .3s; }
 .arena-unit .au-crbar { height:3px; border-radius:2px; background:var(--bg4); margin-top:2px; overflow:hidden; }
@@ -4917,7 +4928,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
 <script src="bird_roles_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=free-your-first-village-v327-20260825"></script>
+<script src="battle_core.js?v=field-any-bird-v330-20260826"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
@@ -20649,6 +20660,12 @@ function openQuestOfferDetail(offer) {
 Object.assign(window, {
   openQuestBoard, openQuestOfferSheet, closeWalkQuestSheet, openActiveWalkQuestSheet, abandonWalkingQuest, switchScreen,
   openTrailTavernSheet, buyTrailTavernDrink, academyTavernRecruit, openQuestPhotoBook, pickQuestPhoto,
+  // Skyclash arena: exported for QA harnesses and evidence scripts.
+  __burbzArenaDebug: {
+    battle: () => battleState && battleState.battle,
+    acting: () => battleState && battleState.battle && battleState.battle.acting,
+    field: index => battleFieldBird(index)
+  },
   // Academy Alive ambience: exported for QA harnesses and evidence scripts.
   toggleAcademyView, toggleAcademyTreeLights, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, engine3d: () => ACADEMY_3D, view: () => academyViewMode() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
@@ -38976,6 +38993,7 @@ function startPerchBattle() {
   (battle.synergies.player || []).forEach(s => addBattleLog('system-msg', s.icon + ' ' + s.title + '! ' + s.copy));
   (battle.synergies.opponent || []).forEach(s => addBattleLog('system-msg', '😈 Rival ' + s.title + ': ' + s.copy));
   addBattleLog('system-msg', '🎯 Pick a move, tap the evil Burb you want to hit, and check the damage on the ATTACK button before you strike.');
+  addBattleLog('system-msg', '\u{1FAB6} Any bird, any turn — tap one of your flock to send it in. The same bird can fight every turn if you like.');
   SFX.tap();
   battleAdvance();
 }
@@ -39012,6 +39030,7 @@ function arenaUnitHTML(f, side, index, opts) {
   const cls = ['arena-unit'];
   if (f.fainted) cls.push('fainted');
   if (o.acting) cls.push('acting');
+  if (o.pickable) cls.push('pickable');
   if (o.targetable) cls.push('targetable');
   if (o.locked) cls.push('target-locked');
   if (f.nightHunter && !f.fainted) cls.push('night-hunter-aura');
@@ -39085,6 +39104,7 @@ function renderArena() {
     const host = $(side === 'opponent' ? 'arenaOppRow' : 'arenaPlayerRow');
     host.innerHTML = b.teams[side].map((f, i) => arenaUnitHTML(f, side, i, {
       acting: acting && acting.side === side && acting.index === i,
+      pickable: playerActing && side === 'player' && !f.fainted && acting.index !== i,
       targetable: choosingTarget && side === 'opponent' && !f.fainted,
       locked: choosingTarget && side === 'opponent' && battleState.pendingTargetIndex === i && !f.fainted,
       preview: side === 'opponent' && previews && !f.fainted ? previews[i] : null
@@ -39106,6 +39126,8 @@ function renderArena() {
   }
   const me = core.actingFighter(b);
   const acts = core.availableActions(b);
+  // Anyone else still on their feet can take this turn instead.
+  const bench = core.livingFighters(b, 'player').filter(x => x.i !== acting.index).length;
   const canSurge = b.focus.player >= core.SURGE_COST;
   const potion = me.potion || null;
   const potionReady = !!(potion && !potion.used && core.canUsePotionEffect(me, potion.effect));
@@ -39140,8 +39162,9 @@ function renderArena() {
     }
   }
   actions.innerHTML =
-    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is ready!' +
-      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK') : ' — pick a move') + '</div>' +
+    '<div class="arena-turn-banner">' + escapeHtml(me.name) + ' is up!' +
+      (pendingAct ? (pendingAct.skill.aoe ? ' — press ATTACK to hit the whole squad' : ' — tap an evil Burb, check the damage, then press ATTACK')
+        : bench ? ' — pick a move, or tap another of your birds to send it in' : ' — pick a move') + '</div>' +
     confirmBar +
     acts.map((a, i) => {
       const m = a.skill;
@@ -39226,9 +39249,29 @@ function battleSelectSkill(skillIndex) {
   renderArena();
 }
 
+// Any bird, any turn. Tapping one of your own birds hands it this turn — and
+// the same bird can fight over and over if that is how you want to play.
+function battleFieldBird(index) {
+  const core = battleCore();
+  const b = battleState.battle;
+  if (b.phase !== 'act' || !b.acting || b.acting.side !== 'player') return;
+  const bird = b.teams.player[index];
+  if (!bird || b.acting.index === index) return;
+  if (bird.fainted) { showToast('\u{1FAB6} ' + bird.name + ' is down — send in a bird still on its feet.'); return; }
+  if (!core.chooseActingFighter(b, index)) return;
+  // A new bird brings its own moves, so the half-made plan goes back.
+  battleState.pendingSkillIndex = null;
+  battleState.pendingTargetIndex = null;
+  SFX.tap();
+  addBattleLog('player-action', '\u{1FAB6} ' + bird.name + ' steps up and takes the turn.');
+  renderArena();
+}
+
 function battleTargetPick(side, index) {
   if (!battleState || battleState.busy) return;
-  if (battleState.pendingSkillIndex == null || side !== 'opponent') return;
+  // Your own row is a bench, not a target list.
+  if (side === 'player') { battleFieldBird(index); return; }
+  if (battleState.pendingSkillIndex == null) return;
   const f = battleState.battle.teams.opponent[index];
   if (!f || f.fainted) return;
   SFX.tap();
@@ -40567,7 +40610,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'trail-mode-v329-20260825';
+const BURBZ_BUILD = 'field-any-bird-v330-20260826';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
