@@ -139,7 +139,7 @@ def test_the_fallback_synth_is_a_struck_thing_not_a_beep():
 
 def test_every_quest_sheet_button_is_actually_styled():
     """`.wq-detail-start` is used by nine sheets and had no rule at all."""
-    # walk-detection-removed-v334-20260827 retired the "Eyes on the trail"
+    # every-bird-carries-its-weight-v335-20260827 retired the "Eyes on the trail"
     # sheet and its two buttons, so seven sheets carry the class now.
     assert HTML.count('class="wq-detail-start"') >= 7
     rule = HTML.split(".wq-detail-start {", 1)[1].split("}", 1)[0]

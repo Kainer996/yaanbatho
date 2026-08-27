@@ -48,7 +48,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 
 OWN_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 PREVIOUS_RELEASE_PIN = "nav-action-badges-v312-20260824"
-CURRENT_BUILD = "walk-detection-removed-v334-20260827"
+CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
 
 STAT_ROW_CARDS = {
     "createBirdCardHTML": "the companion card",
@@ -161,14 +161,21 @@ def test_carry_is_the_number_the_field_guide_already_quotes():
 
 
 def test_a_bigger_bird_carries_more_and_the_smallest_still_carries_one():
-    """One load per 100 g, floored at one — so every small bird reads 1."""
+    """A robin carries one, and from there the load climbs all the way up.
+
+    every-bird-carries-its-weight-v335: the old rule was one load per 100 g,
+    which flattened everything under a myna to 1 and everything over 2 kg to the
+    cap. Weight now runs on a square-root curve anchored on the robin, so the
+    middle of the roster actually spreads out.
+    """
     loads = run_node(
         f"""
 const core = require({json.dumps(str(SIZE_CORE))});
-const bird = (massG, stamina) => ({{ massG, stamina, level: 1 }});
+const bird = (massG, stamina) => ({{ massG, stamina, level: 1, carryGuild: 'songbird' }});
 process.stdout.write(JSON.stringify({{
   goldcrest: core.carryCapacity(bird(6, 40)),
   robin: core.carryCapacity(bird(18, 50)),
+  blackbird: core.carryCapacity(bird(100, 50)),
   jackdaw: core.carryCapacity(bird(250, 50)),
   crow: core.carryCapacity(bird(500, 50)),
   heron: core.carryCapacity(bird(1500, 88)),
@@ -179,9 +186,63 @@ process.stdout.write(JSON.stringify({{
 """
     )
     assert loads["goldcrest"] == 1 == loads["robin"]  # the floor holds them level
-    assert loads["jackdaw"] < loads["crow"] < loads["heron"]
+    # The rule Yaan asked for: it keeps climbing, with no flat stretch in the middle.
+    assert loads["robin"] < loads["blackbird"] < loads["jackdaw"] < loads["crow"] < loads["heron"] < loads["giant"]
     assert loads["withSatchel"] == loads["jackdaw"] + 3
-    assert loads["giant"] == loads["cap"]  # nothing outruns the cap
+    assert loads["giant"] <= loads["cap"]  # nothing outruns the cap
+
+
+def test_a_merlin_carries_far_more_than_a_robin_or_a_reed_warbler():
+    """Yaan's report: a 180 g falcon hauling the same as an 18 g robin is wrong.
+
+    A Merlin hunts by carrying prey home in its feet, so it lifts a real share
+    of its own weight. The old flat rule gave it 2 against a robin's 1.
+    """
+    loads = run_node(
+        f"""
+const core = require({json.dumps(str(SIZE_CORE))});
+const of = name => {{
+  const size = core.speciesSize({{ id: name.toLowerCase().replace(/[^a-z]+/g, '_'), name }});
+  return core.carryCapacity({{ massG: size.massG, sizeScore: size.score, carryGuild: size.carryGuild, stamina: 50, level: 1 }});
+}};
+process.stdout.write(JSON.stringify({{
+  reedWarbler: of('Reed Warbler'), robin: of('Robin'), merlin: of('Merlin'),
+  kestrel: of('Kestrel'), mallard: of('Mallard'), raven: of('Raven'),
+  goldenEagle: of('Golden Eagle'), muteSwan: of('Mute Swan')
+}}));
+"""
+    )
+    assert loads["reedWarbler"] == 1 and loads["robin"] == 1
+    assert loads["merlin"] >= loads["robin"] + 3      # the complaint, answered
+    assert loads["merlin"] == loads["kestrel"]        # two falcons of a weight agree
+    # …and a duck of six times the Merlin's weight still carries less, because a
+    # webbed foot and a flat bill are no way to hold on to anything.
+    assert loads["mallard"] < loads["merlin"]
+    assert loads["merlin"] < loads["raven"] < loads["goldenEagle"]
+    # All weight, no grip: the heaviest flying bird in the game is not the best hauler.
+    assert loads["muteSwan"] < loads["goldenEagle"]
+
+
+def test_what_a_bird_is_built_to_carry_counts_as_well_as_what_it_weighs():
+    """Same weight, different build, different load — the carrying guilds."""
+    loads = run_node(
+        f"""
+const core = require({json.dumps(str(SIZE_CORE))});
+const at = guild => core.carryUnitsRaw({{ massG: 1000, carryGuild: guild }});
+process.stdout.write(JSON.stringify({{
+  raptor: at('raptor'), corvid: at('corvid'), songbird: at('songbird'),
+  waterfowl: at('waterfowl'), gamebird: at('gamebird'),
+  eagleVsGoose: core.carryCapacity({{ massG: 4500, carryGuild: 'raptor', stamina: 50, level: 1 }})
+              - core.carryCapacity({{ massG: 4500, carryGuild: 'waterfowl', stamina: 50, level: 1 }}),
+  guilds: Object.keys(core.CARRY_GUILDS).length
+}}));
+"""
+    )
+    assert loads["raptor"] > loads["corvid"] > loads["songbird"]
+    assert loads["songbird"] > loads["waterfowl"] > loads["gamebird"]
+    # A Golden Eagle and a goose of the very same weight are not the same hauler.
+    assert loads["eagleVsGoose"] >= 10
+    assert loads["guilds"] >= 15
 
 
 def test_a_birdex_preview_never_writes_to_the_equipment_ledger():
@@ -289,10 +350,10 @@ process.stdout.write(JSON.stringify({{
 }}));
 """
     )
-    assert result["goldcrest"] == 5      # one load of twenty
-    assert result["crow"] == 25
-    assert result["giant"] == 100        # the cap fills the bar, never overruns
-    assert result["max"] == 20
+    # The bar is drawn against the core's own ceiling, so these move with it.
+    assert 0 < result["goldcrest"] < result["crow"] < result["giant"] <= 100
+    assert result["max"] == 30           # a Steller's Sea-Eagle, and nothing more
+    assert result["goldcrest"] == round(1 / result["max"] * 100)
 
 
 # ---------------------------------------------------------------------------

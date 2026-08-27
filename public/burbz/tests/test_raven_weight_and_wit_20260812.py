@@ -21,11 +21,11 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
-RELEASE = "raven-weight-and-wit-v255-20260812"
+RELEASE = "every-bird-carries-its-weight-v335-20260827"
 # The roles core moved on with chef mastery (v261); the size core stays ours.
 # Later releases move BURBZ_BUILD on; this release's own segment stays in the
 # cache lineage and its untouched cores keep their ?v= pins.
-CURRENT_BUILD = "walk-detection-removed-v334-20260827"
+CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
@@ -82,30 +82,48 @@ def test_measured_mass_still_beats_the_field_guide_which_beats_stats():
 
 
 # ---------------------------------------------------------------------------
-# 2. True carrying: one load per hundred grams of bird
+# 2. True carrying: real weight, on a curve that reaches the real top
 # ---------------------------------------------------------------------------
 
-def test_carrying_tracks_real_mass_so_the_raven_hauls_double_the_crow():
+def test_carrying_tracks_real_mass_so_the_raven_far_outhauls_the_crow():
+    """A raven out-hauls a crow, a buzzard buries a robin, and nothing is flat.
+
+    v255 set this rule with load running straight off weight — one unit per
+    100 g — which made a 1.2 kg raven exactly twice a 510 g crow. That literal
+    doubling could never survive the whole roster: carried across four orders of
+    magnitude it put every bird under a myna on 1 and every bird over 2 kg on
+    the same ceiling. every-bird-carries-its-weight-v335 keeps the fact Yaan
+    cared about — the raven is the far bigger hauler, and its number says so —
+    on a square-root curve that still has somewhere to go at the top.
+    """
     out = run_node(
         """
         const core = require('./bird_size_core.js');
         const carry = id => {
           const s = core.speciesSize({ id, name: id });
-          return core.carryCapacity({ sizeScore: s.score, massG: s.massG, stamina: 50, level: 1 });
+          return core.carryCapacity({ sizeScore: s.score, massG: s.massG, carryGuild: s.carryGuild, stamina: 50, level: 1 });
         };
         console.log(JSON.stringify({
           raven: carry('raven'), crow: carry('carrion_crow'), robin: carry('robin'),
           buzzard: carry('buzzard'), gull: carry('herring_gull'),
-          gramsPerLoad: core.GRAMS_PER_LOAD_UNIT, maxUnits: core.MAX_CARRY_UNITS
+          jackdaw: carry('jackdaw'), goldenEagle: carry('golden_eagle'),
+          plainBirdOfAGullsWeight: core.carryCapacity({ massG: 1150, carryGuild: 'songbird', stamina: 50, level: 1 }),
+          maxUnits: core.MAX_CARRY_UNITS
         }));
         """
     )
-    assert out["gramsPerLoad"] == 100
-    assert out["raven"] >= 2 * out["crow"], "a raven carries twice as much as a carrion crow"
+    assert out["raven"] > out["crow"] > out["jackdaw"], "weight still tells, all the way up the corvids"
+    assert out["raven"] >= out["crow"] + 3, "a raven is the far bigger hauler and the number says so"
     assert out["buzzard"] >= 2 * out["robin"], "a buzzard carries so much more than a robin"
-    assert out["gull"] >= out["buzzard"], "seagulls carry an awful lot"
+    # Seagulls still carry an awful lot — for their weight. A buzzard of two
+    # thirds the gull's weight now edges ahead of it, because it carries rabbits
+    # in its talons and a gull carries what fits in its bill.
+    assert out["gull"] > out["plainBirdOfAGullsWeight"], "seagulls carry an awful lot"
+    assert out["gull"] > out["crow"]
     assert out["robin"] >= 1, "even the smallest bird brings a beakful home"
-    assert out["raven"] <= out["maxUnits"]
+    # The top of the curve is a real bird, not the ceiling: the eagle has room above it.
+    assert out["goldenEagle"] > out["raven"]
+    assert out["goldenEagle"] <= out["maxUnits"]
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +189,7 @@ def test_the_raven_is_a_recruitable_character_and_the_ui_tells_the_rule():
     html = HTML.read_text(encoding="utf-8")
     assert 'id: "raven", name: "Raven", rarity: "rare"' in html
     # v4 re-derives every companion so old saves pick up the true weights.
-    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';" in html
+    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v5-every-bird-carries-its-weight-20260827';" in html
     # The size panel shows the governing chip and honest weight sourcing.
     assert "% governing" in html
     assert "governanceWitFactor" in html
