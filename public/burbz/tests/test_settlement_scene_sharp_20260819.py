@@ -29,7 +29,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
+CURRENT_BUILD = "walk-detection-removed-v334-20260827"
 VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
 
 
