@@ -19,7 +19,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "building-discovery-v284-20260819"
 PREVIOUS_RELEASE_PIN = "offroad-side-quests-v283-20260818"
-CURRENT_BUILD = "village-swipe-v332-20260826"
+CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
 
 
 def run_node(script: str):

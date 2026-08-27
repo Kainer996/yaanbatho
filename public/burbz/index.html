@@ -404,7 +404,9 @@ svg.academy-room-bg { display:block; filter:none; }
 .kitchen-bridge-arrow { flex:0 0 auto; color:var(--text3); font-size:10px; }
 .kitchen-prep-strip { display:flex; flex-wrap:wrap; gap:6px; }
 /* Kitchen — companion feeding roster (scrollable list; no birds wander the room) */
-.kitchen-roster-list { max-height:56vh; overflow-y:auto; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; gap:8px; padding-right:2px; }
+/* The roster flows with the Kitchen page — one scroll for the whole screen,
+   never a list scrolling inside it (Yaan, 2026-08-27). */
+.kitchen-roster-list { display:flex; flex-direction:column; gap:8px; padding-right:2px; }
 .kitchen-roster-row { padding:10px 12px; border-radius:13px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.22); }
 .kitchen-roster-head { display:flex; align-items:center; gap:10px; }
 .kitchen-roster-art { width:46px; height:46px; flex:0 0 auto; object-fit:contain; font-size:34px; line-height:46px; text-align:center; filter:drop-shadow(0 3px 5px rgba(0,0,0,.45)); }
@@ -6047,11 +6049,13 @@ function hungerBarHTML(status, surface = '') {
   const fullness = clamp(100 - hunger, 0, 100);
   const rounded = Math.round(fullness);
   const color = 'hsl(' + Math.round(fullness * 1.2) + ' 72% 44%)';
-  const note = status && status.blocksWork ? 'Feed before quests or training' : status && status.warnsWork ? 'Feed soon' : rounded === 100 ? 'Full — optional top-ups still use one ingredient' : 'Feed anytime — each tap uses one whole ingredient';
+  // A full bird needs no caption — the 100% bar already says it (Yaan,
+  // 2026-08-27, from a Kitchen screenshot).
+  const note = status && status.blocksWork ? 'Feed before quests or training' : status && status.warnsWork ? 'Feed soon' : rounded === 100 ? '' : 'Feed anytime — each tap uses one whole ingredient';
   return '<div class="bird-hunger-bar" data-hunger-surface="' + escapeHtml(surface || 'care') + '" data-hunger-state="' + escapeHtml((status && status.level) || 'fed') + '" data-fullness="' + rounded + '" role="progressbar" aria-label="Fullness ' + rounded + ' percent" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + rounded + '">' +
     '<div class="bird-hunger-head"><span>Fullness</span><span>' + rounded + '%</span></div>' +
     '<div class="bird-hunger-track"><div class="bird-hunger-fill" style="width:' + rounded + '%;background-color:' + color + '"></div></div>' +
-    '<div class="bird-hunger-note">' + note + '</div></div>';
+    (note ? '<div class="bird-hunger-note">' + note + '</div>' : '') + '</div>';
 }
 // Fullness is the hunger bar and nothing else. Feeding used to sit behind a
 // one-hour wall-clock cooldown, which is how a bird on 100/100 hunger could be
@@ -15291,7 +15295,12 @@ function kitchenRosterEntries() {
       key: String(bird.id),
       bird,
       name: birdDisplayName(bird),
-      speciesLine: canonicalSpeciesName(bird.species || bird.commonName) || (bird.commonName || ''),
+      // The species reads under the name only when it adds something — a
+      // bird called by its own species name would just say it twice.
+      speciesLine: (() => {
+        const species = canonicalSpeciesName(bird.species || bird.commonName) || (bird.commonName || '');
+        return species.trim().toLowerCase() === birdDisplayName(bird).trim().toLowerCase() ? '' : species;
+      })(),
       target: { target:'bird', birdId:bird.id, scientificName:bird.scientificName || bird.scientific || null, commonName:bird.commonName || bird.species, name:bird.commonName || bird.species },
       artBird: bird
     });
@@ -15439,7 +15448,7 @@ function kitchenRosterRowHTML(entry) {
   return '<div class="kitchen-roster-row" data-feed-surface="kitchen-roster" data-kitchen-roster-bird="' + escapeHtml(entry.key) + '">' +
     '<div class="kitchen-roster-head">' + feedArtHTML(entry.artBird, 'kitchen-roster-art') +
     '<div class="kitchen-roster-main"><div class="kitchen-roster-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
-    '<div class="kitchen-roster-species">' + escapeHtml(entry.speciesLine) + '</div>' + hungerLine + '</div>' + feedBtn + '</div>' +
+    (entry.speciesLine ? '<div class="kitchen-roster-species">' + escapeHtml(entry.speciesLine) + '</div>' : '') + hungerLine + '</div>' + feedBtn + '</div>' +
     eatsLine + supplyLine + activityLine + awayLine +
     (open ? kitchenRosterTrayHTML(entry, options) : '') + '</div>';
 }
@@ -40759,7 +40768,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-swipe-v332-20260826';
+const BURBZ_BUILD = 'kitchen-clean-table-v333-20260827';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

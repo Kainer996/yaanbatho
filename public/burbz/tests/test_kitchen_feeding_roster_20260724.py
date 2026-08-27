@@ -91,8 +91,12 @@ def test_feeding_roster_is_wired_into_the_kitchen_panel():
     # The roster leads the Kitchen panel, above the Prep Counter mini-game.
     panel = function_source(html, "renderKitchenPanelHTML")
     assert "renderKitchenRosterHTML()" in panel
-    # The scrollable list scrolls inside its own container.
-    assert "overflow-y:auto" in html[html.index(".kitchen-roster-list {"):html.index(".kitchen-roster-row {")]
+    # INVERTED by kitchen-clean-table-v333-20260827: the list used to scroll
+    # inside its own 56vh box, a menu within the Kitchen's own scroll. Yaan
+    # asked for one scroll for the whole screen, so the roster now flows with
+    # the page and must never grow its own scrollbox back.
+    list_rule = html[html.index(".kitchen-roster-list {"):html.index(".kitchen-roster-row {")]
+    assert "overflow" not in list_rule and "max-height" not in list_rule
     # No-food copy teaches where food comes from.
     roster_src = html[html.index("function kitchenRosterEntries("):html.index("function kitchenRosterFeed(")]
     assert "No food in the kitchen for this bird" in roster_src
