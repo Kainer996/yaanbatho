@@ -14038,11 +14038,13 @@ function claimBirdExpedition(expeditionId) {
   closeQuestOverlay();
   playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   // Say it plainly when a load was left in the field: it is the size rule doing
-  // its job, not a bug.
+  // its job, not a bug. Since v335 "send a bigger bird" is no longer sound
+  // advice on its own — a swan outweighs a raven and hauls less — so the toast
+  // names the carrying number the player should actually shop for.
   if (q.carry && q.carry.leftBehind > 0) {
     const sizeLabel = (birdSizeCore() && birdSizeCore().SIZE_CLASS_INDEX[q.carry.sizeClass]) || null;
     setTimeout(() => showToast('🧺 ' + escapeHtml(q.birdName) + ' could only carry ' + q.carry.capacity + ' load' + (q.carry.capacity === 1 ? '' : 's') +
-      (sizeLabel ? ' — a ' + sizeLabel.label.toLowerCase() + ' bird' : '') + '. Send a bigger bird to bring it all home.'), 2100);
+      (sizeLabel ? ' — a ' + sizeLabel.label.toLowerCase() + ' bird' : '') + '. Send a bird that carries more, or fit a satchel.'), 2100);
   }
   // Merlin's tutorial errand is the one claim followed by a scripted chapter:
   // a quiz modal here would open 650ms before the dim and end up buried

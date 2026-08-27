@@ -551,10 +551,10 @@
     ['gull',     ['gull','tern','skua','kittiwake','noddy','auk','puffin','razorbill','guillemot','murrelet']],
     ['beakfisher',['kingfisher','kookaburra','kingbird','bee-eater']],
     ['fisher',   ['heron','egret','bittern','stork','ibis','spoonbill','cormorant','shag','darter','gannet','booby','frigatebird','shoebill']],
-    ['gamebird', ['pheasant','partridge','grouse','quail','ptarmigan','francolin','guineafowl','brushturkey','megapode','junglefowl','peafowl','turkey']],
-    ['waterfowl',['duck','goose','swan','teal','wigeon','pintail','shoveler','pochard','goldeneye','merganser','shelduck','eider','scoter','goosander','smew','grebe','coot','moorhen','rail','crake','swamphen','loon','diver','hardhead']],
-    ['wader',    ['sandpiper','plover','godwit','curlew','redshank','greenshank','snipe','dunlin','stint','turnstone','oystercatcher','avocet','stilt','lapwing','phalarope','sanderling','woodcock','crane','bustard','flamingo','dotterel','knot','ruff','killdeer','stone-curlew','thick-knee','jacana','pratincole']],
-    ['pigeon',   ['pigeon','dove','bronzewing','sandgrouse']],
+    ['gamebird', ['pheasant','partridge','grouse','quail','ptarmigan','francolin','guineafowl','brushturkey','megapode','junglefowl','peafowl','turkey','capercaillie','malleefowl','scrubfowl','brushfowl']],
+    ['waterfowl',['duck','goose','swan','teal','wigeon','pintail','shoveler','pochard','goldeneye','merganser','shelduck','eider','scoter','goosander','smew','grebe','coot','moorhen','rail','crake','swamphen','loon','diver','hardhead','scaup','garganey','corncrake','nativehen','gallinule','pukeko','shoveller']],
+    ['wader',    ['sandpiper','plover','godwit','curlew','redshank','greenshank','snipe','dunlin','stint','turnstone','oystercatcher','avocet','stilt','lapwing','phalarope','sanderling','woodcock','crane','bustard','flamingo','dotterel','knot','ruff','killdeer','stone-curlew','thick-knee','jacana','pratincole','brolga','whimbrel','yellowlegs','willet','greenshank','sanderling']],
+    ['pigeon',   ['pigeon','woodpigeon','dove','bronzewing','sandgrouse']],
     ['clinger',  ['woodpecker','toucan','hornbill','trogon','quetzal','hoopoe','roller','barbet','wryneck','flicker','sapsucker','dollarbird']],
     ['aerial',   ['swift','swallow','martin','nightjar','frogmouth','hummingbird','swiftlet','nighthawk','potoo']]
   ];

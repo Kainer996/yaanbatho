@@ -188,6 +188,39 @@ def test_the_carrying_guild_is_read_off_the_bird_not_off_a_lucky_substring():
     assert out["tawnyOwl"] == "owl"
 
 
+def test_compound_bird_names_land_in_the_right_guild():
+    """A Thornbill is not a hornbill; a Woodpigeon really is a pigeon.
+
+    Whole-word matching is what stops "Cuckooshrike" reading as a shrike and
+    "Woodswallow" as a swallow — but it also means every bird whose name is ONE
+    compound word has to be named outright. These are the ones that matter.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const g = name => core.carryGuildForProfile({ name });
+        console.log(JSON.stringify({
+          woodpigeon: g('Woodpigeon'), brolga: g('Brolga'), capercaillie: g('Capercaillie'),
+          malleefowl: g('Malleefowl'), scrubfowl: g('Orange-footed Scrubfowl'),
+          scaup: g('Scaup'), whimbrel: g('Whimbrel'), garganey: g('Garganey'),
+          corncrake: g('Corncrake'), nativehen: g('Tasmanian Nativehen'),
+          thornbill: g('Brown Thornbill'), woodswallow: g('Dusky Woodswallow'),
+          cuckooshrike: g('Black-faced Cuckooshrike'), shrikethrush: g('Gray Shrikethrush'),
+          spinebill: g('Eastern Spinebill'), babbler: g('Grey-crowned Babbler')
+        }));
+        """
+    )
+    # Compound names that really are the bird.
+    assert out["woodpigeon"] == "pigeon"
+    assert out["brolga"] == "wader", "a Brolga is a crane"
+    assert out["capercaillie"] == out["malleefowl"] == out["scrubfowl"] == "gamebird"
+    assert out["scaup"] == out["garganey"] == out["corncrake"] == out["nativehen"] == "waterfowl"
+    assert out["whimbrel"] == "wader"
+    # Compound names that only LOOK like another guild. All passerines.
+    for key in ["thornbill", "woodswallow", "cuckooshrike", "shrikethrush", "spinebill", "babbler"]:
+        assert out[key] == "songbird", key + " is a songbird, whatever its name contains"
+
+
 def test_a_vulture_does_not_out_carry_an_eagle_it_outweighs():
     """A griffon is heavier than a sea-eagle and carries far less. Grip decides."""
     out = run_node(
