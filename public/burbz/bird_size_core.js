@@ -121,9 +121,10 @@
 
     // -- every-bird-carries-its-weight-v335 ---------------------------------
     // Until now 425 of the roster's 567 birds had no weight anywhere, so they
-    // guessed one off HP and STRENGTH — and the guess put a Bald Eagle, an
-    // Emperor Penguin and an Ostrich in the same bracket as a thrush. These are
-    // typical adult body masses in grams from the standard field guides
+    // guessed one off HP and STRENGTH, and the guess was a lottery: it put a
+    // Harpy Eagle within 2% of the truth and a 1.1 kg Little Penguin at 12 g —
+    // a warbler's weight. A Snow Goose came out at 206 g, an Ostrich at 12 kg.
+    // These are typical adult body masses in grams from the standard field guides
     // (BTO/RSPB, BirdLife Australia, Cornell Birds of the World). Now every
     // playable bird has a real weight, and the carry rule can be trusted.
 
