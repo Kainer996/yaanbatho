@@ -188,6 +188,48 @@ def test_the_carrying_guild_is_read_off_the_bird_not_off_a_lucky_substring():
     assert out["tawnyOwl"] == "owl"
 
 
+def test_training_can_never_lift_a_small_bird_past_a_bigger_one():
+    """A well-fed, heavily trained robin is still a robin.
+
+    The level bonus used to be a flat +(level-1)/10 — worth +490% to a Robin and
+    +21% to a Golden Eagle. So a level-50 Goldcrest carried 5, exactly a wild
+    Merlin's load, and a level-50 Robin carried 6, more than one. That is the
+    size rule coming apart at the point it was written to hold. Seasoning and
+    condition are a SHARE of the bird's own back now.
+
+    The line: who a bird is decides what it can carry; what it carries it IN is
+    the part the player changes. So a satchel may still lift a small bird past a
+    big one — that is a crafted legendary, not a level-up.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const at = (massG, carryGuild, level, stamina, gear) =>
+          core.carryCapacity({ massG, carryGuild, level: level || 1, stamina: stamina || 50 }, gear);
+        console.log(JSON.stringify({
+          goldcrestMaxed: at(5.5, 'songbird', 50, 100),
+          robinMaxed: at(18, 'songbird', 50, 100),
+          robinFresh: at(18, 'songbird', 1),
+          wildMerlin: at(200, 'raptor', 1),
+          merlinMaxed: at(200, 'raptor', 50, 100),
+          eagleMaxed: at(4500, 'raptor', 50, 100),
+          robinWithRoyalSatchel: at(18, 'songbird', 1, 50, 5),
+          cap: core.MAX_CARRY_UNITS
+        }));
+        """
+    )
+    # No amount of training lifts a small bird to a wild Merlin's load.
+    assert out["goldcrestMaxed"] < out["wildMerlin"]
+    assert out["robinMaxed"] < out["wildMerlin"]
+    # Training still helps the birds with a back to build on.
+    assert out["merlinMaxed"] > out["wildMerlin"]
+    assert out["eagleMaxed"] > out["merlinMaxed"]
+    # …and it must not shove the big birds into the ceiling, or the top goes flat again.
+    assert out["eagleMaxed"] < out["cap"]
+    # A satchel is the small bird's way up, and it is allowed to be.
+    assert out["robinWithRoyalSatchel"] > out["robinFresh"]
+
+
 def test_compound_bird_names_land_in_the_right_guild():
     """A Thornbill is not a hornbill; a Woodpigeon really is a pigeon.
 

@@ -11460,12 +11460,13 @@ function birdCarryCapacity(bird) {
   const core = birdSizeCore();
   return core ? core.carryCapacity(bird) : 3;
 }
-// The card back draws CARRY as a bar, so it needs the number as a fraction of
-// the most any bird can haul. Read the ceiling off the core: raise
-// MAX_CARRY_UNITS there and every bar moves with it.
+// The card back draws CARRY as a bar, so it needs the number as a fraction of a
+// full basket. That is CARRY_BAR_FULL_UNITS — a well-seasoned sea-eagle — and
+// NOT the core's hard ceiling, which is only a rail against bad data and sits
+// far above any real bird. Raise the bar constant there and every bar moves.
 function birdCardCarryPct(bird) {
   const core = birdSizeCore();
-  const max = Math.max(1, Number(core && core.MAX_CARRY_UNITS) || 20);
+  const max = Math.max(1, Number(core && core.CARRY_BAR_FULL_UNITS) || 34);
   return Math.min(100, Math.round((birdCardCarryCapacity(bird) / max) * 100));
 }
 

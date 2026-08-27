@@ -658,7 +658,14 @@
   const CARRY_REFERENCE_MASS_G = 18;   // a Robin: the bird Yaan named as "carries one".
   const CARRY_MASS_EXPONENT = 0.5;     // four times the bird, twice the load.
   const MIN_CARRY_UNITS = 1;
-  const MAX_CARRY_UNITS = 30;          // a Steller's Sea-Eagle, and nothing carries more.
+  // The ceiling is a rail against bad data, not a balance lever. It was 30, and
+  // 30 was a real bird's number — so nine fully trained birds sat on it together
+  // and the top of the ladder went flat again at exactly the point a player has
+  // earned the difference. No real bird reaches 60.
+  const MAX_CARRY_UNITS = 60;
+  // What fills the carry bar on the card: a well-seasoned sea-eagle. The few
+  // birds above it — the ratites — simply fill the bar, which is the truth.
+  const CARRY_BAR_FULL_UNITS = 34;
   // Kept so older callers and saved games that still speak in grams-per-unit
   // have an honest answer, and because the size chip's copy quotes it.
   const GRAMS_PER_LOAD_UNIT = 100;
@@ -690,12 +697,24 @@
     return byWeight * carryGuild(birdCarryGuild(bird)).factor;
   }
 
+  // Seasoning and condition help a bird pack — but by a SHARE of its own back,
+  // never by a flat unit. A flat unit was worth +490% to a Robin and +21% to a
+  // Golden Eagle, so a fully trained Goldcrest carried as much as a wild Merlin
+  // and a trained Robin carried more: the size rule came apart at exactly the
+  // point it was written to hold. The line the Kingdom draws now is simple —
+  // WHO a bird is decides what it can carry, and WHAT IT CARRIES IT IN is the
+  // part the player can change. That is the satchel's job, and satchels stay
+  // flat units on top so they are worth most to the smallest birds.
+  const CARRY_VETERAN_MAX = 0.25;    // a bird at the level cap packs a quarter better
+  const CARRY_CONDITION_MAX = 0.10;  // full stamina is worth a tenth
+  const CARRY_LEVEL_CAP = 50;        // the game's own level ceiling
+
   function carryCapacity(bird, equipmentBonus) {
-    const staminaBonus = Math.max(0, (n(bird && bird.stamina, 50) - 50) / 120);
-    const levelBonus = Math.max(0, (n(bird && bird.level, 1) - 1) / 10);
+    const veteran = clamp((n(bird && bird.level, 1) - 1) / (CARRY_LEVEL_CAP - 1), 0, 1) * CARRY_VETERAN_MAX;
+    const condition = clamp((n(bird && bird.stamina, 50) - 50) / 50, 0, 1) * CARRY_CONDITION_MAX;
     const satchelBonus = Math.max(0, Math.floor(n(equipmentBonus, 0)));
     // Even a goldcrest manages one load of its own; a satchel always adds on top.
-    const ownUnits = Math.max(MIN_CARRY_UNITS, Math.round(carryUnitsRaw(bird) + staminaBonus + levelBonus));
+    const ownUnits = Math.max(MIN_CARRY_UNITS, Math.round(carryUnitsRaw(bird) * (1 + veteran + condition)));
     return clamp(ownUnits + satchelBonus, MIN_CARRY_UNITS, MAX_CARRY_UNITS);
   }
 
@@ -838,6 +857,7 @@
     CARRY_MASS_EXPONENT,
     MIN_CARRY_UNITS,
     MAX_CARRY_UNITS,
+    CARRY_BAR_FULL_UNITS,
     BATTLE_MIN_MULT,
     BATTLE_MAX_MULT,
     sizeClassForScore,

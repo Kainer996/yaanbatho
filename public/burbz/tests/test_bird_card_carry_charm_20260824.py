@@ -189,7 +189,7 @@ process.stdout.write(JSON.stringify({{
     # The rule Yaan asked for: it keeps climbing, with no flat stretch in the middle.
     assert loads["robin"] < loads["blackbird"] < loads["jackdaw"] < loads["crow"] < loads["heron"] < loads["giant"]
     assert loads["withSatchel"] == loads["jackdaw"] + 3
-    assert loads["giant"] <= loads["cap"]  # nothing outruns the cap
+    assert loads["giant"] < loads["cap"], "the cap is a rail; no real bird should reach it"
 
 
 def test_a_merlin_carries_far_more_than_a_robin_or_a_reed_warbler():
@@ -330,10 +330,13 @@ def test_carrying_spans_the_block_because_it_is_not_a_combat_stat():
     assert '<strong class="card-back-stat-value">${birdCardCarryCapacity(bird)}</strong>' in src
 
 
-def test_the_back_bar_is_scaled_by_the_cores_ceiling_not_a_literal():
+def test_the_back_bar_is_scaled_by_the_cores_own_full_basket_not_a_literal():
     html = html_text()
     src = function_source(html, "birdCardCarryPct")
-    assert "core.MAX_CARRY_UNITS" in src
+    # The bar is drawn against a full basket, NOT the hard ceiling — the ceiling
+    # is only a rail against bad data and sits far above any real bird.
+    assert "core.CARRY_BAR_FULL_UNITS" in src
+    assert "core.MAX_CARRY_UNITS" not in src
     assert "${birdCardCarryPct(bird)}%" in function_source(html, "createBirdCardHTML")
     result = run_node(
         f"""
@@ -346,14 +349,16 @@ let gameState = {{ flock: [] }};
 {src}
 const at = massG => birdCardCarryPct({{ massG, stamina: 50, level: 1 }});
 process.stdout.write(JSON.stringify({{
-  goldcrest: at(6), crow: at(500), giant: at(9000), max: core.MAX_CARRY_UNITS
+  goldcrest: at(6), crow: at(500), giant: at(9000),
+  barFull: core.CARRY_BAR_FULL_UNITS, rail: core.MAX_CARRY_UNITS
 }}));
 """
     )
-    # The bar is drawn against the core's own ceiling, so these move with it.
+    # The bar is drawn against the core's own full basket, so these move with it.
     assert 0 < result["goldcrest"] < result["crow"] < result["giant"] <= 100
-    assert result["max"] == 30           # a Steller's Sea-Eagle, and nothing more
-    assert result["goldcrest"] == round(1 / result["max"] * 100)
+    assert result["barFull"] == 34       # a well-seasoned sea-eagle fills the basket
+    assert result["rail"] > result["barFull"], "the hard ceiling is a rail, not the top of the bar"
+    assert result["goldcrest"] == round(1 / result["barFull"] * 100)
 
 
 # ---------------------------------------------------------------------------
