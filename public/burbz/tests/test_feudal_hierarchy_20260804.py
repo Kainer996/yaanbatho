@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "village-swipe-v332-20260826"
+CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 

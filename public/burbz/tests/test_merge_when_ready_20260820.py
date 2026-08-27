@@ -26,7 +26,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "village-swipe-v332-20260826"
+CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
 MERGE_CORE_PIN = "village-work-huts-v311-20260824"  # last release to touch the core
 
 
