@@ -189,45 +189,32 @@ def function_source(name: str) -> str:
     return HTML[start:end]
 
 
-def test_every_position_fix_reaches_the_detector():
-    fix = function_source("handleLivePosition")
-    assert "trailModeOnPositionFix(lat, lon, accuracy)" in fix
-    feed = function_source("trailModeOnPositionFix")
-    assert "detector.push({ lat, lon, accuracy, at: Date.now() })" in feed
-    assert "if (!reading.walking) {" in feed
+# INVERTED by walk-detection-removed-v334-20260827: the detector fired in
+# cars and vans and took the screen over while Yaan was driving at work, so
+# the game no longer watches the position stream for a walk at all. These
+# tests used to pin the auto-detection wiring; they now pin its absence.
+# The pure detector stays in trail_mode_core.js (untested code is shipped
+# above), and the pocket-time Trail Bonus below survives — it pays for a
+# wander the player chose to start.
+
+def test_the_position_stream_never_reaches_a_walk_detector():
+    assert "trailModeOnPositionFix" not in HTML
+    assert "createWalkDetector" not in HTML  # the game never builds one
 
 
-def test_taking_over_the_screen_is_guarded_hard():
-    guard = function_source("trailModeBlockedReason")
-    for reason in ("'off'", "'muted'", "'offered'", "'questing'", "'battle'", "'tutorial'", "'cutscene'"):
-        assert f"return {reason};" in guard, reason
-    assert "gameState.settings && gameState.settings.trailMode === false" in guard
-    assert "sideQuestActive() || activeWalkingQuest()" in guard
+def test_nothing_opens_questing_by_itself():
+    assert "enterTrailMode" not in HTML
+    assert "openTrailModeSheet" not in HTML
+    assert "Eyes on the trail" not in HTML
+    assert "Burbz sees you walking" not in HTML
+    # A wander starts from the player's own button and nowhere else.
+    start_fn = function_source("startSideQuest")
+    assert "opts" not in start_fn
 
 
-def test_entering_trail_mode_opens_questing_and_pulls_the_camera_back():
-    enter = function_source("enterTrailMode")
-    assert "startSideQuest({ auto: true, quiet: true })" in enter
-    assert "switchScreen('map')" in enter
-    assert "zoom: TRAIL_MODE_ZOOM" in enter
-    assert "openTrailModeSheet(reading)" in enter
-    # Pulled back from the normal walking zoom, not pushed in.
-    trail_zoom = float(HTML.split("const TRAIL_MODE_ZOOM = ", 1)[1].split(";", 1)[0])
-    start_zoom = float(HTML.split("const BURBZ_START_ZOOM = ", 1)[1].split(";", 1)[0])
-    assert trail_zoom < start_zoom, (trail_zoom, start_zoom)
-
-
-def test_the_card_says_the_things_yaan_asked_for():
-    sheet = function_source("openTrailModeSheet")
-    assert "Eyes on the trail" in sheet
-    assert "Be careful out there" in sheet
-    assert "You are in questing mode" in sheet
-    assert "This is saved" in sheet
-    assert "Pocket the phone" in sheet
-    assert "TRAIL BONUS" in sheet
-    # And it can always be turned down without turning the feature off for good.
-    assert "dismissTrailMode({ mute:true })" in sheet
-    assert "const TRAIL_MODE_MUTE_MS" in HTML
+def test_the_dead_settings_toggle_is_gone_too():
+    assert 'id="toggleTrailMode"' not in HTML
+    assert "gameState.settings.trailMode" not in HTML
 
 
 def test_pocket_time_counts_only_while_the_screen_is_away():
@@ -243,12 +230,6 @@ def test_pocket_time_counts_only_while_the_screen_is_away():
     assert "trailPocketAccrue();" in end
     assert "const xp = Math.round(baseXp * pocket.multiplier);" in end
     assert "TRAIL BONUS ×" in end
-
-
-def test_the_player_can_switch_trail_mode_off():
-    assert 'id="toggleTrailMode"' in HTML
-    assert "trailMode: true }" in HTML          # on by default
-    assert "gameState.settings.trailMode = el.classList.contains('on');" in HTML
 
 
 def test_release_is_pinned_and_the_new_core_is_precached():

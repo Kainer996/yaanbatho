@@ -270,7 +270,7 @@ def test_tapping_your_own_bird_fields_it():
     assert "or tap another bird" in function_source("renderArena")
 
 
-CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
+CURRENT_BUILD = "walk-detection-removed-v334-20260827"
 # battle_core.js pins the release that last CHANGED it, not the head build —
 # later releases that leave the core alone must not churn every phone's cache.
 BATTLE_CORE_PIN = "quiet-arena-v331-20260826"

@@ -48,7 +48,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 
 OWN_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 PREVIOUS_RELEASE_PIN = "nav-action-badges-v312-20260824"
-CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
+CURRENT_BUILD = "walk-detection-removed-v334-20260827"
 
 STAT_ROW_CARDS = {
     "createBirdCardHTML": "the companion card",

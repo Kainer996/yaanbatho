@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "kitchen-clean-table-v333-20260827"
+CURRENT_BUILD = "walk-detection-removed-v334-20260827"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
