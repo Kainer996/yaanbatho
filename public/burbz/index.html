@@ -4956,7 +4956,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_sleep_core.js?v=night-hunter-ascendant-v258-20260813"></script>
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
-<script src="bird_size_core.js?v=raven-weight-and-wit-v255-20260812"></script>
+<script src="bird_size_core.js?v=every-bird-carries-its-weight-v335-20260827"></script>
 <script src="bird_roles_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=quiet-arena-v331-20260826"></script>
@@ -11333,16 +11333,24 @@ function renderBirdSizePanel(bird) {
   const witPct = Math.round((wit - 1) * 100);
   const witChip = witPct === 0 ? '' :
     `<span class="bird-size-chip${witPct < 0 ? ' is-weak' : ''}">🏛️ ${witPct > 0 ? '+' : ''}${witPct}% governing</span>`;
+  // Weight is only half of carrying. The guild chip says the other half out
+  // loud: a Merlin lifts far more than its 200 g suggests because it hunts by
+  // carrying, and a swan lifts far less than its 11 kg suggests because it
+  // has nothing to carry with.
+  const guildPct = Math.round(((Number(size.carryGuildFactor) || 1) - 1) * 100);
+  const guildChip = !size.carryGuildLabel || guildPct === 0 ? '' :
+    `<span class="bird-size-chip${guildPct < 0 ? ' is-weak' : ''}">🪶 ${escapeHTML(size.carryGuildLabel)} ${guildPct > 0 ? '+' : ''}${guildPct}% carrying</span>`;
   return `
     <div class="bird-info-section bird-size-panel">
       <div class="bird-info-section-title">${size.icon} Size &amp; carrying</div>
       <div class="bird-size-chips">
         <span class="bird-size-chip">${escapeHTML(size.label)}</span>
         <span class="bird-size-chip">🧺 carries ${size.capacity} load${size.capacity === 1 ? '' : 's'}</span>
+        ${guildChip}
         <span class="bird-size-chip${size.battlePct < 0 ? ' is-weak' : ''}">⚔️ ${escapeHTML(size.battleLabel)}</span>
         ${witChip}
       </div>
-      <div class="bird-info-section-body">${escapeHTML(size.blurb)} Bigger birds haul heavier loads home and hit harder in battle; the small charmers make the better project managers and wardens — ${escapeHTML(massLine)}.</div>
+      <div class="bird-info-section-body">${escapeHTML(size.blurb)} ${escapeHTML(size.carryGuildBlurb || '')} Bigger birds haul heavier loads home and hit harder in battle; the small charmers make the better project managers and wardens — ${escapeHTML(massLine)}.</div>
     </div>`;
 }
 
@@ -11452,12 +11460,13 @@ function birdCarryCapacity(bird) {
   const core = birdSizeCore();
   return core ? core.carryCapacity(bird) : 3;
 }
-// The card back draws CARRY as a bar, so it needs the number as a fraction of
-// the most any bird can haul. Read the ceiling off the core: raise
-// MAX_CARRY_UNITS there and every bar moves with it.
+// The card back draws CARRY as a bar, so it needs the number as a fraction of a
+// full basket. That is CARRY_BAR_FULL_UNITS — a well-seasoned sea-eagle — and
+// NOT the core's hard ceiling, which is only a rail against bad data and sits
+// far above any real bird. Raise the bar constant there and every bar moves.
 function birdCardCarryPct(bird) {
   const core = birdSizeCore();
-  const max = Math.max(1, Number(core && core.MAX_CARRY_UNITS) || 20);
+  const max = Math.max(1, Number(core && core.CARRY_BAR_FULL_UNITS) || 34);
   return Math.min(100, Math.round((birdCardCarryCapacity(bird) / max) * 100));
 }
 
@@ -12137,6 +12146,7 @@ function generateBirdStats(speciesName, basePower, rarity) {
       sizeClass: size.classId,
       massG: size.massG,
       sizeSource: size.source,
+      carryGuild: size.carryGuild,
       specialMove,
       emoji,
       power: clamp(finalPower, 20, 9999),
@@ -12190,6 +12200,9 @@ function generateBirdStats(speciesName, basePower, rarity) {
       sizeClass: sizeCore ? sizeCore.sizeClassForScore(sizeScore).id : 'medium',
       massG: null,
       sizeSource: 'estimate',
+      // An unknown bird still joins a carrying guild — read off its own name,
+      // so a "Sea Eagle" nobody catalogued still carries like a raptor.
+      carryGuild: sizeCore ? sizeCore.carryGuildForProfile({ name: speciesName }) : 'songbird',
       specialMove,
       emoji,
       power: clamp(power, 20, 999),
@@ -12201,10 +12214,13 @@ function generateBirdStats(speciesName, basePower, rarity) {
   }
 }
 
-// v4 re-derives every companion so the field-guide weights land (a Raven is
+// v4 re-derived every companion so the field-guide weights landed (a Raven is
 // twice a Carrion Crow, and its size score, class, mass and carrying all say
 // so now) — reaching birds recruited under the old stat-guessed sizes.
-const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';
+// v5 does it again for v335: 190 roster birds that had no weight anywhere now
+// have a real one, and every bird joins a carrying guild. Without this bump a
+// saved Merlin would keep the 2 loads the old flat rule gave it.
+const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v5-every-bird-carries-its-weight-20260827';
 
 function migrateBirdToBiologyStats(bird) {
   if (!bird || bird.biologyStatsVersion === BIRD_BIOLOGY_STATS_VERSION) return bird;
@@ -12234,6 +12250,7 @@ function migrateBirdToBiologyStats(bird) {
   bird.sizeClass = base.sizeClass;
   bird.massG = base.massG;
   bird.sizeSource = base.sizeSource;
+  bird.carryGuild = base.carryGuild;
   bird.carryCapacity = birdCarryCapacity(bird);
   bird.basePower = base.basePower;
   bird.power = clamp(Math.floor((bird.maxHp * 0.2 + bird.atk * 1.5 + bird.def + bird.spd * 1.2 + bird.int * 0.8 + bird.stamina * 0.7) * (levelMult * 0.7)), 20, 9999);
@@ -14022,11 +14039,13 @@ function claimBirdExpedition(expeditionId) {
   closeQuestOverlay();
   playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   // Say it plainly when a load was left in the field: it is the size rule doing
-  // its job, not a bug.
+  // its job, not a bug. Since v335 "send a bigger bird" is no longer sound
+  // advice on its own — a swan outweighs a raven and hauls less — so the toast
+  // names the carrying number the player should actually shop for.
   if (q.carry && q.carry.leftBehind > 0) {
     const sizeLabel = (birdSizeCore() && birdSizeCore().SIZE_CLASS_INDEX[q.carry.sizeClass]) || null;
     setTimeout(() => showToast('🧺 ' + escapeHtml(q.birdName) + ' could only carry ' + q.carry.capacity + ' load' + (q.carry.capacity === 1 ? '' : 's') +
-      (sizeLabel ? ' — a ' + sizeLabel.label.toLowerCase() + ' bird' : '') + '. Send a bigger bird to bring it all home.'), 2100);
+      (sizeLabel ? ' — a ' + sizeLabel.label.toLowerCase() + ' bird' : '') + '. Send a bird that carries more, or fit a satchel.'), 2100);
   }
   // Merlin's tutorial errand is the one claim followed by a scripted chapter:
   // a quiz modal here would open 650ms before the dim and end up buried
@@ -39593,9 +39612,19 @@ let petSpeechTimer = null;
 let petChatterTimer = null;
 let merlinCareReturnFocus = null;
 
+// Merlin is a real Falco columbarius, so he weighs what one weighs. He is a
+// hand-written literal rather than a recruited companion, so until v335 he
+// alone skipped the size rule: no mass, no size score, no guild — which left
+// the Kingdom's own guide, and the bird who flies the tutorial errand, hauling
+// a wren's load. His size is read from the same species profile every other
+// Merlin uses, so the two can never disagree again.
+const MERLIN_GUIDE_SIZE = speciesSizeInfo(findSpeciesProfile('Merlin'));
 const MERLIN_GUIDE = Object.freeze({
-  id: 'merlin-guide', species: 'Merlin', commonName: 'Merlin', scientificName: 'Falco columbarius',
+  id: 'merlin-guide', species: 'Merlin', commonName: 'Merlin', name: 'Merlin', scientificName: 'Falco columbarius',
   level: 1, power: 80, int: 55, spd: 85, stamina: 48, cha: 72,
+  sizeScore: MERLIN_GUIDE_SIZE.score, sizeClass: MERLIN_GUIDE_SIZE.classId,
+  massG: MERLIN_GUIDE_SIZE.massG, sizeSource: MERLIN_GUIDE_SIZE.source,
+  carryGuild: MERLIN_GUIDE_SIZE.carryGuild,
   artUrl: '/burbz/bird-art-cache/merlin_burbz_manga_20260624_v2.png',
   cutoutUrl: '/burbz/bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png',
   // The perched companion is not the flat cutout — it is that same painting cut
@@ -40638,7 +40667,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'walk-detection-removed-v334-20260827';
+const BURBZ_BUILD = 'every-bird-carries-its-weight-v335-20260827';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

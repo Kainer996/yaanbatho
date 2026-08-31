@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERGE_CORE = ROOT / "settlement_merge_core.js"
-CURRENT_BUILD = "walk-detection-removed-v334-20260827"
+CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
 # The release immediately before this one. Ava's walking-villagers work took
 # v310 on main while this branch was open, so this became v311.
 PREVIOUS_RELEASE_PIN = "walking-villagers-cottage-variety-v310-20260823"

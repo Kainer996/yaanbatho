@@ -40,7 +40,7 @@ CORE = ROOT / "empire_grid_core.js"
 OWN_RELEASE_PIN = "empire-grid-v322-20260825"
 # Later releases ship over the top. This one edited bird_roles_core.js, so its
 # own tag stays on that core while the head build moves on without it.
-CURRENT_BUILD = "walk-detection-removed-v334-20260827"
+CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
 PREVIOUS_RELEASE_PIN = "free-birds-v318-20260824"
 
 

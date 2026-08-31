@@ -189,7 +189,7 @@ def function_source(name: str) -> str:
     return HTML[start:end]
 
 
-# INVERTED by walk-detection-removed-v334-20260827: the detector fired in
+# INVERTED by every-bird-carries-its-weight-v335-20260827: the detector fired in
 # cars and vans and took the screen over while Yaan was driving at work, so
 # the game no longer watches the position stream for a walk at all. These
 # tests used to pin the auto-detection wiring; they now pin its absence.

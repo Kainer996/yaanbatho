@@ -21,8 +21,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
-SIZE_CORE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "walk-detection-removed-v334-20260827"
+SIZE_CORE_PIN = "every-bird-carries-its-weight-v335-20260827"
+CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
@@ -103,11 +103,217 @@ def test_an_overloaded_little_bird_leaves_the_rest_behind():
     assert tiny["capacity"] < giant["capacity"]
     assert tiny["overloaded"] and tiny["leftBehind"] > 0
     assert not giant["overloaded"]
-    assert giant["branches"] > tiny["branches"]
+    assert giant["branches"] >= tiny["branches"]
     assert sum(giant["items"].values()) > sum(tiny["items"].values())
-    # A timber errand always keeps one unit back for timber, so even the
-    # smallest bird comes home with a beakful rather than nothing at all.
-    assert tiny["branches"] > 0
+    # However small the bird, it never comes home with an empty beak.
+    assert tiny["branches"] + sum(tiny["items"].values()) > 0
+
+
+def test_every_playable_bird_knows_what_it_weighs():
+    """No bird in the game guesses its weight off its stat block any more.
+
+    every-bird-carries-its-weight-v335: 425 of the roster's birds — including
+    the Bald Eagle, the Emperor Penguin, the Ostrich and the Reed Warbler —
+    had no weight anywhere, so speciesSize() fell back to reading one off HP
+    and STRENGTH. The carry rule cannot be honest while that is true, so the
+    field guide now covers every single playable species.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const mods = ['./uk_bird_expansion_50.js', './uk_bird_expansion_2.js', './au_bird_expansion.js',
+                      './uk_bird_expansion_3.js', './au_bird_expansion_2.js', './uk_bird_expansion_4.js'];
+        let total = 0, guessing = 0;
+        const count = p => {
+          total += 1;
+          const s = core.speciesSize(p);
+          if (s.source === 'stats' || s.source === 'default') guessing += 1;
+        };
+        mods.forEach(f => (require(f).profiles || []).forEach(count));
+        require('./national_bird_completion_20260715.js').profiles.forEach(count);
+        console.log(JSON.stringify({ total, guessing, entries: Object.keys(core.FIELD_GUIDE_MASS_G).length }));
+        """
+    )
+    assert out["guessing"] == 0, "every playable bird must know what it really weighs"
+    assert out["total"] > 1100
+    assert out["entries"] >= 560
+
+
+def test_the_carrying_guild_is_read_off_the_bird_not_off_a_lucky_substring():
+    """Whole words only, and taxonomy never overrules the obvious exceptions.
+
+    Accipitridae holds the eagles, the Old World vultures and the kites in one
+    family, and they carry nothing alike — a griffon has near-chicken feet and
+    gorges rather than carries, while an osprey has the best grip of any bird
+    alive. And a plain substring match reads "Eastern" and "Bittern" as terns,
+    "Owlet-nightjar" as an owl and "Dovekie" as a dove.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const guild = (name, extra) => core.carryGuildForProfile(Object.assign({ name }, extra || {}));
+        console.log(JSON.stringify({
+          griffon: guild('Eurasian Griffon Vulture', { family: 'Accipitridae' }),
+          condor: guild('Andean Condor', { family: 'Cathartidae' }),
+          lammergeier: guild('Bearded Vulture', { family: 'Accipitridae' }),
+          redKite: guild('Red Kite', { family: 'Accipitridae' }),
+          elanus: guild('Black-shouldered Kite', { id: 'black_shouldered_kite', family: 'Accipitridae' }),
+          osprey: guild('Osprey', { id: 'osprey' }),
+          goldenEagle: guild('Golden Eagle', { family: 'Accipitridae' }),
+          bittern: guild('Bittern'),
+          cattleEgret: guild('Eastern Cattle-Egret'),
+          farEasternCurlew: guild('Far Eastern Curlew'),
+          owletNightjar: guild('Australian Owlet-nightjar'),
+          magpieGoose: guild('Magpie Goose'),
+          commonTern: guild('Common Tern'),
+          tawnyOwl: guild('Tawny Owl')
+        }));
+        """
+    )
+    # Taxonomy cannot separate these three; the exception list can.
+    assert out["griffon"] == out["condor"] == "vulture"
+    assert out["lammergeier"] == "bonedropper", "the one vulture that really does carry"
+    assert out["redKite"] == "kite"
+    assert out["elanus"] == "raptor", "Elanus really does hunt rodents"
+    assert out["osprey"] == "osprey"
+    assert out["goldenEagle"] == "raptor"
+    # Whole words only.
+    assert out["bittern"] == "fisher"
+    assert out["cattleEgret"] == "fisher"
+    assert out["farEasternCurlew"] == "wader"
+    assert out["owletNightjar"] == "aerial"
+    assert out["magpieGoose"] == "waterfowl"
+    # …without breaking the ordinary matches those rules exist to protect.
+    assert out["commonTern"] == "gull"
+    assert out["tawnyOwl"] == "owl"
+
+
+def test_training_can_never_lift_a_small_bird_past_a_bigger_one():
+    """A well-fed, heavily trained robin is still a robin.
+
+    The level bonus used to be a flat +(level-1)/10 — worth +490% to a Robin and
+    +21% to a Golden Eagle. So a level-50 Goldcrest carried 5, exactly a wild
+    Merlin's load, and a level-50 Robin carried 6, more than one. That is the
+    size rule coming apart at the point it was written to hold. Seasoning and
+    condition are a SHARE of the bird's own back now.
+
+    The line: who a bird is decides what it can carry; what it carries it IN is
+    the part the player changes. So a satchel may still lift a small bird past a
+    big one — that is a crafted legendary, not a level-up.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const at = (massG, carryGuild, level, stamina, gear) =>
+          core.carryCapacity({ massG, carryGuild, level: level || 1, stamina: stamina || 50 }, gear);
+        console.log(JSON.stringify({
+          goldcrestMaxed: at(5.5, 'songbird', 50, 100),
+          robinMaxed: at(18, 'songbird', 50, 100),
+          robinFresh: at(18, 'songbird', 1),
+          wildMerlin: at(200, 'raptor', 1),
+          merlinMaxed: at(200, 'raptor', 50, 100),
+          eagleMaxed: at(4500, 'raptor', 50, 100),
+          robinWithRoyalSatchel: at(18, 'songbird', 1, 50, 5),
+          cap: core.MAX_CARRY_UNITS
+        }));
+        """
+    )
+    # No amount of training lifts a small bird to a wild Merlin's load.
+    assert out["goldcrestMaxed"] < out["wildMerlin"]
+    assert out["robinMaxed"] < out["wildMerlin"]
+    # Training still helps the birds with a back to build on.
+    assert out["merlinMaxed"] > out["wildMerlin"]
+    assert out["eagleMaxed"] > out["merlinMaxed"]
+    # …and it must not shove the big birds into the ceiling, or the top goes flat again.
+    assert out["eagleMaxed"] < out["cap"]
+    # A satchel is the small bird's way up, and it is allowed to be.
+    assert out["robinWithRoyalSatchel"] > out["robinFresh"]
+
+
+def test_compound_bird_names_land_in_the_right_guild():
+    """A Thornbill is not a hornbill; a Woodpigeon really is a pigeon.
+
+    Whole-word matching is what stops "Cuckooshrike" reading as a shrike and
+    "Woodswallow" as a swallow — but it also means every bird whose name is ONE
+    compound word has to be named outright. These are the ones that matter.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const g = name => core.carryGuildForProfile({ name });
+        console.log(JSON.stringify({
+          woodpigeon: g('Woodpigeon'), brolga: g('Brolga'), capercaillie: g('Capercaillie'),
+          malleefowl: g('Malleefowl'), scrubfowl: g('Orange-footed Scrubfowl'),
+          scaup: g('Scaup'), whimbrel: g('Whimbrel'), garganey: g('Garganey'),
+          corncrake: g('Corncrake'), nativehen: g('Tasmanian Nativehen'),
+          thornbill: g('Brown Thornbill'), woodswallow: g('Dusky Woodswallow'),
+          cuckooshrike: g('Black-faced Cuckooshrike'), shrikethrush: g('Gray Shrikethrush'),
+          spinebill: g('Eastern Spinebill'), babbler: g('Grey-crowned Babbler')
+        }));
+        """
+    )
+    # Compound names that really are the bird.
+    assert out["woodpigeon"] == "pigeon"
+    assert out["brolga"] == "wader", "a Brolga is a crane"
+    assert out["capercaillie"] == out["malleefowl"] == out["scrubfowl"] == "gamebird"
+    assert out["scaup"] == out["garganey"] == out["corncrake"] == out["nativehen"] == "waterfowl"
+    assert out["whimbrel"] == "wader"
+    # Compound names that only LOOK like another guild. All passerines.
+    for key in ["thornbill", "woodswallow", "cuckooshrike", "shrikethrush", "spinebill", "babbler"]:
+        assert out[key] == "songbird", key + " is a songbird, whatever its name contains"
+
+
+def test_a_vulture_does_not_out_carry_an_eagle_it_outweighs():
+    """A griffon is heavier than a sea-eagle and carries far less. Grip decides."""
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const carry = (massG, carryGuild) => core.carryCapacity({ massG, carryGuild, stamina: 50, level: 1 });
+        console.log(JSON.stringify({
+          griffon: carry(8000, 'vulture'), seaEagle: carry(5000, 'raptor'),
+          osprey: carry(1500, 'osprey'), heronOfAWeight: carry(1500, 'fisher'),
+          pelican: carry(5500, 'pouch')
+        }));
+        """
+    )
+    assert out["griffon"] < out["seaEagle"], "8 kg of vulture carries less than 5 kg of sea-eagle"
+    assert out["osprey"] > out["heronOfAWeight"], "the best feet on the roster tell"
+    assert out["pelican"] < out["seaEagle"], "the pouch is drained before take-off"
+
+
+def test_a_bird_comes_home_with_the_thing_it_was_sent_for():
+    """The hold is shared out in proportion to what the bird actually found.
+
+    every-bird-carries-its-weight-v335. Before this, finds were packed first and
+    timber kept a single unit back, so a Golden Eagle on a day-long TIMBER
+    errand came home with three branches and an armful of moss — and any bird
+    with a one-unit hold (nearly half the roster) came back from a FOOD errand
+    with two sticks and nothing to eat.
+    """
+    out = run_node(
+        """
+        const core = require('./bird_size_core.js');
+        const bird = (massG, carryGuild) => ({ massG, carryGuild, stamina: 50, level: 1 });
+        // A day-long Branch Run: 90 branches, and moss picked up along the way.
+        const timber = { branches: 90, items: { soft_moss: 12 } };
+        // An hour on the Bark & Grub Round: food, and a couple of stray twigs.
+        const food = { branches: 2, items: { mealworm_scoop: 3 } };
+        console.log(JSON.stringify({
+          eagleOnTimber: core.applyCarryLimit(timber, bird(4500, 'raptor')),
+          robinOnTimber: core.applyCarryLimit(timber, bird(18, 'songbird')),
+          robinOnFood: core.applyCarryLimit(food, bird(18, 'songbird')),
+          eagleOnFood: core.applyCarryLimit(food, bird(4500, 'raptor'))
+        }));
+        """
+    )
+    # A timber errand comes home mostly as timber, and the big bird brings far more.
+    assert out["eagleOnTimber"]["branches"] >= 40
+    assert out["eagleOnTimber"]["branches"] > out["robinOnTimber"]["branches"] * 10
+    assert out["robinOnTimber"]["branches"] > 0, "sent for sticks, comes home with sticks"
+    # A food errand comes home as food, even in a one-unit hold.
+    assert sum(out["robinOnFood"]["items"].values()) > 0, "sent for supper, comes home with supper"
+    assert out["robinOnFood"]["branches"] == 0, "the twigs are what gets dropped, not the food"
+    assert sum(out["eagleOnFood"]["items"].values()) >= sum(out["robinOnFood"]["items"].values())
 
 
 def test_battle_strength_rises_with_size_and_is_applied_once():
@@ -185,7 +391,7 @@ def test_generated_stats_make_the_eagle_beat_the_goldcrest_on_every_physical_axi
 
 def test_every_companion_is_re_derived_so_old_saves_get_the_size_rule():
     html = HTML.read_text(encoding="utf-8")
-    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v4-weight-and-wit-20260812';" in html
+    assert "const BIRD_BIOLOGY_STATS_VERSION = 'bird-biology-runtime-v5-every-bird-carries-its-weight-20260827';" in html
     # Size belongs to the species, so migration re-reads it from the profile
     # rather than trusting whatever an older save wrote.
     assert "bird.sizeScore = base.sizeScore;" in html

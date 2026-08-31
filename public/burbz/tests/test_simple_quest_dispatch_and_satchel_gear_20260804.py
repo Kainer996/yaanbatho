@@ -140,7 +140,9 @@ def test_host_applies_and_displays_equipped_satchel_capacity():
 
 
 def test_satchel_release_assets_are_versioned_for_installed_pwa():
-    size_version = "raven-weight-and-wit-v255-20260812"
+    # A core ships under the tag of the release that LAST touched it, so the
+    # size core moved on to v335 when the carry curve was rebuilt.
+    size_version = "every-bird-carries-its-weight-v335-20260827"
     loot_version = "stores-market-project-manager-v295-20260820"
     assert f"bird_size_core.js?v={size_version}" in HTML
     assert f"loot_crafting_core.js?v={MAGPIE_CORE_PIN}" in HTML
@@ -148,4 +150,6 @@ def test_satchel_release_assets_are_versioned_for_installed_pwa():
     assert f"'./loot_crafting_core.js?v={MAGPIE_CORE_PIN}'" in SW
     # BURBZ_BUILD tracks the NEWEST release marker; later releases move it on,
     # but this release's own segment stays in the cache lineage forever.
-    assert size_version in next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
+    cache_line = next(line for line in SW.splitlines() if line.startswith("const BURBZ_CACHE = "))
+    assert "raven-weight-and-wit-v255-20260812" in cache_line
+    assert size_version in cache_line
