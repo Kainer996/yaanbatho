@@ -486,8 +486,14 @@ svg.academy-room-bg { display:block; filter:none; }
   opacity: 0; pointer-events: none; transform: translateY(12px);
   z-index: 0; background: var(--bg0);
   transition: opacity 0.3s ease, transform 0.3s ease;
+  /* Vertical scroll stays the browser's from the first pixel; only a
+     horizontal drag is ours to claim, and only once the axis lock says so. */
+  touch-action: pan-y;
 }
 .screen.active { opacity: 1; pointer-events: auto; transform: translateY(0); z-index: 2; }
+/* A neighbouring screen standing beside the page mid-swipe (screen-swipe-v336).
+   It is visible but takes no touches; the swipe drives its transform inline. */
+.screen.swipe-peek { opacity: 1; transform: none; transition: none; z-index: 1; }
 .screen-title {
   font-family: 'Russo One', sans-serif; font-size: 20px; margin-bottom: 16px;
   display: flex; align-items: center; gap: 10px;
@@ -21680,6 +21686,218 @@ function activateQuickDockItem(destination) {
   try { item.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); } catch (e) {}
 }
 
+// ---- Swipe between screens (screen-swipe-v336) -----------------------------
+// A horizontal swipe on any ordinary screen pulls the whole page along with
+// the finger while the dock's neighbouring screen rides in beside it, then
+// both glide home — walking the dock in reading order, wrapping at the ends.
+// Surfaces with sideways business of their own — the maps, the 3D stages,
+// the village carousel, scrolling shelves, form controls — keep their
+// touches; a vertical drag still scrolls; an open sheet closes the road.
+const SCREEN_SWIPE_COMMIT_PX = 70; // drag this far to turn the page
+const SCREEN_SWIPE_AXIS_PX = 14;   // drift before the axis locks
+const SCREEN_SWIPE_FLICK_PX = 32;  // a quick flick turns the page from here...
+const SCREEN_SWIPE_FLICK_MS = 250; // ...if the finger was down this briefly
+// The dock in reading order: the top deck's screens, then the adventure row
+// with its centre island. Kitchen, Training and Hospital open pop-ups, not
+// screens, so the road passes them by. The map itself is enter-only: the
+// whole map surface steers the map, so leaving it is the dock's job.
+const SCREEN_SWIPE_ROAD = ['inventory', 'forge', 'leaderboards', 'map', 'quests', 'village', 'scan', 'academy', 'battle', 'birdex'];
+// Where a sideways touch already means something else, the road gives way.
+const SCREEN_SWIPE_KEEP_CLEAR = '#liveMapShell, #empireMapCard, #empireVillageHub, .village-stage, .academy-stage-3d, .bird-crop-stage, .camera-viewfinder, input, textarea, select';
+// While a sheet stands above the screens, the road is closed.
+const SCREEN_SWIPE_LAYERS = '.modal-overlay.show, .quest-overlay.open, .resource-quest-overlay.open, .bird-equip-overlay.show, .village-shop-overlay.show, .town-sheet-backdrop.show, .role-picker.is-open, .capture-overlay.show, .recruit-overlay.show, .barracks-recruit-overlay.show, .bird-crop-overlay.show, .intro-cutscene-overlay.show, .merlin-tutorial-overlay.show, .bat-secret-overlay.show, #empireTravelOverlay.show';
+let screenSwipeBound = false;
+let screenSwipeAnimating = false;
+
+// The screen `delta` steps along the dock, wrapping around. A screen off the
+// road — a room's interior, a hall, the diary — swipes nowhere.
+function screenSwipeNeighbour(delta) {
+  const at = SCREEN_SWIPE_ROAD.indexOf(currentScreen);
+  if (at < 0) return null;
+  const len = SCREEN_SWIPE_ROAD.length;
+  return SCREEN_SWIPE_ROAD[((at + delta) % len + len) % len];
+}
+
+// The page turns on a long enough drag, or a short sharp flick.
+function screenSwipeShouldCommit(dx, heldMs) {
+  const span = Math.abs(dx);
+  if (span >= SCREEN_SWIPE_COMMIT_PX) return true;
+  return span >= SCREEN_SWIPE_FLICK_PX && heldMs <= SCREEN_SWIPE_FLICK_MS;
+}
+
+// A swipe may begin only on the open screen itself: not on a surface that
+// keeps its own sideways touches, not on a shelf that really scrolls, and
+// not while any sheet stands above the page.
+function screenSwipeCanStart(target) {
+  if (screenSwipeAnimating || SCREEN_SWIPE_ROAD.indexOf(currentScreen) < 0) return false;
+  // A live fight stays put — the arena is the road here, not a swipe zone,
+  // or a stray flick mid-battle would walk away from a fight still running.
+  if (currentScreen === 'battle' && battleState) return false;
+  if (!target || !target.closest || !target.closest('.screen.active')) return false;
+  if (target.closest(SCREEN_SWIPE_KEEP_CLEAR)) return false;
+  if (document.querySelector(SCREEN_SWIPE_LAYERS)) return false;
+  // A shelf that scrolls sideways keeps its scroll, whatever it is called.
+  for (let el = target; el && el.nodeType === 1 && !el.classList.contains('screen'); el = el.parentElement) {
+    if (el.scrollWidth > el.clientWidth + 1) {
+      const overflowX = getComputedStyle(el).overflowX;
+      if (overflowX === 'auto' || overflowX === 'scroll') return false;
+    }
+  }
+  return true;
+}
+
+// Stand the neighbouring screen beside the page, ready to be pulled in.
+// delta 1 = swiping left = the next screen waits on the right.
+function screenSwipePeek(delta) {
+  const name = screenSwipeNeighbour(delta);
+  const el = name ? $('screen-' + name) : null;
+  if (!el) return null;
+  el.style.transition = 'none';
+  el.style.willChange = 'transform';
+  el.classList.add('swipe-peek');
+  return { name, el, delta };
+}
+
+// Stand a peeked screen back down without a trace.
+function screenSwipeUnpeek(peek) {
+  if (!peek || !peek.el) return;
+  const el = peek.el;
+  el.classList.remove('swipe-peek');
+  el.style.transition = 'none';
+  el.style.transform = '';
+  el.style.willChange = '';
+  // Two frames, matching the glide/spring-back paths — one alone can run
+  // before the 'none' ever paints, turning this into a live transition.
+  requestAnimationFrame(() => requestAnimationFrame(() => { el.style.transition = ''; }));
+}
+
+// Turn the page: both screens glide together until the neighbour sits home,
+// then the real switch lands under an already-settled page.
+function screenSwipeGlide(peek, active) {
+  screenSwipeAnimating = true;
+  vibrate(12);
+  const glide = 'transform .24s cubic-bezier(.22,.61,.36,1)';
+  active.style.transition = glide;
+  peek.el.style.transition = glide;
+  active.style.transform = 'translateX(' + (-peek.delta * 100) + '%)';
+  peek.el.style.transform = 'translateX(0)';
+  setTimeout(() => {
+    // A screen's own render can throw (a bad save, a missing element); the
+    // latch must lift and the styles must clear regardless, or the page is
+    // stuck mid-swipe and every future gesture is refused forever.
+    try {
+      switchScreen(peek.name);
+    } finally {
+      active.style.transition = 'none';
+      active.style.transform = '';
+      active.style.willChange = '';
+      screenSwipeUnpeek(peek);
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        active.style.transition = '';
+        screenSwipeAnimating = false;
+      }));
+    }
+  }, 250);
+}
+
+// Not far enough, or not quick enough: both screens spring back home.
+function screenSwipeSpringBack(peek, active) {
+  screenSwipeAnimating = true;
+  const spring = 'transform .18s ease-out';
+  active.style.transition = spring;
+  peek.el.style.transition = spring;
+  active.style.transform = 'translateX(0)';
+  peek.el.style.transform = 'translateX(' + (peek.delta * 100) + '%)';
+  setTimeout(() => {
+    active.style.transition = 'none';
+    active.style.transform = '';
+    active.style.willChange = '';
+    screenSwipeUnpeek(peek);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      active.style.transition = '';
+      screenSwipeAnimating = false;
+    }));
+  }, 190);
+}
+
+function bindScreenSwipe() {
+  if (screenSwipeBound) return;
+  const stage = document.querySelector('.screens');
+  if (!stage) return;
+  screenSwipeBound = true;
+  let startX = 0, startY = 0, dx = 0, startAt = 0, axis = null, tracking = false;
+  let active = null, peek = null, touchOrigin = null;
+  const drop = () => { tracking = false; axis = null; active = null; peek = null; touchOrigin = null; };
+  // A second finger means a pinch, not a page turn: give the touch back.
+  const abandon = () => {
+    if (peek && active) screenSwipeSpringBack(peek, active);
+    else if (active) { active.style.transition = ''; active.style.transform = ''; active.style.willChange = ''; }
+    drop();
+  };
+  // A screen can be rewritten wholesale mid-gesture by its own live ticker
+  // (the quest board's 20s refresh, the Academy's minute tick, a finished
+  // build) — and once the exact element a touch began on leaves the
+  // document, the browser stops delivering that touch's later events
+  // ANYWHERE, to any listener, not just to the removed node. No amount of
+  // listener placement catches that; only watching the node itself does.
+  // One frame of staleness is the price — cheap, and only paid mid-drag.
+  const watchOrigin = () => {
+    if (!tracking) return;
+    if (touchOrigin && !touchOrigin.isConnected) { abandon(); return; }
+    requestAnimationFrame(watchOrigin);
+  };
+  stage.addEventListener('touchstart', e => {
+    if (tracking) { abandon(); return; }
+    if (e.touches.length !== 1 || !screenSwipeCanStart(e.target)) return;
+    active = $('screen-' + currentScreen);
+    if (!active) return;
+    tracking = true; axis = null; dx = 0; peek = null; touchOrigin = e.target;
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    // The event's own clock is the finger's: a busy frame must not slow a
+    // real flick down. Both clocks share performance.now()'s origin.
+    startAt = e.timeStamp || performance.now();
+    requestAnimationFrame(watchOrigin);
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!tracking || !e.touches.length) return;
+    if (e.touches.length > 1) { abandon(); return; }
+    dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    // Lock the gesture to one axis after a little drift, then let a
+    // horizontal drag pull the whole page with the finger.
+    if (!axis) {
+      if (Math.abs(dx) < SCREEN_SWIPE_AXIS_PX && Math.abs(dy) < SCREEN_SWIPE_AXIS_PX) return;
+      axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (axis === 'x') { active.style.transition = 'none'; active.style.willChange = 'transform'; }
+    }
+    if (axis !== 'x') return;
+    if (e.cancelable) e.preventDefault();
+    // The neighbour waits on whichever side the finger is pulling from.
+    const delta = dx < 0 ? 1 : -1;
+    if (!peek || peek.delta !== delta) {
+      screenSwipeUnpeek(peek);
+      peek = screenSwipePeek(delta);
+    }
+    active.style.transform = 'translateX(' + dx + 'px)';
+    if (peek) peek.el.style.transform = 'translateX(calc(' + (peek.delta * 100) + '% + ' + dx + 'px))';
+  }, { passive: false });
+  const settle = (e, cancelled) => {
+    if (!tracking) return;
+    const heldMs = ((e && e.timeStamp) || performance.now()) - startAt;
+    const done = { active, peek, dx, axis };
+    drop();
+    if (done.axis !== 'x' || !done.active) return;
+    // A cancelled touch — the system took the gesture away, mid-air — is
+    // never a page turn the player asked to finish. It only ever springs
+    // back home, whatever distance it had already travelled.
+    if (done.peek && !cancelled && screenSwipeShouldCommit(done.dx, heldMs)) { screenSwipeGlide(done.peek, done.active); return; }
+    if (done.peek) { screenSwipeSpringBack(done.peek, done.active); return; }
+    done.active.style.transition = ''; done.active.style.transform = ''; done.active.style.willChange = '';
+  };
+  document.addEventListener('touchend', e => settle(e, false));
+  document.addEventListener('touchcancel', e => settle(e, true));
+}
+
 function openAcademyRoomHudShortcut(room, label) {
   if (!isAcademyRoomBuilt(room)) {
     academySelectedRoom = room;
@@ -40667,7 +40885,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'every-bird-carries-its-weight-v335-20260827';
+const BURBZ_BUILD = 'screen-swipe-v336-20260831';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -41677,6 +41895,7 @@ document.addEventListener('pointerdown', event => {
 document.querySelectorAll('[data-game-route]').forEach(control => {
   control.addEventListener('click', () => activateGameHudDestination(control.dataset.screen));
 });
+bindScreenSwipe();
 
 document.querySelector('[data-quick-destination="kitchen"]')?.addEventListener('click', openKitchenHudShortcut);
 document.querySelector('[data-quick-destination="training"]')?.addEventListener('click', openTrainingHub);
