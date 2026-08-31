@@ -27,7 +27,7 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
+CURRENT_BUILD = "screen-swipe-v336-20260831"
 VERSIONED_BADGE_CORE = "action_badge_core.js?v=nav-action-badges-v312-20260824"  # moved on in v312
 
 

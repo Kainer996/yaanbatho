@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 SIZE_CORE_PIN = "every-bird-carries-its-weight-v335-20260827"
-CURRENT_BUILD = "every-bird-carries-its-weight-v335-20260827"
+CURRENT_BUILD = "screen-swipe-v336-20260831"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"

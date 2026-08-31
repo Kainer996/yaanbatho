@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "every-bird-carries-its-weight-v335-20260827"
+RELEASE_PIN = "screen-swipe-v336-20260831"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 
