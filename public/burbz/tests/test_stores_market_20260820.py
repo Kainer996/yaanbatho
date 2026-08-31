@@ -25,7 +25,7 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
@@ -186,7 +186,9 @@ def test_every_surface_wears_the_new_nameplate():
     assert "function rolePostTitle(scope, key, role)" in html
     assert "escapeHtml(prefix + title)" in html              # the desk row
     assert "title:EMPIRE_POST_TITLES.town" not in html       # no caller passes it
-    assert "your Project Manager is raising it by" in html  # the income line
+    # gentle-start-v338: the income line is a number with an eye — the
+    # Project Manager's raise now reads inside the eye's note.
+    assert "Your Project Manager raises it by" in html  # the income note
     assert "'STEWARD'" not in html                          # the old tab is gone
 
 

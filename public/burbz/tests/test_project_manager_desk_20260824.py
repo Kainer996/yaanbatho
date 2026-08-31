@@ -39,7 +39,7 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 # The release that last edited bird_roles_core.js — free-birds-v318, which
 # retired the Head Gardener when the Aviary Gardens stopped being a room.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"

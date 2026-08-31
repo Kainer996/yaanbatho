@@ -54,7 +54,8 @@ def test_empty_provinces_pay_no_taxes_and_say_why():
     assert "no residents yet" in logic
     # Since raven-weight-and-wit-v255-20260812 the first home is the
     # stone-free Timber Cabin, so the empty-village hint points there.
-    assert "Timber Cabin</b> (just coins and timber) and residents will move in" in logic
+    # gentle-start-v338 shortened the line; the Cabin still leads it.
+    assert "raise a 🛖 <b>Timber Cabin</b> and folk will move in" in logic
     assert "build homes" in logic
 
 

@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "trail-mode-v329-20260825"
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 
 # The Iron Foundry and the Entertainment House are town industry too — they
 # arrived with the towns-3D release and the pin had not been told.
@@ -105,7 +105,10 @@ def test_the_village_desk_lists_basics_and_teases_the_town_works():
     html = HTML.read_text(encoding="utf-8")
     panel = function_source(html, "renderVillageManagePanel")
     assert "EMPIRE_BUILDINGS.filter(b => settlementAllowsBuilding(rec, b) || villageBuildingLevel(rec, b.id) > 0)" in panel
-    assert "Town works — open when three starred villages merge" in panel
+    # gentle-start-v338: the tease is one short line; the list of town
+    # works waits behind its eye.
+    assert "town works open at the town merge" in panel
+    assert "When three starred villages merge into a Town, these open here:" in panel
     # The village guidance points at the hut now, not the farm.
     assert "'🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut'" in panel
     assert "EMPIRE_BUILDING_INDEX.hut" in panel

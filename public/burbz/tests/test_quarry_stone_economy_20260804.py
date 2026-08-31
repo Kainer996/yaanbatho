@@ -239,7 +239,11 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     manage = function_source(html, "renderVillageManagePanel")
     assert "const stone = playerStone()" in manage
     assert "stone < cost.stone" in manage
-    assert "cost.stone + ' stone ·" in manage
+    # gentle-start-v338: the desk bill is unbreakable chips now, and a
+    # stone cost renders as its own 🪨 chip only when it is above zero.
+    assert "buildCostChipsHTML(cost, villageBuildDurationMs" in manage
+    chips = function_source(html, "buildCostChipsHTML")
+    assert "Number(cost.stone) > 0" in chips and "🪨" in chips
     # empire-declutter-v317 removed the guide and the Construction Yard's purse
     # heading, which is where these two also read the stone tally. The build
     # buttons and the shortage line above still prove stone reaches this panel.

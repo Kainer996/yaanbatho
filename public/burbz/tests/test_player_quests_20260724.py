@@ -140,7 +140,10 @@ def test_gameplay_hooks_feed_the_chain():
     ):
         assert hook in html, hook
     # The Quests nav badge counts claimable player quests too.
-    assert "questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS" in html
+    # gentle-start-v338: boards the gate still holds closed stay out of
+    # the badge count, so the dot never lights for a card the player
+    # cannot see. The chain itself always counts.
+    assert "...PLAYER_QUESTS,\n      ...(featureGateOpen('quests_daily') ? DAILY_QUESTS : [])" in html
 
 
 def test_tutorial_introduces_player_quests():

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
@@ -259,7 +259,10 @@ def test_the_desk_shows_granary_cistern_and_the_cart():
     # relief mechanic itself is untouched and still reachable.
     assert "function empireSendSupplyCart(" in html
     assert "SEND A SUPPLY CART" not in panel
-    assert "the stores run short</b>" in panel
+    # gentle-start-v338: the warning is a short chip; the fix reads in
+    # the eye's note.
+    assert "stores short</b>" in panel
+    assert "The stores run short — raise a" in panel
     # v296: the gauge reads what the BUILT farms and wells supply (relief
     # stores keep folk fed, but they never fill the bar); the number beside
     # it counts the same truth.

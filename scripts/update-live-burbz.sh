@@ -121,6 +121,7 @@ FILES=(
   "privacy.html"
   "inbox.html"
   "action_badge_core.js"
+  "onboarding_gate_core.js"
   "merlin_companion_core.js"
   "uk_bird_expansion_50.js"
   "uk_bird_expansion_2.js"
