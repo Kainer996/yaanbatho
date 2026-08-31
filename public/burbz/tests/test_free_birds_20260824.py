@@ -33,7 +33,7 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 
 OWN_RELEASE_PIN = "free-birds-v318-20260824"
-CURRENT_BUILD = "screen-swipe-v336-20260831"
+CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The release that last edited bird_roles_core.js — this one, which retired
 # the Head Gardener.
@@ -233,30 +233,26 @@ def test_the_hospital_still_sorts_by_who_is_hurt():
 # 4. The birds tab says how many are spare
 # ---------------------------------------------------------------------------
 
-def test_the_birds_tab_counts_birds_with_nothing_to_do():
+def test_the_birds_tab_carries_no_badge_any_more():
+    """feeding-menu-banked-coins-v337 (Yaan, 2026-08-31): the red dot on the
+    Birds book confused more than it helped — 'you have spare birds' is not a
+    thing WAITING — so the tab carries no count at all. Free birds still lead
+    every picker; only the dot is gone."""
     html = html_text()
     state = function_source(html, "normalizeActionBadgeState")
-    assert "idleBirdCount = freeBirdsCount();" in state
-    assert "birdex: idleBirdCount" in state
-    # Wrapped like every other count: one broken save must not blank the dock.
-    assert "try { idleBirdCount = freeBirdsCount(); } catch (e) {}" in state
-    # Screen readers get words, not a bare number.
-    assert "birdex: ['bird with nothing to do', 'birds with nothing to do']" in html
-
-
-def test_the_badge_reaches_the_birds_button():
-    html = html_text()
-    # The dock button the count lands on.
-    assert 'data-game-route data-screen="birdex"' in html
-    badge = BADGE_CORE.read_text(encoding="utf-8")
-    assert "'birdex'" in badge, "the walker already knows this screen"
+    assert "idleBirdCount" not in state
+    assert "birdex:" not in state
+    assert "birdex: ['bird with nothing to do', 'birds with nothing to do']" not in html
+    # The dock button itself still stands — renamed Birds, because Burbz names
+    # the enemy zombie flock, never the player's own companions.
+    assert 'data-game-route data-screen="birdex" aria-label="Birds codex"' in html
+    assert '<div class="nav-label">Birds</div>' in html
+    # With no birdex feed the walker computes zero, which CLEARS a stale dot.
     out = run_node(
         "const c = require(%s); console.log(JSON.stringify({"
-        "  none: c.computeActionBadgeCounts({ birdex: 0 }).birdex,"
-        "  three: c.computeActionBadgeCounts({ birdex: 3 }).birdex,"
-        "  junk: c.computeActionBadgeCounts({ birdex: -2 }).birdex"
+        "  absent: c.computeActionBadgeCounts({}).birdex"
         "}));" % json.dumps(str(BADGE_CORE)))
-    assert out == {"none": 0, "three": 3, "junk": 0}
+    assert out == {"absent": 0}
 
 
 # ---------------------------------------------------------------------------

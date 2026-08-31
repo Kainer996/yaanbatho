@@ -50,7 +50,9 @@ def test_quest_quiz_never_opens_over_merlins_lessons():
     # The 950ms delay re-checks, in case a chapter started in the meantime.
     assert "if (typeof merlinTutActive !== 'undefined' && merlinTutActive) return;" in body
     # The tutorial errand still never quizzes at all.
-    assert "if (q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);" in html
+    # feeding-menu-banked-coins-v337 also silences the quiz on auto-banked
+    # landings; the hand-tapped guard is unchanged underneath the auto flag.
+    assert "if (!auto && q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);" in html
 
 
 def test_session_discoveries_survive_mic_restarts_and_clear_on_user_stop():

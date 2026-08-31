@@ -58,7 +58,9 @@ def test_two_decks_six_up_top_and_a_symmetric_adventure_row():
     pairs = low.split('<div class="dock-pair">')[1:]
     assert len(pairs) == 2, "two symmetric wings flank the island"
     assert re.findall(r'<div class="nav-label">([^<]+)</div>', pairs[0]) == ["Map", "Quests"]
-    assert re.findall(r'<div class="nav-label">([^<]+)</div>', pairs[1]) == ["Battle", "Burbz"]
+    # feeding-menu-banked-coins-v337: the codex tab is the player's Birds —
+    # Burbz names the enemy zombie flock, never their own companions.
+    assert re.findall(r'<div class="nav-label">([^<]+)</div>', pairs[1]) == ["Battle", "Birds"]
     # Both wings are equal-sized, so space-between keeps them mirrored.
     low_css = re.search(r"\.dock-row-low\s*\{([^}]*)\}", HTML).group(1)
     assert "space-between" in low_css

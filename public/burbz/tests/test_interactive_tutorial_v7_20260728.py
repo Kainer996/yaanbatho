@@ -304,7 +304,9 @@ def test_the_tutorial_errand_claim_does_not_open_a_quiz_under_the_dim():
     """Regression: the Bird Wisdom Check opened 650ms before the errand chapter
     and was then buried under the tutorial dim with nothing to close it."""
     html = HTML.read_text(encoding="utf-8")
-    assert "if (q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);" in html
+    # feeding-menu-banked-coins-v337 also silences the quiz on auto-banked
+    # landings; the hand-tapped guard is unchanged underneath the auto flag.
+    assert "if (!auto && q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);" in html
 
 
 def test_release_cache_is_bumped():

@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "screen-swipe-v336-20260831"
+CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
