@@ -13,7 +13,7 @@ HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "feedback-menu-keyless-v263-20260813"
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 
 
 def test_link_key_is_adopted_then_scrubbed():

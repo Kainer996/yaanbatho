@@ -19,7 +19,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "realm-dropdown-v223-20260804"
 PREVIOUS_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 
 
 def empire_logic(html: str) -> str:
@@ -90,9 +90,10 @@ def test_the_counties_body_still_lists_the_pyramid_counties_and_trade():
 
 def test_a_lone_village_still_opens_on_something_that_explains_the_ladder():
     logic = empire_logic(HTML.read_text(encoding="utf-8"))
-    assert "🕊️ Your realm starts here." in logic
-    assert "merge three stars into a Town, three starred Towns into a County" in logic  # v290: the player merges
-    assert "and on to Duchies and Kingdoms" in logic
+    # gentle-start-v338 compressed the one-village counties hint.
+    assert "🕊️ Free villages, grow them to their ⭐" in logic
+    assert "merge three at a time" in logic  # v290: the player merges (v338 compressed the line)
+    assert "up through Towns, Counties and Kingdoms" in logic
 
 
 def test_onboarding_still_greets_a_player_with_no_villages():

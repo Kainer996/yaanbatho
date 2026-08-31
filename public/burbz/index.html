@@ -628,6 +628,22 @@ svg.academy-room-bg { display:block; filter:none; }
   .bottom-dock-anchor { padding: 2px 4px 1px; }
   .dock-row-low { padding: 0 3px; }
 }
+/* Gentle start (v338): destinations the chain has not reached yet stay off
+   the dock entirely. A hidden nav item must beat its own display:flex, and an
+   empty row or pair collapses so what remains sits centred. */
+.nav-item[hidden], .dock-row[hidden], .dock-pair[hidden], .header-diary-btn[hidden] { display: none !important; }
+/* With the whole top deck still locked the dock is one row tall; every
+   screen reads its height from --nav-height, so they all breathe in step. */
+body.dock-compact { --nav-height: 50px; }
+body.dock-compact .dock-row-low { justify-content: space-between; }
+/* A newly opened destination lands with a little bounce and a moment of gold. */
+@keyframes dockUnlockPop {
+  0% { transform: scale(.3); opacity: 0; }
+  55% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); }
+}
+.nav-item.dock-unlock-pop .nav-icon { animation: dockUnlockPop .6s cubic-bezier(.34,1.56,.64,1); }
+.nav-item.dock-unlock-pop { color: var(--accent); }
 .nav-badge {
   position: absolute; top: 4px; right: 50%; transform: translateX(16px);
   background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
@@ -774,7 +790,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .burbz-village-marker.in-city .burbz-village-icon { box-shadow:0 5px 16px rgba(0,0,0,.5), 0 0 0 2.5px rgba(240,199,103,.95), 0 0 24px rgba(240,199,103,.6); }
 #villageClaimBar { margin:0 14px 10px; }
 #villageClaimBar:empty { display:none; }
-.village-claim-btn { width:100%; min-height:54px; border-radius:15px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.06em; box-shadow:0 10px 24px rgba(0,0,0,.4); }
+.village-claim-btn { width:100%; min-height:54px; border-radius:15px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.06em; box-shadow:0 10px 24px rgba(0,0,0,.4); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.village-claim-btn .build-cost-bit { font-size:11px; }
 .village-claim-btn:active { transform:scale(.98); }
 .village-claim-btn[disabled] { opacity:.55; }
 .village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
@@ -1282,6 +1299,26 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .province-build-shortage { min-height:14px; font-size:9px; line-height:1.25; color:#ffc4a0; text-align:center; }
 .province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
 .province-build-btn.busy { opacity:.55; filter:grayscale(.35); }
+/* Build orders read as two clean lines (v338): the action on top, then the
+   bill as little chips. A chip never breaks between its number and its icon,
+   so "60 🪙" can no longer strand its coin on the next line. */
+.province-build-btn, .town-action { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.province-build-btn { padding:5px 4px; }
+.build-btn-act { display:block; line-height:1.15; }
+.build-cost-row { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:1px 8px; }
+.build-cost-bit { white-space:nowrap; font-size:10px; font-weight:800; letter-spacing:.02em; opacity:.92; }
+.province-build-shortage b { white-space:nowrap; font-weight:800; }
+/* The little eye (v338): long explanations live behind it, not on the screen.
+   Tap to peek, tap to put it away. The dot stays small but the finger target
+   does not. */
+.info-dot { position:relative; display:inline-flex; align-items:center; justify-content:center; width:21px; height:21px; margin-left:6px; padding:0; border-radius:50%; border:1px solid rgba(240,199,103,.42); background:rgba(0,0,0,.34); color:#d9c07a; vertical-align:middle; flex:0 0 auto; }
+.info-dot::after { content:''; position:absolute; inset:-9px; border-radius:50%; }
+.info-dot svg { width:13px; height:13px; display:block; }
+.info-dot.is-open { color:#0d0a05; background:var(--accent, #f0c767); border-color:var(--accent, #f0c767); }
+.info-dot:active { transform:scale(.9); }
+.info-note { margin:6px 0 8px; padding:8px 11px; border-radius:9px; border:1px dashed rgba(240,199,103,.32); background:rgba(0,0,0,.34); font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11px; line-height:1.45; color:#cfc09a; text-align:left; animation:infoNoteIn .18s ease; }
+.info-note[hidden] { display:none !important; }
+@keyframes infoNoteIn { from { opacity:0; transform:translateY(-3px); } to { opacity:1; transform:none; } }
 .province-ruin-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:10px; }
 .province-ruin { display:flex; flex-direction:column; gap:4px; padding:9px 9px 8px; border-radius:10px; border:1px dashed rgba(200,150,110,.4); background:linear-gradient(180deg,rgba(38,26,18,.62),rgba(14,9,5,.78)); }
 .province-ruin-head { display:flex; align-items:center; gap:6px; }
@@ -3374,7 +3411,9 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .quest-category-summary .qc-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:21px; border-radius:12px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.26), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.26); }
 .quest-category-summary .qc-main { flex:1; min-width:0; }
 .quest-category-summary .qc-label { display:block; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.04em; color:var(--legendary); }
-.quest-category-summary .qc-copy { display:block; font-size:10px; line-height:1.35; color:var(--text3); margin-top:2px; }
+.quest-category-summary .qc-copy { display:block; font-size:10px; line-height:1.35; color:var(--text3); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* An open drawer earns its whole blurb back. */
+.quest-category[open] .quest-category-summary .qc-copy { white-space:normal; }
 .quest-category-summary .qc-count { flex:none; font-family:'Russo One',sans-serif; font-size:11px; color:var(--accent2); }
 .quest-category-summary .qc-chevron { flex:none; font-family:'Russo One',sans-serif; font-size:18px; color:var(--accent); transition:transform .2s ease; }
 .quest-category[open] .qc-chevron { transform:rotate(90deg); }
@@ -4121,7 +4160,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
           <div class="sound-session-shelf-grid" id="soundSessionShelfGrid" aria-label="Birds discovered this listening session"></div>
           <div class="sound-session-shelf-empty" id="soundSessionShelfEmpty">No birds yet — start Merlin&rsquo;s wand and every bird you discover will perch here.</div>
         </div>
-        <div class="merlin-data-note" id="merlinDataNote">Microphone active only while the green listening light is shown. Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
+        <div class="merlin-data-note">🛡️ Mic on only while the light shows.<button type="button" class="info-dot" data-info-dot="merlinDataNote" aria-expanded="false" aria-controls="merlinDataNote" aria-label="Microphone and privacy details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.6 12 5.6 21.5 12 21.5 12 18 18.4 12 18.4 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button></div>
+        <div class="merlin-data-note info-note" id="merlinDataNote" hidden>Microphone active only while the green listening light is shown. Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
           <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; raw coordinates are not stored.</span>
         </div>
@@ -4484,7 +4524,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     <!-- FLETCHER'S FORGE — equip weapons & armour, craft gear from found loot -->
     <div class="screen" id="screen-forge">
       <div class="screen-title">FLETCHER'S FORGE</div>
-      <div class="forge-intro">Loot found on your walks becomes weapons, armour, satchels, trinkets, spells and battle potions here. Equip each bird at the Forge; its potion can be drunk on that bird’s turn, and satchels let it carry more home from quests.</div>
+      <div class="forge-intro">Turn found loot into gear for your birds.<button type="button" class="info-dot" data-info-dot="infoNoteForgeIntro" aria-expanded="false" aria-controls="infoNoteForgeIntro" aria-label="How the Forge works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.6 12 5.6 21.5 12 21.5 12 18 18.4 12 18.4 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button></div>
+      <div class="info-note" id="infoNoteForgeIntro" hidden>Loot found on your walks becomes weapons, armour, satchels, trinkets, spells and battle potions here. Equip each bird at the Forge; its potion can be drunk on that bird’s turn, and satchels let it carry more home from quests.</div>
       <div class="forge-tabs">
         <button class="forge-tab" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
         <button class="forge-tab active" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
@@ -5000,6 +5041,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=trail-mode-v329-20260825"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
+<script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
 <script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
 <script>
@@ -14153,11 +14195,18 @@ function playQuestClaimCelebration(rewards) {
 function renderMerlinClueNotebook() {
   const clues = window.BurbzAcademyCore && window.BurbzAcademyCore.getMerlinClues ? window.BurbzAcademyCore.getMerlinClues() : [];
   const found = Array.isArray(gameState.merlinCluesFound) ? gameState.merlinCluesFound : [];
+  // The "how to uncover one" line reads once, on the first hidden card —
+  // repeating it on every locked card was a wall of the same sentence.
+  let hintSaid = false;
   const cards = clues.map(clue => {
     const known = found.includes(clue.id);
+    let copy;
+    if (known) copy = escapeHtml(clue.copy);
+    else if (!hintSaid) { hintSaid = true; copy = 'A hidden Merlin Clue. Send birds from the Quest Roost to uncover it.'; }
+    else copy = '🔍 Hidden';
     return '<div class="merlin-clue-card' + (known ? '' : ' locked') + '">' +
       '<div class="merlin-clue-name">' + (known ? '✨ ' + escapeHtml(clue.title) : '???') + '</div>' +
-      '<div class="merlin-clue-copy">' + (known ? escapeHtml(clue.copy) : 'A hidden Merlin Clue. Send birds from the Quest Roost to uncover it.') + '</div>' +
+      '<div class="merlin-clue-copy">' + copy + '</div>' +
     '</div>';
   }).join('');
   return '<div class="merlin-clue-notebook"><div class="merlin-clue-title">Merlin\'s Clues</div><div class="merlin-clue-grid">' + cards + '</div></div>';
@@ -14335,8 +14384,8 @@ function renderBirdExpeditions() {
     '</details>';
   }).join('');
 
-  const boardHtml = '<div class="quest-section-title">Kingdom Errands</div>' +
-    '<div class="quest-category-hint">Tap a category to open it — every food in the game and every crafting material has its own errand inside.</div>' + drawers;
+  const boardHtml = '<div class="quest-section-title">Kingdom Errands' + infoDotHTML('infoNoteErrandBoard', 'How Kingdom Errands work') + '</div>' +
+    infoNoteHTML('infoNoteErrandBoard', 'Tap a category to open it — every food in the game and every crafting material has its own errand inside. Send birds out and they come home with coins, timber, food and treasure.') + drawers;
 
   questScreen.innerHTML = activeHtml + tutorialHtml + boardHtml + renderMerlinClueNotebook();
   scheduleQuestBoardRefresh();
@@ -17439,7 +17488,7 @@ function renderTrainingHallPanel(birds, others) {
   const nightHallHint = isNightRightNow()
     ? '<div class="battle-night-hint">🌙 Night school: a nocturnal bird training now earns 3× XP and double stat gains.</div>'
     : '';
-  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Pick a run length, then tap a bird under a drill. Short runs pay the most for your time; long runs pay while you\'re away. Every run counts one session toward the drill\'s move line (1 = move I, 3 = II, 6 = III).</div>' + durationRow + '<div class="training-template-grid">' + templateHtml + '</div></div></div>';
+  return '<div class="training-hall-panel" data-feature="training-hall-sessions" data-hunger-surface="training-dispatch"><div class="training-hall-title">Training Hall</div>' + nightHallHint + sessionHtml + '<div class="training-notice-board"><div class="training-hall-title">📋 Notice Board</div><div class="training-hall-copy">Pick a run length, then tap a bird under a drill.' + infoDotHTML('infoNoteTrainingBoard', 'How drills pay') + '</div>' + infoNoteHTML('infoNoteTrainingBoard', 'Short runs pay the most for your time; long runs pay while you\'re away. Every run counts one session toward the drill\'s move line (1 = move I, 3 = II, 6 = III).') + durationRow + '<div class="training-template-grid">' + templateHtml + '</div></div></div>';
 }
 
 function trainingMasterActorHTML() {
@@ -17901,6 +17950,13 @@ function focusQuestFromNotice(target) {
 }
 function queueQuestCompleteNotice(q) {
   if (!q || !q.id) return;
+  // A quest whose board section the gate still holds closed completes
+  // quietly — its card waits in the section and greets the player there.
+  try {
+    if ((DAILY_QUESTS.includes(q) && !featureGateOpen('quests_daily')) ||
+        (WEEKLY_QUESTS.includes(q) && !featureGateOpen('quests_weekly')) ||
+        (ACHIEVEMENT_QUESTS.includes(q) && !featureGateOpen('quests_achievements'))) return;
+  } catch (e) {}
   queueCompletionNotice({ kind: 'quest', icon: q.icon || '\u{1F3C5}', title: q.name || 'Quest complete', sub: 'Quest complete — tap to claim', target: { questId: q.id } });
 }
 
@@ -21656,7 +21712,14 @@ function normalizeActionBadgeState(now = Date.now()) {
   let trainingCount = 0;
   try { trainingCount = trainingHubSessions().filter(session => session.status === 'complete').length; } catch (e) {}
   return {
-    questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
+    // A section the gate still holds closed must not light the Quests dot —
+    // a dot the player cannot clear teaches them to ignore dots.
+    questDefinitions: [
+      ...PLAYER_QUESTS,
+      ...(featureGateOpen('quests_daily') ? DAILY_QUESTS : []),
+      ...(featureGateOpen('quests_weekly') ? WEEKLY_QUESTS : []),
+      ...(featureGateOpen('quests_achievements') ? ACHIEVEMENT_QUESTS : [])
+    ],
     quests: gameState && gameState.quests,
     birdExpeditions,
     birdTrainingSessions,
@@ -21699,6 +21762,7 @@ function updateActionBadges() {
   // the corner cards ride it so a claimed quest's card leaves on its own,
   // and returned birds bank their rewards on the same beat.
   try { bankReturnedExpeditions(); } catch (e) {}
+  try { applyFeatureGates(); } catch (e) {}
   try { renderCompletionNotices(); } catch (e) {}
   const core = window.BurbzActionBadges;
   if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
@@ -21715,6 +21779,148 @@ function queueActionBadgeUpdate() {
   if (typeof queueMicrotask === 'function') queueMicrotask(run);
   else Promise.resolve().then(run);
 }
+
+// ============================================================================
+// GENTLE START (v338) — the dock grows as the game is learned.
+// The player quest chain is the teacher, so each destination joins the dock
+// when the chain reaches it (or the save shows it already in use). Nothing is
+// taken away: at trainer level 12 — the old early-game line — every gate
+// stands open, and a veteran's dock looks exactly as it always did.
+// ============================================================================
+let featureGateMap = null;      // latest computed map, read by featureGateOpen
+let featureGateBaseline = null; // previous map, so a fresh unlock can say hello
+
+// What the save already proves the player uses. Every read is guarded: a
+// broken helper must never hide a working feature, so a throw reads as open.
+function featureGateEvidence() {
+  const ev = {};
+  const flock = (gameState && gameState.flock) || [];
+  const wins = Number(gameState && gameState.player && gameState.player.wins) || 0;
+  // 'outdoors' and the starter kitchen are built on every save, so only a
+  // building the player raised themselves is proof they know the Academy.
+  try { ev.academy = !!tutorialFlowState().errandClaimed || flock.length > 0 ||
+    Object.keys(typeof ACADEMY_ROOMS === 'object' && ACADEMY_ROOMS || {})
+      .some(id => id !== 'outdoors' && id !== 'kitchen' && isAcademyBuildingBuilt(id)); } catch (e) { ev.academy = true; }
+  try { ev.birdex = flock.length > 0 || discoveredSpeciesSet().size > 0; } catch (e) { ev.birdex = true; }
+  // New saves start with gear in the bag, so owning gear proves nothing —
+  // gear ON a bird does.
+  let armed = false;
+  try { armed = Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)); } catch (e) { armed = true; }
+  ev.forge = armed;
+  ev.inventory = armed;
+  // The first liberation also counts as a win, so one win is not yet the
+  // arena — two are.
+  ev.battle = wins >= 2;
+  ev.leaderboards = wins >= 3;
+  // The Kitchen building stands from the start (starter-kitchen), so being
+  // built proves nothing — a meal served or a diet learned does.
+  try { ev.kitchen = (Number(gameState.player && gameState.player.mealsServed) || 0) > 0 || countDiscoveredDiets() > 0; } catch (e) { ev.kitchen = true; }
+  try { ev.training = isAcademyBuildingBuilt('training') || ensureBirdTrainingSessions().length > 0; } catch (e) { ev.training = true; }
+  try { ev.hospital = isAcademyBuildingBuilt('hospital'); } catch (e) { ev.hospital = true; }
+  try {
+    const wq = (gameState && gameState.walkingQuests) || {};
+    ev.quests_walks = !!wq.active || ((wq.history || []).length > 0) ||
+      (((gameState.sideQuest && gameState.sideQuest.history) || []).length > 0);
+  } catch (e) { ev.quests_walks = true; }
+  return ev;
+}
+
+// One line each, spoken once, the moment a destination joins the dock.
+const FEATURE_UNLOCK_TOASTS = {
+  academy: '🏛️ The Academy is open — new on your dock.',
+  birdex: '📖 Your Birds book is open — every discovery lands there.',
+  forge: '⚒️ The Forge is open — new on your dock.',
+  inventory: '🎒 The Royal Stores are open — new on your dock.',
+  battle: '⚔️ The arena is open — new on your dock.',
+  kitchen: '🥣 The Kitchen has joined your dock.',
+  training: '🏋️ Training has joined your dock.',
+  hospital: '🏥 The Bird Hospital has joined your dock.',
+  leaderboards: '🏆 Ranks have joined your dock.',
+  diary: '🪶 Merlin keeps your diary now — top right.'
+};
+
+function applyFeatureGates() {
+  const core = window.BurbzOnboardingGate;
+  if (!core || typeof core.unlockedFeatures !== 'function' || !gameState || !document.querySelectorAll) return;
+  let map;
+  try {
+    map = core.unlockedFeatures({
+      chainIds: PLAYER_QUESTS.map(q => q.id),
+      claimedIds: PLAYER_QUESTS.filter(q => gameState.quests && gameState.quests[q.id] && gameState.quests[q.id].claimed).map(q => q.id),
+      evidence: featureGateEvidence(),
+      playerLevel: gameState.player && gameState.player.level
+    });
+  } catch (e) { return; }
+  const prev = featureGateBaseline;
+  featureGateMap = map;
+  featureGateBaseline = map;
+  document.querySelectorAll('[data-game-route][data-screen],[data-quick-destination]').forEach(item => {
+    const key = item.getAttribute('data-quick-destination') || item.getAttribute('data-screen');
+    if (!key || !(key in map)) return;
+    item.hidden = map[key] === false;
+  });
+  // An empty pair or deck folds away so what remains sits centred; with the
+  // whole top deck folded the dock is one row tall (body.dock-compact).
+  document.querySelectorAll('#bottomNav .dock-pair').forEach(pair => {
+    pair.hidden = !pair.querySelector('.nav-item:not([hidden])');
+  });
+  const topRow = document.querySelector('#bottomNav .dock-row-top');
+  if (topRow) {
+    const anyTop = !!topRow.querySelector('.nav-item:not([hidden])');
+    topRow.hidden = !anyTop;
+    document.body.classList.toggle('dock-compact', !anyTop);
+  }
+  if (!prev) return; // first run of the session sets the baseline quietly
+  let announced = 0;
+  Object.keys(map).forEach(key => {
+    if (map[key] !== true || prev[key] !== false) return;
+    document.querySelectorAll('[data-game-route][data-screen="' + key + '"],[data-quick-destination="' + key + '"]').forEach(item => {
+      item.classList.add('dock-unlock-pop');
+      setTimeout(() => item.classList.remove('dock-unlock-pop'), 950);
+    });
+    // Merlin's own lessons point at new tabs themselves — no toast over him.
+    if (!merlinTutActive && FEATURE_UNLOCK_TOASTS[key] && announced < 2) {
+      const line = FEATURE_UNLOCK_TOASTS[key];
+      setTimeout(() => showToast(line), 350 + announced * 2400);
+      announced += 1;
+    }
+  });
+}
+
+// Is this feature open? Defaults to open when the gate cannot answer.
+function featureGateOpen(key) {
+  if (!featureGateMap) { try { applyFeatureGates(); } catch (e) {} }
+  return !featureGateMap || featureGateMap[key] !== false;
+}
+
+// ============================================================================
+// THE LITTLE EYE (v338) — long explanations live behind a small eye icon
+// instead of sitting on the screen. Tap the eye to read, tap again to put it
+// away. One delegated listener serves every eye in the game.
+// ============================================================================
+const INFO_EYE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.6 12 5.6 21.5 12 21.5 12 18 18.4 12 18.4 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg>';
+
+function infoDotHTML(noteId, label) {
+  return '<button type="button" class="info-dot" data-info-dot="' + noteId + '" aria-expanded="false" aria-controls="' + noteId + '" aria-label="' + escapeHtml(label || 'Read more about this') + '">' + INFO_EYE_SVG + '</button>';
+}
+function infoNoteHTML(noteId, html) {
+  return '<div class="info-note" id="' + noteId + '" hidden>' + html + '</div>';
+}
+// Capture phase, so an eye inside a tappable card toggles its note without
+// also opening the card underneath.
+document.addEventListener('click', ev => {
+  const dot = ev.target && ev.target.closest ? ev.target.closest('[data-info-dot]') : null;
+  if (!dot) return;
+  ev.stopPropagation();
+  ev.preventDefault();
+  const note = document.getElementById(dot.getAttribute('data-info-dot'));
+  if (!note) return;
+  const open = note.hidden;
+  note.hidden = !open;
+  dot.setAttribute('aria-expanded', open ? 'true' : 'false');
+  dot.classList.toggle('is-open', open);
+  SFX.tap();
+}, true);
 
 // ============================================================================
 // NAVIGATION
@@ -21810,10 +22016,16 @@ let screenSwipeAnimating = false;
 // The screen `delta` steps along the dock, wrapping around. A screen off the
 // road — a room's interior, a hall, the diary — swipes nowhere.
 function screenSwipeNeighbour(delta) {
-  const at = SCREEN_SWIPE_ROAD.indexOf(currentScreen);
+  // The road only visits places already on the dock — a swipe must never
+  // land on a screen whose button the player has not earned yet (v338).
+  const gate = window.BurbzOnboardingGate;
+  const road = gate && featureGateMap && typeof gate.filterRoad === 'function'
+    ? gate.filterRoad(SCREEN_SWIPE_ROAD, featureGateMap)
+    : SCREEN_SWIPE_ROAD;
+  const at = road.indexOf(currentScreen);
   if (at < 0) return null;
-  const len = SCREEN_SWIPE_ROAD.length;
-  return SCREEN_SWIPE_ROAD[((at + delta) % len + len) % len];
+  const len = road.length;
+  return road[((at + delta) % len + len) % len];
 }
 
 // The page turns on a long enough drag, or a short sharp flick.
@@ -24900,6 +25112,27 @@ function formatBuildDuration(ms) {
   if (m < 60) return m + 'm';
   return Math.floor(m / 60) + 'h' + (m % 60 ? ' ' + (m % 60) + 'm' : '');
 }
+// The bill on a build order, as chips that never break in half (v338): each
+// chip pairs its number with its icon in one unbreakable piece, and a cost of
+// zero says nothing at all — no more "+ 0 stone".
+function buildCostChipsHTML(cost, duration) {
+  const bits = [];
+  if (cost) {
+    if (Number(cost.coins) > 0) bits.push(cost.coins + ' 🪙');
+    if (Number(cost.branches) > 0) bits.push(cost.branches + ' 🪵');
+    if (Number(cost.stone) > 0) bits.push(cost.stone + ' 🪨');
+    Object.entries(cost.materials || {}).forEach(([id, qty]) => {
+      let icon = '📦', label = id.replace(/_/g, ' ');
+      try { const material = lootCore().materialById(id); icon = material?.icon || icon; label = material?.name || material?.label || label; } catch (e) {}
+      bits.push(qty + ' ' + icon + ' ' + escapeHtml(label));
+    });
+  }
+  // The clock rides along as its own chip: pass milliseconds or a label.
+  if (typeof duration === 'string' && duration) bits.push('⏱ ' + duration);
+  else if (Number.isFinite(duration)) bits.push('⏱ ' + formatBuildDuration(duration));
+  if (!bits.length) return '';
+  return '<span class="build-cost-row">' + bits.map(b => '<span class="build-cost-bit">' + b + '</span>').join('') + '</span>';
+}
 // A village yard runs one project at a time. Appoint a Project Manager and it
 // runs two: the post is a foreman, so a second crew can work in parallel. The
 // slots only gate STARTING a build — a project already under way always
@@ -26089,7 +26322,7 @@ function renderVillageClaimBar() {
   }
   const cost = birdhouseCostForNextVillage();
   if (empireHasLiberationVictory(v.seed)) {
-    bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🏡 BUILD LIBERATION BIRDHOUSE · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵</button>';
+    bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()"><span class="build-btn-act">🏡 BUILD LIBERATION BIRDHOUSE</span>' + buildCostChipsHTML(cost) + '</button>';
     return;
   }
   bar.innerHTML = '<button class="village-claim-btn" onclick="claimCurrentVillage()">🕊️ BEGIN LIBERATION BATTLE — FREE ' + escapeHtml(v.name.toUpperCase()) + '</button>';
@@ -26185,7 +26418,8 @@ function renderVillageManagePanel() {
   const deskBuildings = EMPIRE_BUILDINGS.filter(b => settlementAllowsBuilding(rec, b) || villageBuildingLevel(rec, b.id) > 0);
   const townWorks = EMPIRE_BUILDINGS.filter(b => !deskBuildings.includes(b));
   const townWorksHtml = townWorks.length
-    ? '<div class="province-need-sub" style="margin:2px 0 8px;">🏘️ Town works — open when three starred villages merge: ' + townWorks.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>'
+    ? '<div class="province-need-sub" style="margin:2px 0 8px;">🏘️ ' + townWorks.length + ' town works open at the town merge' + infoDotHTML('infoNoteTownWorks', 'Which buildings a Town opens') + '</div>' +
+      infoNoteHTML('infoNoteTownWorks', 'When three starred villages merge into a Town, these open here: ' + townWorks.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · '))
     : '';
   const buildingsHtml = deskBuildings.map(b => {
     const level = villageBuildingLevel(rec, b.id);
@@ -26194,9 +26428,9 @@ function renderVillageManagePanel() {
     const locked = level === 0 && (Number(gameState.player.level) || 1) < (Number(b.unlockLevel) || 1);
     const cost = maxed ? null : villageBuildingCost(b, level, rec.seed);
     const shortages = [];
-    if (cost && wallet < cost.coins) shortages.push((cost.coins - wallet) + ' 🪙');
-    if (cost && timber < cost.branches) shortages.push((cost.branches - timber) + ' 🪵');
-    if (cost && stone < cost.stone) shortages.push((cost.stone - stone) + ' stone');
+    if (cost && wallet < cost.coins) shortages.push('<b>' + (cost.coins - wallet) + ' 🪙</b>');
+    if (cost && timber < cost.branches) shortages.push('<b>' + (cost.branches - timber) + ' 🪵</b>');
+    if (cost && stone < cost.stone) shortages.push('<b>' + (cost.stone - stone) + ' 🪨</b>');
     const affordable = cost && !shortages.length;
     const pips = Array.from({ length: b.maxLevel }, (_, i) => '<span class="province-pip' + (i < level ? ' on' : '') + '"></span>').join('');
     const rising = villageConstructionOf(rec, b.id);
@@ -26209,13 +26443,15 @@ function renderVillageManagePanel() {
     const nextTier = !maxed && b.tiers ? villageBuildingTier(b, level + 1) : null;
     const upgradeLabel = level === 0 ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
     let btn;
-    if (maxed) btn = '<button class="province-build-btn maxed" disabled>★ FULLY BUILT</button>';
-    else if (inProgress) btn = '<button class="province-build-btn busy" disabled>🏗️ BUILDING · <span data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></button>';
-    else if (locked) btn = '<button class="province-build-btn locked" disabled>🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</button>';
+    if (maxed) btn = '<button class="province-build-btn maxed" disabled><span class="build-btn-act">★ FULLY BUILT</span></button>';
+    else if (inProgress) btn = '<button class="province-build-btn busy" disabled><span class="build-btn-act">🏗️ BUILDING</span><span class="build-cost-row"><span class="build-cost-bit" data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></span></button>';
+    else if (locked) btn = '<button class="province-build-btn locked" disabled><span class="build-btn-act">🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</span></button>';
     // Short on coins or timber? The button stays live: tapping it opens the
-    // shortfall prompt that sends birds out for the missing resource.
+    // shortfall prompt that sends birds out for the missing resource. The
+    // order reads as two clean lines: the action, then the bill in chips.
     else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short') + '" onclick="empireBuildStructure(' + (rec.seed >>> 0) + ',\'' + b.id + '\')">' +
-      upgradeLabel + ' · ' + cost.coins + ' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone · ⏱ ' + formatBuildDuration(villageBuildDurationMs(rec.seed, b, level)) + '</button>';
+      '<span class="build-btn-act">' + upgradeLabel + '</span>' +
+      buildCostChipsHTML(cost, villageBuildDurationMs(rec.seed, b, level)) + '</button>';
     // The crew line: a yard says plainly whether a villager is working it.
     let crewHtml = '';
     if (b.workers) {
@@ -26251,8 +26487,22 @@ function renderVillageManagePanel() {
     settleLine +
     '<div class="province-needs">' + needsHtml + '</div>' +
     (snap.pop > 0
-      ? '<div class="province-income-line">🏦 This village pays <b>+' + snap.taxes + ' 🪙</b> and <b>+' + snap.branches + ' 🪵</b> every 8 hours' + (snap.settlement ? ' · ' + snap.settlement.icon + ' its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes' : '') + (snap.inRegion ? ' · 🛡️ county unity is raising its taxes' : '') + (snap.steward > 1 ? ' · 📋 your Project Manager is raising it by ' + Math.round((snap.steward - 1) * 100) + '%' : '') + ' · happy villagers multiply and pay more' + (idleYards > 0 ? ' · 👷 <b>' + idleYards + ' yard' + (idleYards === 1 ? '' : 's') + ' stand' + (idleYards === 1 ? 's' : '') + ' idle</b> — build more homes so workers move in' : '') + (snap.needs.some(n => snap.provisions[n.id] && n.sat < 1) ? ' · 🥣 <b>the stores run short</b> — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or 🪣 Timber Well' : '') + '</div>'
-      : '<div class="province-income-line">🏚️ This village stands empty and pays no taxes — build a 🛖 <b>Timber Cabin</b> (just coins and timber) and residents will move in</div>') +
+      ? (() => {
+          // The desk states the pay; the eye explains it (v338). Warnings
+          // keep a short visible flag — the fix lives behind the eye too.
+          const storesShort = snap.needs.some(n => snap.provisions[n.id] && n.sat < 1);
+          const warns = (idleYards > 0 ? ' · 👷 <b>' + idleYards + ' idle</b>' : '') + (storesShort ? ' · 🥣 <b>stores short</b>' : '');
+          const why = ['This village pays its taxes every 8 hours.'];
+          if (snap.settlement) why.push(snap.settlement.icon + ' Its merged ' + (snap.settlement.tier === 'city' ? 'city' : 'town') + ' is raising its taxes.');
+          if (snap.inRegion) why.push('🛡️ County unity is raising its taxes.');
+          if (snap.steward > 1) why.push('📋 Your Project Manager raises it by ' + Math.round((snap.steward - 1) * 100) + '%.');
+          why.push('Happy villagers multiply and pay more.');
+          if (idleYards > 0) why.push('👷 ' + idleYards + ' yard' + (idleYards === 1 ? ' stands' : 's stand') + ' idle — build more homes so workers move in.');
+          if (storesShort) why.push('🥣 The stores run short — raise a ' + (snap.settlement ? '🌾 Grain Farm' : '🏹 Hunter-Gatherer Hut') + ' or 🪣 Timber Well.');
+          return '<div class="province-income-line">🏦 <b>+' + snap.taxes + ' 🪙</b> · <b>+' + snap.branches + ' 🪵</b> every 8h' + warns + infoDotHTML('infoNoteVillageIncome', 'How this village pays') + '</div>' +
+            infoNoteHTML('infoNoteVillageIncome', why.join('<br>'));
+        })()
+      : '<div class="province-income-line">🏚️ Empty and paying nothing — raise a 🛖 <b>Timber Cabin</b> and folk will move in</div>') +
     ruinsHtml +
     constructionHtml +
     '<div class="province-build-grid">' + buildingsHtml + '</div>' +
@@ -26330,7 +26580,8 @@ function renderEmpirePanel() {
   // lead the row, then the towns no city has swallowed yet.
   const townTiles = settlements.cities.concat(settlements.towns.filter(t => !t.cityId)).map(empireTownTile);
   const townsExtra = townTiles.length && rcTiers
-    ? '<div class="realm-hint">⭐ A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.</div>'
+    ? '<div class="realm-hint">⭐ Town star: 120 folk · 75% happy' + infoDotHTML('infoNoteTownStar', 'How towns merge') + '</div>' +
+      infoNoteHTML('infoNoteTownStar', 'A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within ' + (rcTiers.REGION_RADIUS_KM || 150) + ' km and a County rises — one desk for the whole region.')
     : '';
   // ---- 🛡️ COUNTIES — counties, the feudal pyramid above them, and trade.
   // The squares are the counties themselves; the pyramid, the ladder nudge and
@@ -26393,12 +26644,13 @@ function renderEmpirePanel() {
   } else if (count >= 2 && rc) {
     const readyTowns = settlements.towns.filter(t => { const r = townMergeReady(t); return r && r.ready; }).length;
     countiesBody = regionMergeBanners || (settlements.townCount
-      ? '<div class="realm-hint">🛡️ County progress: ' + readyTowns + ' of your ' + settlements.townCount + ' town' + (settlements.townCount === 1 ? '' : 's') + ' wear' + (readyTowns === 1 ? 's' : '') + ' the ⭐ merge star (120 folk, 75% happiness). Merge three starred towns within 150 km and their holdings unite beneath one County Hall — unity taxes, trade, and the road to Duchies, Kingdoms and your Empire.</div>'
-      : '<div class="realm-hint">🛡️ First merge Towns: grow villages to their ⭐ merge star and unite them three at a time. Then raise three towns to their own stars and merge them into a County.</div>');
+      ? '<div class="realm-hint">🛡️ County progress: ' + readyTowns + ' of ' + settlements.townCount + ' town' + (settlements.townCount === 1 ? '' : 's') + ' starred' + infoDotHTML('infoNoteCountyRules', 'How a County rises') + '</div>' +
+        infoNoteHTML('infoNoteCountyRules', 'A town earns its ⭐ merge star at 120 folk and 75% happiness. Merge three starred towns within 150 km and their holdings unite beneath one County Hall — unity taxes, trade, and the road to Duchies, Kingdoms and your Empire.')
+      : '<div class="realm-hint">🛡️ Three ⭐ villages make a Town; three ⭐ towns make a County.</div>');
   } else if (count) {
     // One village and no ladder yet — the counties tab still opens on
     // something that explains where the crown is heading.
-    countiesBody = '<div class="realm-hint">🕊️ Your realm starts here. Free nearby villages and grow each to its ⭐ merge star; merge three stars into a Town, three starred Towns into a County, and on to Duchies and Kingdoms.</div>';
+    countiesBody = '<div class="realm-hint">🕊️ Free villages, grow them to their ⭐, and merge three at a time — up through Towns, Counties and Kingdoms.</div>';
   }
   // ---- The boxes of boxes, directly under the map: 🏡 VILLAGES on top,
   // 🏘️ TOWNS beneath, 🛡️ COUNTIES under that. Yaan asked for villages first
@@ -26407,7 +26659,8 @@ function renderEmpirePanel() {
   // is left to unfold: every square is on screen at once, so one tap reaches
   // any holding in the realm.
   const starHint = villages.length && !townCandidates.length
-    ? '<div class="realm-hint">⭐ A village earns its merge star at 16 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.</div>'
+    ? '<div class="realm-hint">⭐ Merge star: 16 folk · 75% happy' + infoDotHTML('infoNoteVillageStar', 'How villages merge') + '</div>' +
+      infoNoteHTML('infoNoteVillageStar', 'A village earns its merge star at 16 folk and 75% happiness. Three starred villages within ' + ((rcTiers && rcTiers.SETTLEMENT_TOWN_RADIUS_KM) || 5) + ' km can merge into one Town — you press Merge; nothing merges on its own.')
     : '';
   const villagesExtra = villages.length
     ? starHint
@@ -26607,13 +26860,12 @@ function renderRegionScreen() {
     regionUpgradeBody = townProjectHTML('⬆️', 'Region-wide upgrade · ' + regionWorks.plan.length + ' buildings rising', regionWorks, regionNow);
   } else if (regionPlan.steps.length) {
     const affordable = (gameState.player.coins || 0) >= regionPlan.cost.coins && playerBranches() >= regionPlan.cost.branches && playerStone() >= regionPlan.cost.stone;
-    regionUpgradeBody = '<div class="town-section-copy">One order upgrades every home and yard across the whole region — ' + regionPlan.steps.length + ' buildings rise together, no town micromanaging.</div>' +
-      '<button class="town-action is-gold" data-action="region-upgrade-all"' + (affordable ? '' : ' disabled') + '>⬆️ UPGRADE · ' + regionPlan.cost.coins + ' 🪙 + ' + regionPlan.cost.branches + ' 🪵 + ' + regionPlan.cost.stone + ' stone · ⏱ ' + formatBuildDuration(Math.max(60000, regionPlan.durationMs)) + '</button>' +
+    regionUpgradeBody = '<button class="town-action is-gold" data-action="region-upgrade-all"' + (affordable ? '' : ' disabled') + '><span class="build-btn-act">⬆️ UPGRADE · ' + regionPlan.steps.length + ' BUILDINGS</span>' + buildCostChipsHTML(regionPlan.cost, Math.max(60000, regionPlan.durationMs)) + '</button>' +
       (affordable ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
   } else {
     regionUpgradeBody = '<div class="town-section-copy">👑 Every home and yard across the region stands at its highest level.</div>';
   }
-  const regionUpgradeSection = '<div class="town-section is-gold" id="regionUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Region</div>' + regionUpgradeBody + '</div>';
+  const regionUpgradeSection = '<div class="town-section is-gold" id="regionUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Region' + infoDotHTML('infoNoteRegionUpgrade', 'How the region-wide upgrade works') + '</div>' + infoNoteHTML('infoNoteRegionUpgrade', 'One order upgrades every home and yard across the whole region — the buildings rise together, no town micromanaging.') + regionUpgradeBody + '</div>';
   // Caravan roads that touch this county, run from this desk too.
   const touchingRoutes = empireTradeRouteRecords().filter(({ a, b }) => a.id === region.id || b.id === region.id);
   const routesHtml = touchingRoutes.length
@@ -26637,7 +26889,7 @@ function renderRegionScreen() {
     '<div class="empire-stat-chip"><div class="empire-stat-value">+' + taxes + ' 🪙</div><div class="empire-stat-label">Taxes / 8h</div></div>' +
     '<div class="empire-stat-chip"><div class="empire-stat-value">+' + branches + ' 🪵</div><div class="empire-stat-label">Materials / 8h</div></div>' +
     '</div>' +
-    '<div class="region-hall-unity">🤝 County unity: every holding here pays +' + Math.round((rc.regionUnityBonus ? rc.regionUnityBonus(region) : rc.REGION_TAX_BONUS) * 100) + '% taxes for standing together' + (liegeDuchy ? ' beneath the ' + escapeHtml((liegeKingdom || liegeDuchy).name) : '') + '.</div>' +
+    '<div class="region-hall-unity">🤝 County unity: every holding pays +' + Math.round((rc.regionUnityBonus ? rc.regionUnityBonus(region) : rc.REGION_TAX_BONUS) * 100) + '% taxes.</div>' +
     ladderHtml +
     '<button class="empire-tribute-btn" data-action="region-collect"' + (hasDue ? '' : ' disabled') + '>' +
     (hasDue ? '💰 COLLECT THIS COUNTY’S TAXES: ' + escapeHtml(empireResourceSummary(due, 5)) : '⏳ NOTHING BANKED YET — THE COUNTY IS EARNING') + '</button>' +
@@ -27281,7 +27533,7 @@ function renderTownScreen() {
     const crewFree = activeProjects < slots, affordable = townCostAffordable(next.cost), enabled = gateMet && crewFree && affordable;
     const upgradeIndex = seatRows.findIndex(row => Number(row.seat.heartSeed) === Number(upgradeRow.seat.heartSeed));
     const upgradeLabel = settle.tier === 'city' ? 'Borough Hall ' + (upgradeIndex + 1) : 'Town Hall';
-    hallAction = '<div class="town-project"><div class="town-project-head"><span>Next: ' + upgradeLabel + ' level ' + next.level + ' · ' + escapeHtml(next.label) + '</span><span class="town-project-eta">' + formatBuildDuration(next.buildTimeMs * settlementBuildFactorForSeed(upgradeRow.seat.heartSeed)) + '</span></div><div class="town-section-copy">Requires ' + next.minDevelopment + ' infrastructure · ' + next.minPopulation + ' residents · ' + Math.round(next.minHappiness * 100) + '% happiness. Unlocks: ' + escapeHtml(next.unlock) + '</div><button class="town-action is-gold" data-action="town-hall-upgrade"' + (enabled ? '' : ' disabled') + '>UPGRADE · ' + escapeHtml(townCostText(next.cost)) + '</button>' + (!gateMet ? '<div class="town-policy-state">GROW THE TOWN TO MEET THE REQUIREMENTS</div>' : !crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER, STONE OR MATERIALS NEEDED</div>' : '') + '</div>';
+    hallAction = '<div class="town-project"><div class="town-project-head"><span>Next: ' + upgradeLabel + ' level ' + next.level + ' · ' + escapeHtml(next.label) + '</span><span class="town-project-eta">' + formatBuildDuration(next.buildTimeMs * settlementBuildFactorForSeed(upgradeRow.seat.heartSeed)) + '</span></div><div class="town-section-copy">Requires ' + next.minDevelopment + ' infrastructure · ' + next.minPopulation + ' residents · ' + Math.round(next.minHappiness * 100) + '% happiness. Unlocks: ' + escapeHtml(next.unlock) + '</div><button class="town-action is-gold" data-action="town-hall-upgrade"' + (enabled ? '' : ' disabled') + '><span class="build-btn-act">UPGRADE</span>' + buildCostChipsHTML(next.cost) + '</button>' + (!gateMet ? '<div class="town-policy-state">GROW THE TOWN TO MEET THE REQUIREMENTS</div>' : !crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER, STONE OR MATERIALS NEEDED</div>' : '') + '</div>';
   }
   const networkHtml = EMPIRE_BUILDINGS.map(building => {
     const level = townNetworkLevel(settle, building.id), max = townMemberRecords(settle).length * building.maxLevel;
@@ -27291,7 +27543,7 @@ function renderTownScreen() {
     // prompt that sends birds out for the missing coins or timber.
     const tappable = !!target && activeProjects < slots;
     const duration = target ? formatBuildDuration(villageBuildDurationMs(target.seed, building, targetLevel)) : '';
-    return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action' + (tappable && !affordable ? ' short' : '') + '" data-action="town-network" data-building="' + building.id + '"' + (tappable ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? 'RAISE NETWORK · ' + escapeHtml(townCostText(cost)) + ' · ' + duration : 'WARD BUILDERS BUSY') + '</button></div>';
+    return '<div class="town-network"><div class="town-network-head"><span class="town-network-icon">' + building.icon + '</span><span class="town-network-name">' + escapeHtml(building.name) + ' Network</span><span class="town-network-level">' + level + '/' + max + '</span></div><div class="town-network-copy">' + escapeHtml(building.desc) + '</div><button class="town-action' + (tappable && !affordable ? ' short' : '') + '" data-action="town-network" data-building="' + building.id + '"' + (tappable ? '' : ' disabled') + '>' + (level >= max ? 'NETWORK COMPLETE' : target ? '<span class="build-btn-act">RAISE NETWORK</span>' + buildCostChipsHTML(cost, duration) : 'WARD BUILDERS BUSY') + '</button></div>';
   }).join('');
   const ruins = [];
   townMemberRecords(settle).forEach(rec => (ensureVillageEconomy(rec).ruins || []).forEach(ruin => { if (!ruin.cleared) ruins.push(ruin); }));
@@ -27320,52 +27572,55 @@ function renderTownScreen() {
     townAdministrativeSeats(settle).some(seat => c.seeds.includes(Number(seat.heartSeed) >>> 0)));
   let countyHtml;
   if (county) {
-    countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">🛡️ ' + escapeHtml(county.name) + '</div><div class="town-section-copy">This ' + (settle.tier === 'city' ? 'city' : 'town') + ' is one of ' + county.townCount + ' towns united in the county. Collect county taxes, appoint a Warden, upgrade the whole region and open trade from its Hall.</div><button class="town-action is-gold" data-action="town-county">🛡️ OPEN COUNTY HALL</button></div>';
+    countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">🛡️ ' + escapeHtml(county.name) + infoDotHTML('infoNoteTownCounty', 'About this county') + '</div>' + infoNoteHTML('infoNoteTownCounty', 'This ' + (settle.tier === 'city' ? 'city' : 'town') + ' is one of ' + county.townCount + ' towns united in the county. Collect county taxes, appoint a Warden, upgrade the whole region and open trade from its Hall.') + '<button class="town-action is-gold" data-action="town-county">🛡️ OPEN COUNTY HALL</button></div>';
   } else if (regionCandidate && mcTown) {
     countyHtml = '<div class="town-section is-gold" id="townCountySection"><div class="town-section-title">⭐ Ready to Unite</div><div class="town-section-copy">' + escapeHtml(mcTown.nameList(regionCandidate.names)) + ' all wear the merge star. Merge them and a County rises — one desk for the whole region.</div><button class="town-action is-gold" data-action="town-merge-region" data-seeds="' + regionCandidate.seeds.join(',') + '">🛡️ MERGE INTO ONE COUNTY</button></div>';
   } else {
-    countyHtml = '<div class="town-section" id="townCountySection"><div class="town-section-title">🛡️ Toward a County</div><div class="town-section-copy">' +
+    countyHtml = '<div class="town-section" id="townCountySection"><div class="town-section-title">🛡️ Toward a County' + infoDotHTML('infoNoteTownCounty', 'How a county rises') + '</div><div class="town-section-copy">' +
       (townReadiness && townReadiness.ready
-        ? '⭐ This town wears its merge star — 120 folk at 75% happiness. Grow two more towns to their stars within 150 km, then press Merge: the three unite into a county, run as one region.'
-        : '⭐ A town earns its merge star at 120 folk and 75% happiness' + (townReadiness ? ' — this one holds 👥 ' + townReadiness.population + '/120 at ' + Math.round(townReadiness.happiness * 100) + '%' : '') + '. Merge three starred towns within 150 km and a county rises — one desk for the whole region.') +
-      '</div></div>';
+        ? '⭐ This town wears its merge star.'
+        : townReadiness
+          ? '⭐ Merge star at 👥 ' + townReadiness.population + '/120 and ' + Math.round(townReadiness.happiness * 100) + '/75% happy.'
+          : '⭐ Merge star: 120 folk · 75% happy.') +
+      '</div>' + infoNoteHTML('infoNoteTownCounty',
+        (townReadiness && townReadiness.ready
+          ? 'Grow two more towns to their stars within 150 km, then press Merge: the three unite into a county, run as one region.'
+          : 'A town earns its merge star at 120 folk and 75% happiness. Merge three starred towns within 150 km and a county rises — one desk for the whole region.')) + '</div>';
   }
   // ⬆️ Yaan's Upgrade tab: one order, every home and yard, no micromanaging.
   const townWorks = wholesaleWorksFor(settle.id);
   const townPlan = townWorks ? null : wholesaleUpgradePlan(townMemberRecords(settle));
-  const planCostText = plan => plan.cost.coins + ' 🪙 + ' + plan.cost.branches + ' 🪵 + ' + plan.cost.stone + ' stone';
   const planAffordable = plan => (gameState.player.coins || 0) >= plan.cost.coins && playerBranches() >= plan.cost.branches && playerStone() >= plan.cost.stone;
   let upgradeHtml;
   if (townWorks) {
     upgradeHtml = townProjectHTML('⬆️', 'Town-wide upgrade · ' + townWorks.plan.length + ' buildings rising', townWorks, now);
   } else if (townPlan.steps.length) {
-    upgradeHtml = '<div class="town-section-copy">One order upgrades every home and yard across all ' + townMemberRecords(settle).length + ' wards — ' + townPlan.steps.length + ' buildings rise together, no ward micromanaging.</div>' +
-      '<button class="town-action is-gold" data-action="town-upgrade-all"' + (planAffordable(townPlan) ? '' : ' disabled') + '>⬆️ UPGRADE · ' + planCostText(townPlan) + ' · ⏱ ' + formatBuildDuration(Math.max(60000, Math.round(townPlan.durationMs * settlementBuildFactorForSeed(settle.heartSeed)))) + '</button>' +
+    upgradeHtml = '<button class="town-action is-gold" data-action="town-upgrade-all"' + (planAffordable(townPlan) ? '' : ' disabled') + '><span class="build-btn-act">⬆️ UPGRADE · ' + townPlan.steps.length + ' BUILDINGS</span>' + buildCostChipsHTML(townPlan.cost, Math.max(60000, Math.round(townPlan.durationMs * settlementBuildFactorForSeed(settle.heartSeed)))) + '</button>' +
       (planAffordable(townPlan) ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
   } else {
     upgradeHtml = '<div class="town-section-copy">👑 Every home and yard across the town stands at its highest level.</div>';
   }
-  const upgradeSection = '<div class="town-section is-gold" id="townUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Town</div>' + upgradeHtml + '</div>';
+  const upgradeSection = '<div class="town-section is-gold" id="townUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Town' + infoDotHTML('infoNoteTownUpgrade', 'How the town-wide upgrade works') + '</div>' + infoNoteHTML('infoNoteTownUpgrade', 'One order upgrades every home and yard across all ' + townMemberRecords(settle).length + ' wards — the buildings rise together, no ward micromanaging.') + upgradeHtml + '</div>';
   // 👣 Small doors back into the old villages — just to look.
-  const visitSection = '<div class="town-section" id="townVisitSection"><div class="town-section-title">👣 Visit the Old Villages</div><div class="town-section-copy">Step back into any ward and see the village as it was. Just a look — governing stays here.</div><div class="visit-chip-row">' +
+  const visitSection = '<div class="town-section" id="townVisitSection"><div class="town-section-title">👣 Visit the Old Villages' + infoDotHTML('infoNoteTownVisit', 'What visiting does') + '</div>' + infoNoteHTML('infoNoteTownVisit', 'Step back into any ward and see the village as it was. Just a look — governing stays here.') + '<div class="visit-chip-row">' +
     townMemberRecords(settle).map(rec => '<button type="button" class="visit-chip" data-action="town-visit" data-seed="' + (rec.seed >>> 0) + '">' + empireVillageCrest(rec.seed) + ' ' + escapeHtml(rec.name) + '</button>').join('') +
     '</div></div>';
   panel.innerHTML =
     '<div class="town-nav"><button data-action="town-back">← ROYAL LEDGER</button><button data-action="town-atlas">🗺️ VIEW ON ATLAS</button></div>' +
     '<div class="town-hero' + (settle.tier === 'city' ? ' is-city' : '') + '"><div class="town-hero-top"><div class="town-crest">' + settle.icon + '</div><div class="town-hero-main"><div class="town-kicker">' + (townReadiness && townReadiness.ready ? '<span class="merge-star">⭐</span> ' : '') + escapeHtml(hall.label) + ' · ' + townMemberRecords(settle).length + ' united wards</div><div class="town-name">' + escapeHtml(name) + '</div><div class="town-rank">Prosperity ' + prosperity + '/100 · governed by ' + escapeHtml(empireCrownTitle()) + '</div></div><button class="town-rename" data-action="town-rename" aria-label="Rename town">✎</button></div><div class="town-bars"><div><div class="town-bar-label"><span>Infrastructure</span><span>' + development + '/' + maxDevelopment + '</span></div><div class="town-bar-track"><div class="town-bar-fill" style="width:' + Math.round(development / Math.max(1, maxDevelopment) * 100) + '%"></div></div></div><div><div class="town-bar-label"><span>Happiness</span><span>' + Math.round(snap.happiness * 100) + '%</span></div><div class="town-bar-track"><div class="town-bar-fill is-happiness" style="width:' + Math.round(snap.happiness * 100) + '%"></div></div></div></div></div>' +
     '<div class="town-resource-grid"><div class="town-resource"><div class="town-resource-value">👥 ' + snap.pop + '/' + snap.housingCap + '</div><div class="town-resource-label">Residents / homes</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.taxes + ' 🪙</div><div class="town-resource-label">Taxes / 8h</div></div><div class="town-resource"><div class="town-resource-value">+' + snap.branches + ' 🪵 · +' + snap.production.stone + ' stone</div><div class="town-resource-label">Building goods / 8h</div></div><div class="town-resource"><div class="town-resource-value">' + escapeHtml(empireResourceSummary({ materials:snap.production.materials, larder:snap.production.larder }, 4) || '—') + '</div><div class="town-resource-label">Goods / 8h</div></div></div>' +
-    '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox</div><div class="town-section-copy">Collect whenever you like — the wards earn around the clock and the strongbox holds up to a full day. Town, County and Realm collection all share the same ward clocks.</div><button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
+    '<div class="town-section is-gold"><div class="town-section-title">💰 Shared Strongbox' + infoDotHTML('infoNoteTownStrongbox', 'How the strongbox fills') + '</div>' + infoNoteHTML('infoNoteTownStrongbox', 'Collect whenever you like — the wards earn around the clock and the strongbox holds up to a full day. Town, County and Realm collection all share the same ward clocks.') + '<button class="town-action is-gold" data-action="town-collect"' + (hasDue ? '' : ' disabled') + '>' + (hasDue ? 'COLLECT · ' + escapeHtml(empireResourceSummary(due, 8)) : 'STRONGBOX IS GROWING') + '</button></div>' +
     upgradeSection +
-    '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + '</div><div class="town-section-copy">Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
+    '<div class="town-section" id="townHallSection"><div class="town-section-head"><div><div class="town-section-title">🏛️ ' + (settle.tier === 'city' ? 'City & Borough Halls' : 'Town Hall') + ' · Lead Level ' + state.hallLevel + infoDotHTML('infoNoteTownHall', 'What the Hall does') + '</div></div><div class="town-builder-chip">BUILDERS ' + activeProjects + '/' + slots + '</div></div>' + infoNoteHTML('infoNoteTownHall', 'Hall investment unlocks policy and builder crews. City formation retains every constituent Hall and paid timer.') + boroughs + hallProjects + districtProjects + hallAction + '</div>' +
     ruinsHtml +
-    '<div class="town-section"><div class="town-section-title">🏗️ Town Networks</div><div class="town-section-copy">Each upgrade automatically strengthens the least-developed eligible ward. Wards never become separate destinations again.</div><div class="town-network-grid">' + networkHtml + '</div></div>' +
+    '<div class="town-section"><div class="town-section-title">🏗️ Town Networks' + infoDotHTML('infoNoteTownNetworks', 'How networks build') + '</div>' + infoNoteHTML('infoNoteTownNetworks', 'Each upgrade automatically strengthens the least-developed eligible ward. Wards never become separate destinations again.') + '<div class="town-network-grid">' + networkHtml + '</div></div>' +
     metalWorksSectionHtml(settle) +
-    '<div class="town-section"><div class="town-section-title">🥣 Provisions, Workforce & Services</div><div class="town-section-copy">Each fully fed, watered and happy ward can grow up to its own housing limit. ' + snap.workforce.working + '/' + snap.workforce.required + ' required workers staffed from ' + snap.workforce.available + ' residents.</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
+    '<div class="town-section"><div class="town-section-title">🥣 Provisions & Workforce' + infoDotHTML('infoNoteTownProvisions', 'How wards grow') + '</div>' + infoNoteHTML('infoNoteTownProvisions', 'Each fully fed, watered and happy ward can grow up to its own housing limit.') + '<div class="town-section-copy">👷 ' + snap.workforce.working + '/' + snap.workforce.required + ' workers staffed · ' + snap.workforce.available + ' residents</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
     entertainmentSectionHtml(settle) +
-    '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy</div><div class="town-section-copy">' + escapeHtml(policyNote) + '</div><div class="town-policy-grid">' + policies + '</div></div>' +
+    '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy' + infoDotHTML('infoNoteTownPolicy', 'What each policy does') + '</div>' + infoNoteHTML('infoNoteTownPolicy', escapeHtml(policyNote)) + '<div class="town-policy-grid">' + policies + '</div></div>' +
     countyHtml +
     visitSection +
-    '<div class="town-section"><div class="town-section-title">🏛️ Lord Mayor</div><div class="town-section-copy">One bird wears the chain for the whole settlement and runs every project in it. Absorbed ward posts are retired.</div>' + steward + '</div>';
+    '<div class="town-section"><div class="town-section-title">🏛️ Lord Mayor' + infoDotHTML('infoNoteTownMayor', 'What the Lord Mayor does') + '</div>' + infoNoteHTML('infoNoteTownMayor', 'One bird wears the chain for the whole settlement and runs every project in it. Absorbed ward posts are retired.') + steward + '</div>';
   panel.querySelector('[data-action="town-back"]')?.addEventListener('click', () => { SFX.tap(); empireLedgerOnlyMode = true; switchScreen('village'); setTimeout(() => $('empirePanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 260); });
   panel.querySelector('[data-action="town-atlas"]')?.addEventListener('click', () => { SFX.tap(); showTownOnAtlas(settle.id); });
   panel.querySelector('[data-action="town-rename"]')?.addEventListener('click', () => renameTown(settle.id));
@@ -27419,7 +27674,10 @@ function renderTownSquare(settle) {
   const hallLevel = Math.max(1, Number(state && state.hallLevel) || 1);
   const projects = townActiveProjectCount(settle), slots = townBuilderSlots(settle);
   const sub = $('townSub');
-  if (sub) sub.textContent = 'Your town, alive — its levelled Hall, working yards, builders, carts, people and animals all reflect the real settlement. Hold and drag to look around; pinch to zoom. Tap a building to run it, or anywhere else for the town ledger.';
+  // The stage's own overlay teaches the camera; the long caption reads
+  // behind the eye (v338).
+  if (sub) sub.innerHTML = 'Tap a building to run it.' + infoDotHTML('infoNoteTownSquare', 'About the living town') +
+    infoNoteHTML('infoNoteTownSquare', 'Your town, alive — its levelled Hall, working yards, builders, carts, people and animals all reflect the real settlement. Hold and drag to look around; pinch to zoom. Tap a building to run it, or anywhere else for the town ledger.');
   const kicker = $('townStageKicker'); if (kicker) kicker.textContent = (settle.tier === 'city' ? 'LIVING CITY' : 'LIVING TOWN') + ' · HALL LEVEL ' + hallLevel;
   const title = $('townStageTitle'); if (title) title.textContent = townDisplayName(settle);
   const meta = $('townStageMeta'); if (meta) meta.textContent = '👥 ' + snap.pop + '/' + snap.housingCap + ' · ' + Math.round(snap.happiness * 100) + '% happy · 🏗️ ' + projects + '/' + slots + ' crews';
@@ -27577,7 +27835,7 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
     const label = !level ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
     const duration = formatBuildDuration(villageBuildDurationMs(rec.seed, building, level));
     const crewFree = activeProjects < slots, wardFree = !construction, affordable = townCostAffordable(cost);
-    action = '<button class="town-action is-gold" data-action="sheet-build" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '"' + (crewFree && wardFree && affordable ? '' : ' disabled') + '>' + label + ' · ' + escapeHtml(townCostText(cost)) + ' · ⏱ ' + duration + '</button>' +
+    action = '<button class="town-action is-gold" data-action="sheet-build" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '"' + (crewFree && wardFree && affordable ? '' : ' disabled') + '><span class="build-btn-act">' + label + '</span>' + buildCostChipsHTML(cost, duration) + '</button>' +
       (!crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !wardFree ? '<div class="town-policy-state">THIS QUARTER’S BUILDERS ARE AT WORK</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>' : '');
   }
   return '<div class="town-sheet-head"><span class="town-sheet-icon">' + tier.icon + '</span><div class="town-sheet-title"><span class="town-sheet-kicker">' + escapeHtml(townDisplayName(settle)) + '</span>' + escapeHtml(tier.name) + (level ? ' · LV ' + level + '/' + building.maxLevel : '') + '</div><button type="button" class="town-sheet-close" data-action="sheet-close" aria-label="Close">✕</button></div>' +
@@ -27633,7 +27891,8 @@ function renderCountyMapPanel(region) {
   const realmInfo = empireRegionsInfo();
   const liege = region.kingdomId ? (realmInfo.kingdoms || []).find(k => k.id === region.kingdomId) : (region.duchyId ? (realmInfo.duchies || []).find(d => d.id === region.duchyId) : null);
   panel.innerHTML =
-    '<div class="county-map-hint">📜 The painted chart of the ' + escapeHtml(region.name) + (liege ? ', sworn to the ' + escapeHtml(liege.name) + ' — its lands wear the realm’s colour' : ' — a free county standing alone') + '. Tap any settlement on the map to visit it.</div>' +
+    '<div class="county-map-hint">📜 Tap any settlement on the map to visit it.' + infoDotHTML('infoNoteCountyChart', 'About this chart') + '</div>' +
+    infoNoteHTML('infoNoteCountyChart', 'The painted chart of the ' + escapeHtml(region.name) + (liege ? ', sworn to the ' + escapeHtml(liege.name) + ' — its lands wear the realm’s colour' : ' — a free county standing alone') + '.') +
     '<div class="region-hall-nav"><button type="button" class="region-hall-back" data-action="county-hall">🛡️ COUNTY HALL</button><button type="button" class="region-hall-atlas" data-action="county-atlas">🗺️ VIEW ON ROYAL ATLAS</button></div>';
   panel.querySelector('[data-action="county-hall"]')?.addEventListener('click', () => { SFX.tap(); openEmpireRegion(region.id); });
   panel.querySelector('[data-action="county-atlas"]')?.addEventListener('click', () => { SFX.tap(); showRegionOnAtlas(region.id); });
@@ -28300,7 +28559,8 @@ function renderVillage() {
     const dev = rec ? villageTotalDevelopment(rec) : 0;
     const ruinsLeft = rec ? (ensureVillageEconomy(rec).ruins || []).filter(ru => !ru.cleared).length : 0;
     const settleNote = settleTitle ? ' ' + settleTitle.icon + ' This village is the ' + (settleTitle.role === 'heart' ? 'centre of ' : 'district of ') + settleTitle.label + ' — bonus taxes, faster guilds.' : '';
-    if (!owned) sub.textContent = 'The darkness left ' + v.name + ' in ruins — only rubble and a couple of wrecked buildings remain. Hold, then drag to look around; pinch to zoom, two-finger drag to wander — then free the village to rebuild it.';
+    if (!owned) sub.innerHTML = 'The darkness left ' + escapeHtml(v.name) + ' in ruins — free it and rebuild.' + infoDotHTML('infoNoteVillageStage', 'Looking around') +
+      infoNoteHTML('infoNoteVillageStage', 'Only rubble and a couple of wrecked buildings remain. Hold, then drag to look around; pinch to zoom, two-finger drag to wander.');
     else if (dev <= 0) sub.textContent = 'Your village, still in ruins. ' + (ruinsLeft ? 'Tap the wrecks (or use the yard below) to clear rubble and salvage timber, then ' : '') + 'raise new buildings to bring ' + v.name + ' back to life.' + settleNote;
     else sub.textContent = 'Tap a building to step inside.' + (ruinsLeft ? ' Old wrecks still await clearing.' : '') + settleNote;
   }
@@ -35860,7 +36120,8 @@ function renderStoresLedger() {
       '<div class="stores-ledger-row header"><span class="slr-icon">👑</span>' +
       '<span class="slr-main"><span class="slr-name">Taxes &amp; timber</span><span class="slr-meta">' + ledger.provinces + ' province' + (ledger.provinces === 1 ? '' : 's') + ' · 👥 ' + ledger.population + ' subjects</span></span>' +
       '<span class="slr-yield">+' + ledger.coins + ' 🪙 +' + ledger.branches + ' 🪵</span></div>' +
-      (yardRows || '<div class="stores-hint">No working yards yet — build 🏹 Hunter-Gatherer Huts, 🪚 Lumberjack Huts and 🪨 Miners’ Huts in your villages, and 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your Towns. Each needs villagers living there to run it — the work huts hold three apiece — and then it starts shipping goods here.</div>') +
+      (yardRows || '<div class="stores-hint">No working yards yet — raise work huts in your villages and folk will ship goods here.' + infoDotHTML('infoNoteStoresYards', 'Which yards ship goods') + '</div>' +
+        infoNoteHTML('infoNoteStoresYards', 'Build 🏹 Hunter-Gatherer Huts, 🪚 Lumberjack Huts and 🪨 Miners’ Huts in your villages, and 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your Towns. Each needs villagers living there to run it — the work huts hold three apiece — and then it starts shipping goods here.')) +
       (idleYards.length ? '<div class="stores-hint">Not yet built anywhere: ' + idleYards.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>' : '') +
       '<button class="stores-collect-btn"' + (hasTribute ? '' : ' disabled') + ' onclick="collectEmpireTribute()">' +
       (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ NOTHING BANKED YET — THE PROVINCES ARE EARNING') + '</button>' +
@@ -35908,7 +36169,8 @@ function renderStoresMaterials() {
           '<div class="src-count">' + have + '</div></div>';
       }).join('') + '</div></div>';
   }).join('');
-  return html + '<div class="stores-hint">Materials come home three ways: found on the map as you walk, dug and felled by your provinces\' quarries and lumber camps, and brought back by the Materials quests on the Quests board — every material in the game has one. Spares sell to the traders — the rarer, the dearer.</div>';
+  return html + '<div class="stores-hint">Spares sell to the traders — the rarer, the dearer.' + infoDotHTML('infoNoteStoresMaterials', 'Where materials come from') + '</div>' +
+    infoNoteHTML('infoNoteStoresMaterials', 'Materials come home three ways: found on the map as you walk, dug and felled by your provinces\' quarries and lumber camps, and brought back by the Materials quests on the Quests board — every material in the game has one.');
 }
 
 // --- Food tab: the Kitchen larder, grouped by the diet family it feeds ------
@@ -36495,7 +36757,8 @@ function renderForgeMaterials(body) {
       '<div><div class="fm-name" style="color:' + color + ';">' + escapeHtml(m.label) + '</div><div class="fm-copy">' + escapeHtml(m.copy) + '</div></div>' +
       '<div class="fm-count">' + (Number(stock[m.id]) || 0) + '</div></div>';
   }).join('') + '</div>' +
-  '<div class="forge-intro" style="margin-top:10px;">Materials turn up on the map while you walk, drop from battles, and arrive as tribute from your liberated provinces.</div>';
+  '<div class="forge-intro" style="margin-top:10px;">Short of a material?' + infoDotHTML('infoNoteForgeMaterials', 'Where materials come from') + '</div>' +
+  infoNoteHTML('infoNoteForgeMaterials', 'Materials turn up on the map while you walk, drop from battles, and arrive as tribute from your liberated provinces.');
 }
 
 // ============================================================================
@@ -39274,7 +39537,8 @@ function renderBattleSelect() {
         '<span class="bench-status' + s.cls + '">' + escapeHtml(s.label) + '</span><span class="bench-go" aria-hidden="true">›</span></button>';
     }).join('');
     const nightRosterHint = isNightRightNow()
-      ? '<div class="battle-night-hint">🌙 Night has fallen — nocturnal birds fight with Night Wings: half again the ATK, SPD and magic, tougher, fresher, and critting out of the dark.</div>'
+      ? '<div class="battle-night-hint">🌙 Night Wings are up — nocturnal birds fight stronger after dark.' + infoDotHTML('infoNoteNightWings', 'What Night Wings grant') + '</div>' +
+        infoNoteHTML('infoNoteNightWings', 'Night has fallen — nocturnal birds fight with Night Wings: half again the ATK, SPD and magic, tougher, fresher, and critting out of the dark.')
       : '';
     grid.innerHTML = nightRosterHint +
       '<div class="roster-title">Ready to fly <span class="roster-count">' + pickable.length + '</span></div>' +
@@ -40621,7 +40885,11 @@ function renderQuests() {
   const container = $('questsList');
   container.innerHTML = '';
   renderPlayerQuests();
-  renderWalkingQuestSection();
+  // The walking board waits until the chain sends the player out for a real
+  // walk (or a walk is already under way / in the book) — see featureGateOpen.
+  const walkHost = $('walkingQuestsList');
+  if (featureGateOpen('quests_walks')) renderWalkingQuestSection();
+  else if (walkHost) walkHost.innerHTML = '';
   renderBirdExpeditions();
 
   function renderSection(title, quests, emptyNote) {
@@ -40655,9 +40923,10 @@ function renderQuests() {
     });
   }
 
-  renderSection('Daily Quests', DAILY_QUESTS, 'All daily quests done — fresh ones at midnight!');
-  renderSection('Weekly Quests', WEEKLY_QUESTS, 'Weeklies cleared. New challenges on Monday.');
-  renderSection('Achievements', ACHIEVEMENT_QUESTS);
+  // Each board joins the screen when the chain has taught enough to use it.
+  if (featureGateOpen('quests_daily')) renderSection('Daily Quests', DAILY_QUESTS, 'All daily quests done — fresh ones at midnight!');
+  if (featureGateOpen('quests_weekly')) renderSection('Weekly Quests', WEEKLY_QUESTS, 'Weeklies cleared. New challenges on Monday.');
+  if (featureGateOpen('quests_achievements')) renderSection('Achievements', ACHIEVEMENT_QUESTS);
 
   // Attach claim handlers — claim pops a celebration, then the card slides away.
   container.querySelectorAll('.quest-claim-btn').forEach(btn => {
@@ -40983,7 +41252,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'feeding-menu-banked-coins-v337-20260831';
+const BURBZ_BUILD = 'gentle-start-v338-20260831';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -42069,6 +42338,7 @@ function landOnSoundScanScreen() {
 
 function init() {
   loadState();
+  applyFeatureGates(); // fold the dock to what this save has met, before first paint
   armBurbzBackGuard(); // back never quits the game — see the ANDROID BACK section
   initGlobalMoneyHud();
   if (new URLSearchParams(window.location.search).get('demo') === '1') addDemoBirds();

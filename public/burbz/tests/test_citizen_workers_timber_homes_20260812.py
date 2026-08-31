@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -186,7 +186,9 @@ def test_finished_homes_still_move_families_in_and_tier_names_reach_the_notices(
 
 def test_the_copy_teaches_homes_first_and_villager_crews():
     html = HTML.read_text(encoding="utf-8")
-    assert "Timber Cabin</b> (just coins and timber) and residents will move in" in html
+    # gentle-start-v338 shortened the empty-desk line; it still leads with
+    # the Timber Cabin as the first build.
+    assert "raise a 🛖 <b>Timber Cabin</b> and folk will move in" in html
     claim = function_source(html, "claimCurrentVillage")
     # A loose liberation still teaches the survival build order. If the claim
     # completes a Town, the same toast must send the player to its Hall instead

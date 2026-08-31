@@ -19,7 +19,7 @@ HTML_PATH = BURBZ / "index.html"
 HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "feeding-menu-banked-coins-v337-20260831"
+RELEASE_PIN = "gentle-start-v338-20260831"
 OWN_RELEASE_PIN = "make-a-friend-v305-20260821"
 
 INDOOR_GO = {"academy", "birdex", "battle", "forge", "quests", "inventory"}

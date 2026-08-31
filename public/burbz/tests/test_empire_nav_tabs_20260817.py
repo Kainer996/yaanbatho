@@ -29,7 +29,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
+CURRENT_BUILD = "gentle-start-v338-20260831"
 
 
 def ledger(html: str) -> str:
@@ -99,7 +99,8 @@ def test_each_tier_still_says_something_under_its_squares():
     assert "A town earns its merge star at 120 folk" in body
     # Counties: the realm desk, or the next-rung explainer.
     assert "let countiesBody = '';" in body
-    assert "🕊️ Your realm starts here." in body
+    # gentle-start-v338 compressed the one-village counties hint.
+    assert "🕊️ Free villages, grow them to their ⭐" in body
     # Villages: the star road, or where every village went.
     assert "const villagesExtra = villages.length" in body
     assert "Every free village has merged into a Town" in body
