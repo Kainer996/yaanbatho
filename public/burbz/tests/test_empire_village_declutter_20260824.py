@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "screen-swipe-v336-20260831"
+CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 

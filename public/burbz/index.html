@@ -357,7 +357,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .feed-food-list { display:flex; flex-direction:column; gap:7px; margin-bottom:12px; max-height:52vh; overflow-y:auto; -webkit-overflow-scrolling:touch; }
 .feed-food { display:flex; align-items:center; gap:10px; width:100%; text-align:left; min-height:56px; padding:9px 11px; border-radius:13px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.24); color:var(--text); font:inherit; transition:border-color .15s, background .15s, transform .12s; }
 .feed-food:active { transform:scale(.985); }
-.feed-food.known-pref { border-color:rgba(214,168,79,.55); background:rgba(214,168,79,.12); }
 .feed-food[disabled] { opacity:.55; }
 .feed-food-emoji { flex:0 0 auto; font-size:24px; line-height:1; }
 .feed-food-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -372,8 +371,13 @@ svg.academy-room-bg { display:block; filter:none; }
 .feed-sheet-name { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); }
 .feed-sheet-species { font-size:11px; color:var(--text3); }
 .feed-sheet-wild { font-size:11px; color:var(--text2); margin-top:3px; line-height:1.4; }
-.feed-sheet-eats { font-size:11.5px; color:var(--text2); margin-bottom:5px; line-height:1.45; }
-.feed-sheet-hint { font-size:11px; color:var(--text3); margin-bottom:8px; line-height:1.45; }
+/* The bird's menu: two quiet columns naming what it eats, icon and name only. */
+.feed-sheet-menu { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+.feed-menu-col { padding:8px 9px; border-radius:11px; border:1px solid rgba(255,255,255,.10); background:rgba(0,0,0,.20); min-width:0; }
+.feed-menu-title { font-size:9.5px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; color:var(--accent2); margin-bottom:5px; }
+.feed-menu-food { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:var(--text2); padding:2px 0; min-width:0; }
+.feed-menu-food-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.feed-menu-none { font-size:11px; color:var(--text3); }
 /* The bird itself crosses to the food it was offered. */
 .feed-flier { position:fixed; z-index:960; pointer-events:none; object-fit:contain; text-align:center; transition:transform .5s cubic-bezier(.3,.9,.4,1); filter:drop-shadow(0 5px 10px rgba(0,0,0,.6)); }
 .feed-flier.facing-left { transform-origin:center; }
@@ -385,7 +389,6 @@ svg.academy-room-bg { display:block; filter:none; }
 .feed-note-title { font-family:'Russo One',sans-serif; font-size:15px; color:var(--accent2); margin-bottom:6px; }
 .feed-note-body { font-size:12.5px; line-height:1.5; color:var(--text2); }
 .feed-note-ok { width:100%; min-height:40px; margin-top:12px; border-radius:12px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; letter-spacing:.06em; }
-.feed-food-tag { flex:0 0 auto; margin-top:3px; align-self:flex-start; padding:2px 7px; border-radius:999px; font-size:9.5px; font-weight:900; letter-spacing:.04em; text-transform:uppercase; border:1px solid rgba(214,168,79,.35); background:rgba(214,168,79,.12); color:var(--accent2); }
 .feed-receipt { display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:12px; border:1px solid rgba(214,168,79,.28); background:rgba(214,168,79,.09); margin-bottom:10px; }
 .feed-receipt-icon { font-size:20px; }
 .feed-receipt-main { min-width:0; display:flex; flex-direction:column; gap:2px; }
@@ -4552,9 +4555,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/battle.webp" alt="" draggable="false"></div>
       <div class="nav-label">Battle</div>
     </button>
-    <button class="nav-item" data-game-route data-screen="birdex" aria-label="Burbz codex">
+    <button class="nav-item" data-game-route data-screen="birdex" aria-label="Birds codex">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/birdex.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Burbz</div>
+      <div class="nav-label">Birds</div>
     </button>
   </div>
   </div>
@@ -13971,13 +13974,14 @@ function startBirdExpedition(birdId, templateId, loadout) {
   }, Math.max(600, msLeft + 500));
 }
 
-function claimBirdExpedition(expeditionId) {
+function claimBirdExpedition(expeditionId, opts) {
+  const auto = !!(opts && opts.auto);
   const receiptKey = 'expedition:' + expeditionId;
   if (questClaimReceipt(receiptKey)) return;
   const q = ensureBirdExpeditions().find(x => x.id === expeditionId);
   if (!q || q.status === 'claimed') return;
   const advanced = window.BurbzAcademyCore.advanceBirdExpedition(q, Date.now());
-  if (advanced.status !== 'complete') { showToast('Still questing — check back soon.'); return; }
+  if (advanced.status !== 'complete') { if (!auto) showToast('Still questing — check back soon.'); return; }
   const snapshot = snapshotGameState();
   const previousPlayerLevel = Number(gameState.player.level) || 1;
   let coins = 0;
@@ -14031,7 +14035,9 @@ function claimBirdExpedition(expeditionId) {
   } catch (error) {
     restoreGameStateSnapshot(snapshot);
     console.warn('Expedition claim rolled back', error);
-    showToast('Expedition rewards could not be saved. Please try claiming again.');
+    // The auto-banker sweeps again on the next heartbeat, so a failed save
+    // needs no instruction — it just tries again shortly.
+    showToast(auto ? 'A returning bird’s rewards could not be saved — trying again shortly.' : 'Expedition rewards could not be saved. Please try claiming again.');
     return;
   }
   queueQuestClaimCloudSync();
@@ -14042,8 +14048,24 @@ function claimBirdExpedition(expeditionId) {
   if (foundNewClue && typeof logDiary === 'function') logDiary('clue', { title: advanced.story.title });
   announcePlayerLevelUps(previousPlayerLevel);
   if (birdLevelsGained > 0) { SFX.levelUp(); showToast('A companion levelled up on the expedition!'); }
-  closeQuestOverlay();
-  playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  if (auto) {
+    // A landing bird banks its own rewards. A player standing at the quest
+    // board sees the full landing celebration; anywhere else the game stays
+    // out of the way — no overlay closed, no screen takeover — just one warm
+    // line saying what came home.
+    if (currentScreen === 'quests') {
+      playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+    } else {
+      const bankedBits = [];
+      if (coins > 0) bankedBits.push('+' + coins + ' 🪙');
+      if (branches > 0) bankedBits.push('+' + branches + ' 🪵');
+      if (questXp > 0) bankedBits.push('+' + questXp + ' XP');
+      showToast('🏡 ' + q.birdName + ' is home: ' + (bankedBits.join(' · ') || 'the finds are put away') + ' — banked.');
+    }
+  } else {
+    closeQuestOverlay();
+    playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+  }
   // Say it plainly when a load was left in the field: it is the size rule doing
   // its job, not a bug. Since v335 "send a bigger bird" is no longer sound
   // advice on its own — a swan outweighs a raven and hauls less — so the toast
@@ -14055,8 +14077,10 @@ function claimBirdExpedition(expeditionId) {
   }
   // Merlin's tutorial errand is the one claim followed by a scripted chapter:
   // a quiz modal here would open 650ms before the dim and end up buried
-  // under it with no way to close it.
-  if (q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);
+  // under it with no way to close it. An auto-banked landing never quizzes
+  // either — a pop question mid-anything would be the screen takeover the
+  // quiet path exists to avoid.
+  if (!auto && q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);
   renderPetCompanion(); renderBirdExpeditions(); renderInventory(); updateHeader();
   // Guided flow: Merlin lands from his first flight with a crafting tease,
   // then points the player at the Academy.
@@ -14064,6 +14088,34 @@ function claimBirdExpedition(expeditionId) {
     setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'errand', resume:false }); }, 1600);
   }
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
+}
+
+// ---- The banker: a returned bird banks its own rewards ---------------------
+// Coins used to wait on a CLAIM tap, and a board that only shows ten rows
+// could even hide the button, so a returned bird's pay could sit unbanked for
+// good. Now every landed expedition banks itself on the next heartbeat — the
+// 30s badge tick, any save, any screen switch, or the moment a short errand's
+// own timer fires. Merlin's scripted first flight keeps its hand-claimed
+// moment: its claim opens a tutorial chapter no sweep should trigger.
+let bankingReturnedExpeditions = false;
+function bankReturnedExpeditions(now) {
+  if (bankingReturnedExpeditions || !gameState) return 0;
+  bankingReturnedExpeditions = true;
+  let banked = 0;
+  try {
+    const t = Number(now) || Date.now();
+    ensureBirdExpeditions()
+      .filter(q => q.templateId !== 'merlin_first_flight' &&
+        !['claimed', 'cancelled', 'failed'].includes(String(q.status || '').toLowerCase()) &&
+        Number(q.endMs) <= t)
+      .map(q => q.id)
+      .forEach(id => { claimBirdExpedition(id, { auto:true }); banked += 1; });
+  } catch (e) {
+    console.warn('Expedition auto-bank failed', e);
+  } finally {
+    bankingReturnedExpeditions = false;
+  }
+  return banked;
 }
 
 // ---- Claim celebration: a quick dopamine burst of coins and sparkles -------
@@ -15597,18 +15649,59 @@ function feedFoodOptions(entry) {
   return kitchenRosterFoodOptions(entry);
 }
 
-// One food, one row, one meal. A main meal glows once the diet is known; a
-// side snack says so on its face, so the half reward is never a surprise.
-function feedFoodRowHTML(entry, option, reveal) {
-  const pref = reveal && option.main;
-  const tag = reveal && option.sideSnack ? '<span class="feed-food-tag">🥄 Side snack · ½</span>' : '';
-  return '<button class="feed-food' + (pref ? ' known-pref' : '') + (option.sideSnack ? ' side-snack' : '') + '" ' +
+// One food, one row, one meal. No row is highlighted or tagged: the menu at
+// the top of the sheet names what this bird eats, and matching the icons in
+// the list against it is the player's own job.
+function feedFoodRowHTML(entry, option) {
+  return '<button class="feed-food' + (option.sideSnack ? ' side-snack' : '') + '" ' +
     'data-feed-food="' + escapeHtml(option.kind + ':' + option.id) + '" data-count="' + option.count + '" data-feed-verdict="' + escapeHtml(option.verdict || '') + '" ' +
     'onclick="burbzFeedTap(\'' + escapeHtml(entry.key) + '\',\'' + option.kind + '\',\'' + escapeHtml(option.id) + '\',this)">' +
     '<span class="feed-food-emoji">' + option.emoji + '</span>' +
     '<span class="feed-food-main"><span class="feed-food-label">' + escapeHtml(option.label) + '</span>' +
-    '<span class="feed-food-desc">' + escapeHtml(option.desc || '') + '</span>' + tag + '</span>' +
+    '<span class="feed-food-desc">' + escapeHtml(option.desc || '') + '</span></span>' +
     '<span class="feed-food-count">×' + option.count + '</span></button>';
+}
+
+// The menu at the head of the feed sheet: two columns, Primary meals and
+// Secondary meals, each food shown as its icon and its name. Every food in
+// the game is scored against this bird's real diet — in stock or not — with
+// the same scorer that judges a serving, so the menu can never disagree with
+// the list below it. Larder-only prey (small-bird rations, shellfish, nectar)
+// gets one stand-in per diet family so a falcon's menu is never blank.
+function feedDietMenuHTML(entry) {
+  const core = kitchenDietCore();
+  if (!core || typeof core.scoreFoodCompatibility !== 'function') return '';
+  const primary = [];
+  const secondary = [];
+  const seenFamilies = { primary: {}, secondary: {} };
+  Object.keys(FOODS).forEach(key => {
+    const spec = typeof core.normalizeFeedingSpec === 'function' ? core.normalizeFeedingSpec({ pantryKey:key, source:'pantry' }) : { ingredientId:key, prep:'fresh' };
+    const compat = core.scoreFoodCompatibility(entry.target, spec);
+    const verdict = feedOptionVerdict(compat);
+    if (!verdict.accepted) return;
+    const bucket = verdict.main ? 'primary' : 'secondary';
+    (verdict.main ? primary : secondary).push({ emoji: FOODS[key].emoji, label: FOODS[key].label });
+    if (compat.family) seenFamilies[bucket][compat.family] = true;
+  });
+  Object.keys(core.INGREDIENTS || {}).forEach(id => {
+    const ing = core.INGREDIENTS[id];
+    if (!ing || ing.family === 'grit') return;
+    const compat = core.scoreFoodCompatibility(entry.target, { ingredientId:id, prep: kitchenRosterWantedPrep(entry.target, ing) });
+    const verdict = feedOptionVerdict(compat);
+    if (!verdict.accepted) return;
+    const bucket = verdict.main ? 'primary' : 'secondary';
+    if (compat.family && seenFamilies[bucket][compat.family]) return;
+    if (compat.family) seenFamilies[bucket][compat.family] = true;
+    const uiIng = kitchenIngredientById(id);
+    (verdict.main ? primary : secondary).push({ emoji: (uiIng && uiIng.icon) || '🍽️', label: ing.label });
+  });
+  const foodLine = food => '<div class="feed-menu-food"><span>' + food.emoji + '</span><span class="feed-menu-food-name">' + escapeHtml(food.label) + '</span></div>';
+  const column = (kind, title, foods) => '<div class="feed-menu-col" data-feed-menu-col="' + kind + '">' +
+    '<div class="feed-menu-title">' + title + '</div>' +
+    (foods.length ? foods.map(foodLine).join('') : '<div class="feed-menu-none">—</div>') + '</div>';
+  return '<div class="feed-sheet-menu" data-feed-menu="1">' +
+    column('primary', 'Primary meals', primary) +
+    column('secondary', 'Secondary meals', secondary) + '</div>';
 }
 
 // Bird art tagged as the flier for this feed surface (img or emoji glyph).
@@ -15657,11 +15750,7 @@ function renderFeedSheet() {
   if (!entry) { closeFeedSheet(); return; }
   const options = feedFoodOptions(entry);
   const status = entry.wild ? null : kitchenRosterHungerStatus(entry);
-  const eats = kitchenRosterEatsLabels(entry);
-  // Diet already discovered? Then known-good picks glow, exactly as they do on
-  // the Academy tray. Otherwise nothing is revealed — choosing is the lesson.
-  const reveal = entry.merlin || entry.wild || (entry.bird && entry.bird.academy && entry.bird.academy.dietKnown);
-  const foodRows = options.map(option => feedFoodRowHTML(entry, option, reveal)).join('');
+  const foodRows = options.map(option => feedFoodRowHTML(entry, option)).join('');
   const empty = '<div class="inventory-empty">Nothing edible in the stores. Send a bird out on a food quest — every food in the game has one — or pick some up on a walk.</div>';
 
   const hungerLine = status
@@ -15673,8 +15762,7 @@ function renderFeedSheet() {
     '<div class="feed-sheet-head">' + feedArtHTML(entry.artBird, 'feed-sheet-art') +
       '<div class="feed-sheet-main"><div class="feed-sheet-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
       '<div class="feed-sheet-species">' + escapeHtml(entry.speciesLine || '') + '</div>' + hungerLine + '</div></div>' +
-    '<div class="feed-sheet-eats">🍴 Eats: ' + escapeHtml(eats.join(', ') || 'diet still unknown — offer a food and learn') + '</div>' + chefNotice +
-    '<div class="feed-sheet-hint">Tap one food to serve it. A primary food fills the bar; a secondary food adds 50 percentage points of Fullness, so two side snacks fill an empty bar, and gives half XP. Feed at any Fullness — every accepted serving uses one complete ingredient.</div>' +
+    feedDietMenuHTML(entry) + chefNotice +
     '<div class="feed-food-list">' + (foodRows || empty) + '</div>' + feedReceiptHTML() + '</div>';
   el.classList.add('open');
 }
@@ -21474,28 +21562,39 @@ function empireBuildingsComplete(nowValue) {
   return done + notices.filter(notice => notice && notice.kind === 'empire-building').length;
 }
 
-// Stores dot: kit sitting in the armoury that a bird has a free slot for.
-// Counted once per spare piece, not once per bird, so one spare talon is one
-// dot however large the flock grows.
-function storesGearWaitingToEquip() {
-  const L = lootCore();
-  const flock = Array.isArray(gameState && gameState.flock) ? gameState.flock : [];
-  if (!L || !flock.length) return 0;
-  const equipment = (gameState.inventory && gameState.inventory.equipment) || {};
-  const emptySlots = {};
-  flock.forEach(bird => {
-    const loadout = (bird && bird.id && equipment[bird.id]) || {};
-    L.GEAR_SLOTS.forEach(slot => { if (!loadout[slot]) emptySlots[slot] = (emptySlots[slot] || 0) + 1; });
+// Empire dot, third part: crews standing idle while the player could pay for
+// a build. It only speaks when NOTHING is rising anywhere in the realm — a
+// project already under way means the empire is working and needs no nudge —
+// and counts the villages where an affordable, unlocked build is waiting.
+function empireIdleAffordableBuilds(nowValue) {
+  const now = Number(nowValue) || Date.now();
+  const villages = empireVillages();
+  if (!villages.length) return 0;
+  // Anything under construction anywhere — a village yard or a hall order —
+  // and the dot stays dark: something IS being built.
+  if (villages.some(rec => villageConstructions(rec).length > 0)) return 0;
+  const hallBusy = (empireSettlementsInfo().towns || []).some(seat => {
+    const state = ensureTownSeatState(seat);
+    return state && state.hallConstruction && now < Number(state.hallConstruction.endMs);
   });
-  const spare = {};
-  const bag = (gameState.inventory && gameState.inventory.gear) || {};
-  Object.keys(bag).forEach(id => {
-    const qty = Math.max(0, Math.floor(Number(bag[id]) || 0));
-    const item = L.gearById(id);
-    if (!item || qty <= 0) return;
-    spare[item.slot] = (spare[item.slot] || 0) + qty;
-  });
-  return Object.keys(spare).reduce((sum, slot) => sum + Math.min(spare[slot], emptySlots[slot] || 0), 0);
+  if (hallBusy) return 0;
+  const wallet = Number(gameState.player && gameState.player.coins) || 0;
+  const timber = playerBranches();
+  const stone = playerStone();
+  const trainerLevel = Number(gameState.player && gameState.player.level) || 1;
+  return villages.filter(rec => {
+    if (villageBuildSlotsFree(rec) <= 0) return false;
+    return EMPIRE_BUILDINGS.some(b => {
+      const level = villageBuildingLevel(rec, b.id);
+      // Same rules as the desk: town-tier works wait for the merge unless
+      // grandfathered, a locked first build waits for the trainer level.
+      if (!settlementAllowsBuilding(rec, b) && level === 0) return false;
+      if (level >= b.maxLevel) return false;
+      if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return false;
+      const cost = villageBuildingCost(b, level, rec.seed);
+      return wallet >= cost.coins && timber >= cost.branches && stone >= cost.stone;
+    });
+  }).length;
 }
 
 function normalizeActionBadgeState(now = Date.now()) {
@@ -21544,20 +21643,18 @@ function normalizeActionBadgeState(now = Date.now()) {
   try { forgeCraftableCount = forgeCraftableNow(); } catch (e) {}
   let buildingsCompleteCount = 0;
   try { buildingsCompleteCount = empireBuildingsComplete(now); } catch (e) {}
+  // Idle crews with money in the chest: the Empire dot also lights when the
+  // player can afford a build and nothing anywhere is being built.
+  let idleBuildsCount = 0;
+  try { idleBuildsCount = empireIdleAffordableBuilds(now); } catch (e) {}
   let kitchenCount = 0;
   try { kitchenCount = kitchenBirdsNeedingFood(now); } catch (e) {}
   let hospitalCount = 0;
   try { hospitalCount = hospitalPatientsWaiting(); } catch (e) {}
-  let storesCount = 0;
-  try { storesCount = storesGearWaitingToEquip(); } catch (e) {}
   // The Training dock button opens a pop-up rather than a screen, so it rides
   // the badge walker by its destination name.
   let trainingCount = 0;
   try { trainingCount = trainingHubSessions().filter(session => session.status === 'complete').length; } catch (e) {}
-  // The birds button lights up while any companion has nothing to do. It is
-  // the one badge that means "you have spare hands", not "something finished".
-  let idleBirdCount = 0;
-  try { idleBirdCount = freeBirdsCount(); } catch (e) {}
   return {
     questDefinitions: [...PLAYER_QUESTS, ...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS],
     quests: gameState && gameState.quests,
@@ -21568,13 +21665,14 @@ function normalizeActionBadgeState(now = Date.now()) {
     careNeedsCount,
     forge: forgeReadyCount,
     forgeCraftable: forgeCraftableCount,
-    village: empireCollectCount,
+    // The Stores and the Birds book carry no dot any more: neither holds
+    // anything WAITING, and a dot that means "you could browse here" teaches
+    // players to ignore dots. Their zero counts still clear old badges.
+    village: empireCollectCount + idleBuildsCount,
     buildingsComplete: buildingsCompleteCount,
     kitchen: kitchenCount,
     hospital: hospitalCount,
-    training: trainingCount,
-    inventory: storesCount,
-    birdex: idleBirdCount
+    training: trainingCount
   };
 }
 
@@ -21588,9 +21686,7 @@ const ACTION_BADGE_WORDS = {
   village: ['thing waiting in your empire', 'things waiting in your empire'],
   kitchen: ['bird to feed', 'birds to feed'],
   hospital: ['bird to treat', 'birds to treat'],
-  training: ['drill finished', 'drills finished'],
-  inventory: ['piece of kit to equip', 'pieces of kit to equip'],
-  birdex: ['bird with nothing to do', 'birds with nothing to do']
+  training: ['drill finished', 'drills finished']
 };
 function actionBadgeText(count, screen) {
   const words = ACTION_BADGE_WORDS[screen];
@@ -21600,7 +21696,9 @@ function actionBadgeText(count, screen) {
 
 function updateActionBadges() {
   // The badge heartbeat runs on every save, screen switch and 30 s tick —
-  // the corner cards ride it so a claimed quest's card leaves on its own.
+  // the corner cards ride it so a claimed quest's card leaves on its own,
+  // and returned birds bank their rewards on the same beat.
+  try { bankReturnedExpeditions(); } catch (e) {}
   try { renderCompletionNotices(); } catch (e) {}
   const core = window.BurbzActionBadges;
   if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
@@ -40885,7 +40983,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'screen-swipe-v336-20260831';
+const BURBZ_BUILD = 'feeding-menu-banked-coins-v337-20260831';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

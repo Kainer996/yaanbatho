@@ -56,9 +56,12 @@ def test_feed_sheet_explains_stackable_side_snacks_and_full_ration_spend():
     html = INDEX.read_text(encoding="utf-8")
     sheet = function_source(html, "renderFeedSheet", "feedFlyBirdToFood")
     explainer = function_source(html, "feedSideSnackExplainer", "feedEntryForKey")
-    assert "adds 50 percentage points of Fullness" in sheet
-    assert "two side snacks fill an empty bar" in sheet
-    assert "every accepted serving uses one complete ingredient" in sheet
+    # feeding-menu-banked-coins-v337: the sheet no longer lectures — the menu
+    # columns say what the bird eats, and the halving is taught at the moment
+    # it happens by the side-snack explainer popup, which keeps its words.
+    assert "adds 50 percentage points of Fullness" not in sheet
+    assert "two side snacks fill an empty bar" not in sheet
+    assert "every accepted serving uses one complete ingredient" not in sheet
     assert "adds 50 percentage points to the Fullness bar" in explainer
     assert "fills up to halfway" not in sheet
 

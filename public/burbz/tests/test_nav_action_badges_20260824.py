@@ -56,7 +56,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 # while the head build moves on — a core pin never tracks CURRENT_BUILD.
 OWN_RELEASE_PIN = "nav-action-badges-v312-20260824"
 PREVIOUS_RELEASE_PIN = "village-work-huts-v311-20260824"
-CURRENT_BUILD = "screen-swipe-v336-20260831"
+CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
 
 
 def run_node(source: str):
@@ -489,39 +489,16 @@ process.stdout.write(JSON.stringify(out));
     assert result["missingHpReadsAsHale"] == 0
 
 
-def test_stores_counts_spare_kit_once_not_once_per_bird():
-    src = function_source(html_text(), "storesGearWaitingToEquip")
-    result = run_node(
-        f"""
-const L = require({json.dumps(str(LOOT_CORE))});
-const lootCore = () => L;
-let gameState;
-{src}
-const state = (flock, gear, equipment) => ({{
-  flock, inventory:{{ gear, equipment: equipment || {{}} }}
-}});
-const out = {{}};
-gameState = state([{{ id:'a' }}, {{ id:'b' }}, {{ id:'c' }}], {{ thorn_talons: 1 }});
-out.oneSpareIsOneDot = storesGearWaitingToEquip();
-gameState = state([{{ id:'a' }}, {{ id:'b' }}], {{ thorn_talons: 2 }});
-out.twoSparesTwoDots = storesGearWaitingToEquip();
-gameState = state([{{ id:'a' }}], {{ thorn_talons: 5 }});
-out.cappedByFreeSlots = storesGearWaitingToEquip();
-gameState = state([{{ id:'a' }}], {{ thorn_talons: 1 }}, {{ a:{{ weapon:'willow_wand' }} }});
-out.filledSlotStaysQuiet = storesGearWaitingToEquip();
-gameState = state([], {{ thorn_talons: 3 }});
-out.noFlockNoDot = storesGearWaitingToEquip();
-gameState = state([{{ id:'a' }}], {{}});
-out.emptyArmouryNoDot = storesGearWaitingToEquip();
-process.stdout.write(JSON.stringify(out));
-"""
-    )
-    assert result["oneSpareIsOneDot"] == 1
-    assert result["twoSparesTwoDots"] == 2
-    assert result["cappedByFreeSlots"] == 1
-    assert result["filledSlotStaysQuiet"] == 0
-    assert result["noFlockNoDot"] == 0
-    assert result["emptyArmouryNoDot"] == 0
+def test_the_stores_carry_no_badge_any_more():
+    """feeding-menu-banked-coins-v337 (Yaan, 2026-08-31): the Stores dot said
+    'spare kit could be equipped', which is browsing, not something waiting —
+    so the Stores button carries no count at all."""
+    html = html_text()
+    assert "storesGearWaitingToEquip" not in html
+    state = function_source(html, "normalizeActionBadgeState")
+    assert "storesCount" not in state
+    assert "inventory: storesCount" not in state
+    assert "inventory: ['piece of kit to equip', 'pieces of kit to equip']" not in html
 
 
 # ---------------------------------------------------------------------------
@@ -533,9 +510,9 @@ def test_every_new_count_is_wrapped_so_one_failure_cannot_blank_the_dock():
     for var, call, key in (
         ("forgeCraftableCount", "forgeCraftableNow()", "forgeCraftable: forgeCraftableCount"),
         ("buildingsCompleteCount", "empireBuildingsComplete(now)", "buildingsComplete: buildingsCompleteCount"),
+        ("idleBuildsCount", "empireIdleAffordableBuilds(now)", "village: empireCollectCount + idleBuildsCount"),
         ("kitchenCount", "kitchenBirdsNeedingFood(now)", "kitchen: kitchenCount"),
         ("hospitalCount", "hospitalPatientsWaiting()", "hospital: hospitalCount"),
-        ("storesCount", "storesGearWaitingToEquip()", "inventory: storesCount"),
         ("trainingCount", "trainingHubSessions()", "training: trainingCount"),
     ):
         assert f"let {var} = 0;" in src           # a broken helper contributes nothing

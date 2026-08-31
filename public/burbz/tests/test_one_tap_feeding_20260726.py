@@ -228,9 +228,12 @@ def test_birdex_and_companion_cards_can_feed_the_bird():
 def test_the_feed_sheet_serves_one_food_per_tap_and_flies_the_bird_to_it():
     html = HTML.read_text(encoding="utf-8")
     sheet = function_source(html, "renderFeedSheet")
-    assert "feedFoodRowHTML(entry, option, reveal)" in sheet
+    # feeding-menu-banked-coins-v337: the hint paragraph is gone — the menu
+    # columns (feedDietMenuHTML) carry what the bird eats instead.
+    assert "feedFoodRowHTML(entry, option)" in sheet
     assert "burbzFeedTap(" in function_source(html, "feedFoodRowHTML")
-    assert "Tap one food to serve it" in sheet
+    assert "Tap one food to serve it" not in sheet
+    assert "feedDietMenuHTML(entry)" in sheet
     fly = function_source(html, "feedFlyBirdToFood")
     assert "getBoundingClientRect" in fly
     assert "prefers-reduced-motion" in fly

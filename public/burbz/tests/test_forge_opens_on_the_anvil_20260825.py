@@ -28,7 +28,7 @@ OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
 PREVIOUS_RELEASE_PIN = "one-tap-appointments-v320-20260824"
 # The head build has moved past this release; its own marker stays in the
 # lineage for ever, and the newest one goes on the end.
-CURRENT_BUILD = "screen-swipe-v336-20260831"
+CURRENT_BUILD = "feeding-menu-banked-coins-v337-20260831"
 
 
 def function_source(name: str) -> str:

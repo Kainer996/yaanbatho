@@ -76,8 +76,11 @@ def test_every_companion_stays_visible_and_feed_controls_stay_actionable_when_fu
     assert "disabled>🍽️ Full" not in html
     assert "birdIsFull(bird) ? 'disabled'" not in html
     assert "is completely full — nothing to feed right now" not in html
-    assert "Feed at any Fullness" in html
-    assert "every accepted serving uses one complete ingredient" in html
+    # feeding-menu-banked-coins-v337: the sheet's explainer paragraph is gone
+    # (the menu columns replaced it). Feeding at any Fullness stays the RULE —
+    # pinned behaviourally above — it just is not lectured about any more.
+    assert "Feed at any Fullness" not in html
+    assert "every accepted serving uses one complete ingredient" not in html
 
 
 def test_v177_application_and_service_worker_markers_match():
