@@ -267,7 +267,7 @@ def test_the_flow_still_covers_every_beat_the_design_asks_for():
         assert term in tour, term
     explore = chapter_copy("explore")
     assert "walking quests" in explore
-    # burbz-release-polish-v342-20260901: the finale hands off to the player
+    # burbz-empire-three-pages-v343-20260901: the finale hands off to the player
     # chain (open the Empire map, free the cradle village with Merlin) instead
     # of deferring liberation and steering the player to Scan first.
     assert "empire map" in explore and "free the village" in explore

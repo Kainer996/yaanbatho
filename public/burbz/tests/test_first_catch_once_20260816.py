@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "release-polish-v342-20260901"
+CURRENT_BUILD = "empire-three-pages-v343-20260901"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

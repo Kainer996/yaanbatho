@@ -29,7 +29,8 @@ OWN = "release-polish-v342-20260901"
 # ---- release plumbing -------------------------------------------------------
 
 def test_build_id_and_cache_segment():
-    assert f"const BURBZ_BUILD = '{OWN}';" in HTML
+    # v343 shipped after us: the build id moved on, the cache lineage keeps us.
+    assert "const BURBZ_BUILD = '" in HTML
     # Membership, never the tail — the next release appends after us.
     assert OWN in SW
 

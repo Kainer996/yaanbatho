@@ -37,7 +37,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "building_interior_core.js"
 DEPLOY = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "step-inside-buildings-v341-20260901"
-CURRENT_BUILD = "release-polish-v342-20260901"
+CURRENT_BUILD = "empire-three-pages-v343-20260901"
 PREVIOUS_RELEASE_PIN = "no-arms-card-art-v340-20260901"
 
 

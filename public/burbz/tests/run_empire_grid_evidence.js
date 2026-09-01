@@ -162,13 +162,14 @@ const TOWN_SEEDS = [707, 808, 909];
         : el.querySelector('span.empire-tile-bird') ? 'glyph' : 'none',
       box: (r => ({ w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top) }))(el.getBoundingClientRect())
     }));
-    const chest = panel.querySelector('.empire-tribute-btn');
+    // v343: the chest stands above the page tabs, the towns on their own page.
+    const chest = document.querySelector('#empireCollectBar .empire-tribute-btn');
     const grid = villageTier.querySelector('.empire-grid');
     return {
       tiles,
       tierLabels: [...panel.querySelectorAll('.empire-tier-label')].map(e => e.textContent),
       townTier: (() => {
-        const section = panel.querySelector('[data-empire-tier="tier-towns"]');
+        const section = document.querySelector('[data-empire-tier="tier-towns"]');
         if (!section) return null;
         const tile = section.querySelector('.empire-tile');
         return tile ? {

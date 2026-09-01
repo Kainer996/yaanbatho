@@ -29,7 +29,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
 PREVIOUS_RELEASE_PIN = "mobile-fresh-update-v274-20260816"
-CURRENT_BUILD = "release-polish-v342-20260901"
+CURRENT_BUILD = "empire-three-pages-v343-20260901"
 
 
 def ledger(html: str) -> str:
@@ -129,7 +129,7 @@ def test_the_old_realm_dropdown_is_gone_for_good():
 def test_copy_now_points_at_the_counties_tab_not_the_royal_ledger():
     html = HTML.read_text(encoding="utf-8")
     assert "Merge three starred towns within 150 km" in html  # v290: the Counties tab teaches the merge road
-    assert "open trade routes from the Counties tab once a second county stands" in html
+    assert "open trade routes from the Empire page once a second county stands" in html  # v343: the Counties tab became the Empire page
     assert "tap it in the Royal Ledger" not in html
 
 
