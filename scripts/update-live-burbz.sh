@@ -50,6 +50,7 @@ FILES=(
   "town_strategy_core.js"
   "empire_grid_core.js"
   "village_manager_core.js"
+  "building_interior_core.js"
   "daylight_core.js"
   "academy_treehouse_core.js"
   "academy_alive_core.js"

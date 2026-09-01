@@ -31,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "no-arms-card-art-v340-20260901"
+CURRENT_BUILD = "step-inside-buildings-v341-20260901"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
@@ -218,7 +218,9 @@ console.log(JSON.stringify({ steps, timberAfterTwo, stoneAfterTwo }));
 
 def test_the_shortfall_line_names_the_source_of_what_is_missing():
     """The bug behind Yaan's screenshot: a timber shortfall read as a stone wall."""
-    panel = function_source(HTML.read_text(encoding="utf-8"), "renderVillageManagePanel")
+    # step-inside-buildings-v341: the shortfall line stands inside the
+    # building with the button it explains.
+    panel = function_source(HTML.read_text(encoding="utf-8"), "villageBuildingSheetHTML")
     assert "Quarry Stone arrives every 8h" not in panel
     # v310: the village digs its own stone now, so the hint names the hut.
     assert "your miners are digging it" in panel

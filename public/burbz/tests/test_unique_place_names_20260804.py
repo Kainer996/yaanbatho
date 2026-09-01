@@ -231,8 +231,11 @@ def test_mobile_ui_explicitly_names_village_town_county_and_player_title():
     assert "'COUNTIES'" in html and "'TOWNS'" in html and "'VILLAGES'" in html
     assert "YOUR TITLE" in html
     assert "· VILLAGE" in html
-    assert "Village centre of " in html
-    assert "Village district of " in html
+    # step-inside-buildings-v341: the desk's dead settlement line went; the
+    # live sub-copy still names the village's place in something bigger.
+    assert "This village is the " in html
+    assert "'centre of '" in html
+    assert "'district of '" in html
 
 
 

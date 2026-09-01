@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "no-arms-card-art-v340-20260901"
+RELEASE_PIN = "step-inside-buildings-v341-20260901"
 
 
 def function_source(name: str) -> str:
@@ -166,8 +166,11 @@ def test_the_yard_shows_its_crews_and_names_the_way_to_a_second():
     # v317 removed the yard heading that printed the crew tally and named the
     # Project Manager. Both slot helpers above, and the gating below, still
     # prove a second crew is real.
-    # A free slot keeps the other build buttons live.
-    assert "const busyElsewhere = !inProgress && slotsFree <= 0;" in panel
+    # A free slot keeps the build button live — the button stands inside the
+    # building since step-inside-buildings-v341.
+    interior = HTML[HTML.index("function villageBuildingSheetHTML("):]
+    interior = interior[:interior.index("\nfunction ", 40)]
+    assert "const busyElsewhere = !inProgress && slotsFree <= 0;" in interior
     # One progress card per crew at work.
     assert "const constructionHtml = constructions.map(con => {" in panel
 

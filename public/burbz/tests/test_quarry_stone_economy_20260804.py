@@ -238,10 +238,13 @@ def test_stone_is_visible_and_actionable_across_hud_stores_yard_and_offline_cach
     assert "playerStone()" in treasury and "'Stone'" in treasury
     manage = function_source(html, "renderVillageManagePanel")
     assert "const stone = playerStone()" in manage
-    assert "stone < cost.stone" in manage
-    # gentle-start-v338: the desk bill is unbreakable chips now, and a
-    # stone cost renders as its own 🪨 chip only when it is above zero.
-    assert "buildCostChipsHTML(cost, villageBuildDurationMs" in manage
+    # step-inside-buildings-v341: the build button and its stone maths stand
+    # inside the building now, same gates, same chips.
+    interior = function_source(html, "villageBuildingSheetHTML")
+    assert "stone < cost.stone" in interior
+    # gentle-start-v338: the bill is unbreakable chips, and a stone cost
+    # renders as its own 🪨 chip only when it is above zero.
+    assert "buildCostChipsHTML(cost, villageBuildDurationMs" in interior
     chips = function_source(html, "buildCostChipsHTML")
     assert "Number(cost.stone) > 0" in chips and "🪨" in chips
     # empire-declutter-v317 removed the guide and the Construction Yard's purse

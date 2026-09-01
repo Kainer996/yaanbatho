@@ -362,7 +362,8 @@ def test_town_screen_exposes_strategy_economy_not_just_a_renamed_village():
         "core.TOWN_POLICIES",
         'data-action="town-collect"',
         'data-action="town-hall-upgrade"',
-        'data-action="town-network"',
+        # step-inside-buildings-v341: yard tiles open building interiors.
+        'data-action="town-enter"',
         'data-action="town-policy"',
     ):
         assert contract in screen
