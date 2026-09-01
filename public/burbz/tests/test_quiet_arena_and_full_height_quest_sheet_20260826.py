@@ -259,7 +259,7 @@ def test_the_whole_errand_fits_in_the_sheet():
 # Release
 # ---------------------------------------------------------------------------
 
-CURRENT_BUILD = "step-inside-buildings-v341-20260901"
+CURRENT_BUILD = "release-polish-v342-20260901"
 # battle_core.js pins the release that last CHANGED it, not the head build —
 # later releases that leave the core alone must not churn every phone's cache.
 BATTLE_CORE_PIN = "quiet-arena-v331-20260826"

@@ -82,7 +82,7 @@ def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():
         "tablet",
         "multiverse",
         "only you can unlock the darkness",
-        "real birdwatching restores burbz",
+        "real birdwatching restores the kingdom of burbz",  # v342: the kingdom keeps its full name
 
     ):
         assert marker in story, marker

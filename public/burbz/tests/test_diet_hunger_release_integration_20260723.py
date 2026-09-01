@@ -28,7 +28,9 @@ PINNED_RUNTIME_ASSETS = {
     "data/bird-diet-records.js": "mallard-true-diet-v237-20260809",
     "bird_diet_hunger_core.js": "mallard-true-diet-v237-20260809",
     "diet_hunger_core.js": RELEASE_PIN,
-    "merlin_companion_core.js": "reconciled-release-v170-20260729",
+    # Rolled by release-polish-v342: Merlin's tips stopped naming the retired
+    # Roost and now free villages, not towns.
+    "merlin_companion_core.js": "release-polish-v342-20260901",
 }
 BUILD_ONLY_ASSETS = ["data/bird-diet-records.json"]
 # The runtime diet payload now carries a real source-backed record for EVERY

@@ -33,8 +33,8 @@ Battle is therefore a story mechanic, not a disconnected league minigame: traini
 
 ### The cost of the field, and the honest merge
 
-- A battle frees **one village** — never a town. Towns rise only where the player merges them: a freed village must first earn its **⭐ merge star** (40 folk, 75% happiness), and only the player's own Merge order seals the charter.
-- Battle has a cost. A bird lost on the field is **carried straight to the Bird Hospital**, hurt — levels won on the way home mend stats, never wounds. If no ward stands yet, the fallen rest in the Aviary Gardens until food and care mend them.
+- A battle frees **one village** — never a town. Towns rise only where the player merges them: a freed village must first earn its **⭐ merge star** (16 folk, 75% happiness), and only the player's own Merge order seals the charter.
+- Battle has a cost. A bird lost on the field is **carried straight to the Bird Hospital**, hurt — levels won on the way home mend stats, never wounds. If no ward stands yet, the fallen rest free in the tree until food and care mend them.
 
 ## The village folk — who lives in the freed towns
 
@@ -66,7 +66,7 @@ plate does.
 
 ## Villages merge into towns — when the player says so
 
-Freedom is contagious between neighbours, but merging is a promise the player makes, not an accident of geography. A liberated village that reaches **40 folk at 75% happiness** earns its **⭐ merge star**. When **three starred villages** stand within a short walk of each other (5 km), a **Merge** button appears — press it, and the free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. The signed charter is **exact and permanent**: later villages and bridge claims cannot redraw an established Town. (Cities from the old automatic era survive untouched; new progression climbs villages → towns → counties.)
+Freedom is contagious between neighbours, but merging is a promise the player makes, not an accident of geography. A liberated village that reaches **16 folk at 75% happiness** earns its **⭐ merge star**. When **three starred villages** stand within a short walk of each other (5 km), a **Merge** button appears — press it, and the free folk tear down the old fences and merge into **one town**, with the earliest-freed village as its heart but a chartered place name of its own. The signed charter is **exact and permanent**: later villages and bridge claims cannot redraw an established Town. (Cities from the old automatic era survive untouched; new progression climbs villages → towns → counties.)
 
 - A merged settlement is one community: its wards share market squares (**bonus taxes**), stores and building crews. The three old village economies still underpin the simulation, but the player governs them through one Town Hall.
 - On the royal atlas the merge is visible: each district's circle of daylight widens until neighbouring pools **fuse into a single glow** — three lights become one. Towns fly a green standard at their heart; cities fly gold, with a crown that glows through the dark.

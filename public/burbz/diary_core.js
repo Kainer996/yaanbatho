@@ -211,7 +211,7 @@
     if (discoveries) parts.push(countWord(discoveries, 'new species', 'new species') + ' entered the Birdex');
     if (recruits) parts.push(countWord(recruits, 'bird') + ' joined the flock');
     if (battles.length) parts.push(countWord(battles.length, 'battle') + ' ' + (battles.length === 1 ? 'was' : 'were') + ' fought against the evil Burbz' + (wins ? ' (' + (wins === battles.length ? (battles.length === 1 ? 'won' : 'all won') : wins + ' won') + ')' : ' (none won — yet)'));
-    if (liberated.length) parts.push('the town' + (liberated.length === 1 ? '' : 's') + ' of ' + liberated.join(' and ') + ' ' + (liberated.length === 1 ? 'was' : 'were') + ' freed');
+    if (liberated.length) parts.push('the village' + (liberated.length === 1 ? '' : 's') + ' of ' + liberated.join(' and ') + ' ' + (liberated.length === 1 ? 'was' : 'were') + ' freed');
     if (km > 0) parts.push(fmtKm(km) + ' km ' + (walks.length === 1 ? 'was' : 'were') + ' walked under open sky');
     if (questsDone) parts.push(countWord(questsDone, 'quest') + ' ' + (questsDone === 1 ? 'was' : 'were') + ' seen through');
     if (crafts) parts.push(countWord(crafts, 'treasure') + ' ' + (crafts === 1 ? 'was' : 'were') + ' forged');
@@ -236,7 +236,7 @@
     const deeds = [];
     if (Number(t.discovered) > 0) deeds.push(String(t.discovered) + ' species discovered');
     if (Number(t.companions) > 0) deeds.push(String(t.companions) + ' loyal companion' + (t.companions === 1 ? '' : 's'));
-    if (Number(t.towns) > 0) deeds.push(String(t.towns) + ' town' + (t.towns === 1 ? '' : 's') + ' liberated');
+    if (Number(t.towns) > 0) deeds.push(String(t.towns) + ' village' + (t.towns === 1 ? '' : 's') + ' liberated');
     if (Number(t.wins) > 0) deeds.push(String(t.wins) + ' ' + (t.wins === 1 ? 'victory' : 'victories') + ' over the evil Burbz');
     const middle = deeds.length
       ? ' Thus far the record shows ' + (deeds.length === 1 ? deeds[0] : deeds.slice(0, -1).join(', ') + ' and ' + deeds[deeds.length - 1]) + '.'

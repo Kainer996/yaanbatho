@@ -24,7 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
-CURRENT_BUILD = "step-inside-buildings-v341-20260901"
+CURRENT_BUILD = "release-polish-v342-20260901"
 
 
 def _node(script: str):
@@ -176,7 +176,5 @@ def test_release_is_versioned_and_the_moved_cores_shipped():
     # training-your-way-v288 — its pin lives in that release's suite now.
     # battle_core moved again with free-your-first-village-v327 (the first
     # liberation is unloseable), so its pin lives in that release's suite now.
-    for core in ("walking_story_core.js",):
-        pin = f"{core}?v={OWN_RELEASE_PIN}"
-        assert f'<script src="{pin}"></script>' in html, core
-        assert sw.count(f"'./{pin}'") == 2, core
+    # walking_story_core moved again with release-polish-v342 (the folio
+    # scrolls teach the town tier), so its pin lives in that suite now too.

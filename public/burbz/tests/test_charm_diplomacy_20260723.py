@@ -50,7 +50,10 @@ def test_engine_source_dropped_the_parley_branches():
     assert "PARLEY" not in core_src
     assert "charmResolve" not in core_src
     html = INDEX.read_text(encoding="utf-8")
-    assert "parley" not in html.lower()
+    # The battle move stays gone. The Diplomacy Envoy errand keeps its id —
+    # v287's own rule: "diplomacy lives on in envoy quests" (release-polish-v342
+    # gave that errand its board line, which names the id).
+    assert "parley" not in html.lower().replace("envoy_parley", "")
 
 
 def test_legacy_goodwill_rewards_stay_harmless():

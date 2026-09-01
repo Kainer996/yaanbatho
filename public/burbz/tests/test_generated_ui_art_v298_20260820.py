@@ -27,7 +27,7 @@ UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 RELEASE = "generated-ui-art-v298-20260820"
 # Later releases move BURBZ_BUILD on; v298's own segment stays in the lineage.
-CURRENT_BUILD = "step-inside-buildings-v341-20260901"
+CURRENT_BUILD = "release-polish-v342-20260901"
 SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
 
 # Since the anchored dock (2026-08-20) the thirteen destinations split:

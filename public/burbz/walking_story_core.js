@@ -48,7 +48,7 @@
       scroll: {
         id: 'folio_01_charter_of_the_cradle',
         title: 'A Charter for the Cradle',
-        text: 'Let it be written: where one village stands free, the realm is not fallen. Let its lamps be tended and its bounds be walked each season. From three free villages a county rises; from counties, duchies; from duchies, kingdoms; and from two crowns, the Empire of the Liberated Skies. But it begins — it always begins — with one walked road. — sealed with a green wax feather'
+        text: 'Let it be written: where one village stands free, the realm is not fallen. Let its lamps be tended and its bounds be walked each season. From three free villages a town rises; from three towns, a county; from counties, duchies; from duchies, kingdoms; and from two crowns, the Empire of the Liberated Skies. But it begins — it always begins — with one walked road. — sealed with a green wax feather'
       },
       reward: { coins: 60, xp: 60, gear: { reed_vest: 1 }, materials: { oak_twig: 3 } }
     },
@@ -76,7 +76,7 @@
       scroll: {
         id: 'folio_03_founding_of_the_academy',
         title: 'On the Founding of the Academy',
-        text: 'The Academy was not built. It was grown. Merlin planted his staff at the meeting of the old roads and asked the tree to hold a school, and the tree — being wiser than most councils — agreed. First came the Aviary Gardens, then the Roost, then rooms as they were needed: a Kitchen, a Hospital, a Library for the patient, a Crowbar for the sociable. The tree still grows. So must we.'
+        text: 'The Academy was not built. It was grown. Merlin planted his staff at the meeting of the old roads and asked the tree to hold a school, and the tree — being wiser than most councils — agreed. First came the open boughs themselves, then the Barracks, then rooms as they were needed: a Kitchen, a Hospital, a Library for the patient, a Crowbar for the sociable. The tree still grows. So must we.'
       },
       reward: { coins: 90, xp: 100, gear: { moonlit_charm: 1 }, materials: { iron_grit: 2 }, items: { xp_scroll_minor: 1 } }
     },
@@ -156,11 +156,11 @@
       npc: { name: 'Elder Bramblewing', role: 'Keeper of the Cradle Village' },
       intro: 'You again! Fortune loves me. This letter must reach the old mill by dusk, and my knees have registered a formal complaint. It\'s sealed with the green feather — no peeking, though you\'ll know soon enough.',
       milestone: 'Fine day for history, isn\'t it? Yes, history. That letter you\'re carrying — let\'s just say the realm grows back the way it grew the first time. Village by village. Walker by walker.',
-      outro: 'Delivered! And now you may know: that was a summons to the first county moot since the darkness fell. Three free villages, close as neighbours — that\'s a COUNTY, walker, the first rung of the realm. And you carried the invitation. Take the copy — it belongs in your folio.',
+      outro: 'Delivered! And now you may know: that was a summons to the first town moot since the darkness fell. Three starred villages, close as neighbours — that\'s a TOWN, walker, the first rung of the realm. And you carried the invitation. Take the copy — it belongs in your folio.',
       scroll: {
         id: 'folio_09_summons_to_the_county_moot',
-        title: 'Summons to the First County Moot',
-        text: 'To every free village within a short flight: your lamps are seen. Your bells are heard. It is time. Where three liberated villages stand together, their folk may found a COUNTY — granaries shared, roads kept, unity taxes paid into the common strongbox, a County Hall raised at the eldest sanctuary. Come to the moot. Come argue about the name — there is always an argument about the name. Come be a realm again. — by the Elder\'s wing, green feather seal'
+        title: 'Summons to the First Town Moot',
+        text: 'To every free village within a short flight: your lamps are seen. Your bells are heard. It is time. Where three starred villages stand together, their folk may found a TOWN — granaries shared, roads kept, one desk for all three wards, a Town Hall raised at the eldest sanctuary. Come to the moot. Come argue about the name — there is always an argument about the name. Come be a realm again. And when three towns wear their stars, a county moot follows — shared granaries, unity taxes, a County Hall. — by the Elder\'s wing, green feather seal'
       },
       reward: { coins: 100, xp: 100, gear: { keen_eye_bead: 1 }, materials: { iron_grit: 3 } }
     },
