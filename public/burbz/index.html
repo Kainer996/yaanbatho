@@ -35,6 +35,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; colo
   --text: #f4ead4; --text2: #c8b98f; --text3: #8f8469;
   --accent: #d6a84f; --accent2: #c9c9c9; --accent3: #8f6f2a;
   --hp-green: #51cf66; --hp-yellow: #fcc419; --hp-red: #ff6b6b;
+  --green: var(--hp-green);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --nav-height: 100px;
@@ -42,7 +43,10 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; colo
 }
 input, button, textarea { font-family: inherit; border: none; outline: none; background: none; color: inherit; }
 button { cursor: pointer; -webkit-user-select: none; user-select: none; }
-::-webkit-scrollbar { width: 3px; }
+/* One focus ring for every control a keyboard or switch can reach. Pointer
+   taps never show it; the scattered bespoke rules still win where they exist. */
+:where(button, a, [tabindex], summary, input, select):focus-visible { outline: 2px solid var(--legendary); outline-offset: 2px; }
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
 
@@ -85,7 +89,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .hud-chip-icon { width: 18px; height: 18px; object-fit: contain; display: block; }
 .hud-chip-value { font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 13px; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hud-chip-copy { display:flex; flex-direction:column; align-items:flex-start; gap:1px; min-width:0; }
-.hud-chip-label { font-family:'Rajdhani',sans-serif; font-size:8px; font-weight:900; line-height:1; letter-spacing:.04em; text-transform:uppercase; color:var(--text3); }
+.hud-chip-label { font-family:'Rajdhani',sans-serif; font-size:9px; font-weight:900; line-height:1; letter-spacing:.04em; text-transform:uppercase; color:var(--text3); }
 .hud-chip.bump .hud-chip-value { animation: hudBump .45s ease; }
 @keyframes hudBump { 0% { transform: scale(1); } 35% { transform: scale(1.25); color: var(--legendary); } 100% { transform: scale(1); } }
 @media (max-width:480px) {
@@ -114,7 +118,9 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .global-money-hud.bump .hud-chip-value { animation:hudBump .45s ease; }
 .header-settings {
   width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-  border-radius: 8px; background: var(--bg3); font-size: 18px; color: var(--text2);
+  border-radius: 10px; border: 1px solid rgba(214,168,79,.24);
+  background: linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
+  font-size: 18px; color: var(--text2); box-shadow: 0 0 12px rgba(214,168,79,.10);
 }
 .header-profile-btn {
   width: 36px; height: 36px; display:flex; align-items:center; justify-content:center;
@@ -456,7 +462,7 @@ svg.academy-room-bg { display:block; filter:none; }
 .chef-board-food-head { display:flex; align-items:center; gap:8px; }
 .chef-board-food-emoji { font-size:22px; flex:0 0 auto; line-height:1; }
 .chef-board-food-title { flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
-.chef-board-food-name { font-family:'Russo One',sans-serif; font-size:12px; color:var(--text1); }
+.chef-board-food-name { font-family:'Russo One',sans-serif; font-size:12px; color:var(--text); }
 .chef-board-food-sub { font-size:10px; color:var(--text3); }
 .chef-board-serve { flex:0 0 auto; min-height:34px; padding:0 11px; border-radius:11px; border:1px solid rgba(214,168,79,.5); background:linear-gradient(180deg,rgba(214,168,79,.30),rgba(214,168,79,.14)); color:var(--accent2); font-family:'Russo One',sans-serif; font-size:11px; }
 .chef-board-serve:disabled { opacity:.45; }
@@ -487,7 +493,7 @@ svg.academy-room-bg { display:block; filter:none; }
   position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
   padding: 16px; padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 16px);
   opacity: 0; pointer-events: none; transform: translateY(12px);
-  z-index: 0; background: var(--bg0);
+  z-index: 0; background: var(--bg);
   transition: opacity 0.3s ease, transform 0.3s ease;
   /* Vertical scroll stays the browser's from the first pixel; only a
      horizontal drag is ours to claim, and only once the axis lock says so. */
@@ -605,8 +611,8 @@ svg.academy-room-bg { display:block; filter:none; }
 .nav-item.active .nav-icon { transform: translateY(-1px); filter: drop-shadow(0 0 7px rgba(214,168,79,.55)); }
 .nav-item:active .nav-icon { transform: scale(.9); }
 .nav-label {
-  font-family: 'Rajdhani', sans-serif; font-size: 7.5px; line-height:1; font-weight: 800;
-  text-transform: uppercase; letter-spacing: .1px; color: inherit;
+  font-family: 'Rajdhani', sans-serif; font-size: 9px; line-height:1; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .04em; color: inherit;
   white-space: nowrap;
   transition: color 0.22s ease;
 }
@@ -644,12 +650,6 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 }
 .nav-item.dock-unlock-pop .nav-icon { animation: dockUnlockPop .6s cubic-bezier(.34,1.56,.64,1); }
 .nav-item.dock-unlock-pop { color: var(--accent); }
-.nav-badge {
-  position: absolute; top: 4px; right: 50%; transform: translateX(16px);
-  background: var(--accent); color: #fff; font-size: 9px; font-weight: 700;
-  min-width: 16px; height: 16px; border-radius: 8px; display: flex;
-  align-items: center; justify-content: center; padding: 0 4px;
-}
 
 
 /* ========== DIAGONAL DECORATIONS ========== */
@@ -707,7 +707,7 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .map-scan-orb { pointer-events:auto; width:52px; height:52px; border:0; border-radius:50%; display:grid; place-items:center; color:#102020; background:radial-gradient(circle at 45% 35%, #fff 0 16%, #f3f7f6 17% 42%, #ff3951 43% 46%, #101817 47% 50%, #fff 51% 100%); font-size:0; box-shadow:0 8px 20px rgba(0,0,0,.38), 0 0 0 4px rgba(255,255,255,.07); }
 .map-locate-btn { position:absolute; right:12px; bottom:calc(198px + var(--safe-bottom)); z-index:26; width:46px; height:46px; border-radius:15px; border:1px solid rgba(255,255,255,.14); color:var(--accent2); font-size:21px; }
 .map-overlay-btn { position:absolute; left:12px; bottom:calc(198px + var(--safe-bottom)); z-index:26; min-height:46px; border-radius:15px; padding:0 12px; border:1px solid rgba(255,255,255,.14); color:var(--accent2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; text-transform:uppercase; letter-spacing:.08em; pointer-events:auto; }
-.map-overlay-btn.active { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--accent2)); }
+.map-overlay-btn.active { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--legendary)); }
 .map-bird-overlay { position:absolute; left:12px; right:12px; bottom:calc(252px + var(--safe-bottom)); z-index:27; display:none; max-height:min(38vh,320px); overflow:auto; border-radius:18px; padding:12px; pointer-events:auto; }
 .map-area-birds-panel { position:absolute; left:8px; top:176px; bottom:calc(202px + var(--safe-bottom)); width:154px; z-index:24; border-radius:18px; padding:9px; pointer-events:auto; overflow:hidden; }
 .map-area-birds-title { font-family:'Russo One',sans-serif; font-size:10px; color:var(--accent2); text-transform:uppercase; letter-spacing:.07em; line-height:1.05; }
@@ -790,20 +790,25 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .burbz-village-marker.in-city .burbz-village-icon { box-shadow:0 5px 16px rgba(0,0,0,.5), 0 0 0 2.5px rgba(240,199,103,.95), 0 0 24px rgba(240,199,103,.6); }
 #villageClaimBar { margin:0 14px 10px; }
 #villageClaimBar:empty { display:none; }
-.village-claim-btn { width:100%; min-height:54px; border-radius:15px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.06em; box-shadow:0 10px 24px rgba(0,0,0,.4); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
+.village-claim-btn { width:100%; min-height:50px; border-radius:12px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94)); color:#ffe9a8; font-family:'Russo One',sans-serif; font-size:14px; letter-spacing:.06em; box-shadow:0 10px 24px rgba(0,0,0,.4); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; }
 .village-claim-btn .build-cost-bit { font-size:11px; }
 .village-claim-btn:active { transform:scale(.98); }
 .village-claim-btn[disabled] { opacity:.55; }
 .village-owned-banner { padding:11px 14px; border-radius:15px; border:1px solid rgba(240,199,103,.4); background:rgba(240,199,103,.1); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:800; letter-spacing:.05em; text-align:center; }
 .village-claim-note { margin-top:7px; padding:9px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.3); background:rgba(240,199,103,.08); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:12.5px; letter-spacing:.04em; text-align:center; }
-#empirePanel { margin:14px; }
+#empirePanel { margin:14px 12px; }
+/* Inside the hub card the 14px screen-level indents double the hub's own
+   padding — zero them so every block shares one left edge. */
+.empire-village-hub > .village-sub, .empire-village-hub #villageClaimBar { margin-inline:0; }
+.empire-village-hub .village-town-link { width:100%; margin:0 0 10px; }
+.empire-village-hub #villageManagePanel { margin:10px 0 4px; }
 /* ---- Crusader-style royal map frame ---------------------------------------- */
 .empire-map-card { position:relative; height:52vh; min-height:380px; margin:12px 12px 6px; overflow:hidden; border-radius:14px; border:2px solid #7a5a28; background:#18222a; box-shadow:0 0 0 1px rgba(240,199,103,.55), 0 0 0 5px rgba(28,20,8,.95), 0 0 0 6px rgba(214,168,79,.4), 0 18px 40px rgba(0,0,0,.55), inset 0 0 32px rgba(240,199,103,.07); }
 #empireWorldMap { position:absolute; inset:0; }
 #empireWorldMap .maplibregl-canvas { filter:saturate(.88) sepia(.24) brightness(1.02) contrast(1.05); }
 .empire-fog-overlay { position:absolute; inset:0; z-index:3; width:100%; height:100%; pointer-events:none; mix-blend-mode:multiply; }
 .empire-map-card .maplibregl-ctrl-bottom-right { z-index:7; }
-.empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-57px); background:rgba(24,16,6,.92); border:1px solid rgba(214,168,79,.5); }
+.empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group { position:relative; margin-right:7px; transform:translateY(-64px); background:rgba(24,16,6,.92); border:1px solid rgba(214,168,79,.5); }
 .empire-map-card .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group button { color:#ffe8a5; }
 .empire-map-vignette { position:absolute; inset:0; z-index:4; pointer-events:none; box-shadow:inset 0 0 48px rgba(20,12,2,.55); background:linear-gradient(180deg,rgba(14,9,2,.28),transparent 30%,transparent 72%,rgba(14,9,2,.34)); }
 /* burnt parchment corners, like an old campaign map */
@@ -812,12 +817,16 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .empire-map-corner.tr { top:6px; right:6px; border-left:0; border-bottom:0; border-top-right-radius:9px; }
 .empire-map-corner.bl { bottom:6px; left:6px; border-right:0; border-top:0; border-bottom-left-radius:9px; }
 .empire-map-corner.br { bottom:6px; right:6px; border-left:0; border-top:0; border-bottom-right-radius:9px; }
-.empire-map-tools { position:absolute; z-index:5; top:12px; left:10px; right:64px; display:flex; flex-wrap:wrap; gap:6px; }
+.empire-map-tools { position:absolute; z-index:5; top:12px; left:10px; right:10px; display:flex; flex-wrap:wrap; gap:6px; }
 .empire-map-btn { min-height:32px; padding:0 9px; border-radius:9px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(46,31,12,.94),rgba(18,12,5,.94)); color:#ffe8a5; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; white-space:nowrap; letter-spacing:.05em; backdrop-filter:blur(8px); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.18); }
 .empire-map-btn:active { transform:scale(.97); }
+/* Small controls, full-size fingers: an invisible halo lifts each hit area
+   past 44px without moving a pixel (the info-dot trick). */
+.empire-map-btn, .empire-tapcard-close, .town-sheet-close, .liberation-cancel-btn, .role-dismiss { position:relative; }
+.empire-map-btn::after, .empire-tapcard-close::after, .town-sheet-close::after, .liberation-cancel-btn::after, .role-dismiss::after { content:''; position:absolute; inset:-7px; }
 .empire-map-btn:focus-visible, .empire-map-marker:focus-visible { outline:3px solid #f4fff5; outline-offset:3px; }
-.empire-map-status { position:absolute; z-index:5; left:10px; right:10px; bottom:26px; min-height:34px; display:flex; align-items:center; justify-content:center; padding:7px 10px; border-radius:10px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(38,26,10,.92),rgba(16,11,4,.92)); color:#f8e7b2; font-size:10px; font-weight:800; letter-spacing:.04em; text-align:center; pointer-events:none; backdrop-filter:blur(8px); }
-.empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:7px; line-height:1; color:rgba(240,226,190,.82); text-align:center; white-space:nowrap; pointer-events:auto; text-shadow:0 1px 3px rgba(20,12,0,.98); }
+.empire-map-status { position:absolute; z-index:5; left:50%; transform:translateX(-50%); width:max-content; max-width:calc(100% - 20px); bottom:26px; min-height:34px; display:flex; align-items:center; justify-content:center; padding:7px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.4); background:linear-gradient(180deg,rgba(38,26,10,.92),rgba(16,11,4,.92)); color:#f8e7b2; font-size:10px; font-weight:800; letter-spacing:.04em; text-align:center; pointer-events:none; backdrop-filter:blur(8px); }
+.empire-map-attribution { position:absolute; z-index:5; left:12px; right:12px; bottom:5px; font-size:8px; line-height:1; color:rgba(240,226,190,.82); text-align:center; white-space:nowrap; pointer-events:auto; text-shadow:0 1px 3px rgba(20,12,0,.98); }
 .empire-map-attribution a { color:inherit; text-decoration:none; }
 .empire-map-empty { position:absolute; z-index:4; inset:64px 24px 58px; display:none; place-items:center; color:#eadcac; font-size:12px; line-height:1.5; text-align:center; pointer-events:none; }
 .empire-map-card.is-empty .empire-map-empty { display:none; }
@@ -854,15 +863,15 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .empire-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 2px 8px; }
 .empire-title { font-family:'Russo One',sans-serif; font-size:16px; color:var(--accent2); letter-spacing:.06em; }
 .empire-rank { display:flex; flex-direction:column; align-items:flex-end; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); letter-spacing:.08em; }
-.empire-rank-label { font-size:8px; line-height:1; color:var(--text3); letter-spacing:.15em; }
+.empire-rank-label { font-size:9.5px; line-height:1; color:var(--text3); letter-spacing:.15em; }
 
 /* ---- Royal ledger: realm stats + provinces --------------------------------- */
-.empire-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 0 10px; }
+.empire-stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(84px,1fr)); gap:6px; margin:0 0 10px; }
 .empire-stat-chip { padding:8px 4px; border-radius:10px; border:1px solid rgba(240,199,103,.28); background:linear-gradient(180deg,rgba(36,25,10,.7),rgba(14,10,4,.8)); text-align:center; }
 .empire-stat-value { font-family:'Russo One',sans-serif; font-size:14px; color:#ffe9a8; }
-.empire-stat-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:8.5px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
-.empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:12px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(160deg,rgba(64,84,38,.92),rgba(22,32,14,.95)); color:#e9f3c9; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; box-shadow:inset 0 1px 0 rgba(255,240,200,.16), 0 8px 20px rgba(0,0,0,.4); }
-.empire-tribute-btn[disabled] { opacity:.5; }
+.empire-stat-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9.5px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
+.empire-tribute-btn { width:100%; min-height:50px; margin:0 0 10px; border-radius:12px; border:none; background:linear-gradient(180deg,#ffd76a,#e0a93f); color:#241a05; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.05em; box-shadow:inset 0 1px 0 rgba(255,250,220,.5), 0 8px 20px rgba(0,0,0,.4); }
+.empire-tribute-btn[disabled] { opacity:.65; filter:saturate(.4) brightness(.8); }
 .empire-village-list { display:grid; gap:8px; }
 .empire-village-row { width:100%; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:11px; background:linear-gradient(180deg,rgba(30,21,9,.6),rgba(10,7,3,.7)); border:1px solid rgba(240,199,103,.22); color:inherit; text-align:left; }
 .empire-village-row:active { transform:scale(.99); border-color:rgba(240,199,103,.5); }
@@ -906,7 +915,7 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 /* MERGE WHEN READY — the ⭐ star and the player's own Merge button. */
 .merge-star { color:#ffd76a; filter:drop-shadow(0 0 5px rgba(255,215,106,.6)); }
 .merge-banner { margin:8px 0; padding:11px 12px; border-radius:12px; border:1.5px solid rgba(255,215,106,.6); background:linear-gradient(180deg,rgba(52,40,12,.7),rgba(20,14,4,.8)); box-shadow:0 0 18px rgba(255,215,106,.14); display:grid; gap:8px; }
-.merge-banner-title { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:13px; letter-spacing:.05em; color:#ffe9a8; }
+.merge-banner-title { font-family:'Russo One',sans-serif; font-weight:400; font-size:14px; letter-spacing:.06em; color:#ffd76a; text-shadow:0 0 10px rgba(255,215,106,.35); }
 .merge-banner-copy { font-size:11px; line-height:1.5; color:#e8d9a8; }
 .merge-banner-btn { width:100%; padding:11px 12px; border:none; border-radius:11px; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.1em; color:#241a05; background:linear-gradient(180deg,#ffd76a,#e0a93f); box-shadow:0 3px 10px rgba(0,0,0,.4); }
 .merge-banner-btn:active { transform:scale(.985); }
@@ -966,7 +975,7 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 /* Every banner says what KIND of thing it is — once. The label already leads
    with the type, so no suffix repeats it and clips the name off the end. */
 .empire-map-btn.is-active { border-color:rgba(255,232,165,.95); background:linear-gradient(180deg,rgba(88,62,22,.96),rgba(40,26,9,.96)); box-shadow:0 4px 12px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,232,165,.3), 0 0 10px rgba(240,199,103,.4); }
-.empire-map-key { position:absolute; z-index:8; top:54px; left:10px; right:10px; max-width:320px; display:none; padding:10px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(38,26,10,.96),rgba(14,9,3,.97)); box-shadow:0 14px 30px rgba(0,0,0,.6); backdrop-filter:blur(8px); }
+.empire-map-key { position:absolute; z-index:8; top:50px; left:10px; right:10px; max-width:320px; display:none; padding:10px 12px; border-radius:12px; border:1px solid rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(38,26,10,.96),rgba(14,9,3,.97)); box-shadow:0 14px 30px rgba(0,0,0,.6); backdrop-filter:blur(8px); }
 .empire-map-key.show { display:block; }
 .empire-map-key-title { font-family:'Russo One',sans-serif; font-size:11px; letter-spacing:.12em; color:#ffe9a8; margin-bottom:7px; }
 .empire-map-key-row { display:flex; align-items:center; gap:8px; padding:3px 0; font-family:'Rajdhani',sans-serif; font-weight:700; font-size:11.5px; color:var(--text); }
@@ -1007,7 +1016,7 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .empire-drawer-summary .ed-icon { width:34px; height:34px; flex:none; display:grid; place-items:center; font-size:18px; border-radius:10px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.26), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.3); }
 .empire-drawer-summary .ed-main { flex:1; min-width:0; }
 .empire-drawer-summary .ed-label { display:block; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.05em; color:var(--legendary); }
-.empire-drawer-summary .ed-copy { display:block; font-size:9.5px; line-height:1.35; color:var(--text3); margin-top:2px; }
+.empire-drawer-summary .ed-copy { display:block; font-size:10.5px; line-height:1.35; color:var(--text3); margin-top:2px; }
 .empire-drawer-summary .ed-count { flex:none; font-family:'Russo One',sans-serif; font-size:11px; color:var(--accent2); }
 .empire-drawer-summary .ed-chevron { flex:none; font-family:'Russo One',sans-serif; font-size:17px; color:var(--accent); transition:transform .2s ease; }
 .empire-drawer[open] .ed-chevron { transform:rotate(90deg); }
@@ -1022,7 +1031,7 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .empire-tier-icon { flex:none; font-size:15px; line-height:1; }
 .empire-tier-main { flex:1; min-width:0; }
 .empire-tier-label { display:block; font-family:'Russo One',sans-serif; font-size:12.5px; letter-spacing:.07em; color:var(--legendary); }
-.empire-tier-copy { display:block; margin-top:2px; font-size:9.5px; line-height:1.35; color:var(--text3); }
+.empire-tier-copy { display:block; margin-top:2px; font-size:10.5px; line-height:1.35; color:var(--text3); }
 .empire-tier-count { flex:none; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
 .empire-tier-count.wants { color:#ffd76a; }
 .empire-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:7px; }
@@ -1045,12 +1054,12 @@ img.empire-tile-bird { max-width:100%; max-height:100%; height:100%; width:auto;
 span.empire-tile-bird { font-size:22px; line-height:1; filter:drop-shadow(0 2px 4px rgba(0,0,0,.7)); }
 span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.4); }
 .empire-tile-need { position:absolute; top:2px; right:3px; font-size:11px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
-.empire-tile-coin { position:absolute; top:2px; left:3px; font-size:9px; line-height:1; opacity:.9; filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
+.empire-tile-coin { position:absolute; top:2px; left:2px; font-size:12px; line-height:1; opacity:.9; filter:drop-shadow(0 1px 2px rgba(0,0,0,.9)); }
 /* The name sits on its own dark strip, so it stays readable on gold. */
 .empire-tile-name { max-width:calc(100% + 6px); width:calc(100% + 6px); margin:0 -3px -3px; padding:2px 3px 3px; background:rgba(0,0,0,.55);
   font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.04em; text-transform:uppercase; color:#fff8e6;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; text-shadow:0 1px 2px rgba(0,0,0,.95); }
-.empire-grid-key { display:flex; flex-wrap:wrap; gap:4px 10px; padding:1px 2px 0; font-size:9px; line-height:1.5; color:var(--text3); }
+.empire-grid-key { display:flex; flex-wrap:wrap; gap:4px 10px; padding:1px 2px 0; font-size:10px; line-height:1.5; color:var(--text3); }
 .egk-item { display:inline-flex; align-items:center; gap:4px; }
 .egk-dot { width:8px; height:8px; flex:none; border-radius:3px; border:1px solid rgba(0,0,0,.55); }
 .egk-dot.is-red { background:#ff6b6b; }
@@ -1137,7 +1146,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .town-sheet-head { display:flex; align-items:center; gap:9px; margin-bottom:8px; }
 .town-sheet-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:20px; border-radius:11px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.28), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.35); }
 .town-sheet-title { flex:1; min-width:0; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.04em; color:var(--legendary); }
-.town-sheet-kicker { display:block; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
+.town-sheet-kicker { display:block; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9.5px; letter-spacing:.12em; color:var(--text3); text-transform:uppercase; }
 .town-sheet-close { flex:none; width:30px; height:30px; border-radius:9px; border:1px solid rgba(240,199,103,.4); background:rgba(0,0,0,.35); color:var(--text); font-size:14px; }
 .town-sheet-back { display:inline-block; margin:0 0 8px; padding:5px 10px; border-radius:9px; border:1px solid rgba(240,199,103,.35); background:rgba(0,0,0,.3); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; letter-spacing:.08em; }
 .town-sheet-line { font-size:11px; line-height:1.5; color:var(--text2); margin:0 0 7px; }
@@ -1169,22 +1178,24 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .town-crest { flex:none; display:grid; place-items:center; width:52px; height:58px; border-radius:12px 12px 50% 50% / 12px 12px 62% 62%; border:2px solid #8ee39a; background:linear-gradient(160deg,#3d7140,#153719 70%); font-size:28px; box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 18px rgba(142,227,154,.25); }
 .town-hero.is-city .town-crest { border-color:#f0c767; background:linear-gradient(160deg,#80631f,#3e2d08 70%); box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 20px rgba(240,199,103,.3); }
 .town-hero-main { flex:1; min-width:0; }
-.town-kicker { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9px; letter-spacing:.18em; color:#9ddca4; text-transform:uppercase; }
+.town-kicker { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:9.5px; letter-spacing:.18em; color:#9ddca4; text-transform:uppercase; }
 .town-hero.is-city .town-kicker { color:#f0c767; }
 .town-name { font-family:'Russo One',sans-serif; font-size:20px; color:#e9f8e5; letter-spacing:.03em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .town-rank { margin-top:3px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; color:#b8cdb4; }
 .town-rename { flex:none; width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.25); color:#dff4da; font-size:16px; }
 .town-bars { display:grid; gap:7px; margin-top:13px; }
 .town-bar-label { display:flex; justify-content:space-between; gap:8px; margin-bottom:3px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10px; color:#c9d9c6; }
-.town-bar-track { height:8px; overflow:hidden; border-radius:6px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.45); }
-.town-bar-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,#4f9b58,#a2db6d); box-shadow:0 0 8px rgba(142,227,154,.35); }
+.town-bar-track { height:7px; overflow:hidden; border-radius:4px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.5); }
+.town-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#4f9b58,#a2db6d); box-shadow:0 0 8px rgba(142,227,154,.35); }
 .town-bar-fill.is-happiness { background:linear-gradient(90deg,#bd8c32,#f0c767); }
 .town-resource-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:7px; margin:10px 0; }
 .town-resource { padding:9px 10px; border-radius:11px; border:1px solid rgba(142,227,154,.26); background:rgba(4,12,5,.56); }
 .town-resource-value { font-family:'Russo One',sans-serif; font-size:14px; color:#e5f4dc; }
-.town-resource-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.1em; text-transform:uppercase; color:#91aa90; }
+.town-resource-label { margin-top:2px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:#91aa90; }
 .town-section { margin-top:10px; padding:11px; border-radius:14px; border:1px solid rgba(142,227,154,.3); background:linear-gradient(180deg,rgba(18,35,17,.68),rgba(5,13,6,.8)); }
 .town-section.is-gold { border-color:rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(43,31,11,.62),rgba(13,9,3,.82)); }
+/* A gold (money) section opens a new group on the desk — give it air. */
+.town-section + .town-section.is-gold { margin-top:18px; }
 .town-section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
 .town-section-title { font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.06em; color:#dff4d7; }
 .town-section-copy { margin-top:2px; font-size:10.5px; line-height:1.4; color:var(--text3); }
@@ -1198,19 +1209,19 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .town-network-icon { font-size:18px; }
 .town-network-name { flex:1; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; color:var(--text); }
 .town-network-level { font-family:'Russo One',sans-serif; font-size:9px; color:#9fe1a6; }
-.town-network-copy { flex:1; min-height:27px; font-size:9.5px; line-height:1.35; color:var(--text3); }
+.town-network-copy { flex:1; min-height:30px; font-size:10.5px; line-height:1.35; color:var(--text3); }
 .town-action { width:100%; min-height:38px; padding:6px 8px; border-radius:9px; border:1px solid rgba(142,227,154,.48); background:linear-gradient(180deg,rgba(43,78,38,.92),rgba(14,38,16,.95)); color:#e3f5df; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; line-height:1.25; }
 .town-action.is-gold { border-color:rgba(240,199,103,.55); background:linear-gradient(180deg,rgba(82,59,20,.92),rgba(31,21,7,.95)); color:#ffe9a8; }
 .town-action:active { transform:scale(.98); }
-.town-action[disabled] { opacity:.42; }
+.town-action[disabled] { opacity:.6; border-color:rgba(240,199,103,.25); }
 /* Short of coins or timber: dimmed but still tappable — the tap offers a quest. */
-.town-action.short { opacity:.55; }
+.town-action.short { opacity:.85; filter:saturate(.75); }
 .town-policy-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
 .town-policy { position:relative; padding:9px; border-radius:11px; border:1px solid rgba(255,255,255,.11); background:rgba(0,0,0,.27); color:inherit; text-align:left; }
 .town-policy.active { border-color:rgba(240,199,103,.68); background:linear-gradient(150deg,rgba(77,57,19,.55),rgba(18,13,4,.7)); box-shadow:inset 0 0 16px rgba(240,199,103,.06); }
 .town-policy-name { display:block; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; color:#eef5e9; }
-.town-policy-effect { display:block; margin-top:3px; font-size:9.5px; line-height:1.35; color:var(--text3); }
-.town-policy-state { display:block; margin-top:5px; font-family:'Russo One',sans-serif; font-size:8px; letter-spacing:.08em; color:#f0c767; }
+.town-policy-effect { display:block; margin-top:3px; font-size:10.5px; line-height:1.35; color:var(--text3); }
+.town-policy-state { display:block; margin-top:5px; font-family:'Russo One',sans-serif; font-size:10px; letter-spacing:.08em; color:#f0c767; }
 .town-provision-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-bottom:8px; }
 .town-provision { padding:9px; border-radius:10px; border:1px solid rgba(240,199,103,.24); background:rgba(0,0,0,.24); }
 .town-provision-title { display:flex; justify-content:space-between; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; color:#f4ead0; }
@@ -1233,6 +1244,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .province-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:8px; }
 .province-pop { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; color:var(--text2); }
 .province-needs { display:grid; grid-template-columns:repeat(2,1fr); gap:7px 10px; margin-bottom:10px; }
+.province-need:has(.province-need-sub) { grid-column:1/-1; }
 .province-need { }
 .province-need-label { display:flex; justify-content:space-between; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:10.5px; letter-spacing:.06em; color:var(--text2); margin-bottom:3px; }
 .province-need-bar { height:7px; border-radius:4px; background:rgba(0,0,0,.5); border:1px solid rgba(255,255,255,.08); overflow:hidden; }
@@ -1253,7 +1265,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .role-holder-main { flex:1; min-width:0; }
 .role-holder-name { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; color:var(--text); }
 .role-holder-rank { font-size:10px; color:var(--accent2); margin-top:1px; }
-.role-holder-bar { height:5px; border-radius:3px; background:rgba(0,0,0,.45); overflow:hidden; margin:5px 0 4px; }
+.role-holder-bar { height:6px; border-radius:4px; background:rgba(0,0,0,.45); overflow:hidden; margin:5px 0 4px; }
 .role-holder-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--accent),var(--legendary)); }
 .role-holder-effect { font-size:10.5px; line-height:1.4; color:var(--text2); }
 .role-dismiss { flex:none; align-self:center; min-height:30px; padding:0 9px; border-radius:9px; border:1px solid rgba(255,255,255,.16); background:rgba(0,0,0,.32); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; }
@@ -1288,17 +1300,17 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .province-building-pips { display:flex; gap:2px; }
 .province-pip { width:7px; height:7px; border-radius:2px; transform:rotate(45deg); background:rgba(255,255,255,.12); border:1px solid rgba(240,199,103,.3); }
 .province-pip.on { background:#f0c767; box-shadow:0 0 6px rgba(240,199,103,.7); }
-.province-crew { font-size:9px; line-height:1.3; color:var(--text3); }
+.province-crew { font-size:10.5px; line-height:1.3; color:var(--text3); }
 .province-crew.on { color:#bfe8c4; }
 .province-crew.off { color:#ffc4a0; }
 .province-build-btn { min-height:44px; border-radius:8px; border:1px solid rgba(240,199,103,.5); background:linear-gradient(180deg,rgba(64,44,17,.92),rgba(26,17,7,.95)); color:#ffe9a8; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.04em; }
 .province-build-btn:active { transform:scale(.97); }
-.province-build-btn[disabled] { opacity:.45; }
+.province-build-btn[disabled] { opacity:.65; border-color:rgba(240,199,103,.25); }
 /* Short of coins or timber: dimmed but still tappable — the tap offers a quest. */
-.province-build-btn.short { opacity:.55; }
-.province-build-shortage { min-height:14px; font-size:9px; line-height:1.25; color:#ffc4a0; text-align:center; }
+.province-build-btn.short { opacity:.85; filter:saturate(.75); }
+.province-build-shortage { min-height:14px; font-size:10.5px; line-height:1.25; color:#ffc4a0; text-align:center; }
 .province-build-btn.maxed { border-color:rgba(126,217,131,.5); color:#bfe8c4; background:rgba(20,40,24,.6); }
-.province-build-btn.busy { opacity:.55; filter:grayscale(.35); }
+.province-build-btn.busy { opacity:.75; filter:grayscale(.35); }
 /* Build orders read as two clean lines (v338): the action on top, then the
    bill as little chips. A chip never breaks between its number and its icon,
    so "60 🪙" can no longer strand its coin on the next line. */
@@ -1342,7 +1354,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .burbz-map-popup .maplibregl-popup-tip { border-top-color:rgba(8,18,17,.94); border-bottom-color:rgba(8,18,17,.94); }
 .burbz-popup-title { font-family:'Russo One',sans-serif; color:var(--accent2); margin-bottom:3px; }
 .burbz-popup-copy { color:var(--text2); font-size:12px; line-height:1.25; }
-.burbz-popup-btn { margin-top:8px; width:100%; border:0; border-radius:10px; padding:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#111; font-family:'Rajdhani',sans-serif; font-weight:900; }
+.burbz-popup-btn { margin-top:8px; width:100%; border:0; border-radius:10px; padding:8px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#111; font-family:'Rajdhani',sans-serif; font-weight:900; }
 /* Attribution collapses into a barely-there ⓘ dot (tap to expand the credits). */
 .maplibregl-ctrl-attrib, .maplibregl-ctrl { font-size:9px; background:rgba(0,0,0,.35) !important; color:rgba(255,255,255,.65) !important; }
 .maplibregl-ctrl-attrib a { color:rgba(255,255,255,.86) !important; }
@@ -1359,7 +1371,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .live-map-shell.clean-cloud-map .map-overlay-btn,
 .live-map-shell.clean-cloud-map .map-locate-btn,
 .live-map-shell.clean-cloud-map .map-nearby-card { display:none !important; }
-.live-map-shell.clean-cloud-map .map-area-birds-panel { z-index:42; left:7px; top:16px; bottom:calc(18px + var(--safe-bottom)); width:124px; max-width:32vw; background:transparent; border:0; box-shadow:none; backdrop-filter:none; padding:2px; }
+.live-map-shell.clean-cloud-map .map-area-birds-panel { z-index:42; left:7px; top:16px; bottom:calc(18px + var(--safe-bottom)); width:138px; max-width:32vw; background:transparent; border:0; box-shadow:none; backdrop-filter:none; padding:2px; }
 .map-area-birds-toggle { width:100%; display:flex; align-items:flex-start; justify-content:space-between; gap:5px; padding:0; color:inherit; text-align:left; }
 .map-area-birds-heading { min-width:0; }
 .map-area-birds-title,.map-area-birds-sub { display:block; }
@@ -1368,22 +1380,22 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .map-area-birds-panel.collapsed { right:auto; bottom:auto !important; width:auto !important; max-width:none !important; padding:7px 9px !important; border:1px solid rgba(240,199,103,.26) !important; border-radius:14px !important; background:rgba(3,10,9,.78) !important; box-shadow:0 8px 20px rgba(0,0,0,.38) !important; backdrop-filter:blur(9px) !important; }
 .map-area-birds-panel.collapsed .map-area-birds-sub,
 .map-area-birds-panel.collapsed .map-area-birds-list { display:none; }
-.map-area-birds-panel.collapsed .map-area-birds-title { font-size:9px; white-space:nowrap; }
+.map-area-birds-panel.collapsed .map-area-birds-title { font-size:10px; white-space:nowrap; }
 .map-area-birds-panel.collapsed .map-area-birds-chevron { transform:rotate(-90deg); }
 .live-map-shell.clean-cloud-map .map-area-birds-title { font-size:10px; color:#fff7d9; text-shadow:0 2px 8px rgba(0,0,0,.86); }
-.live-map-shell.clean-cloud-map .map-area-birds-sub { font-size:8px; margin:2px 0 5px; color:#efe2bd; text-shadow:0 2px 8px rgba(0,0,0,.86); }
+.live-map-shell.clean-cloud-map .map-area-birds-sub { font-size:9.5px; margin:2px 0 5px; color:#efe2bd; text-shadow:0 2px 8px rgba(0,0,0,.86); }
 .live-map-shell.clean-cloud-map .map-area-birds-list { gap:5px; max-height:calc(100% - 34px); }
 .live-map-shell.clean-cloud-map .map-area-bird { grid-template-columns:40px minmax(0,1fr); gap:7px; min-height:48px; padding:4px; border-radius:10px; background:rgba(3,10,9,.6); border-color:rgba(240,199,103,.16); box-shadow:0 5px 12px rgba(0,0,0,.3); }
 .live-map-shell.clean-cloud-map .map-area-bird img { width:40px; height:40px; border-radius:8px; object-fit:cover; }
-.live-map-shell.clean-cloud-map .map-area-bird-name { font-size:10px; }
-.live-map-shell.clean-cloud-map .map-area-bird-rarity { font-size:7.5px; }
+.live-map-shell.clean-cloud-map .map-area-bird-name { font-size:11px; }
+.live-map-shell.clean-cloud-map .map-area-bird-rarity { font-size:9px; }
 .live-map-shell.clean-cloud-map .map-player-ring { display:none; }
 
 .live-map-shell.clean-cloud-map .map-zoom-controls { position:absolute; right:12px; bottom:calc(130px + var(--safe-bottom)); z-index:48; display:grid; gap:8px; pointer-events:auto; }
 .map-zoom-btn { width:48px; height:48px; border-radius:16px; border:1px solid rgba(240,199,103,.28); background:rgba(3,10,9,.72); color:#fff7d9; font-family:'Russo One',sans-serif; font-size:26px; line-height:1; box-shadow:0 10px 22px rgba(0,0,0,.36); backdrop-filter:blur(9px); }
 .map-zoom-btn:active { transform:scale(.96); background:rgba(240,199,103,.24); }
 @media (max-height:720px) { .live-map-shell.clean-cloud-map .map-zoom-controls { right:10px; bottom:calc(116px + var(--safe-bottom)); } .map-zoom-btn { width:44px; height:44px; border-radius:14px; } }
-@media (max-height:720px) { .live-map-shell.clean-cloud-map .map-area-birds-panel { top:10px; bottom:calc(12px + var(--safe-bottom)); width:116px; } .live-map-shell.clean-cloud-map .map-area-bird { grid-template-columns:28px minmax(0,1fr); min-height:36px; } .live-map-shell.clean-cloud-map .map-area-bird img { width:28px; height:28px; } }
+@media (max-height:720px) { .live-map-shell.clean-cloud-map .map-area-birds-panel { top:10px; bottom:calc(12px + var(--safe-bottom)); width:126px; } .live-map-shell.clean-cloud-map .map-area-bird { grid-template-columns:28px minmax(0,1fr); min-height:36px; } .live-map-shell.clean-cloud-map .map-area-bird img { width:28px; height:28px; } }
 @media (max-height:720px) { .live-map-shell { min-height:0; height:calc(100dvh - 50px - var(--nav-height) - var(--safe-bottom)); } .map-medieval-banner{top:104px; max-width:calc(100% - 84px);} .map-nearby-card { bottom:calc(82px + var(--safe-bottom)); padding:8px 9px; max-height:88px; } .map-locate-btn,.map-overlay-btn { bottom:calc(180px + var(--safe-bottom)); } .map-bird-overlay{bottom:calc(232px + var(--safe-bottom)); max-height:34vh;} .map-area-birds-panel{top:150px; bottom:calc(184px + var(--safe-bottom)); width:148px;} }
 
 /* ========== BIRDEX SCREEN ========== */
@@ -1399,7 +1411,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 
 .burbz-mode-tabs { display:flex; gap:8px; margin:0 0 12px; padding:4px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:14px; }
 .burbz-mode-btn { flex:1; border:0; border-radius:10px; padding:10px 8px; min-height:44px; background:transparent; color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
-.burbz-mode-btn.active { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 0 18px rgba(214,168,79,.22); }
+.burbz-mode-btn.active { color:#11100d; background:linear-gradient(135deg,var(--accent),var(--legendary)); box-shadow:0 0 18px rgba(214,168,79,.22); }
 .companions-empty { grid-column:1/-1; margin:10px 0 80px; padding:30px 18px; border:1px dashed rgba(214,168,79,.32); border-radius:20px; background:linear-gradient(135deg,rgba(214,168,79,.10),rgba(0,0,0,.25)); text-align:center; color:var(--text2); }
 .companions-empty-title { font-family:'Russo One',sans-serif; font-size:20px; color:var(--accent2); margin-bottom:8px; }
 .companions-empty-copy { font-size:13px; line-height:1.45; color:var(--text3); }
@@ -1623,7 +1635,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .birdex-learning-fact { padding:5px 6px; border-radius:7px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.07); }
 .birdex-learning-label { display:block; margin-bottom:1px; color:var(--accent); font-family:'Rajdhani',sans-serif; font-size:8px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; }
 .birdex-learning-value { display:-webkit-box; overflow:hidden; color:var(--text2); font-size:9px; line-height:1.25; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
-.birdex-more-info { margin-top:auto; width:100%; min-height:44px; padding:9px 12px; border:1px solid rgba(214,168,79,.62); border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#17130b; font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+.birdex-more-info { margin-top:auto; width:100%; min-height:44px; padding:9px 12px; border:1px solid rgba(214,168,79,.62); border-radius:10px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#17130b; font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
 .birdex-learning-back .card-back-hint { margin-top:0; }
 
 
@@ -1866,8 +1878,8 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   transition: all 0.25s ease; min-height: 44px;
 }
 .scan-mode-btn.active {
-  background: var(--bg4); color: var(--text);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  background: linear-gradient(135deg, var(--accent), var(--legendary)); color: #11100d;
+  box-shadow: 0 0 18px rgba(214,168,79,.22);
 }
 
 .scan-area {
@@ -1951,15 +1963,16 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 
 .scan-btn {
   display: block; width: 100%; max-width: 320px; margin: 0 auto; padding: 16px;
-  background: linear-gradient(135deg, var(--accent), var(--accent3));
+  background: linear-gradient(135deg, #f0c767, #c99a3f);
   border-radius: 12px; font-family: 'Russo One', sans-serif; font-size: 16px;
-  color: #fff; text-align: center; text-transform: uppercase; letter-spacing: 2px;
+  color: #241a08; text-align: center; text-transform: uppercase; letter-spacing: .08em;
   transition: all 0.2s ease; min-height: 54px;
   box-shadow: 0 4px 20px rgba(214,168,79,0.30);
 }
 .scan-btn:active { transform: scale(0.97); }
 .scan-btn.recording {
   background: linear-gradient(135deg, #c92a2a, var(--accent));
+  color: #fff;
   animation: recordPulse 1s ease-in-out infinite;
 }
 @keyframes recordPulse { 0%,100%{box-shadow:0 4px 20px rgba(214,168,79,0.30)} 50%{box-shadow:0 4px 30px rgba(214,168,79,0.58)} }
@@ -1967,7 +1980,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .bird-pickup-pop {
   position: absolute; top: 4px; left: 50%;
   transform: translateX(-50%) translateY(-8px) scale(0.9);
-  background: rgba(20,20,34,0.94); border: 1px solid var(--accent);
+  background: rgba(24,20,13,0.94); border: 1px solid var(--accent);
   color: var(--accent2); font-family: 'Rajdhani', sans-serif; font-weight: 700;
   font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
   padding: 8px 16px; border-radius: 999px; white-space: nowrap;
@@ -2576,8 +2589,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .battle-result-title.defeat { color: var(--accent2); text-shadow: 0 0 30px rgba(214,168,79,0.36); }
 .battle-result-xp { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 20px; color: var(--accent2); margin-bottom: 24px; }
 .battle-result-xp-bar { width: 80%; max-width: 280px; height: 10px; background: var(--bg4); border-radius: 5px; overflow: hidden; margin: 8px auto 24px; }
-.battle-result-xp-fill { height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2)); border-radius: 5px; transition: width 1s ease; }
-.battle-again-btn { display: inline-block; padding: 14px 34px; border-radius: 10px; background: linear-gradient(135deg, var(--accent), var(--accent3)); font-family: 'Russo One', sans-serif; font-size: 14px; color: #fff; text-transform: uppercase; letter-spacing: 1.5px; }
+.battle-result-xp-fill { height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--legendary)); border-radius: 5px; transition: width 1s ease; }
+.battle-again-btn { display: inline-block; padding: 14px 34px; border-radius: 12px; background: linear-gradient(135deg, #f0c767, #c99a3f); font-family: 'Russo One', sans-serif; font-size: 14px; color: #241a08; text-transform: uppercase; letter-spacing: .08em; }
 @keyframes squadPulse { 0%,100%{ transform:translate(-50%,-50%) scale(1); } 50%{ transform:translate(-50%,-50%) scale(1.08); } }
 .squad-slot.highlight { animation: squadPulse .75s ease; }
 
@@ -2588,13 +2601,17 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; margin-top: 20px;
 }
 .quest-section-title::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(214,168,79,.42), transparent); }
-.quest-section-title:first-child { margin-top: 0; }
+/* Only the very first title on the screen hugs the top — the Quests screen is
+   four stacked containers, and each system deserves its full 20px break. */
+#playerQuestsList .quest-section-title:first-child { margin-top: 0; }
 .quest-card {
   padding: 14px; background: linear-gradient(160deg, rgba(214,168,79,.05), var(--bg2) 40%); border-radius: 14px;
   border: 1px solid rgba(214,168,79,.14); margin-bottom: 10px;
   display: flex; gap: 12px; align-items: center;
   box-shadow: 0 6px 18px rgba(0,0,0,.22);
 }
+/* Finished walks sit quietly under the live board. */
+.quest-card.is-history { opacity: .7; padding: 10px 14px; box-shadow: none; }
 .quest-icon {
   width: 44px; height: 44px; border-radius: 12px; display: flex;
   align-items: center; justify-content: center; font-size: 22px;
@@ -2605,30 +2622,31 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .quest-name { font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 14px; }
 .quest-desc { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .quest-progress-bar { width: 100%; height: 6px; background: var(--bg4); border-radius: 3px; margin-top: 6px; overflow: hidden; }
-.quest-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2)); transition: width 0.5s ease; }
+.quest-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--legendary)); transition: width 0.5s ease; }
 .quest-progress-text { font-family: 'Rajdhani', sans-serif; font-size: 11px; font-weight: 600; color: var(--text3); margin-top: 2px; }
 .quest-reward {
-  flex-shrink: 0; padding: 6px 10px; background: rgba(255,212,59,0.1);
-  border: 1px solid rgba(255,212,59,0.2); border-radius: 6px;
+  flex-shrink: 0; padding: 6px 10px; background: rgba(240,199,103,0.10);
+  border: 1px solid rgba(240,199,103,0.24); border-radius: 10px;
   font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 12px; color: var(--legendary);
   text-align: center;
 }
 .quest-card.completed { opacity: 0.5; }
 .quest-card.completed .quest-progress-fill { background: var(--hp-green); }
+/* The base button stands still — only a real claim (.pulse) throbs, so the
+   plain MAP button built from this class stops pretending to be a reward. */
 .quest-claim-btn {
-  flex-shrink: 0; padding: 8px 14px; background: linear-gradient(135deg, var(--legendary), #f59f00);
-  border-radius: 6px; font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: 12px; color: #000; text-transform: uppercase;
-  animation: claimPulse 1.5s ease infinite;
+  flex-shrink: 0; padding: 8px 14px; background: linear-gradient(135deg, #f0c767, #c99a3f);
+  border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 12px; color: #241a08; text-transform: uppercase;
 }
-@keyframes claimPulse { 0%,100%{box-shadow:0 0 8px rgba(255,212,59,0.3)} 50%{box-shadow:0 0 16px rgba(255,212,59,0.6)} }
 /* Player Quests — the guided chain pinned to the top of the Quests tab */
 .player-quest-card { border-color: rgba(214,168,79,.45); background: linear-gradient(180deg, rgba(214,168,79,.10), rgba(0,0,0,.18)); }
 .player-quest-count { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(214,168,79,.16); border: 1px solid rgba(214,168,79,.3); font-size: 11px; color: var(--accent); }
 .quest-go-btn {
-  flex-shrink: 0; padding: 8px 14px; background: linear-gradient(135deg, #4dabf7, #1971c2);
-  border-radius: 6px; font-family: 'Rajdhani', sans-serif; font-weight: 700;
-  font-size: 12px; color: #fff; text-transform: uppercase;
+  flex-shrink: 0; padding: 8px 14px; border: 1px solid rgba(240,199,103,.5);
+  background: linear-gradient(160deg, rgba(63,44,21,.92), rgba(24,16,8,.94));
+  border-radius: 12px; font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: 12px; color: #ffe9a8; text-transform: uppercase;
 }
 .merlin-clue-notebook { margin-top: 12px; padding: 12px; background: rgba(151,117,250,0.08); border: 1px solid rgba(151,117,250,0.22); border-radius: 12px; }
 .merlin-clue-title { font-family: 'Russo One', sans-serif; font-size: 13px; color: var(--legendary); letter-spacing: 0.8px; margin-bottom: 8px; }
@@ -2669,7 +2687,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 }
 .profile-xp-bar { width: 100%; height: 8px; background: var(--bg4); border-radius: 4px; overflow: hidden; }
 .profile-xp-fill {
-  height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--accent2));
+  height: 100%; background: linear-gradient(90deg, var(--accent3), var(--accent), var(--legendary));
   border-radius: 4px; transition: width 0.5s ease;
 }
 
@@ -2726,7 +2744,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .cloud-setup-hint { margin-top:10px; font-size:11px; line-height:1.35; color:var(--text3); }
 .leaderboard-tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px; }
 .leaderboard-tab { min-height:46px; border-radius:12px; border:1px solid rgba(255,255,255,.08); background:var(--bg2); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.06em; }
-.leaderboard-tab.active { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#11100d; }
+.leaderboard-tab.active { background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; }
 
 .leaderboard-list { display:flex; flex-direction:column; gap:8px; }
 .leaderboard-row { display:grid; grid-template-columns:34px 1fr auto; gap:10px; align-items:center; padding:10px; border:1px solid rgba(255,255,255,.08); background:rgba(0,0,0,.24); border-radius:13px; }
@@ -2782,7 +2800,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-crop-actions button { flex:1; min-height:52px; border-radius:14px; border:0; cursor:pointer;
   font-family:'Rajdhani',sans-serif; font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:.06em; }
 .bird-crop-retake { background:rgba(255,255,255,.1); color:var(--text2); }
-.bird-crop-confirm { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#11100d; }
+.bird-crop-confirm { background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; }
 .bird-crop-confirm:disabled { opacity:.6; cursor:default; }
 .capture-flash {
   position: absolute; inset: 0;
@@ -2988,13 +3006,16 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 }
 .modal-overlay.show { display: flex; }
 .modal-sheet {
-  width: 100%; max-width: 420px; max-height: 70vh; background: var(--bg2);
-  border-radius: 16px 16px 0 0; padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom));
+  width: 100%; max-width: 420px; max-height: 70vh;
+  background: linear-gradient(180deg, #171512, #070706);
+  border: 1px solid rgba(214,168,79,.28); border-bottom: none;
+  box-shadow: 0 -14px 44px rgba(0,0,0,.55);
+  border-radius: 22px 22px 0 0; padding: 20px 16px; padding-bottom: calc(20px + var(--safe-bottom));
   overflow-y: auto; animation: sheetUp 0.3s ease;
 }
 @keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
 .modal-handle {
-  width: 40px; height: 4px; background: var(--bg4); border-radius: 2px;
+  width: 40px; height: 4px; background: rgba(244,234,212,.22); border-radius: 2px;
   margin: 0 auto 16px;
 }
 .modal-title { font-family: 'Russo One', sans-serif; font-size: 18px; margin-bottom: 16px; }
@@ -3128,7 +3149,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 }
 .bird-info-close {
   width: 100%; margin-top: 14px; padding: 12px; border: 0; border-radius: 12px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white;
+  background: linear-gradient(135deg, var(--accent), var(--legendary)); color: #241a08;
   font-family:'Rajdhani', sans-serif; font-weight: 900; font-size: 15px;
 }
 .card-info-hint { margin-top: 4px; color: var(--accent2); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -3167,11 +3188,15 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-hunger-note { margin-top:3px; color:var(--text3); font-size:9px; line-height:1.2; }
 
 /* ========== TOAST NOTIFICATIONS ========== */
-.toast-container { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 900; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(92vw, 460px); pointer-events: none; }
+/* Toasts stand above every gameplay sheet (recruit 1360, equip 1370, Merlin
+   1500) — a message fired from an open sheet must not land behind it. */
+.toast-container { position: fixed; top: calc(64px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 1600; display: flex; flex-direction: column; align-items: center; gap: 8px; width: min(92vw, 460px); pointer-events: none; }
 .toast {
-  padding: 10px 20px; border-radius: 8px; background: var(--bg3);
-  border: 1px solid rgba(255,255,255,0.1); font-family: 'Rajdhani', sans-serif;
-  font-weight: 600; font-size: 13px;
+  padding: 10px 20px; border-radius: 12px;
+  background: linear-gradient(160deg, rgba(38,30,15,.96), rgba(14,12,8,.96));
+  border: 1px solid rgba(214,168,79,.30); color: #f3e6c4;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500; font-size: 12.5px; line-height: 1.45;
   /* Long messages wrap inside the container instead of running off both
      edges of a phone screen and covering the header/map. */
   max-width: 100%; white-space: normal; text-align: center; overflow-wrap: anywhere;
@@ -3397,7 +3422,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .starter-quest-copy { color:var(--text3); font-size:11px; line-height:1.35; margin-top:4px; }
 
 /* ---- Fallout Shelter-style quest board ---- */
-.quest-board-card { display:flex; align-items:center; gap:12px; margin:0 10px 10px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.10),rgba(0,0,0,.28)); cursor:pointer; transition:transform .15s ease, border-color .2s ease; }
+.quest-board-card { display:flex; align-items:center; gap:12px; margin:0 0 10px; padding:12px; border-radius:16px; border:1px solid rgba(214,168,79,.22); background:linear-gradient(135deg,rgba(214,168,79,.10),rgba(0,0,0,.28)); box-shadow:0 6px 18px rgba(0,0,0,.22); cursor:pointer; transition:transform .15s ease, border-color .2s ease; }
 .quest-board-card:active { transform:scale(.98); }
 .quest-board-card.locked { opacity:.5; cursor:default; }
 .quest-board-icon { width:44px; height:44px; display:grid; place-items:center; font-size:24px; border-radius:13px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.28), rgba(0,0,0,.35)); border:1px solid rgba(214,168,79,.3); flex:none; }
@@ -3438,7 +3463,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .resource-quest-go:active { transform:scale(.985); }
 .resource-quest-later { width:100%; min-height:36px; margin-top:8px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
 .quest-duration { font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--text3); background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.25); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
-.quest-away-card { display:flex; align-items:center; gap:12px; margin:0 10px 10px; padding:12px; border-radius:16px; border:1px solid rgba(120,200,140,.28); background:linear-gradient(135deg,rgba(60,120,80,.14),rgba(0,0,0,.3)); cursor:pointer; transition:transform .15s ease; }
+.quest-away-card { display:flex; align-items:center; gap:12px; margin:0 0 10px; padding:12px; border-radius:16px; border:1px solid rgba(120,200,140,.28); background:linear-gradient(135deg,rgba(60,120,80,.14),rgba(0,0,0,.3)); box-shadow:0 6px 18px rgba(0,0,0,.22); cursor:pointer; transition:transform .15s ease; }
 .quest-away-card:active { transform:scale(.98); }
 .quest-away-card.ready { border-color:rgba(255,212,90,.6); background:linear-gradient(135deg,rgba(214,168,79,.2),rgba(0,0,0,.3)); box-shadow:0 0 18px rgba(214,168,79,.22); }
 .quest-away-art, img.quest-away-art { width:46px; height:46px; border-radius:12px; object-fit:cover; display:grid; place-items:center; font-size:24px; background:rgba(0,0,0,.3); flex:none; }
@@ -3447,7 +3472,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 @keyframes claimPulse { 0%,100% { transform:scale(1); box-shadow:0 0 0 rgba(214,168,79,0); } 50% { transform:scale(1.07); box-shadow:0 0 16px rgba(214,168,79,.55); } }
 .quest-card.claiming { animation:questCardOut .6s ease-in forwards; }
 @keyframes questCardOut { 0% { opacity:1; transform:translateX(0) scale(1); } 30% { transform:translateX(0) scale(1.03); } 100% { opacity:0; transform:translateX(60px) scale(.92); max-height:0; margin-bottom:0; padding-top:0; padding-bottom:0; } }
-.quest-all-done { margin:0 10px 12px; padding:10px 12px; border-radius:12px; border:1px dashed rgba(214,168,79,.3); color:var(--text3); font-size:12px; }
+.quest-all-done { margin:0 0 12px; padding:10px 12px; border-radius:12px; border:1px dashed rgba(214,168,79,.3); color:var(--text3); font-size:12px; }
 
 /* Quest overlay (send sheet + adventure log) */
 .quest-overlay { position:fixed; inset:0; z-index:600; display:none; align-items:flex-end; justify-content:center; background:rgba(4,6,5,.72); backdrop-filter:blur(4px); }
@@ -3475,7 +3500,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .quest-overlay-close { position:absolute; top:12px; right:12px; width:32px; height:32px; border-radius:50%; border:1px solid rgba(255,255,255,.14); background:rgba(0,0,0,.4); color:var(--text3); font-size:14px; }
 .quest-overlay-head { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
 .quest-overlay-icon { width:52px; height:52px; display:grid; place-items:center; font-size:28px; border-radius:15px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.3), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.35); flex:none; }
-.quest-overlay-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:19px; letter-spacing:.04em; color:#f4ead4; text-transform:uppercase; }
+.quest-overlay-title { font-family:'Russo One',sans-serif; font-weight:400; font-size:16px; letter-spacing:.03em; color:#f4ead4; text-transform:uppercase; }
 .quest-overlay-sub { font-size:12px; color:var(--text3); margin-top:2px; }
 .quest-overlay-copy { font-size:12.5px; line-height:1.45; color:var(--text2); margin-bottom:10px; }
 .quest-overlay-label { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--accent2); margin:8px 0 4px; }
@@ -3620,7 +3645,13 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-locked-room { padding:16px 14px; border:1px dashed rgba(214,168,79,.30); border-radius:14px; background:rgba(214,168,79,.06); color:var(--text2); font-size:12px; line-height:1.45; }
 .academy-move-btn.locked { opacity:.82; border-color:rgba(214,168,79,.34); color:var(--accent2); }
 @media (min-width: 720px) { .academy-build-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
-.nav-action-badge { position:absolute; top:4px; left:calc(50% + 8px); min-width:16px; height:16px; padding:0 4px; display:grid; place-items:center; border-radius:999px; border:2px solid #090806; background:linear-gradient(145deg,#ff6b6b,#c92f42); color:#fff; box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 8px rgba(255,74,92,.45); font:800 9px/1 'Rajdhani',sans-serif; z-index:3; pointer-events:none; animation:navActionPulse 1.8s ease-in-out infinite; }
+/* The red dot: a calm, legible pill. It pops once when it arrives and then
+   stands still — six dots pulsing in sync read as noise, not news. */
+.nav-action-badge { position:absolute; top:3px; left:calc(50% + 7px); min-width:18px; height:18px; padding:0 5px; display:grid; place-items:center; border-radius:999px; border:2px solid #0a0805; background:linear-gradient(180deg,#ef5350,#c62f3e); color:#fff; box-shadow:0 1px 3px rgba(0,0,0,.6); font:800 10px/1 'Rajdhani',sans-serif; font-variant-numeric:tabular-nums; z-index:3; pointer-events:none; animation:navBadgeIn .35s cubic-bezier(.34,1.56,.64,1); }
+@keyframes navBadgeIn { from { transform:scale(.4); opacity:0; } to { transform:scale(1); opacity:1; } }
+/* When the numbered badge stands on a tab, the plain tutorial dot yields —
+   two red dots on one 52px tab read as a rendering bug. */
+.nav-item.has-action.tutorial-alert::after { display:none; }
 .sr-only { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
 @keyframes navActionPulse { 0%,100% { transform:scale(1); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 5px rgba(255,74,92,.35); } 50% { transform:scale(1.08); box-shadow:0 2px 7px rgba(0,0,0,.55),0 0 10px rgba(255,74,92,.58); } }
 @media (prefers-reduced-motion: reduce) { .nav-action-badge { animation:none; } }
@@ -3827,12 +3858,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 @keyframes villageMarkerBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
 @media (max-width: 430px) {
-  .nav-label { font-size: 8.5px; letter-spacing: 0.02em; }
   .nav-icon { font-size: 17px; }
 }
 /* ---- Walking quests (real-world adventure) ---- */
 .map-quest-btn { position:absolute; right:12px; top:64px; z-index:44; min-width:178px; height:62px; padding:5px 12px 5px 6px; border-radius:19px; border:1px solid rgba(240,199,103,.64); background:radial-gradient(circle at 14% 30%,rgba(52,111,86,.34),transparent 34%),linear-gradient(145deg,rgba(39,31,17,.96),rgba(10,18,14,.97)); color:#fff6d7; font-family:inherit; display:flex; align-items:center; gap:9px; box-shadow:0 12px 28px rgba(0,0,0,.5),inset 0 1px rgba(255,255,255,.1),0 0 22px rgba(75,196,153,.10); overflow:hidden; }
-.map-quest-btn::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.10) 47%,transparent 67%); transform:translateX(-110%); animation:questControlSheen 5.2s ease-in-out infinite; }
+.map-quest-btn::after { content:''; position:absolute; inset:0; pointer-events:none; background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.10) 47%,transparent 67%); transform:translateX(-110%); animation:questControlSheen 5.2s ease-in-out 4; }
 @keyframes questControlSheen { 0%,70%{transform:translateX(-110%)} 88%,100%{transform:translateX(120%)} }
 .map-quest-btn-art { position:relative; z-index:1; width:49px; height:49px; flex:none; object-fit:cover; border-radius:14px; border:1px solid rgba(240,199,103,.54); box-shadow:0 0 0 2px rgba(0,0,0,.4),0 0 18px rgba(87,215,173,.25); }
 .map-quest-btn-copy { position:relative; z-index:1; min-width:0; text-align:left; line-height:1; }
@@ -3944,7 +3974,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .tavern-lines { margin:8px 0 4px; }
 .tavern-line { margin:4px 0; }
 .tavern-fact { margin:8px 0; padding:8px 10px; border-radius:10px; background:rgba(126,224,138,.09); border-left:2px solid #7ee08a; color:var(--text2); font-size:12.5px; line-height:1.5; }
-.tavern-drink { display:flex; align-items:center; gap:10px; width:100%; margin:6px 0; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.30); color:var(--text1); text-align:left; }
+.tavern-drink { display:flex; align-items:center; gap:10px; width:100%; margin:6px 0; padding:9px 10px; border-radius:12px; background:rgba(214,168,79,.10); border:1px solid rgba(214,168,79,.30); color:var(--text); text-align:left; }
 .tavern-drink:active { transform:scale(.985); }
 .tavern-drink[disabled] { opacity:.45; filter:grayscale(.4); }
 .tavern-drink-icon { font-size:26px; }
@@ -4045,8 +4075,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
       <div class="hud-resources">
         <button class="hud-chip" id="hudCoinsChip" title="Coins — earned from quests, battles and taxes; spent recruiting birds and building" aria-label="Coins — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/coin.webp" alt=""><span class="hud-chip-copy"><span class="hud-chip-label">Coins</span><span class="hud-chip-value" id="hudCoins">0</span></span></button>
-        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/timber.webp" alt=""><span class="hud-chip-value" id="hudTimber">0</span></button>
-        <button class="hud-chip" id="hudStoneChip" title="Stone — dug by your Miners’ Huts and cut by your Quarries; spent on Stone Cottages and town buildings" aria-label="Stone — open Royal Stores"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/stone.svg" alt=""><span class="hud-chip-value" id="hudStone">0</span></button>
+        <button class="hud-chip" id="hudTimberChip" title="Timber — hauled home by birds on quests; spent on Academy and Empire buildings" aria-label="Timber — open bag"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/timber.webp" alt=""><span class="hud-chip-copy"><span class="hud-chip-label">Timber</span><span class="hud-chip-value" id="hudTimber">0</span></span></button>
+        <button class="hud-chip" id="hudStoneChip" title="Stone — dug by your Miners’ Huts and cut by your Quarries; spent on Stone Cottages and town buildings" aria-label="Stone — open Royal Stores"><img class="hud-chip-icon" src="assets/ui/burbz-icon-set/stone.svg" alt=""><span class="hud-chip-copy"><span class="hud-chip-label">Stone</span><span class="hud-chip-value" id="hudStone">0</span></span></button>
       </div>
     </div>
     <button class="merlin-listening-dock" id="merlinDockReturn" type="button" aria-label="Merlin is listening — open listener">
@@ -4699,8 +4729,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
   <!-- Settings Modal -->
   <div class="modal-overlay" id="settingsModal">
-    <div class="modal-sheet">
+    <div class="modal-sheet" style="position:relative">
       <div class="modal-handle"></div>
+      <button type="button" class="quest-overlay-close" id="settingsCloseBtn" aria-label="Close settings">✕</button>
       <div class="modal-title">Settings</div>
       <button type="button" class="settings-row settings-feedback" id="sendFeedbackBtn" aria-label="Send feedback, report a bug, or suggest an idea">
         <div>
@@ -20297,9 +20328,11 @@ function renderWalkingQuestSection() {
   if (!wq.history.length) {
     html += '<div class="quest-all-done">No adventures completed yet — open Explore Quests and take a real walk!</div>';
   } else {
-    wq.history.slice(0, 25).forEach((s, i) => {
+    // Six finished walks are a memory shelf; twenty-five were a wall burying
+    // the live quests below. Each card still opens its full summary sheet.
+    wq.history.slice(0, 6).forEach((s, i) => {
       const meta = WALK_QUEST_KIND_META[s.type] || WALK_QUEST_KIND_META.path;
-      html += '<div class="quest-card" data-walk-history="' + i + '"><div class="quest-icon">' + meta.icon + '</div><div class="quest-info">' +
+      html += '<div class="quest-card is-history" data-walk-history="' + i + '"><div class="quest-icon">' + meta.icon + '</div><div class="quest-info">' +
         '<div class="quest-name">' + escapeHtml(s.name) + '</div>' +
         '<div class="quest-desc">' + new Date(s.completedAt).toLocaleDateString() + ' · ' + s.distanceKm.toFixed(2) + ' km · ' + s.durationMin + ' min · ' + (s.birds || []).length + ' 🐦 · ' + s.chestsOpened + ' 🎁 · +' + s.xp + ' XP' + (s.trailBirds && s.trailBirds.total ? ' · trail birds ' + s.trailBirds.matched + '/' + s.trailBirds.total + (s.trailBirds.fullSet ? ' 🏅' : '') : '') + '</div>' +
         '</div></div>';
@@ -21618,27 +21651,20 @@ function empireBuildingsComplete(nowValue) {
   return done + notices.filter(notice => notice && notice.kind === 'empire-building').length;
 }
 
-// Empire dot, third part: crews standing idle while the player could pay for
-// a build. It only speaks when NOTHING is rising anywhere in the realm — a
-// project already under way means the empire is working and needs no nudge —
-// and counts the villages where an affordable, unlocked build is waiting.
-function empireIdleAffordableBuilds(nowValue) {
-  const now = Number(nowValue) || Date.now();
+// Empire dot, third part: villages where the player could start a build right
+// now. Since polished-ui-notifications-v339 the rule is simple — if a village
+// has a free crew and the chest can pay for an unlocked build, the dot says
+// so. A project rising elsewhere no longer silences it: another village's
+// scaffold is no reason to hide work that is waiting here.
+function empireAffordableBuilds() {
   const villages = empireVillages();
   if (!villages.length) return 0;
-  // Anything under construction anywhere — a village yard or a hall order —
-  // and the dot stays dark: something IS being built.
-  if (villages.some(rec => villageConstructions(rec).length > 0)) return 0;
-  const hallBusy = (empireSettlementsInfo().towns || []).some(seat => {
-    const state = ensureTownSeatState(seat);
-    return state && state.hallConstruction && now < Number(state.hallConstruction.endMs);
-  });
-  if (hallBusy) return 0;
   const wallet = Number(gameState.player && gameState.player.coins) || 0;
   const timber = playerBranches();
   const stone = playerStone();
   const trainerLevel = Number(gameState.player && gameState.player.level) || 1;
   return villages.filter(rec => {
+    // Both crews busy means nothing can start here, whatever the wallet says.
     if (villageBuildSlotsFree(rec) <= 0) return false;
     return EMPIRE_BUILDINGS.some(b => {
       const level = villageBuildingLevel(rec, b.id);
@@ -21651,6 +21677,24 @@ function empireIdleAffordableBuilds(nowValue) {
       return wallet >= cost.coins && timber >= cost.branches && stone >= cost.stone;
     });
   }).length;
+}
+
+// Empire dot, fourth part: captured villages waiting to be freed. A won
+// Liberation Battle records a victory, but the village only joins the empire
+// when its birdhouse is built — so a victory with no birdhouse is a village
+// standing captured, waiting. When the player can pay for the birdhouse,
+// every such village counts: you can go and finish freeing it right now.
+function empireLiberationsReady() {
+  const empire = ensureEmpireState();
+  if (!empire) return 0;
+  const waiting = Object.keys(empire.liberationVictories || {})
+    .filter(key => !empire.villages[key]).length;
+  if (!waiting) return 0;
+  const cost = birdhouseCostForNextVillage();
+  const coins = Number(gameState.player && gameState.player.coins) || 0;
+  if (coins < (Number(cost.coins) || 0)) return 0;
+  if (playerBranches() < (Number(cost.branches) || 0)) return 0;
+  return waiting;
 }
 
 function normalizeActionBadgeState(now = Date.now()) {
@@ -21699,10 +21743,13 @@ function normalizeActionBadgeState(now = Date.now()) {
   try { forgeCraftableCount = forgeCraftableNow(); } catch (e) {}
   let buildingsCompleteCount = 0;
   try { buildingsCompleteCount = empireBuildingsComplete(now); } catch (e) {}
-  // Idle crews with money in the chest: the Empire dot also lights when the
-  // player can afford a build and nothing anywhere is being built.
-  let idleBuildsCount = 0;
-  try { idleBuildsCount = empireIdleAffordableBuilds(now); } catch (e) {}
+  // Money in the chest with a crew to spend it: the Empire dot also lights
+  // when the player can afford a build, and when a captured village only
+  // waits on its birdhouse to be freed.
+  let affordableBuildsCount = 0;
+  try { affordableBuildsCount = empireAffordableBuilds(); } catch (e) {}
+  let liberationsReadyCount = 0;
+  try { liberationsReadyCount = empireLiberationsReady(); } catch (e) {}
   let kitchenCount = 0;
   try { kitchenCount = kitchenBirdsNeedingFood(now); } catch (e) {}
   let hospitalCount = 0;
@@ -21731,7 +21778,7 @@ function normalizeActionBadgeState(now = Date.now()) {
     // The Stores and the Birds book carry no dot any more: neither holds
     // anything WAITING, and a dot that means "you could browse here" teaches
     // players to ignore dots. Their zero counts still clear old badges.
-    village: empireCollectCount + idleBuildsCount,
+    village: empireCollectCount + affordableBuildsCount + liberationsReadyCount,
     buildingsComplete: buildingsCompleteCount,
     kitchen: kitchenCount,
     hospital: hospitalCount,
@@ -26865,7 +26912,7 @@ function renderRegionScreen() {
   } else {
     regionUpgradeBody = '<div class="town-section-copy">👑 Every home and yard across the region stands at its highest level.</div>';
   }
-  const regionUpgradeSection = '<div class="town-section is-gold" id="regionUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Region' + infoDotHTML('infoNoteRegionUpgrade', 'How the region-wide upgrade works') + '</div>' + infoNoteHTML('infoNoteRegionUpgrade', 'One order upgrades every home and yard across the whole region — the buildings rise together, no town micromanaging.') + regionUpgradeBody + '</div>';
+  const regionUpgradeSection = '<div class="town-section" id="regionUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Region' + infoDotHTML('infoNoteRegionUpgrade', 'How the region-wide upgrade works') + '</div>' + infoNoteHTML('infoNoteRegionUpgrade', 'One order upgrades every home and yard across the whole region — the buildings rise together, no town micromanaging.') + regionUpgradeBody + '</div>';
   // Caravan roads that touch this county, run from this desk too.
   const touchingRoutes = empireTradeRouteRecords().filter(({ a, b }) => a.id === region.id || b.id === region.id);
   const routesHtml = touchingRoutes.length
@@ -27600,7 +27647,7 @@ function renderTownScreen() {
   } else {
     upgradeHtml = '<div class="town-section-copy">👑 Every home and yard across the town stands at its highest level.</div>';
   }
-  const upgradeSection = '<div class="town-section is-gold" id="townUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Town' + infoDotHTML('infoNoteTownUpgrade', 'How the town-wide upgrade works') + '</div>' + infoNoteHTML('infoNoteTownUpgrade', 'One order upgrades every home and yard across all ' + townMemberRecords(settle).length + ' wards — the buildings rise together, no ward micromanaging.') + upgradeHtml + '</div>';
+  const upgradeSection = '<div class="town-section" id="townUpgradeSection"><div class="town-section-title">⬆️ Upgrade the Whole Town' + infoDotHTML('infoNoteTownUpgrade', 'How the town-wide upgrade works') + '</div>' + infoNoteHTML('infoNoteTownUpgrade', 'One order upgrades every home and yard across all ' + townMemberRecords(settle).length + ' wards — the buildings rise together, no ward micromanaging.') + upgradeHtml + '</div>';
   // 👣 Small doors back into the old villages — just to look.
   const visitSection = '<div class="town-section" id="townVisitSection"><div class="town-section-title">👣 Visit the Old Villages' + infoDotHTML('infoNoteTownVisit', 'What visiting does') + '</div>' + infoNoteHTML('infoNoteTownVisit', 'Step back into any ward and see the village as it was. Just a look — governing stays here.') + '<div class="visit-chip-row">' +
     townMemberRecords(settle).map(rec => '<button type="button" class="visit-chip" data-action="town-visit" data-seed="' + (rec.seed >>> 0) + '">' + empireVillageCrest(rec.seed) + ' ' + escapeHtml(rec.name) + '</button>').join('') +
@@ -27617,7 +27664,7 @@ function renderTownScreen() {
     metalWorksSectionHtml(settle) +
     '<div class="town-section"><div class="town-section-title">🥣 Provisions & Workforce' + infoDotHTML('infoNoteTownProvisions', 'How wards grow') + '</div>' + infoNoteHTML('infoNoteTownProvisions', 'Each fully fed, watered and happy ward can grow up to its own housing limit.') + '<div class="town-section-copy">👷 ' + snap.workforce.working + '/' + snap.workforce.required + ' workers staffed · ' + snap.workforce.available + ' residents</div>' + provisionsHtml + needsHtml + '<button class="town-action" data-action="town-supply"' + (storesFull ? ' disabled' : '') + '>🛒 SEND SUPPLY CART · ' + VILLAGE_SUPPLY_CART.coins + ' 🪙</button></div>' +
     entertainmentSectionHtml(settle) +
-    '<div class="town-section is-gold"><div class="town-section-title">📜 Council Policy' + infoDotHTML('infoNoteTownPolicy', 'What each policy does') + '</div>' + infoNoteHTML('infoNoteTownPolicy', escapeHtml(policyNote)) + '<div class="town-policy-grid">' + policies + '</div></div>' +
+    '<div class="town-section"><div class="town-section-title">📜 Council Policy' + infoDotHTML('infoNoteTownPolicy', 'What each policy does') + '</div>' + infoNoteHTML('infoNoteTownPolicy', escapeHtml(policyNote)) + '<div class="town-policy-grid">' + policies + '</div></div>' +
     countyHtml +
     visitSection +
     '<div class="town-section"><div class="town-section-title">🏛️ Lord Mayor' + infoDotHTML('infoNoteTownMayor', 'What the Lord Mayor does') + '</div>' + infoNoteHTML('infoNoteTownMayor', 'One bird wears the chain for the whole settlement and runs every project in it. Absorbed ward posts are retired.') + steward + '</div>';
@@ -38147,7 +38194,7 @@ function drawWaveform() {
     const data = new Uint8Array(analyserNode.frequencyBinCount);
     analyserNode.getByteTimeDomainData(data);
 
-    ctx.fillStyle = 'rgba(18,18,30,0.3)';
+    ctx.fillStyle = 'rgba(17,16,13,0.3)';
     ctx.fillRect(0, 0, W, H);
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#d6a84f';
@@ -41252,7 +41299,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'gentle-start-v338-20260831';
+const BURBZ_BUILD = 'polished-ui-notifications-v339-20260901';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -42052,6 +42099,7 @@ $('settingsModal').addEventListener('click', (e) => {
     $('settingsModal').classList.remove('show');
   }
 });
+$('settingsCloseBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} });
 
 $('birdInfoClose').addEventListener('click', closeBirdInfo);
 $('birdInfoModal').addEventListener('click', (e) => {
