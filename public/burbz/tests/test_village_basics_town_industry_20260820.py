@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "trail-mode-v329-20260825"
-CURRENT_BUILD = "gentle-start-v338-20260831"
+CURRENT_BUILD = "polished-ui-notifications-v339-20260901"
 
 # The Iron Foundry and the Entertainment House are town industry too — they
 # arrived with the towns-3D release and the pin had not been told.

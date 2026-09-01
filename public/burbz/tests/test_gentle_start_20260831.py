@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "onboarding_gate_core.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "gentle-start-v338-20260831"
-CURRENT_BUILD = "gentle-start-v338-20260831"
+CURRENT_BUILD = "polished-ui-notifications-v339-20260901"
 
 
 def html_text() -> str:
@@ -360,7 +360,9 @@ def test_release_plumbing():
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
-    assert sw.count(f"-{OWN_RELEASE_PIN}'") == 1  # cache name grew one segment
+    # The segment is in the lineage. It led the cache name only until the next
+    # release appended its own (polished-ui-notifications-v339 was the first).
+    assert sw.count(f"-{OWN_RELEASE_PIN}") == 1
     assert f'<script src="onboarding_gate_core.js?v={OWN_RELEASE_PIN}"></script>' in html
     assert sw.count(f"./onboarding_gate_core.js?v={OWN_RELEASE_PIN}") == 2
     # The VPS updater ships the new core, or live 404s the feature.

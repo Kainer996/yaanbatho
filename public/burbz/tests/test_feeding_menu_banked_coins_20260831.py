@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "feeding-menu-banked-coins-v337-20260831"
-CURRENT_BUILD = "gentle-start-v338-20260831"
+CURRENT_BUILD = "polished-ui-notifications-v339-20260901"
 PREVIOUS_RELEASE_PIN = "screen-swipe-v336-20260831"
 
 
@@ -180,7 +180,7 @@ def test_the_quiet_claim_banks_without_taking_the_screen_over():
 
 
 # ---------------------------------------------------------------------------
-# 3 + 4. The dots: Stores dark, Empire lit when idle money could be building
+# 3 + 4. The dots: Stores dark, Empire lit when money could be building
 # ---------------------------------------------------------------------------
 
 def test_the_stores_dot_is_gone():
@@ -190,22 +190,22 @@ def test_the_stores_dot_is_gone():
     assert "inventory:" not in state.split("return {")[1]
 
 
-def test_the_empire_dot_lights_for_idle_affordable_builds():
+def test_the_empire_dot_lights_for_affordable_builds():
+    # polished-ui-notifications-v339 retargeted this suite: the dot no longer
+    # waits for the whole realm to stand idle. If a village has a free crew
+    # and the chest covers an unlocked build, the dot says so — a scaffold
+    # rising elsewhere is no reason to hide work waiting here.
     html = html_text()
     state = function_source(html, "normalizeActionBadgeState")
-    assert "idleBuildsCount = empireIdleAffordableBuilds(now)" in state
-    assert "village: empireCollectCount + idleBuildsCount" in state
+    assert "affordableBuildsCount = empireAffordableBuilds()" in state
+    assert "village: empireCollectCount + affordableBuildsCount + liberationsReadyCount" in state
     src = "\n".join([
         "let villages = [];",
         "let wallet = { coins: 200, branches: 50, stone: 0 };",
-        "let towns = [];",
         "let gameState = { player: { get coins() { return wallet.coins; }, level: 9 } };",
         "const playerBranches = () => wallet.branches;",
         "const playerStone = () => wallet.stone;",
         "const empireVillages = () => villages;",
-        "const villageConstructions = rec => rec.constructions || [];",
-        "const empireSettlementsInfo = () => ({ towns });",
-        "const ensureTownSeatState = seat => seat;",
         "const villageBuildSlotsFree = rec => rec.slotsFree == null ? 1 : rec.slotsFree;",
         "const EMPIRE_BUILDINGS = [",
         "  { id:'cabin', maxLevel: 3, unlockLevel: 1, cost: { coins: 60, branches: 20, stone: 0 } },",
@@ -215,35 +215,69 @@ def test_the_empire_dot_lights_for_idle_affordable_builds():
         "const villageBuildingLevel = (rec, id) => (rec.levels && rec.levels[id]) || 0;",
         "const settlementAllowsBuilding = (rec, b) => b.tier !== 'town';",
         "const villageBuildingCost = (b, level) => ({ coins: b.cost.coins * (level + 1), branches: b.cost.branches * (level + 1), stone: (b.cost.stone || 0) * (level + 1) });",
-        function_source(html, "empireIdleAffordableBuilds"),
+        function_source(html, "empireAffordableBuilds"),
         "const out = {};",
         "villages = [{ seed: 1 }, { seed: 2 }];",
-        "out.twoIdleVillagesTwoDots = empireIdleAffordableBuilds(0);",
-        "villages = [{ seed: 1 }, { seed: 2, constructions: [{ id:'cabin' }] }];",
-        "out.anythingRisingGoesDark = empireIdleAffordableBuilds(0);",
-        "villages = [{ seed: 1 }]; towns = [{ hallConstruction: { endMs: 99 } }];",
-        "out.hallOrderCountsAsRising = empireIdleAffordableBuilds(50);",
-        "towns = [];",
+        "out.twoVillagesTwoDots = empireAffordableBuilds();",
+        "villages = [{ seed: 1 }, { seed: 2, slotsFree: 0 }];",
+        "out.aRisingBuildElsewhereNoLongerHidesIt = empireAffordableBuilds();",
         "wallet = { coins: 10, branches: 0, stone: 0 };",
-        "out.tooPoorStaysDark = empireIdleAffordableBuilds(0);",
+        "out.tooPoorStaysDark = empireAffordableBuilds();",
         "wallet = { coins: 200, branches: 50, stone: 0 };",
         "villages = [{ seed: 1, levels: { cabin: 3 } }];",
-        "out.onlyLockedOrTownWorksLeftStaysDark = empireIdleAffordableBuilds(0);",
+        "out.onlyLockedOrTownWorksLeftStaysDark = empireAffordableBuilds();",
         "villages = [{ seed: 1, slotsFree: 0 }];",
-        "out.noFreeCrewStaysDark = empireIdleAffordableBuilds(0);",
+        "out.noFreeCrewStaysDark = empireAffordableBuilds();",
         "villages = [];",
-        "out.noVillagesNoDot = empireIdleAffordableBuilds(0);",
+        "out.noVillagesNoDot = empireAffordableBuilds();",
         "console.log(JSON.stringify(out));",
     ])
     out = run_node(src)
     assert out == {
-        "twoIdleVillagesTwoDots": 2,
-        "anythingRisingGoesDark": 0,
-        "hallOrderCountsAsRising": 0,
+        "twoVillagesTwoDots": 2,
+        "aRisingBuildElsewhereNoLongerHidesIt": 1,
         "tooPoorStaysDark": 0,
         "onlyLockedOrTownWorksLeftStaysDark": 0,
         "noFreeCrewStaysDark": 0,
         "noVillagesNoDot": 0,
+    }
+
+
+def test_the_empire_dot_lights_for_a_captured_village_awaiting_its_birdhouse():
+    # polished-ui-notifications-v339: a won Liberation Battle records a
+    # victory, but the village only joins the empire once its birdhouse is
+    # built. While the player can pay for that birdhouse, every captured
+    # village still waiting lights the Empire dot.
+    html = html_text()
+    state = function_source(html, "normalizeActionBadgeState")
+    assert "liberationsReadyCount = empireLiberationsReady()" in state
+    src = "\n".join([
+        "let empire = { liberationVictories: {}, villages: {} };",
+        "let wallet = { coins: 100, branches: 30 };",
+        "let gameState = { player: { get coins() { return wallet.coins; } } };",
+        "const ensureEmpireState = () => empire;",
+        "const playerBranches = () => wallet.branches;",
+        "const birdhouseCostForNextVillage = () => ({ coins: 60, branches: 15 });",
+        function_source(html, "empireLiberationsReady"),
+        "const out = {};",
+        "out.nothingCapturedNoDot = empireLiberationsReady();",
+        "empire.liberationVictories = { '7': { seed: 7 }, '9': { seed: 9 } };",
+        "out.twoCapturedVillagesTwoDots = empireLiberationsReady();",
+        "empire.villages['7'] = { seed: 7 };",
+        "out.aBuiltBirdhouseClearsItsDot = empireLiberationsReady();",
+        "wallet = { coins: 59, branches: 30 };",
+        "out.coinsShortStaysDark = empireLiberationsReady();",
+        "wallet = { coins: 100, branches: 14 };",
+        "out.timberShortStaysDark = empireLiberationsReady();",
+        "console.log(JSON.stringify(out));",
+    ])
+    out = run_node(src)
+    assert out == {
+        "nothingCapturedNoDot": 0,
+        "twoCapturedVillagesTwoDots": 2,
+        "aBuiltBirdhouseClearsItsDot": 1,
+        "coinsShortStaysDark": 0,
+        "timberShortStaysDark": 0,
     }
 
 

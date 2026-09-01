@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "gentle-start-v338-20260831"
+CURRENT_BUILD = "polished-ui-notifications-v339-20260901"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 KNOWN_HABITATS = {"water", "wetland", "woodland", "heath", "park", "farmland",

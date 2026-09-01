@@ -56,7 +56,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 # while the head build moves on — a core pin never tracks CURRENT_BUILD.
 OWN_RELEASE_PIN = "nav-action-badges-v312-20260824"
 PREVIOUS_RELEASE_PIN = "village-work-huts-v311-20260824"
-CURRENT_BUILD = "gentle-start-v338-20260831"
+CURRENT_BUILD = "polished-ui-notifications-v339-20260901"
 
 
 def run_node(source: str):
@@ -510,7 +510,11 @@ def test_every_new_count_is_wrapped_so_one_failure_cannot_blank_the_dock():
     for var, call, key in (
         ("forgeCraftableCount", "forgeCraftableNow()", "forgeCraftable: forgeCraftableCount"),
         ("buildingsCompleteCount", "empireBuildingsComplete(now)", "buildingsComplete: buildingsCompleteCount"),
-        ("idleBuildsCount", "empireIdleAffordableBuilds(now)", "village: empireCollectCount + idleBuildsCount"),
+        # polished-ui-notifications-v339 split the build half of the Empire dot
+        # in two: affordable builds waiting (no longer silenced by a project
+        # rising elsewhere) and captured villages whose birdhouse is payable.
+        ("affordableBuildsCount", "empireAffordableBuilds()", "village: empireCollectCount + affordableBuildsCount + liberationsReadyCount"),
+        ("liberationsReadyCount", "empireLiberationsReady()", "village: empireCollectCount + affordableBuildsCount + liberationsReadyCount"),
         ("kitchenCount", "kitchenBirdsNeedingFood(now)", "kitchen: kitchenCount"),
         ("hospitalCount", "hospitalPatientsWaiting()", "hospital: hospitalCount"),
         ("trainingCount", "trainingHubSessions()", "training: trainingCount"),
