@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "no-arms-card-art-v340-20260901"
+CURRENT_BUILD = "step-inside-buildings-v341-20260901"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
@@ -230,7 +230,8 @@ def test_town_3d_and_management_never_reopen_absorbed_villages():
     assert "openEmpireVillage(" not in renderer
     screen = function_source(html, "renderTownScreen")
     assert "openEmpireVillage(" not in screen
-    assert 'data-action="town-network"' in screen
+    # step-inside-buildings-v341: the yard tiles open building interiors.
+    assert 'data-action="town-enter"' in screen
     assert 'data-action="town-policy"' in screen
 
 

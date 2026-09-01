@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "onboarding_gate_core.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "gentle-start-v338-20260831"
-CURRENT_BUILD = "no-arms-card-art-v340-20260901"
+CURRENT_BUILD = "step-inside-buildings-v341-20260901"
 
 
 def html_text() -> str:
@@ -341,7 +341,10 @@ def test_every_build_order_reads_as_action_then_bill():
     # Village desk, region upgrade, town upgrade, hall upgrade, network,
     # town sheet build, liberation birdhouse.
     assert html.count("build-btn-act") >= 10
-    assert html.count("buildCostChipsHTML(") >= 8
+    # step-inside-buildings-v341: the desk grid and the town network cards
+    # became door tiles; their build orders (and bills) moved inside the
+    # buildings, so two chip call sites folded into the interior cards.
+    assert html.count("buildCostChipsHTML(") >= 7
     # The old single-string bill is gone from the village desk button.
     assert "' 🪙 + ' + cost.branches + ' 🪵 + ' + cost.stone + ' stone" not in html
 

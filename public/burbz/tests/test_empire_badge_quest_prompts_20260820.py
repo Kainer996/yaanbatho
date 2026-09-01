@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "no-arms-card-art-v340-20260901"
+CURRENT_BUILD = "step-inside-buildings-v341-20260901"
 
 
 def run_node(source: str):
@@ -190,12 +190,14 @@ def test_every_coin_and_timber_build_gate_offers_the_prompt():
 
 def test_short_build_buttons_stay_tappable():
     html = html_text()
-    # Province construction yard: shortfall dims the button, never disables it.
-    province = function_source(html, "renderVillageManagePanel")
+    # step-inside-buildings-v341: the build button stands inside the building
+    # now. Shortfall still dims it, never disables it.
+    province = function_source(html, "villageBuildingSheetHTML")
     assert "province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short')" in province
     assert "(affordable ? '' : ' disabled')" not in province
-    # Town networks: only a missing target or busy builders disable the button.
+    # Town yards: the tile always opens the interior; only a missing target
+    # ward disables it.
     town = function_source(html, "renderTownScreen")
-    assert "(tappable ? '' : ' disabled')" in town
+    assert "(target ? '' : ' disabled')" in town
     assert ".town-action.short {" in html
     assert ".province-build-btn.short {" in html

@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "no-arms-card-art-v340-20260901"
+CURRENT_BUILD = "step-inside-buildings-v341-20260901"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 
@@ -201,7 +201,12 @@ def test_every_removed_mechanic_is_still_alive_elsewhere():
     # Crews still gate what a village can build at once.
     desk = village_desk()
     assert "const buildSlots = villageBuildSlots(rec);" in desk
-    assert "const busyElsewhere = !inProgress && slotsFree <= 0;" in desk
+    # step-inside-buildings-v341: the build button moved inside the building;
+    # the same free-slot gate keeps it live from in there.
+    html = html_text()
+    interior = html[html.index("function villageBuildingSheetHTML("):]
+    interior = interior[:interior.index("\nfunction ", 40)]
+    assert "const busyElsewhere = !inProgress && slotsFree <= 0;" in interior
 
 
 def test_the_construction_yard_heading_is_gone_but_the_grid_is_not():
@@ -219,18 +224,25 @@ def test_the_construction_yard_heading_is_gone_but_the_grid_is_not():
 # ---------------------------------------------------------------------------
 
 def test_a_building_card_shows_name_crew_and_cost_but_no_essay():
+    # step-inside-buildings-v341: the grid card became a small tile — icon,
+    # name, pips and one status glyph. Crew, cost and shortage moved inside
+    # the building, where one room speaks at a time.
     desk = village_desk()
     start = desk.index("const buildingsHtml = deskBuildings.map")
     card = desk[start:desk.index("}).join('');", start)]
     assert "province-building-desc" not in card
     assert "tier.desc" not in card
-    # What a card is actually for: which building, how far up, who works it,
-    # and what the next step costs.
-    assert "province-building-name" in card
+    assert "province-tile-name" in card
     assert "province-building-pips" in card
-    assert "crewHtml + btn" in card
-    assert "province-build-shortage" in card
-    assert ".province-building-desc" not in html_text(), "no dead rule left behind"
+    assert "province-tile-flag" in card
+    assert 'data-action="enter-building"' in card
+    html = html_text()
+    interior = html[html.index("function villageBuildingSheetHTML("):]
+    interior = interior[:interior.index("\nfunction ", 40)]
+    assert "villagerCount" in interior
+    assert "province-build-shortage" in interior
+    assert "buildCostChipsHTML(cost, villageBuildDurationMs" in interior
+    assert ".province-building-desc" not in html, "no dead rule left behind"
 
 
 def test_the_desc_field_is_untouched_in_the_data():

@@ -33,7 +33,7 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 
 OWN_RELEASE_PIN = "free-birds-v318-20260824"
-CURRENT_BUILD = "no-arms-card-art-v340-20260901"
+CURRENT_BUILD = "step-inside-buildings-v341-20260901"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The release that last edited bird_roles_core.js — this one, which retired
 # the Head Gardener.
