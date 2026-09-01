@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "polished-ui-notifications-v339-20260901"
+CURRENT_BUILD = "no-arms-card-art-v340-20260901"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
