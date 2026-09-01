@@ -52,10 +52,10 @@ def test_merlin_tamagotchi_menu_is_accessible_and_actionable():
         "function closeMerlinCareMenu(",
     ]:
         assert marker in html
-    assert "merlin_companion_core.js?v=reconciled-release-v170-20260729" in html
+    assert "merlin_companion_core.js?v=release-polish-v342-20260901" in html
     sw = SW.read_text(encoding="utf-8")
     assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
-    assert "./merlin_companion_core.js?v=reconciled-release-v170-20260729" in sw
+    assert "./merlin_companion_core.js?v=release-polish-v342-20260901" in sw
     assert "./bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" in sw
 
 

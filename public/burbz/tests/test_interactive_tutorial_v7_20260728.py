@@ -80,7 +80,9 @@ def test_the_guided_flow_is_mostly_doing_not_reading():
         "merlin-care-opened",   # tap Merlin on his branch
         "merlin-fed",           # feed him a real ration
         "tab:quests",           # walk to the quest board
-        "expedition-sent",      # send him on his first errand
+        # v342: the step waits on the qualified event so another errand
+        # dispatched mid-lesson cannot skip Merlin's own first flight.
+        "expedition-sent:merlin_first_flight",      # send him on his first errand
         "tab:academy",          # walk to the Academy
         "barracks-built",       # raise a building
         "tab:map",              # out to the real world
@@ -186,7 +188,7 @@ def test_free_mode_exists_for_multi_tap_jobs():
     # Raising the Barracks and sending a quest both need the whole screen.
     modes = {s["action"]["event"]: s["action"].get("mode") for s in tutorial_data()["steps"] if s.get("action")}
     assert modes["barracks-built"] == "free"
-    assert modes["expedition-sent"] == "free"
+    assert modes["expedition-sent:merlin_first_flight"] == "free"
     # A single precise tap keeps the dim.
     assert modes["merlin-fed"] is None
 
@@ -265,8 +267,11 @@ def test_the_flow_still_covers_every_beat_the_design_asks_for():
         assert term in tour, term
     explore = chapter_copy("explore")
     assert "walking quests" in explore
-    assert "villages" in explore and "comes later" in explore
-    assert "send me out on quests or get out and look for a bird" in explore
+    # burbz-release-polish-v342-20260901: the finale hands off to the player
+    # chain (open the Empire map, free the cradle village with Merlin) instead
+    # of deferring liberation and steering the player to Scan first.
+    assert "empire map" in explore and "free the village" in explore
+    assert "kingdom of burbz flies with you now" in explore
 
 
 def test_free_mode_always_leaves_a_way_out():

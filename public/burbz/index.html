@@ -618,17 +618,22 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 /* Scan remains the brightest verb without breaking the one-bar silhouette. */
 .nav-item.nav-scan { color: var(--accent2); }
+/* Scan keeps its lit golden plate, but at the same height as its neighbours:
+   any taller and its label fell off the bottom edge of the screen. */
 .nav-scan .nav-icon {
-  width: 42px; height: 42px; border-radius: 14px;
+  width: 38px; height: 38px; border-radius: 13px;
   background: radial-gradient(circle at 45% 35%, rgba(244,212,133,.24), rgba(150,105,31,.08) 72%);
   box-shadow: inset 0 0 0 1px rgba(240,199,103,.28), 0 0 16px rgba(214,168,79,.18);
 }
-.nav-scan .nav-icon img { width:40px; height:40px; }
+.nav-scan .nav-icon img { width:36px; height:36px; }
 .nav-scan.active .nav-icon { transform:translateY(-1px); filter:none; box-shadow:inset 0 0 0 1px rgba(240,199,103,.65),0 0 20px rgba(240,199,103,.38); }
 .nav-scan:active .nav-icon { transform: scale(.93); }
 .nav-scan .nav-label { color: var(--accent); }
-.bottom-dock-anchor .nav-scan .nav-icon { width: 46px; height: 46px; }
-.bottom-dock-anchor .nav-scan .nav-icon img { width: 44px; height: 44px; }
+.bottom-dock-anchor .nav-scan .nav-icon { width: 38px; height: 38px; }
+.bottom-dock-anchor .nav-scan .nav-icon img { width: 36px; height: 36px; }
+/* The islanded three fit the island: the strip's 50px minimum overflowed the
+   island's padded box and nudged all three labels 1px past the screen edge. */
+.bottom-dock-anchor .nav-item { min-height: 0; padding-top: 0; padding-bottom: 0; }
 @media (max-width: 355px) {
   .nav-item { flex-basis: 44px; min-width: 44px; }
   .bottom-dock-anchor { padding: 2px 4px 1px; }
@@ -1663,6 +1668,16 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   animation: merlinBranchSway 7.6s ease-in-out infinite;
 }
 .merlin-perch-assembly:has(.pet-companion.flying) { animation:none; }
+/* The bough hangs over open country, never over controls. On these screens
+   that corner belongs to the game — the Empire's ledger and map keys, the
+   arena's record, a room's own Back button, the hall ledgers — so Merlin
+   sits them out. He still perches on the map, the tree and the field guide. */
+body[data-active-screen="village"] .merlin-perch-assembly,
+body[data-active-screen="battle"] .merlin-perch-assembly,
+body[data-active-screen="academy-room"] .merlin-perch-assembly,
+body[data-active-screen="town"] .merlin-perch-assembly,
+body[data-active-screen="region"] .merlin-perch-assembly,
+body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
 /* Away on a quest, the bough is empty and must LOOK empty: nothing on the
    branch, whatever else has touched the companion's classes. It also rides a
    little higher and rocks faster with no falcon's weight on the end of it. */
@@ -1960,7 +1975,10 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   width: 100%; height: 60px; margin-bottom: 16px; position: relative;
   background: var(--bg2); border-radius: 8px; overflow: hidden;
   border: 1px solid rgba(255,255,255,0.05);
+  /* The waveform appears with the microphone — stopped, it was an empty box. */
+  display: none;
 }
+.scan-waveform.show { display: block; }
 .scan-waveform canvas { width: 100%; height: 100%; }
 
 .scan-btn {
@@ -5023,7 +5041,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
     </div>
     <div class="pet-companion show" id="petCompanion" aria-live="polite">
       <div class="pet-speech" id="petSpeech">Ready when you are!</div>
-      <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><span class="merlin-rig"><img class="merlin-part merlin-back" src="/burbz/assets/merlin/merlin-back.webp" alt="" aria-hidden="true"><img class="merlin-part merlin-body" src="/burbz/assets/merlin/merlin-body.webp" alt="Merlin the wizard falcon"><img class="merlin-part merlin-wing" src="/burbz/assets/merlin/merlin-wing.webp" alt="" aria-hidden="true"><span class="merlin-part merlin-head"><img src="/burbz/assets/merlin/merlin-head.webp" alt="" aria-hidden="true"><span class="merlin-glint" aria-hidden="true"></span></span></span></button>
+      <button class="pet-sprite" id="petSprite" type="button" aria-label="Open Merlin's care menu" aria-haspopup="dialog" aria-expanded="false"><span class="merlin-rig"><img class="merlin-part merlin-back" src="assets/merlin/merlin-back.webp" alt="" aria-hidden="true"><img class="merlin-part merlin-body" src="assets/merlin/merlin-body.webp" alt="Merlin the wizard falcon"><img class="merlin-part merlin-wing" src="assets/merlin/merlin-wing.webp" alt="" aria-hidden="true"><span class="merlin-part merlin-head"><img src="assets/merlin/merlin-head.webp" alt="" aria-hidden="true"><span class="merlin-glint" aria-hidden="true"></span></span></span></button>
     </div>
   </div>
   <section class="merlin-care-menu" id="merlinCareMenu" role="dialog" aria-labelledby="merlinCareTitle" data-hunger-surface="merlin-care" hidden>
@@ -5082,7 +5100,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
-<script src="walking_story_core.js?v=mercy-streak-attack-preview-v287-20260819"></script>
+<script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
@@ -5105,8 +5123,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="audio_core.js?v=trail-mode-v329-20260825"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
-<script src="merlin_companion_core.js?v=reconciled-release-v170-20260729"></script>
-<script src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"></script>
+<script src="merlin_companion_core.js?v=release-polish-v342-20260901"></script>
+<script src="diary_core.js?v=release-polish-v342-20260901"></script>
 <script>
 /* ============================================================================
    BURBZ - Bird Collection Battle Game
@@ -13492,10 +13510,28 @@ function academyStartPlaceBuilding(id) {
     if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return; }
     if (playerBranches() < (Number(cfg.branches) || 0)) { showResourceQuestPrompt('branches', Number(cfg.branches) || 0, goalWithThe(cfg.label)); return; }
   }
+  // The 3D tree gives every building its own branch — there is no spot to
+  // pick, and the painted tree's tap-to-place layer is hidden. Build at once
+  // and scroll up so the player watches it rise.
+  if (academyViewMode() === '3d' && academySupports3D() && !academy3dBroken) {
+    if (isAcademyBuildingBuilt(id)) { showToast('In 3D every building keeps its own branch. Switch to the painted tree to move it.'); return; }
+    if (academyBuildBuilding(id)) academyScrollToTree();
+    return;
+  }
   academyPlacementTarget = id;
   SFX.tap();
   showToast((isAcademyBuildingBuilt(id) ? 'Tap the tree to move ' : 'Tap the tree to place ') + cfg.label);
   renderAcademy();
+  // The build panel sits below the tree, so the tree the toast points at is
+  // off-screen — carry the player straight up to it.
+  academyScrollToTree();
+}
+
+function academyScrollToTree() {
+  const screen = $('screen-academy');
+  if (!screen) return;
+  try { screen.scrollTo({ top: 0, behavior: 'smooth' }); }
+  catch (e) { screen.scrollTop = 0; }
 }
 
 function academyHandleTreeTap(event) {
@@ -13542,7 +13578,7 @@ function renderAcademyBuildPanel() {
       ? '<button class="academy-build-btn secondary" onclick="academyStartPlaceBuilding(\'' + id + '\')">Move</button><button class="academy-build-btn secondary" onclick="academySelectRoom(\'' + b.room + '\')">Open</button>'
       : locked
         ? '<button class="academy-build-btn" disabled>LV ' + b.unlockLevel + '</button>'
-        : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Place') + '</button>';
+        : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Build') + '</button>';
     return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + '" data-building="' + id + '">' +
       '<img class="academy-building-art" src="' + b.asset + '" alt="' + escapeHtml(b.label) + ' sprite">' +
       '<div class="academy-building-name">' + b.icon + ' ' + escapeHtml(b.label) + '</div>' +
@@ -14084,7 +14120,12 @@ function startBirdExpedition(birdId, templateId, loadout) {
     : '🧭 ' + (bird.commonName || bird.species) + ' set off: ' + quest.label);
   renderPetCompanion();
   renderBirdExpeditions();
-  if (typeof burbzTutorialAction === 'function') burbzTutorialAction('expedition-sent');
+  if (typeof burbzTutorialAction === 'function') {
+    burbzTutorialAction('expedition-sent');
+    // The tutorial's "Send me out!" step waits on this qualified event, so
+    // dispatching some other errand mid-lesson cannot skip Merlin's flight.
+    burbzTutorialAction('expedition-sent:' + quest.templateId);
+  }
   // Seconds-long errands can't wait for the 20s board refresh: redraw the
   // moment the bird lands so the CLAIM button (and nav badge) appear at once.
   const msLeft = quest.endMs - Date.now();
@@ -14324,6 +14365,8 @@ const QUEST_TEMPLATE_INFO = {
   oak_gather:      'The windfall wood after a gale. Oak twigs: hafts and frames for half the Forge.',
   reed_cutting:    'A wade out into the reedbed. River reed for bindings, fletching and wand-craft.',
   grit_sift:       'The gravel bar at the river bend. Iron grit — the edge on every blade in the Forge.',
+  ingot_pour:      'Carry grit down to the foundry and fly home with the ingots still warm.',
+  envoy_parley:    'Fly the truce-feather banner and talk a squabble down to shared seed. A charmer\'s errand.',
   down_collection: 'A round of last year\'s empty nests. Warm down tufts for padding armour.',
   moondust_sweep:  'The Observatory lens gallery after moonrise. Sweep up the glimmer before it fades.',
   stormglass_hunt: 'Out onto the dunes behind the storm. Sand fused by lightning, still humming.',
@@ -18409,7 +18452,7 @@ function showTrailBirdDialog(npc, quest, metCount) {
   const needed = window.BurbzQuestCore.TRAIL_TAVERN_NPCS_NEEDED;
   if (quest.trailTavern) text += ' See you at ' + quest.trailTavern.name + ' — mine\'s a thimble of mead!';
   else if (metCount >= 1 && metCount < needed) text += ' They say when ' + needed + ' of us gather on one trail, the wandering tavern sets up shop... ' + (needed - metCount) + ' more to go!';
-  text += ' (I\'ll wait for you at the Academy tavern afterwards — +15 XP)';
+  text += ' (I\'ll wait for you at the Academy Barracks afterwards — +15 XP)';
   document.getElementById('wqNpcDialog')?.remove();
   const art = getBirdArtUrl({ commonName: npc.species, species: npc.species });
   const el = document.createElement('div');
@@ -20373,7 +20416,7 @@ function renderWalkingQuestSection() {
   // here raced the map's location fix and flickered in and out of the tab.
   html += '<div class="quest-section-title">🏆 Completed Adventures</div>';
   if (!wq.history.length) {
-    html += '<div class="quest-all-done">No adventures completed yet — open Explore Quests and take a real walk!</div>';
+    html += '<div class="quest-all-done">No adventures completed yet — open Show Quests on the Map and take a real walk!</div>';
   } else {
     // Six finished walks are a memory shelf; twenty-five were a wall burying
     // the live quests below. Each card still opens its full summary sheet.
@@ -21363,7 +21406,7 @@ function collectStarterTimber(pickup) {
   state.taken[pickup.starterIndex] = true;
   addBranches(STARTER_TIMBER_PER_BUNDLE);
   if (starterTimberDone()) {
-    setTimeout(() => showToast('🏠 Enough timber for The Roost and Barracks! Raise them at the Academy.'), 1300);
+    setTimeout(() => showToast('🏠 Enough timber for the Barracks! Raise it at the Academy.'), 1300);
   }
   return '+' + STARTER_TIMBER_PER_BUNDLE + ' branches';
 }
@@ -25147,7 +25190,7 @@ const EMPIRE_BUILDINGS = [
   { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, tier: 'town', cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, tier: 'town', cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, tier: 'town', cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
-  { id: 'market',  icon: '🏪', name: 'Market Hall',  maxLevel: 3, tier: 'town', cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
+  { id: 'market',  icon: '⛺', name: 'Market Hall',  maxLevel: 3, tier: 'town', cost: { coins: 80, branches: 16, stone: 12 }, buildMinutes: 180, taxBoost: 0.25, workers: 1, workPriority: 4, produces: { materials: { river_reed: 2 }, larder: { hedgerow_berries: 1 } }, unlockLevel: 10, desc: '+25% taxes per level, and traders bring in 🌾2 River Reed + 🫐1 berries per cycle per level. Needs 1 villager to run.' },
   { id: 'storehouse', icon: '🧺', name: 'Storehouse', maxLevel: 2, cost: { coins: 50, branches: 20, stone: 0 }, buildMinutes: 70, storagePerLevel: 40, unlockLevel: 4, desc: 'Deep cellars hold +40 food and +40 water per level, so a good harvest is never wasted.' },
   { id: 'foundry', icon: '⚒️', name: 'Iron Foundry', maxLevel: 3, tier: 'town', cost: { coins: 110, branches: 30, stone: 18 }, costLevels: [{ coins: 110, branches: 30, stone: 18 }, { coins: 190, branches: 44, stone: 26 }, { coins: 300, branches: 60, stone: 38 }], buildMinutes: 200, workers: 2, workPriority: 6, produces: { materials: { iron_ingot: 1 } }, unlockLevel: 9, desc: 'Two smiths smelt the Miners’ iron grit into ⚙️1 Iron Ingot per cycle per level — the clean metal the Fletcher’s Forge craves for finer gear.' },
   { id: 'entertainment', icon: '🎭', name: 'Entertainment House', maxLevel: 3, tier: 'town', cost: { coins: 95, branches: 28, stone: 8 }, costLevels: [{ coins: 95, branches: 28, stone: 8 }, { coins: 160, branches: 40, stone: 14 }, { coins: 260, branches: 55, stone: 22 }], buildMinutes: 210, need: 'joy', perLevel: 14, coinsPerLevel: 3, workers: 1, workPriority: 5, unlockLevel: 7, tiers: [{ name: 'Tavern & Games Yard', icon: '🍻', desc: 'Skittles, darts and decent ale — cheer for 14 villagers and +3 🪙 taxes per level.' }, { name: 'Inn & Playhouse', icon: '🎭', desc: 'A proper stage: travelling bards play to 28 happy villagers and +6 🪙 taxes per level.' }, { name: 'Grand Music Hall', icon: '🎶', desc: 'The whole realm talks about this stage — 42 cheerful villagers and +9 🪙 taxes per level.' }], desc: 'Invest in fun: every level raises a livelier hall — alehouse games, then a bard’s stage, then a grand music hall — cheering 14 villagers and earning +3 🪙 taxes per level. Needs 1 host.' }
@@ -33207,7 +33250,7 @@ function buildVillageScene(v) {
           stall.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
           stall.rotation.y = -a + Math.PI / 2 + (er() - 0.5) * 0.4;
           // Every stall is a door into the one Market Hall.
-          stall.userData.sceneLabel = { icon:'🏪', name:'Market Hall', detail:'Traders under the awnings · tap to step inside' };
+          stall.userData.sceneLabel = { icon:'⛺', name:'Market Hall', detail:'Traders under the awnings · tap to step inside' };
           stall.userData.buildingId = 'market';
           villageBuildings.push(stall);
           villageScene.add(stall);
@@ -36405,7 +36448,7 @@ function renderStoresLedger() {
       '<span class="slr-main"><span class="slr-name">Taxes &amp; timber</span><span class="slr-meta">' + ledger.provinces + ' province' + (ledger.provinces === 1 ? '' : 's') + ' · 👥 ' + ledger.population + ' subjects</span></span>' +
       '<span class="slr-yield">+' + ledger.coins + ' 🪙 +' + ledger.branches + ' 🪵</span></div>' +
       (yardRows || '<div class="stores-hint">No working yards yet — raise work huts in your villages and folk will ship goods here.' + infoDotHTML('infoNoteStoresYards', 'Which yards ship goods') + '</div>' +
-        infoNoteHTML('infoNoteStoresYards', 'Build 🏹 Hunter-Gatherer Huts, 🪚 Lumberjack Huts and 🪨 Miners’ Huts in your villages, and 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and 🏪 Market Halls in your Towns. Each needs villagers living there to run it — the work huts hold three apiece — and then it starts shipping goods here.')) +
+        infoNoteHTML('infoNoteStoresYards', 'Build 🏹 Hunter-Gatherer Huts, 🪚 Lumberjack Huts and 🪨 Miners’ Huts in your villages, and 🌾 Grain Farms, 🪓 Lumber Camps, ⛏️ Quarries and ⛺ Market Halls in your Towns. Each needs villagers living there to run it — the work huts hold three apiece — and then it starts shipping goods here.')) +
       (idleYards.length ? '<div class="stores-hint">Not yet built anywhere: ' + idleYards.map(b => b.icon + ' ' + escapeHtml(b.name)).join(' · ') + '</div>' : '') +
       '<button class="stores-collect-btn"' + (hasTribute ? '' : ' disabled') + ' onclick="collectEmpireTribute()">' +
       (hasTribute ? '💰 COLLECT: ' + escapeHtml(empireResourceSummary(due, 6)) : '⏳ NOTHING BANKED YET — THE PROVINCES ARE EARNING') + '</button>' +
@@ -38118,6 +38161,8 @@ function updateMerlinListeningUI() {
   const dock = $('merlinDockReturn');
   const dockStatus = $('merlinDockStatus');
   stage?.classList.toggle('listening', active);
+  // The live waveform only earns its space while the microphone is open.
+  $('waveformContainer')?.classList.toggle('show', active);
   if (status) {
     status.textContent = soundListenerState === 'requesting' ? 'Opening the microphone…'
       : soundListenerState === 'error' ? 'Listening paused'
@@ -39881,7 +39926,7 @@ function startPerchBattle() {
   const blocked = team.find(b => !birdBattleReady(b));
   if (blocked) {
     const readiness = birdWorkReadiness(blocked, 'battle');
-    showToast((readiness.sleepBlocked ? '💤 ' + birdDisplayName(blocked) + ' is sleeping or needs The Roost.' : '🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'));
+    showToast((readiness.sleepBlocked ? '💤 ' + birdDisplayName(blocked) + ' is sleeping and needs a rest in the tree.' : '🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'));
     renderBattleSelect();
     return;
   }
@@ -40448,7 +40493,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen });
+Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -40499,7 +40544,7 @@ const MERLIN_GUIDE = Object.freeze({
 
 function merlinRigHTML() {
   const parts = MERLIN_GUIDE.rigParts.map(part => {
-    const src = '/burbz/assets/merlin/merlin-' + part + '.webp';
+    const src = 'assets/merlin/merlin-' + part + '.webp';
     const alt = part === 'body' ? ' alt="Merlin the wizard falcon"' : ' alt="" aria-hidden="true"';
     // The head is a group rather than a bare layer: the eye glint lives inside
     // it, so the spark travels with the skull when he turns to look around.
@@ -40803,26 +40848,26 @@ function makePetSparkles(count) {
 // on the board only until its `done()` reads true from real game state, then
 // the midnight reset retires it for good instead of re-opening it.
 const DAILY_QUESTS = [
-  { id: 'daily_capture_3', name: 'Field Work', desc: 'Capture 3 birds today', type: 'capture', target: 3, reward: 50, icon: '\u{1F426}' },
+  { id: 'daily_capture_3', name: 'Field Work', desc: 'Recruit 3 birds today', type: 'capture', target: 3, reward: 50, icon: '\u{1F426}' },
   { id: 'daily_battle_2', name: 'Arena Fighter', desc: 'Win 2 battles', type: 'win', target: 2, reward: 40, icon: '\u{2694}\u{FE0F}' },
-  { id: 'daily_capture_1', name: 'First Catch', desc: 'Capture any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}', once: true, done: () => (gameState.player.totalCaptures || 0) >= 1 },
+  { id: 'daily_capture_1', name: 'First Catch', desc: 'Recruit any bird', type: 'capture', target: 1, reward: 20, icon: '\u{1F3AF}', once: true, done: () => (gameState.player.totalCaptures || 0) >= 1 },
   { id: 'daily_diet_2', name: 'Field Naturalist', desc: 'Feed 2 birds their preferred food', type: 'feed_correct', target: 2, reward: 60, icon: '\u{1F37D}\u{FE0F}' },
   { id: 'daily_bird_brain', name: 'Bird Brain Bonus', desc: 'Answer 1 bird question correctly', type: 'bird_quiz_correct', target: 1, reward: 35, icon: '\u{1F9E0}' },
   { id: 'daily_loot_2', name: 'Treasure Walker', desc: 'Find 2 pieces of gear out on the map', type: 'gear_found', target: 2, reward: 45, icon: '\u{1F392}' }
 ];
 
 const WEEKLY_QUESTS = [
-  { id: 'weekly_capture_10', name: 'Avid Collector', desc: 'Capture 10 birds this week', type: 'capture', target: 10, reward: 150, icon: '\u{1F4DA}' },
+  { id: 'weekly_capture_10', name: 'Avid Collector', desc: 'Recruit 10 birds this week', type: 'capture', target: 10, reward: 150, icon: '\u{1F4DA}' },
   { id: 'weekly_win_5', name: 'Champion', desc: 'Win 5 battles this week', type: 'win', target: 5, reward: 120, icon: '\u{1F3C6}' },
-  { id: 'weekly_rare', name: 'Rare Find', desc: 'Discover a Rare or better species', type: 'capture_rare', target: 1, reward: 100, icon: '\u{2728}' },
+  { id: 'weekly_rare', name: 'Rare Find', desc: 'Recruit a Rare or better bird', type: 'capture_rare', target: 1, reward: 100, icon: '\u{2728}' },
   { id: 'weekly_forge_1', name: 'At the Anvil', desc: 'Forge a piece of gear at the Fletcher\'s Forge', type: 'gear_crafted', target: 1, reward: 110, icon: '\u{2692}\u{FE0F}' }
 ];
 
 const ACHIEVEMENT_QUESTS = [
-  { id: 'ach_first_capture', name: 'First Discovery', desc: 'Capture your first bird', type: 'capture', target: 1, reward: 30, icon: '\u{1F331}' },
-  { id: 'ach_10_species', name: 'Budding Birder', desc: 'Discover 10 unique species', type: 'total_species', target: 10, reward: 100, icon: '\u{1F3C5}' },
+  { id: 'ach_first_capture', name: 'First Recruit', desc: 'Recruit your first bird', type: 'capture', target: 1, reward: 30, icon: '\u{1F331}' },
+  { id: 'ach_10_species', name: 'Budding Birder', desc: 'Recruit 10 unique species', type: 'total_species', target: 10, reward: 100, icon: '\u{1F3C5}' },
   { id: 'ach_first_win', name: 'First Victory', desc: 'Win your first battle', type: 'win', target: 1, reward: 30, icon: '\u{1F4AA}' },
-  { id: 'ach_legendary', name: 'Legendary Find', desc: 'Discover a Legendary bird', type: 'capture_legendary', target: 1, reward: 200, icon: '\u{1F451}' },
+  { id: 'ach_legendary', name: 'Legendary Find', desc: 'Recruit a Legendary bird', type: 'capture_legendary', target: 1, reward: 200, icon: '\u{1F451}' },
   { id: 'ach_diet_5',  name: 'Real Birdkeeper', desc: 'Discover the true diets of 5 species', type: 'diets_known', target: 5,  reward: 75,  icon: '\u{1F37D}\u{FE0F}' },
   { id: 'ach_diet_15', name: 'Field Naturalist', desc: 'Discover the true diets of 15 species', type: 'diets_known', target: 15, reward: 200, icon: '\u{1F4D6}' }
 ];
@@ -41346,7 +41391,7 @@ function renderDiary() {
   const stats = [
     ['🐦', totals.discovered + ' species'],
     ['🪶', totals.companions + ' companion' + (totals.companions === 1 ? '' : 's')],
-    ['🏰', totals.towns + ' town' + (totals.towns === 1 ? '' : 's') + ' freed'],
+    ['🏡', totals.towns + ' village' + (totals.towns === 1 ? '' : 's') + ' freed'],
     ['🏆', totals.wins + ' ' + (totals.wins === 1 ? 'victory' : 'victories')]
   ].map(([icon, label]) => '<span class="diary-stat">' + icon + ' ' + escapeHtml(label) + '</span>').join('');
 
@@ -41536,7 +41581,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'step-inside-buildings-v341-20260901';
+const BURBZ_BUILD = 'release-polish-v342-20260901';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -41572,7 +41617,7 @@ const MERLIN_TUTORIAL_STEPS = [
   //   the game back: tap him, feed him, tap the Quests tab. A mechanic the
   //   player has performed once is a mechanic they own.
   { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'A kingdom in darkness', screen:'map', target:null, text:'The Kingdom of Burbz \u2014 the Earth of another universe, where birds are the dominant species \u2014 has fallen to a dark force: the evil Burbz.' },
-  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'This app is my magic tablet, hurled across the multiverse into your hands. Only you can unlock the darkness. Real birdwatching restores Burbz!' },
+  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'This app is my magic tablet, hurled across the multiverse. Only you can unlock the darkness. Real birdwatching restores the Kingdom of Burbz!' },
   { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'I am Merlin, your friend', screen:'map', target:null, text:'I am Merlin, wizard falcon of the kingdom \u2014 and from today, your new friend. But even a wizard needs feeding and looking after to be at his best.' },
   { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'Come and see to me', screen:'map', target:'#petSprite', text:'Do not just take my word for it. Tap me on my branch, up in the top-right corner, and my care menu will open.',
     action:{ event:'merlin-care-opened', hint:'Tap Merlin on his branch \u2197' } },
@@ -41589,7 +41634,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'Stuck? Always look here. Player Quests guide you through the game step by step \u2014 follow them and you will never wonder what to do next.' },
   { chapterId:'quests', chapter:'Quests', title:'Kingdom Errands', screen:'quests', target:'#expeditionQuestList', text:'Below sits the errand board. Send birds out on quests and expeditions and they come home with coins, timber, food and treasure.' },
   { chapterId:'quests', chapter:'Quests', title:'Send me out!', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'See Merlin\u2019s First Flight? You can send me out for this one \u2014 it takes mere seconds. Tap it, choose me, and press Send.',
-    action:{ event:'expedition-sent', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Tap Merlin\u2019s First Flight, then send me on my way' } },
+    action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Tap Merlin\u2019s First Flight, then send me on my way' } },
   { chapterId:'quests', chapter:'Quests', title:'Now we wait \u2014 briefly', screen:'quests', target:null, text:'Off I go! I will be back in seconds. The moment I land, tap CLAIM and take what I have brought you.' },
 
   // — Merlin returns: one beat, then the player walks to the Academy.
@@ -41600,8 +41645,8 @@ const MERLIN_TUTORIAL_STEPS = [
   // — Academy: two beats, then the player raises the building themselves.
   { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'The heart of your kingdom! Every building in this tree unlocks a new way to house, feed, heal and train your flock.' },
   { chapterId:'academy', chapter:'Academy', title:'A gift for the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'I have slipped 60 coins and 8 timber into your purse \u2014 exactly what the Barracks costs. Buildings need coin and timber; this one is my treat.' },
-  { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Place on the Barracks, then tap the tree to set it down. It builds instantly this time round \u2014 go on, raise it!',
-    action:{ event:'barracks-built', mode:'free', hint:'Tap Place on the Barracks, then tap the tree' } },
+  { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Build on the Barracks, then tap the tree to set it down. It builds instantly this time round \u2014 go on, raise it!',
+    action:{ event:'barracks-built', mode:'free', hint:'Tap Build on the Barracks, then tap the tree' } },
 
   // — Academy tour: three buildings, then out to the world. The Player Quests
   //   introduce the rest, one mechanic at a time.
@@ -41613,8 +41658,8 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — The real world: the finale, then the game is theirs.
   { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Likely Birds hints at what may be near \u2014 a clue for your hunt, never a promise.' },
-  { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestShowBtn', text:'Show Quests reveals real walking quests on public paths around you. Out there you will free villages from the evil Burbz \u2014 but that comes later.' },
-  { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'First, either send me out on quests or get out and look for a bird! Stuck? Open Quests. The Kingdom of Burbz flies with you now.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestShowBtn', text:'Show Quests reveals real walking quests on public paths around you. Out there, treasure, tales and new birds wait on every trail.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'Now follow your Player Quests: open the Empire map and we will free the village beside us \u2014 you and I. The Kingdom of Burbz flies with you now.' },
 
   // — Discovery: taught the first time the Scan screen opens.
   { chapterId:'scan', chapter:'Discovery', title:'Two ways to discover', screen:'scan', target:'.scan-mode-toggle', text:'Discover birds with Camera or Sound. Only a real, recognised bird counts \u2014 that is what powers the tablet\u2019s magic.' },
@@ -41628,7 +41673,7 @@ const MERLIN_TUTORIAL_STEPS = [
 
   // — War on the evil Burbz: taught the first time the Battle screen opens.
   { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'The Burbz are zombie birds \u2014 the Z is for zombie. You only fight them, never free living birds. A green Counter tag marks the birds that beat them.' },
-  { chapterId:'battle', chapter:'The War', title:'Fight or charm', screen:'battle', target:'#battleStartBtn', text:'Pick a move, then tap the evil Burb you want to hit — the ATTACK button shows the damage first. Any of your birds can take the turn: just tap it.' },
+  { chapterId:'battle', chapter:'The War', title:'Pick your move', screen:'battle', target:'#battleStartBtn', text:'Pick a move, then tap the evil Burb you want to hit — the ATTACK button shows the damage first. Any of your birds can take the turn: just tap it.' },
   { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
 
   // — Realm: taught the first time the Empire screen opens.
@@ -41640,7 +41685,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'town', chapter:'Town Hall', title:'Build a real economy', screen:'town', target:'#townHallPanel', text:'Keep food and water supplied for growth, staff productive networks, clear ruins and upgrade the Hall to unlock builder crews and Council policy.' },
 
   // — Diary: taught the first time the Adventurer's Diary opens.
-  { chapterId:'diary', chapter:'The Chronicle', title:'Your adventuring diary', screen:'diary', target:'#diaryBook', text:'Every bird found, town freed and trail walked, I set down here with my own quill. Lost your place? Read the tale back, day by day.' },
+  { chapterId:'diary', chapter:'The Chronicle', title:'Your adventuring diary', screen:'diary', target:'#diaryBook', text:'Every bird found, village freed and trail walked, I set down here with my own quill. Lost your place? Read the tale back, day by day.' },
 
   // — Forge: taught the first time the Fletcher's Forge opens.
   { chapterId:'forge', chapter:'Forge', title:'The Fletcher\u2019s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour, satchels and trinkets from battle spoils at the Forge. Equipped satchels carry more finds home from quests.' },
@@ -41905,6 +41950,13 @@ function startMerlinTutorial(options = {}) {
   if (!overlay || merlinTutActive) return;
   merlinTutMode = options.full ? 'full' : (options.chapterId || 'story');
   merlinTutSequence = options.full ? MERLIN_TUTORIAL_STEPS.map((_, index) => index) : merlinChapterStepIndices(merlinTutMode);
+  // The Town Hall lesson needs a town to stand in: renderTownScreen bounces
+  // straight back to the Empire when the save holds none, which would show
+  // both Town steps over the wrong screen. The chapter still plays on its
+  // own trigger the day the first three villages merge.
+  if (options.full && !(typeof currentTownSettlement === 'function' && currentTownSettlement())) {
+    merlinTutSequence = merlinTutSequence.filter(index => MERLIN_TUTORIAL_STEPS[index].chapterId !== 'town');
+  }
   if (!merlinTutSequence.length) return;
   const saved = options.resume === false ? null : readMerlinTutorialState();
   const resumeStep = saved && saved.status === 'in_progress' && saved.mode === merlinTutMode
@@ -42471,6 +42523,9 @@ document.addEventListener('pointerdown', () => {
 
 function handleBurbzBackPress() {
   if (closeTopBurbzLayer()) return;
+  // Mid-tutorial, back must not walk the screens out from under Merlin's
+  // spotlight — the press is spent holding the lesson in place.
+  if (typeof merlinTutActive !== 'undefined' && merlinTutActive) return;
   const prev = burbzScreenTrail.pop();
   const target = prev || (currentScreen !== 'map' ? 'map' : null);
   if (target && target !== currentScreen) {

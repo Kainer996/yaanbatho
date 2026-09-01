@@ -17,10 +17,11 @@ SW_PATH = ROOT / "sw.js"
 STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
-# The core itself moved again with mercy-streak-attack-preview-v287.
-CORE_PIN = "mercy-streak-attack-preview-v287-20260819"
+# The core itself moved again with mercy-streak-attack-preview-v287, then with
+# release-polish-v342 (the charter ladder now climbs village -> town -> county).
+CORE_PIN = "release-polish-v342-20260901"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
-CURRENT_BUILD = "step-inside-buildings-v341-20260901"
+CURRENT_BUILD = "release-polish-v342-20260901"
 
 
 def run_node(script: str):

@@ -69,7 +69,9 @@ def test_the_perched_companion_is_the_puppet_not_the_flat_cutout():
     assert 'class="merlin-rig"' in markup
     for part in PARTS:
         assert f'merlin-part merlin-{part}' in markup, part
-        assert f'/burbz/assets/merlin/merlin-{part}.webp' in markup, part
+        # burbz-release-polish-v342-20260901: the rig loads by relative path so
+        # the game works from any mount point, not only /burbz.
+        assert f'src="assets/merlin/merlin-{part}.webp"' in markup, part
     # The 348KB single-image cutout must not be what he wears on the branch.
     assert "merlin_burbz_manga_20260624_v2_cutout.png" not in markup
 

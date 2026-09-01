@@ -58,8 +58,8 @@ def test_diary_core_is_included_and_cached_offline():
     sw = SW.read_text(encoding="utf-8")
     # The original v200 lineage remains in BURBZ_CACHE, while the script and
     # both offline entries move when its player-facing place copy changes.
-    assert 'src="diary_core.js?v=accurate-diets-full-catalogue-v226-20260805"' in html
-    assert sw.count("./diary_core.js?v=accurate-diets-full-catalogue-v226-20260805") == 2  # assets + core shell
+    assert 'src="diary_core.js?v=release-polish-v342-20260901"' in html
+    assert sw.count("./diary_core.js?v=release-polish-v342-20260901") == 2  # assets + core shell
     assert "restored-lost-features-v200-20260802" in sw  # historical cache lineage
 
 
