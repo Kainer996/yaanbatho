@@ -1532,6 +1532,13 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
 }
 .card-art img.card-art-painting { object-fit: contain; filter: none; }
+/* Armless stand-in for a painting drawn with arms: a transparent bird cutout
+   standing on the card's habitat backdrop. A touch of padding keeps talons
+   and crests off the frame edge. */
+.card-art img.card-art-cutout {
+  object-fit: contain; padding: 5% 5% 2%;
+  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.45));
+}
 /* The paintings are square, the card frames are not. Cropping to fill cut the
    heads and tails off, so the whole bird is fitted in and a soft blurred wash
    of that same art fills the rest of the frame. */
@@ -3109,6 +3116,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 }
 .bird-info-art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,.48)); }
 .bird-info-art img.card-art-painting { object-fit: cover; filter: none; }
+.bird-info-art img.card-art-cutout { object-fit: contain; padding: 6%; }
 .bird-info-name { font-family: 'Russo One', sans-serif; font-size: 19px; line-height: 1.15; }
 .bird-info-sci { color: var(--text3); font-style: italic; font-size: 12px; margin-top: 4px; }
 .bird-info-rarity { margin-top: 8px; font-family: 'Rajdhani', sans-serif; font-weight: 800; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
@@ -5069,6 +5077,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="uk_bird_alias_completion_20260803.js?v=uk-bird-alias-completion-v216-20260803"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
+<script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=trail-mode-v329-20260825"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
@@ -13017,7 +13026,9 @@ function birdOnlyImgHTML(bird, className, extraAttrs) {
 // pushed out of focus, so a square painting in a wide frame still reads as one
 // whole image instead of a cropped bird between two bars.
 function cardArtWashHTML(cardArt) {
-  if (!cardArt || !cardArt.src) return '';
+  // A transparent cutout gets no wash: the habitat backdrop behind it is the
+  // whole point, and a blurred copy of a cutout would smear over that scene.
+  if (!cardArt || !cardArt.src || cardArt.isCutout) return '';
   return '<img class="card-art-wash" src="' + escapeHtml(cardArt.src) +
     '" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">';
 }
@@ -13031,8 +13042,21 @@ function cardArtWashHTML(cardArt) {
 function birdCardImgAttrs(bird) {
   const art = getBirdCardArtUrl(bird);
   if (!art) return null;
-  const fallbackArt = getBirdArtUrl(bird);
   const emoji = getBirdMarkerEmoji(String((bird && (bird.commonName || bird.species)) || '')) || '🐦';
+  // A painting drawn with human arms never reaches a card. Its armless
+  // warrior cutout stands on the card's habitat backdrop instead — the
+  // backdrop is already painted behind every card, so the swap is only the
+  // foreground. A failed cutout falls straight to the emoji glyph: the only
+  // other painting of these birds is the armed one.
+  const noArms = window.burbzNoArmsCardArt20260901 ? window.burbzNoArmsCardArt20260901(art) : null;
+  if (noArms) {
+    return {
+      src: noArms,
+      isCutout: true,
+      extra: ' class="card-art-cutout" data-fallback-emoji="' + escapeHtml(emoji) + '"'
+    };
+  }
+  const fallbackArt = getBirdArtUrl(bird);
   return {
     src: art,
     extra: ' class="card-art-painting"' +
@@ -13044,9 +13068,9 @@ function birdCardImgAttrs(bird) {
 
 const MAP_BIRD_CUTOUT_ART = {
   'Blackbird': '/burbz/bird-art-cache/cutouts/blackbird_burbz_manga_20260624_v2_cutout.png',
-  'Blue Tit': '/burbz/bird-art-cache/cutouts/blue_tit_burbz_manga_20260624_v2_cutout.png',
-  'European Robin': '/burbz/bird-art-cache/cutouts/european_robin_burbz_manga_20260624_v2_cutout.png',
-  'Great Tit': '/burbz/bird-art-cache/cutouts/great_tit_burbz_manga_20260624_v2_cutout.png',
+  'Blue Tit': '/burbz/bird-art-cache/cutouts/blue_tit_burbz_manga_warrior_20260802_cutout.png',
+  'European Robin': '/burbz/bird-art-cache/cutouts/european_robin_burbz_manga_warrior_20260802_cutout.png',
+  'Great Tit': '/burbz/bird-art-cache/cutouts/great_tit_burbz_manga_warrior_20260802_cutout.png',
   'Wren': '/burbz/bird-art-cache/cutouts/wren_burbz_manga_20260624_v2_cutout.png',
   'Chiffchaff': '/burbz/bird-art-cache/cutouts/chiffchaff_burbz_manga_20260624_v2_cutout.png',
   'Treecreeper': '/burbz/bird-art-cache/cutouts/treecreeper_burbz_manga_20260624_v2_cutout.png',
@@ -13056,8 +13080,8 @@ const MAP_BIRD_CUTOUT_ART = {
   'Meadow Pipit': '/burbz/bird-art-cache/cutouts/meadow_pipit_burbz_manga_20260624_v2_cutout.png',
   'Mute Swan': '/burbz/bird-art-cache/cutouts/mute_swan_burbz_manga_20260624_cutout.png',
   'Kingfisher': '/burbz/bird-art-cache/cutouts/kingfisher_burbz_manga_20260624_v2_cutout.png',
-  'Grey Wagtail': '/burbz/bird-art-cache/cutouts/grey_wagtail_burbz_manga_20260624_v2_cutout.png',
-  'Heron': '/burbz/bird-art-cache/cutouts/heron_burbz_manga_20260624_v2_cutout.png',
+  'Grey Wagtail': '/burbz/bird-art-cache/cutouts/grey_wagtail_burbz_manga_warrior_20260802_cutout.png',
+  'Heron': '/burbz/bird-art-cache/cutouts/heron_burbz_manga_warrior_20260802_cutout.png',
   'Nuthatch': '/burbz/bird-art-cache/cutouts/nuthatch_burbz_manga_20260624_v2_cutout.png',
   'Blackcap': '/burbz/bird-art-cache/cutouts/blackcap_burbz_manga_20260630_clean_cutout.png',
   'Great Spotted Woodpecker': '/burbz/bird-art-cache/cutouts/great_spotted_woodpecker_burbz_manga_20260624_cutout.png',
@@ -13069,9 +13093,9 @@ const MAP_BIRD_CUTOUT_ART = {
   'Jackdaw': '/burbz/bird-art-cache/cutouts/jackdaw_burbz_manga_20260624_cutout.png',
   'Skylark': '/burbz/bird-art-cache/cutouts/skylark_burbz_manga_20260624_v2_cutout.png',
   'Buzzard': '/burbz/bird-art-cache/cutouts/buzzard_burbz_manga_20260624_v2_cutout.png',
-  'Raven': '/burbz/bird-art-cache/cutouts/raven_burbz_manga_20260624_v2_cutout.png',
-  'Wood Pigeon': '/burbz/bird-art-cache/cutouts/woodpigeon_burbz_manga_20260624_cutout.png',
-  'Goldfinch': '/burbz/bird-art-cache/cutouts/goldfinch_burbz_manga_20260624_v2_cutout.png',
+  'Raven': '/burbz/bird-art-cache/cutouts/raven_burbz_manga_warrior_20260802_cutout.png',
+  'Wood Pigeon': '/burbz/bird-art-cache/cutouts/woodpigeon_burbz_manga_warrior_20260802_cutout.png',
+  'Goldfinch': '/burbz/bird-art-cache/cutouts/goldfinch_burbz_manga_warrior_20260802_cutout.png',
   'House Sparrow': '/burbz/bird-art-cache/house_sparrow_burbz_manga_20260624_v2.png',
   'Dipper': '/burbz/bird-art-cache/cutouts/dipper_burbz_manga_20260630_cutout.png',
   'White-throated Dipper': '/burbz/bird-art-cache/cutouts/dipper_burbz_manga_20260630_cutout.png',
@@ -13094,7 +13118,7 @@ const MAP_BIRD_CUTOUT_ART = {
   'Common Whitethroat': '/burbz/bird-art-cache/whitethroat_burbz_manga_upload_20260707.png',
   'Whitethroat': '/burbz/bird-art-cache/whitethroat_burbz_manga_upload_20260707.png',
   'Fieldfare': '/burbz/bird-art-cache/fieldfare_burbz_manga_upload_20260707.png',
-  'Great Crested Grebe': '/burbz/bird-art-cache/great_crested_grebe_burbz_manga_20260706T0200.png',
+  'Great Crested Grebe': '/burbz/bird-art-cache/cutouts/great_crested_grebe_burbz_manga_warrior_20260802_cutout.png',
   'Barnacle Goose': '/burbz/bird-art-cache/barnacle_goose_burbz_manga_upload_20260707.png',
   'Greylag Goose': '/burbz/bird-art-cache/greylag_goose_burbz_manga_upload_20260707.png',
   'Lapwing': '/burbz/bird-art-cache/lapwing_burbz_manga_upload_20260707.png'
@@ -22757,7 +22781,7 @@ const VILLAGE_SHOP_INTERIORS = {
 
 const VILLAGE_SHOP_PATRONS = [
   'bird-art-cache/cutouts/puffin_burbz_manga_20260624_cutout.png',
-  'bird-art-cache/cutouts/blue_tit_burbz_manga_20260624_v2_cutout.png',
+  'bird-art-cache/cutouts/blue_tit_burbz_manga_warrior_20260802_cutout.png',
   'bird-art-cache/cutouts/blackcap_burbz_manga_20260630_clean_cutout.png',
   'bird-art-cache/cutouts/hawfinch_burbz_manga_20260709_cutout.png',
   'bird-art-cache/cutouts/marsh_tit_burbz_manga_20260709_cutout.png',
@@ -41299,7 +41323,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'polished-ui-notifications-v339-20260901';
+const BURBZ_BUILD = 'no-arms-card-art-v340-20260901';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
