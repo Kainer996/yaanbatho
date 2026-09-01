@@ -98,12 +98,12 @@ function plantedVillages(now) {
 
   const readState = () => page.evaluate(() => ({
     title: (document.getElementById('villageTitle') || {}).textContent || '',
-    pager: (document.getElementById('villagePager') || {}).textContent || '',
+    pager: (document.getElementById('villagePager') || { getAttribute: () => '' }).getAttribute('aria-label') || '',
     transform: (document.getElementById('empireVillageHub') || { style: {} }).style.transform || ''
   }));
 
   const first = await readState();
-  check('pager stands and counts the villages', /1 of 3 villages/.test(first.pager), JSON.stringify(first.pager.trim()));
+  check('pager stands and counts the villages', /1 of 3 villages/.test(first.pager), JSON.stringify(first.pager.trim()));  // v343: the count lives in the pager's aria-label; the dots are the words
 
   // ---- a real finger, through CDP touch events ----------------------------
   const cdp = await context.newCDPSession(page);
