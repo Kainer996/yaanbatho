@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN = "empire-three-pages-v343-20260901"
+CURRENT_BUILD = "generated-building-interiors-v344-20260902"
 
 
 def function_source(name: str) -> str:
@@ -36,7 +37,7 @@ def function_source(name: str) -> str:
 # ---- release plumbing -------------------------------------------------------
 
 def test_build_id_and_cache_segment():
-    assert f"const BURBZ_BUILD = '{OWN}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     # Membership, never the tail — the next release appends after us.
     assert OWN in SW
 

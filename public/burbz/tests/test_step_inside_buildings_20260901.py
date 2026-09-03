@@ -7,11 +7,10 @@ has; and the convoluted menu under the town gets cleaned up.
 
 What shipped:
 
-1. A new pure core, `building_interior_core.js`, draws a hand-made SVG
-   interior for all fifteen governor buildings — honest rooms that show the
-   real level, the posted villagers (and the empty stools), the granary and
-   cistern actually filling, dust sheets while an upgrade rises, and a
-   staked plot before the first build.
+1. A pure core, `building_interior_core.js`, now selects sixteen original
+   image-model-painted rooms: one for every governor building plus a staked
+   plot before the first build. Level, workers, stores and construction remain
+   honest live state on the room and management card.
 2. One overlay, `#buildingInteriorOverlay`, in the shop-interior family:
    the room on top, the one card that runs the building below. A lone
    village gets `villageBuildingSheetHTML` (the desk's tested button, gates
@@ -28,8 +27,11 @@ What shipped:
 """
 
 import json
+import hashlib
 import subprocess
 from pathlib import Path
+
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
@@ -37,8 +39,10 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "building_interior_core.js"
 DEPLOY = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "step-inside-buildings-v341-20260901"
-CURRENT_BUILD = "empire-three-pages-v343-20260901"
+CURRENT_BUILD = "generated-building-interiors-v344-20260902"
+ART_RELEASE_PIN = CURRENT_BUILD
 PREVIOUS_RELEASE_PIN = "no-arms-card-art-v340-20260901"
+ART_DIR = ROOT / "assets" / "building-interiors-manga"
 
 
 def html_text():
@@ -52,10 +56,10 @@ def function_source(html, name):
 
 
 # ---------------------------------------------------------------------------
-# 1. The core: fifteen honest rooms
+# 1. The core: sixteen painted, honest rooms
 # ---------------------------------------------------------------------------
 
-def test_the_core_draws_a_room_for_every_building():
+def test_the_core_selects_real_art_for_every_building():
     script = """
 const core = require(%s);
 const ids = ['cabin','hut','farm','well','lumberhut','minehut','cottages','tavern',
@@ -64,11 +68,17 @@ if (JSON.stringify(core.INTERIOR_IDS) !== JSON.stringify(ids)) throw new Error('
 for (const id of ids) {
   for (const level of [0, 1, 2, 3]) {
     const view = core.interiorView(id, { level, maxLevel: 3, workersNeeded: 3, workersPosted: 2, storeFill: 0.5 });
-    const svg = core.sceneSVG(view, id);
-    if (!svg.startsWith('<svg') || !svg.endsWith('</svg>')) throw new Error(id + ' bad svg');
-    if (svg.length < 900) throw new Error(id + ' level ' + level + ' too thin');
+    const path = core.imagePath(view);
+    const expected = 'assets/building-interiors-manga/' + (level === 0 ? 'plot' : id) + '.webp';
+    if (path !== expected) throw new Error(id + ' level ' + level + ' chose ' + path);
+    const scene = core.sceneHTML(view, id);
+    if (!scene.includes('<img class="bi-scene bi-scene-art"')) throw new Error(id + ' has no painting');
+    if (!scene.includes('src="' + expected + '"')) throw new Error(id + ' art missing');
+    if (!scene.includes('data-level="' + level + '"')) throw new Error(id + ' level hidden');
+    if (scene.includes('<svg')) throw new Error(id + ' fell back to placeholder SVG');
   }
 }
+if (core.ART_PATHS.length !== 16 || new Set(core.ART_PATHS).size !== 16) throw new Error('art roster drifted');
 console.log('ok');
 """ % json.dumps(str(CORE))
     out = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
@@ -80,27 +90,52 @@ def test_the_room_tells_the_truth():
     script = """
 const core = require(%s);
 // A half-manned yard shows the gap: two posted hands draw differently from none.
-const manned = core.sceneSVG(core.interiorView('lumberhut', { level: 1, maxLevel: 3, workersNeeded: 3, workersPosted: 2 }), 'x');
-const idle = core.sceneSVG(core.interiorView('lumberhut', { level: 1, maxLevel: 3, workersNeeded: 3, workersPosted: 0 }), 'x');
+const manned = core.sceneHTML(core.interiorView('lumberhut', { level: 1, maxLevel: 3, workersNeeded: 3, workersPosted: 2 }), 'x');
+const idle = core.sceneHTML(core.interiorView('lumberhut', { level: 1, maxLevel: 3, workersNeeded: 3, workersPosted: 0 }), 'x');
 if (manned === idle) throw new Error('crew ignored');
 // A dry cistern and a full one read differently.
-const dry = core.sceneSVG(core.interiorView('well', { level: 1, maxLevel: 3, storeFill: 0 }), 'x');
-const full = core.sceneSVG(core.interiorView('well', { level: 1, maxLevel: 3, storeFill: 1 }), 'x');
+const dry = core.sceneHTML(core.interiorView('well', { level: 1, maxLevel: 3, storeFill: 0 }), 'x');
+const full = core.sceneHTML(core.interiorView('well', { level: 1, maxLevel: 3, storeFill: 1 }), 'x');
 if (dry === full) throw new Error('stores ignored');
 // An upgrade under way drapes the room; the plot never does.
-const rising = core.sceneSVG(core.interiorView('farm', { level: 1, maxLevel: 3, rising: true }), 'x');
-const still = core.sceneSVG(core.interiorView('farm', { level: 1, maxLevel: 3, rising: false }), 'x');
+const rising = core.sceneHTML(core.interiorView('farm', { level: 1, maxLevel: 3, rising: true }), 'x');
+const still = core.sceneHTML(core.interiorView('farm', { level: 1, maxLevel: 3, rising: false }), 'x');
 if (rising === still) throw new Error('scaffold missing');
-const plot = core.sceneSVG(core.interiorView('farm', { level: 0, maxLevel: 3 }), 'x');
-if (!plot.includes('stroke-dasharray')) throw new Error('no staked plot');
+if (!rising.includes('bi-scene-rising')) throw new Error('construction atmosphere missing');
+const plot = core.sceneHTML(core.interiorView('farm', { level: 0, maxLevel: 3 }), 'x');
+if (!plot.includes('is-plot') || !plot.includes('/plot.webp')) throw new Error('no painted staked plot');
 // The view clamps hostile shapes instead of throwing.
 const v = core.interiorView('well', { level: 99, maxLevel: 3, workersPosted: 9, workersNeeded: 1, storeFill: 7 });
 if (v.level !== 3 || v.workers.posted !== 1 || v.storeFill !== 1) throw new Error('clamps failed');
+const hostile = core.interiorView('not-a-building', { level: -9, maxLevel: NaN, workersPosted: -4, workersNeeded: -2, storeFill: NaN });
+if (hostile.id !== 'plot' || hostile.level !== 0 || hostile.maxLevel !== 3 || hostile.workers.posted !== 0 || hostile.workers.needed !== 0 || hostile.storeFill !== 0) throw new Error('hostile defaults failed');
+if (core.imagePath(null) !== core.PLOT_ART) throw new Error('null view did not choose the safe plot');
+const escaped = core.sceneHTML(core.interiorView('cabin', { level: 1 }), 'A & B <home> "quoted" interior');
+if (!escaped.includes('alt="A &amp; B &lt;home&gt; &quot;quoted&quot; interior"')) throw new Error('alt was not escaped');
+if (!core.sceneHTML(core.interiorView('cabin', { level: 1 })).includes('alt="Building interior"')) throw new Error('default alt missing');
 console.log('ok');
 """ % json.dumps(str(CORE))
     out = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60)
     assert out.returncode == 0, out.stderr
     assert "ok" in out.stdout
+
+
+def test_every_generated_room_is_a_unique_full_size_webp():
+    expected = {
+        "cabin", "hut", "farm", "well", "lumberhut", "minehut", "cottages",
+        "tavern", "chapel", "lumber", "quarry", "market", "storehouse",
+        "foundry", "entertainment", "plot",
+    }
+    files = sorted(ART_DIR.glob("*.webp"))
+    assert {path.stem for path in files} == expected
+    hashes = set()
+    for path in files:
+        assert path.stat().st_size > 200_000, path.name
+        hashes.add(hashlib.sha256(path.read_bytes()).hexdigest())
+        with Image.open(path) as image:
+            assert image.format == "WEBP", path.name
+            assert image.size == (1448, 1086), path.name
+    assert len(hashes) == 16
 
 
 # ---------------------------------------------------------------------------
@@ -155,8 +190,9 @@ def test_the_overlay_is_the_shop_pattern_with_the_room_on_top():
     # Settle the clocks before reading the room.
     assert "empireCompleteConstructions();" in render
     assert "simulateVillageEconomy(rec, Date.now());" in render
-    # The core draws the room from the building's real state.
-    assert "core.sceneSVG(core.interiorView(building.id, facts)" in render
+    # The core selects the painting from the building's real state.
+    assert "core.sceneHTML(core.interiorView(building.id, facts)" in render
+    assert "sceneSVG" not in render
     # A ward folded into a Town gets the tested town card; a lone village
     # gets the desk's card moved indoors.
     assert "townBuildingSheetHTML(settle, rec, building.id)" in render
@@ -164,6 +200,17 @@ def test_the_overlay_is_the_shop_pattern_with_the_room_on_top():
     assert 'class="shop-panel building-interior-panel"' in render
     # All three doors are exported for inline handlers.
     assert "openBuildingInterior, closeBuildingInterior, buildingInteriorBuild," in html
+
+
+def test_the_painted_room_motion_is_subtle_stateful_and_accessible():
+    html = html_text()
+    assert ".building-interior-scene .bi-scene-art { animation:biArtBreathe 13s" in html
+    assert ".is-level-2 .bi-scene-art { filter:saturate(1) brightness(.98); }" in html
+    assert ".is-level-3 .bi-scene-art { filter:saturate(1.08) brightness(1.02)" in html
+    assert ".is-well .bi-scene-glow,.is-quarry .bi-scene-glow,.is-minehut .bi-scene-glow" in html
+    assert ".is-foundry .bi-scene-glow,.is-tavern .bi-scene-glow,.is-entertainment .bi-scene-glow" in html
+    reduced = html[html.index("@media (prefers-reduced-motion: reduce)") :]
+    assert ".building-interior-scene .bi-scene-art,.building-interior-scene .bi-scene-glow,.building-interior-scene .bi-scene-rising { animation:none; }" in reduced
 
 
 def test_the_interior_build_button_keeps_every_gate():
@@ -259,11 +306,18 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
-    assert f'<script src="building_interior_core.js?v={OWN_RELEASE_PIN}"></script>' in html
+    assert f'<script src="building_interior_core.js?v={ART_RELEASE_PIN}"></script>' in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
+    assert ART_RELEASE_PIN in cache_line
     assert OWN_RELEASE_PIN in cache_line
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     # The core rides all three precache arrays, install-required included.
-    assert sw.count(f"./building_interior_core.js?v={OWN_RELEASE_PIN}") == 3
+    assert sw.count(f"./building_interior_core.js?v={ART_RELEASE_PIN}") == 3
+    for name in sorted(path.name for path in ART_DIR.glob("*.webp")):
+        assert f"./assets/building-interiors-manga/{name}" in sw
+    assert "asset.startsWith('.' + '/assets/building-interiors-manga/')" in sw
     assert DEPLOY.exists()
-    assert '"building_interior_core.js"' in DEPLOY.read_text(encoding="utf-8")
+    deploy = DEPLOY.read_text(encoding="utf-8")
+    assert '"building_interior_core.js"' in deploy
+    for name in sorted(path.name for path in ART_DIR.glob("*.webp")):
+        assert f'"assets/building-interiors-manga/{name}"' in deploy
