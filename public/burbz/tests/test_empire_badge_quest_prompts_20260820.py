@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "empire-three-pages-v343-20260901"
+CURRENT_BUILD = "generated-building-interiors-v344-20260902"
 
 
 def run_node(source: str):

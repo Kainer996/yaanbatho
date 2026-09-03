@@ -39,7 +39,7 @@ ROLES_CORE = (ROOT / "bird_roles_core.js").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "one-tap-appointments-v320-20260824"
 # A later release ships over the top; this one changed no core either, so only
 # the head build moves on.
-CURRENT_BUILD = "empire-three-pages-v343-20260901"
+CURRENT_BUILD = "generated-building-interiors-v344-20260902"
 PREVIOUS_RELEASE_PIN = "villages-first-county-merge-v319-20260824"
 
 

@@ -29,7 +29,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "quest-zoom-lock-v282-20260818"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "empire-three-pages-v343-20260901"
+CURRENT_BUILD = "generated-building-interiors-v344-20260902"
 
 CONSTANTS = ("QUEST_WALK_ZOOM_FLOOR", "QUEST_WALK_ZOOM_CEILING", "QUEST_WALK_FRAME_MIN_M")
 

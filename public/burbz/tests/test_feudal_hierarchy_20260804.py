@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "empire-three-pages-v343-20260901"
+CURRENT_BUILD = "generated-building-interiors-v344-20260902"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 

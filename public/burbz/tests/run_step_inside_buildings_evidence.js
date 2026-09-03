@@ -1,10 +1,11 @@
 #!/usr/bin/env node
-// Browser evidence for step-inside-buildings-v341-20260901. Boots the REAL
+// Browser evidence for step-inside-buildings-v341-20260901 plus the painted
+// interior upgrade generated-building-interiors-v344-20260902. Boots the REAL
 // game in Chromium with a veteran save owning one built-up village, then
 // walks the whole feature with real clicks:
 //
 //   - the desk under the 3D village is door tiles now (no card wall),
-//   - tapping a tile opens the building's interior overlay: the drawn room,
+//   - tapping a tile opens the building's interior overlay: the real painting,
 //     the crew truth, the stores truth, and the same build button,
 //   - the build button really builds (coins fall, a construction starts,
 //     the room re-renders showing BUILDING),
@@ -121,14 +122,23 @@ function check(name, ok, detail) {
   await page.waitForSelector('#buildingInteriorOverlay.show', { timeout: 15000 });
   const hut = await page.evaluate(() => {
     const overlay = document.getElementById('buildingInteriorOverlay');
+    const painting = overlay.querySelector('.bi-scene-art');
     return {
       title: (overlay.querySelector('.shop-name') || {}).textContent || '',
       scene: !!overlay.querySelector('.bi-scene'),
+      painting: painting ? {
+        src: painting.getAttribute('src'),
+        complete: painting.complete,
+        naturalWidth: painting.naturalWidth,
+        naturalHeight: painting.naturalHeight
+      } : null,
+      placeholderSvgs: overlay.querySelectorAll('.building-interior-scene svg').length,
       crewLine: (overlay.querySelector('.building-interior-body') || {}).textContent || '',
       buildBtn: !!overlay.querySelector('.province-build-btn')
     };
   });
-  check('the Hunter-Gatherer Hut opens: its name over its drawn room', /Hunter-Gatherer Hut/.test(hut.title) && hut.scene, hut.title);
+  check('the Hunter-Gatherer Hut opens: its name over its painted room', /Hunter-Gatherer Hut/.test(hut.title) && hut.scene, hut.title);
+  check('the full-size hut painting loaded with no SVG placeholder', hut.painting && hut.painting.complete && hut.painting.naturalWidth === 1448 && hut.painting.naturalHeight === 1086 && /building-interiors-manga\/hut\.webp$/.test(hut.painting.src) && hut.placeholderSvgs === 0, JSON.stringify(hut.painting));
   check('the room tells the crew truth (posted hands or the idle warning)', /at work|posted|dle/.test(hut.crewLine));
   check('the granary line reads the real stores', /Granary holds/.test(hut.crewLine));
   check('the build button stands inside the room', hut.buildBtn);
@@ -141,9 +151,11 @@ function check(name, ok, detail) {
   const wellBefore = await page.evaluate(() => ({
     title: (document.querySelector('#buildingInteriorOverlay .shop-name') || {}).textContent || '',
     cistern: /Cistern holds/.test((document.querySelector('#buildingInteriorOverlay .building-interior-body') || {}).textContent || ''),
+    painting: (document.querySelector('#buildingInteriorOverlay .bi-scene-art') || {}).getAttribute('src') || '',
     coins: JSON.parse(localStorage.getItem('burbz_state')).player.coins
   }));
   check('the well opens by its exported door too', /Timber Well/.test(wellBefore.title), wellBefore.title);
+  check('the well has its own painting', /building-interiors-manga\/well\.webp$/.test(wellBefore.painting), wellBefore.painting);
   check('the cistern line reads the real water store', wellBefore.cistern);
   await page.click('#buildingInteriorOverlay .province-build-btn:not([disabled])');
   await page.waitForFunction(() => {
@@ -154,10 +166,12 @@ function check(name, ok, detail) {
     const state = JSON.parse(localStorage.getItem('burbz_state'));
     return {
       coins: state.player.coins,
-      rising: (state.empire.villages['101'].economy.constructions || []).map(c => c.id)
+      rising: (state.empire.villages['101'].economy.constructions || []).map(c => c.id),
+      atmosphere: !!document.querySelector('#buildingInteriorOverlay .bi-scene-rising')
     };
   });
   check('the upgrade starts from inside: a real construction on the well', wellAfter.rising.indexOf('well') !== -1, JSON.stringify(wellAfter.rising));
+  check('the painted room shows the construction atmosphere', wellAfter.atmosphere);
   check('and the coins were really spent', wellAfter.coins < wellBefore.coins, wellBefore.coins + ' -> ' + wellAfter.coins);
   if (SHOTS) await page.screenshot({ path: SHOTS + '/well-building.png', fullPage: false });
 

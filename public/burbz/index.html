@@ -3878,10 +3878,23 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   .village-shop-interior { min-height: 210px; max-height: 42dvh; }
   .shop-desc { display: none; }
 }
-/* Step inside your buildings (step-inside-buildings-v341): every yard the
-   governor raises opens like a shop — its drawn room on top, the one card
-   that runs it below. */
-.building-interior-scene .bi-scene { position:absolute; inset:0; z-index:0; width:100%; height:100%; }
+/* Generated building interiors (generated-building-interiors-v344): the old
+   code-drawn SVG rooms are now full Burbz paintings. A very slow push-in and
+   room-specific light breathe without competing with the controls. */
+.building-interior-scene .bi-scene-art-wrap { position:absolute; inset:0; z-index:0; overflow:hidden; background:#171108; }
+.building-interior-scene .bi-scene { position:absolute; inset:0; z-index:0; width:100%; height:100%; object-fit:cover; }
+.building-interior-scene .bi-scene-art { animation:biArtBreathe 13s ease-in-out infinite alternate; transform:scale(1.012); filter:saturate(.96) brightness(.94); }
+.building-interior-scene .bi-scene-art-wrap.is-level-2 .bi-scene-art { filter:saturate(1) brightness(.98); }
+.building-interior-scene .bi-scene-art-wrap.is-level-3 .bi-scene-art { filter:saturate(1.08) brightness(1.02) contrast(1.025); }
+.bi-scene-glow,.bi-scene-vignette,.bi-scene-rising { position:absolute; inset:0; pointer-events:none; }
+.bi-scene-glow { z-index:1; opacity:.42; mix-blend-mode:screen; background:radial-gradient(circle at 68% 28%,rgba(255,193,83,.24),transparent 28%); animation:biLanternGlow 4.8s ease-in-out infinite; }
+.is-well .bi-scene-glow,.is-quarry .bi-scene-glow,.is-minehut .bi-scene-glow { background:radial-gradient(circle at 58% 44%,rgba(84,220,230,.25),transparent 33%),radial-gradient(circle at 20% 18%,rgba(255,188,75,.18),transparent 25%); }
+.is-foundry .bi-scene-glow,.is-tavern .bi-scene-glow,.is-entertainment .bi-scene-glow { opacity:.56; background:radial-gradient(circle at 62% 36%,rgba(255,135,44,.34),transparent 32%),radial-gradient(circle at 24% 18%,rgba(255,211,112,.22),transparent 24%); }
+.bi-scene-vignette { z-index:3; box-shadow:inset 0 0 52px rgba(4,3,2,.7); background:linear-gradient(180deg,rgba(4,3,2,.16),transparent 32%,transparent 70%,rgba(4,3,2,.24)); }
+.bi-scene-rising { z-index:2; opacity:.34; background:linear-gradient(105deg,transparent 6%,rgba(232,219,188,.56) 24%,rgba(120,102,72,.18) 43%,transparent 62%),repeating-linear-gradient(112deg,transparent 0 34px,rgba(240,224,188,.12) 35px 39px); animation:biBuildDust 7s ease-in-out infinite alternate; }
+@keyframes biArtBreathe { from{transform:scale(1.012) translate3d(-.15%,0,0)} to{transform:scale(1.032) translate3d(.15%,-.2%,0)} }
+@keyframes biLanternGlow { 0%,100%{opacity:.32} 48%{opacity:.5} 70%{opacity:.4} }
+@keyframes biBuildDust { from{transform:translateX(-3%);opacity:.26} to{transform:translateX(3%);opacity:.4} }
 .building-interior-scene .shop-desc .province-building-pips { display:inline-flex; margin-right:6px; vertical-align:middle; }
 .building-interior-body { display:flex; flex-direction:column; gap:10px; }
 .building-interior-body .town-sheet-head { display:none; } /* the scene head already names the room */
@@ -3909,6 +3922,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   .settlement-scene-label { transition:none; }
   .shop-panel, .village-shop-patron, .village-shop-patron img, .village-shop-mote, .village-shop-steam, .village-shop-fire-glow { animation: none !important; }
   .village-shop-mote, .village-shop-steam { display: none; }
+  .building-interior-scene .bi-scene-art,.building-interior-scene .bi-scene-glow,.building-interior-scene .bi-scene-rising { animation:none; }
 }
 
 @media (min-width:900px) {
@@ -5152,7 +5166,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
 <script src="empire_grid_core.js?v=empire-grid-v322-20260825"></script>
 <script src="village_manager_core.js?v=manager-builds-the-village-v324-20260825"></script>
-<script src="building_interior_core.js?v=step-inside-buildings-v341-20260901"></script>
+<script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="quest_core.js?v=ordered-quest-markers-v224-20260804"></script>
@@ -28450,13 +28464,13 @@ function renderBuildingInterior() {
   const facts = buildingInteriorFacts(rec, building);
   const tier = villageBuildingTier(building, Math.max(1, facts.level));
   const label = facts.level > 0 ? tier.name : building.name;
-  const svg = core.sceneSVG(core.interiorView(building.id, facts), label + ' interior');
+  const scene = core.sceneHTML(core.interiorView(building.id, facts), label + ' interior');
   const mergedLink = view.mode === 'town' ? empireSettlementOfSeed(rec.seed) : null;
   const settle = mergedLink ? canonicalEmpireSettlement(empireSettlementById(mergedLink.id)) : null;
   const body = settle ? townBuildingSheetHTML(settle, rec, building.id) : villageBuildingSheetHTML(rec, building.id);
   const pips = Array.from({ length: building.maxLevel }, (_, i) => '<span class="province-pip' + (i < facts.level ? ' on' : '') + '"></span>').join('');
   overlay.innerHTML = '<section class="shop-panel building-interior-panel" role="dialog" aria-modal="true" aria-labelledby="buildingInteriorTitle">' +
-    '<div class="village-shop-interior building-interior-scene">' + svg +
+    '<div class="village-shop-interior building-interior-scene">' + scene +
     '<div class="village-shop-scene-head"><span class="shop-icon">' + (facts.level > 0 ? tier.icon : building.icon) + '</span>' +
     '<div class="shop-head-copy"><h2 class="shop-name" id="buildingInteriorTitle">' + escapeHtml(label) + '</h2>' +
     '<div class="shop-desc"><span class="province-building-pips">' + pips + '</span>' +
@@ -41843,7 +41857,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-three-pages-v343-20260901';
+const BURBZ_BUILD = 'generated-building-interiors-v344-20260902';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
