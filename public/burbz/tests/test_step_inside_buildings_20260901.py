@@ -39,8 +39,8 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "building_interior_core.js"
 DEPLOY = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "step-inside-buildings-v341-20260901"
-CURRENT_BUILD = "generated-building-interiors-v344-20260902"
-ART_RELEASE_PIN = CURRENT_BUILD
+CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+ART_RELEASE_PIN = "generated-building-interiors-v344-20260902"
 PREVIOUS_RELEASE_PIN = "no-arms-card-art-v340-20260901"
 ART_DIR = ROOT / "assets" / "building-interiors-manga"
 
