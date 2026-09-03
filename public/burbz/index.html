@@ -1134,6 +1134,7 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .role-post-row { width:100%; display:flex; align-items:center; gap:10px; margin:8px 0 2px; padding:10px 11px; border-radius:14px; border:1px solid rgba(214,168,79,.3); background:linear-gradient(150deg,rgba(214,168,79,.09),rgba(0,0,0,.32)); color:inherit; text-align:left; }
 .role-post-row:active { transform:scale(.99); }
 .role-post-row.is-staffed { border-color:rgba(240,199,103,.46); }
+.role-post-row.is-locked { border-color:rgba(240,199,103,.22); opacity:.82; }
 .role-post-row-symbol { flex:none; width:26px; height:26px; color:var(--accent2); }
 .role-post-row-main { flex:1; min-width:0; }
 .role-post-row-title { display:block; font-family:'Russo One',sans-serif; font-size:12px; letter-spacing:.05em; color:var(--legendary); }
@@ -3315,6 +3316,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .treehouse-room-node[data-room="library"] { --th-tilt:-.8deg; --th-rock-dur:8.9s; --th-rock-delay:-3.7s; }
 .treehouse-room-node[data-room="observatory"] { --th-tilt:1.6deg; --th-rock-dur:9.4s; --th-rock-delay:-5.7s; }
 .treehouse-room-node[data-room="magpie_market"] { --th-tilt:1.2deg; --th-rock-dur:7.7s; --th-rock-delay:-2.1s; }
+.treehouse-room-node[data-room="manager_office"] { --th-tilt:-1.3deg; --th-rock-dur:8.1s; --th-rock-delay:-3.4s; }
 .treehouse-room-name { position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); max-width:98px; padding:2px 7px; border-radius:999px; background:rgba(0,0,0,.55); color:var(--text); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; letter-spacing:.045em; font-size:8.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .treehouse-room-meta { display:none; }
 .treehouse-room-count { position:absolute; right:-7px; top:-7px; min-width:22px; height:22px; padding:0 5px; border-radius:999px; display:flex; align-items:center; justify-content:center; background:var(--legendary); color:#11100d; font-weight:900; font-size:11px; border:2px solid #11100d; }
@@ -3691,6 +3693,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .academy-building-card.built { border-color:rgba(81,207,102,.38); box-shadow:0 0 18px rgba(81,207,102,.08); }
 .academy-building-card.locked { opacity:.54; filter:grayscale(.32); }
 .academy-building-card.buildable { border-color:rgba(214,168,79,.38); }
+.academy-building-card.recommended { border-color:#ffd76a; box-shadow:0 0 0 3px rgba(255,215,106,.13),0 0 24px rgba(255,215,106,.34); }
+.academy-building-card.quest-guided { border-color:#ffd76a; box-shadow:0 0 0 4px rgba(255,215,106,.18),0 0 32px rgba(255,215,106,.48); animation:academyQuestGuidePulse 1.15s ease-in-out infinite; }
+@media (prefers-reduced-motion:reduce) { .academy-building-card.quest-guided { animation:none; } }
+.academy-market-nudge { margin:0 10px 12px; padding:11px 12px; border:1px solid rgba(255,215,106,.48); border-radius:14px; background:linear-gradient(135deg,rgba(255,215,106,.17),rgba(0,0,0,.24)); color:#ffe7a2; font:800 12px/1.4 'Rajdhani',sans-serif; }
+.academy-market-nudge button { margin-top:8px; width:100%; min-height:38px; border-radius:10px; background:#ffd76a; color:#161006; font-weight:900; letter-spacing:.04em; }
 .academy-building-art { width:100%; height:96px; object-fit:contain; border-radius:10px; background:radial-gradient(circle at 50% 72%,rgba(214,168,79,.10),rgba(10,8,5,.40)); display:block; border:1px solid rgba(214,168,79,.12); padding:4px; }
 .academy-building-name { margin-top:7px; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:12px; color:var(--text); letter-spacing:.05em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .academy-building-effect { margin-top:2px; color:var(--text3); font-size:10px; line-height:1.22; min-height:24px; }
@@ -5145,10 +5152,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=iron-ingot-errand-v326-20260825"></script>
-<script src="academy_alive_core.js?v=magpie-market-v316-20260824"></script>
+<script src="academy_treehouse_core.js?v=trading-manager-gates-v346-20260903"></script>
+<script src="academy_alive_core.js?v=trading-manager-gates-v346-20260903"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
-<script src="academy_3d_core.js?v=magpie-market-v316-20260824"></script>
+<script src="academy_3d_core.js?v=trading-manager-gates-v346-20260903"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -11879,6 +11886,8 @@ function assignBirdRole(scope, key, birdId) {
   const role = roleDefFor(scope, key);
   const bird = (gameState.flock || []).find(b => b && b.id === birdId);
   if (!core || !role || !bird) return;
+  const managerGate = projectManagerAppointmentGate(scope, key);
+  if (managerGate) { closeRolePicker(); focusProjectManagerOffice(); return; }
   const currentPost = birdAssignedPost(bird.id);
   const samePost = !!currentPost && currentPost.scope === scope && String(currentPost.key) === String(key);
   // Any posted bird can walk straight to another job: core.assignRole vacates
@@ -12006,12 +12015,13 @@ function rolePostRowHTML(scope, key, options = {}) {
   const role = roleDefFor(scope, key);
   if (!role) return '';
   const post = rolePostState(scope, key);
+  const managerGate = !post.staffed ? projectManagerAppointmentGate(scope, key) : null;
   const prefix = options.titlePrefix || '';
   const title = rolePostTitle(scope, key, role);
   const sub = post.staffed
     ? birdDisplayName(post.bird) + ' · ' + role.effect.label + ' +' + post.bonusPct + '%'
-    : 'Vacant — tap to appoint a bird';
-  return '<button type="button" class="role-post-row' + (post.staffed ? ' is-staffed' : '') + '"' +
+    : managerGate ? managerGate : 'Vacant — tap to appoint a bird';
+  return '<button type="button" class="role-post-row' + (post.staffed ? ' is-staffed' : '') + (managerGate ? ' is-locked' : '') + '"' +
     roleOpenAttrs(scope, key, prefix) + '>' +
     roleSymbolSVG(role, 'role-post-row-symbol') +
     '<span class="role-post-row-main"><span class="role-post-row-title">' + escapeHtml(prefix + title) + '</span>' +
@@ -12038,6 +12048,17 @@ function roleOpenAttrs(scope, key, prefix) {
   return ' data-action="role-open" data-role-scope="' + escapeHtml(scope) + '"' +
     ' data-role-key="' + escapeHtml(String(key)) + '"' +
     (prefix ? ' data-role-prefix="' + escapeHtml(prefix) + '"' : '');
+}
+
+// Town hearts use the same saved role slot for their Lord Mayor, but this new
+// licence is specifically for standalone-village Project Managers.
+function projectManagerAppointmentGate(scope, key) {
+  if (scope !== 'village' || rolePostTitle(scope, key) !== 'Project Manager') return '';
+  if (typeof isAcademyBuildingBuilt === 'function' && isAcademyBuildingBuilt('manager_office')) return '';
+  const complete = typeof completedVillageCount === 'function' ? completedVillageCount() : 0;
+  return complete > 0
+    ? "Locked — build the Project Manager's Office at the Academy"
+    : 'Locked — build every kind of building in one village first';
 }
 
 // ---- The one appointment sheet in the game ---------------------------------
@@ -12074,6 +12095,7 @@ function rolePickerRoot() {
 }
 function openRolePicker(scope, key, prefix) {
   if (!roleDefFor(scope, key)) return;
+  if (projectManagerAppointmentGate(scope, key)) { focusProjectManagerOffice(); return; }
   rolePickerOpen = { scope, key: String(key), prefix: prefix || '' };
   const el = rolePickerRoot();
   el.innerHTML = rolePickerSheetHTML(scope, key, rolePickerOpen.prefix);
@@ -12276,6 +12298,7 @@ function applyQuartermasterPlanning(quest) {
   if (mult <= 1) return quest;
   quest.rewards.coins = Math.round((Number(quest.rewards.coins) || 0) * mult);
   quest.rewards.branches = Math.round((Number(quest.rewards.branches) || 0) * mult);
+  quest.rewards.stone = Math.round((Number(quest.rewards.stone) || 0) * mult);
   quest.quartermasterMultiplier = mult;
   return quest;
 }
@@ -13392,7 +13415,7 @@ function applyBirdTraining(bird, type) {
 // ACADEMY — campus where captured birds live, train, and get cared for
 // ============================================================================
 const TREEHOUSE_ROOM_CATALOG = (window.BurbzAcademyCore ? window.BurbzAcademyCore.getAcademyRooms() : []);
-const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', magpie_market:'assets/academy-buildings-manga/market.png', library:'assets/academy-buildings/library.svg' };
+const ACADEMY_BUILDING_ASSETS = { outdoors:'assets/academy-buildings-manga/aviary-gardens.png', tavern:'assets/academy-buildings-manga/training-hall.png', training:'assets/academy-buildings-manga/training-hall.png', hospital:'assets/academy-buildings-manga/hospital.png', crowbar:'assets/academy-buildings-manga/crowbar.png', kitchen:'assets/academy-buildings-manga/kitchen.png', workshop:'assets/academy-buildings-manga/workshop.png', nursery:'assets/academy-buildings-manga/nursery.png', observatory:'assets/academy-buildings-manga/observatory.png', quest_roost:'assets/academy-buildings-manga/quest-roost.png', magpie_market:'assets/academy-buildings-manga/market.png', manager_office:'assets/academy-buildings-manga/roost.png', library:'assets/academy-buildings/library.svg' };
 const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.id, { id:r.id, room:r.id, label:r.label, icon:r.icon, cost:r.cost, branches:Math.max(0, Number(r.branches) || 0), unlockLevel:r.unlockLevel, floor:r.floor, branch:r.branch, x:r.x, y:r.y, asset:ACADEMY_BUILDING_ASSETS[r.id] || 'assets/academy-buildings/roost.svg', effect:r.effect }]));
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
@@ -13408,6 +13431,7 @@ const ACADEMY_ROOMS = {
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
   library: { label:'THE LIBRARY', icon:'📚', buildingId:'library', desc:'The Academy reading room. Field guides, story scrolls and quiet candlelight — birds stationed among the stacks grow cleverer by the hour, and the Quiet Study drill teaches MIND battle moves.', perk:'Passive: +1 INT every 30 min', perches:[[75,29],[71,33],[79,33]] },
   magpie_market: { label:'MAGPIE MARKET', icon:'⚖️', buildingId:'magpie_market', desc:'The Academy trading post. Magpies deal in everything the kingdom digs up — buy the material a recipe is short of, and sell whatever is piling up on the shelves.', perk:'Active: buy and sell every crafting material', perches:[] },
+  manager_office: { label:"PROJECT MANAGER'S OFFICE", icon:'📋', buildingId:'manager_office', desc:'The Academy planning office. Complete every kind of building in one village, then raise this office to unlock Project Manager appointments across your villages.', perk:'Unlocks village Project Manager appointments', perches:[] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
 // Where a bird stands when it has no job. Kept as an id for save
@@ -13430,6 +13454,48 @@ function isAcademyBuildingBuilt(id) {
 function isAcademyRoomBuilt(room) {
   const cfg = ACADEMY_ROOMS[room];
   return !!cfg && isAcademyBuildingBuilt(cfg.buildingId || room);
+}
+
+// The planning office is earned by finishing the full village catalogue once.
+// After that milestone it can be built at the Academy and its licence applies
+// to every standalone village, including new ones.
+function academyBuildingProgressLock(id) {
+  if (id !== 'manager_office' || isAcademyBuildingBuilt(id)) return null;
+  const complete = typeof completedVillageCount === 'function' ? completedVillageCount() : 0;
+  return complete > 0 ? null : {
+    chip:'BUILD ALL VILLAGE BUILDINGS',
+    button:'FINISH A VILLAGE',
+    message:"The Project Manager's Office unlocks after one village has every kind of village building."
+  };
+}
+
+function focusAcademyBuildCard(id, message) {
+  academySelectedRoom = id;
+  academyQuestGuidanceRoom = id;
+  if (currentScreen === 'academy') renderAcademy(); else switchScreen('academy');
+  if (message) showToast(message);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const card = document.querySelector('.academy-building-card[data-building="' + id + '"]');
+    if (!card) return;
+    card.classList.add('quest-guided');
+    card.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center' });
+  }));
+}
+
+function focusMagpieMarketBuild() {
+  villageCloseShop();
+  if (typeof closeWalkQuestSheet === 'function') closeWalkQuestSheet();
+  focusAcademyBuildCard('magpie_market', '⚖️ Build the Magpie Market to unlock buying and selling.');
+}
+
+function focusProjectManagerOffice() {
+  const lock = academyBuildingProgressLock('manager_office');
+  if (lock) {
+    showToast('📋 Finish every kind of building in one village to unlock the Project Manager\'s Office.');
+    if (currentScreen !== 'village') switchScreen('village');
+    return;
+  }
+  focusAcademyBuildCard('manager_office', "📋 Build the Project Manager's Office before appointing village managers.");
 }
 
 function ensureAcademyBuildings(applyStarterGrant = true) {
@@ -13549,6 +13615,8 @@ function academyBuildBuilding(id, opts = {}) {
   const level = Number(gameState.player.level) || 1;
   const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
+  const progressLock = academyBuildingProgressLock(id);
+  if (progressLock) { showToast(progressLock.message); return false; }
   if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return false; }
   if (playerBranches() < branchCost) { showResourceQuestPrompt('branches', branchCost, goalWithThe(cfg.label)); return false; }
   addCoins(-cfg.cost);
@@ -13577,6 +13645,8 @@ function academyStartPlaceBuilding(id) {
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
+    const progressLock = academyBuildingProgressLock(id);
+    if (progressLock) { showToast(progressLock.message); return; }
     if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return; }
     if (playerBranches() < (Number(cfg.branches) || 0)) { showResourceQuestPrompt('branches', Number(cfg.branches) || 0, goalWithThe(cfg.label)); return; }
   }
@@ -13639,24 +13709,29 @@ function renderAcademyBuildPanel() {
   const cards = ACADEMY_BUILDING_ORDER.filter(id => id !== 'outdoors').map(id => {
     const b = ACADEMY_BUILDINGS[id];
     const built = isAcademyBuildingBuilt(id);
-    const locked = (gameState.player.level || 1) < b.unlockLevel;
+    const levelLocked = (gameState.player.level || 1) < b.unlockLevel;
+    const progressLock = academyBuildingProgressLock(id);
+    const locked = levelLocked || !!progressLock;
     const affordable = wallet >= b.cost && branchWallet >= (b.branches || 0);
     const placing = academyPlacementTarget === id;
+    const recommended = id === 'magpie_market' && !built;
+    const guided = academyQuestGuidanceRoom === id;
     const cls = built ? ' built' : locked ? ' locked' : affordable ? ' buildable' : '';
     const costLabel = b.cost + ' 🪙' + ((b.branches || 0) > 0 ? ' · ' + b.branches + ' 🪵' : '');
     const btn = built
       ? '<button class="academy-build-btn secondary" onclick="academyStartPlaceBuilding(\'' + id + '\')">Move</button><button class="academy-build-btn secondary" onclick="academySelectRoom(\'' + b.room + '\')">Open</button>'
       : locked
-        ? '<button class="academy-build-btn" disabled>LV ' + b.unlockLevel + '</button>'
+        ? '<button class="academy-build-btn" disabled>' + (progressLock ? progressLock.button : 'LV ' + b.unlockLevel) + '</button>'
         : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Build') + '</button>';
-    return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + '" data-building="' + id + '">' +
+    return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + (recommended ? ' recommended' : '') + (guided ? ' quest-guided' : '') + '" data-building="' + id + '">' +
       '<img class="academy-building-art" src="' + b.asset + '" alt="' + escapeHtml(b.label) + ' sprite">' +
       '<div class="academy-building-name">' + b.icon + ' ' + escapeHtml(b.label) + '</div>' +
       '<div class="academy-building-effect">' + escapeHtml(b.effect) + '</div>' +
-      '<div class="academy-building-meta"><span class="academy-building-chip">' + (built ? 'BUILT · MOVE ANYTIME' : locked ? 'UNLOCK LV ' + b.unlockLevel : costLabel) + '</span>' + btn + '</div>' +
+      '<div class="academy-building-meta"><span class="academy-building-chip">' + (built ? 'BUILT · MOVE ANYTIME' : progressLock ? progressLock.chip : levelLocked ? 'UNLOCK LV ' + b.unlockLevel : costLabel) + '</span>' + btn + '</div>' +
     '</div>';
   }).join('');
-  panel.innerHTML = '<div class="academy-builder-status"><div class="academy-builder-title">World buildings</div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵</div></div><div class="academy-build-grid">' + cards + '</div>';
+  const marketNudge = isAcademyBuildingBuilt('magpie_market') ? '' : '<div class="academy-market-nudge">⚖️ Trading is locked until the Magpie Market is built.<button type="button" onclick="focusMagpieMarketBuild()">SHOW ME THE MAGPIE MARKET</button></div>';
+  panel.innerHTML = '<div class="academy-builder-status"><div class="academy-builder-title">World buildings</div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵</div></div>' + marketNudge + '<div class="academy-build-grid">' + cards + '</div>';
 }
 
 
@@ -14217,6 +14292,7 @@ function claimBirdExpedition(expeditionId, opts) {
   const previousPlayerLevel = Number(gameState.player.level) || 1;
   let coins = 0;
   let branches = 0;
+  let stone = 0;
   let questXp = 0;
   let items = {};
   let foundNewClue = false;
@@ -14228,9 +14304,11 @@ function claimBirdExpedition(expeditionId, opts) {
     const equipment = q.equipment || {};
     coins = advanced.rewards.coins || 0;
     branches = Math.max(0, Math.floor(Number(advanced.rewards.branches) || 0));
+    stone = Math.max(0, Math.floor(Number(advanced.rewards.stone) || 0));
     if (equipment.provision) { coins = Math.round(coins * 1.25); branches = Math.round(branches * 1.25); }
     addCoins(coins);
     addBranches(branches);
+    addStone(stone);
     questXp = Math.max(0, Math.floor(Number(advanced.rewards.xp) || 0));
     if (questXp > 0) applyPlayerXpState(questXp); // durable mutation; addPlayerXp(questXp) would save and celebrate too early
     items = { ...(advanced.rewards.items || {}) };
@@ -14260,7 +14338,7 @@ function claimBirdExpedition(expeditionId, opts) {
     // Merlin's tutorial errand is one-off: the claim retires it durably.
     if (q.templateId === 'merlin_first_flight') tutorialFlowState().errandClaimed = true;
     gameState.birdExpeditions = gameState.birdExpeditions.filter(x => x.id !== expeditionId);
-    setQuestClaimReceipt(receiptKey, { id:receiptKey, committedAt:Date.now(), coins, branches, xp:questXp, items });
+    setQuestClaimReceipt(receiptKey, { id:receiptKey, committedAt:Date.now(), coins, branches, stone, xp:questXp, items });
     // saveState() is intentionally replaced by one observable durable commit.
     durableSaveState({ throwOnFailure:true, queueCloud:false });
   } catch (error) {
@@ -14285,17 +14363,18 @@ function claimBirdExpedition(expeditionId, opts) {
     // out of the way — no overlay closed, no screen takeover — just one warm
     // line saying what came home.
     if (currentScreen === 'quests') {
-      playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+      playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, stone, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
     } else {
       const bankedBits = [];
       if (coins > 0) bankedBits.push('+' + coins + ' 🪙');
       if (branches > 0) bankedBits.push('+' + branches + ' 🪵');
+      if (stone > 0) bankedBits.push('+' + stone + ' 🪨');
       if (questXp > 0) bankedBits.push('+' + questXp + ' XP');
       showToast('🏡 ' + q.birdName + ' is home: ' + (bankedBits.join(' · ') || 'the finds are put away') + ' — banked.');
     }
   } else {
     closeQuestOverlay();
-    playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
+    playQuestClaimCelebration({ badge: q.nightBonus ? '🌙 NIGHT HUNTER RETURNS!' : 'EXPEDITION COMPLETE!', coins, branches, stone, xp: questXp, items, clue: foundNewClue ? advanced.story.title : null });
   }
   // Say it plainly when a load was left in the field: it is the size rule doing
   // its job, not a bug. Since v335 "send a bigger bird" is no longer sound
@@ -14370,7 +14449,7 @@ function playQuestClaimCelebration(rewards) {
     .map(([k, n]) => { const ing = kitchenIngredientById(k); return '<span class="qcc-item">' + (ing ? ing.icon : '🍽️') + ' ' + escapeHtml(ing ? ing.label : k) + ' ×' + n + '</span>'; }).join('');
   el.innerHTML = '<div class="qcc-center">' + bits.join('') +
     '<div class="qcc-badge">' + escapeHtml(rewards.badge || 'REWARD FOUND!') + '</div>' +
-    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.branches > 0 ? '+' + rewards.branches + ' 🪵' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
+    '<div class="qcc-rewards">' + [rewards.coins > 0 ? '+' + rewards.coins + ' 🪙' : null, rewards.branches > 0 ? '+' + rewards.branches + ' 🪵' : null, rewards.stone > 0 ? '+' + rewards.stone + ' 🪨' : null, rewards.xp > 0 ? '+' + rewards.xp + ' XP' : null].filter(Boolean).join(' &nbsp; ') + '</div>' +
     (itemBits || larderBits ? '<div class="qcc-items">' + itemBits + larderBits + '</div>' : '') +
     (rewards.clue ? '<div class="qcc-clue">📜 Merlin Clue: ' + escapeHtml(rewards.clue) + '</div>' : '') +
     '</div>';
@@ -14410,6 +14489,7 @@ const QUEST_TEMPLATE_INFO = {
   find_seed:    'A quick hop around the gardens for spilt seed. The perfect first errand.',
   find_coins:   'Someone always drops a coin near the market lane. Send a sharp-eyed bird.',
   branch_run:   'Fallen twigs litter the windfall thicket. Haul branches home — buildings need timber.',
+  stone_run:    'The river gravel beds hold loose building stone. Send a strong bird to haul some home.',
   scavenge:     'Moss, twigs and berries for the Academy stores. Easy pickings.',
   meadow_hunt:  'Quarter the rough grass for voles, mice and shrews — the staple prey of owls, kestrels and harriers.',
   warren_watch: 'A patient watch over the warren. Young rabbits: the heavy prey buzzards, goshawks and eagles need.',
@@ -14511,6 +14591,7 @@ function renderBirdExpeditions() {
     const durationOptions = t.tutorial === true ? [] : window.BurbzAcademyCore.getQuestDurationOptions(t.id);
     const durationBadge = durationOptions.length ? '5m–24h' : questDurationLabel(t.minutes);
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
+    const stoneHint = (t.stone && t.stone[1] > 0) ? ' · ~' + t.stone[0] + '–' + t.stone[1] + ' 🪨' : '';
     // Show the food an errand actually brings home. The hunting quests exist
     // so the birds of prey can eat, and that has to be readable at a glance.
     const foodIcons = [...new Set((t.items || []).map(id => kitchenIngredientById(id)).filter(Boolean).map(ing => ing.icon))];
@@ -14522,8 +14603,8 @@ function renderBirdExpeditions() {
       if (mats.length) matHint = ' · ' + mats.slice(0, 3).map(m => m.icon + ' ' + m.label).join(', ');
     } catch (e) {}
     const rewardHint = durationOptions.length
-      ? '7 durations · includes an 8h bedtime quest · quick runs pay best per hour' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
-      : '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
+      ? '7 durations · includes an 8h bedtime quest · quick runs pay best per hour' + foodHint + matHint + stoneHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
+      : '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + stoneHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
       '<div class="quest-info">' +
@@ -14596,13 +14677,13 @@ function questCategoryIsOpen(id) { return !!questCategoryOpenMap()[id]; }
 function setQuestCategoryOpen(id, open) { questCategoryOpenMap()[id] = !!open; }
 
 // ---- Shortfall prompt -------------------------------------------------------
-// A build the player can't pay for is not a dead end. Instead of a toast that
-// names the problem and walks away, a small card offers the fix: send birds
-// out on the errand that earns the missing resource. Taking it opens the
-// quest board with the right drawer open and glowing.
+// A build the player can't pay for is not a dead end. One tap takes them all
+// the way to the matching send-bird sheet, with the useful drawer left open
+// behind it for the next errand.
 const RESOURCE_QUEST_ROUTES = {
-  coins:    { icon:'🪙', noun:'coins',  category:'treasure', drawerLabel:'Coin & Treasure' },
-  branches: { icon:'🪵', noun:'timber', category:'timber',   drawerLabel:'Timber & Building' }
+  coins:    { icon:'🪙', noun:'coins',  category:'treasure', drawerLabel:'Coin & Treasure', templateId:'find_coins' },
+  branches: { icon:'🪵', noun:'timber', category:'timber',   drawerLabel:'Timber & Building', templateId:'branch_run' },
+  stone:    { icon:'🪨', noun:'stone',  category:'materials', drawerLabel:'Materials', templateId:'stone_run' }
 };
 
 function resourceQuestOverlayEl() {
@@ -14628,26 +14709,38 @@ function goalWithThe(label) { return /^the\s/i.test(label) ? label : 'The ' + la
 
 // kind: 'coins' | 'branches'. need: the full cost. goal: what the player was
 // trying to raise ("The Alehouse", "A birdhouse in Elmbrook").
-function showResourceQuestPrompt(kind, need, goal) {
-  const route = RESOURCE_QUEST_ROUTES[kind];
+function showResourceQuestPrompt(kind, need, goal, customRoute) {
+  const route = customRoute || RESOURCE_QUEST_ROUTES[kind];
   if (!route) return;
-  const have = kind === 'branches' ? playerBranches() : (Number(gameState && gameState.player && gameState.player.coins) || 0);
+  const have = Number.isFinite(Number(route.have)) ? Number(route.have)
+    : kind === 'branches' ? playerBranches()
+    : kind === 'stone' ? playerStone()
+    : (Number(gameState && gameState.player && gameState.player.coins) || 0);
   const short = Math.max(1, Math.ceil(need - have));
-  const el = resourceQuestOverlayEl();
-  el.innerHTML = '<div class="resource-quest-card">' +
-    '<div class="resource-quest-icon">' + route.icon + '</div>' +
-    '<div class="resource-quest-title">Not enough ' + route.noun + '</div>' +
-    '<div class="resource-quest-copy">' + escapeHtml(goal) + ' costs ' + need + ' ' + route.icon + ' and you have ' + have + '. Your birds can fetch the missing ' + short + '.</div>' +
-    '<button class="resource-quest-go">🕊️ SEND BIRDS OUT ON A QUEST</button>' +
-    '<button class="resource-quest-later">NOT NOW</button>' +
-  '</div>';
-  el.querySelector('.resource-quest-go').addEventListener('click', () => {
-    SFX.tap();
-    closeResourceQuestPrompt();
-    openQuestBoardCategory(route.category);
-  });
-  el.querySelector('.resource-quest-later').addEventListener('click', () => { SFX.tap(); closeResourceQuestPrompt(); });
-  el.classList.add('open');
+  closeResourceQuestPrompt();
+  showToast(route.icon + ' ' + goal + ' needs ' + short + ' more ' + route.noun + ' — choose a bird to fetch it.');
+  setQuestCategoryOpen(route.category, true);
+  if (currentScreen === 'quests') renderBirdExpeditions(); else switchScreen('quests');
+  requestAnimationFrame(() => requestAnimationFrame(() => openQuestSend(route.templateId)));
+}
+
+// Every construction purse uses this same escape hatch. The first missing
+// resource wins, so one tap opens one useful send-bird sheet instead of a
+// dead button or a shopping list of problems.
+function showBuildResourceQuest(cost, goal) {
+  const need = cost || {};
+  if ((gameState.player.coins || 0) < (need.coins || 0)) { showResourceQuestPrompt('coins', need.coins, goal); return true; }
+  if (playerBranches() < (need.branches || 0)) { showResourceQuestPrompt('branches', need.branches, goal); return true; }
+  if (playerStone() < (need.stone || 0)) { showResourceQuestPrompt('stone', need.stone, goal); return true; }
+  const materialShort = Object.entries(need.materials || {}).find(([id, qty]) => townCostMaterialCount(id) < Number(qty || 0));
+  if (!materialShort) return false;
+  const [id, qty] = materialShort;
+  const template = (window.BurbzAcademyCore.getQuestTemplates() || []).find(t => t.material === id);
+  if (!template) return false;
+  let icon = template.icon || '📦', noun = id.replace(/_/g, ' ');
+  try { const material = lootCore().materialById(id); icon = material?.icon || icon; noun = material?.label || noun; } catch (e) {}
+  showResourceQuestPrompt('material', Number(qty), goal, { icon, noun, category:'materials', drawerLabel:'Materials', templateId:template.id, have:townCostMaterialCount(id) });
+  return true;
 }
 
 // Open the quest board with one category drawer open, scrolled to and glowing.
@@ -14746,13 +14839,15 @@ function renderQuestSendSheet() {
   const durationChoices = durationOptions.map(o => {
     const selected = selectedDuration && selectedDuration.minutes === o.minutes ? ' selected' : '';
     const branchLine = o.branches && o.branches[1] > 0 ? ' · ' + o.branches[0] + '–' + o.branches[1] + ' 🪵' : '';
+    const stoneLine = o.stone && o.stone[1] > 0 ? ' · ' + o.stone[0] + '–' + o.stone[1] + ' 🪨' : '';
     const findLine = o.expectedItemRolls >= 1 ? ' · ~' + (Math.round(o.expectedItemRolls * 10) / 10) + ' finds' : ' · chance of a find';
     return '<button type="button" class="quest-duration-choice' + selected + '" onclick="selectQuestDuration(' + o.minutes + ')">' +
       '<strong>' + questDurationLabel(o.minutes) + '</strong>' +
-      '<span>~' + o.coins[0] + '–' + o.coins[1] + ' 🪙' + branchLine + ' · +' + o.xp + ' XP' + findLine + '</span></button>';
+      '<span>~' + o.coins[0] + '–' + o.coins[1] + ' 🪙' + branchLine + stoneLine + ' · +' + o.xp + ' XP' + findLine + '</span></button>';
   }).join('');
   const selectedCoins = selectedDuration ? selectedDuration.coins : t.coins;
   const selectedBranches = selectedDuration ? selectedDuration.branches : t.branches;
+  const selectedStone = selectedDuration ? selectedDuration.stone : t.stone;
   const selectedXp = selectedDuration ? selectedDuration.xp : (t.xp || 0);
   const selectedMinutes = selectedDuration ? selectedDuration.minutes : t.minutes;
 
@@ -14786,7 +14881,7 @@ function renderQuestSendSheet() {
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
-      '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
+      '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ((selectedStone && selectedStone[1] > 0) ? ' · ~' + selectedStone[0] + '–' + selectedStone[1] + ' 🪨' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') +
       (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: TRIPLE coins and XP, double timber and two guaranteed extra finds.</span>' : '') + '</div>' +
     (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
@@ -14883,6 +14978,10 @@ function buildQuestTimeline(q) {
   const totalBranches = (q.rewards && q.rewards.branches) || 0;
   if (totalBranches > 0) {
     events.push({ pct: 25 + Math.floor(rng() * 55), text: q.birdName + ' lashes together a bundle of sturdy branches for the Academy builders.', loot: '+' + totalBranches + ' 🪵' });
+  }
+  const totalStone = (q.rewards && q.rewards.stone) || 0;
+  if (totalStone > 0) {
+    events.push({ pct: 30 + Math.floor(rng() * 50), text: q.birdName + ' slings together clean-cut stones for the Kingdom\'s masons.', loot: '+' + totalStone + ' 🪨' });
   }
   // Item finds
   Object.entries((q.rewards && q.rewards.items) || {}).forEach(([key, count]) => {
@@ -14988,6 +15087,10 @@ function renderAcademyRoomPanel(birds) {
   // shows its stall here instead of the "no birds in this room" note.
   if (academySelectedRoom === 'magpie_market') {
     panel.innerHTML = html + renderMagpieMarketPanelHTML();
+    return;
+  }
+  if (academySelectedRoom === 'manager_office') {
+    panel.innerHTML = html + renderProjectManagerOfficePanelHTML();
     return;
   }
 
@@ -15327,6 +15430,7 @@ function academyMoveBird(birdId, room) {
   if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
   if (room === 'kitchen') { showToast('The Kitchen is a feeding table — birds visit for meals, they do not lodge there. Open the Kitchen to feed your companions.'); return; }
   if (room === 'magpie_market') { showToast('The Magpie Market is a trading counter — birds visit to deal, they do not lodge there. Open the Market to buy and sell.'); return; }
+  if (room === 'manager_office') { showToast("The Project Manager's Office licenses village managers — birds work at their village desks, not here."); return; }
   if (birdHasActiveExpedition(birdId)) { showToast((bird.commonName || bird.species) + ' is away on a quest — they rejoin the Academy when it finishes.'); return; }
   if (birdHasActiveTraining(birdId)) { showToast((bird.commonName || bird.species) + ' is mid-drill in the Training Hall — claim the training first.'); return; }
   ensureBirdAcademy(bird);
@@ -15370,7 +15474,7 @@ function cardSendBirdToRoom(birdId, room) {
 
 function academyRoomButtonsHTML(bird) {
   ensureBirdAcademy(bird);
-  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen' && room !== 'magpie_market').map(room => {
+  return Object.keys(ACADEMY_ROOMS).filter(room => room !== 'tavern' && room !== 'kitchen' && room !== 'magpie_market' && room !== 'manager_office').map(room => {
     const cfg = ACADEMY_ROOMS[room];
     const built = isAcademyRoomBuilt(room);
     const current = bird.academy.room === room;
@@ -17467,6 +17571,7 @@ const ACADEMY_ROOM_INTERIOR_ASSETS = {
   crowbar: 'assets/academy-interiors-manga/crowbar-v2-animated-20260819.webp',
   kitchen: 'assets/academy-interiors-manga/kitchen-v2-animated-20260819.webp',
   workshop: 'assets/academy-interiors-manga/workshop.png',
+  manager_office: 'assets/academy-interiors-manga/roost.png',
   nursery: 'assets/academy-interiors-manga/nursery.png',
   observatory: 'assets/academy-interiors-manga/observatory.png',
   quest_roost: 'assets/academy-interiors-manga/quest-roost.png'
@@ -17755,6 +17860,7 @@ function renderAcademyRoomInterior() {
     const trainingPanel = room === 'training' ? renderTrainingHallPanel(birds, others) : '';
     const kitchenPanel = room === 'kitchen' ? renderKitchenPanelHTML() : '';
     const marketPanel = room === 'magpie_market' ? renderMagpieMarketPanelHTML() : '';
+    const managerPanel = room === 'manager_office' ? renderProjectManagerOfficePanelHTML() : '';
     // Every room can be run by a bird — the Library by its Librarian, the
     // Kitchen by its Head Chef. The post is a symbol in the corner of the
     // room's own picture now; tapping it opens the one appointment sheet.
@@ -17766,16 +17872,18 @@ function renderAcademyRoomInterior() {
     // The Kitchen and the Market are counters you visit, not rooms a bird
     // moves into: both skip the "add a bird" roster, and both describe
     // themselves by what is on offer rather than by a head count.
-    const counterRoom = room === 'kitchen' || room === 'magpie_market';
+    const counterRoom = room === 'kitchen' || room === 'magpie_market' || room === 'manager_office';
     const roomSub = room === 'kitchen'
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
       : room === 'magpie_market'
       ? magpieMarketStock().length + ' materials traded · ' + escapeHtml(cfg.perk)
+      : room === 'manager_office'
+      ? completedVillageCount() + ' complete village' + (completedVillageCount() === 1 ? '' : 's') + ' · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
     const roomAddPanel = counterRoom ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
     const stageBirds = academyRoomStageBirds(birds, room);
     const trainingMaster = room === 'training' ? trainingMasterActorHTML() : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + roleBadge + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + trainingPanel + kitchenPanel + marketPanel + roomAddPanel;
+    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + roleBadge + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + trainingPanel + kitchenPanel + marketPanel + managerPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
@@ -17807,6 +17915,8 @@ Object.assign(window, {
   empireClearRuin,
   empireSendSupplyCart,
   academyBuildBuilding,
+  focusMagpieMarketBuild,
+  focusProjectManagerOffice,
   academyBuildAndMoveBird,
   academySelectRoom,
   academyMoveBird,
@@ -18582,6 +18692,7 @@ function openTrailTavernSheet(quest, opts = {}) {
 }
 
 function buyTrailTavernDrink(drinkId) {
+  if (typeof requireMagpieMarketTrade === 'function' && !requireMagpieMarketTrade()) return;
   const quest = activeWalkingQuest();
   if (!quest || !quest.trailTavern || quest.trailTavern.drinkBought) return;
   const drink = TRAIL_TAVERN_DRINKS.find(d => d.id === drinkId);
@@ -25922,6 +26033,14 @@ const MANAGER_CATCHUP_PASSES = 200;
 function villageTierBuildings() {
   return EMPIRE_BUILDINGS.filter(b => b.tier !== 'town');
 }
+// "Complete" means every kind of standalone-village building exists at least
+// once. Higher upgrade levels are optional and town-only industry is separate.
+function villageHasEveryBuilding(rec) {
+  return !!rec && villageTierBuildings().every(b => villageBuildingLevel(rec, b.id) > 0);
+}
+function completedVillageCount() {
+  return empireVillages().filter(villageHasEveryBuilding).length;
+}
 // The four-hour yardstick: one player, one crew, every village building raised
 // once, back to back, with the materials already in hand.
 function villagePlayerBudgetMs() {
@@ -26120,7 +26239,7 @@ function empireBuildStructure(seed, buildingId, options) {
   const cost = villageBuildingCost(building, level, rec.seed);
   if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, goalWithThe(building.name)); return; }
   if (playerBranches() < cost.branches) { showResourceQuestPrompt('branches', cost.branches, goalWithThe(building.name)); return; }
-  if (playerStone() < cost.stone) { showToast('Need ' + cost.stone + ' stone for the ' + building.name + ' — raise a 🪨 Miners’ Hut and collect what your villagers dig, or a ⛏️ Quarry once your villages merge into a Town.'); return; }
+  if (playerStone() < cost.stone) { showResourceQuestPrompt('stone', cost.stone, goalWithThe(building.name)); return; }
   const snapshot = snapshotGameState();
   addCoins(-cost.coins);
   addBranches(-cost.branches);
@@ -26193,6 +26312,7 @@ function villageTapRuin(index) {
 // road at once. Coins out of the purse, food and water into the stores —
 // capped by cellar space, so nothing bought is ever wasted.
 function empireSendSupplyCart(seed, options) {
+  if (typeof requireMagpieMarketTrade === 'function' && !requireMagpieMarketTrade()) return;
   const opts = options || {};
   const empire = ensureEmpireState();
   const rec = empire && empire.villages[String(Number(seed) >>> 0)];
@@ -27068,7 +27188,7 @@ function renderRegionScreen() {
     regionUpgradeBody = townProjectHTML('⬆️', 'Region-wide upgrade · ' + regionWorks.plan.length + ' buildings rising', regionWorks, regionNow);
   } else if (regionPlan.steps.length) {
     const affordable = (gameState.player.coins || 0) >= regionPlan.cost.coins && playerBranches() >= regionPlan.cost.branches && playerStone() >= regionPlan.cost.stone;
-    regionUpgradeBody = '<button class="town-action is-gold" data-action="region-upgrade-all"' + (affordable ? '' : ' disabled') + '><span class="build-btn-act">⬆️ UPGRADE · ' + regionPlan.steps.length + ' BUILDINGS</span>' + buildCostChipsHTML(regionPlan.cost, Math.max(60000, regionPlan.durationMs)) + '</button>' +
+    regionUpgradeBody = '<button class="town-action is-gold" data-action="region-upgrade-all"><span class="build-btn-act">⬆️ UPGRADE · ' + regionPlan.steps.length + ' BUILDINGS</span>' + buildCostChipsHTML(regionPlan.cost, Math.max(60000, regionPlan.durationMs)) + '</button>' +
       (affordable ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
   } else {
     regionUpgradeBody = '<div class="town-section-copy">👑 Every home and yard across the region stands at its highest level.</div>';
@@ -27398,7 +27518,10 @@ function beginTownHallUpgrade(settlementId) {
   if (townTotalDevelopment(settlement) < next.minDevelopment || snap.pop < next.minPopulation || snap.happiness < next.minHappiness) {
     showToast('🏛️ Hall level ' + next.level + ' needs ' + next.minDevelopment + ' infrastructure, ' + next.minPopulation + ' residents and ' + Math.round(next.minHappiness * 100) + '% happiness.'); return;
   }
-  if (!townCostAffordable(next.cost)) { showToast('The Hall upgrade needs ' + townCostText(next.cost) + '.'); return; }
+  if (!townCostAffordable(next.cost)) {
+    if (!showBuildResourceQuest(next.cost, 'The ' + townDisplayName(settlement) + ' Hall upgrade')) showToast('The Hall upgrade needs ' + townCostText(next.cost) + '.');
+    return;
+  }
   const buildMs = Math.max(30000, Math.round(next.buildTimeMs * settlementBuildFactorForSeed(primary.seat.heartSeed)));
   if (!spendTownCostAtomic(next.cost, () => { const now = Date.now(); state.hallConstruction = { id:'hall-' + primary.seat.heartSeed + '-' + next.level, fromLevel:state.hallLevel, toLevel:next.level, startMs:now, endMs:now + buildMs, paidCost:{...next.cost, materials:{...(next.cost.materials || {})}} }; })) return;
   SFX.questComplete(); vibrate(40); showToast('🏛️ ' + townDisplayName(settlement) + ' Hall level ' + next.level + ' begun — ready in ' + formatBuildDuration(buildMs) + '.');
@@ -27539,7 +27662,7 @@ function beginWholesaleUpgrade(id, scope) {
   if (wallet < plan.cost.coins) shortages.push((plan.cost.coins - wallet) + ' 🪙');
   if (timber < plan.cost.branches) shortages.push((plan.cost.branches - timber) + ' 🪵');
   if (stone < plan.cost.stone) shortages.push((plan.cost.stone - stone) + ' stone');
-  if (shortages.length) { showToast('The upgrade order needs ' + shortages.join(' + ') + ' more.'); return; }
+  if (shortages.length) { showBuildResourceQuest(plan.cost, 'The ' + displayName + ' upgrade order'); return; }
   const factor = isRegion ? 1 : settlementBuildFactorForSeed(target.heartSeed);
   const buildMs = Math.max(60000, Math.round(plan.durationMs * factor));
   const snapshot = snapshotGameState();
@@ -27739,7 +27862,7 @@ function renderTownScreen() {
   let hallAction = '<div class="town-advice">' + (unfinishedHalls ? '🏗️ Every eligible Hall is already being upgraded.' : '👑 Every Hall is complete. Its builder crews can keep strengthening Town networks.') + '</div>';
   if (next && upgradeRow) {
     const gateMet = development >= next.minDevelopment && snap.pop >= next.minPopulation && snap.happiness >= next.minHappiness;
-    const crewFree = activeProjects < slots, affordable = townCostAffordable(next.cost), enabled = gateMet && crewFree && affordable;
+    const crewFree = activeProjects < slots, affordable = townCostAffordable(next.cost), enabled = gateMet && crewFree;
     const upgradeIndex = seatRows.findIndex(row => Number(row.seat.heartSeed) === Number(upgradeRow.seat.heartSeed));
     const upgradeLabel = settle.tier === 'city' ? 'Borough Hall ' + (upgradeIndex + 1) : 'Town Hall';
     hallAction = '<div class="town-project"><div class="town-project-head"><span>Next: ' + upgradeLabel + ' level ' + next.level + ' · ' + escapeHtml(next.label) + '</span><span class="town-project-eta">' + formatBuildDuration(next.buildTimeMs * settlementBuildFactorForSeed(upgradeRow.seat.heartSeed)) + '</span></div><div class="town-section-copy">Requires ' + next.minDevelopment + ' infrastructure · ' + next.minPopulation + ' residents · ' + Math.round(next.minHappiness * 100) + '% happiness. Unlocks: ' + escapeHtml(next.unlock) + '</div><button class="town-action is-gold" data-action="town-hall-upgrade"' + (enabled ? '' : ' disabled') + '><span class="build-btn-act">UPGRADE</span>' + buildCostChipsHTML(next.cost) + '</button>' + (!gateMet ? '<div class="town-policy-state">GROW THE TOWN TO MEET THE REQUIREMENTS</div>' : !crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER, STONE OR MATERIALS NEEDED</div>' : '') + '</div>';
@@ -27815,7 +27938,7 @@ function renderTownScreen() {
   if (townWorks) {
     upgradeHtml = townProjectHTML('⬆️', 'Town-wide upgrade · ' + townWorks.plan.length + ' buildings rising', townWorks, now);
   } else if (townPlan.steps.length) {
-    upgradeHtml = '<button class="town-action is-gold" data-action="town-upgrade-all"' + (planAffordable(townPlan) ? '' : ' disabled') + '><span class="build-btn-act">⬆️ UPGRADE · ' + townPlan.steps.length + ' BUILDINGS</span>' + buildCostChipsHTML(townPlan.cost, Math.max(60000, Math.round(townPlan.durationMs * settlementBuildFactorForSeed(settle.heartSeed)))) + '</button>' +
+    upgradeHtml = '<button class="town-action is-gold" data-action="town-upgrade-all"><span class="build-btn-act">⬆️ UPGRADE · ' + townPlan.steps.length + ' BUILDINGS</span>' + buildCostChipsHTML(townPlan.cost, Math.max(60000, Math.round(townPlan.durationMs * settlementBuildFactorForSeed(settle.heartSeed)))) + '</button>' +
       (planAffordable(townPlan) ? '' : '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>');
   } else {
     upgradeHtml = '<div class="town-section-copy">👑 Every home and yard across the town stands at its highest level.</div>';
@@ -28031,7 +28154,7 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
     const label = !level ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
     const duration = formatBuildDuration(villageBuildDurationMs(rec.seed, building, level));
     const crewFree = activeProjects < slots, wardFree = !construction, affordable = townCostAffordable(cost);
-    action = '<button class="town-action is-gold" data-action="sheet-build" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '"' + (crewFree && wardFree && affordable ? '' : ' disabled') + '><span class="build-btn-act">' + label + '</span>' + buildCostChipsHTML(cost, duration) + '</button>' +
+    action = '<button class="town-action is-gold" data-action="sheet-build" data-seed="' + (rec.seed >>> 0) + '" data-building="' + building.id + '"' + (crewFree && wardFree ? '' : ' disabled') + '><span class="build-btn-act">' + label + '</span>' + buildCostChipsHTML(cost, duration) + '</button>' +
       (!crewFree ? '<div class="town-policy-state">ALL BUILDERS ARE BUSY</div>' : !wardFree ? '<div class="town-policy-state">THIS QUARTER’S BUILDERS ARE AT WORK</div>' : !affordable ? '<div class="town-policy-state">MORE COINS, TIMBER OR STONE NEEDED</div>' : '');
   }
   return '<div class="town-sheet-head"><span class="town-sheet-icon">' + tier.icon + '</span><div class="town-sheet-title"><span class="town-sheet-kicker">' + escapeHtml(townDisplayName(settle)) + '</span>' + escapeHtml(tier.name) + (level ? ' · LV ' + level + '/' + building.maxLevel : '') + '</div><button type="button" class="town-sheet-close" data-action="sheet-close" aria-label="Close">✕</button></div>' +
@@ -28400,7 +28523,7 @@ function villageBuildingSheetHTML(rec, buildingId) {
   if (maxed) btn = '<button class="province-build-btn maxed" disabled><span class="build-btn-act">★ FULLY BUILT</span></button>';
   else if (inProgress) btn = '<button class="province-build-btn busy" disabled><span class="build-btn-act">🏗️ BUILDING</span><span class="build-cost-row"><span class="build-cost-bit" data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></span></button>';
   else if (locked) btn = '<button class="province-build-btn locked" disabled><span class="build-btn-act">🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</span></button>';
-  // Short on coins or timber? The button stays live: tapping it opens the
+  // Short on coins, timber, stone or a specialist material? The button stays live: tapping it opens the
   // shortfall prompt that sends birds out for the missing resource.
   else btn = '<button class="province-build-btn' + (busyElsewhere ? ' busy' : '') + (affordable ? '' : ' short') + '" onclick="buildingInteriorBuild(' + (rec.seed >>> 0) + ',\'' + b.id + '\')">' +
     '<span class="build-btn-act">' + upgradeLabel + '</span>' +
@@ -28424,7 +28547,7 @@ function villageBuildingSheetHTML(rec, buildingId) {
   if (shortages.length && !locked && slotsFree > 0 && !inProgress && !maxed) {
     out += '<div class="province-build-shortage">SHORT ' + shortages.join(' + ') + ' · ' +
       (cost && stone < cost.stone
-        ? (villageBuildingLevel(rec, 'minehut') > 0 ? '🪨 your miners are digging it' : '🪨 raise a Miners’ Hut and your folk will dig it')
+        ? (villageBuildingLevel(rec, 'minehut') > 0 ? '🪨 your miners are digging it' : '🪨 raise a Miners’ Hut and your folk will dig it') + ' · 🕊️ tap to send birds after more'
         : '🕊️ tap to send birds after it') + '</div>';
   }
   // The Alehouse really pours: its bar is the tavern the birders drink at.
@@ -28513,9 +28636,8 @@ function closeBuildingInterior() {
 // off to the quest board, the door closes quietly behind us.
 function buildingInteriorBuild(seed, buildingId) {
   empireBuildStructure(seed, buildingId);
-  // Coin and timber shortfalls open a quest prompt. That prompt predates
-  // building interiors and sits below this overlay, so leave the room before
-  // showing it rather than immediately painting the room over it again.
+  // Coin and timber shortfalls now jump straight to the matching send sheet;
+  // leave the building behind when that navigation happens.
   const resourcePrompt = document.getElementById('resourceQuestOverlay');
   if (resourcePrompt && resourcePrompt.classList.contains('open')) { closeBuildingInterior(); return; }
   if (currentScreen !== 'village' && currentScreen !== 'town') { closeBuildingInterior(); return; }
@@ -35248,9 +35370,10 @@ function villageOpenShop(shopKey) {
   }
   SFX.tap();
   const coins = gameState.player.coins || 0;
+  const tradeReady = isAcademyBuildingBuilt('magpie_market');
   const rows = shop.stock.map(item => {
     const pantryNote = item.food ? '<span class="shop-pantry-note">You have ×' + ((gameState.pantry && gameState.pantry[item.food]) || 0) + '</span>' : '';
-    const buyLabel = item.price > 0 ? item.price + ' 🪙' : 'Open';
+    const buyLabel = item.price > 0 ? (tradeReady ? item.price + ' 🪙' : 'MARKET REQUIRED') : 'Open';
     return '<div class="shop-item">' +
       '<div class="shop-item-main"><div class="shop-item-name">' + escapeHtml(item.label) + '</div>' +
       '<div class="shop-item-detail">' + escapeHtml(item.detail) + ' ' + pantryNote + '</div></div>' +
@@ -35268,6 +35391,7 @@ function villageOpenShop(shopKey) {
     '<button class="shop-close" type="button" aria-label="Close ' + escapeHtml(shop.name) + '" onclick="villageCloseShop()">&times;</button></div>' +
     '</div><div class="shop-scroll-body">' +
     '<div class="shop-coins">Your purse: <b>' + coins + ' 🪙</b></div>' +
+    (tradeReady ? '' : '<div class="academy-market-nudge">⚖️ Buying and selling unlocks when you build the Magpie Market.<button type="button" onclick="focusMagpieMarketBuild()">BUILD THE MAGPIE MARKET</button></div>') +
     '<div class="shop-stock">' + rows + '</div></div>' +
     '</section>';
   overlay.classList.add('show');
@@ -35287,6 +35411,8 @@ function villageBuy(shopKey, itemId) {
   const coins = gameState.player.coins || 0;
 
   if (item.effect === 'quests') { villageCloseShop(); switchScreen('quests'); return; }
+
+  if (!requireMagpieMarketTrade()) return;
 
   if (coins < item.price) { showToast('Not enough coins — win battles and finish quests to earn more!'); return; }
 
@@ -36513,7 +36639,16 @@ function storesSellQuote(kind, id, qty) {
   const owned = Number(storesSellBag(kind)[id]) || 0;
   return lootCore().sellQuote(kind, storesSellRarity(kind, id), owned, qty === 'all' ? owned : qty);
 }
+function magpieMarketTradeReady() {
+  return isAcademyBuildingBuilt('magpie_market');
+}
+function requireMagpieMarketTrade() {
+  if (magpieMarketTradeReady()) return true;
+  focusMagpieMarketBuild();
+  return false;
+}
 function storesSellItem(kind, id, qty) {
+  if (!requireMagpieMarketTrade()) return false;
   const quote = storesSellQuote(kind, id, qty);
   if (!quote.qty || !quote.each) { showToast('The traders shrug — nothing here to sell.'); return; }
   const bag = storesSellBag(kind);
@@ -36526,12 +36661,14 @@ function storesSellItem(kind, id, qty) {
   showToast('💰 Sold ' + quote.qty + ' × ' + storesSellLabel(kind, id) + ' for ' + quote.total + ' 🪙.');
   updateHeader();
   renderInventory();
+  return true;
 }
 // The two-button row a sellable shelf card carries: one for a single sale,
 // one to clear the stack. An empty stack renders nothing.
 function storesSellRowHTML(kind, id) {
   const one = storesSellQuote(kind, id, 1);
   if (!one.qty || !one.each) return '';
+  if (!magpieMarketTradeReady()) return '<div class="src-sell"><button type="button" class="src-sell-btn" onclick="focusMagpieMarketBuild()">BUILD MAGPIE MARKET TO TRADE</button></div>';
   const all = storesSellQuote(kind, id, 'all');
   return '<div class="src-sell">' +
     '<button type="button" class="src-sell-btn" onclick="storesSellItem(\'' + kind + '\',\'' + id + '\',1)">SELL 1 · +' + one.each + ' 🪙</button>' +
@@ -36582,6 +36719,7 @@ function magpieMarketBuyQuote(id, qty) {
 // toward the chain, and it redraws the stall. Comparing the stack before and
 // after is what proves a sale happened, so a refused click counts for nothing.
 function magpieMarketSell(id, qty) {
+  if (!requireMagpieMarketTrade()) return;
   const before = magpieMarketOwned(id);
   storesSellItem('material', id, qty);
   if (magpieMarketOwned(id) < before) magpieMarketRecordTrade();
@@ -36594,6 +36732,7 @@ function magpieMarketRecordTrade() {
 }
 
 function magpieMarketBuy(id, qty) {
+  if (!requireMagpieMarketTrade()) return;
   const mat = lootCore().materialById(id);
   if (!mat) return;
   const quote = magpieMarketBuyQuote(id, qty);
@@ -36663,6 +36802,19 @@ function renderMagpieMarketPanelHTML() {
     '<div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse' + haggle + '</div>' +
     '<div class="magpie-note">Magpies buy anything and sell it dearer. Quests are still the cheapest way to a Phoenix Ember — this is the shortcut you pay for.</div>' +
     '<div class="stores-res-grid">' + stock.map(magpieMarketRowHTML).join('') + '</div>' +
+  '</div>';
+}
+
+function renderProjectManagerOfficePanelHTML() {
+  const complete = completedVillageCount();
+  const appointed = Object.keys((gameState.birdRoles && gameState.birdRoles.villages) || {}).filter(seed => {
+    try { return empirePostTitleFor('village', seed) === 'Project Manager'; } catch (e) { return false; }
+  }).length;
+  return '<div class="stores-panel manager-office-panel">' +
+    '<div class="stores-panel-title">📋 Village building office</div>' +
+    '<div class="magpie-note">Project Manager appointments are unlocked. Open any standalone village and tap its Project Manager desk to put a bird in charge.</div>' +
+    '<div class="stores-ledger-row"><span class="slr-icon">🏘️</span><span class="slr-main"><span class="slr-name">Complete villages</span><span class="slr-meta">Every kind of village building stands</span></span><span class="slr-yield">' + complete + '</span></div>' +
+    '<div class="stores-ledger-row"><span class="slr-icon">🪶</span><span class="slr-main"><span class="slr-name">Project Managers</span><span class="slr-meta">Birds currently appointed</span></span><span class="slr-yield">' + appointed + '</span></div>' +
   '</div>';
 }
 
@@ -40774,7 +40926,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
+Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -41217,8 +41369,12 @@ const PLAYER_QUESTS = [
     measure:() => isAcademyBuildingBuilt('training') ? 1 : 0 },
   { id:'pq_training_drill', name:'Run a training drill', desc:'Complete and claim a Training Hall drill', type:'training_claimed', target:1, reward:50, coins:20, icon:'\u{1F94A}', go:'academy',
     measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.training && Number(b.training.trainCount)) || 0), 0) },
-  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:50, coins:25, gear:{ thorn_talons:1 }, icon:'\u{1F9ED}', go:'academy',
+  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:75, coins:25, gear:{ thorn_talons:1 }, icon:'\u{1F9ED}', go:'academy',
     measure:() => isAcademyBuildingBuilt('quest_roost') ? 1 : 0 },
+  { id:'pq_build_market',   name:'Build the Magpie Market', desc:'Build the Academy trading post to unlock buying and selling', type:'build_magpie_market', target:1, reward:55, coins:25, icon:'\u{2696}\u{FE0F}', go:'academy', focusRoom:'magpie_market',
+    measure:() => isAcademyBuildingBuilt('magpie_market') ? 1 : 0 },
+  { id:'pq_market_trade',   name:'Strike a deal', desc:'Buy or sell something through the Magpie Market', type:'market_traded', target:1, reward:45, coins:20, icon:'\u{1FA99}', go:'academy', focusRoom:'magpie_market',
+    measure:() => Number(gameState.player && gameState.player.marketTrades) || 0 },
   // Arm the bird before its first fight, not after. The Quest Roost above
   // pays out a pair of Thorn Talons, so there is always something in the
   // Stores to put on — a battle win only drops gear about one time in five.
@@ -41231,10 +41387,6 @@ const PLAYER_QUESTS = [
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
     measure:() => Number(gameState.player.mealsServed) || 0 },
   { id:'pq_diet_badge',     name:'Feed a bird the right meal', desc:'Give any companion one of its proper foods', type:'proper_meal_fed', target:1, reward:60, coins:30, icon:'\u{1F37D}\u{FE0F}', go:'academy', focusRoom:'kitchen' },
-  { id:'pq_build_market',   name:'Build the Magpie Market', desc:'Raise the Academy trading post to buy and sell materials', type:'build_magpie_market', target:1, reward:55, coins:25, icon:'\u{2696}\u{FE0F}', go:'academy',
-    measure:() => isAcademyBuildingBuilt('magpie_market') ? 1 : 0 },
-  { id:'pq_market_trade',   name:'Strike a deal', desc:'Buy or sell a material at the Magpie Market', type:'market_traded', target:1, reward:45, coins:20, icon:'\u{1FA99}', go:'academy', focusRoom:'magpie_market',
-    measure:() => Number(gameState.player && gameState.player.marketTrades) || 0 },
   { id:'pq_build_hospital', name:'Build the Bird Hospital', desc:'Raise the Bird Hospital at the Academy', type:'build_hospital', target:1, reward:55, coins:25, icon:'\u{1F3E5}', go:'academy',
     measure:() => isAcademyBuildingBuilt('hospital') ? 1 : 0 },
   { id:'pq_hospital_rest',  name:'Prescribe some rest', desc:'Station a companion in the Bird Hospital', type:'station_hospital', target:1, reward:45, coins:20, icon:'\u{1FA79}', go:'academy',
@@ -41250,6 +41402,10 @@ const PLAYER_QUESTS = [
   { id:'pq_craft_gear',     name:'Commission the smith', desc:'Forge a piece of gear at the Fletcher’s Forge', type:'gear_crafted', target:1, reward:70, coins:40, icon:'\u{2692}\u{FE0F}', go:'forge' },
   { id:'pq_village_food',   name:'Feed and water your folk', desc:'Give a village both a food yard and a well', type:'village_provisioned', target:1, reward:90, coins:50, icon:'\u{1F9FA}', go:'village',
     measure:() => villagesFedAndWatered() ? 1 : 0 },
+  { id:'pq_complete_village', name:'Finish a village', desc:'Build every kind of village building at least once', type:'village_completed', target:1, reward:120, coins:70, branches:30, icon:'\u{1F3D8}\u{FE0F}', go:'village',
+    measure:() => completedVillageCount() },
+  { id:'pq_build_manager_office', name:"Build the Project Manager's Office", desc:'Raise the Academy office that licences village managers', type:'build_manager_office', target:1, reward:80, coins:40, icon:'\u{1F4CB}', go:'academy', focusRoom:'manager_office',
+    measure:() => isAcademyBuildingBuilt('manager_office') ? 1 : 0 },
   { id:'pq_build_crowbar',  name:'Build The Crowbar', desc:'Raise the Academy bird bar to grow Charm', type:'build_crowbar', target:1, reward:60, coins:30, icon:'\u{1F37B}', go:'academy',
     measure:() => isAcademyBuildingBuilt('crowbar') ? 1 : 0 },
   { id:'pq_village_steward', name:'Appoint a Project Manager', desc:'Give a companion the village post', type:'village_role_filled', target:1, reward:80, coins:40, icon:'\u{1F4CB}', go:'village',
@@ -41300,6 +41456,10 @@ function syncActivePlayerQuest() {
 
 function playerQuestGo(q) {
   academyQuestGuidanceRoom = q.focusRoom || null;
+  if (q.go === 'academy' && q.focusRoom && !isAcademyBuildingBuilt(q.focusRoom)) {
+    focusAcademyBuildCard(q.focusRoom);
+    return;
+  }
   if (q.id === 'pq_walk_adventure') {
     // Go straight to the real world: the live map with every local walking
     // quest drawn on it, not a flat list of footpaths in a sheet.
@@ -41862,7 +42022,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'visible-build-shortfall-v345-20260903';
+const BURBZ_BUILD = 'trading-manager-gates-v346-20260903';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

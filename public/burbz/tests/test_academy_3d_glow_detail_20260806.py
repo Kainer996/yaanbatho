@@ -11,7 +11,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+MAGPIE_CORE_PIN = "trading-manager-gates-v346-20260903"
 
 
 def _node(source: str):
@@ -32,9 +32,9 @@ console.log(JSON.stringify({
   allDetailed: styles.every(s => Array.isArray(s.details) && s.details.length >= 2)
 }));
 """)
-    assert out["rooms"] == 12
+    assert out["rooms"] == 13
     assert len(out["bodies"]) >= 6
-    assert len(set(out["signatures"])) == 12
+    assert len(set(out["signatures"])) == 13
     assert out["allDetailed"] is True
     for body in ("birdhouse", "pavilion", "longhall", "cross-gable", "cottage", "tower"):
         assert f"st.body === '{body}'" in CORE, f"{body} must alter rendered geometry"

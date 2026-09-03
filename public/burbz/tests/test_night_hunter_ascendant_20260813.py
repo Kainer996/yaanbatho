@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
@@ -166,7 +166,7 @@ def test_release_is_query_busted_everywhere():
     # with quiet-arena-v331, academy_treehouse_core with
     # iron-ingot-errand-v326.
     for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
-                            ("academy_treehouse_core.js", "iron-ingot-errand-v326-20260825"),
+                            ("academy_treehouse_core.js", "trading-manager-gates-v346-20260903"),
                             ("battle_core.js", "quiet-arena-v331-20260826")):
         pin = f"{core}?v={pin_build}"
         assert pin in html, core

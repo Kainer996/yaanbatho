@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 OWN_RELEASE_PIN = "empire-badge-quest-prompts-v289-20260820"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 
 
 def run_node(source: str):
@@ -141,12 +141,14 @@ process.stdout.write(JSON.stringify({{
     assert result["timberStarter"] is True
 
 
-def test_prompt_card_offers_the_quest_and_a_way_out():
+def test_shortfall_goes_directly_to_the_matching_send_sheet():
     src = function_source(html_text(), "showResourceQuestPrompt")
-    assert "SEND BIRDS OUT ON A QUEST" in src
-    assert "NOT NOW" in src
-    assert "openQuestBoardCategory(route.category)" in src
-    assert "escapeHtml(goal)" in src  # settlement names are player-adjacent text
+    assert "setQuestCategoryOpen(route.category, true)" in src
+    assert "switchScreen('quests')" in src
+    assert "openQuestSend(route.templateId)" in src
+    routes = html_text()[html_text().index("const RESOURCE_QUEST_ROUTES"):html_text().index("function resourceQuestOverlayEl")]
+    assert "templateId:'find_coins'" in routes
+    assert "templateId:'branch_run'" in routes
 
 
 def test_taking_the_prompt_opens_and_spotlights_the_drawer():
@@ -182,10 +184,10 @@ def test_every_coin_and_timber_build_gate_offers_the_prompt():
         src = function_source(html, fn)
         for kind in kinds:
             assert f"showResourceQuestPrompt('{kind}'" in src, (fn, kind)
-    # Stone has no errand — quarries make it — so that gate keeps its toast
-    # (v299 reworded it: quarries are town works now).
+    # Stone gained a real bird errand in v346, so its build gate routes to the
+    # same dispatch sheet as coins and timber.
     build = function_source(html, "empireBuildStructure")
-    assert "Miners" in build and "Quarry once your villages merge" in build
+    assert "showResourceQuestPrompt('stone'" in build
 
 
 def test_short_build_buttons_stay_tappable():

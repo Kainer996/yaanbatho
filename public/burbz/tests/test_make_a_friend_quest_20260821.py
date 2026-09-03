@@ -19,7 +19,7 @@ HTML_PATH = BURBZ / "index.html"
 HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "visible-build-shortfall-v345-20260903"
+RELEASE_PIN = "trading-manager-gates-v346-20260903"
 OWN_RELEASE_PIN = "make-a-friend-v305-20260821"
 
 INDOOR_GO = {"academy", "birdex", "battle", "forge", "quests", "inventory"}
@@ -50,7 +50,7 @@ def test_make_a_friend_takes_its_place_right_after_the_first_diet():
     # One swapped, none lost — the length only ever moves when links are
     # deliberately added, as village-chain-v307 did at the far end and the
     # Magpie Market did in the middle.
-    assert len(quests) == 35
+    assert len(quests) == 37
 
     quest = next(q for q in quests if q["id"] == "pq_preen")
     assert quest["name"] == "Make a friend"

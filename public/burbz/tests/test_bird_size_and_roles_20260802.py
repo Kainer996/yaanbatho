@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 SIZE_CORE_PIN = "every-bird-carries-its-weight-v335-20260827"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
@@ -421,7 +421,10 @@ def test_every_academy_room_a_village_and_a_region_has_a_post():
     # can actually build still has a head.
     heads = dict(zip(out["rooms"], out["staffedRooms"]))
     assert heads.pop("outdoors") is None, "being free is not a post"
-    assert None not in heads.values(), "every buildable room needs a head"
+    # The Project Manager's Office is a licence counter, not another bird post:
+    # its birds are appointed out at the village desks it unlocks.
+    assert heads.pop("manager_office") is None
+    assert None not in heads.values(), "every other buildable room needs a head"
     assert len(out["rooms"]) == len(out["staffedRooms"])
     assert out["village"] == "steward" and out["region"] == "region_warden"
     # The posts the player asked for by name.

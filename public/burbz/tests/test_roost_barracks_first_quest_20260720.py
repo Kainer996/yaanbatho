@@ -15,7 +15,7 @@ ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
+ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
 
 
 def _node_json(source: str):
@@ -173,6 +173,7 @@ function renderPetCompanion(){}
 function renderBirdExpeditions(){}
 function ensureAcademyBuildings(){}
 function isAcademyBuildingBuilt(id){return !!gameState.academyBuildings[id]?.built;}
+function academyBuildingProgressLock(){return null;}
 function isAcademyRoomBuilt(room){return room==='tavern' && isAcademyBuildingBuilt('tavern');}
 function playerBranches(){return gameState.player.branches;}
 function addCoins(n){gameState.player.coins+=n;return gameState.player.coins;}

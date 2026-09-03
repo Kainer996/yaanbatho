@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "onboarding_gate_core.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "gentle-start-v338-20260831"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 
 
 def html_text() -> str:
@@ -59,11 +59,12 @@ CHAIN = [
     "pq_open_empire", "pq_liberate", "pq_first_bird", "pq_expedition",
     "pq_claim_errand", "pq_build_barracks", "pq_recruit", "pq_true_diet",
     "pq_preen", "pq_build_training", "pq_training_drill",
-    "pq_build_quest_roost", "pq_equip_gear", "pq_first_win",
-    "pq_build_kitchen", "pq_meal", "pq_diet_badge", "pq_build_market",
-    "pq_market_trade", "pq_build_hospital", "pq_hospital_rest", "pq_win_3",
+    "pq_build_quest_roost", "pq_build_market", "pq_market_trade",
+    "pq_equip_gear", "pq_first_win", "pq_build_kitchen", "pq_meal",
+    "pq_diet_badge", "pq_build_hospital", "pq_hospital_rest", "pq_win_3",
     "pq_walk_adventure", "pq_quiz", "pq_village_build", "pq_craft_gear",
-    "pq_village_food", "pq_build_crowbar", "pq_village_steward",
+    "pq_village_food", "pq_complete_village", "pq_build_manager_office",
+    "pq_build_crowbar", "pq_village_steward",
     "pq_species_10", "pq_village_tax", "pq_build_workshop", "pq_liberate_3",
     "pq_merge_star", "pq_found_town",
 ]

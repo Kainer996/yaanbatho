@@ -25,7 +25,7 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
@@ -109,13 +109,15 @@ def sell_harness(probe: str) -> str:
     html = HTML.read_text(encoding="utf-8")
     functions = "\n".join(
         function_source(html, name)
-        for name in ("storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "storesSellItem")
+        for name in ("storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "magpieMarketTradeReady", "requireMagpieMarketTrade", "storesSellItem")
     )
     stubs = f"""
 global.window = global;
 const toasts = [];
 const L = require({json.dumps(str(LOOT_CORE))});
 const lootCore = () => L;
+const isAcademyBuildingBuilt = id => id === 'magpie_market';
+const focusMagpieMarketBuild = () => toasts.push('BUILD MARKET');
 const gameState = {{ player: {{ coins: 100 }}, inventory: {{
   items: {{ oak_twig: 3, phoenix_ember: 1, lucky_pebble: 2 }},
   larder: {{ hedgerow_berries: 5 }},
