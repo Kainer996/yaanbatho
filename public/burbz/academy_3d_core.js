@@ -9,7 +9,7 @@
   //
   // Everything here is procedural three.js geometry: no downloaded meshes, no
   // multi-megabyte GLB over mobile data. The whole Academy — a gnarled
-  // buttressed tree, ten treehouses that keep the character of their paintings,
+  // buttressed tree, treehouses that keep the character of their paintings,
   // birds with beating wings, chimney smoke, lanterns — is a few dozen KB of
   // code that builds itself on the device.
   //
@@ -33,6 +33,7 @@
     training:    { angle: 92,  y: 4.60, reach: 5.0, scale: 1.02 },
     kitchen:     { angle: 342, y: 5.60, reach: 4.3, scale: 1.04 },
     hospital:    { angle: 158, y: 6.05, reach: 4.6, scale: 1.00 },
+    manager_office: { angle: 188, y: 7.05, reach: 4.1, scale: 0.98 },
     crowbar:     { angle: 48,  y: 6.90, reach: 4.2, scale: 1.02 },
     workshop:    { angle: 232, y: 7.60, reach: 4.0, scale: 0.96 },
     nursery:     { angle: 128, y: 8.60, reach: 3.7, scale: 0.94 },
@@ -119,6 +120,13 @@
       wall: 0xb5813f, wallDark: 0x7a5630, roofCol: 0x5f4a2a, trim: 0xc79a4e,
       windows: [{ x: 0, y: 0.28, z: 0.88, r: 0.48, wide: true, warm: true }],
       extras: ['awning', 'sign', 'lantern-left', 'lantern-right', 'barrel', 'sacks', 'open-front']
+    },
+    manager_office: {
+      label: "Project Manager's Office", roof: 'steep', w: 1.8, d: 1.6, h: 1.45,
+      body: 'birdhouse', signature: 'plans-and-ledgers-office', details: ['map-board', 'reading-lamp'],
+      wall: 0x9b7144, wallDark: 0x684a2b, roofCol: 0x4e4938, trim: 0xc6a44c,
+      windows: [{ x: 0, y: 0.34, z: 0.82, r: 0.32, round: true, warm: true }],
+      extras: ['lantern-left', 'rope-belt', 'sign']
     },
     quest_roost: {
       label: 'Quest Roost', roof: 'gable', w: 1.9, d: 1.7, h: 1.35,

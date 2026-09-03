@@ -9,7 +9,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "roost-retired-v302-20260820"
 # magpie-market-v316 edited the Academy core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
+ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
 
 
 def node_json(source: str):

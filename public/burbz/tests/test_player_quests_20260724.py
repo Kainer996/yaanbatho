@@ -59,9 +59,10 @@ def test_chain_covers_the_whole_core_loop():
     quests = player_quests()
     # remove-merlin-first-clue-v242 (live line) retired pq_merlin_clue;
     # village-chain-v307 added six village links to the late chain,
-    # magpie-market-v316 added the build-and-trade pair after the Kitchen, and
+    # magpie-market-v316 added the build-and-trade pair, v346 moved it early
+    # and added the complete-village / manager-office pair, and
     # free-your-first-village-v327 opened the chain with the Empire map.
-    assert len(quests) == 35
+    assert len(quests) == 37
     types = [q["type"] for q in quests]
     for needed in (
         # The original loop…
@@ -72,7 +73,8 @@ def test_chain_covers_the_whole_core_loop():
         "training_claimed", "build_quest_roost", "gear_equipped",
         "build_kitchen", "proper_meal_fed", "build_hospital", "station_hospital",
         "walk_completed", "bird_quiz_correct", "gear_crafted",
-        "build_crowbar", "build_workshop",
+        "build_crowbar", "build_workshop", "build_magpie_market",
+        "village_completed", "build_manager_office",
         # …and the village arc, once a settlement is yours to run.
         "village_built", "village_provisioned", "village_role_filled",
         "tribute_collected", "merge_star", "town_founded",
@@ -87,8 +89,9 @@ def test_extended_chain_paces_buildings_with_their_unlock_levels():
     ids = [q["id"] for q in quests]
     order = [
         "pq_build_barracks", "pq_build_training",
-        "pq_build_quest_roost", "pq_build_kitchen", "pq_build_hospital",
-        "pq_build_crowbar", "pq_build_workshop",
+        "pq_build_quest_roost", "pq_build_market", "pq_build_kitchen",
+        "pq_build_hospital", "pq_build_manager_office", "pq_build_crowbar",
+        "pq_build_workshop",
     ]
     positions = [ids.index(i) for i in order]
     assert positions == sorted(positions), positions

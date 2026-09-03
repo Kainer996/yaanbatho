@@ -6,8 +6,8 @@ Yaan's ask (2026-08-24), pinned as `magpie-market-v316-20260824`:
 > in the levels, that is a trade building so that the player can buy and sell
 > materials? Make it the fifth building that the player can build."
 
-So the Market is the FIFTH gate on the Academy ladder — Barracks 1, Training
-Hall 2, Quest Roost 3, Kitchen 4, Magpie Market 5 — and the Bird Hospital and
+So the Market is the FIFTH room on the Academy ladder — Barracks 1, Training
+Hall 2, Quest Roost 3, Kitchen 4, Magpie Market 4 — and the Bird Hospital and
 The Crowbar each slipped one level to make room. Nothing got dearer: the
 Market costs 135 coins, between the Kitchen's 130 and the Hospital's 140, so
 the coin ladder still rises with every gate.
@@ -33,23 +33,20 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
 # Every core this release edited, and therefore re-pinned.
-EDITED_CORES = (
-    "academy_alive_core.js",
-    "academy_3d_core.js",
-    "loot_crafting_core.js",
-)
+EDITED_CORES = ("loot_crafting_core.js",)
 # bird_roles_core.js was edited by this release too, but free-birds-v318 then
 # retired the Head Gardener and re-pinned it. A core carries the tag of the
 # release that last touched it, so it is checked separately below.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
 # academy_treehouse_core.js the same story: iron-ingot-errand-v326 added the
 # Foundry Ingot Pour errand to it, so it now carries that tag instead.
-ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
+ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
+ACADEMY_PRESENTATION_PIN = "trading-manager-gates-v346-20260903"
 
 
 def html_text() -> str:
@@ -93,13 +90,13 @@ def test_the_market_is_the_fifth_gate_on_the_academy_ladder():
 
 def test_trade_arrives_early_and_pushes_nothing_out_of_the_early_game():
     by_id = {r["id"]: r for r in academy_rooms()}
-    assert by_id[ROOM_ID]["unlockLevel"] == 5, "'not much later on in the levels'"
+    assert by_id[ROOM_ID]["unlockLevel"] == 4, "trade now follows the Quest Roost immediately"
     # The two rooms it displaced each slipped exactly one level, filling the
     # gap that used to sit at level 7. Nothing jumped further than that.
     assert by_id["hospital"]["unlockLevel"] == 6
     assert by_id["crowbar"]["unlockLevel"] == 7
     gates = sorted(r["unlockLevel"] for r in academy_rooms() if r["id"] != "outdoors")
-    assert gates[:7] == [1, 2, 3, 4, 5, 6, 7], "the early ladder has no holes"
+    assert gates[:8] == [1, 2, 3, 4, 4, 6, 6, 7]
 
 
 def test_the_coin_ladder_still_rises_with_every_gate_and_nothing_got_dearer():
@@ -189,7 +186,7 @@ def test_the_traders_discount_is_applied_before_the_sums_not_after():
 def market_harness(probe: str) -> str:
     html = html_text()
     functions = "\n".join(function_source(html, name) for name in (
-        "storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "storesSellItem",
+        "storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "magpieMarketTradeReady", "requireMagpieMarketTrade", "storesSellItem",
         "magpieMarketOwned", "magpieMarketDiscount", "magpieMarketBuyQuote",
         "magpieMarketSell", "magpieMarketRecordTrade", "magpieMarketBuy",
     ))
@@ -202,6 +199,8 @@ const L = require(%s);
 const lootCore = () => L;
 let roleMultiplier = 1;
 const academyRoleMultiplier = () => roleMultiplier;
+const isAcademyBuildingBuilt = id => id === 'magpie_market';
+const focusMagpieMarketBuild = () => toasts.push('BUILD MARKET');
 let currentScreen = 'academy-room';
 const gameState = { player: { coins: 300 }, inventory: {
   items: { oak_twig: 4 }, larder: {}, gear: {}
@@ -315,7 +314,7 @@ def test_the_market_is_a_counter_not_a_dormitory():
     assert "room !== '%s'" % ROOM_ID in buttons, "no 'send to the market' button"
     # Like the Kitchen, it offers no "add a bird to this room" roster.
     render = function_source(html, "renderAcademyRoomInterior")
-    assert "const counterRoom = room === 'kitchen' || room === '%s';" % ROOM_ID in render
+    assert "room === 'kitchen' || room === '%s'" % ROOM_ID in render
     assert "const roomAddPanel = counterRoom ? ''" in render
     room = {r["id"]: r for r in academy_rooms()}[ROOM_ID]
     assert "ACADEMY_ROOMS" in html
@@ -389,8 +388,8 @@ def test_the_chain_asks_the_player_to_build_it_then_use_it():
     ids = re.findall(r"id:'(pq_[a-z_0-9]+)'", chain)
     assert "pq_build_market" in ids and "pq_market_trade" in ids
     assert ids.index("pq_market_trade") == ids.index("pq_build_market") + 1
-    # Fifth gate, so it sits after the Kitchen's links and before the Hospital's.
-    assert ids.index("pq_build_kitchen") < ids.index("pq_build_market") < ids.index("pq_build_hospital")
+    # Trading is now taught immediately after the Quest Roost, before combat.
+    assert ids.index("pq_build_quest_roost") < ids.index("pq_build_market") < ids.index("pq_equip_gear")
     # academyBuildBuilding fires build_<id>, so the type must match the room id.
     assert "type:'build_%s'" % ROOM_ID in chain
 
@@ -416,6 +415,9 @@ def test_every_core_this_release_edited_ships_under_its_new_tag():
     sw = SW.read_text(encoding="utf-8")
     assert "bird_roles_core.js?v=%s" % ROLES_CORE_PIN in html
     assert "academy_treehouse_core.js?v=%s" % ACADEMY_CORE_PIN in html
+    for core in ("academy_alive_core.js", "academy_3d_core.js"):
+        pin = "%s?v=%s" % (core, ACADEMY_PRESENTATION_PIN)
+        assert pin in html and "'./%s'" % pin in sw
     for core in EDITED_CORES:
         pin = "%s?v=%s" % (core, OWN_RELEASE_PIN)
         assert pin in html, core

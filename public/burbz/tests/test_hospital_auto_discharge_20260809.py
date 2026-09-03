@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
-RELEASE_PIN = "visible-build-shortfall-v345-20260903"
+RELEASE_PIN = "trading-manager-gates-v346-20260903"
 # This release's own cache marker stays in the lineage; later releases move
 # BURBZ_BUILD on.
 OWN_RELEASE_PIN = "hospital-auto-discharge-v239-20260809"

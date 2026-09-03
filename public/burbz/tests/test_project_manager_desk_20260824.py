@@ -39,7 +39,7 @@ ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 RELEASE = "project-manager-desk-v315-20260824"
 # The head of the line, which later releases move. Not this release's
 # own name — magpie-market-v316 shipped after it.
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # The release that last edited bird_roles_core.js — free-birds-v318, which
 # retired the Head Gardener when the Aviary Gardens stopped being a room.
 ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
@@ -79,6 +79,9 @@ const normalizeBirdCare = b => { b.care = b.care || { sleeping: false }; };
 const ACADEMY_ROOMS = { library: { label: 'The Library' } };
 const FREE_BIRD_ROOM = 'outdoors';
 const empireSettlementOfSeed = () => null;
+const isAcademyBuildingBuilt = id => id === 'manager_office';
+const completedVillageCount = () => 1;
+const focusProjectManagerOffice = () => {};
 const empireSettlementById = () => null;
 const canonicalEmpireSettlement = s => s;
 const townDisplayName = s => s && s.name;

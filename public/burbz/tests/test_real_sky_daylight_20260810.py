@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

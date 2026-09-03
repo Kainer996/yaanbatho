@@ -26,9 +26,9 @@ RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
+ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
 
 ASCENDANT_PACK = {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2, "statBonus": 2}
 
@@ -105,7 +105,7 @@ def test_expedition_payout_multiplies_under_the_night_hunter_pack():
       }));
     """)
     assert out["dayFlag"] is None
-    assert out["nightFlag"] == {"coins": 3, "branches": 2, "xp": 3, "itemRolls": 2}
+    assert out["nightFlag"] == {"coins": 3, "branches": 2, "stone": 2, "xp": 3, "itemRolls": 2}
     assert out["coinsTripled"]
     assert out["branchesDoubled"]
     assert out["xpTripled"]

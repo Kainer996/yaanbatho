@@ -34,6 +34,12 @@
       { fx: 0.565, fy: 0.375, type: 'glow', glow: 'window', r: 24 },
       { fx: 0.245, fy: 0.62, type: 'glow', glow: 'lantern', r: 20 }
     ],
+    // The planning office reuses the retired Roost painting: its round desk
+    // window and porch lamp make the little paperwork house feel occupied.
+    manager_office: [
+      { fx: 0.565, fy: 0.375, type: 'glow', glow: 'window', r: 24 },
+      { fx: 0.245, fy: 0.62, type: 'glow', glow: 'lantern', r: 20 }
+    ],
     crowbar: [
       // The crooked stovepipe at the roof's apex vents the pub hearth.
       { fx: 0.44, fy: 0.075, type: 'smoke', power: 0.6 },

@@ -30,7 +30,8 @@
     { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:6, floor:3, branch:'left', x:25, y:52, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
     { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:190, branches:40, unlockLevel:7, floor:4, branch:'right', x:75, y:41, role:'social', trainStat:'cha', effect:'The bird bar and the home of Kingdom diplomacy: companions perched here grow Charm (CHA) and morale — charm pays out on diplomacy quests.' },
     { id:'kitchen', label:'Kitchen & Pantry', icon:'🥣', cost:130, branches:25, unlockLevel:4, floor:3, branch:'trunk', x:50, y:55, role:'food', trainStat:'stamina', effect:'The feeding table: serve each companion the food it really eats, and run the Pantry Gauntlet to grow Stamina.' },
-    { id:'magpie_market', label:'Magpie Market', icon:'⚖️', cost:135, branches:28, unlockLevel:5, floor:2, branch:'left', x:23, y:67, role:'trade', effect:'The Academy trading post: buy the materials a build is short of, sell the ones piling up. Post a charming bird as Market Trader and both prices move your way.' },
+    { id:'magpie_market', label:'Magpie Market', icon:'⚖️', cost:135, branches:28, unlockLevel:4, floor:2, branch:'left', x:23, y:67, role:'trade', effect:'The Academy trading post: buy the materials a build is short of, sell the ones piling up. Post a charming bird as Market Trader and both prices move your way.' },
+    { id:'manager_office', label:"Project Manager's Office", icon:'📋', cost:175, branches:36, unlockLevel:6, floor:4, branch:'left', x:24, y:41, role:'management', effect:'The Academy planning office. Once a village has every building, this office can be built to unlock Project Manager appointments.' },
     { id:'workshop', label:'Nest Workshop', icon:'🛠️', cost:240, branches:55, unlockLevel:8, floor:5, branch:'left', x:29, y:30, role:'craft', trainStat:'def', effect:'Nest engineering: birds stationed here toughen up and grow DEF.' },
     { id:'library', label:'The Library', icon:'📚', cost:300, branches:70, unlockLevel:9, floor:5, branch:'right', x:74, y:26, role:'study', trainStat:'int', effect:'The Academy reading room: shelves of field guides and story scrolls. Birds stationed here sharpen their minds and grow INT.' },
     { id:'nursery', label:'Hatchery Nursery', icon:'🥚', cost:380, branches:85, unlockLevel:11, floor:6, branch:'left', x:35, y:16, role:'bond', effect:'Baby-bird care and bonding progression.' },
@@ -133,6 +134,7 @@
       physicalRatio,
       coins: scaledQuestRange(template && template.coins, ratio),
       branches: scaledQuestRange(template && template.branches, physicalRatio),
+      stone: scaledQuestRange(template && template.stone, physicalRatio),
       xp: Math.max(1, Math.round((Number(template && template.xp) || 1) * ratio)),
       expectedItemRolls: physicalRatio
     };
@@ -148,6 +150,7 @@
     find_seed: { id:'find_seed', category:'food', label:'Find Seed', minutes:3, icon:'🌾', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:6, items:['seed_satchel','sunflower_seeds'], beats:['hops straight from the garden path','checks the soft grass for fallen seed','tucks a tiny seed satchel under one wing','returns ready for another quick errand'] },
     find_coins: { id:'find_coins', category:'treasure', label:'Find Coins', minutes:4, icon:'🪙', minLevel:1, chaWeight:1, starter:true, coins:[6,16], branches:[0,1], xp:8, items:['shiny_pebble'], beats:['flutters toward a sunny lane','spots a glint beside an old root','trades a bright pebble for pocket coins','returns jingling with tiny treasure'] },
     branch_run: { id:'branch_run', category:'timber', label:'Branch Run', minutes:5, icon:'🪵', minLevel:1, starter:true, coins:[0,5], branches:[4,7], xp:8, items:['soft_moss'], beats:['glides down to the windfall thicket','tugs loose the driest fallen twigs','stacks a neat bundle of branches','hauls the timber home for the builders'] },
+    stone_run: { id:'stone_run', category:'materials', label:'Stone Run', minutes:6, icon:'🪨', minLevel:1, starter:true, coins:[0,4], branches:[0,1], stone:[3,6], xp:9, items:['iron_grit','gizzard_grit'], beats:['flies for the river gravel beds','tests loose stones for a mason\'s clean edge','binds the best pieces into a carrying sling','hauls building stone home to the yard'] },
     scavenge: { id:'scavenge', category:'materials', label:'Scavenge', minutes:5, icon:'🧺', minLevel:1, starter:true, coins:[2,10], branches:[2,4], xp:10, items:['soft_moss','berry_bundle'], beats:['sets off on a quick cosy scavenge','checks mossy twigs and berry leaves','bundles useful bits for the Academy','returns with simple supplies'] },
     // --- Hunting errands: where MEAT comes from. Every bird of prey in the
     // Academy needs prey, so these are starter quests (no Quest Roost, no
@@ -336,7 +339,7 @@
       ? requestedDuration
       : template.minutes;
     const economy = template.tutorial === true
-      ? { ratio:1, physicalRatio:1, coins:[...template.coins], branches:Array.isArray(template.branches) ? [...template.branches] : [0,0], xp:template.xp || 1, expectedItemRolls:1 }
+      ? { ratio:1, physicalRatio:1, coins:[...template.coins], branches:Array.isArray(template.branches) ? [...template.branches] : [0,0], stone:Array.isArray(template.stone) ? [...template.stone] : [0,0], xp:template.xp || 1, expectedItemRolls:1 }
       : questRewardsForDuration(template, durationMinutes);
     const durationMs = Math.round(durationMinutes * 60 * 1000 * slowFactor);
     const endMs = nowMs + durationMs;
@@ -348,6 +351,8 @@
     const branchRange = economy.branches;
     const baseBranches = rand(seed + 7, branchRange[0], branchRange[1]);
     const branchBonus = baseBranches > 0 ? Math.max(0, Math.round(Math.floor(((bird.stamina || 40) + (bird.power || 80)) / 160) * economy.physicalRatio)) : 0;
+    const stoneRange = economy.stone;
+    const baseStone = rand(seed + 11, stoneRange[0], stoneRange[1]);
     // Item loot scales as expected rolls, including a deterministic fractional
     // chance at short tiers and multiple finds on long tiers.
     const expectedItemRolls = Math.max(0, Number(economy.expectedItemRolls) || 0);
@@ -391,11 +396,12 @@
       status: 'active',
       slowFactor,
       hungryFlight: slowFactor > 1,
-      nightBonus: night ? { coins: nightMultiplier(night, 'coins'), branches: nightMultiplier(night, 'branches'), xp: nightMultiplier(night, 'xp'), itemRolls: nightFinds } : null,
+      nightBonus: night ? { coins: nightMultiplier(night, 'coins'), branches: nightMultiplier(night, 'branches'), stone: nightMultiplier(night, 'branches'), xp: nightMultiplier(night, 'xp'), itemRolls: nightFinds } : null,
       rewards: {
         coins: Math.round((baseCoins + powerBonus + charmBonus) * nightMultiplier(night, 'coins')),
         charmBonus,
         branches: Math.round((baseBranches + branchBonus) * nightMultiplier(night, 'branches')),
+        stone: Math.round(baseStone * nightMultiplier(night, 'branches')),
         xp: Math.round(economy.xp * nightMultiplier(night, 'xp')),
         items: rewardItems,
         itemRolls

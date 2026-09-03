@@ -20,7 +20,7 @@ HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 LOOT_CORE = (BURBZ / "loot_crafting_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "visible-build-shortfall-v345-20260903"
+RELEASE_PIN = "trading-manager-gates-v346-20260903"
 OWN_RELEASE_PIN = "arm-your-bird-v306-20260821"
 
 
@@ -45,12 +45,14 @@ def test_the_equip_link_says_what_it_asks_for():
 
 def test_the_bird_is_armed_before_its_first_battle():
     ids = [q["id"] for q in player_quests()]
-    assert ids.index("pq_equip_gear") == ids.index("pq_build_quest_roost") + 1
+    assert ids[ids.index("pq_build_quest_roost") + 1:ids.index("pq_equip_gear")] == [
+        "pq_build_market", "pq_market_trade"
+    ]
     assert ids.index("pq_equip_gear") < ids.index("pq_first_win")
     # Still one chain with no duplicate ids; the length grew where
     # village-chain-v307 added its links, and again where the Magpie Market
     # added its build-and-trade pair — both well after this one.
-    assert len(ids) == 35 == len(set(ids))
+    assert len(ids) == 37 == len(set(ids))
 
 
 def test_the_roost_pays_the_gear_the_next_link_needs():

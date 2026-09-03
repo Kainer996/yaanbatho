@@ -44,7 +44,7 @@ ROLES_CORE = ROLES_CORE_PATH.read_text(encoding="utf-8")
 MANAGER_CORE_PATH = BURBZ / "village_manager_core.js"
 UPDATER = (BURBZ.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "visible-build-shortfall-v345-20260903"  # the head build, whatever it is now
+RELEASE_PIN = "trading-manager-gates-v346-20260903"  # the head build, whatever it is now
 # This release's OWN tag. The two cores it edited still ship under it — a later
 # release that touches neither must not move their ?v= busters.
 OWN_RELEASE_PIN = "manager-builds-the-village-v324-20260825"

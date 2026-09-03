@@ -19,9 +19,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
+ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
 
 

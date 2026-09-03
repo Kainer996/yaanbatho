@@ -21,9 +21,9 @@ ACADEMY = (ROOT / "academy_3d_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "hold-to-steer-v251-20260811"
 PREVIOUS_RELEASE_PIN = "academy-2d-default-v250-20260811"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
+MAGPIE_CORE_PIN = "trading-manager-gates-v346-20260903"
 
 
 def run_node(script: str):

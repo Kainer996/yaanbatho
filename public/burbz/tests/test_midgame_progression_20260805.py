@@ -18,10 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
+CURRENT_BUILD = "trading-manager-gates-v346-20260903"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
+ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.
@@ -31,10 +30,11 @@ ACADEMY_UNLOCKS = {
     "training": 2,
     "quest_roost": 3,
     "kitchen": 4,
-    # magpie-market-v316: trade is the fifth room on the ladder, so the
-    # Hospital and The Crowbar each slipped one gate to make room.
-    "magpie_market": 5,
+    # v346 teaches trade immediately after the Quest Roost. The planning
+    # office shares the Hospital's gate but also needs one complete village.
+    "magpie_market": 4,
     "hospital": 6,
+    "manager_office": 6,
     "crowbar": 7,
     "workshop": 8,
     "library": 9,
@@ -78,11 +78,11 @@ def _academy_rooms():
 def test_academy_unlocks_span_the_mid_game_exactly_as_designed():
     by_id = {room["id"]: room for room in _academy_rooms()}
     assert {rid: room["unlockLevel"] for rid, room in by_id.items()} == ACADEMY_UNLOCKS
-    # A slow burn, not a sprint: the last unlock is a real mid-game goal and no
-    # level above 1 opens more than one Academy room at once.
+    # A slow burn, not a sprint: the last unlock is a real mid-game goal. Trade
+    # and the planning office deliberately share the level of a neighbour.
     assert max(ACADEMY_UNLOCKS.values()) >= 12
     later_levels = [lv for lv in ACADEMY_UNLOCKS.values() if lv > 1]
-    assert len(later_levels) == len(set(later_levels))
+    assert max(later_levels.count(lv) for lv in set(later_levels)) <= 2
 
 
 def test_room_costs_climb_with_their_unlock_levels():
