@@ -28513,6 +28513,11 @@ function closeBuildingInterior() {
 // off to the quest board, the door closes quietly behind us.
 function buildingInteriorBuild(seed, buildingId) {
   empireBuildStructure(seed, buildingId);
+  // Coin and timber shortfalls open a quest prompt. That prompt predates
+  // building interiors and sits below this overlay, so leave the room before
+  // showing it rather than immediately painting the room over it again.
+  const resourcePrompt = document.getElementById('resourceQuestOverlay');
+  if (resourcePrompt && resourcePrompt.classList.contains('open')) { closeBuildingInterior(); return; }
   if (currentScreen !== 'village' && currentScreen !== 'town') { closeBuildingInterior(); return; }
   renderBuildingInterior();
 }
@@ -41857,7 +41862,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'generated-building-interiors-v344-20260902';
+const BURBZ_BUILD = 'visible-build-shortfall-v345-20260903';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -26,7 +26,7 @@ RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
 # Both cores moved with the ascendant release: bird_sleep_core carries the
 # bigger packs, academy_treehouse_core learned statBonus.
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "generated-building-interiors-v344-20260902"
+CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 ACADEMY_CORE_PIN = "iron-ingot-errand-v326-20260825"
 

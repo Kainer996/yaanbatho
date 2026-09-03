@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "screen-swipe-v336-20260831"
-CURRENT_BUILD = "generated-building-interiors-v344-20260902"
+CURRENT_BUILD = "visible-build-shortfall-v345-20260903"
 PREVIOUS_RELEASE_PIN = "every-bird-carries-its-weight-v335-20260827"
 
 
