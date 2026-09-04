@@ -29,7 +29,10 @@ set -Eeuo pipefail
 MODEL_DIR="${BURBZ_MODEL_DIR:-/opt/burbz/models}"
 SERVER_PY="${BURBZ_SERVER_PY:-}"
 SERVICE="${BURBZ_SERVICE:-}"
-HEALTH_URL="${BURBZ_HEALTH_URL:-http://127.0.0.1}"
+# The Burbz service listens on 5055. The port-80 default virtual host can
+# return 404 even while that service is healthy; prove the adapter directly.
+# Operators with another backend/proxy origin can still override this value.
+HEALTH_URL="${BURBZ_HEALTH_URL:-http://127.0.0.1:5055}"
 ENV_FILE="${BURBZ_ENV_FILE:-/etc/burbz-sound.env}"
 DRY_RUN=0; NO_PATCH=0; MODELS_ONLY=0; ROLLBACK=0
 PROOF_CLIP=""

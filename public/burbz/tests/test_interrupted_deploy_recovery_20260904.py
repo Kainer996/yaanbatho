@@ -105,6 +105,6 @@ def test_verified_reanchor_runs_normal_updater_at_pinned_sha(tmp_path):
 
 def test_recovery_release_forces_the_normal_backend_proof():
     package = (REPO / "public/burbz/sound_id/__init__.py").read_text(encoding="utf-8")
-    assert 'INTERRUPTED_DEPLOY_RECOVERY_REVISION = "v347.1"' in package
+    assert 'INTERRUPTED_DEPLOY_RECOVERY_REVISION = "v348.1"' in package
     installer = (REPO / "scripts/install-burbz-autodeploy.sh").read_text(encoding="utf-8")
     assert "sound_id/__init__.py" in installer.split("BACKEND_CHANGED=0", 1)[1]
