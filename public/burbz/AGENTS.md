@@ -6,6 +6,14 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
+Deployment proof origin (2026-09-04): the maintained Burbz service listens on
+`127.0.0.1:5055`; the port-80 default nginx host returns 404 for the sound routes.
+The BirdNET installer therefore defaults its live proof to port 5055, while
+preserving `BURBZ_HEALTH_URL` for other setups. Never bypass the positive,
+confuser, silence, provenance or rollback checks to complete a deployment.
+The managed `sound_id` recovery revision v348.1 forces that proof after a
+partial v348 frontend copy; reconcile only against its verified copied SHA.
+
 Current release: 2026-09-04 (`alderwing-living-settlements-v348-20260904`) — **Alderwing has bird neighbours, and the opening begins with friendship.** Yaan chose Alderwing for the friendly bird-led parallel Earth; Burbz remains the game and zombie-bird enemy name. The introduction video is preserved. Merlin's shorter, warmer story teaches a real meal, play, a saved ten-second nap, the existing first expedition and the first Academy building, then invites the player onwards at their own pace. Both coin displays hide throughout any active tutorial and return on close/skip; accounting is unchanged. Merlin's nap completes once across reload, blocks care/dispatch while sleeping and cannot be tapped repeatedly for energy/bond; play has an energy cost and short breather. First-flight bird selection is idempotent, fixing the beginner trap where tapping the already-selected Merlin disabled Send. His care menu fits short phones and keeps scientific food guidance behind “Why this food?”.
 
 Village/town buildings now come only from the saved completed-building ledger, saved uncleared ruins, actual construction projects and the earned civic Hall. All fifteen paid building types use the shared batched woodland renderer in `settlement_models.js`, with timber/stone progression, pitched roofs, doors, windows and working-yard details. Construction and upgrades keep their real actions. Camera context raycasts carry their camera, preventing Sprite selection failures. Town plots reserve actual building sizes, expand the ground when crowded and permit camera access to the expanded town. Trees yield around paid roofs; nature remains elsewhere.

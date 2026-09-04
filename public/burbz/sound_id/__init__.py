@@ -42,10 +42,10 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PROVIDER = "birdnetv3"
 
-# v347's first promotion copied the package but rolled server.py back after a
-# premature cold-start probe. This managed-file revision makes the repaired
-# autodeployer run its transactional adapter install/proof once more.
-INTERRUPTED_DEPLOY_RECOVERY_REVISION = "v347.1"
+# Interrupted promotions copied the package but rolled server.py back after
+# probing too early or using nginx's unrelated default host. This revision
+# makes the repaired autodeployer run its transactional install/proof again.
+INTERRUPTED_DEPLOY_RECOVERY_REVISION = "v348.1"
 
 # Legacy BirdNET V2.4. Kept so a rollback is possible and so research builds
 # can still use it, but it is never selected by default or by fallback.
