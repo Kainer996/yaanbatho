@@ -935,14 +935,21 @@ soundfile.write(
 PY
     CLIP="$PROOF_CLIP"
     RESPONSE=""
-    for base in "$HEALTH_URL/burbz/api/identify/sound" "$HEALTH_URL/api/identify/sound"; do
-      RESPONSE="$(curl -fsS -m 90 -F "audio=@$CLIP" -F "lat=53.228" -F "lon=-2.598" "$base" 2>/dev/null || true)"
-      if [[ -n "$RESPONSE" ]] && printf "%s" "$RESPONSE" | "$PY" -c \
-          'import json,sys; raise SystemExit(0 if isinstance(json.load(sys.stdin), dict) else 1)' \
-          >/dev/null 2>&1; then
-        LIVE_ENDPOINT="$base"
-        break
-      fi
+    # Loading the V3 acoustic and geographic models can keep the socket closed
+    # for several seconds after systemd reports the process as active. Poll for
+    # up to 30 seconds so a healthy cold start cannot trigger a false rollback.
+    LIVE_READY_ATTEMPTS=30
+    for (( attempt=1; attempt<=LIVE_READY_ATTEMPTS; attempt+=1 )); do
+      for base in "$HEALTH_URL/burbz/api/identify/sound" "$HEALTH_URL/api/identify/sound"; do
+        RESPONSE="$(curl -fsS -m 90 -F "audio=@$CLIP" -F "lat=53.228" -F "lon=-2.598" "$base" 2>/dev/null || true)"
+        if [[ -n "$RESPONSE" ]] && printf "%s" "$RESPONSE" | "$PY" -c \
+            'import json,sys; raise SystemExit(0 if isinstance(json.load(sys.stdin), dict) else 1)' \
+            >/dev/null 2>&1; then
+          LIVE_ENDPOINT="$base"
+          break 2
+        fi
+      done
+      [[ $attempt -lt $LIVE_READY_ATTEMPTS ]] && sleep 1
     done
 
     if [[ -z "$RESPONSE" ]]; then

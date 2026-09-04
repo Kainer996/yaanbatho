@@ -235,3 +235,11 @@ def test_installer_still_prefers_systemd_server_path_over_process_guessing():
     assert text.index('found="$(server_py_from_systemd)"') < text.index('found="$(server_py_from_process)"')
     assert 'printf \'%s\\n\' burbz.service' in text
     assert 'WorkingDirectory' in text
+
+
+def test_installer_waits_for_the_cold_model_server_to_accept_requests():
+    text = INSTALLER.read_text(encoding="utf-8")
+    assert "LIVE_READY_ATTEMPTS=30" in text
+    assert "attempt<=LIVE_READY_ATTEMPTS" in text
+    assert "break 2" in text
+    assert "[[ $attempt -lt $LIVE_READY_ATTEMPTS ]] && sleep 1" in text
