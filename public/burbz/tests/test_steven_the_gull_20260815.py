@@ -1,4 +1,4 @@
-"""Every Herring Gull is called Steven.
+"""Steven, the Rook Witch and the Market Magpie are special characters.
 
 An Easter egg, by request. Any Herring Gull that joins the flock arrives
 already answering to Steven, and gulls recruited before this release pick
@@ -14,8 +14,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
+ROOK_WITCH_ART = ROOT / "bird-art-cache" / "rook_witch_blackfeather_hex_burbz_manga_20260904.png"
 
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 
@@ -43,7 +44,7 @@ def _fn(html: str, name: str) -> str:
 
 
 def _harness(html: str) -> str:
-    """createBirdEntry and the Easter-egg helpers with tiny game-glue stubs."""
+    """Create birds and resolve special characters with tiny game-glue stubs."""
     return "\n".join([
         "function findSpeciesProfile() { return null; }",
         "function determineBirdRarity() { return 'common'; }",
@@ -51,7 +52,12 @@ def _harness(html: str) -> str:
         "function resolveBuiltInBirdArt() { return null; }",
         "function defaultBirdCare() { return {}; }",
         "function hashStr() { return 1; }",
+        "function escapeHtml(value) { return String(value ?? ''); }",
         "const BIRD_BIOLOGY_STATS_VERSION = 1;",
+        _fn(html, "specialBirdCharacterFor"),
+        _fn(html, "applySpecialBirdCharacter"),
+        _fn(html, "specialBirdCharacterBadgeHTML"),
+        _fn(html, "specialBirdCharacterPanelHTML"),
         _fn(html, "easterEggBirdName"),
         _fn(html, "applyEasterEggBirdName"),
         _fn(html, "createBirdEntry"),
@@ -90,6 +96,116 @@ console.log(JSON.stringify({
     assert out["robin"] == ""        # everyone else stays nameless by default
 
 
+def test_steven_and_the_rook_witch_are_real_special_characters():
+    html = HTML.read_text(encoding="utf-8")
+    out = run_node(_harness(html) + """
+const gull = createBirdEntry('Herring Gull', 'Larus argentatus', 0.9);
+const rook = createBirdEntry('Rook', 'Corvus frugilegus', 0.9);
+const robin = createBirdEntry('Robin', 'Erithacus rubecula', 0.9);
+console.log(JSON.stringify({
+  gull: { name: gull.customName, id: gull.specialCharacterId, move: gull.specialMove },
+  rook: { name: rook.customName, id: rook.specialCharacterId, move: rook.specialMove, magic: rook.specialMagicPower, stat: rook.mag },
+  robin: { id: robin.specialCharacterId || null },
+  rookBadge: specialBirdCharacterBadgeHTML(rook),
+  rookPanel: specialBirdCharacterPanelHTML(rook)
+}));
+""")
+    assert out["gull"] == {
+        "name": "Steven",
+        "id": "steven-herring-gull",
+        "move": "Chip Raid",
+    }
+    assert out["rook"] == {
+        "name": "The Rook Witch",
+        "id": "rook-witch",
+        "move": "Blackfeather Hex",
+        "magic": 118,
+        "stat": 118,
+    }
+    assert out["robin"]["id"] is None
+    assert "SPECIAL CHARACTER" in out["rookBadge"]
+    assert "Witch" in out["rookBadge"]
+    assert "The Rook Witch" in out["rookPanel"]
+    assert "Magic power: 118" in out["rookPanel"]
+
+
+def test_the_market_magpie_is_a_real_special_character():
+    html = HTML.read_text(encoding="utf-8")
+    out = run_node(_harness(html) + """
+const magpie = createBirdEntry('Magpie', 'Pica pica', 0.9);
+const australian = createBirdEntry('Australian Magpie', 'Gymnorhina tibicen', 0.9);
+console.log(JSON.stringify({
+  magpie: {
+    name: magpie.customName,
+    id: magpie.specialCharacterId,
+    role: magpie.specialCharacterRole,
+    move: magpie.specialMove
+  },
+  australian: australian.specialCharacterId || null,
+  badge: specialBirdCharacterBadgeHTML(magpie),
+  panel: specialBirdCharacterPanelHTML(magpie)
+}));
+""")
+    assert out["magpie"] == {
+        "name": "The Market Magpie",
+        "id": "market-magpie",
+        "role": "Marketplace Maestro",
+        "move": "Shiny Snatch",
+    }
+    assert out["australian"] is None
+    assert "SPECIAL CHARACTER" in out["badge"]
+    assert "triples its effectiveness" in out["panel"]
+
+
+def test_the_rook_witch_has_her_own_full_card_painting():
+    html = HTML.read_text(encoding="utf-8")
+    art_url = "/burbz/bird-art-cache/rook_witch_blackfeather_hex_burbz_manga_20260904.png"
+    card_map = html[html.index("const BUILT_IN_BIRD_CARD_ART = Object.freeze({"):]
+    card_map = card_map[:card_map.index("});")]
+    assert f"'Rook': '{art_url}'" in card_map
+    assert ROOK_WITCH_ART.exists()
+    # Real generated PNG, never an unhydrated Git LFS pointer.
+    assert ROOK_WITCH_ART.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+    assert ROOK_WITCH_ART.stat().st_size > 1_000_000
+
+
+def test_special_character_names_are_added_to_old_saves_but_player_names_win():
+    html = HTML.read_text(encoding="utf-8")
+    out = run_node(_harness(html) + """
+const oldRook = applySpecialBirdCharacter({ commonName: 'Rook' });
+const namedRook = applySpecialBirdCharacter({ commonName: 'Rook', customName: 'Morgana', mag: 140 });
+const scientificOnly = applySpecialBirdCharacter({ scientificName: 'Larus argentatus' });
+console.log(JSON.stringify({ oldRook, namedRook, scientificOnly }));
+""")
+    assert out["oldRook"]["customName"] == "The Rook Witch"
+    assert out["namedRook"]["customName"] == "Morgana"
+    assert out["namedRook"]["specialCharacterId"] == "rook-witch"
+    assert out["oldRook"]["mag"] == 118
+    assert out["namedRook"]["mag"] == 140
+    assert out["scientificOnly"]["customName"] == "Steven"
+
+
+def test_special_characters_have_matching_battle_signatures():
+    out = run_node("""
+const core = require('./battle_core.js');
+const rook = core.signatureFor('Rook', 'corvid');
+console.log(JSON.stringify({
+  rook: { label: rook.label, power: rook.power, aoe: rook.aoe, crShred: rook.crShred, debuff: rook.rider },
+  gull: core.signatureFor('Herring Gull', 'seabird').label
+}));
+""")
+    assert out == {
+        "rook": {
+            "label": "Blackfeather Hex",
+            "power": 118,
+            "aoe": True,
+            "crShred": 0.2,
+            "debuff": {"kind": "debuff", "stat": "def", "pct": 0.3, "turns": 3},
+        },
+        "gull": "Chip Raid",
+    }
+
+
 def test_a_players_own_name_for_their_gull_is_respected():
     html = HTML.read_text(encoding="utf-8")
     out = run_node(_harness(html) + """
@@ -108,11 +224,11 @@ def test_existing_saves_meet_steven_on_load():
     # Local saves: the loadState flock migration sweep.
     load_start = html.index("function loadState()")
     load = html[load_start:html.index("function saveState", load_start)]
-    assert "gameState.flock.forEach(applyEasterEggBirdName)" in load
+    assert "gameState.flock.forEach(applySpecialBirdCharacter)" in load
     # Cloud saves: mergeCloudState runs the same sweep.
     merge_start = html.index("function mergeCloudState(")
     merge = html[merge_start:html.index("async function loadCloudProgress", merge_start)]
-    assert "applyEasterEggBirdName(b)" in merge
+    assert "applySpecialBirdCharacter(b)" in merge
 
 
 def test_clearing_a_gulls_name_hands_it_straight_back():

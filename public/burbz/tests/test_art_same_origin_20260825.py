@@ -52,7 +52,7 @@ SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "art-same-origin-v325-20260825"
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 PREVIOUS_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 
 GITHUB_HOSTS = ("github.com/Kainer996", "raw.githubusercontent.com")
@@ -202,9 +202,8 @@ def test_release_is_versioned_and_the_lineage_is_append_only():
     assert "forge-opens-on-the-anvil-v323-20260825" in cache_line, "the lineage is append-only"
 
 
-def test_no_core_was_edited_so_no_version_buster_moved():
-    # This release changed index.html, sw.js and two scripts only. If a core's
-    # ?v= had moved without the core changing, installed PWAs would be served a
-    # cache-miss for no reason.
+def test_only_a_core_edited_since_this_release_moves_its_version_buster():
+    # The village manager remains under v324. The roles core moved in v347 for
+    # The Market Magpie, so installed PWAs must fetch that changed module.
     assert f'src="village_manager_core.js?v={PREVIOUS_RELEASE_PIN}"' in HTML
-    assert f'src="bird_roles_core.js?v={PREVIOUS_RELEASE_PIN}"' in HTML
+    assert f'src="bird_roles_core.js?v={CURRENT_BUILD}"' in HTML

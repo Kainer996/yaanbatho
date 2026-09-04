@@ -145,6 +145,60 @@ def aggregate_server():
     return app, namespace, calls
 
 
+def catalogue_mapping_server():
+    """Mirror the live response mapper, including an incomplete catalogue row."""
+    app = flask.Flask(__name__ + ".catalogue_mapping")
+
+    def legacy_analyse(path, **kwargs):
+        return []
+
+    def catalogue_lookup(scientific_name, common_name=None):
+        assert common_name == "Rook"
+        return {
+            "common_name": "Rook",
+            "latin_name": None,
+            "species_id": "rook",
+        }
+
+    def fragile_species_mapper(scientific_name, common_name, confidence, catalog_entry):
+        display_scientific = catalog_entry.get("latin_name")
+        # This is the exact operation that crashed in production.
+        display_scientific.encode()
+        return {
+            "name": catalog_entry.get("common_name") or common_name,
+            "scientificName": display_scientific,
+            "confidence": confidence,
+        }
+
+    namespace = {
+        "app": app,
+        "_analyse_recording": legacy_analyse,
+        "_catalog_lookup": catalogue_lookup,
+        "_species_to_game_bird": fragile_species_mapper,
+    }
+
+    def species_to_game_bird(scientific_name, common_name, confidence):
+        entry = namespace["_catalog_lookup"](scientific_name, common_name)
+        return namespace["_species_to_game_bird"](
+            scientific_name, common_name, confidence, entry
+        )
+
+    namespace["species_to_game_bird"] = species_to_game_bird
+
+    @app.post("/api/identify/sound")
+    def identify_sound():
+        detections = namespace["_analyse_recording"]("/tmp/window.wav")
+        winner = detections[0]
+        bird = namespace["species_to_game_bird"](
+            winner["scientific_name"],
+            winner["common_name"],
+            winner["confidence"],
+        )
+        return flask.jsonify({"found": True, "bird": bird})
+
+    return app, namespace
+
+
 def configure_like_embedded_v4(app):
     """Call configure() from the exact private namespace shipped by v4."""
     namespace = {
@@ -339,6 +393,26 @@ def test_aggregate_contract_uses_truthy_token_and_preserves_allowlist(monkeypatc
     assert len(body["allDetections"]) == 2
     assert seen["allow"] == {"parus major", "fringilla coelebs"}
     assert calls == {"legacy_analyse": 0, "legacy_aggregate": 0}
+
+
+def test_incomplete_rook_catalogue_row_cannot_crash_a_valid_v3_detection(monkeypatch):
+    app, namespace = catalogue_mapping_server()
+    monkeypatch.setattr(
+        sound_id,
+        "_run",
+        lambda provider, path, allow, lat, lon, week: [
+            candidate("Rook", "Corvus frugilegus", 0.81)
+        ],
+    )
+    integration.install(namespace, mode="direct")
+
+    response = app.test_client().post("/api/identify/sound")
+    body = response.get_json()
+
+    assert response.status_code == 200
+    assert body["bird"]["name"] == "Rook"
+    assert body["bird"]["scientificName"] == "Corvus frugilegus"
+    assert body["provider"] == "birdnetv3"
 
 
 def test_embedded_v4_configure_gets_exact_package_only_provenance(monkeypatch):

@@ -33,7 +33,7 @@ ROLES_CORE = ROOT / "bird_roles_core.js"
 BADGE_CORE = ROOT / "action_badge_core.js"
 
 OWN_RELEASE_PIN = "free-birds-v318-20260824"
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The release that last edited bird_roles_core.js — this one, which retired
 # the Head Gardener.
@@ -42,7 +42,7 @@ PREVIOUS_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # tracks the head build — the invariant is that it never lags behind.
 # NOT CURRENT_BUILD: a core ships under the tag of the release that last
 # EDITED it, and the head has moved on twice since without touching this one.
-ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
+ROLES_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
 
 def html_text() -> str:

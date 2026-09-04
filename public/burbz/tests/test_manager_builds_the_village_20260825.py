@@ -44,10 +44,11 @@ ROLES_CORE = ROLES_CORE_PATH.read_text(encoding="utf-8")
 MANAGER_CORE_PATH = BURBZ / "village_manager_core.js"
 UPDATER = (BURBZ.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "trading-manager-gates-v346-20260903"  # the head build, whatever it is now
+RELEASE_PIN = "rook-recognition-special-characters-v347-20260904"  # the head build, whatever it is now
 # This release's OWN tag. The two cores it edited still ship under it — a later
 # release that touches neither must not move their ?v= busters.
 OWN_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
+ROLES_CORE_PIN = RELEASE_PIN
 HOUR_MS = 3600000
 
 # The village's own works, in the order the manager raises them.
@@ -745,9 +746,11 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     # under THIS release's tag — nothing since has edited it.
     assert f'src="village_manager_core.js?v={OWN_RELEASE_PIN}"' in HTML
     assert SW.count(f"'./village_manager_core.js?v={OWN_RELEASE_PIN}'") == 3
-    # bird_roles_core.js was edited this release, so it re-pins here.
-    assert f'src="bird_roles_core.js?v={OWN_RELEASE_PIN}"' in HTML
-    assert f"'./bird_roles_core.js?v={OWN_RELEASE_PIN}'" in SW
+    # v347 later added The Market Magpie's real marketplace multiplier, so the
+    # roles core now ships under the current release while the manager core
+    # keeps this release's own historical tag.
+    assert f'src="bird_roles_core.js?v={ROLES_CORE_PIN}"' in HTML
+    assert f"'./bird_roles_core.js?v={ROLES_CORE_PIN}'" in SW
     # And the VPS updater ships the file at all.
     assert '"village_manager_core.js"' in UPDATER
     assert MANAGER_CORE_PATH.exists()

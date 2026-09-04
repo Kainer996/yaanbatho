@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 PREVIOUS_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 
 
 def function_source(html: str, name: str) -> str:

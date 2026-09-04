@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 ACADEMY_CORE = ROOT / "academy_treehouse_core.js"
-RELEASE = "trading-manager-gates-v346-20260903"
+RELEASE = "rook-recognition-special-characters-v347-20260904"
 
 
 def html() -> str:

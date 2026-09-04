@@ -39,6 +39,11 @@
   // How much better than an unstaffed building the very best appointee makes it.
   const MAX_ROLE_BONUS = 0.75;
 
+  // The Market Magpie is a real special character, not a cosmetic title. When
+  // a European Magpie runs the Magpie Market, its haggling effectiveness is
+  // tripled. The market price formula turns 3x effectiveness into 50% off.
+  const MAGPIE_MARKET_MULTIPLIER = 3;
+
   // Head Chef mastery is earned by real time on duty, not by the companion's
   // ordinary combat level. One day advances one Chef Level; level 10 unlocks
   // the whole-kitchen "Feed all birds" service. Earned time is retained if the
@@ -115,8 +120,8 @@
     {
       id:'market_trader', title:'Market Trader', icon:'⚖️', scope:'academy', key:'magpie_market',
       stats:{ cha:0.7, int:0.3 },
-      effect:{ id:'trade_terms', label:'Haggling', copy:'Materials cost fewer coins to buy at the Magpie Market.' },
-      copy:'Magpies drive a hard bargain. A charming bird with a head for numbers talks the traders down, so every purchase costs you less.'
+      effect:{ id:'trade_terms', label:'Haggling', copy:'Materials cost fewer coins to buy at the Magpie Market. Appoint The Market Magpie for a dramatic 3× boost and half-price purchases.' },
+      copy:'Magpies drive a hard bargain. A charming bird with a head for numbers talks the traders down, so every purchase costs you less. The Market Magpie is born for this post and triples its effectiveness.'
     },
     {
       id:'quartermaster', title:'Quartermaster', icon:'🧭', scope:'academy', key:'quest_roost',
@@ -251,23 +256,34 @@
     return match;
   }
 
+  function isMarketMagpie(bird) {
+    if (!bird) return false;
+    if (String(bird.specialCharacterId || '').toLowerCase() === 'market-magpie') return true;
+    return [bird.commonName, bird.species, bird.scientificName]
+      .map(value => String(value || '').split('(')[0].trim().toLowerCase())
+      .some(value => value === 'magpie' || value === 'pica pica');
+  }
+
   // The number the rest of the game multiplies by. An empty post is 1.0 — the
   // building keeps working exactly as it always did, and a posting is upside
   // only.
   function roleEffectiveness(bird, role) {
     const def = typeof role === 'string' ? roleById(role) : role;
     if (!def || !bird) {
-      return { role: def || null, staffed:false, aptitude:0, rank:ROLE_RANKS[0], bonusPct:0, multiplier:1 };
+      return { role: def || null, staffed:false, aptitude:0, rank:ROLE_RANKS[0], bonusPct:0, multiplier:1, specialBoost:false };
     }
     const aptitude = roleAptitude(bird, def);
-    const multiplier = 1 + MAX_ROLE_BONUS * (aptitude / 100);
+    const ordinaryMultiplier = 1 + MAX_ROLE_BONUS * (aptitude / 100);
+    const specialBoost = def.id === 'market_trader' && isMarketMagpie(bird);
+    const multiplier = specialBoost ? Math.max(ordinaryMultiplier, MAGPIE_MARKET_MULTIPLIER) : ordinaryMultiplier;
     return {
       role: def,
       staffed: true,
       aptitude,
       rank: rankForAptitude(aptitude),
       bonusPct: Math.round((multiplier - 1) * 100),
-      multiplier: Math.round(multiplier * 1000) / 1000
+      multiplier: Math.round(multiplier * 1000) / 1000,
+      specialBoost
     };
   }
 
@@ -277,6 +293,8 @@
     const def = typeof role === 'string' ? roleById(role) : role;
     if (!def || !Array.isArray(birds) || !birds.length) return null;
     return birds.slice().sort((a, b) => {
+      const effectDiff = roleEffectiveness(b, def).multiplier - roleEffectiveness(a, def).multiplier;
+      if (effectDiff) return effectDiff;
       const diff = roleAptitude(b, def) - roleAptitude(a, def);
       if (diff) return diff;
       return String(a && a.id).localeCompare(String(b && b.id));
@@ -288,7 +306,7 @@
     if (!def || !Array.isArray(birds)) return [];
     return birds
       .map(bird => ({ bird, ...roleEffectiveness(bird, def) }))
-      .sort((a, b) => (b.aptitude - a.aptitude) || String(a.bird && a.bird.id).localeCompare(String(b.bird && b.bird.id)));
+      .sort((a, b) => (b.multiplier - a.multiplier) || (b.aptitude - a.aptitude) || String(a.bird && a.bird.id).localeCompare(String(b.bird && b.bird.id)));
   }
 
   // ---------------------------------------------------------------------------
@@ -500,6 +518,7 @@
     ROLE_RANKS,
     STAT_MASTERY,
     MAX_ROLE_BONUS,
+    MAGPIE_MARKET_MULTIPLIER,
     CHEF_MAX_LEVEL,
     CHEF_MS_PER_LEVEL,
     CHEF_REWARD_BONUS_PER_LEVEL,
@@ -516,6 +535,7 @@
     regionRole,
     roleAptitude,
     rankForAptitude,
+    isMarketMagpie,
     roleEffectiveness,
     bestCandidate,
     rankCandidates,
