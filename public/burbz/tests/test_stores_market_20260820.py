@@ -25,12 +25,12 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "magpie-market-v316-20260824"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
-ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
+ROLES_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
 
 def run_node(source: str) -> dict:

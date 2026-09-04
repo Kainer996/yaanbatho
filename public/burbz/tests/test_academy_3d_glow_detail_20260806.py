@@ -11,7 +11,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 
 # magpie-market-v316 edited this core, so it ships under that tag now.
-MAGPIE_CORE_PIN = "trading-manager-gates-v346-20260903"
+MAGPIE_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
 
 def _node(source: str):

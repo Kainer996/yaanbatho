@@ -1560,6 +1560,21 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   letter-spacing:.055em; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   box-shadow:0 2px 8px rgba(0,0,0,.52);
 }
+.special-character-badge {
+  position:absolute; right:6px; top:32px; z-index:4; max-width:calc(100% - 12px);
+  display:inline-flex; align-items:center; gap:4px; padding:3px 7px; border-radius:999px;
+  border:1px solid rgba(197,141,255,.82); background:rgba(30,10,45,.88); color:#f3dcff;
+  font:900 8px/1.2 'Rajdhani',sans-serif; letter-spacing:.055em; text-transform:uppercase;
+  white-space:nowrap; box-shadow:0 0 12px rgba(151,117,250,.42),0 2px 8px rgba(0,0,0,.52);
+}
+.special-character-panel {
+  margin-top:10px; padding:12px; border:1px solid rgba(197,141,255,.48); border-radius:10px;
+  background:linear-gradient(135deg,rgba(82,35,112,.28),rgba(15,12,18,.94));
+  box-shadow:inset 0 0 18px rgba(151,117,250,.08);
+}
+.special-character-kicker { color:#d8adff; font:900 9px/1.2 'Rajdhani',sans-serif; letter-spacing:.12em; text-transform:uppercase; }
+.special-character-title { margin-top:3px; color:#f4e8ff; font:700 16px/1.15 'Russo One',sans-serif; }
+.special-character-copy { margin-top:5px; color:var(--text2); font-size:12px; line-height:1.4; }
 .card-art-bg {
   position: absolute; inset: 0;
   background: linear-gradient(135deg, var(--bg3), var(--bg4));
@@ -5152,10 +5167,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=trading-manager-gates-v346-20260903"></script>
-<script src="academy_alive_core.js?v=trading-manager-gates-v346-20260903"></script>
+<script src="academy_treehouse_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
+<script src="academy_alive_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
-<script src="academy_3d_core.js?v=trading-manager-gates-v346-20260903"></script>
+<script src="academy_3d_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5163,7 +5178,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="diet_hunger_core.js?v=diet-hunger-release-20260723"></script>
 <script src="bird_family_core.js?v=bird-families-mega-v1-20260728"></script>
 <script src="bird_size_core.js?v=every-bird-carries-its-weight-v335-20260827"></script>
-<script src="bird_roles_core.js?v=manager-builds-the-village-v324-20260825"></script>
+<script src="bird_roles_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=quiet-arena-v331-20260826"></script>
 <script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
@@ -6601,7 +6616,7 @@ function loadState() {
   gameState.flock.forEach(bird => rememberDiscoveredBird(bird, { silent: true }));
   gameState.flock.forEach(ensureBirdAcademy); // Academy migration: every bird gets a campus room (defaults to the Gardens)
   gameState.flock.forEach(ensureBirdBond); // Bond migration: every bird starts its friendship at New Friend
-  gameState.flock.forEach(applyEasterEggBirdName); // Every unnamed Herring Gull is already called Steven
+  gameState.flock.forEach(applySpecialBirdCharacter); // Every named special character reaches old saves
   gameState.pantry = (gameState.pantry && typeof gameState.pantry === 'object' && !Array.isArray(gameState.pantry)) ? { ...DEFAULT_PANTRY, ...gameState.pantry } : { ...DEFAULT_PANTRY }; // Pantry migration
   // Merlin permanently replaces the old selectable walking-pet slot. Preserve
   // old care values as his starting mood, then discard the obsolete selection.
@@ -6664,6 +6679,7 @@ function loadState() {
     b.int = b.int || 50;
     b.stamina = b.stamina || 50;
     syncBirdArtUrl(b);
+    applySpecialBirdCharacter(b);
     return b;
   });
   resumeAssignedHeadChefCareer(Date.now());
@@ -6817,7 +6833,7 @@ function mergeCloudState(cloudState) {
   const merged = { ...current, ...(cloudState && typeof cloudState === 'object' ? cloudState : {}) };
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
-  merged.flock.forEach(b => { if (b && typeof b === 'object') applyEasterEggBirdName(b); }); // cloud gulls are Steven too
+  merged.flock.forEach(b => { if (b && typeof b === 'object') applySpecialBirdCharacter(b); }); // cloud special characters too
   const core = dietHungerCore();
   const hungerMigrated = core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
   return migrateGamePlaceNames(hungerMigrated);
@@ -11434,7 +11450,7 @@ function createRosterBird(speciesName) {
   const profile = findSpeciesProfile(speciesName);
   const rarity = (profile && profile.rarity) || determineBirdRarity(speciesName, 0.5);
   const stats = generateBirdStats(speciesName, null, rarity);
-  return {
+  const bird = {
     id: 'preview:' + speciesName,
     species: speciesName,
     scientificName: profile && profile.scientificName ? profile.scientificName : speciesName,
@@ -11448,6 +11464,7 @@ function createRosterBird(speciesName) {
     previewOnly: true,
     ...stats
   };
+  return typeof applySpecialBirdCharacter === 'function' ? applySpecialBirdCharacter(bird) : bird;
 }
 
 function openBirdInfo(birdId) {
@@ -11486,6 +11503,7 @@ function openBirdInfo(birdId) {
       </div>
     </div>
     <div class="bird-info-summary">${escapeHTML(summary)}</div>
+    ${specialBirdCharacterPanelHTML(bird)}
     <div class="bird-info-stats">
       <div class="bird-info-stat"><span class="bird-info-stat-label">HP</span><span class="bird-info-stat-value">${bird.maxHp || bird.hp || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">ATK</span><span class="bird-info-stat-value">${bird.atk || 0}</span></div>
@@ -12929,7 +12947,12 @@ Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 // Cards keep the original complete paintings, including each bird's own
 // habitat scene. The warrior release below is deliberately limited to the
 // icon/sprite route so transparent birds can still move cleanly over the UI.
-const BUILT_IN_BIRD_CARD_ART = Object.freeze({ ...BUILT_IN_BIRD_ART });
+const BUILT_IN_BIRD_CARD_ART = Object.freeze({
+  ...BUILT_IN_BIRD_ART,
+  // Special-character painting: full Blackfeather Hex scene on cards, while
+  // compact moving Rooks keep the existing natural armless cutout.
+  'Rook': '/burbz/bird-art-cache/rook_witch_blackfeather_hex_burbz_manga_20260904.png'
+});
 if (window.applyBurbzMangaWarriorArt20260803) {
   window.applyBurbzMangaWarriorArt20260803(BUILT_IN_BIRD_ART);
 }
@@ -13286,13 +13309,12 @@ function createBirdEntry(speciesName, scientificName, confidence) {
   const rarity = determineBirdRarity(canonicalName, confidence);
   const stats = generateBirdStats(canonicalName, null, rarity);
 
-  return {
+  const bird = {
     id: Date.now() + '_' + hashStr(canonicalName),
     species: canonicalName,
     scientificName: canonicalScientificName,
     commonName: canonicalName,
-    // Easter egg: every Herring Gull arrives already answering to Steven.
-    customName: /herring gull/i.test(canonicalName) ? 'Steven' : null,
+    customName: null,
     rarity,
     level: 1,
     xp: 0,
@@ -13305,6 +13327,7 @@ function createBirdEntry(speciesName, scientificName, confidence) {
     biologyStatsVersion: BIRD_BIOLOGY_STATS_VERSION,
     ...stats
   };
+  return typeof applySpecialBirdCharacter === 'function' ? applySpecialBirdCharacter(bird) : bird;
 }
 
 function levelUpBird(bird, xpGain, options = {}) {
@@ -22702,6 +22725,66 @@ function birdDisplayName(bird) { return (bird && String(bird.customName || '').t
 function birdSpeciesLabel(bird) { return (bird && (bird.commonName || bird.species)) || 'Unknown species'; }
 // nickname-line-v167-20260729: nicknames decorate identity; they never replace taxonomy.
 function birdNickname(bird) { return (bird && String(bird.customName || '').trim()) || ''; }
+// special-bird-characters-v347-20260904: named story characters keep their
+// identity in new birds, old saves, discovery cards and the field guide.
+function specialBirdCharacterFor(bird) {
+  const keys = [bird?.commonName, bird?.species, bird?.scientificName]
+    .map(value => String(value || '').split('(')[0].trim().toLowerCase())
+    .filter(Boolean);
+  if (keys.some(key => key === 'rook' || key === 'corvus frugilegus')) {
+    return {
+      id:'rook-witch', defaultName:'The Rook Witch', title:'The Rook Witch',
+      role:'Witch', icon:'🧙', move:'Blackfeather Hex', magicPower:118,
+      description:'A mighty corvid witch from the rookery, channelling a storm of ancient magic directly through her natural wings.'
+    };
+  }
+  if (keys.some(key => key === 'magpie' || key === 'pica pica')) {
+    return {
+      id:'market-magpie', defaultName:'The Market Magpie', title:'The Market Magpie',
+      role:'Marketplace Maestro', icon:'⚖️', move:'Shiny Snatch',
+      description:'A born trader whose presence at the Magpie Market triples its effectiveness and cuts buying prices in half.'
+    };
+  }
+  if (keys.some(key => key === 'herring gull' || key === 'european herring gull' || key === 'larus argentatus')) {
+    return {
+      id:'steven-herring-gull', defaultName:'Steven', title:'Steven the Herring Gull',
+      role:'Seaside scoundrel', icon:'🌊', move:'Chip Raid',
+      description:'Burbz’s bold Herring Gull: clever, fearless and always watching for an unattended chip.'
+    };
+  }
+  return null;
+}
+function applySpecialBirdCharacter(bird) {
+  if (!bird) return bird;
+  const character = specialBirdCharacterFor(bird);
+  if (!character) return bird;
+  bird.specialCharacterId = character.id;
+  bird.specialCharacterTitle = character.title;
+  bird.specialCharacterRole = character.role;
+  bird.specialMove = character.move;
+  if (character.magicPower) {
+    bird.specialMagicPower = character.magicPower;
+    bird.mag = Math.max(Number(bird.mag) || 0, character.magicPower);
+  }
+  if (!String(bird.customName || '').trim()) bird.customName = character.defaultName;
+  return bird;
+}
+function specialBirdCharacterBadgeHTML(bird) {
+  const character = specialBirdCharacterFor(bird);
+  if (!character) return '';
+  return '<div class="special-character-badge" title="' + escapeHtml(character.title) + '">' +
+    character.icon + ' SPECIAL CHARACTER · ' + escapeHtml(character.role) + '</div>';
+}
+function specialBirdCharacterPanelHTML(bird) {
+  const character = specialBirdCharacterFor(bird);
+  if (!character) return '';
+  return '<div class="special-character-panel"><div class="special-character-kicker">' +
+    character.icon + ' Special character · ' + escapeHtml(character.role) +
+    '</div><div class="special-character-title">' + escapeHtml(character.title) +
+    '</div><div class="special-character-copy">' + escapeHtml(character.description) +
+    (character.magicPower ? ' Magic power: ' + escapeHtml(character.magicPower) + '.' : '') +
+    ' Signature move: ' + escapeHtml(character.move) + '.</div></div>';
+}
 // Easter egg: every Herring Gull is called Steven. Nobody knows why.
 // Least of all Steven.
 function easterEggBirdName(bird) {
@@ -22726,6 +22809,8 @@ function renameCompanionBird(birdId) {
   // Clearing a Herring Gull's name is futile. He was always Steven.
   const eggName = !clean && easterEggBirdName(bird);
   if (eggName) bird.customName = eggName;
+  const resetCharacter = !clean && specialBirdCharacterFor(bird);
+  if (!eggName && resetCharacter) bird.customName = resetCharacter.defaultName;
   saveState();
   renderBirdex();
   renderAcademy();
@@ -22734,6 +22819,7 @@ function renameCompanionBird(birdId) {
   // Refresh the field-guide sheet in place if it is showing this bird.
   if ($('birdInfoModal')?.classList.contains('show') && $('birdInfoContent')?.dataset.currentBirdId === String(bird.id)) openBirdInfo(bird.id);
   showToast(eggName ? '✏️ No use. Every Herring Gull is Steven.'
+    : resetCharacter ? '✏️ ' + resetCharacter.title + ' keeps their special name.'
     : clean ? '✏️ Named ' + birdSpeciesLabel(bird) + ' “' + clean + '”' : '✏️ Name reset to ' + birdSpeciesLabel(bird));
 }
 // bird-bond-love-v256-20260812: every bird can be loved for itself. Each
@@ -36696,9 +36782,8 @@ function magpieMarketStock() {
   });
 }
 
-// The posted Market Trader haggles. Same shape as the Barracks' recruiting
-// discount, so a discount means the same thing wherever the player meets one:
-// a perfect bird takes about a quarter off, a vacant post pays full price.
+// The posted Market Trader haggles. An ordinary grandmaster takes about a
+// quarter off; The Market Magpie's special 3x multiplier cuts prices in half.
 function magpieMarketDiscount() {
   const mult = academyRoleMultiplier('magpie_market');
   return mult > 1 ? 1 / (1 + (mult - 1) * 0.5) : 1;
@@ -37885,7 +37970,7 @@ function birdFamilyAttrs(bird) {
 }
 function birdFamilyBadgeHTML(bird) {
   const meta = birdFamilyMeta(bird);
-  return '<div class="bird-family-badge" title="Bird family: ' + escapeHtml(meta.label) + '">' + meta.icon + ' ' + escapeHtml(meta.label) + '</div>';
+  return '<div class="bird-family-badge" title="Bird family: ' + escapeHtml(meta.label) + '">' + meta.icon + ' ' + escapeHtml(meta.label) + '</div>' + specialBirdCharacterBadgeHTML(bird);
 }
 function familyChipHTML(bird) {
   const meta = birdFamilyMeta(bird);
@@ -39816,6 +39901,7 @@ function showCaptureOverlay(bird) {
           <div class="card-art">
             <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>
             ${artHtml}
+            ${specialBirdCharacterBadgeHTML(bird)}
           </div>
           <div class="card-level">NEW · LV.${bird.level}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power}</div>
@@ -42022,7 +42108,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'trading-manager-gates-v346-20260903';
+const BURBZ_BUILD = 'rook-recognition-special-characters-v347-20260904';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

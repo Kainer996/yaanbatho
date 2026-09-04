@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "feeding-menu-banked-coins-v337-20260831"
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 PREVIOUS_RELEASE_PIN = "screen-swipe-v336-20260831"
 
 

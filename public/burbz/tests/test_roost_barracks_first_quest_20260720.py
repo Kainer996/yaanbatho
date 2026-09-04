@@ -15,7 +15,7 @@ ECONOMY_PATH = ROOT / "scan_economy_core.js"
 SW_PATH = ROOT / "sw.js"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
+ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
 
 def _node_json(source: str):

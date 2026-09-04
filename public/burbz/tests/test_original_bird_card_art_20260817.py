@@ -9,7 +9,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 INDEX = BURBZ / "index.html"
 CACHE = BURBZ / "bird-art-cache"
 SW = BURBZ / "sw.js"
-BUILD = "trading-manager-gates-v346-20260903"
+BUILD = "rook-recognition-special-characters-v347-20260904"
 
 
 def source_block(source: str, start_marker: str, end_marker: str) -> str:
@@ -21,11 +21,12 @@ def source_block(source: str, start_marker: str, end_marker: str) -> str:
 def test_card_art_snapshot_precedes_transparent_warrior_override():
     index = INDEX.read_text(encoding="utf-8")
     completion = index.index("Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);")
-    snapshot = index.index("const BUILT_IN_BIRD_CARD_ART = Object.freeze({ ...BUILT_IN_BIRD_ART });")
+    snapshot = index.index("const BUILT_IN_BIRD_CARD_ART = Object.freeze({")
     warrior_override = index.index("applyBurbzMangaWarriorArt20260803(BUILT_IN_BIRD_ART)")
 
     assert completion < snapshot < warrior_override
     assert "'Eastern Rosella': '/burbz/bird-art-cache/eastern_rosella_burbz_manga_20260630.png'" in index
+    assert "'Rook': '/burbz/bird-art-cache/rook_witch_blackfeather_hex_burbz_manga_20260904.png'" in index[snapshot:warrior_override]
 
 
 def test_framed_views_use_original_paintings_and_icons_keep_cutouts():

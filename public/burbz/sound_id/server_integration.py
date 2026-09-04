@@ -202,6 +202,41 @@ def _install_aggregate(namespace, original_analyse, original_aggregate):
     return wrapped_analyse, wrapped_aggregate
 
 
+def _install_species_mapping_guard(namespace):
+    """Keep incomplete game-catalogue rows from discarding valid model names.
+
+    Some national-completion profiles have a common name but no scientific
+    name. The legacy response mapper preferred that blank catalogue field over
+    BirdNET's valid scientific name and then hashed ``None``, turning an
+    accepted detection into HTTP 500. Supply only the missing catalogue fields
+    from the detection; complete catalogue rows retain their existing values.
+    """
+    original = namespace.get("_species_to_game_bird")
+    if not callable(original):
+        return None
+
+    @functools.wraps(original)
+    def wrapped(scientific_name, common_name, confidence, catalog_entry):
+        detected_scientific = str(scientific_name or "").strip()
+        detected_common = str(common_name or "").strip()
+        safe_scientific = detected_scientific or detected_common or "Unknown bird"
+        safe_common = detected_common or detected_scientific or "Unknown bird"
+        safe_entry = catalog_entry
+        if isinstance(catalog_entry, dict):
+            catalogue_scientific = str(catalog_entry.get("latin_name") or "").strip()
+            catalogue_common = str(catalog_entry.get("common_name") or "").strip()
+            if not catalogue_scientific or not catalogue_common:
+                safe_entry = dict(catalog_entry)
+                safe_entry["latin_name"] = catalogue_scientific or safe_scientific
+                safe_entry["common_name"] = catalogue_common or safe_common
+        return original(
+            safe_scientific, safe_common, confidence, safe_entry
+        )
+
+    namespace["_species_to_game_bird"] = wrapped
+    return wrapped
+
+
 def _install_response_provenance(app) -> dict:
     """Attach the provider that actually served, including failed/empty scans."""
     from flask import request
@@ -301,6 +336,9 @@ def install(namespace: MutableMapping[str, Any], *, mode: str) -> dict:
         wrappers = (_install_direct(namespace, original_analyse),)
     else:
         wrappers = _install_aggregate(namespace, original_analyse, original_aggregate)
+    species_mapping_guard = _install_species_mapping_guard(namespace)
+    if species_mapping_guard is not None:
+        wrappers = (*wrappers, species_mapping_guard)
     _install_response_provenance(app)
 
     state = {

@@ -18,9 +18,9 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
+ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
 # The intended curve, in full. A change to any gate is a design decision and
 # should be made here on purpose, not slip through by accident.

@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "trading-manager-gates-v346-20260903"
+CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -42,11 +42,11 @@ EDITED_CORES = ("loot_crafting_core.js",)
 # bird_roles_core.js was edited by this release too, but free-birds-v318 then
 # retired the Head Gardener and re-pinned it. A core carries the tag of the
 # release that last touched it, so it is checked separately below.
-ROLES_CORE_PIN = "manager-builds-the-village-v324-20260825"
+ROLES_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 # academy_treehouse_core.js the same story: iron-ingot-errand-v326 added the
 # Foundry Ingot Pour errand to it, so it now carries that tag instead.
-ACADEMY_CORE_PIN = "trading-manager-gates-v346-20260903"
-ACADEMY_PRESENTATION_PIN = "trading-manager-gates-v346-20260903"
+ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
+ACADEMY_PRESENTATION_PIN = "rook-recognition-special-characters-v347-20260904"
 
 
 def html_text() -> str:
@@ -300,6 +300,37 @@ console.log(JSON.stringify({ vacant, staffed, discount: magpieMarketDiscount() }
     # at best, never a giveaway.
     assert 0.70 <= out["discount"] <= 0.76
     assert out["staffed"] > out["vacant"] // 2
+
+
+def test_the_market_magpie_gets_a_dramatic_market_only_boost():
+    out = run_node("""
+const roles = require(%s);
+const market = roles.academyRoleForRoom('magpie_market');
+const library = roles.academyRoleForRoom('library');
+const magpie = { id:'magpie', commonName:'Magpie', scientificName:'Pica pica', cha:40, int:40 };
+const expert = { id:'expert', commonName:'Robin', cha:250, int:250 };
+const renamedRobin = { id:'renamed', commonName:'Robin', name:'Magpie', cha:250, int:250 };
+const marketFx = roles.roleEffectiveness(magpie, market);
+const libraryFx = roles.roleEffectiveness(magpie, library);
+const ranked = roles.rankCandidates([expert, magpie], market).map(row => row.bird.id);
+console.log(JSON.stringify({ marketFx, libraryFx, renamedFx:roles.roleEffectiveness(renamedRobin, market), ranked }));
+""" % json.dumps(str(ROLES_CORE)))
+    assert out["marketFx"]["multiplier"] == 3
+    assert out["marketFx"]["bonusPct"] == 200
+    assert out["marketFx"]["specialBoost"] is True
+    assert out["libraryFx"]["multiplier"] < 3, "the boost belongs only to the marketplace"
+    assert out["libraryFx"]["specialBoost"] is False
+    assert out["renamedFx"]["multiplier"] < 3, "a nickname cannot impersonate the special Magpie"
+    assert out["renamedFx"]["specialBoost"] is False
+    assert out["ranked"][0] == "magpie", "the assignment sheet must put the special choice first"
+
+    quote = run_node(market_harness("""
+roleMultiplier = 3;
+const ordinary = 500;
+const special = magpieMarketBuyQuote('phoenix_ember', 1).each;
+console.log(JSON.stringify({ ordinary, special, discount: magpieMarketDiscount() }));
+"""))
+    assert quote == {"ordinary": 500, "special": 250, "discount": 0.5}
 
 
 # ---------------------------------------------------------------------------
