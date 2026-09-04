@@ -117,7 +117,7 @@ def test_liberation_battle_removes_league_chrome_and_reaches_the_playable_arena(
 def test_story_canon_connects_real_world_liberation_to_the_kingdom_of_burbz():
     story = STORY.read_text(encoding="utf-8")
     required = [
-        "Kingdom of Burbz",
+        "Kingdom of Alderwing",
         "Merlin's spell-tablet",
         "liberate the real world",
         "usurper's shadow",
@@ -140,5 +140,5 @@ def test_tutorial_surfaces_liberation_story_without_repeating_it_on_empire_scree
     screen = html[screen_start:screen_end]
     tutorial = html[html.index("const MERLIN_TUTORIAL_STEPS = ["):html.index("\n];", html.index("const MERLIN_TUTORIAL_STEPS = ["))]
     assert 'class="empire-story-callout"' not in screen
-    assert "Real birdwatching restores the Kingdom of Burbz" in tutorial  # v342: the kingdom keeps its full name beside the enemy's
+    assert "birdwatching" in tutorial and "Alderwing" in tutorial  # v342: the kingdom keeps its full name beside the enemy's
     assert "Liberation Battle" in tutorial

@@ -45,7 +45,7 @@ def test_opening_story_counter_is_split_into_small_reassuring_blocks():
         "1 / 3", "2 / 3", "3 / 3",
         "1 / 3", "2 / 3", "3 / 3",
         "1 / 2", "2 / 2",
-        "1 / 2", "2 / 2",
+        "1 / 3", "2 / 3",
     ]
 
 

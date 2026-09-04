@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "rook-recognition-special-characters-v347-20260904"
+RELEASE_PIN = "alderwing-living-settlements-v348-20260904"
 # This release's own marker stays on the cache lineage even after later
 # releases move BURBZ_BUILD on.
 OWN_RELEASE_PIN = "merlin-bond-meter-v197-20260802"
@@ -96,6 +96,7 @@ def test_core_grants_bond_for_feed_play_and_rest_and_levels_up():
         console.log(JSON.stringify({
           playBond: play.state.bondXp,
           restBond: rest.state.bondXp,
+          restedBond: core.completeMerlinRest(rest.state, now + core.MERLIN_REST_DURATION_MS).bondXp,
           feedOk: feed.ok,
           feedBond: feed.state.bondXp,
           leveledLevel: nearLevel.bondLevel,
@@ -104,7 +105,8 @@ def test_core_grants_bond_for_feed_play_and_rest_and_levels_up():
         """
     )
     assert out["playBond"] == 8
-    assert out["restBond"] == 3
+    assert out["restBond"] == 0
+    assert out["restedBond"] == 3
     assert out["feedOk"] is True
     assert out["feedBond"] == 5
     # 97 + 8 rolls the meter over into bond level 2 with 5 XP carried forward.

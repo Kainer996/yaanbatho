@@ -109,16 +109,15 @@ def test_feeding_is_taught_by_feeding_him():
     order = [s["title"] for s in story]
     needs = next(s for s in story if s["target"] == ".merlin-care-status")
     diet = next(s for s in story if s["target"] == "#merlinDietGuidance")
-    assert "hungry" in needs["text"].lower()
-    assert "primary meal" in diet["text"].lower() and "small-bird prey" in diet["text"].lower()
-    assert "secondary meal" in diet["text"].lower() and "not ideal" in diet["text"].lower()
+    assert all(word in needs["text"].lower() for word in ("food", "play", "rest"))
+    assert "proper meal" in diet["text"].lower() and "small-bird prey ration" in diet["text"].lower()
     # 4. The player presses Feed themselves.
     feed = by_event["merlin-fed"]
     assert feed["target"] == "#merlinFeedBtn"
-    # 5. Merlin closes the lesson on accurate diets and teases the Kitchen.
+    # 5. Merlin thanks the player and explains the visible result.
     after = story[order.index(feed["title"]) + 1]
-    assert "diet must be accurate" in after["text"].lower()
-    assert "kitchen" in after["text"].lower()
+    assert "food bar" in after["text"].lower()
+    assert "thank you" in after["text"].lower()
     # The whole lesson runs in the order above.
     assert order.index(tap["title"]) < order.index(needs["title"]) < order.index(diet["title"])
     assert order.index(diet["title"]) < order.index(feed["title"])
@@ -215,7 +214,7 @@ def test_the_tutorial_owns_the_care_menu_for_the_whole_feeding_lesson():
     """
     html = HTML.read_text(encoding="utf-8")
     assert "function merlinTutHoldsCareMenu()" in html
-    assert "const MERLIN_CARE_STEP_TARGETS = ['.merlin-care-status', '#merlinDietGuidance', '#merlinFeedBtn', '#merlinCareMenu'];" in html
+    assert "const MERLIN_CARE_STEP_TARGETS = ['.merlin-care-status', '#merlinDietGuidance', '#merlinFeedBtn', '#merlinPlayBtn', '#merlinRestBtn', '#merlinCareMenu'];" in html
     # Both ways the menu can be closed are gated on the lesson, not on an
     # armed action (which is null while Merlin is merely talking).
     assert "if (merlinTutHoldsCareMenu()) return;" in html
@@ -229,11 +228,11 @@ def test_the_tutorial_owns_the_care_menu_for_the_whole_feeding_lesson():
     ensure = html[html.index("function merlinTutEnsureCareMenuOpen()"):]
     assert "burbzTutorialAction" not in ensure[:ensure.index("\n}")]
     # Every care-lesson step targets something inside the menu.
-    care_targets = {"#petSprite", ".merlin-care-status", "#merlinDietGuidance", "#merlinFeedBtn", "#merlinCareMenu"}
+    care_targets = {"#petSprite", ".merlin-care-status", "#merlinDietGuidance", "#merlinFeedBtn", "#merlinPlayBtn", "#merlinRestBtn", "#merlinCareMenu"}
     story = steps_of("story")
     tap = next(i for i, s in enumerate(story) if s["target"] == "#petSprite")
-    feed = next(i for i, s in enumerate(story) if s["target"] == "#merlinFeedBtn")
-    for step in story[tap:feed + 1]:
+    rest = next(i for i, s in enumerate(story) if s["target"] == "#merlinRestBtn")
+    for step in story[tap:rest + 2]:
         assert step["target"] in care_targets, step["title"]
 
 
@@ -243,9 +242,10 @@ def test_the_diet_panel_keeps_its_id_across_renders():
     html = HTML.read_text(encoding="utf-8")
     render = html[html.index("function renderMerlinCareMenu()"):]
     render = render[:render.index("\n}")]
-    assert "menu.querySelector('.merlin-diet-guidance')" in render
-    assert "guidance.id = 'merlinDietGuidance'" in render
-    # The disclosure itself still emits no id, which is why the re-stamp exists.
+    assert "const guidance = $('merlinDietGuidance')" in render
+    assert "guidance && !guidance.querySelector('details')" in render
+    assert "Why this food?" in render
+    # The stable parent is reused; care ticks preserve disclosure and focus.
     disclosure = html[html.index("function renderDietDisclosureHTML(subject, surface, options = {})"):]
     assert "id=\"merlinDietGuidance\"" not in disclosure[:2000]
 
@@ -259,8 +259,8 @@ def test_a_chapter_ended_by_a_tab_tap_hands_over_to_the_next_chapter():
 
 
 def test_the_flow_still_covers_every_beat_the_design_asks_for():
-    assert "never be stuck for something to do" in chapter_copy("story")
-    assert "crafting gear" in chapter_copy("errand")
+    assert "a next little adventure" in chapter_copy("story")
+    assert "crafting material" in chapter_copy("errand")
     assert "instantly this time round" in chapter_copy("academy")
     tour = chapter_copy("academy_tour")
     for term in ("barracks", "kitchen", "hospital", "training", "crowbar", "player quests"):
@@ -270,8 +270,9 @@ def test_the_flow_still_covers_every_beat_the_design_asks_for():
     # burbz-empire-three-pages-v343-20260901: the finale hands off to the player
     # chain (open the Empire map, free the cradle village with Merlin) instead
     # of deferring liberation and steering the player to Scan first.
-    assert "empire map" in explore and "free the village" in explore
-    assert "kingdom of burbz flies with you now" in explore
+    assert "player quests" in explore and "free villages" in explore
+    assert "alderwing" in explore and "bird neighbours" in explore
+    assert "when you are ready" in explore
 
 
 def test_free_mode_always_leaves_a_way_out():

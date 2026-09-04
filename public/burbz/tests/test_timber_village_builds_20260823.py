@@ -31,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
@@ -231,8 +231,10 @@ def test_the_shortfall_line_names_the_source_of_what_is_missing():
 
 def test_the_3d_village_reads_the_three_steps():
     html = HTML.read_text(encoding="utf-8")
-    assert "villageMakeSettlerHome(er, pal, level >= 3)" in html
-    assert "if (level === 2) home.scale.set(1, 1.12, 1.55);" in html
+    model = (ROOT / 'settlement_models.js').read_text(encoding='utf-8')
+    assert "BurbzSettlementModels.building(THREE, b.id, level" in html
+    assert "stoneHome=id==='cabin'&&level>=3" in model
+    assert "if(id==='cabin'){w=level>=2?4.1:3" in model
     assert "Timber Longhouse" in html
 
 

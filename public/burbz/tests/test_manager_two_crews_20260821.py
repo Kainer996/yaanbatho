@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "rook-recognition-special-characters-v347-20260904"
+RELEASE_PIN = "alderwing-living-settlements-v348-20260904"
 
 
 def function_source(name: str) -> str:
@@ -176,8 +176,9 @@ def test_the_yard_shows_its_crews_and_names_the_way_to_a_second():
 
 
 def test_both_scenes_raise_one_scaffold_per_crew():
-    village = HTML[HTML.index("const pendingCon = villageConstructionOf(econRec, b.id);"):]
-    assert "const rising = !!pendingCon;" in village[:200]
+    village = HTML[HTML.index("pending = villageConstructionOf(econRec, b.id)"):]
+    assert "if (pending)" in village[:200]
+    assert "villageMakeConstructionSite(er, pal, constructionProgress(pending), pending)" in village[:500]
     town = HTML[HTML.index("// A build rising in the ward rises in the town too"):]
     assert "(dState.constructions || []).forEach(con => {" in town[:400]
 

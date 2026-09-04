@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 
@@ -213,10 +213,11 @@ def test_the_copy_teaches_homes_first_and_villager_crews():
 
 def test_the_settler_home_rises_in_the_3d_village():
     html = HTML.read_text(encoding="utf-8")
-    assert "function villageMakeSettlerHome(" in html
-    assert "b.id === 'cabin'" in html
-    assert "level >= 3 ? '🏠 Stone Cottage' : (level === 2 ? '🏡 Timber Longhouse' : '🛖 Timber Cabin')" in html
-    assert "villageMakeSettlerHome(er, pal, level >= 3)" in html
+    assert "BurbzSettlementModels.building(THREE, b.id, level, er, pal)" in html
+    assert "villageBuildingTier(b, level).name" in html
+    model = (ROOT / "settlement_models.js").read_text(encoding="utf-8")
+    assert "stoneHome=id==='cabin'&&level>=3" in model
+    assert "if(id==='cabin'){w=level>=2?4.1:3" in model
 
 
 def test_release_is_versioned_and_cache_lineage_kept():

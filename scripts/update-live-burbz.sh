@@ -44,6 +44,8 @@ FILES=(
   "building_discovery_core.js"
   "village_variation_core.js"
   "settlement_scene_core.js"
+  "settlement_life_core.js"
+  "settlement_models.js"
   "empire_map_core.js"
   "empire_realm_core.js"
   "settlement_merge_core.js"

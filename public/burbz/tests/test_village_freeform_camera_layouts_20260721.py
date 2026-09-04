@@ -45,10 +45,10 @@ def test_camera_orbits_the_pan_target_and_drift_yields_to_the_player():
     assert "villageCamera.lookAt(tx, 1.4, tz)" in frame
     assert "tx + Math.sin(azimuth)" in frame
     assert "tz + Math.cos(azimuth)" in frame
-    # Idle drift only resumes once the player has let go of the camera.
-    assert "villageCam.lastInputAt" in frame
+    # The view now stays where the player leaves it, and opens on paid roofs.
+    assert "villageCam.azimuth +=" not in frame
     builder = scene_builder(html)
-    assert "villageCam.tx = 0; villageCam.tz = 0;" in builder
+    assert "villageCam.tx = builtCenter.x" in builder
 
 
 def test_villages_are_not_all_rings_around_a_point():
@@ -62,11 +62,9 @@ def test_villages_are_not_all_rings_around_a_point():
     # The high street stays clear of buildings and carves a pass in the hills.
     assert "the high street runs straight through" in builder
     assert "the high street leaves through a single pass" in builder
-    # Lane shopfronts stagger down the street; hamlet trades scatter freely.
-    assert "a row of gables rather than a ring" in builder
-    assert "each trade settles wherever the ground allows" in builder
-    # Even the classic green is jittered out of a neat circle.
-    assert "not a circle" in builder
+    # Paid buildings get clear plots; landscape plans no longer seed shops.
+    assert "const econScatter" in builder and "spotFree(x, z, rad)" in builder
+    assert "villageMakeTradeShop(" not in builder
 
 
 def test_each_village_still_varies_from_its_neighbours():

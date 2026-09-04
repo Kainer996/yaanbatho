@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 MERGE_CORE = ROOT / "settlement_merge_core.js"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 # The release immediately before this one. Ava's walking-villagers work took
 # v310 on main while this branch was open, so this became v311.
 PREVIOUS_RELEASE_PIN = "walking-villagers-cottage-variety-v310-20260823"
@@ -311,7 +311,7 @@ def test_the_well_is_timber_in_name_icon_and_mesh():
     assert "Stone Well" not in html
     assert "🪣 Timber Well" in html      # the 3D sign agrees with the card
     # The collar is staved wood now, not dressed stone.
-    assert "// A staved timber collar, not dressed stone" in html
+    assert "Math.sin(a)*.63,.50,Math.cos(a)*.63,shade(p.wood" in (ROOT / "settlement_models.js").read_text(encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------

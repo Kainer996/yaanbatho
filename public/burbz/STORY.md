@@ -2,17 +2,17 @@
 
 ## The first law — the name of the enemy
 
-**Burbz is the name of the evil ones. The Z is for zombie.** The Burbz are zombie birds — dead bird-shapes raised and driven by the usurper's shadow magic — and they have taken over the kingdom. The game carries their name because they are the task: **save the world from the Burbz.** The realm they hold bears their name too, and every liberation takes a piece of it back.
+**Burbz is the name of the evil ones. The Z is for zombie.** The Burbz are zombie birds — dead bird-shapes raised and driven by the usurper's shadow magic — and they have taken over the kingdom. The game carries their name because they are the task: **save the world from the Burbz.** The friendly kingdom is **Alderwing** (chosen by Yaan on 2026-09-04); every liberation takes a piece of it back. Burbz remains the game brand and enemy name.
 
 The player's own birds are never Burbz. They are living, free birds — **birds** and **companions**, the heroes of the story. Every other law in this canon stands under this one.
 
 ## The two worlds
 
-The **Kingdom of Burbz** is the Earth of another universe in the multiverse — the same continents, the same seas — but there the dominant species are birds. It is a bird-led magical realm bound to the player's real world. A dark force has taken the kingdom: the **evil Burbz**, zombie birds raised by shadow magic, with burning red eyes, serving a usurper who has spread darkness across the realm, trapping towns beneath an occupying spell and dimming the paths between them.
+The **Kingdom of Alderwing** is the Earth of another universe in the multiverse — the same continents, the same seas — but there the dominant species are birds. It is a bird-led magical realm bound to the player's real world. A dark force has taken the kingdom: the **evil Burbz**, zombie birds raised by shadow magic, with burning red eyes, serving a usurper who has spread darkness across the realm, trapping towns beneath an occupying spell and dimming the paths between them.
 
-The last free birds gather around Merlin, a wizard Merlin falcon. His final spell hurled **Merlin's spell-tablet** across the multiverse into our universe, where it becomes the player's phone and the Burbz app. The player is the one Merlin has chosen: the only being who can unlock the darkness that has swallowed the Kingdom of Burbz.
+The last free birds gather around Merlin, a wizard Merlin falcon. His final spell hurled **Merlin's spell-tablet** across the multiverse into our universe, where it becomes the player's phone and the Burbz app. The player is the one Merlin has chosen: the only being who can unlock the darkness that has swallowed the Kingdom of Alderwing.
 
-The two maps are linked. When the player helps to **liberate the real world**, the corresponding part of the Kingdom of Burbz wakes as well. Every real journey therefore advances the main story rather than sitting beside it.
+The two maps are linked. When the player helps to **liberate the real world**, the corresponding part of the Kingdom of Alderwing wakes as well. Every real journey therefore advances the main story rather than sitting beside it.
 
 ## The Liberation Map
 
@@ -20,7 +20,7 @@ The two maps are linked. When the player helps to **liberate the real world**, t
 - Around a liberated sanctuary the **darkness lifts**, revealing the true medieval map beneath — parchment land, ink-lettered town names and no modern roads — ringed in light green.
 - Town and village icons appear when the player zooms close enough to inspect liberated places.
 - The fantasy of travelling abroad is a major part of Burbz. Taking the app to another country literally reveals and restores a new piece of the world.
-- The long-term objective is global: the player and their flock can awaken the whole map, restoring the Kingdom of Burbz region by region.
+- The long-term objective is global: the player and their flock can awaken the whole map, restoring the Kingdom of Alderwing region by region.
 
 ## How a town is liberated
 
@@ -38,10 +38,12 @@ Battle is therefore a story mechanic, not a disconnected league minigame: traini
 
 ## The village folk — who lives in the freed towns
 
-The birds are the heroes of this story. But the villages they free are not empty. The **village folk** live there: a small, sturdy, human-like people of the Kingdom of Burbz. They look a little like the humans of our universe, but they are a different species altogether — and they are nowhere near as clever as the birds. They cannot work magic. They cannot fight the evil Burbz. They never lead. They farm, they fell, they dig, they trade, and they are content.
+The villages are home to **bird inhabitants**: robins, sparrows, blackbirds and other ordinary neighbours with names, homes and work. Their lives are why restoration matters. This 2026-09-04 direction replaces the older human-like village-folk concept.
 
-- Village folk are **residents and workers, never protagonists**. Named speaking parts belong to birds. The folk are the quiet life of a settlement: figures crossing the square, a crew at the quarry, smoke over a cabin roof.
-- Under the usurper the folk did not resist — they endured. The birds and the player liberate their homes *for* them. Gratitude, not command, is why they move back in, work the yards and pay their taxes.
+- Residents belong to the saved population, with persistent identities, home capacity and jobs from the existing workforce ledger. They are inhabitants, not automatically recruited flock companions or new Birdex discoveries.
+- They leave their actual homes, walk to assigned workplaces, work, take breaks on the green and return home. At night their windows glow while they sleep. A missing home or workplace is an honest vacancy, never a made-up building.
+- The scene shows a bounded sample of that real census; the remaining residents can be indoors. Visual routines do not change taxes, growth, production clocks or offline penalties.
+- When the player frees a village, safe homes and useful yards give its bird neighbours a reason to return. A new roof and a familiar face are the visible rewards of restoration.
 - Every producing yard needs **villagers to run it**. A yard with no crew stands idle, and a half-manned one does half the work: post two of the Miners' Hut's three and it digs two thirds of the rock. Homes come first: no homes, no folk; no folk, no stone.
 - The folk build the way the folk are: **timber first, stone later**. A freed village's first roof is a log Timber Cabin. It stretches into a Timber Longhouse when the family grows — still logs, still no stone, because a village has no quarry to cut from. The Stone Cottage above it is bought with stone the village's own miners dug.
 - **The folk live off what they grow.** Nothing on a village's table appears by magic: staffed yards bank their food in the granary, wells refill the cistern, and every villager eats and drinks each tax day. The liberation caravan leaves relief supplies for the first days; after that the stores must be earned. When the granary runs dry the folk go hungry, pay a trickle and drift away — and a governor can answer with a paid supply cart or a deep-cellared Storehouse.
@@ -81,7 +83,7 @@ Towns and cities are the street-level layer of the realm; counties (below) are t
 
 The game stays deliberately simple — walk, listen, befriend, liberate — until the player's sanctuaries begin to knit together. Then, and only then, the realm layer wakes. The feudal ladder is a simplified Crusader Kings: **every tier is made of the tier below it**, never of loose villages — **County → Duchy → Kingdom → Empire**.
 
-- A Town that reaches **120 folk at 75% happiness** earns its own **⭐ merge star**. When **three starred Towns** stand within 150 km of each other, the player merges them and **founds a County** — a rescued piece of the Kingdom of Burbz with the earliest-founded Town as its capital, run from its own County Hall: one chest, one Warden, one region-wide Upgrade order, and every town still visitable. A county stays a county however many Towns it holds; the higher titles are built from counties, not from loose village headcounts.
+- A Town that reaches **120 folk at 75% happiness** earns its own **⭐ merge star**. When **three starred Towns** stand within 150 km of each other, the player merges them and **founds a County** — a rescued piece of the Kingdom of Alderwing with the earliest-founded Town as its capital, run from its own County Hall: one chest, one Warden, one region-wide Upgrade order, and every town still visitable. A county stays a county however many Towns it holds; the higher titles are built from counties, not from loose village headcounts.
 - **Two Counties** whose capitals stand within 600 km unite into a **Duchy**; **two Duchies** within 2000 km proclaim a **Kingdom**; and **two Kingdoms** anywhere on Earth proclaim the **Empire of the Liberated Skies**. The earliest-founded member remains each title's seat, but the title receives its own unique proper name instead of copying that seat.
 - Towns inside a founded county prosper together: free neighbours share granaries, keep the roads safe and pay **unity taxes** into the royal strongbox — and the taxes rise as the county's liege chain climbs (+15% for a lone county, +20% under a duchy, +25% inside a kingdom, +30% beneath the empire).
 - The player's own style is the highest title they actually hold — from humble village keeper up through **Count, Duke and Monarch to Emperor of the Liberated Skies** — titles of stewardship, never of conquest: every crown is a promise kept to freed villages.
@@ -90,7 +92,7 @@ The game stays deliberately simple — walk, listen, befriend, liberate — unti
 - Every county keeps a **County Map** — a painted, Crusader-Kings-style chart of its lands: the border inked in the realm's colour, every settlement drawn in its place, lanes leading back to the capital, and the wild woods sketched beyond the frontier.
 - Once counties swear to a duchy or kingdom, the royal atlas paints their lands in the liege's own colour — one hue per realm, exactly as a Crusader Kings map reads. Free counties standing alone stay unpainted: the colours are the reward for uniting the realm.
 
-This is the long game: liberate villages into towns, unite towns into counties, counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Burbz wakes.
+This is the long game: liberate villages into towns, unite towns into counties, counties into duchies, duchies into kingdoms and kingdoms into the empire, and bind the realm together with trade — county by county, the whole Kingdom of Alderwing wakes.
 
 There is a market in all of this too. Anything in the Royal Stores can be sold to the traders: a masterwork from the Fletcher's Forge fetches real money — the rarer the piece, the dearer — while the small things a bird brings home, a pile of berries or a heap of sticks, go for pocket change. Selling is always the player's choice, never the best deal: a crafted blade is worth more on a companion's talon than on a trader's cart, and a berry is worth more in a hungry bird than in a purse.
 
@@ -122,7 +124,7 @@ the story you walk is shared.
 
 Every tale hides one **lore scroll** along its road, in the manner of the books
 of the old world's great libraries. Together they are the Feathered Folio —
-twenty documents of the Kingdom of Burbz: the cradle charter, the Academy's
+twenty documents of the Kingdom of Alderwing: the cradle charter, the Academy's
 founding, the last muster's orders, the sky-caravan waybills, the ward sister's
 receipts, the border-stone compact, a natural history of the evil Burbz, and at
 the last, Merlin's letter to the walker. Collected scrolls are kept and can be
@@ -225,10 +227,10 @@ The lesson mirrors the raven's law: keep the right bird for the right hour. A pl
 ## Canon terminology
 
 - **Burbz** names the enemy — the usurper's zombie flock, **the Z is for zombie**. Use **Burbz** or **evil Burbz** for them and for nothing else; the player's own birds are simply **birds** or **companions**.
-- Use **Kingdom of Burbz** for the magical realm — the Earth of another universe where birds are the dominant species. It carries its captors' name while they hold it.
+- Use **Kingdom of Alderwing** for the magical realm — the Earth of another universe where birds are the dominant species. Burbz names the zombie enemies, never this friendly kingdom or its living inhabitants.
 - Use **village folk** (or **villagers**) for the human-like people of the liberated settlements — a separate, simpler species than the birds, who are the realm's true minds and heroes.
 - Use **liberate**, **liberated**, **sanctuary**, **restore**, **awaken** and **free** for world progress.
-- The real world and the Kingdom of Burbz are magically linked through Merlin's spell-tablet.
+- The real world and the Kingdom of Alderwing are magically linked through Merlin's spell-tablet.
 - Avoid domination language for the player's actions; the player is freeing the world from the usurper's hold.
 
 - **The folk are always working, and the ledger is always open.** A holding earns by the minute, not by the clock chime. The governor takes what has piled up whenever they like — a quarter of a cycle pays a quarter of the taxes — and leaving it longer simply pays more, up to a full day's worth. Nothing is lost by collecting often, and nothing is conjured by tapping twice.

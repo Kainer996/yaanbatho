@@ -116,28 +116,29 @@ def test_quality_profiles_are_deterministic_and_device_appropriate():
     # v285: only a genuinely weak chip lands in "low" — and even low keeps
     # near-full sharpness and native-rate frames. A phone-sized screen alone
     # must never soften the render (that was the v281 regression).
+    # v348 aligns these older expectations with the unchanged maintained core.
     assert profiles["low"] == {
         "tier": "low",
         "maxDpr": 1.75,
         "shadowSize": 1024,
         "frameInterval": 0,
-        "maxAmbientActors": 8,
+        "maxAmbientActors": 14,
         "maxLabels": 3,
     }
     assert profiles["medium"] == {
         "tier": "medium",
         "maxDpr": 2,
-        "shadowSize": 2048,
+        "shadowSize": 1536,
         "frameInterval": 0,
-        "maxAmbientActors": 18,
-        "maxLabels": 5,
+        "maxAmbientActors": 24,
+        "maxLabels": 6,
     }
     assert profiles["high"] == profiles["highAgain"] == {
         "tier": "high",
         "maxDpr": 2,
         "shadowSize": 2048,
         "frameInterval": 0,
-        "maxAmbientActors": 32,
+        "maxAmbientActors": 40,
         "maxLabels": 8,
     }
 

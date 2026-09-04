@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "rook-recognition-special-characters-v347-20260904"
+RELEASE_PIN = "alderwing-living-settlements-v348-20260904"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 

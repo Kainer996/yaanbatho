@@ -134,7 +134,7 @@ def test_current_diet_and_hunger_release_is_query_busted_and_precached():
     sw = SW.read_text(encoding="utf-8")
     versions = {
         "bird_diet_hunger_core.js": "mallard-true-diet-v237-20260809",
-        "merlin_companion_core.js": "release-polish-v342-20260901",
+        "merlin_companion_core.js": "alderwing-living-settlements-v348-20260904",
     }
     assert "two-side-snacks-v205-20260803" in sw
     for asset, marker in versions.items():

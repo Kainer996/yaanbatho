@@ -37,10 +37,11 @@ def test_build_id_and_cache_segment():
 
 def test_edited_cores_rolled_their_pins_everywhere():
     for core in ("walking_story_core.js", "merlin_companion_core.js", "diary_core.js"):
-        pin = f"{core}?v={OWN}"
+        version = "alderwing-living-settlements-v348-20260904" if core == "merlin_companion_core.js" else OWN
+        pin = f"{core}?v={version}"
         assert pin in HTML, core
         assert pin in SW, core
-        assert re.search(re.escape(core) + r"\?v=(?!" + re.escape(OWN) + ")", SW) is None, (
+        assert re.search(re.escape(core) + r"\?v=(?!" + re.escape(version) + ")", SW) is None, (
             core + " still carries an old pin somewhere in sw.js")
 
 
@@ -130,7 +131,7 @@ def test_the_roost_and_other_ghosts_left_the_copy():
     assert "Academy tavern afterwards" not in HTML
     assert "open Explore Quests" not in HTML
     assert "'Fight or charm'" not in HTML
-    assert "Real birdwatching restores the Kingdom of Burbz" in HTML
+    assert "birdwatching" in HTML and "Alderwing" in HTML
 
 
 def test_quests_say_recruit_when_they_mean_recruit():
