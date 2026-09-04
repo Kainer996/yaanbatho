@@ -81,6 +81,8 @@ const durableSaveState = () => { if (failDurableSave) throw new Error('storage f
 const saveState = () => {}; const updateHeader = () => {}; const renderVillage = () => {}; const renderTownScreen = () => {};
 const SFX = { questComplete: () => {} }; const vibrate = () => {};
 const showToast = t => toasts.push(t);
+const goalWithThe = name => 'the ' + name;
+const showResourceQuestPrompt = (kind, amount) => toasts.push('Need ' + amount + ' ' + kind);
 const formatBuildDuration = () => 'soon';
 let villageActive = null, villageBuiltSeed = null;
 """

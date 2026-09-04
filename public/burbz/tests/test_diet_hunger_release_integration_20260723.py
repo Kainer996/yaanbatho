@@ -31,7 +31,7 @@ PINNED_RUNTIME_ASSETS = {
     "diet_hunger_core.js": RELEASE_PIN,
     # Rolled by release-polish-v342: Merlin's tips stopped naming the retired
     # Roost and now free villages, not towns.
-    "merlin_companion_core.js": "release-polish-v342-20260901",
+    "merlin_companion_core.js": "alderwing-living-settlements-v348-20260904",
 }
 BUILD_ONLY_ASSETS = ["data/bird-diet-records.json"]
 # The runtime diet payload now carries a real source-backed record for EVERY

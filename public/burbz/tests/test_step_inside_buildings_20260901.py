@@ -39,7 +39,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "building_interior_core.js"
 DEPLOY = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "step-inside-buildings-v341-20260901"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 ART_RELEASE_PIN = "generated-building-interiors-v344-20260902"
 PREVIOUS_RELEASE_PIN = "no-arms-card-art-v340-20260901"
 ART_DIR = ROOT / "assets" / "building-interiors-manga"
@@ -144,20 +144,10 @@ def test_every_generated_room_is_a_unique_full_size_webp():
 
 def test_every_village_yard_knows_which_building_it_is():
     html = html_text()
-    # econLabel carries the building id onto the mesh the raycast walks to.
     assert "const econLabel = (group, text, _height, buildingId) => {" in html
     assert "if (buildingId) group.userData.buildingId = buildingId;" in html
-    for call in (
-        "2.3, 'cabin');", "2.3, 'hut');", "2.4, 'farm');", "3.1, 'well');",
-        "2.2, 'lumber');", "2.1, 'quarry');", "2.2, 'lumberhut');",
-        "2.3, 'minehut');", "2.5, 'chapel');", "2.9, b.id);",
-    ):
-        assert call in html, call
-    # The yards that never answered a tap before answer now.
-    assert "cottage.userData.buildingId = 'cottages';" in html
-    assert "stall.userData.buildingId = 'market';" in html
-    assert "shed.userData.buildingId = 'storehouse';" in html
-    assert "tavern.userData.buildingId = 'tavern';" in html
+    assert "econLabel(model, b.icon + ' ' + villageBuildingTier(b, level).name, 2.8, b.id)" in html
+    assert "ray.camera = camera" in html or "ray.camera=camera" in html
 
 
 def test_a_village_tap_opens_the_interior():

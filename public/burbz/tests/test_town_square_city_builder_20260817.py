@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 PREVIOUS_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 
 
 def function_source(html: str, name: str) -> str:
@@ -78,15 +78,16 @@ def test_each_wards_real_buildings_stand_in_its_district_as_tagged_yards():
     assert "yard.userData.wardSeed = seed" in scene
     assert "yard.userData.buildingId = b.id" in scene
     assert "townEconBuildings.push(yard)" in scene
-    # Yards return with recovery, like everything else in a healing district.
-    assert "if (dRuin >= 1) {" in scene
+    # Saved completed levels, not decorative recovery stages, own the scene.
+    assert "if (!yardLevel) return" in scene
     # The charter stone is the Town Hall's own tap target.
     assert "standard.userData.townHallStone = true" in scene
     maker = function_source(html, "townMakeEconBuilding")
-    # Homes are not repeated — the quarter's cottages already show them.
-    for building_id in ("farm", "well", "tavern", "chapel", "lumber", "quarry", "market", "storehouse"):
-        assert f"'{building_id}'" in maker, building_id
-    assert "'cabin'" not in maker and "'cottages'" not in maker
+    # The shared model factory includes the ward's actual homes and yards.
+    assert "EMPIRE_BUILDING_INDEX[buildingId]" in maker
+    assert "BurbzSettlementModels.building(THREE, buildingId, level, dr, pal)" in maker
+    assert "buildingId === 'cottages' ? level : 1" in maker
+    assert "model.userData.homeId" in maker
 
 
 def test_taps_route_to_the_sheets_yard_first_then_town():
@@ -101,7 +102,7 @@ def test_taps_route_to_the_sheets_yard_first_then_town():
     assert "openEmpireVillage(" not in controls
     # The scene key rebuilds the square when a yard finishes rising.
     key_fn = function_source(html, "townSceneKey")
-    assert "EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)).join('')" in key_fn
+    assert "villageBuildingSceneKey(rec)" in key_fn
 
 
 # ---------------------------------------------------------------------------

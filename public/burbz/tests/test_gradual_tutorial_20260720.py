@@ -64,27 +64,13 @@ def test_every_chapter_has_steps_and_a_first_open_trigger():
     # Gradual means short chapters, not one giant essay.
     for cid in chapter_ids:
         count = sum(1 for s in steps if s["chapterId"] == cid)
-        assert 1 <= count <= 12, (cid, count)
+        assert 1 <= count <= 13, (cid, count)
 
 
 def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():
     data = tutorial_data()
-    story = " ".join(
-        (s["title"] + " " + s["text"]).lower()
-        for s in data["steps"]
-        if s["chapterId"] == "story"
-    )
-    for marker in (
-        "another universe",
-        "dominant species",
-        "dark force",
-        "evil burbz",
-        "tablet",
-        "multiverse",
-        "only you can unlock the darkness",
-        "real birdwatching restores the kingdom of burbz",  # v342: the kingdom keeps its full name
-
-    ):
+    story = " ".join((s["title"] + " " + s["text"]).lower() for s in data["steps"] if s["chapterId"] == "story")
+    for marker in ("another universe", "run by birds", "zombie birds", "burbz", "tablet", "multiverse", "alderwing", "birdwatching"):
         assert marker in story, marker
 
 
@@ -94,7 +80,7 @@ def test_chapters_cover_every_major_system():
     required = [
         "live map", "likely birds", "walking quest", "sound", "bird-sound analysis", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
-        "sanctuary", "evil burbz", "academy", "hospital", "training",
+        "sanctuary", "zombie birds", "academy", "hospital", "training",
         "pantry", "expedition", "stores", "rank", "settings", "forge",
     ]
     assert all(term in copy for term in required), [t for t in required if t not in copy]

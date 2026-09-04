@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 
@@ -137,7 +137,7 @@ def test_village_scene_lights_itself_from_the_grade():
     # light and hemisphere take their intensities from the grade.
     assert "tierCfg.op * daylight.stars" in scene
     assert "if (daylight.moon) {" in scene
-    assert "2.5 * daylight.torch" in scene
+    assert "villageRenderer.toneMappingExposure = daylight.exposure" in scene
     assert "new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, daylight.hemi)" in scene
     assert "new THREE.DirectionalLight(daylight.keyColor, daylight.keyIntensity)" in scene
     assert "villageFireflies.visible = daylight.stars > 0.4" in scene

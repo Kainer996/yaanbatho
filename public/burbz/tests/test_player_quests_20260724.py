@@ -153,7 +153,7 @@ def test_tutorial_introduces_player_quests():
     html = HTML.read_text(encoding="utf-8")
     assert "title:'Player Quests'" in html
     assert "target:'#playerQuestsList'" in html
-    assert "never wonder what to do next" in html
+    assert "next little adventure" in html
 
 
 def test_release_cache_is_bumped():

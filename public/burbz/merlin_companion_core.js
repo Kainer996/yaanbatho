@@ -104,7 +104,7 @@
     'I practise my heroic silhouette every sunset.',
     'We should explore somewhere new. Familiar worms grow complacent.',
     'My wand glows near birdsong and occasionally excellent biscuits.',
-    'The Kingdom of Burbz runs on courage, curiosity and pantry stock.',
+    'The Kingdom of Alderwing runs on courage, curiosity and pantry stock.',
     'I can make myself invisible. I simply stand behind a larger bird.',
     'That cloud looks like a dragon. The other one looks like lunch.',
     'I have declared this perch a sovereign wizard tower.',
@@ -147,6 +147,8 @@
   ];
 
   const ALL_MERLIN_LINES = BASE_CHATTER_LINES.concat(NEW_CHATTER_LINES, GAMEPLAY_TIPS);
+  const MERLIN_REST_DURATION_MS = 10000;
+  const MERLIN_PLAY_COOLDOWN_MS = 10000;
   const DEFAULT_MERLIN_CARE = Object.freeze({
     hunger: 20,
     happiness: 85,
@@ -160,6 +162,8 @@
     lastFedAt: null,
     lastPlayedAt: null,
     lastRestedAt: null,
+    restStartedAt: null,
+    restEndsAt: null,
     lastHungerAt: null,
     hungerTransactions: [],
     hungerTransactionLog: []
@@ -238,6 +242,9 @@
     const source = raw && typeof raw === 'object' ? raw : {};
     const time = Number(now) || Date.now();
     const hungerTransactions = normalizeHungerTransactions(source);
+    const restStartedAt = Math.max(0, Number(source.restStartedAt) || 0) || null;
+    const restEndsAt = restStartedAt && Number(source.restEndsAt) > restStartedAt
+      ? Math.min(Number(source.restEndsAt), restStartedAt + MERLIN_REST_DURATION_MS) : null;
     return {
       hunger: clamp(source.hunger === undefined ? DEFAULT_MERLIN_CARE.hunger : source.hunger, 0, 100),
       happiness: clamp(source.happiness === undefined ? DEFAULT_MERLIN_CARE.happiness : source.happiness, 0, 100),
@@ -251,6 +258,8 @@
       lastFedAt: Number(source.lastFedAt) || null,
       lastPlayedAt: Number(source.lastPlayedAt) || null,
       lastRestedAt: Number(source.lastRestedAt) || null,
+      restStartedAt: restEndsAt ? restStartedAt : null,
+      restEndsAt,
       lastHungerAt: Number(source.lastHungerAt) || time,
       hungerTransactions,
       hungerTransactionLog: normalizeHungerLog(source, hungerTransactions, time)
@@ -267,7 +276,7 @@
   }
 
   function tickMerlinCare(raw, elapsedMinutes, now) {
-    const state = sanitizeMerlinCare(raw, now);
+    const state = completeMerlinRest(raw, now);
     const time = Number(now) || Date.now();
     const elapsed = Math.max(0, time - state.lastHungerAt);
     const hunger = clamp(state.hunger + (elapsed / (24 * 60 * 60 * 1000)) * 100, 0, 100);
@@ -281,6 +290,18 @@
       lastCareAt: time,
       lastHungerAt: time
     }, now);
+  }
+
+  function completeMerlinRest(raw, now) {
+    const time = Number(now) || Date.now();
+    const state = sanitizeMerlinCare(raw, time);
+    if (!state.restEndsAt || time < state.restEndsAt) return state;
+    // Clear the saved nap before awarding anything: reloads and later ticks
+    // cannot finish the same rest twice.
+    return addBond(sanitizeMerlinCare({
+      ...state, energy:100, happiness:state.happiness + 3,
+      lastRestedAt:state.restEndsAt, restStartedAt:null, restEndsAt:null
+    }, time), 3);
   }
 
   function grantMerlinBondXp(raw, amount, now) {
@@ -315,7 +336,7 @@
 
   function applyMerlinCareAction(rawCare, rawPantry, action, now) {
     const time = Number(now) || Date.now();
-    const baseState = sanitizeMerlinCare(rawCare, time);
+    const baseState = completeMerlinRest(rawCare, time);
     const elapsed = Math.max(0, time - baseState.lastHungerAt);
     const state = sanitizeMerlinCare({
       ...baseState,
@@ -323,6 +344,7 @@
       lastHungerAt: time
     }, time);
     const pantry = { ...(rawPantry && typeof rawPantry === 'object' ? rawPantry : {}) };
+    if (state.restEndsAt) return { ok:false, state, pantry, message:'Shh… I am having a little wizard nap. I will be ready soon.' };
     if (action === 'feed') {
       if (state.hunger < 60) return { ok:false, state, pantry, consumed:{}, message:'Merlin is still full enough for today; no falcon food was spent.' };
       // A Merlin hunts small birds — pipits, larks, finches — so any
@@ -340,10 +362,13 @@
       return { ok:false, state, pantry, consumed:{}, message:'No falcon food ready - prepare a small-bird prey ration for Merlin first.' };
     }
     if (action === 'play') {
+      if (state.energy < 20) return { ok:false, state, pantry, message:'My wings need a little rest first.' };
+      if (state.lastPlayedAt && time - state.lastPlayedAt < MERLIN_PLAY_COOLDOWN_MS) return { ok:false, state, pantry, message:'That was fun! Give me a moment to catch my breath.' };
       return { ok:true, pantry, state:addBond(sanitizeMerlinCare({ ...applyHungerDelta(state, 6, 'merlin-play', time), happiness:state.happiness + 22, energy:state.energy - 12, lastCareAt:time, lastPlayedAt:time }, time), 8), message:'Merlin swoops after the wand-light — happiness up!' };
     }
     if (action === 'rest') {
-      return { ok:true, pantry, state:addBond(sanitizeMerlinCare({ ...state, happiness:state.happiness + 3, energy:state.energy + 28, lastCareAt:time, lastRestedAt:time }, time), 3), message:'Merlin tucks one foot up and restores his magic.' };
+      if (state.energy >= 95) return { ok:false, state, pantry, message:'Bright-eyed and ready! I do not need another nap.' };
+      return { ok:true, pantry, state:sanitizeMerlinCare({ ...state, restStartedAt:time, restEndsAt:time + MERLIN_REST_DURATION_MS, lastCareAt:time }, time), message:'One foot tucked up… ten seconds of wizard sleep. Stay with me.' };
     }
     return { ok:false, state, pantry, message:'Merlin does not know that care action.' };
   }
@@ -367,7 +392,10 @@
     GAMEPLAY_TIPS,
     ALL_MERLIN_LINES,
     DEFAULT_MERLIN_CARE,
+    MERLIN_REST_DURATION_MS,
+    MERLIN_PLAY_COOLDOWN_MS,
     sanitizeMerlinCare,
+    completeMerlinRest,
     tickMerlinCare,
     grantMerlinBondXp,
     applyMerlinExpeditionCompletion,

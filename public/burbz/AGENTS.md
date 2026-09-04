@@ -6,7 +6,15 @@
 > edges. Keep it that way — when you change how the project works, update this
 > file in the *same* commit.
 
-Current release: 2026-09-04 (`rook-recognition-special-characters-v347-20260904`) — **Rooks can be heard again, and three birds become true story characters.** The live sound logs exposed repeated HTTP 500 failures in the response mapper during Yaan's listening session. The national game catalogue's Rook row has no scientific name; when BirdNET V3 supplies its valid Rook label (`Corvus frugilegus`), the legacy mapper prefers that blank catalogue field and crashes while hashing `None`. `sound_id/server_integration.py` now fills only missing catalogue names from the model's detection before the old mapper sees them, preserving complete catalogue records and protecting every similarly incomplete species. Rook companions are now **The Rook Witch**, wear a SPECIAL CHARACTER · WITCH badge, get a field-guide character panel and cast the 118-power area signature **Blackfeather Hex**. Her new full card painting shows the spell exploding directly from her natural wings, with no human arms. The existing Steven is now explicitly **Steven the Herring Gull**, with the same badge/panel treatment and **Chip Raid**. A European Magpie becomes **The Market Magpie**; when appointed Market Trader it jumps to 3× effectiveness, leads the candidate list and cuts Magpie Market buying prices in half, while the bonus never leaks into another post or Australian Magpies. Player-chosen nicknames still win, while old local and cloud saves gain each character identity automatically. Contracts: `tests/test_sound_id_server_integration_20260729.py` reproduces the exact incomplete-Rook crash and proves the successful response; `tests/test_steven_the_gull_20260815.py` covers the three characters and the Rook art/move; `tests/test_magpie_market_20260824.py` proves the marketplace-only 3× boost and half-price trades.
+Current release: 2026-09-04 (`alderwing-living-settlements-v348-20260904`) — **Alderwing has bird neighbours, and the opening begins with friendship.** Yaan chose Alderwing for the friendly bird-led parallel Earth; Burbz remains the game and zombie-bird enemy name. The introduction video is preserved. Merlin's shorter, warmer story teaches a real meal, play, a saved ten-second nap, the existing first expedition and the first Academy building, then invites the player onwards at their own pace. Both coin displays hide throughout any active tutorial and return on close/skip; accounting is unchanged. Merlin's nap completes once across reload, blocks care/dispatch while sleeping and cannot be tapped repeatedly for energy/bond; play has an energy cost and short breather. First-flight bird selection is idempotent, fixing the beginner trap where tapping the already-selected Merlin disabled Send. His care menu fits short phones and keeps scientific food guidance behind “Why this food?”.
+
+Village/town buildings now come only from the saved completed-building ledger, saved uncleared ruins, actual construction projects and the earned civic Hall. All fifteen paid building types use the shared batched woodland renderer in `settlement_models.js`, with timber/stone progression, pitched roofs, doors, windows and working-yard details. Construction and upgrades keep their real actions. Camera context raycasts carry their camera, preventing Sprite selection failures. Town plots reserve actual building sizes, expand the ground when crowded and permit camera access to the expanded town. Trees yield around paid roofs; nature remains elsewhere.
+
+`settlement_life_core.js` owns the saved resident census and visual routines. Its workforce calculation preserves the existing food-first allocation. Each population member keeps an id/name/species, a capacity-backed home and an assigned job; removed buildings/capacity changes reconcile only displaced assignments. The renderer shows a bounded sample across wards, with actual doorway routes, work, leisure, home time and sleep. Routes compile once per scene and use rotated footprints, so bounding boxes do not falsely seal a neighbour's street. These routines never award resources or change economic/offline clocks. The dog faces its direction of travel and uses forward/back two-joint legs with planted stance and a sniffing pause; reduced motion is respected.
+
+Ordinary companions also receive a warmer welcome, a short existing species field note, visible bond titles and a personal story panel using recorded discovery/recruitment dates, saved names and sightings. Missing legacy history stays missing. Share a meal opens that bird's existing food sheet; no new chores, penalties or biological claims are introduced. County Hall, Warden, wholesale upgrades, the nested realm hierarchy and trade remain the established regional-management system, introduced only when earned. Tests: the new Merlin-rest, resident-life and companion-story suites plus the existing tutorial, economy, town/county and realm contracts. Phone browser evidence exercises care→reload→quest→Barracks, ordinary-bird naming/history/food, built-only selection and dense-city routes. Human enjoyment/retention still needs new-player feedback.
+
+Previous release: 2026-09-04 (`rook-recognition-special-characters-v347-20260904`) — **Rooks can be heard again, and three birds become true story characters.** The live sound logs exposed repeated HTTP 500 failures in the response mapper during Yaan's listening session. The national game catalogue's Rook row has no scientific name; when BirdNET V3 supplies its valid Rook label (`Corvus frugilegus`), the legacy mapper prefers that blank catalogue field and crashes while hashing `None`. `sound_id/server_integration.py` now fills only missing catalogue names from the model's detection before the old mapper sees them, preserving complete catalogue records and protecting every similarly incomplete species. Rook companions are now **The Rook Witch**, wear a SPECIAL CHARACTER · WITCH badge, get a field-guide character panel and cast the 118-power area signature **Blackfeather Hex**. Her new full card painting shows the spell exploding directly from her natural wings, with no human arms. The existing Steven is now explicitly **Steven the Herring Gull**, with the same badge/panel treatment and **Chip Raid**. A European Magpie becomes **The Market Magpie**; when appointed Market Trader it jumps to 3× effectiveness, leads the candidate list and cuts Magpie Market buying prices in half, while the bonus never leaks into another post or Australian Magpies. Player-chosen nicknames still win, while old local and cloud saves gain each character identity automatically. Contracts: `tests/test_sound_id_server_integration_20260729.py` reproduces the exact incomplete-Rook crash and proves the successful response; `tests/test_steven_the_gull_20260815.py` covers the three characters and the Rook art/move; `tests/test_magpie_market_20260824.py` proves the marketplace-only 3× boost and half-price trades.
 
 Deployment note: the first v347 promotion exposed a cold-start race in `scripts/install-birdnet-v3.sh`: systemd marked Burbz active before the two BirdNET models had opened port 5055, so the immediate proof falsely rolled the install back. The proof now waits up to 30 seconds for a valid JSON response before judging the deployment. If a promotion fails after copying public files but before publishing the new hash manifest, use `scripts/reconcile-interrupted-burbz-deploy.sh --dry-run` first; it opens the drift lock only when every changed previously managed live file is byte-identical to one explicitly pinned, clean copied commit, backs up the old manifest, then runs the normal updater at a separately pinned final commit. That final commit must change a managed `sound_id` module so the updater runs the transactional backend proof; v347.1 carries `INTERRUPTED_DEPLOY_RECOVERY_REVISION` for exactly that purpose. Never replace the manifest by hand or bless unknown live edits.
 
@@ -110,13 +118,14 @@ asset lives in [`LICENSING.md`](LICENSING.md).
 **The name law (first law of the canon):** Burbz names the ENEMY — the
 usurper's zombie flock, and the Z is for zombie. The game is named after the
 threat the player must save the world from. Player-facing copy must never call
-the player's own birds "Burbz"; they are birds and companions. The Kingdom of
-Burbz carries its captors' name while they hold it. Full canon: `STORY.md`,
+the player's own birds "Burbz"; they are birds and companions. Their friendly
+kingdom is Alderwing, following Yaan's 2026-09-04 decision. Full canon: `STORY.md`,
 "The first law".
 
-**The whole app is static.** There is no application server in this repo. It is
-HTML + vanilla JS + JSON data + a service worker. That is a feature: it can
-never break because a backend went down, because there is no backend.
+**The frontend is static and offline-first:** HTML, vanilla JS, JSON and a
+service worker. Sound recognition also has a production BirdNET V3 service
+and maintained `sound_id/` integration; verify its deployment proof rather
+than treating the historical “no backend” description as current.
 
 ---
 
@@ -342,6 +351,13 @@ If you remember nothing else, remember these:
 7. **No art comes from GitHub** — not in the game, not in the deploy. The LFS
    download allowance is 1 GB/month against ~1.6 GB of art, and exceeding it
    blocks the Pages deploy for everyone. (§5)
+8. **Settlement truth comes from the saved economy.** No decorative homes,
+   shops or invented population; resident routines and models do not change
+   resources, growth or offline consequences. Reconcile homes/jobs on load
+   and building/population changes; keep actor counts bounded on phones.
+9. **Tutorials are the coin-HUD exception.** Hide both displays while the
+   shared tutorial overlay is active, including replay and free-action steps;
+   restore them on dismissal without modifying the purse.
 
 ---
 

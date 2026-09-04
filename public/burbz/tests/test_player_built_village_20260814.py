@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 PREVIOUS_RELEASE_PIN = "night-veil-removed-v266-20260813"
 
 
@@ -28,32 +28,24 @@ def function_source(html, name):
 
 
 def test_trades_stay_shut_until_the_village_flourishes():
-    html = HTML.read_text(encoding="utf-8")
-    scene = function_source(html, "buildVillageScene")
-    # Shopfronts only rise at ruin stage 2 — never after the first build.
-    assert "if (ruinStage >= 2) shopKeys.forEach((k, i) => {" in scene
-    assert "if (ruinStage >= 1) shopKeys" not in scene
-    # The dovecote waits for the flourish too — nothing pre-built before it.
-    assert "if (ruinStage >= 2 && r() < 0.6) {" in scene
+    scene = function_source(HTML.read_text(encoding="utf-8"), "buildVillageScene")
+    assert "if (!level) return" in scene
+    assert "villageMakeTradeShop(" not in scene and "villageMakeDovecote(" not in scene
+    assert "BurbzSettlementModels.building(THREE, b.id, level" in scene
 
 
 def test_no_prebuilt_centrepiece_the_well_is_the_players():
-    html = HTML.read_text(encoding="utf-8")
-    scene = function_source(html, "buildVillageScene")
-    # The decorative centrepiece is gone from the village scene entirely.
+    scene = function_source(HTML.read_text(encoding="utf-8"), "buildVillageScene")
     assert "villageMakeCentrepiece" not in scene
-    # The Stone Well the governor builds takes the centre of the square...
-    assert "} else if (b.id === 'well') {" in scene
-    assert "well.position.set(0, 0, 0);" in scene
-    # ...and it only renders through the built-level gate like every yard.
-    assert "if (!level && !rising) return;" in scene
+    assert "b.id === 'well' ? {x:0,z:0}" in scene
+    assert scene.index("if (!level) return") < scene.index("b.id === 'well' ? {x:0,z:0}")
 
 
 def test_town_districts_follow_the_same_rule():
-    html = HTML.read_text(encoding="utf-8")
-    scene = function_source(html, "buildTownScene")
-    # A district's trade shopfront waits for its village to flourish.
-    assert "if (dRuin >= 2) {" in scene
+    scene = function_source(HTML.read_text(encoding="utf-8"), "buildTownScene")
+    assert "if (!yardLevel) return" in scene
+    assert "townMakeEconBuilding(b.id, yardLevel" in scene
+    assert "villageMakeCottage(" not in scene and "villageMakeTradeShop(" not in scene
 
 
 def test_release_is_versioned_and_cache_lineage_kept():

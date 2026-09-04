@@ -29,7 +29,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
 
 
@@ -77,7 +77,7 @@ def test_phone_sized_screens_render_at_full_sharpness_and_native_rate():
     for name, profile in profiles.items():
         assert profile["tier"] != "low", f"{name} must not be softened by screen size"
         assert profile["maxDpr"] == 2, name
-        assert profile["shadowSize"] == 2048, name
+        assert profile["shadowSize"] == 1536, name  # Maintained medium profile; screen sharpness is unchanged.
         assert profile["frameInterval"] == 0, f"{name} runs at native rate"
 
 

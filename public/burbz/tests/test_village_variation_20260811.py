@@ -26,7 +26,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 
 OWN_RELEASE_PIN = "village-variation-v260-20260813"
 PREVIOUS_RELEASE_PIN = "walking-story-quests-v249-20260811"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 
 
 def run_core(expression: str):
@@ -202,19 +202,15 @@ def test_buildings_read_the_dna_card():
         assert fragment in cottage, fragment
 
 
-def test_new_landmarks_join_the_shared_skyline_pool():
+def test_scenes_do_not_add_seeded_landmark_buildings():
     html = HTML.read_text(encoding="utf-8")
-    assert "function villageMakeShrine(" in html
-    assert "function villageMakeWatchtower(" in html
-    # ONE pool, shared by both scenes, indexed by the landmark ledger.
-    assert "const VILLAGE_LANDMARK_MAKERS = [villageMakeChurch, villageMakeWindmill, villageMakeManor, villageMakeRuinTower," in html
-    assert "villageMakeShrine, villageMakeWatchtower];" in html
-    scene = function_source(html, "buildVillageScene")
-    # The village places exactly the ledger's picks; no core = classic rolls.
-    assert "vvCore.landmarkPlan(v.seed, tier, VILLAGE_LANDMARK_MAKERS.length)" in scene
-    assert "lmPlan ? lmPlan.count" in scene
-    assert "VILLAGE_LANDMARK_MAKERS[lmPlan.picks[i]]" in scene
-    assert "landmarkPool.splice(Math.floor(r() * landmarkPool.length), 1)[0]" in scene
+    for name in ("buildVillageScene", "buildTownScene"):
+        scene = function_source(html, name)
+        assert "landmarkPlan(" not in scene
+        assert "VILLAGE_LANDMARK_MAKERS[" not in scene
+        assert "villageMakeDovecote(" not in scene
+        assert "cottageCount" not in scene
+        assert "const cottages =" not in scene
 
 
 def test_festival_cloth_is_dyed_in_the_villages_banners():
@@ -234,21 +230,10 @@ def test_town_quarters_replay_their_founders_visual_dice_but_stay_anonymous():
     scene = function_source(html, "buildTownScene")
     assert "vcore.villagePlan(seed, VILLAGE_PALETTES.length)" in scene
     assert "villageVariedPalette(VILLAGE_PALETTES[plan.paletteIndex], seed)" in scene
-    # Each ward builds in ITS palette (dpal), to its own tier. (The per-ward
-    # street plans retired with one-town-fixed-view-v277 — one cohesive town.)
-    for fragment in ("const dTier = plan ? plan.tier : 1;",
-                     "villageMakeCottage(dr, dpal)"):
-        assert fragment in scene, fragment
-    # One of the village's FOUND trades keeps a shopfront on the yard — since
-    # building-discovery-v284 a trade only shows once walked to in real life.
-    assert "discoveredVillageShopKeys(seed)" in scene
-    assert "townShopfrontKey(discoveredVillageShopKeys(seed), tradeRoll)" in scene
-    assert "villageMakeBuilding(tradeKey" in scene
-    # The district's landmark IS the village's signature from the ledger —
-    # and a village with no landmark gets an honest bare green, not a fake.
-    assert "vcore.landmarkPlan(seed, dTier, VILLAGE_LANDMARK_MAKERS.length)" in scene
-    assert "VILLAGE_LANDMARK_MAKERS[lmPlan.signature]" in scene
-    assert "lmPlan.signature !== null" in scene
+    # Each ward's actual homes and yards keep its palette after the merge.
+    assert "townMakeEconBuilding(b.id, yardLevel, dr, dpal)" in scene
+    assert "const yardLevel = villageBuildingLevel(wardRec, b.id);" in scene
+    assert "if (!yardLevel) return;" in scene
     # Source-village names retire at merger. One-town-fixed-view-v277 knits
     # the wards into a single town: no quarter signs, no geographic pads —
     # and still no route back into a consumed village.
@@ -281,14 +266,11 @@ def test_town_districts_mirror_their_villages_ruin_state():
     assert "devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2" in village_scene  # same rule
     scene = function_source(html, "buildTownScene")
     assert "const dState = villageDistrictState(seed);" in scene
-    # Wrecked and rebuilding districts show wreckage, not landmarks.
-    assert "if (dRuin < 2) {" in scene
-    assert "villageMakeWreckedBuilding(dr, dpal, dState.firstWreckKind || 'house')" in scene
+    # Saved uncleared ruins remain salvage piles at every recovery stage.
+    assert "if (ruin.cleared) return;" in scene
     assert "villageMakeRubblePile(dr, dpal)" in scene
-    # Trades, homes and landmarks all wait for stage 2 — a district shows
-    # nothing pre-built while its village is still rebuilding (v267).
-    assert "if (dRuin >= 2) {" in scene
-    assert "if (dRuin === 2) {" in scene
+    assert "villageMakeWreckedBuilding(" not in scene
+    assert "rubble.userData.ruinIndex = ruinIndex;" in scene
     # A build rising in the village rises in its district.
     # One scaffold per crew: a managed ward runs two projects, so the ward
     # scene walks the list rather than drawing a single site.

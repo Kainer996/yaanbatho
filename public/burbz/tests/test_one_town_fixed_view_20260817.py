@@ -27,7 +27,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "one-town-fixed-view-v277-20260817"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 
 
 def function_source(html: str, name: str) -> str:
@@ -65,10 +65,11 @@ def test_each_ward_still_wears_its_own_dna_and_recovery():
     scene = function_source(html, "buildTownScene")
     assert "villageVariedPalette(VILLAGE_PALETTES[plan.paletteIndex], seed)" in scene
     assert "const dState = villageDistrictState(seed);" in scene
-    assert "if (dRuin < 2) {" in scene       # wreckage until rebuilt
-    assert "if (dRuin >= 2) {" in scene      # trades wait for the flourish
-    assert "if (dRuin === 2) {" in scene     # homes wait for the flourish
-    assert "if (i < 8 && dRuin >= 1) {" in scene  # wrecked wards stay dark
+    assert "if (ruin.cleared) return;" in scene
+    assert "const yardLevel = villageBuildingLevel(wardRec, b.id);" in scene
+    assert "if (!yardLevel) return;" in scene
+    assert "if (i < 8 && dRuin >= 1) {" in scene
+
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +89,7 @@ def test_the_view_opens_on_a_fixed_city_builder_angle():
     assert "townCam.polar = 0.82;" in scene
     assert "townCam.dist = isCity ? 30 : 26;" in scene
     # The ground hugs the streets so the town fills the frame.
-    assert "const groundR = isCity ? 36 : 32;" in scene
+    assert "let groundR = isCity ? 36 : 32;" in scene
 
 
 # ---------------------------------------------------------------------------

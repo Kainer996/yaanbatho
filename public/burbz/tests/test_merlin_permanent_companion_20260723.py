@@ -52,10 +52,10 @@ def test_merlin_tamagotchi_menu_is_accessible_and_actionable():
         "function closeMerlinCareMenu(",
     ]:
         assert marker in html
-    assert "merlin_companion_core.js?v=release-polish-v342-20260901" in html
+    assert "merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904" in html
     sw = SW.read_text(encoding="utf-8")
     assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw
-    assert "./merlin_companion_core.js?v=release-polish-v342-20260901" in sw
+    assert "./merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904" in sw
     assert "./bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png" in sw
 
 
@@ -113,7 +113,10 @@ console.log(JSON.stringify({fed,refused,played,rested,ticked,empty,full}));
     assert out["refused"]["pantry"]["insects"] == 2
     assert out["fed"]["state"]["hunger"] <= out["refused"]["state"]["hunger"] < 1
     assert out["played"]["state"]["happiness"] > out["fed"]["state"]["happiness"]
-    assert out["rested"]["state"]["energy"] > out["played"]["state"]["energy"]
+    assert out["rested"]["state"]["energy"] == out["played"]["state"]["energy"]
+    assert out["rested"]["state"]["restEndsAt"] == 1190000
+    assert out["ticked"]["energy"] == 100
+    assert out["ticked"]["restEndsAt"] is None
     assert 0 <= out["ticked"]["hunger"] <= 100
     assert 0 <= out["ticked"]["happiness"] <= 100
     assert 0 <= out["ticked"]["energy"] <= 100

@@ -19,7 +19,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "building-discovery-v284-20260819"
 PREVIOUS_RELEASE_PIN = "offroad-side-quests-v283-20260818"
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 
 
 def run_node(script: str):
@@ -116,36 +116,18 @@ def test_walking_a_quest_uncovers_the_local_settlements_trades():
     assert "saveState()" in discover
 
 
-def test_village_scene_only_raises_found_trades_and_burns_every_draw():
+def test_discovered_trades_keep_their_controls_without_unbuilt_scene_shopfronts():
     html = HTML_PATH.read_text(encoding="utf-8")
-    scene = function_source(html, "buildVillageScene")
-    # The full trade list still rolls from the seed; the found set gates it.
-    assert "const shopKeys = villageShopKeysFor(v.seed);" in scene
-    assert "const openShopKeys = new Set(discoveredVillageShopKeys(v.seed));" in scene
-    # The flourish gate survives untouched.
-    assert "if (ruinStage >= 2) shopKeys.forEach((k, i) => {" in scene
-    # An undiscovered trade burns its rng draws and keeps its plot, so a new
-    # find pops in without moving a single other building.
-    assert "const discovered = openShopKeys.has(k);" in scene
-    assert scene.count("if (discovered)") >= 3
-    # A fresh discovery rebuilds the cached scene.
-    assert "villageBuiltShopsKey = discoveredVillageShopKeys(v.seed).join('.')" in scene
-    assert "villageBuiltShopsKey !== discoveredVillageShopKeys(v.seed).join('.')" in html
-    # The 2D fallback square honours the same ledger, with an honest hint.
+    village = function_source(html, "buildVillageScene")
+    town = function_source(html, "buildTownScene")
+    assert "openShopKeys" not in village
+    assert "shopKeys.forEach" not in village
+    assert "townShopfrontKey(" not in town
+    assert "villageMakeBuilding(tradeKey" not in town
+    # Discovery and its shops remain available outside the built-only 3D scene.
     fallback = function_source(html, "renderVillageFallback")
     assert "discoveredVillageShopKeys(currentVillage().seed)" in fallback
     assert "No trades found here yet" in fallback
-
-
-def test_town_square_deals_its_shopfront_from_found_trades_only():
-    html = HTML_PATH.read_text(encoding="utf-8")
-    scene = function_source(html, "buildTownScene")
-    # The trade die still burns while every shop waits to be found.
-    assert "const tradeRoll = dr();" in scene
-    assert "townShopfrontKey(discoveredVillageShopKeys(seed), tradeRoll)" in scene
-    assert "if (tradeKey) {" in scene
-    # A ward's new find rebuilds the cached square.
-    assert "'#s' + discoveredVillageShopKeys(v.seed).join('.')" in function_source(html, "townSceneKey")
 
 
 def test_doors_stay_shut_until_found_except_the_players_own_alehouse():

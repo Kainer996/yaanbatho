@@ -16,7 +16,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROOK_WITCH_ART = ROOT / "bird-art-cache" / "rook_witch_blackfeather_hex_burbz_manga_20260904.png"
 
-CURRENT_BUILD = "rook-recognition-special-characters-v347-20260904"
+CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 
