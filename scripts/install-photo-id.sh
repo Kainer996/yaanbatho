@@ -37,7 +37,10 @@ chown --reference="$ROOT/server.py" "$ROOT/photo_id.py"
 systemctl restart "$SERVICE"
 ready=0
 for attempt in $(seq 1 30); do
-  if curl -fsS --max-time 2 "$ORIGIN/api/health" >/dev/null; then ready=1; break; fi
+  # This backend has no /api/health. A camera POST without an image is a
+  # cheap, non-inference probe of the actual route we will verify next.
+  if PROBE=$(curl -sS --max-time 2 -X POST -d captureSource=camera -w '\n%{http_code}' "$ORIGIN/api/identify/image" 2>/dev/null) && \
+    printf '%s' "$PROBE" | "$PYTHON" -c 'import json,sys; body,status=sys.stdin.read().rsplit("\n",1); p=json.loads(body); sys.exit(0 if status=="400" and p.get("found") is False and p.get("message")=="No camera image received." else 1)' >/dev/null 2>&1; then ready=1; break; fi
   sleep 1
 done
 [[ $ready -eq 1 ]] || { echo 'Photo backend did not become healthy' >&2; exit 1; }
