@@ -1,8 +1,8 @@
 /* Saved residents and deterministic street routines. Never changes the economy. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BurbzSettlementLife=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
+  const peeps=typeof module==='object'&&module.exports?require('./peep_needs_core.js'):globalThis.BurbzPeepNeeds;
   const NAMES=['Pip','Rowan','Bramble','Wren','Fern','Hazel','Moss','Alder','Clover','Reed','Tansy','Ash','Sorrel','Thistle','Juniper','Flint','Willow','Lark','Cedar','Nettle','Briar','Oak'];
-  const SPECIES=['Robin','House Sparrow','Blackbird','Blue Tit','Wren','Goldfinch'];
   function hash(value){let n=2166136261;for(const c of String(value)){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return n>>>0;}
   const count=n=>Math.max(0,Math.min(1000,Math.floor(Number(n)||0)));
   function workforce(population,buildings,definitions){
@@ -22,8 +22,8 @@
       if(!p||typeof p.id!=='string'||!p.id.startsWith(prefix)||seen.has(p.id))return false;
       const n=Number(p.id.slice(prefix.length));if(!Number.isSafeInteger(n)||n<0)return false;
       serial=Math.max(serial,n+1);seen.add(p.id);return true;
-    }).slice(0,pop).map(p=>({id:p.id,name:typeof p.name==='string'?p.name.slice(0,36):NAMES[hash(p.id)%NAMES.length],species:SPECIES.includes(p.species)?p.species:SPECIES[hash(p.id+'bird')%SPECIES.length],homeId:p.homeId||null,jobId:p.jobId||null}));
-    while(residents.length<pop){const id=prefix+serial++;residents.push({id,name:NAMES[hash(id)%NAMES.length],species:SPECIES[hash(id+'bird')%SPECIES.length],homeId:null,jobId:null});}
+    }).slice(0,pop).map(p=>({id:p.id,name:typeof p.name==='string'?p.name.slice(0,36):NAMES[hash(p.id)%NAMES.length],kind:'humanoid',homeId:p.homeId||null,jobId:p.jobId||null,...(peeps?.sanitize(p.lifeMemory)?{lifeMemory:peeps.sanitize(p.lifeMemory)}:{})}));
+    while(residents.length<pop){const id=prefix+serial++;residents.push({id,name:NAMES[hash(id)%NAMES.length],kind:'humanoid',homeId:null,jobId:null});}
     // Keep existing households and crews where capacity still permits them.
     // Reassign only displaced/new residents, using the current paid buildings.
     for(const [field,slots] of [['homeId',homes],['jobId',jobs]]){
@@ -31,7 +31,9 @@
       for(const p of residents){if(available.get(p[field])>0)available.set(p[field],available.get(p[field])-1);else p[field]=null;}
       for(const p of residents){if(p[field])continue;const id=[...available.keys()].find(k=>available.get(k)>0);if(id!==undefined){p[field]=id;available.set(id,available.get(id)-1);}}
     }
-    return {version:1,nextId:serial,residents};
+    // v348's species labels described the wrong inhabitants. Reclassify the
+    // same people without changing their identity, home, job or serial counter.
+    return {version:2,nextId:serial,residents};
   }
   function homeSlots(buildings,definitions){
     return definitions.filter(b=>b.need==='shelter').flatMap(b=>{

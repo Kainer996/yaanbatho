@@ -77,10 +77,10 @@
     gilded_satchel:    { id:'gilded_satchel',     slot:'trinket', kind:'satchel', rarity:'epic',      label:'Gilded Satchel',     icon:'🎒', stats:{}, carryBonus:4, craftOnly:true, copy:'A balanced courier bag that carries four extra finds.' },
     royal_satchel:     { id:'royal_satchel',      slot:'trinket', kind:'satchel', rarity:'legendary', label:'Royal Satchel',      icon:'🎒', stats:{}, carryBonus:5, craftOnly:true, copy:'The finest expedition pack in the Kingdom: five extra finds.' },
     // --- Spells — an equipped scroll grants the bird an extra battle skill ---
-    ember_wisp:     { id:'ember_wisp',     slot:'spell', kind:'spell', rarity:'common',    label:'Ember Wisp',       icon:'🔥', stats:{}, spell:{ power:56, cd:2, kind:'attack' }, copy:'A darting mote of flame, eager to bite.' },
+    ember_wisp:     { id:'ember_wisp',     slot:'spell', kind:'spell', rarity:'common',    label:'Ember Wisp',       icon:'🔥', stats:{}, spell:{ power:56, cd:2, kind:'attack', splash:0.35 }, copy:'Aim a flame at one foe; embers strike adjacent cards at 35% strength.' },
     mending_light:  { id:'mending_light',  slot:'spell', kind:'spell', rarity:'uncommon',  label:'Mending Light',    icon:'💫', stats:{}, spell:{ power:0, cd:3, kind:'heal', healPct:0.28 }, copy:'Warm dawnlight knits feather and bone.' },
     frost_sigil:    { id:'frost_sigil',    slot:'spell', kind:'spell', rarity:'rare',      label:'Frost Sigil',      icon:'❄️', stats:{}, spell:{ power:68, cd:2, kind:'attack', rider:{ kind:'debuff', stat:'spd', pct:0.2, turns:2 } }, copy:'Rime creeps along the foe\'s wings.' },
-    tempest_scroll: { id:'tempest_scroll', slot:'spell', kind:'spell', rarity:'epic',      label:'Tempest Scroll',   icon:'⛈️', stats:{}, spell:{ power:62, cd:3, kind:'attack', aoe:true }, copy:'Unrolls into a storm that strikes every foe.' },
+    tempest_scroll: { id:'tempest_scroll', slot:'spell', kind:'spell', rarity:'epic',      label:'Tempest Scroll',   icon:'⛈️', stats:{}, spell:{ power:62, cd:3, kind:'attack', splash:0.55 }, copy:'Aim the storm; adjacent cards take a 55% strength splash.' },
     phoenix_chorus: { id:'phoenix_chorus', slot:'spell', kind:'spell', rarity:'legendary', label:'Phoenix Chorus',   icon:'🎶', stats:{}, spell:{ power:0, cd:4, kind:'heal', healPct:0.32, cleanse:true, teamWide:true }, copy:'The firebird\'s song mends the whole squad.' },
     // --- Potions — equipped brews used as bonus actions on their bird's turn ---
     tonic_of_vigour:{ id:'tonic_of_vigour',slot:'potion', kind:'potion', rarity:'common',    label:'Tonic of Vigour',  icon:'🧪', stats:{}, battle:{ healPct:0.3 }, copy:'A bracing berry tonic — restore HP on this bird’s turn, then still make a move.' },
@@ -131,6 +131,8 @@
       cd: item.spell.cd || 2,
       healPct: item.spell.healPct || 0,
       aoe: !!item.spell.aoe,
+      aimed: (item.spell.kind || 'attack') === 'attack',
+      splash: item.spell.splash || 0,
       cleanse: !!item.spell.cleanse,
       teamWide: !!item.spell.teamWide,
       rider: item.spell.rider || null,

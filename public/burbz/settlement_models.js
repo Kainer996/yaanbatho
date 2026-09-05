@@ -1,4 +1,4 @@
-/* Small, batched woodland buildings and bird inhabitants. THREE is supplied by the scene. */
+/* Small, batched woodland buildings and humanoid inhabitants. THREE is supplied by the scene. */
 (function(root){
   'use strict';
   const COLOURS={wood:0x68462f,trim:0x49352a,stone:0xaca58e,plaster:0xe6d5ac,roof:0x627f77,glass:0xffd28a,soil:0x77533b};
@@ -141,5 +141,44 @@
     rig.body.position.y=moving?Math.abs(Math.sin(stride))*.018:Math.sin(time*1.7)*.006*motion;
     rig.wings.forEach((wing,i)=>wing.rotation.z=(i?1:-1)*(moving?.10+Math.sin(stride)*.025:.025));
   }
-  root.BurbzSettlementModels={batch,building,bird,animateBird};
+  // The little folk reuse the pre-v348 hood, tapered cloak, hands and boots.
+  // Their appearance is stable by identity; no bird plumage or taxonomy is used.
+  function resident(T,person){
+    let seed=2166136261;for(const c of String(person.id)){seed^=c.charCodeAt(0);seed=Math.imul(seed,16777619);}seed>>>=0;
+    const cloth=[0x6a4a3a,0x3a4a6a,0x4a5a3a,0x5a3a52,0x6a5a34][seed%5];
+    const skin=[0xd8b890,0xb88e69,0x926b4e,0xe2c7a6][(seed>>>4)%4],boot=0x3a2e22;
+    const g=new T.Group(),torso=batch(T);
+    torso.cylinder(.18,.28,.65,0,.56,0,cloth);
+    torso.cylinder(.16,.24,.25,0,.82,0,cloth);
+    const body=torso.finish();body.name='little-folk-cloak';g.add(body);
+    const head=new T.Group(),face=batch(T);head.position.y=1.02;
+    face.sphere(.13,0,0,.015,skin);
+    face.add(new T.ConeGeometry(.16,.28,8),cloth,[0,.13,-.015]);
+    // A small face points along +Z, the same forward axis as the saved routes.
+    for(const x of [-.045,.045])face.sphere(.013,x,.014,.132,0x322a22);
+    face.sphere(.022,0,-.025,.15,skin);
+    head.add(face.finish());head.name='little-folk-head';g.add(head);
+    const arms=[],legs=[];
+    for(const side of [-1,1]){
+      const shoulder=new T.Group(),arm=batch(T);shoulder.position.set(side*.19,.80,0);
+      arm.cylinder(.048,.04,.36,0,-.18,0,cloth);arm.sphere(.04,0,-.38,0,skin);
+      shoulder.add(arm.finish());shoulder.name='little-folk-arm';g.add(shoulder);arms.push(shoulder);
+      const hip=new T.Group(),leg=batch(T);hip.position.set(side*.10,.27,0);
+      leg.cylinder(.048,.04,.23,0,-.115,0,boot);leg.sphere(.055,0,-.245,.035,boot,[1,.6,1.35]);
+      hip.add(leg.finish());hip.name='little-folk-leg';hip.userData.phase=side>0?0:Math.PI;g.add(hip);legs.push(hip);
+    }
+    g.userData={resident:person,humanoidRig:{body,head,arms,legs,phase:(seed%100)/10},arms,legs,cloak:body};
+    return g;
+  }
+  function animateResident(g,state,time,motion){
+    const rig=g.userData.humanoidRig;if(!rig)return;
+    const stride=(state.stride||time*6)*.72,moving=state.moving&&motion;
+    rig.legs.forEach((leg,i)=>leg.rotation.x=moving?Math.sin(stride+i*Math.PI)*.38:0);
+    rig.arms.forEach((arm,i)=>arm.rotation.x=moving?-Math.sin(stride+i*Math.PI)*.28:Math.sin(time*.7+rig.phase+i)*.035*motion);
+    rig.body.position.y=moving?Math.abs(Math.sin(stride))*.008:0;
+    rig.head.rotation.y=Math.sin(time*.65+rig.phase)*.14*motion;
+    rig.head.rotation.x=state.mood&&state.mood!=='Content'?.24:0;
+    rig.body.rotation.z=state.mood==='Unhappy'?Math.sin(time*.7+rig.phase)*.025*motion:0;
+  }
+  root.BurbzSettlementModels={batch,building,bird,animateBird,resident,animateResident};
 })(typeof globalThis!=='undefined'?globalThis:this);

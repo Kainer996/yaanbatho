@@ -1,0 +1,13 @@
+# v350 browser and release checks
+
+Build: `little-folk-residents-v350-20260905`. Start a static server with `public/` as its root on `127.0.0.1:8765`. Use installed Playwright/Chrome and set `PLAYWRIGHT_MODULE`, `CHROME_PATH`, and an optional `EVIDENCE_DIR` before running the two Node runners. Test-only closure access is injected by the local browser route and is never shipped in the app.
+
+- `tests/run_humanoid_residents_v350.cjs`: 51 checks covering the real Three.js village/town scenes, humanoid selection and voices, mute/rapid taps, existing dog and all 15 building doors, commuting/drinking, save/reload identity and needs, removed home/job reconciliation, and a 320px town.
+- `tests/run_aimed_spells_v350.cjs`: 16 checks covering actual touch dragging, artwork/trajectory screen coordinates, free cancellation/back/navigation, visible flight before damage, rapid casting, direct and adjacent damage, removed targets, 320px resize, reduced-motion feedback and photo attempts leaving game state unchanged.
+- `tests/run_settlement_lighting_v350.cjs`: samples actual rendered-frame intervals, submission time, draw calls, renderer/GPU identity and lighting/actor budgets for a village, town and dense 48-building town. `RENDER_BACKEND=native` requests D3D11; otherwise it requests SwiftShader. The recorded GPU establishes which actually ran. Use `PERF_TAG` to retain independent evidence and compare screenshots. This is desktop emulation, not physical-phone measurement.
+- `node --test tests/test_peeps_20260905.cjs tests/test_peep_needs_20260905.cjs tests/test_photo_client_gate_20260905.cjs tests/test_aimed_spells_20260905.cjs` checks pure models, audio coordination, needs, photo client acceptance and battle rules.
+- `python -m pytest tests/test_photo_abstention_20260905.py -q` checks the conservative photo policy. `scripts/verify-photo-id.py` uses two attributed real bird fixtures and four negative fixtures against the running HTTP backend. It does not enter these examples into a player's collection.
+
+The full maintained Python suite remains `python -m pytest tests/ test_continuous_scan_economy.py -q`. On Windows, long Node inline snippets may need stdin instead of the OS command-line limit. Record environment skips separately from passes.
+
+Before release, verify the managed live manifest, exact art hashes, backend rollback path and both photo and sound HTTP behavior. After deployment, verify public runtime bytes, new asset responses and installed/fresh PWA save/cache behavior. Keep the stopped v349 navigation worktree intact. Local evidence and private account setup details belong outside the game repository.

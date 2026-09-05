@@ -39,7 +39,7 @@ def test_audio_assets_ship_through_offline_and_live_deployment_paths():
 
     # The core last moved with map-music-fade v187, then again with
     # trail-mode v329 (per-sound levels and pitch drift).
-    version = "trail-mode-v329-20260825"
+    version = "little-folk-residents-v350-20260905"
     assert f"audio_core.js?v={version}" in sw
     assert f"audio_core.js?v={version}" in (BURBZ / "index.html").read_text(encoding="utf-8")
     assert "burbz-side-snacks-hunger-metre-v142-20260726" in sw

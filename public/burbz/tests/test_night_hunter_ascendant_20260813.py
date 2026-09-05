@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 
@@ -167,10 +167,10 @@ def test_release_is_query_busted_everywhere():
     # iron-ingot-errand-v326.
     for core, pin_build in (("bird_sleep_core.js", RELEASE_PIN),
                             ("academy_treehouse_core.js", "rook-recognition-special-characters-v347-20260904"),
-                            ("battle_core.js", "quiet-arena-v331-20260826")):
+                            ("battle_core.js", "little-folk-residents-v350-20260905")):
         pin = f"{core}?v={pin_build}"
         assert pin in html, core
-        assert sw.count(f"'./{pin}'") == 2, core
+        assert sw.count(f"'./{pin}'") == (3 if core == 'battle_core.js' else 2), core
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE"))
     assert RELEASE_PIN in cache_line

@@ -29,8 +29,8 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
-VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
+VERSIONED_CORE = "settlement_scene_core.js?v=little-folk-residents-v350-20260905"
 
 
 def run_node(source: str):
@@ -105,7 +105,7 @@ def test_adapt_detail_steps_down_only_on_proven_slow_stretches():
     result = run_core(
         """({
   slow: core.adaptDetail({dpr:2, minDpr:1.25, maxDpr:2}, {frames:48, avgFrameMs:38}),
-  fine: core.adaptDetail({dpr:2, minDpr:1.25, maxDpr:2}, {frames:48, avgFrameMs:24}),
+  fine: core.adaptDetail({dpr:2, minDpr:1.25, maxDpr:2}, {frames:48, avgFrameMs:18}),
   tooFewFrames: core.adaptDetail({dpr:2, minDpr:1.25, maxDpr:2}, {frames:6, avgFrameMs:80}),
   noSample: core.adaptDetail({dpr:2, minDpr:1.25, maxDpr:2}, {})
 })"""

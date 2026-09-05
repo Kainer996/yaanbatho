@@ -110,8 +110,8 @@ console.log(JSON.stringify({rotated:c.streetRoute(start,end,[diamond]),box:c.str
 def test_changed_runtime_is_required_before_the_updated_shell_can_activate():
     sw = (ROOT / 'sw.js').read_text(encoding='utf-8')
     required = sw.split('const BURBZ_INSTALL_REQUIRED = [', 1)[1].split('];', 1)[0]
-    for name in ('merlin_companion_core', 'settlement_life_core', 'settlement_models'):
-        assert f'./{name}.js?v=alderwing-living-settlements-v348-20260904' in required
+    for name in ('audio_core', 'settlement_life_core', 'settlement_models'):
+        assert f'./{name}.js?v=little-folk-residents-v350-20260905' in required
 
 
 def test_dog_stance_is_planted_and_joint_solution_reaches_the_paw():
@@ -143,3 +143,12 @@ console.log(JSON.stringify(definitions.map(b=>{const g=global.BurbzSettlementMod
     assert len(out) == 15
     assert all(1 <= b['parts'] <= 2 and b['finite'] and b['door']['z'] > 0 for b in out)
     assert max(b['vertices'] for b in out) < 25000
+
+
+def test_v348_species_correction_keeps_the_same_people_and_assignments():
+    out = node("""
+const raw={version:1,nextId:12,residents:[{id:'42:resident:7',name:'Moss',species:'Robin',homeId:'cabin:0',jobId:'hut'}]};
+const corrected=c.reconcile(raw,{seed:42,population:1,homes:[{id:'cabin:0',capacity:6}],jobs:[{id:'hut',capacity:1}]});
+console.log(JSON.stringify(corrected));
+""")
+    assert out == {'version':2,'nextId':12,'residents':[{'id':'42:resident:7','name':'Moss','kind':'humanoid','homeId':'cabin:0','jobId':'hut'}]}

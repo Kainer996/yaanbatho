@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
@@ -78,7 +78,7 @@ def test_birdex_recruits_directly_once_the_barracks_stands():
     html = HTML.read_text(encoding="utf-8")
     assert "recruitAction = tavernBuilt ? 'recruit-birdex' : 'goto-tavern'" in html
     assert 'data-action="recruit-birdex"' in html
-    assert "NEW COMPANION UNLOCKED!" in html
+    assert "A new companion for your adventures" in html
 
 
 def test_the_merlin_first_clue_quest_stays_retired():

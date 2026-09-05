@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -450,10 +450,10 @@ def test_every_core_this_release_edited_ships_under_its_new_tag():
         pin = "%s?v=%s" % (core, ACADEMY_PRESENTATION_PIN)
         assert pin in html and "'./%s'" % pin in sw
     for core in EDITED_CORES:
-        pin = "%s?v=%s" % (core, OWN_RELEASE_PIN)
+        pin = "%s?v=%s" % (core, "little-folk-residents-v350-20260905")
         assert pin in html, core
         assert "'./%s'" % pin in sw, core
         # No copy of the core is left behind on an older pin.
         stale = [m for m in re.findall(re.escape(core) + r"\?v=([A-Za-z0-9.-]+)", html + sw)
-                 if m != OWN_RELEASE_PIN]
+                 if m != "little-folk-residents-v350-20260905"]
         assert not stale, (core, stale)

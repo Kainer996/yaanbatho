@@ -32,6 +32,7 @@ LFS_FILES=(
   "bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png"
 )
 BIRDNET_INSTALLER_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts/install-birdnet-v3.sh"
+PHOTO_SCRIPTS_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts"
 
 FILES=(
   "index.html"
@@ -44,8 +45,23 @@ FILES=(
   "building_discovery_core.js"
   "village_variation_core.js"
   "settlement_scene_core.js"
+  "peep_needs_core.js"
+  "photo_id.py"
+  "tests/fixtures/photo-v350/robin-clear.jpg"
+  "tests/fixtures/photo-v350/great-tit-clear.jpg"
+  "tests/fixtures/photo-v350/distant-blob.jpg"
+  "tests/fixtures/photo-v350/blurred-bird.jpg"
+  "tests/fixtures/photo-v350/empty-scene.jpg"
+  "tests/fixtures/photo-v350/nonbird-shapes.jpg"
+  "tests/fixtures/photo-v350/README.md"
+  "assets/quest-categories/food.webp"
+  "assets/quest-categories/materials.webp"
+  "assets/quest-categories/timber.webp"
+  "assets/quest-categories/treasure.webp"
+  "assets/quest-categories/diplomacy.webp"
   "settlement_life_core.js"
   "settlement_models.js"
+  "settlement_lighting.js"
   "empire_map_core.js"
   "empire_realm_core.js"
   "settlement_merge_core.js"
@@ -70,6 +86,7 @@ FILES=(
   "scan_economy_core.js"
   "sound_listener_core.js"
   "battle_core.js"
+  "battle_aim_core.js"
   "loot_crafting_core.js"
   "world_level_core.js"
   "diary_core.js"
@@ -119,6 +136,22 @@ FILES=(
   "assets/audio/sfx-quest-complete.mp3"
   "assets/audio/sfx-victory.mp3"
   "assets/audio/sfx-defeat-error.mp3"
+  "assets/audio/little-folk/mumble-01.mp3"
+  "assets/audio/little-folk/mumble-02.mp3"
+  "assets/audio/little-folk/mumble-03.mp3"
+  "assets/audio/little-folk/mumble-04.mp3"
+  "assets/audio/little-folk/mumble-05.mp3"
+  "assets/audio/little-folk/mumble-06.mp3"
+  "assets/audio/little-folk/mumble-07.mp3"
+  "assets/audio/little-folk/mumble-08.mp3"
+  "assets/audio/little-folk/mumble-09.mp3"
+  "assets/audio/little-folk/mumble-10.mp3"
+  "assets/audio/little-folk/mumble-11.mp3"
+  "assets/audio/little-folk/mumble-12.mp3"
+  "assets/audio/little-folk/mumble-13.mp3"
+  "assets/audio/little-folk/mumble-14.mp3"
+  "assets/audio/little-folk/mumble-15.mp3"
+  "assets/audio/little-folk/mumble-16.mp3"
   "assets/audio/ATTRIBUTION.md"
   "audio-credits.html"
   "privacy.html"
@@ -433,6 +466,10 @@ curl -fsSL "$BIRDNET_INSTALLER_URL" -o "$TMP/install-birdnet-v3.sh" \
   || die "Download failed: scripts/install-birdnet-v3.sh"
 bash -n "$TMP/install-birdnet-v3.sh" \
   || die "Downloaded BirdNET installer failed its shell syntax check"
+for script in install-photo-id.sh verify-photo-id.py verify-sound-runtime.py; do
+  curl -fsSL "$PHOTO_SCRIPTS_URL/$script" -o "$TMP/$script" || die "Photo proof script download failed: $script"
+done
+bash -n "$TMP/install-photo-id.sh" || die "Photo installer syntax check failed"
 # The two art modules are manifests for the paintings. Enumerate exactly the
 # same set the game can request — v204's portrait + transparent-cutout pairs and
 # its habitat backgrounds included — and source every one of them locally.
@@ -492,6 +529,9 @@ for f in "${BACKEND_FILES[@]}"; do
     break
   fi
 done
+
+bash "$TMP/install-photo-id.sh" "$ROOT" "$TMP/photo_id.py" "$TMP/tests/fixtures/photo-v350" "$TMP/verify-photo-id.py" "$TMP/verify-sound-runtime.py" \
+  || die "Photo HTTP proof failed; prior adapter restored before publishing the app shell"
 
 for f in "${FILES[@]}"; do
   mkdir -p "$ROOT/$(dirname "$f")"

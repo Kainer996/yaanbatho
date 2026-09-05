@@ -24,7 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 
 
 def _node(script: str):
@@ -113,7 +113,7 @@ def test_attacks_aim_and_confirm_instead_of_firing_on_tap():
     assert "if (a.skill.kind !== 'attack') { battleResolvePlayer(skillIndex, (a.targets || [])[0]); return; }" in select
     assert "battleState.pendingSkillIndex = skillIndex;" in select
     # A lone rival aims itself; tapping the chosen move again puts it back.
-    assert "liveTargets.length === 1 ? liveTargets[0] : null" in select
+    assert "(liveTargets.length === 1 || core.isAimedSkill(a.skill)) ? liveTargets[0] : null" in select
     assert "battleState.pendingSkillIndex = null;" in select
     # The old quick-cast is gone: selecting never resolves an attack.
     assert "quick-cast" not in select

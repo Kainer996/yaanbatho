@@ -39,7 +39,10 @@
     unlock: 'assets/audio/ui-lock.mp3',
     coins: 'assets/audio/ui-coins.mp3',
     build: 'assets/audio/sfx-build.mp3',
-    error: 'assets/audio/sfx-defeat-error.mp3'
+    error: 'assets/audio/sfx-defeat-error.mp3',
+    residentChatter: Object.freeze(Array.from({length:16}, function(_, i) {
+      return 'assets/audio/little-folk/mumble-' + String(i + 1).padStart(2, '0') + '.mp3';
+    }))
   });
 
   // How loud each role sits. The files were mastered at wildly different levels
@@ -140,6 +143,7 @@
     var localEnabled = options.enabled !== false;
     var active = [];
     var lastPlayed = Object.create(null);
+    var lastSource = Object.create(null);
     var lastAnyPlayedAt = -Infinity;
 
     function isEnabled() {
@@ -178,6 +182,9 @@
     function chooseSource(name) {
       var candidate = manifest[name];
       if (Array.isArray(candidate)) {
+        if (name === 'residentChatter' && candidate.length > 1) {
+          candidate = candidate.filter(function(src) { return src !== lastSource[name]; });
+        }
         if (!candidate.length) return null;
         var index = Math.floor(random() * candidate.length);
         index = Math.max(0, Math.min(candidate.length - 1, index));
@@ -253,6 +260,7 @@
       try { audio.preload = 'auto'; } catch (_) {}
 
       var entry = { name: name, audio: audio };
+      lastSource[name] = src;
       active.push(entry);
       var finish = function() { removeActive(entry); };
       try {
@@ -332,7 +340,10 @@
       unlock: function(opts) { return play('unlock', opts); },
       coins: function(opts) { return play('coins', opts); },
       build: function(opts) { return play('build', opts); },
-      error: function(opts) { return play('error', opts); }
+      error: function(opts) { return play('error', opts); },
+      // A single shared voice channel for village and town taps. No queue:
+      // a rapid tap keeps selecting people while the current greeting finishes.
+      residentChatter: function() { return play('residentChatter', {volume:0.38, maxPolyphony:1, cooldown:180}); }
     };
     Object.defineProperty(manager, 'enabled', {
       enumerable: true,
