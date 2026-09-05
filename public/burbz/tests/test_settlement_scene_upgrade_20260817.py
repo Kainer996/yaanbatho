@@ -14,7 +14,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 LOADING_ART = ROOT / "assets" / "settlements" / "settlement-loading-v281.webp"
-VERSIONED_CORE = "settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"
+VERSIONED_CORE = "settlement_scene_core.js?v=little-folk-residents-v350-20260905"
 
 
 def run_node(source: str):

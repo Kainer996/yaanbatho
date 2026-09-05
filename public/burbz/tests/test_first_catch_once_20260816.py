@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

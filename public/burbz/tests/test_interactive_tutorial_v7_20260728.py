@@ -271,7 +271,7 @@ def test_the_flow_still_covers_every_beat_the_design_asks_for():
     # chain (open the Empire map, free the cradle village with Merlin) instead
     # of deferring liberation and steering the player to Scan first.
     assert "player quests" in explore and "free villages" in explore
-    assert "alderwing" in explore and "bird neighbours" in explore
+    assert "alderwing" in explore and "peeps" in explore
     assert "when you are ready" in explore
 
 

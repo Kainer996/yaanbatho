@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
@@ -278,5 +278,5 @@ def test_no_core_pin_moved_because_no_core_changed():
     # (academy_treehouse_core.js has likewise moved to iron-ingot-errand-v326,
     # which gave the Iron Ingot its own errand.)
     for core in ("loot_crafting_core.js",):
-        assert "%s?v=%s" % (core, PREVIOUS_RELEASE_PIN) in html, core
+        assert "%s?v=%s" % (core, CURRENT_BUILD) in html, core
     assert "academy_treehouse_core.js?v=%s" % ACADEMY_CORE_PIN in html

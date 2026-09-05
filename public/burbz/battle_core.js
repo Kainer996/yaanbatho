@@ -169,7 +169,7 @@
   // Basic attacks (s1): no cooldown, always available. Every bird carries
   // both and auto-leads with whichever side of it is stronger.
   const PECK  = { id:'peck',  label:'Peck',  icon:'🐤', school:'basic', stat:'atk', power:42, cd:0, kind:'attack', copy:'A reliable jab that never needs recharging.' };
-  const SPARK = { id:'spark', label:'Spark', icon:'✨', school:'basic', stat:'mag', power:42, cd:0, kind:'attack', copy:'A dart of kingdom magic that never needs recharging.' };
+  const SPARK = { id:'spark', label:'Spark', icon:'✨', school:'basic', stat:'mag', power:42, cd:0, kind:'attack', aimed:true, copy:'Aim a dart of kingdom magic. Never needs recharging.' };
 
   // ---------------------------------------------------------------------------
   // Signature moves — curated, real-behaviour flavoured, per famous species.
@@ -569,6 +569,22 @@
 
   function skillUsable(fighter, skill) { return (skill.cdLeft || 0) <= 0; }
 
+  function isAimedSkill(skill) { return !!skill && skill.kind==='attack' && (skill.aimed===true || skill.school==='spell'); }
+  // Splash reaches the immediately adjoining card slots only. A fallen card
+  // remains an empty slot; it never lets a blast jump to a more distant foe.
+  // Shared by preview and resolution, with each target's own defence/barrier.
+  function attackTargets(battle, skill, targetIndex) {
+    if(!battle.acting || !skill || skill.kind!=='attack')return [];
+    const side=battle.acting.side==='player'?'opponent':'player',team=battle.teams[side];
+    const living=i=>team[i]&&!team[i].fainted&&team[i].hp>0;
+    if(skill.aoe&&!isAimedSkill(skill))return team.flatMap((f,i)=>living(i)?[{index:i,scale:1,primary:i===targetIndex}]:[]);
+    if(!Number.isInteger(targetIndex)||!living(targetIndex))return [];
+    const out=[{index:targetIndex,scale:1,primary:true}];
+    const splash=clamp(Number(skill.splash)||0,0,1);
+    if(splash>0)for(const i of [targetIndex-1,targetIndex+1])if(living(i))out.push({index:i,scale:splash,primary:false});
+    return out;
+  }
+
   // Actions available to the acting fighter (for the UI and the AI).
   function availableActions(battle) {
     const f = actingFighter(battle);
@@ -601,6 +617,7 @@
     const pierce = !!(skill.rider && skill.rider.kind === 'pierce');
     let raw = (4 + skill.power * (attStat / ((defStat + 70) * 1.6))) * mult * stab * variance * (crit ? 1.5 : 1);
     if (o.aoeSplit) raw *= 0.72;
+    if (o.damageScale != null) raw *= clamp(o.damageScale,0,1);
     let absorbed = 0;
     if (defender.barrier > 0 && !pierce) {
       absorbed = Math.min(defender.barrier, raw);
@@ -626,6 +643,7 @@
     const pierce = !!(skill.rider && skill.rider.kind === 'pierce');
     let base = (4 + skill.power * (attStat / ((defStat + 70) * 1.6))) * mult * stab;
     if (o.aoeSplit) base *= 0.72;
+    if (o.damageScale != null) base *= clamp(o.damageScale,0,1);
     const barrier = pierce ? 0 : Math.max(0, defender.barrier || 0);
     const land = raw => {
       const absorbed = Math.min(barrier, raw);
@@ -727,8 +745,12 @@
     const side = battle.acting.side;
     const defSide = side === 'player' ? 'opponent' : 'player';
     const attacker = actingFighter(battle);
+    if(!attacker || attacker.fainted)throw new Error('The acting bird is unavailable');
     const events = [];
     let skill = attacker.skills[action.skillIndex] || attacker.skills[0];
+    if(isAimedSkill(skill)||action.aimed){
+      if(!Number.isInteger(action.skillIndex)||!attacker.skills[action.skillIndex]||!skillUsable(attacker,skill)||!attackTargets(battle,skill,action.targetIndex).length)throw new Error('Aim is no longer valid');
+    }
     if (!skillUsable(attacker, skill)) skill = attacker.skills[0];
     skill.cdLeft = skill.cd || 0;
 
@@ -737,19 +759,21 @@
 
     if (skill.kind === 'attack') {
       const foes = livingFighters(battle, defSide);
-      let targets;
-      if (skill.aoe) targets = foes.map(x => x.f);
+      let targets, hitPlan;
+      if (isAimedSkill(skill) || skill.splash) { hitPlan=attackTargets(battle,skill,action.targetIndex);targets=hitPlan.map(t=>battle.teams[defSide][t.index]); }
+      else if (skill.aoe) targets = foes.map(x => x.f);
       else {
         const chosen = foes.find(x => x.i === action.targetIndex) || foes[0];
         targets = [chosen.f];
       }
       let anyCrit = false;
       targets.forEach(defender => {
-        const res = computeDamage(battle, attacker, defender, skill, { aoeSplit: skill.aoe && targets.length > 1 });
+        const hit=hitPlan?.find(t=>battle.teams[defSide][t.index]===defender);
+        const res = computeDamage(battle, attacker, defender, skill, { aoeSplit: !hitPlan && skill.aoe && targets.length > 1, damageScale:hit?.scale });
         defender.hp = Math.max(0, defender.hp - res.dmg);
         anyCrit = anyCrit || res.crit;
         events.push({ type:'damage', side: defSide, name: defender.name, targetIndex: battle.teams[defSide].indexOf(defender),
-          dmg: res.dmg, crit: res.crit, mult: res.mult, magic: res.magic, hp: defender.hp, maxHp: defender.maxHp,
+          dmg: res.dmg, crit: res.crit, mult: res.mult, magic: res.magic, hp: defender.hp, maxHp: defender.maxHp, splash:!!hit&&!hit.primary,
           text: defender.name + ' takes ' + res.dmg + (res.magic ? ' magic' : '') + ' damage' + (res.crit ? ' — critical hit!' : '.') });
         if (res.mult > 1) events.push({ type:'fact', side, text: 'Super effective! ' + (res.fact || '') });
         else if (res.mult < 1) events.push({ type:'info', side, text: 'Not very effective...' });
@@ -914,7 +938,7 @@
     ULTIMATE_CD, ULTIMATE_OPENING_CD,
     deriveMagic, deriveResist,
     disciplineTier, trainedMoves, buildFighter, buildOpponentFighter,
-    createBattle, tickToNextTurn, chooseActingFighter, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage,
+    createBattle, tickToNextTurn, chooseActingFighter, forecastTurnOrder, availableActions, resolveAction, aiChooseAction, previewDamage, isAimedSkill, attackTargets,
     actingFighter, livingFighters, teamAlive, effStat, skillUsable, canUsePotionEffect, applyPotionEffect,
     LEAGUE_TIERS, battleRewards, DAILY_FULL_REWARD_WINS,
     hashString, seededRandom

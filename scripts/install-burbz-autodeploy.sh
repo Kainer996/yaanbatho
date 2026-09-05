@@ -159,6 +159,14 @@ for f in \
   fi
 done
 
+# Prove a changed photo adapter in the running backend before publishing the
+# app shell. Its installer backs up/rolls back the adapter on proof failure.
+if [[ -f "$SRC/photo_id.py" ]]; then
+  bash "$TMP/repo/scripts/install-photo-id.sh" "$ROOT" "$SRC/photo_id.py" \
+    "$SRC/tests/fixtures/photo-v350" "$TMP/repo/scripts/verify-photo-id.py" "$TMP/repo/scripts/verify-sound-runtime.py" \
+    || { logger -t burbz-sync "abort: photo HTTP proof failed; prior adapter restored"; exit 1; }
+fi
+
 # add/update only — never delete live-only assets
 cp -a "$SRC/." "$ROOT/"
 chown -R "$OWNER" "$ROOT"

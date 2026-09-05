@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 

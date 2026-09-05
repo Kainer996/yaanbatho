@@ -3536,6 +3536,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .quest-category-summary { display:flex; align-items:center; gap:10px; padding:11px 12px; cursor:pointer; list-style:none; }
 .quest-category-summary::-webkit-details-marker { display:none; }
 .quest-category-summary .qc-icon { width:38px; height:38px; flex:none; display:grid; place-items:center; font-size:21px; border-radius:12px; background:radial-gradient(circle at 34% 30%, rgba(214,168,79,.26), rgba(0,0,0,.4)); border:1px solid rgba(214,168,79,.26); }
+.quest-category-summary .qc-icon img { display:block; width:38px; height:38px; object-fit:contain; }
 .quest-category-summary .qc-main { flex:1; min-width:0; }
 .quest-category-summary .qc-label { display:block; font-family:'Russo One',sans-serif; font-size:13px; letter-spacing:.04em; color:var(--legendary); }
 .quest-category-summary .qc-copy { display:block; font-size:10px; line-height:1.35; color:var(--text3); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -4200,6 +4201,25 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .profile-badge.secret.locked .profile-badge-icon { filter:grayscale(1); }
 .profile-badge.earned[data-badge="nightwing_secret"] { cursor:pointer; border-color:#9370ff; box-shadow:0 0 12px rgba(147,112,255,.4); }
 
+
+.battle-aim-panel { display:grid; gap:5px; margin-top:8px; padding:10px; border:1px solid #b9914c; border-radius:14px; background:var(--bg3); font-size:12px; }
+.battle-aim-panel[hidden] { display:none; }
+.battle-aim-panel label { color:var(--gold); }
+.battle-aim-panel input[type=range] { width:100%; height:44px; margin:0; accent-color:#e6b65b; touch-action:pan-y; }
+.battle-aim-panel input::-webkit-slider-thumb { width:30px; height:30px; }
+.battle-aim-panel small { color:var(--text2); font-size:10px; }
+.battle-aim-buttons { display:grid; grid-template-columns:1fr 2fr; gap:8px; }
+.battle-aim-buttons button { min-height:44px; padding:8px; border-radius:10px; border:1px solid #b9914c; color:var(--text); background:var(--bg4); font:700 11px var(--font-display, sans-serif); }
+.battle-aim-buttons button:last-child { background:#6b4820; color:#fff3d1; }
+.battle-aim-buttons button:disabled { opacity:.55; }
+.battle-aim-overlay { display:none; position:fixed; inset:0; width:100vw; height:100dvh; pointer-events:none; z-index:90; overflow:visible; }
+.battle-arena.aiming .arena-unit.targetable, .battle-arena.aiming .arena-unit.target-locked { animation:none; transform:none; }
+.arena-unit.splash-target { outline:2px dashed #e8be78; outline-offset:1px; }
+.arena-unit.splash-target .au-target-flag { background:#75511b; }
+.arena-unit.spell-hit .au-art { animation:spell-impact .5s ease-out; outline:2px solid #ffe0a0; }
+@keyframes spell-impact { 0% { filter:brightness(1); } 20% { filter:brightness(1.7); } 100% { filter:brightness(1); } }
+@media(prefers-reduced-motion:reduce){ .arena-unit.spell-hit .au-art { animation:none; outline:3px solid #ffe0a0; } }
+
 </style>
 </head>
 <body>
@@ -4431,7 +4451,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <div class="arena-squad opponent" id="arenaOppRow"></div>
         <div class="battle-log" id="battleLog"></div>
         <div class="arena-squad player" id="arenaPlayerRow"></div>
+        <div class="battle-aim-panel" id="battleAimPanel" hidden></div>
         <div class="arena-actions" id="arenaActions"></div>
+        <svg class="battle-aim-overlay" id="battleAimOverlay" aria-hidden="true"></svg>
       </div>
 
       <!-- Result -->
@@ -5207,8 +5229,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_size_core.js?v=every-bird-carries-its-weight-v335-20260827"></script>
 <script src="bird_roles_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=quiet-arena-v331-20260826"></script>
-<script src="loot_crafting_core.js?v=magpie-market-v316-20260824"></script>
+<script src="battle_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="loot_crafting_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -5224,9 +5247,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
-<script src="settlement_scene_core.js?v=settlement-scene-sharp-v285-20260819"></script>
-<script src="settlement_life_core.js?v=alderwing-living-settlements-v348-20260904"></script>
-<script src="settlement_models.js?v=alderwing-living-settlements-v348-20260904"></script>
+<script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="peep_needs_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="settlement_life_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="settlement_models.js?v=little-folk-residents-v350-20260905"></script>
+<script src="settlement_lighting.js?v=little-folk-residents-v350-20260905"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -5241,7 +5266,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=trail-mode-v329-20260825"></script>
+<script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -14700,7 +14725,7 @@ function renderBirdExpeditions() {
     const unlocked = list.filter(t => t.starter === true || roostBuilt).length;
     return '<details class="quest-category" data-quest-category="' + cat.id + '"' + (open ? ' open' : '') + ' ontoggle="setQuestCategoryOpen(\'' + cat.id + '\', this.open)">' +
       '<summary class="quest-category-summary">' +
-        '<span class="qc-icon">' + cat.icon + '</span>' +
+        '<span class="qc-icon"><img src="assets/quest-categories/' + cat.id + '.webp" alt="" aria-hidden="true" width="38" height="38"></span>' +
         '<span class="qc-main"><span class="qc-label">' + escapeHtml(cat.label) + '</span>' +
         '<span class="qc-copy">' + escapeHtml(cat.copy || '') + '</span></span>' +
         '<span class="qc-count">' + unlocked + '/' + list.length + '</span>' +
@@ -22303,6 +22328,10 @@ let currentScreen = 'map';
 
 function switchScreen(name) {
   if (name === currentScreen) return;
+  if (currentScreen === 'battle') {
+    if (battleState?.aimFlight) return;
+    if (battleAimPlan()) battleCancelAim();
+  }
   SFX.page();
   recordScreenTrail(currentScreen);
 
@@ -28583,14 +28612,14 @@ function burbzDaylightPalette(pal, daylight) {
   return core ? core.gradePalette(pal, daylight) : pal;
 }
 
-// Bird identities live in the economy save; these are only the visible models.
+// Humanoid identities live in the economy save; these are only the visible models.
 const settlementResidentActors = { village:[], town:[] };
 function settlementResidentDescription(data) {
   const p=data.resident;
   if(!p)return 'A neighbour in the settlement.';
   const home=p.homeId && EMPIRE_BUILDING_INDEX[p.homeId.split(':')[0]];
   const job=p.jobId && EMPIRE_BUILDING_INDEX[p.jobId];
-  return p.species + ' · ' + (data.routine?.activity || 'At home') + ' · ' + (home?'Home: '+home.name:'Waiting for a home') + ' · ' + (job?'Work: '+job.name:'No job assigned');
+  return 'Peep · ' + (data.routine?.mood || 'Content') + ' · ' + (data.routine?.activity || 'At home') + (data.routine?.need?' · '+data.routine.need:'') + ' · ' + (home?'Home: '+home.name:'Waiting for a home') + ' · ' + (job?'Work: '+job.name:'No job assigned');
 }
 function settlementBuildingNeighbours(seed,buildingId) {
   const rec=empireVillageRecordBySeed(seed),building=EMPIRE_BUILDING_INDEX[buildingId];
@@ -28605,7 +28634,7 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
   settlementResidentActors[kind] = [];
   if (!life) return;
   // Retire decorative townsfolk. A paid construction crew may still visit;
-  // its builders are birds, identified separately from the resident census.
+  // its builders are humanoid Peeps, identified separately from the resident census.
   const belongs = object => { let o=object; while(o.parent) o=o.parent; return o===scene; };
   villageNpcs = villageNpcs.filter(npc => {
     if (!belongs(npc) || ['dog','cat','chicken'].includes(npc.userData.npc?.role)) return true;
@@ -28654,17 +28683,42 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
     }
     return points;
   }
+  const serviceCrews=new Map(records.map(rec=>[Number(rec.seed),villageWorkforce(rec)]));
+  const serviceDoors=doors.filter(d=>{
+    const b=EMPIRE_BUILDING_INDEX[d.id];
+    return b && (b.need==='water'||b.need==='joy') && (!b.workers||serviceCrews.get(d.seed)?.staffed[d.id]);
+  });
+  function destination(door,key){const path=route(door);return door&&path?{key:key+':'+door.seed+':'+door.id+':'+(door.homeId||'')+':'+door.entry.x.toFixed(3)+':'+door.entry.z.toFixed(3),point:door.entry,path}:null;}
+  function routeFrom(memory,target){
+    let exit=null;
+    if(memory.route?.length){
+      const gi=memory.route.findIndex(p=>Math.hypot(p.x-green.x,p.z-green.z)<.01);
+      if(gi>=0){
+        let nearest=0,best=Infinity;
+        for(let i=0;i<memory.route.length;i++){const d=Math.hypot(memory.route[i].x-memory.x,memory.route[i].z-memory.z);if(d<best){best=d;nearest=i;}}
+        exit=[{x:memory.x,z:memory.z},...(nearest<=gi?memory.route.slice(nearest,gi+1):memory.route.slice(gi,nearest+1).reverse())];
+      }
+    }
+    if(!exit){const door=doors.find(d=>Math.hypot(d.entry.x-memory.x,d.entry.z-memory.z)<.12);exit=door?route(door):life.streetRoute({x:memory.x,z:memory.z},green,obstacles);}
+    return exit?exit.concat([...target.path].reverse().slice(1)):null;
+  }
   const census=records.flatMap(rec=>ensureVillageEconomy(rec).residentLedger?.residents || []);
   for(const resident of life.visibleResidents(census,Math.min(budget,census.length))) {
     const seed=Number(resident.id.split(':resident:')[0]);
     const home=resident.homeId?doors.find(d=>d.seed===seed&&d.homeId===resident.homeId):null;
     const job=doors.find(d=>d.seed===seed&&d.id===resident.jobId);
     const homeRoute=route(home),jobRoute=route(job);
-    const model=window.BurbzSettlementModels.bird(THREE,resident);
+    const model=window.BurbzSettlementModels.resident(THREE,resident);
     model.userData.npc={role:'resident',name:resident.name};
     model.userData.wardSeed=seed;
     model.userData.paths={home:homeRoute || [home?.entry || green],leisure:homeRoute || [home?.entry || green],work:job&&homeRoute&&jobRoute?homeRoute.concat([...jobRoute].reverse().slice(1)):null};
     model.userData.pathBlocked=!homeRoute || (!!job&&!jobRoute);
+    const chooseService=need=>serviceDoors.filter(d=>EMPIRE_BUILDING_INDEX[d.id].need===need&&route(d)).sort((a,b)=>Number(b.seed===seed)-Number(a.seed===seed)||Math.hypot(a.entry.x-(home?.entry.x||green.x),a.entry.z-(home?.entry.z||green.z))-Math.hypot(b.entry.x-(home?.entry.x||green.x),b.entry.z-(home?.entry.z||green.z)))[0];
+    model.userData.peepEnvironment={life,routeFrom,sceneKey:kind+':'+records.map(r=>r.seed).sort().join(','),destinations:{
+      home:destination(home,'home'),work:destination(job,'work'),well:destination(chooseService('water'),'well'),fun:destination(chooseService('joy'),'fun'),
+      green:{key:'green',point:green,path:[green]}
+    }};
+
     scene.add(model);villageNpcs.push(model);
     settlementResidentActors[kind].push(model);
   }
@@ -28692,16 +28746,24 @@ function settlementClearRoofTrees(scene, targets) {
     if(clearings.some(b=>p.x>b.min.x&&p.x<b.max.x&&p.z>b.min.z&&p.z<b.max.z))tree.removeFromParent();
   }
 }
+let settlementNeedsDirty=false;
+function settlementSaveNeeds(){if(settlementNeedsDirty&&durableSaveState({queueCloud:false}).ok)settlementNeedsDirty=false;}
+setInterval(settlementSaveNeeds,15000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)settlementSaveNeeds();});
+window.addEventListener('pagehide',settlementSaveNeeds);
 function settlementAnimateResidents(kind, now, motion) {
   const date=new Date(now),hour=date.getHours()+date.getMinutes()/60;
   for(const model of settlementResidentActors[kind]) {
     const u=model.userData;
-    const state=window.BurbzSettlementLife.routine(u.resident,u.paths,now,hour);
-    if(u.pathBlocked) Object.assign(state,{...u.paths.home[0],moving:false,inside:!!u.resident.homeId,activity:'Waiting for a clear path'});
+    const state=window.BurbzPeepNeeds.advance(u.resident,u.peepEnvironment,now,hour);
+    settlementNeedsDirty=true;
     u.routine=state;
+    if(settlementSceneSelection[kind]?.object===model){
+      const desc=$(kind+'SceneDesc'),text=settlementResidentDescription(u);if(desc&&desc.textContent!==text)desc.textContent=text;
+    }
     model.visible=!state.inside;
     model.position.set(state.x,.015,state.z);model.rotation.y=state.yaw;
-    window.BurbzSettlementModels.animateBird(model,state,now/1000,motion);
+    window.BurbzSettlementModels.animateResident(model,state,now/1000,motion);
   }
 }
 function settlementAnimateDog(dog, time, motion) {
@@ -29009,18 +29071,22 @@ function settlementSceneSampleFrame(kind, ts) {
   const gov = settlementSceneGovernor(kind);
   if (gov.lastTs) {
     const delta = ts - gov.lastTs;
-    // Ignore pauses and tab switches — a 300ms gap is not a slow frame.
-    if (delta > 0 && delta < 250) { gov.frames++; gov.totalMs += delta; }
+    // A weak GPU can take over 250ms. Count those real slow frames too;
+    // scene visibility resets lastTs separately when its loop pauses.
+    if (delta > 0 && delta < 1000) { gov.frames++; gov.totalMs += delta; }
   }
   gov.lastTs = ts;
-  if (gov.frames < 48) return;
+  if (gov.frames < 48 && !(gov.frames>=8 && gov.totalMs>=1500 && gov.totalMs/gov.frames>80)) return;
   const quality = kind === 'town' ? townSceneQuality : villageSceneQuality;
+  if (quality.frameInterval) { gov.frames=0; gov.totalMs=0; return; }
   const core = window.BurbzSettlementSceneCore;
   const sample = { frames: gov.frames, avgFrameMs: gov.totalMs / gov.frames };
-  const current = { dpr: gov.dpr, minDpr: 1.25, maxDpr: Math.min(quality.maxDpr || 2, window.devicePixelRatio || 1) };
+  const current = { dpr: gov.dpr, minDpr: 1, maxDpr: Math.min(quality.maxDpr || 2, window.devicePixelRatio || 1) };
   gov.frames = 0; gov.totalMs = 0;
   const next = core && core.adaptDetail ? core.adaptDetail(current, sample) : null;
-  if (!next || !next.changed || Math.abs(next.dpr - gov.dpr) < 0.01) return;
+  if (!next || !next.changed || Math.abs(next.dpr - gov.dpr) < 0.01) { gov.fastStreak=0; return; }
+  if (next.dpr>gov.dpr) { gov.fastStreak=(gov.fastStreak||0)+1; if(gov.fastStreak<3)return; }
+  gov.fastStreak=0;
   gov.dpr = next.dpr;
   const renderer = kind === 'town' ? townRenderer : villageRenderer;
   if (!renderer) return;
@@ -29052,6 +29118,7 @@ function settlementSceneClearContext(kind) {
 }
 function settlementSceneSetContext(kind, object, info) {
   if (!object || !info) { settlementSceneClearContext(kind); return; }
+  if (object.userData?.humanoidRig) { try { SFX.residentChatter?.(); } catch (_) {} }
   const id = kind + '-' + (object.uuid || Date.now());
   const labels = $(kind + 'SceneLabels');
   const label = document.createElement('span');
@@ -29225,7 +29292,7 @@ function villageSceneContextInfo(object) {
   }
   if (object.userData.npc) {
     const npc = object.userData.npc;
-    return { icon:'🐦', name:npc.name || 'Village resident', detail:object.userData.resident?settlementResidentDescription(object.userData):'A visitor to the village.', actionLabel:'GREET', action:() => villageGreetNpc(object) };
+    return { icon:object.userData.humanoidRig?'👤':'🐾', name:npc.name || 'Village resident', detail:object.userData.resident?settlementResidentDescription(object.userData):'A visitor to the village.', actionLabel:'GREET', action:() => villageGreetNpc(object) };
   }
   if (object.userData.sceneLabel) {
     const label = object.userData.sceneLabel;
@@ -29269,7 +29336,7 @@ function townSceneContextInfo(object) {
   }
   if (object.userData.npc) {
     const npc = object.userData.npc;
-    return { icon:'🐦', name:npc.name || 'Town resident', detail:object.userData.resident?settlementResidentDescription(object.userData):'A visitor to the town.', actionLabel:'GREET', action:() => villageGreetNpc(object) };
+    return { icon:object.userData.humanoidRig?'👤':'🐾', name:npc.name || 'Town resident', detail:object.userData.resident?settlementResidentDescription(object.userData):'A visitor to the town.', actionLabel:'GREET', action:() => villageGreetNpc(object) };
   }
   return null;
 }
@@ -32151,8 +32218,8 @@ const VILLAGE_NPC_LINES = {
 function villageGreetNpc(g) {
   const npc = g.userData && g.userData.npc;
   if (!npc) return;
-  try { SFX.tap(); } catch (e) {}
-  if(g.userData.resident) { showToast('🐦 ' + npc.name + ' · ' + settlementResidentDescription(g.userData)); return; }
+  try { if(g.userData.humanoidRig) SFX.residentChatter?.(); else SFX.tap(); } catch (e) {}
+  if(g.userData.resident) { showToast('👤 ' + npc.name + ' · ' + settlementResidentDescription(g.userData)); return; }
   const lines = VILLAGE_NPC_LINES[npc.role] || VILLAGE_NPC_LINES.commoner;
   npc.lineIdx = npc.lineIdx === undefined ? Math.floor(Math.random() * lines.length) : (npc.lineIdx + 1) % lines.length;
   showToast('💬 ' + npc.name + ': “' + lines[npc.lineIdx] + '”');
@@ -32167,7 +32234,7 @@ function villageNpcRegister(g, r, role, article) {
 
 // A villager in a hooded cloak with neatly fitted shoulders, cowl and hands.
 function villageMakeVillager(r, pal, role) {
-  const g = window.BurbzSettlementModels.bird(THREE, {id:'visitor', species:'House Sparrow', name:'A visiting builder'});
+  const g = window.BurbzSettlementModels.resident(THREE, {id:'visitor:'+Math.floor(r()*100000), kind:'humanoid', name:'A visiting builder'});
   delete g.userData.resident;
   villageNpcRegister(g, r, role || 'commoner');
   return g;
@@ -32579,7 +32646,7 @@ function ensureVillageRenderer(stage) {
   settlementSceneApplyDpr('village', villageRenderer, villageSceneQuality);
   villageRenderer.shadowMap.enabled = true; // real moonlight shadows
   villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  villageRenderer.shadowMap.autoUpdate = false; // static moon: the pass re-renders every 3rd frame (see villageAnimateFrame)
+  villageRenderer.shadowMap.autoUpdate = false; // scenery is cached until the scene or daylight changes
   villageRenderer.toneMapping = THREE.ACESFilmicToneMapping; // filmic depth + rich darks
   villageRenderer.toneMappingExposure = 1.25;
   stage.appendChild(villageRenderer.domElement);
@@ -32675,7 +32742,7 @@ function ensureVillageRenderer(stage) {
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
     const ray = new THREE.Raycaster();
     ray.setFromCamera(ndc, villageCamera);
-    const hits = ray.intersectObjects(villageBuildings.concat(villageNpcs), true);
+    const hits = ray.intersectObjects(villageBuildings.concat(villageNpcs.filter(o => o.visible)), true);
     if (hits.length > 0) {
       let obj = hits[0].object;
       while (obj && !obj.userData.shopKey && !obj.userData.npc && !obj.userData.sceneLabel && obj.userData.ruinIndex === undefined && obj.userData.buildingId === undefined) obj = obj.parent;
@@ -33538,6 +33605,7 @@ function buildVillageScene(v) {
   villageBuiltShopsKey = discoveredVillageShopKeys(v.seed).join('.');
   villageBuiltBuildingsKey = villageBuildingSceneKey(econRec);
   if (villageRenderer) villageRenderer.toneMappingExposure = daylight.exposure;
+  window.BurbzSettlementLighting.install(THREE,{scene:villageScene,renderer:villageRenderer,buildings:villageBuildings,actors:settlementResidentActors.village,daylight,keyLight:moon,fillLight:fill,movers:villageNpcs.concat(villageChickens,villageRoofBirds,villageTraffic,villageLivestock,villageFlocks)});
   // Open on the gap between the first two buildings so nothing blocks the view
   // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
   villageCam.azimuth = camAz;
@@ -33699,6 +33767,7 @@ function villageAnimate(ts) {
   if (currentScreen !== 'village') { villageRunning = false; return; }
   const stage = $('villageStage');
   if (!settlementSceneShouldRun(true, true, stage)) {
+    settlementSceneGovernor('village').lastTs=0;
     stage?.classList.add('is-paused');
     setTimeout(() => {
       if (!villageRunning) return;
@@ -33808,7 +33877,7 @@ function villageAnimateFrame(t) {
   // Idle villagers let their arms drift with an easy breathing sway
   villageNpcs.forEach((np, ni) => {
     const u = np.userData;
-    if (!u || !u.arms || u.route) return;
+    if (!u || !u.arms || u.route || u.resident) return;
     const br = Math.sin(t * 1.15 + ni * 1.3);
     u.arms[0].rotation.x = br * 0.06;
     u.arms[1].rotation.x = -br * 0.06;
@@ -33910,14 +33979,14 @@ function villageAnimateFrame(t) {
   }
   // Dawn breaks over an open screen too: every ~10s, if the real sky has
   // moved to a new phase, the scene rebuilds itself in the new light.
-  if (villageShadowTick % 600 === 599 && villageBuiltPhase && villageBuiltPhase !== burbzDaylightPhaseNow()) {
+  if (villageShadowTick++ % 600 === 599 && villageBuiltPhase && villageBuiltPhase !== burbzDaylightPhaseNow()) {
     villageBuiltSeed = null;
     renderVillage();
     return;
   }
   // The key light never moves — refreshing the shadow map at a third of the
   // frame rate keeps walkers' and sails' shadows live at a fraction of the GPU cost
-  if (villageShadowTick++ % 3 === 0) villageRenderer.shadowMap.needsUpdate = true;
+  villageScene.userData.updatePeepContacts?.();
   villageRenderer.render(villageScene, villageCamera);
 }
 
@@ -34068,7 +34137,7 @@ function ensureTownRenderer(stage) {
   settlementSceneApplyDpr('town', townRenderer, townSceneQuality);
   townRenderer.shadowMap.enabled = true;
   townRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  townRenderer.shadowMap.autoUpdate = false; // static moon: refreshed every 3rd frame like the village
+  townRenderer.shadowMap.autoUpdate = false; // cached scenery; moving Peeps use contact shadows
   townRenderer.toneMapping = THREE.ACESFilmicToneMapping;
   townRenderer.toneMappingExposure = 1.25;
   stage.appendChild(townRenderer.domElement);
@@ -34163,7 +34232,7 @@ function ensureTownRenderer(stage) {
     // The Hall is already registered with the other tappable economy meshes.
     // Keep each root in the raycast once so a dominant civic model cannot
     // accidentally win twice over the working yard behind it.
-    const rayTargets = townEconBuildings.concat(townDistrictGroups, townNpcs);
+    const rayTargets = townEconBuildings.concat(townDistrictGroups, townNpcs.filter(o => o.visible));
     const hits = ray.intersectObjects(rayTargets, true);
     if (hits.length > 0) {
       let obj = hits[0].object;
@@ -34819,6 +34888,7 @@ function buildTownScene(settle) {
   townBuiltKey = townSceneKey(settle);
   townBuiltPhase = daylight.phase;
   if (townRenderer) townRenderer.toneMappingExposure = daylight.exposure;
+  window.BurbzSettlementLighting.install(THREE,{scene:townScene,renderer:townRenderer,buildings:townEconBuildings,actors:settlementResidentActors.town,daylight,keyLight:moon,fillLight:fill,movers:townNpcs.concat(townChickens,townRoofBirds,townTraffic,townLivestock,townFlocks,townWalkers)});
   // A classic city-builder opening: a fixed three-quarter view, high enough
   // to read the whole town. It stays put until the player moves it.
   townCam.azimuth = camAz;
@@ -34831,6 +34901,7 @@ function townAnimate(ts) {
   if (currentScreen !== 'town') { townRunning = false; return; }
   const stage = $('townStage');
   if (!settlementSceneShouldRun(true, true, stage)) {
+    settlementSceneGovernor('town').lastTs=0;
     stage?.classList.add('is-paused');
     setTimeout(() => {
       if (!townRunning) return;
@@ -34915,12 +34986,12 @@ function townAnimateFrame(t) {
   });
   // Dawn breaks over an open screen too: every ~10s, if the real sky has
   // moved to a new phase, the scene rebuilds itself in the new light.
-  if (townShadowTick % 600 === 599 && townBuiltPhase && townBuiltPhase !== burbzDaylightPhaseNow()) {
+  if (townShadowTick++ % 600 === 599 && townBuiltPhase && townBuiltPhase !== burbzDaylightPhaseNow()) {
     townBuiltKey = null;
     renderTownScreen();
     return;
   }
-  if (townShadowTick++ % 3 === 0) townRenderer.shadowMap.needsUpdate = true;
+  townScene.userData.updatePeepContacts?.();
   townRenderer.render(townScene, townCamera);
 }
 function onTownResize() {
@@ -39253,13 +39324,14 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
       message: 'Photo ID upload failed — try a clearer bird photo.'
     }));
 
-    const batLabel = batLabelInIdentifyResult(result);
+    const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.policy === 'photo-evidence-v350' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
+    const batLabel = photoAccepted ? batLabelInIdentifyResult(result) : '';
     if (batLabel) triggerBatEasterEgg('photo', batLabel);
     const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
-    if (result && result.found && result.species && !mainMatchIsBat) {
+    if (photoAccepted && result.species && !mainMatchIsBat) {
       handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
     } else if (!batLabel) {
-      showToast(result && result.message ? result.message : 'No bird found in that photo');
+      showToast(result && !result.found && result.message ? result.message : 'Bird not found. Try a closer, clearer photo—we couldn’t identify a bird confidently.');
     }
   } catch(e) {
     console.log('Photo ID failed:', e);
@@ -40090,6 +40162,8 @@ function renderArena() {
   const b = battleState.battle;
   const acting = b.acting;
   const playerActing = acting && acting.side === 'player' && !battleState.busy && b.phase === 'act';
+  $('battleAimPanel').hidden=true;
+  if(!battleState.aimFlight)$('battleAimOverlay').style.display='none';
   // The aim-then-strike flow: a chosen move projects its damage onto every
   // living rival, the tapped rival locks as the target, and the ATTACK
   // button lands the blow.
@@ -40109,6 +40183,9 @@ function renderArena() {
     }
   }
   const choosingTarget = !!pendingAct && !pendingAct.skill.aoe;
+  const aimedPlan=playerActing&&pendingAct&&core.isAimedSkill(pendingAct.skill)?battleAimPlan():null;
+  $('battleArena').classList.toggle('aiming',!!aimedPlan);
+  if(aimedPlan){previews={};aimedPlan.hits.forEach(h=>previews[h.index]=core.previewDamage(aimedPlan.actor,b.teams.opponent[h.index],pendingAct.skill,{damageScale:h.scale}));}
 
   // One banner, and only when it has something to say. A Liberation Battle
   // names the village it is freeing; a squad with a family bonus names it.
@@ -40146,6 +40223,7 @@ function renderArena() {
   });
 
   const actions = $('arenaActions');
+  if(aimedPlan){actions.innerHTML='';battleRenderAim(aimedPlan);return;}
   if (b.phase === 'over') { actions.innerHTML = ''; return; }
   const playerTurn = acting && acting.side === 'player' && !battleState.busy;
   if (!playerTurn) {
@@ -40194,7 +40272,7 @@ function renderArena() {
       const m = a.skill;
       const moveIcon = m.gearId ? gearIconHTML({ id:m.gearId, icon:m.icon }) : escapeHtml(m.icon || '🐤');
       const metaLine = m.kind === 'attack'
-        ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
+        ? 'PWR ' + m.power + (m.stat === 'mag' || (m.stat === 'auto' && me.mag > me.atk) ? ' · ✨ magic' : ' · ⚔️ physical') + (m.aoe ? ' · hits all' : m.splash ? ' · adjacent splash '+Math.round(m.splash*100)+'%' : core.isAimedSkill(m) ? ' · aim & cast' : '') + (m.rider && m.rider.kind === 'debuff' ? ' · -' + m.rider.stat.toUpperCase() : '') + (m.rider && m.rider.kind === 'pierce' ? ' · anti-barrier' : '') + (m.crShred ? ' · knocks meter' : '') + (m.crPushSelf ? ' · races meter' : '')
         : m.kind === 'barrier' ? 'Barrier ' + Math.round(m.barrierPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '')
         : m.kind === 'heal' ? 'Heal ~' + Math.round(m.healPct * 100) + '% HP' + (m.teamWide ? ' · whole squad' : '') + (m.cleanse ? ' · cleanse' : '')
         : 'Squad rally' + (m.healPct ? ' + heal' : '');
@@ -40268,7 +40346,8 @@ function battleSelectSkill(skillIndex) {
   battleState.pendingSkillIndex = skillIndex;
   const liveTargets = a.targets || [];
   // A lone rival aims itself; AoE needs no aim at all.
-  battleState.pendingTargetIndex = !a.skill.aoe && liveTargets.length === 1 ? liveTargets[0] : null;
+  battleState.pendingTargetIndex = !a.skill.aoe && (liveTargets.length === 1 || core.isAimedSkill(a.skill)) ? liveTargets[0] : null;
+  battleState.pendingTargetRef = core.isAimedSkill(a.skill) ? b.teams.opponent[battleState.pendingTargetIndex] : null;
   renderArena();
 }
 
@@ -40299,11 +40378,102 @@ function battleTargetPick(side, index) {
   if (!f || f.fainted) return;
   SFX.tap();
   battleState.pendingTargetIndex = index;
-  renderArena();
+  battleState.pendingTargetRef = f;
+  if(battleAimPlan())battleRefreshAim();else renderArena();
 }
+
+function battleAimPlan() {
+  const state=battleState,b=state?.battle,core=battleCore();
+  if(!b||b.phase!=='act'||b.acting?.side!=='player'||state.pendingSkillIndex==null)return null;
+  const a=core.availableActions(b)[state.pendingSkillIndex];
+  if(!a?.usable||!core.isAimedSkill(a.skill))return null;
+  const index=state.pendingTargetIndex,target=b.teams.opponent[index];
+  if(!target||target.fainted||target.hp<=0||(state.pendingTargetRef&&state.pendingTargetRef!==target))return null;
+  return {state,b,core,a,index,target,actor:core.actingFighter(b),actorIndex:b.acting.index,hits:core.attackTargets(b,a.skill,index)};
+}
+function battleArtPoint(side,index){
+  const card=$('unit_'+side+'_'+index),art=card?.querySelector('.au-art'),r=art?.getBoundingClientRect();
+  return r&&r.width&&r.height?{x:r.left+r.width/2,y:r.top+r.height*.5}:null;
+}
+function battleAimTargets(){
+  const b=battleState?.battle;if(!b)return [];
+  return b.teams.opponent.flatMap((f,index)=>{const p=battleArtPoint('opponent',index);return p&&!f.fainted&&f.hp>0?[{index,...p}]:[];});
+}
+function battleAimColor(skill){return skill.id.includes('frost')?'#92eaff':skill.id.includes('ember')?'#ffb75c':skill.id.includes('tempest')?'#c4adff':'#ffeaa4';}
+function battleDrawAim(plan,progress=null){
+  const svg=$('battleAimOverlay'),start=battleArtPoint('player',plan.actorIndex),end=battleArtPoint('opponent',plan.index);
+  if(!svg||!start||!end)return false;
+  // Screen panels have transformed ancestors. Keep this fixed overlay on the
+  // body so viewport artwork coordinates remain viewport SVG coordinates.
+  if(svg.parentElement!==document.body)document.body.appendChild(svg);
+  const c=window.BurbzBattleAim.curve(start,end,innerWidth),color=battleAimColor(plan.a.skill);
+  svg.style.display='block';svg.setAttribute('viewBox','0 0 '+innerWidth+' '+innerHeight);
+  const d='M '+start.x+' '+start.y+' Q '+c.control.x+' '+c.control.y+' '+end.x+' '+end.y;
+  const markers=plan.hits.map(hit=>{const p=battleArtPoint('opponent',hit.index);return !p?'':'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(hit.primary?15:20)+'" fill="'+color+'" fill-opacity=".12" stroke="'+color+'" stroke-width="'+(hit.primary?2.5:1.5)+'" '+(!hit.primary?'stroke-dasharray="4 4"':'')+'/>';}).join('');
+  const dot=progress==null?null:window.BurbzBattleAim.pointAt(c,progress);
+  svg.innerHTML='<path d="'+d+'" fill="none" stroke="#13201b" stroke-width="5" opacity=".65"/><path d="'+d+'" fill="none" stroke="'+color+'" stroke-width="2" stroke-dasharray="6 5" opacity=".85"/>'+markers+(dot?'<circle class="aim-projectile-glow" cx="'+dot.x+'" cy="'+dot.y+'" r="13" fill="'+color+'" opacity=".3"/><circle class="aim-projectile" cx="'+dot.x+'" cy="'+dot.y+'" r="6" fill="'+color+'" stroke="white" stroke-width="2"/>':'');
+  return true;
+}
+function battleRefreshAim(value){
+  if(!battleState||battleState.busy)return;
+  const targets=battleAimTargets();
+  if(value!=null){const chosen=window.BurbzBattleAim.targetAt(value,targets);if(chosen){battleState.pendingTargetIndex=chosen.index;battleState.pendingTargetRef=battleState.battle.teams.opponent[chosen.index];}}
+  const p=battleAimPlan();if(!p){$('battleAimOverlay').style.display='none';if($('battleAimCast'))$('battleAimCast').disabled=true;return;}
+  const slider=$('battleAimSlider');if(slider&&value==null)slider.value=window.BurbzBattleAim.valueFor(p.index,targets);
+  if(slider)slider.setAttribute('aria-valuetext',p.target.name+(p.a.skill.splash?' with adjacent splash':''));
+  const damage=p.core.previewDamage(p.actor,p.target,p.a.skill);
+  $('battleAimTarget').textContent=p.target.name+' · '+damage.min+'–'+damage.max+' '+(p.state.liberation?'resolve':'damage');
+  $('battleAimCast').textContent='CAST '+p.a.skill.label.toUpperCase();$('battleAimCast').disabled=false;
+  p.b.teams.opponent.forEach((f,index)=>{
+    const card=$('unit_opponent_'+index);if(!card)return;
+    const hit=p.hits.find(h=>h.index===index);card.classList.toggle('target-locked',!!hit?.primary);card.classList.toggle('splash-target',!!hit&&!hit.primary);
+    card.querySelectorAll('.au-target-flag,.au-dmg-preview').forEach(el=>el.remove());
+    if(hit){const d=p.core.previewDamage(p.actor,f,p.a.skill,{damageScale:hit.scale}),flag=document.createElement('div'),preview=document.createElement('div');flag.className='au-target-flag';flag.textContent=hit.primary?'TARGET':'SPLASH';preview.className='au-dmg-preview';preview.textContent='−'+d.min+'–'+d.max;card.append(flag,preview);}
+  });
+  battleDrawAim(p);
+}
+function battleRenderAim(plan){
+  const panel=$('battleAimPanel');panel.hidden=false;
+  panel.innerHTML='<label for="battleAimSlider"><strong>'+escapeHtml(plan.a.skill.label)+'</strong> · '+(plan.a.skill.splash?'adjacent splash '+Math.round(plan.a.skill.splash*100)+'%':'one precise hit')+'</label><input id="battleAimSlider" type="range" min="0" max="100" step="1" value="50" aria-label="Aim spell across enemy cards"><div id="battleAimTarget" role="status" aria-live="polite"></div><div class="battle-aim-buttons"><button id="battleAimCancel">CANCEL</button><button id="battleAimCast">CAST</button></div><small>Slide to aim, then cast. Cancelling costs no turn.</small>';
+  $('battleAimSlider').addEventListener('input',e=>battleRefreshAim(e.target.value));
+  $('battleAimCancel').addEventListener('click',battleCancelAim);
+  $('battleAimCast').addEventListener('click',battleCastAimed);
+  requestAnimationFrame(()=>battleRefreshAim());
+}
+function battleCancelAim(){
+  if(!battleState||battleState.busy)return false;
+  battleState.pendingSkillIndex=null;battleState.pendingTargetIndex=null;battleState.pendingTargetRef=null;
+  $('battleAimPanel').hidden=true;$('battleAimOverlay').style.display='none';renderArena();return true;
+}
+async function battleCastAimed(){
+  if(!battleState||battleState.busy)return;
+  const plan=battleAimPlan();if(!plan){battleCancelAim();showToast('That target changed. Aim again.');return;}
+  const {state,b,core,a,index,target,actor,actorIndex}=plan,turn=b.turn,skillIndex=state.pendingSkillIndex;
+  state.busy=true;state.aimFlight=true;
+  $('battleAimPanel').querySelectorAll('button,input').forEach(el=>el.disabled=true);
+  const stillValid=()=>battleState===state&&b.phase==='act'&&b.turn===turn&&b.acting?.side==='player'&&b.acting.index===actorIndex&&core.actingFighter(b)===actor&&b.teams.opponent[index]===target&&!target.fainted&&target.hp>0&&core.availableActions(b)[skillIndex]?.usable;
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const landed=await new Promise(resolve=>{
+    const start=performance.now(),duration=reduced?0:650;
+    const frame=now=>{if(!stillValid()){resolve(false);return;}const t=duration?Math.min(1,(now-start)/duration):1;if(!battleDrawAim(plan,t)){resolve(false);return;}if(t<1)requestAnimationFrame(frame);else resolve(true);};requestAnimationFrame(frame);
+  });
+  if(battleState!==state)return;
+  state.aimFlight=false;$('battleAimOverlay').style.display='none';
+  if(!landed||!stillValid()){state.busy=false;battleCancelAim();showToast('That target changed. Aim again.');return;}
+  try{
+    const events=core.resolveAction(b,{skillIndex,targetIndex:index,aimed:true});
+    state.pendingSkillIndex=null;state.pendingTargetIndex=null;state.pendingTargetRef=null;
+    playBattleEvents(events,{impact:true});
+  }catch(e){state.busy=false;battleCancelAim();showToast('That move is no longer ready.');}
+}
+window.addEventListener('resize',()=>{if(!battleState?.busy&&battleAimPlan())battleRefreshAim();});
+document.addEventListener('scroll',()=>{if(!battleState?.busy&&battleAimPlan())battleRefreshAim();},true);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&battleAimPlan()&&!battleState.busy){e.preventDefault();battleCancelAim();}});
+
 
 function battleConfirmAttack() {
   if (!battleState || battleState.busy) return;
+  if(battleAimPlan()){battleCastAimed();return;}
   const core = battleCore();
   const b = battleState.battle;
   if (b.phase !== 'act' || !b.acting || b.acting.side !== 'player') return;
@@ -40351,14 +40521,30 @@ function fighterIndexByName(b, side, name) {
   return i < 0 ? 0 : i;
 }
 
-function playBattleEvents(events) {
+function battleHitPulse(side,index){
+  const card=$('unit_'+side+'_'+index);if(!card)return;
+  card.classList.add('spell-hit');setTimeout(()=>card.classList.remove('spell-hit'),600);
+}
+function playBattleEvents(events, options={}) {
+  const state=battleState;
   battleState.busy = true;
   renderArena();
   const b = battleState.battle;
+  if(options.impact){
+    events.forEach(ev=>addBattleLog(battleLogClassFor(ev),ev.text));
+    for(const ev of events.filter(e=>e.type==='damage')){
+      spawnDamageFloat(ev.side,ev.targetIndex,'−'+ev.dmg+(state.liberation?' resolve':''),'magic');
+      battleHitPulse(ev.side,ev.targetIndex);
+    }
+    if(SFX.specialHit)SFX.specialHit();
+    setTimeout(()=>{if(battleState!==state)return;state.busy=false;if(b.phase==='over')endPerchBattle();else battleAdvance();},750);
+    return;
+  }
   let delay = 120;
   events.forEach(ev => {
     setTimeout(() => {
-      if (!battleState) return;
+      if (battleState !== state) return;
+      renderArena();
       addBattleLog(battleLogClassFor(ev), ev.text);
       if (ev.type === 'damage') {
         const idx = ev.targetIndex != null && ev.targetIndex >= 0 ? ev.targetIndex : fighterIndexByName(b, ev.side, ev.name);
@@ -40383,12 +40569,11 @@ function playBattleEvents(events) {
         if (SFX.capture) SFX.capture({ volume:0.75 });
       }
       if (ev.type === 'faint' && !battleState.liberation && SFX.defeat) SFX.defeat();
-      renderArena();
     }, delay);
     delay += ev.type === 'fact' ? 450 : ev.type === 'info' ? 380 : 620;
   });
   setTimeout(() => {
-    if (!battleState) return;
+    if (battleState !== state) return;
     battleState.busy = false;
     if (b.phase === 'over') { endPerchBattle(); return; }
     battleAdvance();
@@ -41677,7 +41862,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-living-settlements-v348-20260904';
+const BURBZ_BUILD = 'little-folk-residents-v350-20260905';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -41762,7 +41947,7 @@ const MERLIN_TUTORIAL_STEPS = [
   // — The real world: the finale, then the game is theirs.
   { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Likely Birds hints at what may be near \u2014 a clue for your hunt, never a promise.' },
   { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestShowBtn', text:'Show Quests reveals real walking quests on public paths around you. Out there, treasure, tales and new birds wait on every trail.' },
-  { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'Follow your Player Quests when you are ready. Together we will free villages and build homes for Alderwing’s bird neighbours. Every lit window is someone coming home.' },
+  { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'Follow your Player Quests when you are ready. Together we will free villages and build homes for Alderwing’s Peeps. Every lit window is someone coming home.' },
 
   // — Discovery: taught the first time the Scan screen opens.
   { chapterId:'scan', chapter:'Discovery', title:'Two ways to discover', screen:'scan', target:'.scan-mode-toggle', text:'Discover real birds with Camera or Sound. Only a real, recognised bird counts \u2014 that is what powers the tablet\u2019s magic.' },
@@ -42664,6 +42849,8 @@ document.addEventListener('pointerdown', () => {
 
 function handleBurbzBackPress() {
   if (closeTopBurbzLayer()) return;
+  if(currentScreen==='battle'&&battleState?.aimFlight)return;
+  if(currentScreen==='battle'&&battleAimPlan()&&battleCancelAim())return;
   // Mid-tutorial, back must not walk the screens out from under Merlin's
   // spotlight — the press is spent holding the lesson in place.
   if (typeof merlinTutActive !== 'undefined' && merlinTutActive) return;

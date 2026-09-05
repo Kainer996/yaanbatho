@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "feeding-menu-banked-coins-v337-20260831"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 PREVIOUS_RELEASE_PIN = "screen-swipe-v336-20260831"
 
 

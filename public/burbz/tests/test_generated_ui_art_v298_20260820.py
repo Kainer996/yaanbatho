@@ -27,8 +27,8 @@ UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 RELEASE = "generated-ui-art-v298-20260820"
 # Later releases move BURBZ_BUILD on; v298's own segment stays in the lineage.
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
-SETTLEMENT_CORE_RELEASE = "settlement-scene-sharp-v285-20260819"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
+SETTLEMENT_CORE_RELEASE = "little-folk-residents-v350-20260905"
 
 # Since the anchored dock (2026-08-20) the thirteen destinations split:
 # ten scroll on the strip, and Empire · Scan · Academy stand solid in a

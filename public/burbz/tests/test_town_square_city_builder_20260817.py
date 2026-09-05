@@ -30,7 +30,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 PREVIOUS_RELEASE_PIN = "empire-nav-tabs-v275-20260817"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 
 
 def function_source(html: str, name: str) -> str:
@@ -93,7 +93,7 @@ def test_each_wards_real_buildings_stand_in_its_district_as_tagged_yards():
 def test_taps_route_to_the_sheets_yard_first_then_town():
     html = HTML.read_text(encoding="utf-8")
     controls = function_source(html, "ensureTownRenderer")
-    assert "townEconBuildings.concat(townDistrictGroups, townNpcs)" in controls
+    assert "townEconBuildings.concat(townDistrictGroups, townNpcs.filter(o => o.visible))" in controls
     # A working yard wins over the town ledger.
     yard = controls.index("openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId)")
     ledger = controls.index("openTownLedgerSheet()")

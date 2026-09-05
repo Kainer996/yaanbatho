@@ -259,10 +259,10 @@ def test_the_whole_errand_fits_in_the_sheet():
 # Release
 # ---------------------------------------------------------------------------
 
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 # battle_core.js pins the release that last CHANGED it, not the head build —
 # later releases that leave the core alone must not churn every phone's cache.
-BATTLE_CORE_PIN = "quiet-arena-v331-20260826"
+BATTLE_CORE_PIN = "little-folk-residents-v350-20260905"
 PREVIOUS_BUILD = "field-any-bird-v330-20260826"
 
 
@@ -275,6 +275,6 @@ def test_release_is_versioned_and_the_changed_core_is_precached_everywhere():
     # A stale battle_core in a phone's service-worker cache would run the new
     # arena against an engine that still has a Focus pool.
     assert f"battle_core.js?v={BATTLE_CORE_PIN}" in HTML
-    assert sw.count(f"'./battle_core.js?v={BATTLE_CORE_PIN}'") == 2
+    assert sw.count(f"'./battle_core.js?v={BATTLE_CORE_PIN}'") == 3
     updater = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
     assert '"battle_core.js"' in updater

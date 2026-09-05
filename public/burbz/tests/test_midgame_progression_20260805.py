@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-CURRENT_BUILD = "alderwing-living-settlements-v348-20260904"
+CURRENT_BUILD = "little-folk-residents-v350-20260905"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 

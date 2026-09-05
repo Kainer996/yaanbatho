@@ -186,8 +186,8 @@
   // slow, softened only as far as it must be, and sharpened again the moment
   // the load lifts. Pure: same sample in, same decision out.
   var ADAPT_MIN_FRAMES = 24;      // don't judge a stutter, judge a stretch
-  var ADAPT_SLOW_MS = 30;         // under ~33fps sustained → give up pixels
-  var ADAPT_FAST_MS = 19;         // near 60fps sustained → win pixels back
+  var ADAPT_SLOW_MS = 22;         // sustained missed 16.7ms budget → reduce fill cost
+  var ADAPT_FAST_MS = 16.9;       // a steady 60Hz stretch can recover detail
   var ADAPT_STEP = 0.25;
   function adaptDetail(state, sample) {
     state = state || {};
@@ -197,7 +197,8 @@
     var dpr = Math.min(maxDpr, Math.max(minDpr, positiveNumber(state.dpr, maxDpr)));
     var frames = Math.max(0, Math.floor(finiteNumber(sample.frames, 0)));
     var avg = finiteNumber(sample.avgFrameMs, NaN);
-    if (frames < ADAPT_MIN_FRAMES || !Number.isFinite(avg)) return { dpr: dpr, changed: false };
+    const sustainedStall = frames >= 8 && avg > 80;
+    if ((frames < ADAPT_MIN_FRAMES && !sustainedStall) || !Number.isFinite(avg)) return { dpr: dpr, changed: false };
     if (avg > ADAPT_SLOW_MS && dpr > minDpr) return { dpr: Math.max(minDpr, dpr - ADAPT_STEP), changed: true };
     if (avg < ADAPT_FAST_MS && dpr < maxDpr) return { dpr: Math.min(maxDpr, dpr + ADAPT_STEP), changed: true };
     return { dpr: dpr, changed: false };
