@@ -40,7 +40,7 @@ CORE = ROOT / "empire_grid_core.js"
 OWN_RELEASE_PIN = "empire-grid-v322-20260825"
 # Later releases ship over the top. This one edited bird_roles_core.js, so its
 # own tag stays on that core while the head build moves on without it.
-CURRENT_BUILD = "little-folk-residents-v350-20260905"
+CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
 PREVIOUS_RELEASE_PIN = "free-birds-v318-20260824"
 
 

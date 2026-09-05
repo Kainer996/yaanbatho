@@ -54,6 +54,7 @@ FILES=(
   "tests/fixtures/photo-v350/empty-scene.jpg"
   "tests/fixtures/photo-v350/nonbird-shapes.jpg"
   "tests/fixtures/photo-v350/README.md"
+  "assets/forge/anvil-v351.webp"
   "assets/quest-categories/food.webp"
   "assets/quest-categories/materials.webp"
   "assets/quest-categories/timber.webp"

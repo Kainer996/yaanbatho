@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "little-folk-residents-v350-20260905"
+CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

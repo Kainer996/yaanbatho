@@ -52,7 +52,7 @@ SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "art-same-origin-v325-20260825"
-CURRENT_BUILD = "little-folk-residents-v350-20260905"
+CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
 PREVIOUS_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 
 GITHUB_HOSTS = ("github.com/Kainer996", "raw.githubusercontent.com")

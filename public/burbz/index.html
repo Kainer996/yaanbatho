@@ -2643,6 +2643,46 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .forge-craft-btn { flex-shrink:0; padding:9px 13px; border-radius:9px; background:linear-gradient(135deg, var(--accent), var(--accent3)); color:#fff; font-family:'Russo One', sans-serif; font-size:10px; letter-spacing:1px; }
 .forge-craft-btn:disabled { opacity:0.35; }
 .forge-recipe .fr-time { font-family:'Rajdhani',sans-serif; font-weight:800; font-size:9px; letter-spacing:.05em; color:var(--text3); white-space:nowrap; }
+/* Painted workshop: warm metal, readable controls, no ambient animation. */
+#screen-forge .forge-tab { min-height:44px; letter-spacing:.05em; }
+#screen-forge .forge-tab.active { color:#ffe1a4; border-color:rgba(224,177,88,.65); background:linear-gradient(180deg,#3e3019,#19150e); }
+#screen-forge .forge-upgrade-card { overflow:hidden; padding:0; background:radial-gradient(ellipse at 85% 30%,rgba(209,121,38,.20),transparent 65%),linear-gradient(140deg,#242017,#101513); border-color:#766036; box-shadow:inset 0 1px rgba(255,222,157,.09); }
+.forge-workshop { display:grid; grid-template-columns:minmax(0,1fr) minmax(110px,43%); align-items:center; gap:2px; min-height:158px; padding:12px 8px 10px 16px; }
+.forge-workshop-copy { min-width:0; }
+.forge-workshop-kicker { font-size:10px; letter-spacing:.13em; color:#d6b57a; text-transform:uppercase; margin-bottom:7px; }
+.forge-workshop .fu-title { font-family:'Russo One',sans-serif; font-size:clamp(17px,4.5vw,21px); line-height:1.2; color:#ffe2ab; }
+.forge-workshop .fu-copy { font-size:12px; line-height:1.45; color:#d4c9b4; margin-top:7px; }
+.forge-anvil-art { width:100%; height:150px; object-fit:contain; filter:drop-shadow(0 7px 8px rgba(0,0,0,.48)); }
+.forge-upgrade-details { border-top:1px solid rgba(220,178,96,.22); padding:0 13px; background:rgba(0,0,0,.2); }
+.forge-upgrade-details summary { min-height:44px; display:list-item; align-content:center; cursor:pointer; padding:12px 0; color:#eed6a6; font-size:12px; font-weight:700; }
+.forge-upgrade-details[open] { padding-bottom:12px; }
+#screen-forge .forge-upgrade-cost { margin:0 0 10px; font-size:12px; line-height:1.5; font-weight:600; color:#d8ccb6; }
+#screen-forge .forge-upgrade-btn { min-height:44px; font-size:11px; letter-spacing:.04em; }
+#screen-forge .forge-recipe { display:grid; grid-template-columns:52px minmax(0,1fr) 82px; gap:10px; padding:12px 10px; background:linear-gradient(125deg,#1b1913,#111410); border-color:rgba(210,181,121,.2); }
+#screen-forge .forge-recipe .fr-icon { width:52px; height:52px; }
+#screen-forge .forge-recipe .fr-name { font-size:13px; line-height:1.35; }
+#screen-forge .forge-recipe .fr-stats { font-size:11px; line-height:1.4; margin-top:4px; }
+#screen-forge .forge-recipe .fr-cost { font-size:11px; line-height:1.5; color:#c6bfae; margin-top:5px; }
+#screen-forge .forge-recipe .fr-time { display:block; font-size:10px; color:#c6bfae; margin-top:3px; }
+#screen-forge .forge-craft-btn { min-height:44px; width:82px; padding:9px 5px; font-size:10px; line-height:1.4; letter-spacing:.02em; }
+#screen-forge .forge-craft-btn:disabled { opacity:.65; }
+#screen-forge .forge-cancel-btn { width:44px; height:44px; }
+#screen-forge .forge-collect-btn,#screen-forge .forge-transmute-btn { min-height:44px; }
+#screen-forge .forge-job-meta { font-size:11px; line-height:1.4; }
+#screen-forge .forge-job.empty { opacity:1; background:rgba(191,151,79,.04); border-color:rgba(204,171,105,.22); }
+#screen-forge .forge-recipe-group { line-height:1.5; color:#ddc38f; }
+#screen-forge .forge-mat-card { min-width:0; }
+#screen-forge .forge-mat-card > div:nth-child(2) { min-width:0; overflow-wrap:anywhere; }
+@media(max-width:359px) {
+  #screen-forge .forge-recipe { grid-template-columns:46px minmax(0,1fr); gap:8px; }
+  #screen-forge .forge-recipe .fr-icon { width:46px; height:46px; }
+  #screen-forge .forge-craft-btn { grid-column:2; width:100%; }
+  #screen-forge .forge-mat-grid { grid-template-columns:minmax(0,1fr); }
+  .forge-workshop { min-height:142px; padding-left:12px; }
+  .forge-anvil-art { height:138px; }
+}
+@media(prefers-reduced-motion:reduce) { #screen-forge .forge-job.ready { animation:none; box-shadow:0 0 0 1px #d9b474; } }
+
 /* The anvil queue — timed commissions, city-builder style */
 .forge-job-list { display:flex; flex-direction:column; gap:8px; margin-bottom:6px; }
 .forge-job { display:flex; align-items:center; gap:10px; padding:10px; border-radius:12px; background:linear-gradient(135deg,rgba(214,168,79,.09),rgba(0,0,0,.30)); border:1px solid rgba(255,255,255,.08); }
@@ -4744,8 +4784,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="forge-intro">Turn found loot into gear for your birds.<button type="button" class="info-dot" data-info-dot="infoNoteForgeIntro" aria-expanded="false" aria-controls="infoNoteForgeIntro" aria-label="How the Forge works"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.6 12 5.6 21.5 12 21.5 12 18 18.4 12 18.4 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button></div>
       <div class="info-note" id="infoNoteForgeIntro" hidden>Loot found on your walks becomes weapons, armour, satchels, trinkets, spells and battle potions here. Equip each bird at the Forge; its potion can be drunk on that bird’s turn, and satchels let it carry more home from quests.</div>
       <div class="forge-tabs">
-        <button class="forge-tab" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
         <button class="forge-tab active" id="forgeTabCraft" onclick="forgeSetTab('craft')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/forge.webp" alt="">CRAFT</button>
+        <button class="forge-tab" id="forgeTabEquip" onclick="forgeSetTab('equip')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">EQUIP</button>
         <button class="forge-tab" id="forgeTabMaterials" onclick="forgeSetTab('materials')"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/inventory.webp" alt="">MATERIALS</button>
       </div>
       <div id="forgeBody"></div>
@@ -37046,11 +37086,12 @@ function renderForgeQueue() {
       '</div>' +
       (done
         ? '<button class="forge-collect-btn" onclick="collectForgeJob(\'' + job.id + '\')">COLLECT</button>'
-        : '<button class="forge-cancel-btn" onclick="cancelForgeJob(\'' + job.id + '\')" title="Cancel and refund">✖</button>') +
+        : '<button class="forge-cancel-btn" onclick="cancelForgeJob(\'' + job.id + '\')" title="Cancel and refund" aria-label="Cancel commission and refund materials">✖</button>') +
       '</div>');
   });
-  for (let i = jobs.length; i < L.FORGE_MAX_JOBS; i++) {
-    slots.push('<div class="forge-job empty"><div class="forge-job-icon">⚒️</div><div class="forge-job-main"><div class="forge-job-name">Anvil free</div><div class="forge-job-meta">Pick a recipe below to start a commission.</div></div></div>');
+  const free = L.FORGE_MAX_JOBS - jobs.length;
+  if (free > 0) {
+    slots.push('<div class="forge-job empty"><div class="forge-job-icon" aria-hidden="true">⚒️</div><div class="forge-job-main"><div class="forge-job-name">' + free + (free === 1 ? ' anvil ready' : ' anvils ready') + '</div><div class="forge-job-meta">Choose a recipe to put the smith to work.</div></div></div>');
   }
   if (jobs.some(j => now < Number(j.endMs))) setTimeout(ensureForgeCountdownTicker, 0);
   return '<div class="forge-recipe-group">🔨 On the anvil — ' + jobs.length + '/' + L.FORGE_MAX_JOBS + '</div><div class="forge-job-list">' + slots.join('') + '</div>';
@@ -37081,9 +37122,10 @@ function renderForgeUpgradePanel() {
     costLine = '<div class="forge-upgrade-cost">The forge is at its summit — every recipe in the Kingdom is open.</div>';
   }
   return '<div class="forge-upgrade-card">' +
-    '<div class="forge-upgrade-head"><span class="fu-icon">⚒️</span><div><div class="fu-title">' + escapeHtml(info.label) + ' · Forge Lv ' + lv + '/' + L.FORGE_MAX_LEVEL + '</div>' +
-    '<div class="fu-copy">' + escapeHtml(info.copy) + (temperPct ? ' Every equipped piece is honed to Lv ' + lv + ' (+' + temperPct + '% stats).' : '') + '</div></div></div>' +
-    costLine + button + '</div>';
+    '<div class="forge-workshop"><div class="forge-workshop-copy"><div class="forge-workshop-kicker">Forge Lv ' + lv + ' / ' + L.FORGE_MAX_LEVEL + '</div><div class="fu-title">' + escapeHtml(info.label) + '</div>' +
+    '<div class="fu-copy">' + escapeHtml(info.copy) + (temperPct ? ' Gear honed +' + temperPct + '%.' : '') + '</div></div>' +
+    '<img class="forge-anvil-art" src="assets/forge/anvil-v351.webp" width="512" height="512" alt="A feather-inlaid iron anvil and hammer on an oak stump" decoding="async"></div>' +
+    (cost ? '<details class="forge-upgrade-details"><summary>Improve your forge</summary>' + costLine + button + '</details>' : '<div class="forge-upgrade-details"><p class="forge-upgrade-cost">Every recipe in Alderwing is open.</p></div>') + '</div>';
 }
 
 function upgradeForge() {
@@ -41862,7 +41904,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'little-folk-residents-v350-20260905';
+const BURBZ_BUILD = 'painted-forge-anvil-v351-20260905';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
