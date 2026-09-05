@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "little-folk-residents-v350-20260905"
+RELEASE_PIN = "painted-forge-anvil-v351-20260905"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 
