@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "polished-ui-notifications-v339-20260901"
-CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
+CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
 PREVIOUS_RELEASE_PIN = "gentle-start-v338-20260831"
 
 

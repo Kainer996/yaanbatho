@@ -21,7 +21,7 @@ OWN_RELEASE_PIN = "walking-story-quests-v249-20260811"
 # release-polish-v342 (the charter ladder now climbs village -> town -> county).
 CORE_PIN = "release-polish-v342-20260901"
 PREVIOUS_RELEASE_PIN = "conquest-world-levels-v248-20260811"
-CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
+CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
 
 
 def run_node(script: str):

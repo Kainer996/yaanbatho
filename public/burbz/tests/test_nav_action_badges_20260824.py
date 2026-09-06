@@ -56,7 +56,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 # while the head build moves on — a core pin never tracks CURRENT_BUILD.
 OWN_RELEASE_PIN = "nav-action-badges-v312-20260824"
 PREVIOUS_RELEASE_PIN = "village-work-huts-v311-20260824"
-CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
+CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
 
 
 def run_node(source: str):

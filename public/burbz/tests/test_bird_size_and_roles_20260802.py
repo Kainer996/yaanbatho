@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 SIZE_CORE = ROOT / "bird_size_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 SIZE_CORE_PIN = "every-bird-carries-its-weight-v335-20260827"
-CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
+CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "rook-recognition-special-characters-v347-20260904"

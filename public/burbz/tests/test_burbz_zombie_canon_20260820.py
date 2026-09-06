@@ -20,7 +20,7 @@ STORY = ROOT / "STORY.md"
 AGENTS = ROOT / "AGENTS.md"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "forge-opens-on-the-anvil-v323-20260825"
-CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
+CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
 
 
 def test_release_is_wired():
