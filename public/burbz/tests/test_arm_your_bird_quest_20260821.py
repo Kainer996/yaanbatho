@@ -20,7 +20,7 @@ HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 LOOT_CORE = (BURBZ / "loot_crafting_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "barracks-tutorial-callout-v354-20260906"
+RELEASE_PIN = "companion-card-polish-v355-20260906"
 OWN_RELEASE_PIN = "arm-your-bird-v306-20260821"
 
 

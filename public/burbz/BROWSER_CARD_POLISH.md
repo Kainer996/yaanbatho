@@ -4,4 +4,4 @@ Browser verified the actual application at390×750 and1280×850. The portrait pr
 
 Selected the real owned Thorn Talons through its weapon picker: loadout changed to Thorn Talons and ATK displayed26+7. Existing equipped-item art appeared after loading. The Close button remains clear of the persistent coin HUD; Escape dismisses the card. Keyboard focus enters Close and stays in the dialog.
 
-29 focused renderer/bond/swipe/interaction checks pass. This is a review draft until build/cache publication is completed.
+29 focused renderer/bond/swipe/interaction checks pass. Build and asset cache are prepared for v355; publication is verified separately.

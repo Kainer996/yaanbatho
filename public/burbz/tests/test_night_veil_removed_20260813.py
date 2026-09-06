@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 OWN_RELEASE_PIN = "night-owl-dark-mode-v257-20260813"  # the removed release's cache segment
 PREVIOUS_RELEASE_PIN = "completion-notices-v265-20260813"
 

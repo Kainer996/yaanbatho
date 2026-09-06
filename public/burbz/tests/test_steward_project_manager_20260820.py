@@ -30,7 +30,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "bird_roles_core.js"
 RELEASE = "roost-retired-v302-20260820"
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.
 ROLES_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
