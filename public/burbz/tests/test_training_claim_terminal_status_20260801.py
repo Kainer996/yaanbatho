@@ -10,7 +10,7 @@ SW = ROOT / "sw.js"
 # move this on (the cache-lineage assert below keeps this release's own marker).
 RELEASE_PIN = "roost-retired-v302-20260820"
 # magpie-market-v316 edited this core, so it ships under that tag now.
-ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
+ACADEMY_CORE_PIN = "barracks-tutorial-callout-v354-20260906"
 
 
 def _academy_core_json(script: str):

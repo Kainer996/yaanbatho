@@ -5335,7 +5335,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
+<script src="academy_treehouse_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="academy_alive_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="academy_3d_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
@@ -5386,7 +5386,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="action_badge_core.js?v=concise-onboarding-v353-20260906"></script>
+<script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
 <script src="diary_core.js?v=release-polish-v342-20260901"></script>
@@ -6624,8 +6624,8 @@ const DEFAULT_STATE = {
   birdCare: defaultBirdCare(), // Default per-bird care state
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
-  academyBuildings: { outdoors: { built: true, builtAt: 'starter' }, kitchen: { built: true, builtAt: 'starter-kitchen', x: 50, y: 52 } }, // Campus building ownership
-  academyBuilderVersion: 7,
+  academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // New players construct the Kitchen after the Barracks.
+  academyBuilderVersion: 8,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
   league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, streak: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
   birdExpeditions: [], // Fallout Shelter-inspired real-time bird quests
@@ -13657,6 +13657,7 @@ function isAcademyRoomBuilt(room) {
 // After that milestone it can be built at the Academy and its licence applies
 // to every standalone village, including new ones.
 function academyBuildingProgressLock(id) {
+  if (id === 'kitchen' && !isAcademyBuildingBuilt(id) && !isAcademyBuildingBuilt('tavern')) return { chip:'BUILD THE BARRACKS FIRST', button:'BUILD BARRACKS', message:'Build the Barracks first, then the Kitchen & Pantry.' };
   if (id !== 'manager_office' || isAcademyBuildingBuilt(id)) return null;
   const complete = typeof completedVillageCount === 'function' ? completedVillageCount() : 0;
   return complete > 0 ? null : {
@@ -13832,6 +13833,7 @@ function academyBuildBuilding(id, opts = {}) {
   // Guided flow: the first Barracks is the tutorial's build lesson —
   // celebrate it properly, then let Merlin tour the rest of the Academy.
   if (id === 'tavern' && typeof onFirstBarracksBuilt === 'function') onFirstBarracksBuilt();
+  if (id === 'kitchen' && typeof burbzTutorialAction === 'function') burbzTutorialAction('kitchen-built');
   return true;
 }
 
@@ -13927,8 +13929,7 @@ function renderAcademyBuildPanel() {
       '<div class="academy-building-meta"><span class="academy-building-chip">' + (built ? 'BUILT · MOVE ANYTIME' : progressLock ? progressLock.chip : levelLocked ? 'UNLOCK LV ' + b.unlockLevel : costLabel) + '</span>' + btn + '</div>' +
     '</div>';
   }).join('');
-  const marketNudge = isAcademyBuildingBuilt('magpie_market') ? '' : '<div class="academy-market-nudge">⚖️ Trading is locked until the Magpie Market is built.<button type="button" onclick="focusMagpieMarketBuild()">SHOW ME THE MAGPIE MARKET</button></div>';
-  panel.innerHTML = '<div class="academy-builder-status"><div class="academy-builder-title">World buildings</div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵</div></div>' + marketNudge + '<div class="academy-build-grid">' + cards + '</div>';
+  panel.innerHTML = '<div class="academy-builder-status"><div class="academy-builder-title">World buildings</div><div class="academy-builder-wallet">' + wallet + ' 🪙 · ' + branchWallet + ' 🪵</div></div>' + '<div class="academy-build-grid">' + cards + '</div>';
 }
 
 
@@ -23870,16 +23871,16 @@ function empireSiteDangerChip(site) {
 
 function beginVillageLiberation(village) {
   const empire = ensureEmpireState();
-  if (!empire || !village) return;
+  if (!empire || !village) return false;
   if (!window.BurbzEmpireMapCore || !window.BurbzEmpireMapCore.validClaim(village)) {
     showToast('Open a real village from the Map tab to begin its Liberation Battle.');
-    return;
+    return false;
   }
   // Merlin always answers the call to arms, so the first Liberation Battle can
   // be fought before a single bird has been recruited.
   if (!getBattleFlock().length) {
     showToast('Befriend a bird first — your flock will help liberate this village.');
-    return;
+    return false;
   }
   empire.pendingLiberation = {
     seed:village.seed >>> 0,
@@ -23892,6 +23893,7 @@ function beginVillageLiberation(village) {
   switchScreen('battle');
   renderBattleSelect();
   showToast('🕊️ Liberation Battle: free ' + empire.pendingLiberation.name + '!');
+  return true;
 }
 
 function cancelEmpireLiberation() {
@@ -23983,13 +23985,22 @@ function scheduleEmpireHereRefresh() {
   empireHereRefreshTimer = setTimeout(() => { try { refreshEmpireMap(); } catch (e) {} }, 1200);
 }
 
-// Tapping a dark frontier banner travels straight into that still-shadowed
-// settlement, where the claim bar leads into its Liberation Battle.
+// An explicit liberation CTA starts the fight; ordinary visits still use enterVillage.
+function startVillageLiberationBattle(village) {
+  if (!village) { switchScreen('map'); showToast('Open the Empire map and choose a nearby village to liberate.'); return false; }
+  if (empireOwnsVillage(village.seed) || empireHasLiberationVictory(village.seed)) { enterVillage(village); return false; }
+  if (!beginVillageLiberation(village)) return false;
+  // Merlin always leads this call to arms; only ready, available companions join.
+  const ready = getBattleFlock().filter(b => birdBattleAvailable(b) && birdBattleReady(b));
+  ready.sort((a, b) => Number(isMerlinCompanion(b)) - Number(isMerlinCompanion(a)) || (b.power || 0) - (a.power || 0));
+  battleSelectedIds = ready.slice(0, 4).map(b => b.id);
+  startPerchBattle();
+  return true;
+}
 function openEmpireFrontier(seed) {
   const village = empireFrontierVillages.find(v => (v.seed >>> 0) === (Number(seed) >>> 0));
   if (!village) return;
-  enterVillage(village);
-  setTimeout(() => $('villageClaimBar')?.scrollIntoView({ behavior:'smooth', block:'center' }), 260);
+  startVillageLiberationBattle(village);
 }
 
 /* Crusader-Kings-style medieval atlas: parchment land, ink lettering, scribe-blue
@@ -24589,6 +24600,7 @@ function openEmpireVillage(seed) {
 }
 
 function refreshEmpireMap(options = {}) {
+  const settlementsOnMap = empireSettlementsInfo();
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const villages = empireMappableVillages();
   const standaloneVillages = empireStandaloneVillages(villages);
@@ -37855,8 +37867,22 @@ function renderBirdex() {
     }
   }
 
+  wireBirdexCardActions(grid);
+  const loadMore = $('birdexLoadMore');
+  if (loadMore) loadMore.addEventListener('click', () => {
+    SFX.tap();
+    birdexVisibleLimit += BIRDEX_PAGE_SIZE;
+    renderBirdex();
+  }, { once:true });
+}
+
+
+function wireBirdexCardActions(grid) {
   // Attach card actions. Locked codex cards do not reveal species.
   grid.querySelectorAll('.bird-card:not(.undiscovered):not(.locked-card)').forEach(card => {
+    card.addEventListener('keydown', (e) => {
+      if (card.hasAttribute('data-owned-bird-card') && e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); openBirdEquip(card.dataset.birdId); }
+    });
     card.addEventListener('click', (e) => {
       const directRecruitBtn = e.target.closest('[data-action="recruit-birdex"]');
       if (directRecruitBtn) {
@@ -37921,18 +37947,18 @@ function renderBirdex() {
         openPlayerBirdPhotoViewer(photoTarget.dataset.photoKey);
         return;
       }
+      if (e.target.closest('button, a, input, select, textarea, summary, [role="button"]')) return;
+      if (card.hasAttribute('data-owned-bird-card')) {
+        e.stopPropagation();
+        openBirdEquip(card.dataset.birdId);
+        return;
+      }
       const isFlipped = card.classList.toggle('flipped');
       if (isFlipped) requestAnimationFrame(() => {
         card.scrollIntoView({ behavior:'smooth', block:'center' });
       });
     });
   });
-  const loadMore = $('birdexLoadMore');
-  if (loadMore) loadMore.addEventListener('click', () => {
-    SFX.tap();
-    birdexVisibleLimit += BIRDEX_PAGE_SIZE;
-    renderBirdex();
-  }, { once:true });
 }
 
 
@@ -38078,7 +38104,7 @@ function createBirdCardHTML(bird, idx) {
     ? `<button class="card-pet-btn" data-action="feed-bird" data-feed-key="${bird.id}">🍽️ Feed</button>`
     : '';
   return `
-    <div class="bird-card bird-family-outline" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
+    <div class="bird-card bird-family-outline" data-owned-bird-card tabindex="0" role="group" aria-label="${escapeHtml(birdDisplayName(bird))} — press Enter to open full card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${bird.id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
       <div class="bird-card-inner">
         <div class="card-front">
           ${cardDietBadge}
@@ -41335,6 +41361,8 @@ const PLAYER_QUESTS = [
     measure:() => claimedExpeditionCount() },
   { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
+  { id:'pq_build_kitchen',  name:'Build the Kitchen & Pantry', desc:'Raise the Kitchen & Pantry at the Academy', type:'build_kitchen', target:1, reward:55, coins:25, icon:'\u{1F963}', go:'academy',
+    measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
   { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
     measure:() => (gameState.flock || []).length },
   { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy', focusRoom:'kitchen',
@@ -41362,8 +41390,6 @@ const PLAYER_QUESTS = [
     measure:() => Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)) ? 1 : 0 },
   { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
-  { id:'pq_build_kitchen',  name:'Build the Kitchen & Pantry', desc:'Raise the Kitchen & Pantry at the Academy', type:'build_kitchen', target:1, reward:55, coins:25, icon:'\u{1F963}', go:'academy',
-    measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
     measure:() => Number(gameState.player.mealsServed) || 0 },
   { id:'pq_diet_badge',     name:'Feed a bird the right meal', desc:'Give any companion one of its proper foods', type:'proper_meal_fed', target:1, reward:60, coins:30, icon:'\u{1F37D}\u{FE0F}', go:'academy', focusRoom:'kitchen' },
@@ -41435,6 +41461,7 @@ function syncActivePlayerQuest() {
 }
 
 function playerQuestGo(q) {
+  if (q.id === 'pq_liberate') { startVillageLiberationBattle(currentVillage()); return; }
   academyQuestGuidanceRoom = q.focusRoom || null;
   if (q.go === 'academy' && q.focusRoom && !isAcademyBuildingBuilt(q.focusRoom)) {
     focusAcademyBuildCard(q.focusRoom);
@@ -42002,7 +42029,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'concise-onboarding-v353-20260906';
+const BURBZ_BUILD = 'barracks-tutorial-callout-v354-20260906';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -42048,6 +42075,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'Buildings unlock recruitment, feeding, healing and training.', id:'lesson-19' },
   { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Build on the Barracks, then tap the tree to place it. Your first Barracks builds instantly.', action:{ event:'barracks-built', mode:'free', hint:'Build the Barracks and place it on the tree' }, id:'lesson-21' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Recruit companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks lets you recruit birds you have discovered. The Kitchen supplies their food.', id:'lesson-22' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Build the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Merlin covers the cost. Tap Build on the Kitchen, then place it on the tree to prepare your companions’ food.', action:{ event:'kitchen-built', mode:'free', hint:'Build the Kitchen and place it on the tree' }, id:'kitchen-build-v354' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Explore the map', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Tap Map. Player Quests will guide you through the other buildings.', action:{ event:'tab:map', hint:'Tap Map' }, id:'lesson-25' },
   { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The map follows your location. Area Birds suggests nearby species; it does not confirm sightings.', id:'lesson-26' },
   { chapterId:'explore', chapter:'The Real World', title:'Walking quests', screen:'map', target:'#mapQuestShowBtn', text:'Tap Show Quests to find walking quests on nearby public paths.', id:'lesson-27' },
@@ -42255,6 +42283,8 @@ function merlinTutActionIsAvailable(action) {
         const feedingCore = dietHungerCore();
         const feedingMinimum = Math.max(1, Number(feedingCore && feedingCore.FEEDING_HUNGER_MIN) || 60);
         return !merlinIsAway() && (Number(getMerlinCare().hunger) || 0) >= feedingMinimum;
+      case 'kitchen-built':
+        return !isAcademyBuildingBuilt('kitchen');
       case 'barracks-built':
         return !isAcademyBuildingBuilt('tavern');
       case 'merlin-played':
@@ -42293,6 +42323,7 @@ function merlinTutArmAction(step) {
   clearTimeout(merlinTutActionRescueTimer);
   merlinTutActionRescueTimer = setTimeout(() => {
     if (!merlinTutActive || merlinTutStep !== armedAt || !merlinTutAwaitingAction) return;
+    if (action.event === 'kitchen-built' && !isAcademyBuildingBuilt('kitchen')) return;
     const button = $('merlinTutorialNext');
     if (button) { button.style.display = ''; button.textContent = 'Skip step'; }
     // Free mode hides the whole bubble, so its skip lives on the task chip —
@@ -42427,6 +42458,19 @@ function maybeGrantMerlinBarracksGift() {
     updateHeader();
     showToast('🎁 Merlin’s gift: +' + (cfg.cost || 60) + ' 🪙 and +' + (cfg.branches || 8) + ' 🪵 for the Barracks!');
   } catch (e) {}
+}
+
+// One construction gift per save; replays and completed Kitchens never pay again.
+function maybeGrantMerlinKitchenGift() {
+  const flow = tutorialFlowState();
+  if (flow.kitchenGiftGranted || isAcademyBuildingBuilt('kitchen') || !isAcademyBuildingBuilt('tavern')) return;
+  const cfg = ACADEMY_BUILDINGS.kitchen;
+  flow.kitchenGiftGranted = true;
+  addCoins(cfg.cost);
+  addBranches(cfg.branches);
+  saveState();
+  updateHeader();
+  showToast('Merlin gives you ' + cfg.cost + ' coins and ' + cfg.branches + ' branches to build the Kitchen.');
 }
 
 // The first Barracks is the tutorial's build lesson: a proper celebration
@@ -42591,6 +42635,7 @@ function merlinTutShowStep(i) {
   // Prepare both the promised ration and a genuinely feedable hunger state
   // before availability is checked; otherwise a fresh player hears a tap but
   // the care transaction quite correctly refuses to overfeed Merlin.
+  if (step.action?.event === 'kitchen-built' && merlinTutMode !== 'full') maybeGrantMerlinKitchenGift();
   if (step.action && step.action.event === 'merlin-fed' && merlinTutMode !== 'full') maybeGrantTutorialFalconRation();
   $('merlinTutorialChapter').textContent = step.chapter;
   $('merlinTutorialTitle').textContent = step.title;
@@ -42628,6 +42673,7 @@ function merlinTutShowStep(i) {
 
 function merlinTutAdvance() {
   if (!merlinTutActive) return;
+  if (merlinTutCurrentStep()?.action?.event === 'kitchen-built' && !isAcademyBuildingBuilt('kitchen')) return;
   // While an action is armed, Next is hidden: only the rescue button (or the
   // deed itself) moves the tutorial on.
   if (merlinTutAwaitingAction && $('merlinTutorialNext')?.style.display === 'none') return;

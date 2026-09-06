@@ -56,7 +56,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 # while the head build moves on — a core pin never tracks CURRENT_BUILD.
 OWN_RELEASE_PIN = "nav-action-badges-v312-20260824"
 PREVIOUS_RELEASE_PIN = "village-work-huts-v311-20260824"
-CURRENT_BUILD = "concise-onboarding-v353-20260906"
+CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
 
 
 def run_node(source: str):
@@ -537,7 +537,7 @@ def test_release_is_versioned_and_the_badge_core_pin_moved():
     assert OWN_RELEASE_PIN in cache_line       # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     # The badge core changed, so its pin moved everywhere at once.
-    pin = "action_badge_core.js?v=concise-onboarding-v353-20260906"
+    pin = "action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"
     assert f'<script src="{pin}"></script>' in html
     assert sw.count(f"'./{pin}'") == 2
     assert "action_badge_core.js?v=battle-progression-fixes-v286-20260819" not in html
