@@ -27,7 +27,7 @@ UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 RELEASE = "generated-ui-art-v298-20260820"
 # Later releases move BURBZ_BUILD on; v298's own segment stays in the lineage.
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 SETTLEMENT_CORE_RELEASE = "little-folk-residents-v350-20260905"
 
 # Since the anchored dock (2026-08-20) the thirteen destinations split:

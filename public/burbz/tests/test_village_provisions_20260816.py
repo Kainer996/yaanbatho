@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

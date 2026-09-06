@@ -27,13 +27,13 @@ def test_tutorial_is_versioned_complete_concise_and_covers_current_systems():
     assert all(len(step["title"]) <= 42 and len(step["text"]) <= 240 for step in steps)
     copy = " ".join((step["title"] + " " + step["text"]).lower() for step in steps)
     required = [
-        "live map", "likely birds", "walking quest", "sound", "bird-sound analysis", "microphone",
+        "live map", "area birds", "walking quest", "sound", "identification", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
-        "sanctuary", "academy", "hospital", "training",
-        "pantry", "expedition", "stores", "rank", "settings",
+        "sanctuary", "academy", "healing", "training",
+        "food", "first flight", "stores", "rank", "settings",
     ]
     assert all(term in copy for term in required), [term for term in required if term not in copy]
-    assert "uploaded" in copy and "location" in copy and "optional" in copy
+    assert "uploads" in copy and "location" in copy and "optional" in copy
     assert "maybeStartMerlinChapterForScreen(name)" in html
     assert "chapterId:'academy'" in html and "chapterId:'quests'" in html
     assert "startMerlinTutorial({ full:true, resume:false })" in html

@@ -67,10 +67,10 @@ def test_every_chapter_has_steps_and_a_first_open_trigger():
         assert 1 <= count <= 13, (cid, count)
 
 
-def test_story_chapter_tells_the_multiverse_tale_of_the_evil_burbz():
+def test_story_chapter_introduces_the_world_and_first_actions():
     data = tutorial_data()
     story = " ".join((s["title"] + " " + s["text"]).lower() for s in data["steps"] if s["chapterId"] == "story")
-    for marker in ("another universe", "run by birds", "zombie birds", "burbz", "tablet", "multiverse", "alderwing", "birdwatching"):
+    for marker in ("alderwing", "falcon guide", "real birds", "companions", "zombie burbz", "feed", "quests"):
         assert marker in story, marker
 
 
@@ -78,13 +78,13 @@ def test_chapters_cover_every_major_system():
     data = tutorial_data()
     copy = " ".join((s["title"] + " " + s["text"]).lower() for s in data["steps"])
     required = [
-        "live map", "likely birds", "walking quest", "sound", "bird-sound analysis", "microphone",
+        "live map", "area birds", "walking quest", "sound", "identification", "microphone",
         "camera", "birdex", "recruit", "companion", "empire", "liberation battle",
-        "sanctuary", "zombie birds", "academy", "hospital", "training",
-        "pantry", "expedition", "stores", "rank", "settings", "forge",
+        "sanctuary", "zombie birds", "academy", "healing", "training",
+        "food", "first flight", "stores", "rank", "settings", "forge",
     ]
     assert all(term in copy for term in required), [t for t in required if t not in copy]
-    assert "uploaded" in copy and "location" in copy and "optional" in copy
+    assert "uploads" in copy and "location" in copy and "optional" in copy
 
 
 def test_gradual_triggers_are_wired_and_replay_survives():

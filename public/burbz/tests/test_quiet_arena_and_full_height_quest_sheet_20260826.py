@@ -259,7 +259,7 @@ def test_the_whole_errand_fits_in_the_sheet():
 # Release
 # ---------------------------------------------------------------------------
 
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 # battle_core.js pins the release that last CHANGED it, not the head build —
 # later releases that leave the core alone must not churn every phone's cache.
 BATTLE_CORE_PIN = "little-folk-residents-v350-20260905"

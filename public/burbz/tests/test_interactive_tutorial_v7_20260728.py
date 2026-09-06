@@ -96,31 +96,14 @@ def test_the_guided_flow_is_mostly_doing_not_reading():
             assert step.get("target"), step["title"]
 
 
-def test_feeding_is_taught_by_feeding_him():
-    """The lesson the player asked for: tap Merlin, see his food, feed him."""
+def test_feeding_is_taught_directly_without_forced_play_or_rest():
     story = steps_of("story")
-    by_event = {s["action"]["event"]: s for s in story if s.get("action")}
-    # 1. Merlin says he needs looking after…
-    assert "feeding and looking after" in chapter_copy("story")
-    # 2. …then the player taps him and his care menu opens.
-    tap = by_event["merlin-care-opened"]
-    assert tap["target"] == "#petSprite"
-    # 3. His needs and his real diet are read off the open menu.
-    order = [s["title"] for s in story]
-    needs = next(s for s in story if s["target"] == ".merlin-care-status")
-    diet = next(s for s in story if s["target"] == "#merlinDietGuidance")
-    assert all(word in needs["text"].lower() for word in ("food", "play", "rest"))
-    assert "proper meal" in diet["text"].lower() and "small-bird prey ration" in diet["text"].lower()
-    # 4. The player presses Feed themselves.
-    feed = by_event["merlin-fed"]
+    assert len(story) == 4
+    events = [s.get("action", {}).get("event") for s in story]
+    assert events == [None, "merlin-care-opened", "merlin-fed", "tab:quests"]
+    feed = next(s for s in story if s.get("action", {}).get("event") == "merlin-fed")
     assert feed["target"] == "#merlinFeedBtn"
-    # 5. Merlin thanks the player and explains the visible result.
-    after = story[order.index(feed["title"]) + 1]
-    assert "food bar" in after["text"].lower()
-    assert "thank you" in after["text"].lower()
-    # The whole lesson runs in the order above.
-    assert order.index(tap["title"]) < order.index(needs["title"]) < order.index(diet["title"])
-    assert order.index(diet["title"]) < order.index(feed["title"])
+    assert "small-bird prey ration" in feed["text"].lower()
 
 
 def test_feeding_never_dead_ends_on_an_empty_larder():
@@ -231,8 +214,8 @@ def test_the_tutorial_owns_the_care_menu_for_the_whole_feeding_lesson():
     care_targets = {"#petSprite", ".merlin-care-status", "#merlinDietGuidance", "#merlinFeedBtn", "#merlinPlayBtn", "#merlinRestBtn", "#merlinCareMenu"}
     story = steps_of("story")
     tap = next(i for i, s in enumerate(story) if s["target"] == "#petSprite")
-    rest = next(i for i, s in enumerate(story) if s["target"] == "#merlinRestBtn")
-    for step in story[tap:rest + 2]:
+    feed = next(i for i, s in enumerate(story) if s["target"] == "#merlinFeedBtn")
+    for step in story[tap:feed + 1]:
         assert step["target"] in care_targets, step["title"]
 
 
@@ -258,21 +241,16 @@ def test_a_chapter_ended_by_a_tab_tap_hands_over_to_the_next_chapter():
     assert "maybeStartMerlinChapterForScreen(handOffScreen)" in html
 
 
-def test_the_flow_still_covers_every_beat_the_design_asks_for():
-    assert "a next little adventure" in chapter_copy("story")
-    assert "crafting material" in chapter_copy("errand")
-    assert "instantly this time round" in chapter_copy("academy")
-    tour = chapter_copy("academy_tour")
-    for term in ("barracks", "kitchen", "hospital", "training", "crowbar", "player quests"):
-        assert term in tour, term
-    explore = chapter_copy("explore")
-    assert "walking quests" in explore
-    # burbz-empire-three-pages-v343-20260901: the finale hands off to the player
-    # chain (open the Empire map, free the cradle village with Merlin) instead
-    # of deferring liberation and steering the player to Scan first.
-    assert "player quests" in explore and "free villages" in explore
-    assert "alderwing" in explore and "peeps" in explore
-    assert "when you are ready" in explore
+def test_concise_flow_retains_essential_instructions():
+    assert "quests" in chapter_copy("story")
+    assert "covers its cost" in chapter_copy("errand")
+    assert "instantly" in chapter_copy("academy")
+    assert "recruit" in chapter_copy("academy_tour")
+    assert "player quests" in chapter_copy("academy_tour")
+    assert "walking quests" in chapter_copy("explore")
+    assert "public paths" in chapter_copy("explore")
+    assert "zombie burbz" in chapter_copy("story")
+    assert "microphone" in chapter_copy("scan") and "uploads" in chapter_copy("scan")
 
 
 def test_free_mode_always_leaves_a_way_out():

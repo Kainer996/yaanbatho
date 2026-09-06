@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.

@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "woodland-ui-polish-v352-20260906"
+RELEASE_PIN = "concise-onboarding-v353-20260906"
 PREVIOUS_RELEASE_PIN = "back-guard-gesture-v195-20260802"
 
 

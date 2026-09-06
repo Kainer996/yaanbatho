@@ -40,7 +40,7 @@ CORE = ROOT / "empire_grid_core.js"
 OWN_RELEASE_PIN = "empire-grid-v322-20260825"
 # Later releases ship over the top. This one edited bird_roles_core.js, so its
 # own tag stays on that core while the head build moves on without it.
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 PREVIOUS_RELEASE_PIN = "free-birds-v318-20260824"
 
 

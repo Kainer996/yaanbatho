@@ -39,13 +39,11 @@ def _tutorial_counter_probe() -> dict:
     return json.loads(result.stdout)
 
 
-def test_opening_story_counter_is_split_into_small_reassuring_blocks():
+def test_opening_is_four_steps_with_local_chapter_counters():
     probe = _tutorial_counter_probe()
     assert [item["label"] for item in probe["firstTen"]] == [
-        "1 / 3", "2 / 3", "3 / 3",
-        "1 / 3", "2 / 3", "3 / 3",
-        "1 / 2", "2 / 2",
-        "1 / 3", "2 / 3",
+        "1 / 4", "2 / 4", "3 / 4", "4 / 4",
+        "1 / 2", "2 / 2", "1 / 1", "1 / 2", "2 / 2", "1 / 2",
     ]
 
 

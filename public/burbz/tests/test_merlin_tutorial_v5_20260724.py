@@ -60,7 +60,7 @@ def test_story_leads_to_quests_and_mechanics_arrive_bit_by_bit():
     story_steps = [s for s in steps if s["chapterId"] == "story"]
     # generated-ui-art-v298: Quests lives in the unified bottom navigation.
     assert story_steps[-1]["target"] == '.nav-item[data-screen="quests"]'
-    assert "next little adventure" in story_steps[-1]["text"].lower()
+    assert "first flight" in story_steps[-1]["text"].lower()
     # The quest screen is the first taught system after the story.
     assert chapters[1]["id"] == "quests"
     # Gradual means every later system waits for its own trigger.
@@ -75,12 +75,9 @@ def test_story_leads_to_quests_and_mechanics_arrive_bit_by_bit():
 def test_new_mechanics_are_taught():
     steps = tutorial_data()["steps"]
     copy = " ".join((s["title"] + " " + s["text"]).lower() for s in steps)
-    for term in (
-        "kitchen", "food", "pantry", "diet",  # Kitchen & Pantry + diet hunger
-        "level up",                              # bird levelling
-        "equipment", "gear",                     # forge equipment
-        "charm", "crowbar",                      # diplomacy (parley retired in v287)
-    ):
+    # Concise onboarding teaches immediate actions; later Player Quests teach
+    # levelling, diet details and diplomacy when those systems are available.
+    for term in ("kitchen", "food", "healing", "training", "recruit", "equipment", "gear"):
         assert term in copy, term
 
 

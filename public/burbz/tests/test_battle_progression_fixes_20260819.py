@@ -27,8 +27,8 @@ BADGE_CORE_PATH = ROOT / "action_badge_core.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
 PREVIOUS_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
-VERSIONED_BADGE_CORE = "action_badge_core.js?v=nav-action-badges-v312-20260824"  # moved on in v312
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
+VERSIONED_BADGE_CORE = "action_badge_core.js?v=concise-onboarding-v353-20260906"  # moved on in v312
 
 
 def function_source(html: str, name: str) -> str:
