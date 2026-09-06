@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 RELEASE_PIN = "night-hunter-ascendant-v258-20260813"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 
 BATTLE_PACK = {"atk": 1.5, "spd": 1.5, "mag": 1.5, "def": 1.25, "maxHp": 1.25, "critBonus": 0.15}
 

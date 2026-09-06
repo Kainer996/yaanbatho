@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "early-game-until-level-12-v262-20260813"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 
 
 def function_source(html: str, name: str) -> str:

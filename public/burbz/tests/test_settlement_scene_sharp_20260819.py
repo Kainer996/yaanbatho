@@ -29,7 +29,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "settlement-scene-sharp-v285-20260819"
 PREVIOUS_RELEASE_PIN = "building-discovery-v284-20260819"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 VERSIONED_CORE = "settlement_scene_core.js?v=little-folk-residents-v350-20260905"
 
 

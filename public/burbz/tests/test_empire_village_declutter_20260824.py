@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 

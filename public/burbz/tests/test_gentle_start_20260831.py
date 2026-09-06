@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "onboarding_gate_core.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "gentle-start-v338-20260831"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 
 
 def html_text() -> str:
@@ -197,20 +197,21 @@ def test_the_gate_rides_the_badge_heartbeat_and_boot():
     assert "applyFeatureGates()" in beat
     # init() is the file's last function — slice to the boot call instead.
     boot = html[html.index("function init() {"):html.index("\ninit();")]
-    assert "applyFeatureGates(); // fold the dock" in boot
+    assert "applyFeatureGates(); // mark locked dock destinations" in boot
     assert boot.index("loadState();") < boot.index("applyFeatureGates();")
 
 
-def test_apply_walks_the_dock_and_folds_empty_rows():
+def test_apply_keeps_locked_destinations_in_fixed_slots():
+    # User changed presentation on 2026-09-06; unlock rules remain unchanged.
     html = html_text()
     apply_src = function_source(html, "applyFeatureGates")
-    assert "'[data-game-route][data-screen],[data-quick-destination]'" in apply_src
-    assert "item.hidden = map[key] === false;" in apply_src
-    assert "dock-compact" in apply_src
-    # A hidden nav item must beat its own display:flex.
-    assert ".nav-item[hidden], .dock-row[hidden], .dock-pair[hidden], .header-diary-btn[hidden] { display: none !important; }" in html
-    # One row tall once the whole top deck is folded.
-    assert "body.dock-compact { --nav-height: 50px; }" in html
+    assert "item.hidden = !dockItem && locked;" in apply_src
+    assert "item.classList.toggle('is-locked', locked)" in apply_src
+    assert "item.setAttribute('aria-disabled', String(locked))" in apply_src
+    assert "document.body.classList.remove('dock-compact')" in apply_src
+    assert "row.hidden = false" in apply_src
+    assert "brightness(0) drop-shadow" in html
+    assert "document.addEventListener('click', guardLockedDockClick, true)" in html
 
 
 def test_the_swipe_road_reads_the_gate():

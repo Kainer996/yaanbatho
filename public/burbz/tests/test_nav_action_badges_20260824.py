@@ -56,7 +56,7 @@ UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 # while the head build moves on — a core pin never tracks CURRENT_BUILD.
 OWN_RELEASE_PIN = "nav-action-badges-v312-20260824"
 PREVIOUS_RELEASE_PIN = "village-work-huts-v311-20260824"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 
 
 def run_node(source: str):
@@ -537,9 +537,30 @@ def test_release_is_versioned_and_the_badge_core_pin_moved():
     assert OWN_RELEASE_PIN in cache_line       # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
     # The badge core changed, so its pin moved everywhere at once.
-    pin = f"action_badge_core.js?v={OWN_RELEASE_PIN}"
+    pin = "action_badge_core.js?v=concise-onboarding-v353-20260906"
     assert f'<script src="{pin}"></script>' in html
     assert sw.count(f"'./{pin}'") == 2
     assert "action_badge_core.js?v=battle-progression-fixes-v286-20260819" not in html
     assert "action_badge_core.js?v=battle-progression-fixes-v286-20260819" not in sw
     assert '"action_badge_core.js"' in UPDATER.read_text(encoding="utf-8")
+
+
+def test_locked_hint_refreshes_after_unlock_and_badges_only_offer_available_actions():
+    result = run_node(f"""
+const core = require({json.dumps(str(BADGE_CORE))});
+{FAKE_DOM}
+const forge=el({{'data-game-route':'','data-screen':'forge','aria-label':'Forge — locked.', 'data-unlocked-label':'Forge','aria-disabled':'true','title':'Unlocks at Player Quest: Equip gear.'}});
+const root=dom([forge]);
+core.applyActionBadges(root,{{forge:2}});
+const locked={{label:forge.getAttribute('aria-label'),badge:badgeOf(forge)}};
+forge.setAttribute('aria-disabled','false');forge.setAttribute('title','');
+core.applyActionBadges(root,{{forge:2}});
+const unlocked={{label:forge.getAttribute('aria-label'),badge:badgeOf(forge)}};
+core.applyActionBadges(root,{{forge:0}});
+console.log(JSON.stringify({{locked,unlocked,clear:forge.getAttribute('aria-label')}}));
+""")
+    assert result['locked']=={'label':'Forge — locked. Unlocks at Player Quest: Equip gear.','badge':None}
+    assert result['unlocked']['badge']=='2'
+    assert result['unlocked']['label'].startswith('Forge, ')
+    assert 'locked' not in result['unlocked']['label']
+    assert result['clear']=='Forge'

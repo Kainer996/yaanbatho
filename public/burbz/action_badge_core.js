@@ -125,7 +125,8 @@
       // Dock pop-ups are keyed by where they go, routed tabs by their screen.
       var screen = item.getAttribute('data-quick-destination') || item.getAttribute('data-screen');
       if (!screen) return;
-      var count = countValue(counts[screen]);
+      var locked = item.getAttribute('aria-disabled') === 'true';
+      var count = locked ? 0 : countValue(counts[screen]);
       var badge = typeof item.querySelector === 'function'
         ? item.querySelector('.nav-action-badge')
         : null;
@@ -136,7 +137,9 @@
       if (!(BASE_LABEL_KEY in item)) {
         item[BASE_LABEL_KEY] = item.getAttribute('aria-label');
       }
-      var baseLabel = item[BASE_LABEL_KEY];
+      // Gate labels change as destinations unlock; never cache a locked label.
+      var baseLabel = item.getAttribute('data-unlocked-label') || item[BASE_LABEL_KEY];
+      if (locked) baseLabel += ' — locked. ' + (item.getAttribute('title') || 'Continue Player Quests to unlock.');
 
       if (!count) {
         if (item.classList && typeof item.classList.remove === 'function') {

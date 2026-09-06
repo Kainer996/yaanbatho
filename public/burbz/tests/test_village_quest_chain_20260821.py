@@ -24,7 +24,7 @@ BURBZ = Path(__file__).resolve().parents[1]
 HTML = (BURBZ / "index.html").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "woodland-ui-polish-v352-20260906"
+RELEASE_PIN = "concise-onboarding-v353-20260906"
 OWN_RELEASE_PIN = "village-chain-v307-20260821"
 
 VILLAGE_LINKS = [

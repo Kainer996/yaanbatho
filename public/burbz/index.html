@@ -4327,6 +4327,18 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
   :is(.filter-btn, .burbz-mode-btn, .forge-tab, .stores-tab) { transition:none; }
 }
 
+
+/* Locked destinations keep their permanent place and their original silhouette. */
+#bottomDock .nav-item.is-locked { color:var(--text3); background:none; }
+#bottomDock .nav-item.is-locked .nav-icon { transform:none; filter:none; }
+#bottomDock .nav-item.is-locked .nav-icon img {
+  filter:brightness(0) drop-shadow(1px 0 0 var(--text3)) drop-shadow(-1px 0 0 var(--text3)) drop-shadow(0 1px 0 var(--text3)) drop-shadow(0 -1px 0 var(--text3));
+  opacity:.7;
+}
+#bottomDock .nav-item.is-locked .nav-icon::before { opacity:0; }
+#bottomDock .nav-item.is-locked .nav-label { color:var(--text3); }
+#bottomDock .nav-item.is-locked .nav-label::after { content:' ·'; }
+
 </style>
 </head>
 <body>
@@ -5374,7 +5386,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="action_badge_core.js?v=nav-action-badges-v312-20260824"></script>
+<script src="action_badge_core.js?v=concise-onboarding-v353-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
 <script src="diary_core.js?v=release-polish-v342-20260901"></script>
@@ -22287,11 +22299,9 @@ function queueActionBadgeUpdate() {
 }
 
 // ============================================================================
-// GENTLE START (v338) — the dock grows as the game is learned.
-// The player quest chain is the teacher, so each destination joins the dock
-// when the chain reaches it (or the save shows it already in use). Nothing is
-// taken away: at trainer level 12 — the old early-game line — every gate
-// stands open, and a veteran's dock looks exactly as it always did.
+// STABLE DOCK (v353) — every destination keeps its place from the start.
+// The existing quest chain, save evidence and level-12 rule still control
+// access. Locked silhouettes explain the next step without opening a route.
 // ============================================================================
 let featureGateMap = null;      // latest computed map, read by featureGateOpen
 let featureGateBaseline = null; // previous map, so a fresh unlock can say hello
@@ -22333,15 +22343,15 @@ function featureGateEvidence() {
 
 // One line each, spoken once, the moment a destination joins the dock.
 const FEATURE_UNLOCK_TOASTS = {
-  academy: '🏛️ The Academy is open — new on your dock.',
+  academy: '🏛️ The Academy is open — unlocked.',
   birdex: '📖 Your Birds book is open — every discovery lands there.',
-  forge: '⚒️ The Forge is open — new on your dock.',
-  inventory: '🎒 The Royal Stores are open — new on your dock.',
-  battle: '⚔️ The arena is open — new on your dock.',
-  kitchen: '🥣 The Kitchen has joined your dock.',
-  training: '🏋️ Training has joined your dock.',
-  hospital: '🏥 The Bird Hospital has joined your dock.',
-  leaderboards: '🏆 Ranks have joined your dock.',
+  forge: '⚒️ The Forge is open — unlocked.',
+  inventory: '🎒 The Royal Stores are open — unlocked.',
+  battle: '⚔️ The arena is open — unlocked.',
+  kitchen: '🥣 The Kitchen unlocked.',
+  training: '🏋️ Training unlocked.',
+  hospital: '🏥 The Bird Hospital unlocked.',
+  leaderboards: '🏆 Ranks unlocked.',
   diary: '🪶 Merlin keeps your diary now — top right.'
 };
 
@@ -22363,19 +22373,21 @@ function applyFeatureGates() {
   document.querySelectorAll('[data-game-route][data-screen],[data-quick-destination]').forEach(item => {
     const key = item.getAttribute('data-quick-destination') || item.getAttribute('data-screen');
     if (!key || !(key in map)) return;
-    item.hidden = map[key] === false;
+    const locked = map[key] === false;
+    const dockItem = !!item.closest('#bottomDock');
+    item.hidden = !dockItem && locked;
+    if (dockItem) {
+      item.classList.toggle('is-locked', locked);
+      item.setAttribute('aria-disabled', String(locked));
+      if (!item.dataset.unlockedLabel) item.dataset.unlockedLabel = item.getAttribute('aria-label') || item.textContent.trim();
+      const hint = locked ? featureUnlockHint(key) : '';
+      item.setAttribute('aria-label', item.dataset.unlockedLabel + (locked ? ' — locked. ' + hint : ''));
+      item.title = hint;
+    }
   });
-  // An empty pair or deck folds away so what remains sits centred; with the
-  // whole top deck folded the dock is one row tall (body.dock-compact).
-  document.querySelectorAll('#bottomNav .dock-pair').forEach(pair => {
-    pair.hidden = !pair.querySelector('.nav-item:not([hidden])');
-  });
-  const topRow = document.querySelector('#bottomNav .dock-row-top');
-  if (topRow) {
-    const anyTop = !!topRow.querySelector('.nav-item:not([hidden])');
-    topRow.hidden = !anyTop;
-    document.body.classList.toggle('dock-compact', !anyTop);
-  }
+  // Stable rows and positions from the first frame through every unlock.
+  document.querySelectorAll('#bottomNav .dock-pair, #bottomNav .dock-row').forEach(row => { row.hidden = false; });
+  document.body.classList.remove('dock-compact');
   if (!prev) return; // first run of the session sets the baseline quietly
   let announced = 0;
   Object.keys(map).forEach(key => {
@@ -22392,6 +22404,25 @@ function applyFeatureGates() {
     }
   });
 }
+
+function featureUnlockHint(key) {
+  const link = window.BurbzOnboardingGate?.FEATURE_UNLOCKS[key];
+  const quest = PLAYER_QUESTS.find(item => item.id === link);
+  return quest ? 'Unlocks at Player Quest: ' + quest.name + '.' : 'Continue Player Quests to unlock.';
+}
+
+// aria-disabled keeps locked buttons reachable for their hint. Capture blocks
+// both pointer and keyboard-generated clicks before any route or shortcut runs.
+function guardLockedDockClick(event) {
+  const item = event.target?.closest?.('#bottomDock .nav-item');
+  if (!item) return;
+  const key = item.dataset.quickDestination || item.dataset.screen;
+  if (featureGateOpen(key)) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  showToast(featureUnlockHint(key));
+}
+document.addEventListener('click', guardLockedDockClick, true);
 
 // Is this feature open? Defaults to open when the gate cannot answer.
 function featureGateOpen(key) {
@@ -41971,7 +42002,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'woodland-ui-polish-v352-20260906';
+const BURBZ_BUILD = 'concise-onboarding-v353-20260906';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -42004,103 +42035,44 @@ const MERLIN_TUTORIAL_CHAPTERS = [
   { id:'profile',      trigger:'profile' },
 ];
 
+// Stable lesson IDs preserve saved progress when copy and steps change.
+const MERLIN_LEGACY_STEP_CHAPTERS = ["story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "quests", "quests", "quests", "quests", "errand", "errand", "academy", "academy", "academy", "academy_tour", "academy_tour", "academy_tour", "academy_tour", "explore", "explore", "explore", "scan", "scan", "scan", "birdex", "birdex", "birdex", "battle", "battle", "battle", "village", "village", "village", "empire_villages", "empire_villages", "empire_towns", "empire_towns", "town", "town", "diary", "forge", "forge", "inventory", "leaderboards", "profile"];
 const MERLIN_TUTORIAL_STEPS = [
-  // — The Tale of Burbz. Merlin speaks in bursts of three at most, then hands
-  //   the game back: tap him, feed him, tap the Quests tab. A mechanic the
-  //   player has performed once is a mechanic they own.
-  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'A kingdom in darkness', screen:'map', target:null, text:'Welcome to Alderwing: Earth from another universe, run by birds. Excellent dawn chorus. Terrible doorknobs. Zombie birds called Burbz have taken our villages and silenced their streets.' },
-  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'Only you can save us', screen:'map', target:null, text:'I sent this enchanted tablet across the multiverse. It landed in your phone. Good aim, if I say so myself! Your real birdwatching brings living companions to help us free Alderwing and bring its neighbours home.' },
-  { chapterId:'story', progressGroup:'story-intro', chapter:'The Tale of Burbz', title:'I am Merlin, your friend', screen:'map', target:null, text:'I am Merlin, a wizard falcon, and your new friend. Saving a kingdom can wait a moment: even a wizard needs feeding and looking after. Shall we start with me?' },
-  { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'Come and see to me', screen:'map', target:'#petSprite', text:'Tap me on my branch, up in the top-right corner. You can see how I feel there. Wizard. Falcon. Very small appetite for paperwork.',
-    action:{ event:'merlin-care-opened', hint:'Tap Merlin on his branch \u2197' } },
-  { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'Food, cheer and energy', screen:'map', target:'.merlin-care-status', text:'Food keeps me going, play lifts my cheer, and rest refreshes my wings. These bars show how I feel. We will try one thing at a time.' },
-  { chapterId:'story', progressGroup:'story-care', chapter:'The Tale of Burbz', title:'A falcon\u2019s proper meal', screen:'map', target:'#merlinDietGuidance', text:'A small-bird prey ration is a proper meal for a little falcon like me. I brought some for us. A packed lunch is a very important spell.' },
-  { chapterId:'story', progressGroup:'story-feed', chapter:'The Tale of Burbz', title:'Feed me!', screen:'map', target:'#merlinFeedBtn', text:'Go on then \u2014 tap Feed and serve me a small-bird prey ration. I am famished.',
-    action:{ event:'merlin-fed', hint:'Tap \u{1FAB6} Feed' } },
-  { chapterId:'story', progressGroup:'story-feed', chapter:'The Tale of Burbz', title:'That is how you feed me', screen:'map', target:'#merlinCareMenu', text:'Delicious! Watch my food bar fill. Thank you for looking after me. I shall try not to get crumbs on the multiverse.' },
-  { chapterId:'story', progressGroup:'story-play-rest', chapter:'Getting to know Merlin', title:'A little play?', screen:'map', target:'#merlinPlayBtn', text:'Tap Play and I will chase a spark of magic. Watch my cheer rise and my wings get a little tired. Very dignified wizard business.',
-    action:{ event:'merlin-played', hint:'Tap Play' } },
-  { chapterId:'story', progressGroup:'story-play-rest', chapter:'Getting to know Merlin', title:'Time for a wizard nap', screen:'map', target:'#merlinRestBtn', text:'That was fun! Tap Rest for a ten-second wizard nap. You only need to tap once. Even magic works better after a little rest.',
-    action:{ event:'merlin-rested', hint:'Tap Rest and watch Merlin settle' } },
-  { chapterId:'story', progressGroup:'story-play-rest', chapter:'Getting to know Merlin', title:'Ready for an adventure', screen:'map', target:'#merlinCareMenu', text:'Aah, wings refreshed! Food, play and rest help me feel my best. You can check on me any time. Now I would love to bring you a little present.' },
-  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Our first little quest', screen:'map', target:'#petCompanion', text:'My first quest is a tiny flight around the garden. A grand expedition, if you happen to be a beetle. I will be back in seconds with something useful.' },
-  { chapterId:'story', progressGroup:'story-go', chapter:'The Tale of Burbz', title:'Never stuck for a task', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'Tap the glowing Quests tab. It always holds a next little adventure, so you can find your feet at your own pace.',
-    action:{ event:'tab:quests', hint:'Tap the Quests tab' } },
-
-  // — Quests: two beats, then the player actually sends Merlin flying.
-  { chapterId:'quests', chapter:'Quests', title:'Player Quests', screen:'quests', target:'#playerQuestsList', text:'These little tasks show what to try next. One at a time is plenty. I did not send a magic tablet across the universe to give you homework.' },
-  { chapterId:'quests', chapter:'Quests', title:'Kingdom Errands', screen:'quests', target:'#expeditionQuestList', text:'Your companions can bring useful things home from errands. Let us try my short first flight together.' },
-  { chapterId:'quests', chapter:'Quests', title:'Send me out!', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'Tap Merlin’s First Flight. I am already picked for this one — press Send and watch me leave the branch.',
-    action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Tap Merlin\u2019s First Flight, then send me on my way' } },
-  { chapterId:'quests', chapter:'Quests', title:'Now we wait \u2014 briefly', screen:'quests', target:null, text:'Off I go! My branch stays empty while I am away. When I return, tap CLAIM to welcome me home and keep what I found.' },
-
-  // — Merlin returns: one beat, then the player walks to the Academy.
-  { chapterId:'errand', chapter:'Merlin Returns', title:'Back with a prize!', screen:'quests', target:null, text:'Home again! A little crafting material for our adventures. Thank you for waiting for me. Even a wizard likes a welcome.' },
-  { chapterId:'errand', chapter:'Merlin Returns', title:'To the Academy!', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Now, a kingdom needs buildings. Tap the Academy tab \u2014 we have a Barracks to raise, and I am paying for it.',
-    action:{ event:'tab:academy', hint:'Tap the Academy tab' } },
-
-  // — Academy: two beats, then the player raises the building themselves.
-  { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'The heart of your kingdom! Every building in this tree unlocks a new way to house, feed, heal and train your flock.' },
-  { chapterId:'academy', chapter:'Academy', title:'A gift for the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'I have slipped 60 coins and 8 timber into your purse \u2014 exactly what the Barracks costs. Buildings need coin and timber; this one is my treat.' },
-  { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Build on the Barracks, then tap the tree to set it down. It builds instantly this time round \u2014 go on, raise it!',
-    action:{ event:'barracks-built', mode:'free', hint:'Tap Build on the Barracks, then tap the tree' } },
-
-  // — Academy tour: three buildings, then out to the world. The Player Quests
-  //   introduce the rest, one mechanic at a time.
-  { chapterId:'academy_tour', chapter:'Academy', title:'The Barracks stands!', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Magnificent \u2014 the recruitment office is open, and discovered birds can now join your flock! Building pays XP, and birds level up as they work.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Home and the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'The tree itself is home \u2014 a bird with no job rests here, free. The Kitchen & Pantry cooks their meals \u2014 true diets, exactly as I promised.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Heal, train and charm', screen:'academy', target:'.academy-building-card[data-building="crowbar"]', text:'The Bird Hospital heals, the Training Hall sharpens skills, and The Crowbar grows Charm \u2014 the stat that pays on diplomacy quests.' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Out to the world', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Your Player Quests will introduce every other building when you need it. One last thing to show you \u2014 tap the Map.',
-    action:{ event:'tab:map', hint:'Tap the Map tab' } },
-
-  // — The real world: the finale, then the game is theirs.
-  { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'This live map mirrors your real world and follows you. Likely Birds hints at what may be near \u2014 a clue for your hunt, never a promise.' },
-  { chapterId:'explore', chapter:'The Real World', title:'Real-life quests', screen:'map', target:'#mapQuestShowBtn', text:'Show Quests reveals real walking quests on public paths around you. Out there, treasure, tales and new birds wait on every trail.' },
-  { chapterId:'explore', chapter:'The Real World', title:'Off you go, my friend', screen:'map', target:null, text:'Follow your Player Quests when you are ready. Together we will free villages and build homes for Alderwing’s Peeps. Every lit window is someone coming home.' },
-
-  // — Discovery: taught the first time the Scan screen opens.
-  { chapterId:'scan', chapter:'Discovery', title:'Two ways to discover', screen:'scan', target:'.scan-mode-toggle', text:'Discover real birds with Camera or Sound. Only a real, recognised bird counts \u2014 that is what powers the tablet\u2019s magic.' },
-  { chapterId:'scan', chapter:'Discovery', title:'Sound', screen:'scan', target:'#scanSoundBtn', text:'Sound listens for bird song with your microphone. Short clips are uploaded for bird-sound analysis only. Location help is optional.' },
-  { chapterId:'scan', chapter:'Discovery', title:'Camera', screen:'scan', target:'#scanImageBtn', text:'Snap a photo of the bird, then confirm the match. Every discovery is added to your Birdex.' },
-
-  // — Collection: taught the first time the Birdex opens.
-  { chapterId:'birdex', chapter:'Collection', title:'Your Birdex', screen:'birdex', target:'#burbzModeTabs', text:'Every discovery is recorded here with real facts about the species. Companions shows the birds already in your flock.' },
-  { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'A discovered bird is not yours yet. Recruit it at the Academy Barracks with coins to bring it into your flock.' },
-  { chapterId:'birdex', chapter:'Collection', title:'Merlin, your companion', screen:'birdex', target:'#petCompanion', text:'That is me, top right! Tap me any time to feed me, play with me, or let me rest.' },
-
-  // — War on the evil Burbz: taught the first time the Battle screen opens.
-  { chapterId:'battle', chapter:'The War', title:'Know your enemy', screen:'battle', target:'#leagueRival', text:'The Burbz are zombie birds \u2014 the Z is for zombie. You only fight them, never free living birds. A green Counter tag marks the birds that beat them.' },
-  { chapterId:'battle', chapter:'The War', title:'Pick your move', screen:'battle', target:'#battleStartBtn', text:'Pick a move, then tap the evil Burb you want to hit — the ATTACK button shows the damage first. Any of your birds can take the turn: just tap it.' },
-  { chapterId:'battle', chapter:'The War', title:'Liberation Battle', screen:'battle', target:'#battleSelect', text:'Open a village on the Map to face its garrison in a Liberation Battle. Win to free the village and build its sanctuary birdhouse.' },
-
-  // — Realm: taught the first time the Empire screen opens.
-  { chapterId:'village', chapter:'Realm', title:'Three pages', screen:'village', pane:'realm', target:'#empirePagesNav', text:'Your empire is three pages: EMPIRE, TOWNS and VILLAGES. Tap a tab or swipe sideways to move between them.' },
-  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', pane:'realm', target:'#empireWorldMap', text:'The Empire map shows the world under darkness. Every village you free lifts the shadow from its lands.' },
-  { chapterId:'village', chapter:'Realm', title:'Holdings pay tribute', screen:'village', pane:'villages', target:'#empireCollectBar', text:'Standalone villages and united Towns pay coins, timber, stone and goods every eight hours. Happy, provisioned residents pay more.' },
-  { chapterId:'empire_villages', chapter:'Realm', title:'One square, one village', screen:'village', pane:'villages', target:'#empirePanel', text:'Every village you free is a square here. Its colour says what it wants: red needs you, gold can merge, green runs itself. Tap a square to step in.' },
-  { chapterId:'empire_villages', chapter:'Realm', title:'Run it from inside', screen:'village', pane:'villages', target:'#villageManagePanel', text:'Below the squares stands the village itself. Tap a building to step inside and run it. A Project Manager bird builds while you are away.' },
-  { chapterId:'empire_towns', chapter:'Realm', title:'Towns', screen:'village', pane:'towns', target:'#empireTownsPanel', text:'Three starred villages merge into a Town. A village earns its star at 16 folk and 75% happiness. Press Merge on the Villages page when it appears.' },
-  { chapterId:'empire_towns', chapter:'Realm', title:'And above towns', screen:'village', pane:'realm', target:'#empireRealmPanel', text:'Three starred Towns make a County. Counties become Duchies and Kingdoms, and trade with each other. It all lives on the EMPIRE page, under the map.' },
-
-  // — Town strategy: taught when the third nearby liberation forms a Town.
-  { chapterId:'town', chapter:'Town Hall', title:'Three become one', screen:'town', target:'#townHallPanel', text:'You merged three starred villages into one Town. Everything is managed here — and one Upgrade order raises the whole town at once.' },
-  { chapterId:'town', chapter:'Town Hall', title:'Build a real economy', screen:'town', target:'#townHallPanel', text:'Keep food and water supplied for growth, staff productive networks, clear ruins and upgrade the Hall to unlock builder crews and Council policy.' },
-
-  // — Diary: taught the first time the Adventurer's Diary opens.
-  { chapterId:'diary', chapter:'The Chronicle', title:'Your adventuring diary', screen:'diary', target:'#diaryBook', text:'Every bird found, village freed and trail walked, I set down here with my own quill. Lost your place? Read the tale back, day by day.' },
-
-  // — Forge: taught the first time the Fletcher's Forge opens.
-  { chapterId:'forge', chapter:'Forge', title:'The Fletcher\u2019s Forge', screen:'forge', target:'#screen-forge', text:'Craft weapons, armour, satchels and trinkets from battle spoils at the Forge. Equipped satchels carry more finds home from quests.' },
-  { chapterId:'forge', chapter:'Forge', title:'Equip your birds', screen:'forge', target:'#screen-forge', text:'Open a bird\u2019s equipment screen to gear it up. Gear raises its battle stats directly.' },
-
-  // — Resources: taught the first time the Stores open.
-  { chapterId:'inventory', chapter:'Resources', title:'Your Stores', screen:'inventory', target:'#storesTabs', text:'Everything the kingdom owns, in four stockrooms: Materials, Food, Armoury and Curios. The Ledger tab collects what your provinces produce.' },
-
-  // — Community: taught the first time Ranks opens.
-  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Compare your bird discoveries and collection progress with the world.' },
-
-  // — Finish: taught the first time the Profile opens.
-  { chapterId:'profile', chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'Your level, achievements and cloud save live here. Replay this tutorial any time from Settings.' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome to Alderwing', screen:'map', target:null, text:'I am Merlin, your falcon guide. Discover real birds, recruit companions and free villages from the zombie Burbz.', id:'lesson-0' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Meet Merlin', screen:'map', target:'#petSprite', text:'Tap Merlin on his branch in the top-right corner.', action:{ event:'merlin-care-opened', hint:'Tap Merlin' }, id:'lesson-3' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Feed Merlin', screen:'map', target:'#merlinFeedBtn', text:'Tap Feed to give Merlin a small-bird prey ration.', action:{ event:'merlin-fed', hint:'Tap Feed' }, id:'lesson-6' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Start your first quest', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'Tap Quests to send Merlin on his first flight.', action:{ event:'tab:quests', hint:'Tap Quests' }, id:'lesson-12' },
+  { chapterId:'quests', chapter:'First quest', title:'Send Merlin', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'Tap Merlin’s First Flight, then Send. Merlin is already selected.', action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Select First Flight, then Send' }, id:'lesson-15' },
+  { chapterId:'quests', chapter:'First quest', title:'Claim the reward', screen:'quests', target:null, text:'Merlin returns in seconds. Tap Claim when he is back.', id:'lesson-16' },
+  { chapterId:'errand', chapter:'Academy', title:'Build your Academy', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Tap Academy to build the Barracks. Merlin covers its cost.', action:{ event:'tab:academy', hint:'Tap Academy' }, id:'lesson-18' },
+  { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'Buildings unlock recruitment, feeding, healing and training.', id:'lesson-19' },
+  { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Build on the Barracks, then tap the tree to place it. Your first Barracks builds instantly.', action:{ event:'barracks-built', mode:'free', hint:'Build the Barracks and place it on the tree' }, id:'lesson-21' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Recruit companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks lets you recruit birds you have discovered. The Kitchen supplies their food.', id:'lesson-22' },
+  { chapterId:'academy_tour', chapter:'Academy', title:'Explore the map', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Tap Map. Player Quests will guide you through the other buildings.', action:{ event:'tab:map', hint:'Tap Map' }, id:'lesson-25' },
+  { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The map follows your location. Area Birds suggests nearby species; it does not confirm sightings.', id:'lesson-26' },
+  { chapterId:'explore', chapter:'The Real World', title:'Walking quests', screen:'map', target:'#mapQuestShowBtn', text:'Tap Show Quests to find walking quests on nearby public paths.', id:'lesson-27' },
+  { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera or Sound. Confirmed discoveries appear in your Birdex.', id:'lesson-29' },
+  { chapterId:'scan', chapter:'Discovery', title:'Sound identification', screen:'scan', target:'#scanSoundBtn', text:'Sound uploads short microphone clips for bird identification. Location help is optional.', id:'lesson-30' },
+  { chapterId:'scan', chapter:'Discovery', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Take a clear, close photo of a bird. Unclear photos will not count as discoveries.', id:'lesson-31' },
+  { chapterId:'birdex', chapter:'Collection', title:'Your birds', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discoveries and species facts. Companions shows your recruited flock.', id:'lesson-32' },
+  { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Recruit a discovered bird at the Academy Barracks using coins.', id:'lesson-33' },
+  { chapterId:'battle', chapter:'The War', title:'Fight the Burbz', screen:'battle', target:'#leagueRival', text:'Burbz are zombie birds. A green Counter tag shows which of your birds has an advantage.', id:'lesson-35' },
+  { chapterId:'battle', chapter:'The War', title:'Choose an attack', screen:'battle', target:'#battleStartBtn', text:'Select a bird and move, then a target. Attack shows the expected damage before you commit.', id:'lesson-36' },
+  { chapterId:'battle', chapter:'The War', title:'Free a village', screen:'battle', target:'#battleSelect', text:'Open a village on the Map and win its Liberation Battle. Then build a sanctuary birdhouse.', id:'lesson-37' },
+  { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', pane:'realm', target:'#empirePagesNav', text:'Use the Empire, Towns and Villages tabs, or swipe between them. Free villages to lift the darkness.', id:'lesson-38' },
+  { chapterId:'village', chapter:'Realm', title:'Collect tribute', screen:'village', pane:'villages', target:'#empireCollectBar', text:'Villages and Towns produce resources every eight hours. Keep residents supplied and happy to increase output.', id:'lesson-40' },
+  { chapterId:'empire_villages', chapter:'Realm', title:'Village status', screen:'village', pane:'villages', target:'#empirePanel', text:'Red villages need attention. Gold villages can merge. Green villages run themselves. Tap one to enter.', id:'lesson-41' },
+  { chapterId:'empire_villages', chapter:'Realm', title:'Manage a village', screen:'village', pane:'villages', target:'#villageManagePanel', text:'Tap a building to manage it. A Project Manager bird can build while you are away.', id:'lesson-42' },
+  { chapterId:'empire_towns', chapter:'Realm', title:'Form a Town', screen:'village', pane:'towns', target:'#empireTownsPanel', text:'Merge three starred villages. Each needs 16 residents and 75% happiness. Use Merge on the Villages page.', id:'lesson-43' },
+  { chapterId:'empire_towns', chapter:'Realm', title:'Expand your realm', screen:'village', pane:'realm', target:'#empireRealmPanel', text:'Three starred Towns form a County. Manage larger realms and trade from the Empire page.', id:'lesson-44' },
+  { chapterId:'town', chapter:'Town Hall', title:'Town Hall', screen:'town', target:'#townHallPanel', text:'Manage your merged Town here. One Upgrade order improves the whole Town.', id:'lesson-45' },
+  { chapterId:'town', chapter:'Town Hall', title:'Keep your Town growing', screen:'town', target:'#townHallPanel', text:'Supply food and water, assign workers and clear ruins. Upgrade the Hall for more crews and policies.', id:'lesson-46' },
+  { chapterId:'diary', chapter:'The Chronicle', title:'Your diary', screen:'diary', target:'#diaryBook', text:'Review discoveries, freed villages and completed trails here.', id:'lesson-47' },
+  { chapterId:'forge', chapter:'Forge', title:'Craft equipment', screen:'forge', target:'#screen-forge', text:'Use loot to craft gear at the Forge. Satchels let birds carry more home from quests.', id:'lesson-48' },
+  { chapterId:'forge', chapter:'Forge', title:'Equip your birds', screen:'forge', target:'#screen-forge', text:'Open Equip to assign gear to a bird and improve its stats.', id:'lesson-49' },
+  { chapterId:'inventory', chapter:'Resources', title:'Royal Stores', screen:'inventory', target:'#storesTabs', text:'Find Materials, Food, Armoury and Curios here. Use Ledger to collect provincial production.', id:'lesson-50' },
+  { chapterId:'leaderboards', chapter:'Community', title:'Ranks', screen:'leaderboards', target:'.leaderboard-tabs', text:'Compare bird discoveries and collection progress.', id:'lesson-51' },
+  { chapterId:'profile', chapter:'Finish', title:'Profile and settings', screen:'profile', target:'#settingsBtn', text:'View your level, achievements and cloud save here. Replay this tutorial from Settings.', id:'lesson-52' }
 ];
 
 function merlinChapterStepIndices(chapterId) {
@@ -42185,7 +42157,8 @@ function saveMerlinTutorialState(status, currentStep = merlinTutStep) {
       version:BURBZ_TUTORIAL_VERSION,
       status,
       mode:merlinTutMode,
-      careLessonVersion:1,
+      careLessonVersion:2,
+      stepId:MERLIN_TUTORIAL_STEPS[merlinTutSequence[Math.max(0, currentStep)]]?.id || null,
       currentStep:Math.max(0, currentStep),
       updatedAt:new Date().toISOString(),
     }));
@@ -42352,6 +42325,26 @@ function merlinTutPositionShields(rect) {
   box('merlinTutorialShieldRight', hole.right, hole.top, w - hole.right, hole.bottom - hole.top);
 }
 
+// Resolve older positional saves to the next surviving lesson. Removed care
+// beats (including forced rest) move directly to Quests without changing care,
+// spending resources, marking an unseen chapter complete or granting rewards.
+function merlinTutorialResumePosition(saved, mode, sequence) {
+  if (!saved || saved.status !== 'in_progress' || saved.mode !== mode || !sequence.length) return 0;
+  if (typeof saved.stepId === 'string') {
+    const direct = sequence.findIndex(index => MERLIN_TUTORIAL_STEPS[index].id === saved.stepId);
+    if (direct >= 0) return direct;
+  }
+  const availableChapters = new Set(sequence.map(index => MERLIN_TUTORIAL_STEPS[index].chapterId));
+  const legacy = MERLIN_LEGACY_STEP_CHAPTERS.map((chapter, index) => ({ chapter, index }))
+    .filter(step => mode === 'full' ? availableChapters.has(step.chapter) : step.chapter === mode);
+  let position = Math.max(0, Number(saved.currentStep) || 0);
+  if (!saved.careLessonVersion && ['story', 'full'].includes(mode) && position >= 8) position += 3;
+  const oldIndex = typeof saved.stepId === 'string' && /^lesson-\d+$/.test(saved.stepId)
+    ? Number(saved.stepId.slice(7)) : legacy[Math.min(position, legacy.length - 1)]?.index;
+  const next = sequence.findIndex(index => Number(MERLIN_TUTORIAL_STEPS[index].id.slice(7)) >= oldIndex);
+  return next >= 0 ? next : sequence.length - 1;
+}
+
 function startMerlinTutorial(options = {}) {
   const overlay = $('merlinTutorialOverlay');
   if (!overlay || merlinTutActive) return;
@@ -42369,13 +42362,7 @@ function startMerlinTutorial(options = {}) {
   }
   if (!merlinTutSequence.length) return;
   const saved = options.resume === false ? null : readMerlinTutorialState();
-  // Older saves numbered the two onward-guidance steps immediately after
-  // feeding. Preserve that place when inserting the three new care beats.
-  const savedStep = Math.max(0, Number(saved && saved.currentStep) || 0);
-  const resumeOffset = saved && !saved.careLessonVersion && ['story', 'full'].includes(saved.mode) && savedStep >= 8 ? 3 : 0;
-  const resumeStep = saved && saved.status === 'in_progress' && saved.mode === merlinTutMode
-    ? Math.max(0, Math.min(merlinTutSequence.length - 1, savedStep + resumeOffset))
-    : 0;
+  const resumeStep = merlinTutorialResumePosition(saved, merlinTutMode, merlinTutSequence);
   merlinTutOriginScreen = currentScreen || 'map';
   merlinTutPreviousFocus = document.activeElement;
   merlinTutActive = true;
@@ -42492,7 +42479,7 @@ function updateMerlinFlowPointer() {
   el.style.top = '';
   el.style.bottom = '';
   const label = $('tutorialNavPointerText');
-  if (label) label.textContent = target === 'quests' ? 'A quest awaits!' : 'To the Academy!';
+  if (label) label.textContent = target === 'quests' ? 'Open Quests' : 'Open Academy';
   el.classList.add('show');
 }
 
@@ -42686,7 +42673,7 @@ function endMerlinTutorial(completed) {
   } else if (completed && merlinTutMode === 'story') {
     if (currentScreen !== 'quests') showToast('\u{1F9ED} Merlin waits. Tap Quests — a quest is ready for you!');
   } else if (completed && merlinTutMode === 'explore') {
-    showToast('Merlin bows. "The Kingdom of Alderwing flies with you now."');
+    showToast('Tutorial complete. Continue with Player Quests.');
   }
   // Guided-flow hand-off. A chapter that ends because the player tapped a nav
   // tab has already switched screens — but the chapter for that screen was
@@ -43115,7 +43102,7 @@ function landOnSoundScanScreen() {
 
 function init() {
   loadState();
-  applyFeatureGates(); // fold the dock to what this save has met, before first paint
+  applyFeatureGates(); // mark locked dock destinations to what this save has met, before first paint
   armBurbzBackGuard(); // back never quits the game — see the ANDROID BACK section
   initGlobalMoneyHud();
   if (new URLSearchParams(window.location.search).get('demo') === '1') addDemoBirds();

@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 PREVIOUS_RELEASE_PIN = "player-built-village-v267-20260814"
 
 LIEGE, COUNTY, SETTLEMENT, VILLAGE = 0, 1, 2, 3

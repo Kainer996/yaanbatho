@@ -13,7 +13,7 @@ SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
 # This release's own cache marker; later releases move BURBZ_BUILD on.
 PREVIOUS_RELEASE_PIN = "early-game-easy-battles-v240-20260810"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 
 
 def function_source(html: str, name: str) -> str:

@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "live-reconcile-v245-20260810"
-CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
+CURRENT_BUILD = "concise-onboarding-v353-20260906"
 LIVE_MARKERS = (
     "birdex-direct-recruit-v240-20260810",
     "companion-unlock-copy-v241-20260810",
@@ -61,7 +61,7 @@ def test_distributed_hud_routes_every_control_through_one_helper():
     assert "[data-game-route][data-screen]" in core
     # The core changed again in v312 (dock badges), so its cache pin moved on —
     # the convention every changed core follows.
-    assert "'./action_badge_core.js?v=nav-action-badges-v312-20260824'" in SW.read_text(encoding="utf-8")
+    assert "'./action_badge_core.js?v=concise-onboarding-v353-20260906'" in SW.read_text(encoding="utf-8")
 
 
 def test_training_hall_drill_master_stands_in_the_scene():

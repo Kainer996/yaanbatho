@@ -11,7 +11,7 @@ HTML = Path(__file__).resolve().parents[1] / "index.html"
 
 def test_first_flight_step_names_merlins_live_picture_as_its_overlay_target():
     html = HTML.read_text(encoding="utf-8")
-    step = html[html.index("title:'Send me out!'"):]
+    step = html[html.index("title:'Send Merlin'"):]
     step = step[:step.index("\n  {", 1)]
     assert "overlayTarget:'#questOverlay.open [data-quest-bird-id=\"merlin-guide\"] .quest-bird-chip-art'" in step
 
