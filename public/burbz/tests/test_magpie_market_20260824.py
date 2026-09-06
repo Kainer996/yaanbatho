@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "concise-onboarding-v353-20260906"
+CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -45,7 +45,7 @@ EDITED_CORES = ("loot_crafting_core.js",)
 ROLES_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 # academy_treehouse_core.js the same story: iron-ingot-errand-v326 added the
 # Foundry Ingot Pour errand to it, so it now carries that tag instead.
-ACADEMY_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
+ACADEMY_CORE_PIN = "barracks-tutorial-callout-v354-20260906"
 ACADEMY_PRESENTATION_PIN = "rook-recognition-special-characters-v347-20260904"
 
 
@@ -84,7 +84,7 @@ def test_the_market_is_the_fifth_gate_on_the_academy_ladder():
     buildable = [r for r in rooms if r["id"] != "outdoors"]
     ladder = sorted(buildable, key=lambda r: (r["unlockLevel"], r["cost"]))
     assert [r["id"] for r in ladder][:5] == [
-        "tavern", "training", "quest_roost", "kitchen", ROOM_ID
+        "tavern", "kitchen", "training", "quest_roost", ROOM_ID
     ], "trade must be the fifth room the player can build"
 
 
@@ -96,16 +96,17 @@ def test_trade_arrives_early_and_pushes_nothing_out_of_the_early_game():
     assert by_id["hospital"]["unlockLevel"] == 6
     assert by_id["crowbar"]["unlockLevel"] == 7
     gates = sorted(r["unlockLevel"] for r in academy_rooms() if r["id"] != "outdoors")
-    assert gates[:8] == [1, 2, 3, 4, 4, 6, 6, 7]
+    assert gates[:8] == [1, 1, 2, 3, 4, 6, 6, 7]
 
 
 def test_the_coin_ladder_still_rises_with_every_gate_and_nothing_got_dearer():
-    rooms = [r for r in academy_rooms() if r["id"] != "outdoors"]
+    rooms = [r for r in academy_rooms() if r["id"] not in ("outdoors", "kitchen")]
     by_gate = sorted(rooms, key=lambda r: r["unlockLevel"])
     costs = [r["cost"] for r in by_gate]
     assert costs == sorted(costs), "a later room must never be cheaper"
     assert len(set(costs)) == len(costs), "no two rooms share a price"
-    by_id = {r["id"]: r for r in rooms}
+    by_id = {r["id"]: r for r in academy_rooms()}
+    # Kitchen now has a funded early lesson; the other price gates stay ordered.
     # The Market slots between the Kitchen and the Hospital, so the rooms it
     # displaced kept their old bills exactly.
     assert by_id["kitchen"]["cost"] < by_id[ROOM_ID]["cost"] < by_id["hospital"]["cost"]

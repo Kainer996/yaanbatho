@@ -71,7 +71,7 @@ def test_liberation_battle_copy_uses_non_destructive_resolve_language():
     html = HTML.read_text(encoding="utf-8")
     battle = battle_logic(html)
     tutorial = html[html.index("const MERLIN_TUTORIAL_STEPS = ["):html.index("\n];", html.index("const MERLIN_TUTORIAL_STEPS = ["))]
-    assert "free the village" in tutorial
+    assert "free villages" in tutorial
     assert "Liberation Battle" in tutorial
     assert "liberationFriendlyBattleText" in battle
     assert "loses $1 resolve" in battle
@@ -140,5 +140,5 @@ def test_tutorial_surfaces_liberation_story_without_repeating_it_on_empire_scree
     screen = html[screen_start:screen_end]
     tutorial = html[html.index("const MERLIN_TUTORIAL_STEPS = ["):html.index("\n];", html.index("const MERLIN_TUTORIAL_STEPS = ["))]
     assert 'class="empire-story-callout"' not in screen
-    assert "birdwatching" in tutorial and "Alderwing" in tutorial  # v342: the kingdom keeps its full name beside the enemy's
+    assert "Discover real birds" in tutorial and "Alderwing" in tutorial  # v342: the kingdom keeps its full name beside the enemy's
     assert "Liberation Battle" in tutorial

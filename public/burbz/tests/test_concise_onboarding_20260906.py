@@ -62,8 +62,8 @@ console.log(JSON.stringify(MERLIN_TUTORIAL_STEPS[seq[merlinTutorialResumePositio
 
 def test_current_lesson_data_is_concise_and_has_no_rest_requirement():
     data=run(prelude()+'\nconsole.log(JSON.stringify(MERLIN_TUTORIAL_STEPS));')
-    assert len(data)==35
-    assert sum(len(x['text'].split()) for x in data)<=460
+    assert len(data)==36
+    assert sum(len(x['text'].split()) for x in data)<=485
     assert all(len(x['text'].split())<=24 for x in data)
     assert not any(x.get('action',{}).get('event')=='merlin-rested' for x in data)
     assert not any(x.get('target')=='#merlinRestBtn' for x in data)

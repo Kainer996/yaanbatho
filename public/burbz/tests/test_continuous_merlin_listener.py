@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 CORE = ROOT / "sound_listener_core.js"
-ART = ROOT / "assets" / "ui" / "merlin-wand-listener.webp"
+ART = ROOT / "assets" / "ui" / "merlin-listening-wand-v354.webp"
 
 
 def run_core(script):
@@ -24,19 +24,18 @@ def run_core(script):
     return json.loads(result.stdout)
 
 
-def test_merlin_wand_art_is_a_real_transparent_mobile_asset():
+def test_merlin_wand_art_is_a_real_square_mobile_panel():
     assert ART.exists()
     assert ART.stat().st_size > 20_000
     with Image.open(ART) as image:
-        assert image.size == (768, 768)
-        assert image.mode == "RGBA"
-        assert image.getchannel("A").getextrema() == (0, 255)
+        assert image.size == (864, 864)
+        assert image.mode == "RGB"
 
 
 def test_sound_screen_centres_merlin_and_his_wand_in_the_live_listener():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="merlinListenerStage"' in html
-    assert 'src="assets/ui/merlin-wand-listener.webp"' in html
+    assert 'src="assets/ui/merlin-listening-wand-v354.webp"' in html
     assert 'id="merlinWandTip"' in html
     assert 'id="merlinListenStatus"' in html
     assert 'id="merlinListenActivity"' in html
@@ -275,5 +274,5 @@ def test_continuous_listener_release_is_query_busted_and_cached_offline():
     assert './sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729' in sw
     core = sw.split("const BURBZ_CORE = [", 1)[1].split("];", 1)[0]
     assert './sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729' in core
-    assert './assets/ui/merlin-wand-listener.webp' in sw
+    assert './assets/ui/merlin-listening-wand-v354.webp' in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

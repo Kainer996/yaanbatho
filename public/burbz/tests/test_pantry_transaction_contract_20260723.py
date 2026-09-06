@@ -22,8 +22,8 @@ def function_source(html: str, name: str) -> str:
 def test_starter_kitchen_is_reachable_and_documents_real_inventory():
     html = INDEX.read_text(encoding="utf-8")
     for marker in (
-        "academyBuildings: { outdoors: { built: true, builtAt: 'starter' }, kitchen: { built: true",
-        "academyBuilderVersion: 7",
+        "academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }",
+        "academyBuilderVersion: 8",
         "starter-kitchen",
         "kitchenStarterLarderVersion: 1",
         "small_bird_prey_ration: 2",

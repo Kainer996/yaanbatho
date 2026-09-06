@@ -31,7 +31,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 RELEASE_PIN = "living-canopy-v236-20260806"
 # The build has moved on (sleep-retired-v238) but the canopy cores have not,
 # so they keep their own pin while the build tracks the current tag.
-CURRENT_BUILD = "concise-onboarding-v353-20260906"
+CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 

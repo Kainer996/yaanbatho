@@ -18,7 +18,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
-CURRENT_BUILD = "concise-onboarding-v353-20260906"
+CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
 OWN_RELEASE_PIN = "settlement-tiers-v203-20260803"
 
 # Three villages a couple of kilometres apart — the classic neighbouring trio.
