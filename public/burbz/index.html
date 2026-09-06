@@ -982,7 +982,8 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
    other two stand beside it, invisible, until a drag pulls one in. */
 .empire-pages-nav { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:0 12px 10px; padding:4px; border-radius:14px; border:1px solid rgba(240,199,103,.35); background:linear-gradient(180deg,rgba(30,21,9,.85),rgba(12,8,3,.9)); box-shadow:inset 0 1px 0 rgba(255,232,165,.08); }
 .empire-page-tab { position:relative; min-height:50px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:0; border-radius:11px; background:transparent; color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:10.5px; letter-spacing:.1em; }
-.empire-page-tab .ept-icon { font-size:19px; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+.empire-page-tab .ept-icon { width:40px; height:36px; display:grid; place-items:center; line-height:1; filter:drop-shadow(0 2px 3px rgba(0,0,0,.6)); }
+.empire-page-tab .ept-icon img { width:100%; height:100%; object-fit:contain; }
 .empire-page-tab .ept-label { line-height:1; }
 .empire-page-tab .ept-count { position:absolute; top:3px; right:6px; min-width:18px; height:18px; padding:0 5px; border-radius:999px; display:grid; place-items:center; font-family:'Russo One',sans-serif; font-size:9.5px; color:#241a05; background:linear-gradient(180deg,#ffd76a,#e0a93f); box-shadow:0 2px 6px rgba(0,0,0,.5); }
 .empire-page-tab .ept-count[hidden] { display:none; }
@@ -1999,9 +2000,9 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
 
 /* Merlin's continuous wand listener: the character stays on the left and the
    real microphone energy originates at the wand tip, not a fake analyse orb. */
-.merlin-listener-stage { position:relative; min-height:320px; margin:0 auto 12px; max-width:430px; overflow:hidden; border-radius:24px; border:1px solid rgba(240,199,103,.34); background:radial-gradient(circle at 82% 22%,rgba(74,221,186,.16),transparent 28%),linear-gradient(155deg,rgba(29,25,17,.96),rgba(6,13,11,.98)); box-shadow:inset 0 1px rgba(255,255,255,.07),0 16px 38px rgba(0,0,0,.46); }
-.merlin-listener-art { position:absolute; left:-32px; bottom:-18px; width:108%; height:auto; object-fit:contain; pointer-events:none; filter:drop-shadow(0 16px 20px rgba(0,0,0,.62)); }
-.merlin-wand-tip { position:absolute; left:82.5%; top:21.5%; width:18px; height:18px; border-radius:50%; transform:translate(-50%,-50%); background:#f6d878; box-shadow:0 0 0 5px rgba(91,224,185,.15),0 0 16px rgba(91,224,185,.72),0 0 28px rgba(240,199,103,.58); opacity:.58; transition:opacity .2s ease,transform .2s ease; }
+.merlin-listener-stage { position:relative; width:100%; aspect-ratio:1; margin:0 auto 12px; max-width:430px; overflow:hidden; border-radius:24px; border:1px solid rgba(240,199,103,.34); background:radial-gradient(circle at 82% 22%,rgba(74,221,186,.16),transparent 28%),linear-gradient(155deg,rgba(29,25,17,.96),rgba(6,13,11,.98)); box-shadow:inset 0 1px rgba(255,255,255,.07),0 16px 38px rgba(0,0,0,.46); }
+.merlin-listener-art { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; pointer-events:none; filter:drop-shadow(0 16px 20px rgba(0,0,0,.62)); }
+.merlin-wand-tip { position:absolute; left:82.5%; top:19.5%; width:18px; height:18px; border-radius:50%; transform:translate(-50%,-50%); background:#f6d878; box-shadow:0 0 0 5px rgba(91,224,185,.15),0 0 16px rgba(91,224,185,.72),0 0 28px rgba(240,199,103,.58); opacity:.58; transition:opacity .2s ease,transform .2s ease; }
 .merlin-wand-tip::before,.merlin-wand-tip::after { content:''; position:absolute; inset:-13px; border:2px solid rgba(97,237,196,.55); border-left-color:transparent; border-bottom-color:transparent; border-radius:50%; transform:rotate(45deg); opacity:0; }
 .merlin-listener-stage.listening .merlin-wand-tip { opacity:1; animation:merlinWandGlow 1.6s ease-in-out infinite; }
 .merlin-listener-stage.listening .merlin-wand-tip::before { animation:merlinSoundRing 1.65s ease-out infinite; }
@@ -2081,7 +2082,7 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
   animation: birdPickupPulse 1s ease-in-out infinite;
 }
 @keyframes birdPickupPulse { 0%,100%{box-shadow:0 4px 18px rgba(214,168,79,0.35)} 50%{box-shadow:0 4px 28px rgba(214,168,79,0.70)} }
-@media (max-width:380px) { .merlin-listener-stage{min-height:305px} }
+
 @media (prefers-reduced-motion:reduce) { .merlin-listener-stage.listening .merlin-wand-tip,.merlin-listener-stage.listening .merlin-wand-tip::before,.merlin-listener-stage.listening .merlin-wand-tip::after { animation:none !important; } }
 
 .scan-result { margin-top:16px; display:none; }
@@ -4366,7 +4367,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       </div>
     </div>
     <button class="merlin-listening-dock" id="merlinDockReturn" type="button" aria-label="Merlin is listening — open listener">
-      <img src="assets/ui/merlin-wand-listener.webp" alt="">
+      <img src="assets/merlin-tutorial.png" alt="">
       <span class="merlin-listening-pulse" aria-hidden="true"></span>
       <span class="sr-only" id="merlinDockStatus" aria-live="polite">Listening across Burbz</span>
     </button>
@@ -4459,7 +4460,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <!-- Sound scan area -->
       <div id="soundScanArea">
         <div class="merlin-listener-stage" id="merlinListenerStage">
-          <img class="merlin-listener-art" src="assets/ui/merlin-wand-listener.webp" alt="Merlin holding his glowing listening wand">
+          <img class="merlin-listener-art" src="assets/ui/merlin-listening-wand-v354.webp" alt="Merlin beside his glowing listening wand">
           <div class="merlin-wand-tip" id="merlinWandTip" aria-hidden="true"></div>
           <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Possible birdsong</div>
         </div>
@@ -4650,9 +4651,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="empire-ledger-pop" id="empireLedgerPop" role="dialog" aria-label="Royal Ledger" hidden></div>
       <div id="empireCollectBar"></div>
       <div class="empire-pages-nav" id="empirePagesNav" role="tablist" aria-label="Empire pages">
-        <button type="button" class="empire-page-tab" data-empire-page="realm" aria-controls="empirePageRealm"><span class="ept-icon">🗺️</span><span class="ept-label">EMPIRE</span><span class="ept-count" hidden></span></button>
-        <button type="button" class="empire-page-tab" data-empire-page="towns" aria-controls="empirePageTowns"><span class="ept-icon">🏘️</span><span class="ept-label">TOWNS</span><span class="ept-count" hidden></span></button>
-        <button type="button" class="empire-page-tab" data-empire-page="villages" aria-controls="empirePageVillages"><span class="ept-icon">🏡</span><span class="ept-label">VILLAGES</span><span class="ept-count" hidden></span></button>
+        <button type="button" class="empire-page-tab" data-empire-page="realm" aria-controls="empirePageRealm"><span class="ept-icon" aria-hidden="true"><img src="assets/ui/empire-tab.webp" alt="" width="40" height="36"></span><span class="ept-label">EMPIRE</span><span class="ept-count" hidden></span></button>
+        <button type="button" class="empire-page-tab" data-empire-page="towns" aria-controls="empirePageTowns"><span class="ept-icon" aria-hidden="true"><img src="assets/ui/towns-tab.webp" alt="" width="40" height="36"></span><span class="ept-label">TOWNS</span><span class="ept-count" hidden></span></button>
+        <button type="button" class="empire-page-tab" data-empire-page="villages" aria-controls="empirePageVillages"><span class="ept-icon" aria-hidden="true"><img src="assets/ui/villages-tab.webp" alt="" width="40" height="36"></span><span class="ept-label">VILLAGES</span><span class="ept-count" hidden></span></button>
       </div>
       <div class="empire-pages" id="empirePages">
         <section class="empire-page" id="empirePageRealm" data-empire-page="realm">
@@ -42470,6 +42471,7 @@ function maybeGrantMerlinKitchenGift() {
   addBranches(cfg.branches);
   saveState();
   updateHeader();
+  renderAcademyBuildPanel();
   showToast('Merlin gives you ' + cfg.cost + ' coins and ' + cfg.branches + ' branches to build the Kitchen.');
 }
 

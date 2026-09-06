@@ -21,7 +21,7 @@ const ACADEMY_ROOMS=Object.fromEntries(rooms.map(r=>[r.id,{buildingId:r.id}]));
 let gameState={player:{level:1,coins:0,branches:0},academyBuildings:{outdoors:{built:true}},academyBuilderVersion:8,flock:[],tutorialFlow:{}};
 let academySelectedRoom='outdoors',events=[],saved=0;
 const FIRST_RECRUIT_MAX_COST=110,SFX={build(){}};
-const setTimeout=()=>{},showToast=()=>{},saveState=()=>saved++,updateHeader=()=>{},renderAcademy=()=>{},updateQuestProgress=()=>{},queueCompletionNotice=()=>{},showResourceQuestPrompt=()=>{},goalWithThe=x=>x;
+const setTimeout=()=>{},showToast=()=>{},saveState=()=>saved++,updateHeader=()=>{},renderAcademy=()=>{},renderAcademyBuildPanel=()=>{},updateQuestProgress=()=>{},queueCompletionNotice=()=>{},showResourceQuestPrompt=()=>{},goalWithThe=x=>x;
 const playerBranches=()=>gameState.player.branches,addCoins=x=>gameState.player.coins+=x,addBranches=x=>gameState.player.branches+=x;
 const burbzTutorialAction=event=>events.push({event,built:!!gameState.academyBuildings.kitchen?.built});
 """+'\n'.join(function(n) for n in ['isAcademyBuildingBuilt','isAcademyRoomBuilt','ensureAcademyBuildings','academyBuildingProgressLock','academyBuildBuilding','tutorialFlowState','maybeGrantMerlinKitchenGift'])

@@ -170,7 +170,7 @@ def test_merlin_walks_the_pages_and_two_lessons_wait_for_their_rung():
     assert "{ id:'empire_towns', trigger:'empire_towns' }," in HTML
     steps = re.findall(r"\{ chapterId:'(village|empire_villages|empire_towns)', chapter:'Realm', title:'([^']+)', screen:'village', pane:'(\w+)', target:'([^']+)'", HTML)
     assert [(s[0], s[2]) for s in steps] == [
-        ("village", "realm"), ("village", "realm"), ("village", "villages"),
+        ("village", "realm"), ("village", "villages"),
         ("empire_villages", "villages"), ("empire_villages", "villages"),
         ("empire_towns", "towns"), ("empire_towns", "realm"),
     ]
