@@ -25,7 +25,7 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "painted-forge-anvil-v351-20260905"
+CURRENT_BUILD = "woodland-ui-polish-v352-20260906"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "little-folk-residents-v350-20260905"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
