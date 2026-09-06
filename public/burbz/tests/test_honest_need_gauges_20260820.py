@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "honest-need-gauges-v296-20260820"
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 
 
 def run_node(source: str) -> dict:

@@ -29,7 +29,7 @@ STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "town-county-screens-v242-20260810"
 PREVIOUS_RELEASE_PIN = "battle-squad-board-v241-20260810"
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 # empire_realm_core.js gained the realm-painting helpers in this release, so
 # its cache-buster moves with it.
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"

@@ -27,7 +27,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "one-town-fixed-view-v277-20260817"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 
 
 def function_source(html: str, name: str) -> str:

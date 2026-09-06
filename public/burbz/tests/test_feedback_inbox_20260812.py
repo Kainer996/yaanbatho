@@ -16,7 +16,7 @@ INBOX = (ROOT / "inbox.html").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "feedback-menu-keyless-v263-20260813"
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 
 
 def test_settings_has_the_inbox_row_next_to_send_feedback():

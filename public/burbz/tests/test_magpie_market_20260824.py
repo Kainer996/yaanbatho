@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 

@@ -2612,6 +2612,59 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bond-hint { font-size:9px; color:var(--text3); margin-top:7px; }
 .bond-heart-float { position:absolute; bottom:20%; font-size:18px; pointer-events:none; opacity:0; animation:bondHeartFloat 1.7s ease-out forwards; }
 @keyframes bondHeartFloat { 0%{ opacity:0; transform:translateY(6px) scale(.6); } 18%{ opacity:1; } 100%{ opacity:0; transform:translateY(-58px) scale(1.15); } }
+
+/* Full companion card: the original portrait leads, with clear care and loadout panels. */
+.bird-equip-scroll { max-width:960px; padding:16px 18px calc(28px + env(safe-area-inset-bottom)); }
+.bird-equip-topbar { position:sticky; top:-16px; z-index:3; padding:12px 0; background:rgba(10,8,5,.96); margin:0 0 12px; }
+.bird-equip-title { flex:1; padding-right:120px; text-align:center; font-size:11px; letter-spacing:.08em; }
+.bird-equip-close { order:-1; min-height:44px; flex:none; margin-right:12px; }
+.bird-equip-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+.bird-equip-profile,.bird-equip-details { min-width:0; }
+.bird-equip-hero { display:block; padding:0; overflow:hidden; border:1px solid rgba(214,168,79,.4); border-radius:22px; background:linear-gradient(160deg,#231d12,#0c0a07); box-shadow:0 12px 40px rgba(0,0,0,.3); }
+.bird-equip-portrait { position:relative; aspect-ratio:1; display:grid; place-items:center; background:radial-gradient(ellipse at 50% 50%,rgba(214,168,79,.14),transparent 72%); }
+.bird-equip-art { width:100%; height:100%; min-height:0; object-fit:contain; border:0; border-radius:0; background:transparent; }
+.bird-equip-art-emoji { width:auto; height:auto; background:none; line-height:1; font-size:120px; }
+.bird-equip-identity { padding:18px 20px 20px; border-top:1px solid rgba(214,168,79,.22); }
+.bird-equip-name { font-size:24px; line-height:1.25; overflow-wrap:anywhere; }
+.bird-equip-sub { font-size:12px; line-height:1.5; margin-top:5px; }
+.bird-equip-power { display:flex; justify-content:space-between; gap:12px; margin:16px 0 10px; color:var(--text2); font-size:13px; font-weight:500; }
+.bird-equip-power b { color:var(--accent2); font-size:18px; margin-left:5px; }
+.bird-equip-rarity { position:absolute; bottom:12px; left:14px; border:1px solid var(--companion-rarity); background:rgba(10,8,5,.88); border-radius:999px; color:var(--companion-rarity); padding:5px 10px; font-size:10px; text-transform:uppercase; letter-spacing:.12em; }
+.bird-equip-xp { height:4px; border-radius:8px; background:rgba(255,255,255,.08); overflow:hidden; }
+.bird-equip-xp span { display:block; height:100%; background:linear-gradient(90deg,#9c7536,#f0cf85); }
+.bird-equip-fav { top:12px; right:12px; width:44px; height:44px; line-height:40px; backdrop-filter:blur(8px); }
+.bird-equip-stats { gap:1px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.18); border-radius:15px; overflow:hidden; margin:12px 0 0; }
+.bird-equip-stat { border:0; border-radius:0; background:#17130d; padding:13px 5px; }
+.bird-equip-stat .bes-label { font-size:10px; }
+.bird-equip-stat .bes-value { font-size:19px; margin-top:5px; }
+.bird-equip-stat .bes-boost { font-size:11px; }
+.bird-equip-section-label { font-size:12px; margin:6px 0 10px; }
+.bird-equip-bond { padding:15px; border-color:rgba(214,168,79,.25); background:linear-gradient(145deg,rgba(108,57,57,.16),rgba(29,22,14,.65)); margin-bottom:22px; }
+.bird-equip-bond .bond-head { flex-wrap:wrap; }
+.bird-equip-bond .bond-title { color:#e7b6ae; font-size:11px; }
+.bird-equip-bond .bond-meter-note,.bird-equip-bond .bond-hint { font-size:11px; line-height:1.5; }
+.bird-equip-bond .bond-preen-btn { display:flex; align-items:center; justify-content:center; gap:9px; min-height:56px; padding:4px 12px; letter-spacing:.05em; }
+.bird-equip-bond .bond-preen-btn.ready { background:linear-gradient(135deg,#4e3423,#302117); color:#f4dfb6; border:1px solid rgba(214,168,79,.55); }
+.bond-preen-btn .bird-equip-placeholder { width:42px; height:42px; }
+.bird-equip-slots { gap:9px; margin-bottom:16px; }
+.bird-equip-slot { flex-direction:column; align-items:flex-start; gap:5px; min-height:144px; padding:13px; background:linear-gradient(145deg,#231c12,#13100b); border:1px solid rgba(214,168,79,.22); color:var(--text); }
+.bird-equip-slot .beq-icon { width:60px; height:60px; align-self:center; }
+.bird-equip-placeholder { display:block; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 4px 5px rgba(0,0,0,.4)); }
+.bird-equip-slot .beq-slot-label { font-size:10px; color:var(--accent2); }
+.bird-equip-slot .beq-item { font-size:12px; line-height:1.4; }
+.bird-equip-slot .beq-meta { font-size:11px; line-height:1.4; }
+.bird-equip-slot:last-child:nth-child(odd) { grid-column:1/-1; flex-direction:row; align-items:center; min-height:86px; gap:14px; }
+.bird-equip-picker { border-color:rgba(214,168,79,.4); }
+.bird-equip-details .forge-stat-card { font-size:12px; line-height:1.55; }
+.bird-equip-overlay button:focus-visible { outline:2px solid #f8dfa3; outline-offset:3px; }
+@media(max-width:680px) {
+ .bird-equip-scroll { max-width:460px; padding-left:14px; padding-right:14px; }
+ .bird-equip-layout { display:block; }
+ .bird-equip-profile { margin-bottom:22px; }
+ .bird-equip-portrait { aspect-ratio:1.12; }
+ .bird-equip-name { font-size:22px; }
+}
+
 .card-fav-heart { position:absolute; top:27px; right:7px; z-index:3; font-size:15px; filter:drop-shadow(0 1px 3px rgba(0,0,0,.6)); animation:favHeartPop .3s ease; }
 @keyframes favHeartPop { 0%{ transform:scale(.4); } 70%{ transform:scale(1.2); } 100%{ transform:scale(1); } }
 .card-bond-hearts { font-size:9px; letter-spacing:1px; line-height:1.25; margin:1px 0 2px; }
@@ -5111,10 +5164,10 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 
 
   <!-- Bird Equipment Screen — tap a companion bird to open its RPG loadout -->
-  <div class="bird-equip-overlay" id="birdEquipOverlay" role="dialog" aria-modal="true" aria-label="Bird equipment">
+  <div class="bird-equip-overlay" id="birdEquipOverlay" role="dialog" aria-modal="true" aria-label="Companion card and equipment">
     <div class="bird-equip-scroll">
       <div class="bird-equip-topbar">
-        <div class="bird-equip-title">⚔️ Equipment</div>
+        <div class="bird-equip-title">Companion card</div>
         <button class="bird-equip-close" onclick="closeBirdEquip()">✕ CLOSE</button>
       </div>
       <div id="birdEquipBody"></div>
@@ -37370,15 +37423,18 @@ function renderForgeMaterials(body) {
 // weapon, armour, enhancement, spell and potion, with a live stat preview.
 // ============================================================================
 let birdEquipState = { birdId: null, slotPicker: null };
+let birdEquipReturnFocus = null;
 
 const EQUIP_SLOT_ORDER = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
 
 function openBirdEquip(birdId) {
   const bird = (gameState.flock || []).find(b => b.id === birdId);
   if (!bird) return;
+  if (!$('birdEquipOverlay').classList.contains('show')) birdEquipReturnFocus = document.activeElement;
   birdEquipState = { birdId: birdId, slotPicker: null };
   renderBirdEquip();
   $('birdEquipOverlay').classList.add('show');
+  $('birdEquipOverlay').querySelector('.bird-equip-close')?.focus({ preventScroll:true });
   bindBirdEquipSwipe();
   SFX.tap();
   vibrate(10);
@@ -37482,7 +37538,25 @@ function bindBirdEquipSwipe() {
 function closeBirdEquip() {
   $('birdEquipOverlay').classList.remove('show');
   birdEquipState.slotPicker = null;
+  if (birdEquipReturnFocus?.isConnected) birdEquipReturnFocus.focus({ preventScroll:true });
+  birdEquipReturnFocus = null;
 }
+
+function birdEquipHandleKeydown(event) {
+  const overlay = $('birdEquipOverlay');
+  if (!overlay?.classList.contains('show')) return;
+  if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeBirdEquip(); return; }
+  if (event.key !== 'Tab') return;
+  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length);
+  if (!controls.length) return;
+  const first = controls[0], last = controls[controls.length - 1];
+  if (!overlay.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  }
+}
+document.addEventListener('keydown', birdEquipHandleKeydown);
+
 
 function birdEquipOpenSlot(slot) {
   birdEquipState.slotPicker = birdEquipState.slotPicker === slot ? null : slot;
@@ -37528,6 +37602,10 @@ function spawnBondHearts() {
   }
 }
 
+function birdEquipPlaceholderIcon(slot) {
+  return '<img class="bird-equip-placeholder" src="assets/bird-card/' + slot + '.webp" alt="" width="64" height="64" aria-hidden="true">';
+}
+
 function renderBirdEquip() {
   const body = $('birdEquipBody');
   if (!body) return;
@@ -37543,13 +37621,19 @@ function renderBirdEquip() {
     : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
 
   const favourite = birdIsFavourite(bird);
-  const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
-  const hero = '<div class="bird-equip-hero" style="border-color:' + rarityColor + '55;">' + art +
-    favBtn +
-    '<div><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
+  const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" aria-label="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
+  const level = Math.max(1, Number(bird.level) || 1);
+  const xpGoal = XP_PER_LEVEL(level);
+  const xp = Math.max(0, Number(bird.xp) || 0);
+  const xpPercent = level >= 50 ? 100 : Math.min(100, xp / xpGoal * 100);
+  const hero = '<div class="bird-equip-hero" style="--companion-rarity:' + rarityColor + ';">' +
+    '<div class="bird-equip-portrait">' + art + favBtn +
+    '<span class="bird-equip-rarity">' + escapeHtml(bird.rarity || 'common') + '</span></div>' +
+    '<div class="bird-equip-identity"><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
-    '<div class="bird-equip-power" style="color:' + rarityColor + ';">Lv ' + (bird.level || 1) + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · ⚡' + (bird.power || 0) + '</div>' +
-    '<div class="bird-equip-sub">' + ((Number(bird.level) || 1) >= 50 ? 'Max level' : (Number(bird.xp) || 0) + '/' + XP_PER_LEVEL(Math.max(1, Number(bird.level) || 1)) + ' XP to Lv ' + ((Number(bird.level) || 1) + 1)) + '</div></div></div>';
+    '<div class="bird-equip-power"><span>Level <b>' + level + '</b></span><span>Power <b>' + (bird.power || 0) + '</b></span></div>' +
+    '<div class="bird-equip-xp" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(xpPercent) + '"><span style="width:' + xpPercent + '%"></span></div>' +
+    '<div class="bird-equip-sub">' + (level >= 50 ? 'Max level' : xp + ' / ' + xpGoal + ' XP · Next: level ' + (level + 1)) + '</div></div></div>';
 
   const stat = (label, base, key) => '<div class="bird-equip-stat"><div class="bes-label">' + label + '</div>' +
     '<div class="bes-value">' + base + (bonus[key] ? ' <span class="bes-boost">+' + bonus[key] + '</span>' : '') + '</div></div>';
@@ -37574,8 +37658,8 @@ function renderBirdEquip() {
       ? '<div class="bond-meter-note">The bond is complete. ' + escapeHtml(birdDisplayName(bird)) + ' is yours for life.</div>'
       : '<div class="bond-meter"><div class="bond-meter-fill" style="width:' + bp.pct + '%"></div></div><div class="bond-meter-note">' + bp.xp + '/' + bp.next + ' to the next bond level</div>';
     const preenBtn = gate.ok
-      ? '<button class="bond-preen-btn ready" onclick="birdEquipPreen()">🪶 PREEN ' + escapeHtml(birdDisplayName(bird)).toUpperCase() + '</button>'
-      : '<button class="bond-preen-btn" disabled>🪶 Preened · come back in ' + bondCore.describeWait(gate.remainingMs) + '</button>';
+      ? '<button class="bond-preen-btn ready" onclick="birdEquipPreen()">' + birdEquipPlaceholderIcon('preen') + '<span>PREEN ' + escapeHtml(birdDisplayName(bird)).toUpperCase() + '</span></button>'
+      : '<button class="bond-preen-btn" disabled>' + birdEquipPlaceholderIcon('preen') + '<span>Preened · ' + bondCore.describeWait(gate.remainingMs) + ' remaining</span></button>';
     bondPanel = '<div class="bird-equip-section-label">Bond</div><div class="bird-equip-bond">' +
       '<div class="bond-head"><span class="bond-hearts" aria-label="Bond level ' + bp.level + ' of ' + bondCore.MAX_BOND_LEVEL + '">' + hearts + '</span><span class="bond-title">' + escapeHtml(bp.title) + '</span></div>' +
       meter + preenBtn +
@@ -37588,8 +37672,8 @@ function renderBirdEquip() {
     const item = L.gearById(loadout[slot]);
     const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
     const open = birdEquipState.slotPicker === slot;
-    return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
-      '<div class="beq-icon">' + (item ? gearIconHTML(item) : meta.empty) + '</div>' +
+    return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' aria-expanded="' + open + '" aria-controls="birdEquipSlotPicker" onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
+      '<div class="beq-icon">' + (item ? gearIconHTML(item) : birdEquipPlaceholderIcon(slot)) + '</div>' +
       '<div><div class="beq-slot-label">' + meta.label + '</div>' +
       (item ? '<div class="beq-item" style="color:' + color + ';">' + escapeHtml(item.label) + '</div><div class="beq-meta">' + forgeGearStatLine(item) + '</div>' : '<div class="beq-meta">' + meta.hint + '</div>') +
       '</div></button>';
@@ -37601,7 +37685,7 @@ function renderBirdEquip() {
     const owned = Object.entries(gameState.inventory.gear || {}).filter(([, n]) => (Number(n) || 0) > 0)
       .map(([id, n]) => ({ item: L.gearById(id), count: n })).filter(x => x.item && x.item.slot === slot)
       .sort((a, b) => L.rarityIndex(b.item.rarity) - L.rarityIndex(a.item.rarity));
-    picker = '<div class="bird-equip-picker"><div class="forge-picker-title">' + FORGE_SLOT_META[slot].label + ' for ' + escapeHtml(birdDisplayName(bird)) + '</div>' +
+    picker = '<div class="bird-equip-picker" id="birdEquipSlotPicker"><div class="forge-picker-title">' + FORGE_SLOT_META[slot].label + ' for ' + escapeHtml(birdDisplayName(bird)) + '</div>' +
       (loadout[slot] ? '<button class="forge-picker-row" onclick="birdEquipClear(\'' + slot + '\')"><span class="fp-icon">✖️</span><span class="fp-name">Unequip</span></button>' : '') +
       (owned.length ? owned.map(x => {
         const color = L.RARITY_META[x.item.rarity].color;
@@ -37615,7 +37699,7 @@ function renderBirdEquip() {
   const potionItem = L.gearById(loadout.potion);
   const notes = '<div class="bird-equip-section-label">In battle</div><div class="forge-stat-card">' +
     '<span>📜 ' + (spellItem ? '<b>' + escapeHtml(spellItem.label) + '</b> joins ' + escapeHtml(birdDisplayName(bird)) + '\'s skill bar.' : 'Equip a spell scroll to add an extra skill.') + '</span>' +
-    '<span>🧪 ' + (potionItem ? '<b>' + escapeHtml(potionItem.label) + '</b> is drunk automatically as battle begins, then restocked from your bag if you have another.' : 'Equip a potion to drink it automatically as battle begins.') + '</span>' +
+    '<span>🧪 ' + (potionItem ? '<b>' + escapeHtml(potionItem.label) + '</b> can be used on this bird’s turn without replacing its move. After use, a spare bottle from your bag refills the slot.' : 'Equip a potion to use on this bird’s turn without replacing its move.') + '</span>' +
     '</div>';
 
   const forgeLink = '<button class="battle-forge-btn" onclick="closeBirdEquip(); switchScreen(\'forge\');">⚒️ CRAFT MORE AT THE FLETCHER\'S FORGE</button>';
@@ -37627,7 +37711,7 @@ function renderBirdEquip() {
     ? '<div class="bird-equip-pager"><span class="bep-arrow">‹</span> ' + (at + 1) + ' of ' + roster.length + ' companions — swipe for the next <span class="bep-arrow">›</span></div>'
     : '';
 
-  body.innerHTML = pager + hero + stats + bondPanel + slots + picker + notes + forgeLink;
+  body.innerHTML = pager + '<div class="bird-equip-layout"><section class="bird-equip-profile" aria-label="Companion portrait and stats">' + hero + stats + '</section><section class="bird-equip-details" aria-label="Bond and equipment">' + bondPanel + slots + picker + notes + forgeLink + '</section></div>';
 }
 
 // ============================================================================
@@ -42030,7 +42114,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'barracks-tutorial-callout-v354-20260906';
+const BURBZ_BUILD = 'companion-card-polish-v355-20260906';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "trail-mode-v329-20260825"
-CURRENT_BUILD = "barracks-tutorial-callout-v354-20260906"
+CURRENT_BUILD = "companion-card-polish-v355-20260906"
 
 # The Iron Foundry and the Entertainment House are town industry too — they
 # arrived with the towns-3D release and the pin had not been told.
