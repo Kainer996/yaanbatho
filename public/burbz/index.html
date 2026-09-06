@@ -2616,8 +2616,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 /* Full companion card: the original portrait leads, with clear care and loadout panels. */
 .bird-equip-scroll { max-width:960px; padding:16px 18px calc(28px + env(safe-area-inset-bottom)); }
 .bird-equip-topbar { position:sticky; top:-16px; z-index:3; padding:12px 0; background:rgba(10,8,5,.96); margin:0 0 12px; }
-.bird-equip-title { font-size:13px; letter-spacing:.13em; }
-.bird-equip-close { min-height:44px; }
+.bird-equip-title { flex:1; padding-right:120px; text-align:center; font-size:11px; letter-spacing:.08em; }
+.bird-equip-close { order:-1; min-height:44px; flex:none; margin-right:12px; }
 .bird-equip-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
 .bird-equip-profile,.bird-equip-details { min-width:0; }
 .bird-equip-hero { display:block; padding:0; overflow:hidden; border:1px solid rgba(214,168,79,.4); border-radius:22px; background:linear-gradient(160deg,#231d12,#0c0a07); box-shadow:0 12px 40px rgba(0,0,0,.3); }
@@ -37423,15 +37423,18 @@ function renderForgeMaterials(body) {
 // weapon, armour, enhancement, spell and potion, with a live stat preview.
 // ============================================================================
 let birdEquipState = { birdId: null, slotPicker: null };
+let birdEquipReturnFocus = null;
 
 const EQUIP_SLOT_ORDER = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
 
 function openBirdEquip(birdId) {
   const bird = (gameState.flock || []).find(b => b.id === birdId);
   if (!bird) return;
+  if (!$('birdEquipOverlay').classList.contains('show')) birdEquipReturnFocus = document.activeElement;
   birdEquipState = { birdId: birdId, slotPicker: null };
   renderBirdEquip();
   $('birdEquipOverlay').classList.add('show');
+  $('birdEquipOverlay').querySelector('.bird-equip-close')?.focus({ preventScroll:true });
   bindBirdEquipSwipe();
   SFX.tap();
   vibrate(10);
@@ -37535,7 +37538,25 @@ function bindBirdEquipSwipe() {
 function closeBirdEquip() {
   $('birdEquipOverlay').classList.remove('show');
   birdEquipState.slotPicker = null;
+  if (birdEquipReturnFocus?.isConnected) birdEquipReturnFocus.focus({ preventScroll:true });
+  birdEquipReturnFocus = null;
 }
+
+function birdEquipHandleKeydown(event) {
+  const overlay = $('birdEquipOverlay');
+  if (!overlay?.classList.contains('show')) return;
+  if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeBirdEquip(); return; }
+  if (event.key !== 'Tab') return;
+  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length);
+  if (!controls.length) return;
+  const first = controls[0], last = controls[controls.length - 1];
+  if (!overlay.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  }
+}
+document.addEventListener('keydown', birdEquipHandleKeydown);
+
 
 function birdEquipOpenSlot(slot) {
   birdEquipState.slotPicker = birdEquipState.slotPicker === slot ? null : slot;
@@ -37678,7 +37699,7 @@ function renderBirdEquip() {
   const potionItem = L.gearById(loadout.potion);
   const notes = '<div class="bird-equip-section-label">In battle</div><div class="forge-stat-card">' +
     '<span>📜 ' + (spellItem ? '<b>' + escapeHtml(spellItem.label) + '</b> joins ' + escapeHtml(birdDisplayName(bird)) + '\'s skill bar.' : 'Equip a spell scroll to add an extra skill.') + '</span>' +
-    '<span>🧪 ' + (potionItem ? '<b>' + escapeHtml(potionItem.label) + '</b> is drunk automatically as battle begins, then restocked from your bag if you have another.' : 'Equip a potion to drink it automatically as battle begins.') + '</span>' +
+    '<span>🧪 ' + (potionItem ? '<b>' + escapeHtml(potionItem.label) + '</b> can be used on this bird’s turn without replacing its move. After use, a spare bottle from your bag refills the slot.' : 'Equip a potion to use on this bird’s turn without replacing its move.') + '</span>' +
     '</div>';
 
   const forgeLink = '<button class="battle-forge-btn" onclick="closeBirdEquip(); switchScreen(\'forge\');">⚒️ CRAFT MORE AT THE FLETCHER\'S FORGE</button>';

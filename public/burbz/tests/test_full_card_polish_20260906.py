@@ -33,3 +33,24 @@ renderBirdEquip();const ready=body.innerHTML;canPreen=false;renderBirdEquip();co
  assert 'onclick="birdEquipPreen()"' not in out['waiting'] and 'disabled' in out['waiting']
  assert '26 <span class="bes-boost">+12</span>' in out['ready']
  assert 'aria-valuenow="20"' in out['ready']
+
+def test_dialog_keyboard_wraps_and_escape_closes_without_touching_game():
+ code=fn('birdEquipHandleKeydown')+"""
+let focused='',closed=0,prevented=0;const first={getClientRects:()=>[1],focus(){focused='first';}},last={getClientRects:()=>[1],focus(){focused='last';}};
+const overlay={classList:{contains:()=>true},querySelectorAll:()=>[first,last],contains:el=>el===first||el===last};
+const $=()=>overlay,document={activeElement:first},closeBirdEquip=()=>closed++;
+const key=(key,shiftKey=false)=>birdEquipHandleKeydown({key,shiftKey,preventDefault(){prevented++;},stopPropagation(){}});
+key('Tab',true);const back=focused;document.activeElement=last;key('Tab');const forward=focused;document.activeElement={};key('Tab');const escaped=focused;key('Escape');console.log(JSON.stringify({back,forward,escaped,closed,prevented}));
+"""
+ out=json.loads(subprocess.run(['node','-e',code],text=True,capture_output=True,check=True).stdout)
+ assert out=={'back':'last','forward':'first','escaped':'first','closed':1,'prevented':4}
+ assert "querySelector('.bird-equip-close')?.focus" in fn('openBirdEquip')
+ assert 'birdEquipReturnFocus?.isConnected' in fn('closeBirdEquip')
+
+def test_potion_copy_matches_player_turn_mechanic_and_crit_display_is_unchanged():
+ render=fn('renderBirdEquip')
+ assert 'automatically as battle begins' not in render
+ assert 'without replacing its move' in render
+ assert "b.acting.side !== 'player'" in fn('battleUsePotion')
+ assert 'used:false' in fn('prepareEquippedPotion')
+ assert "bonus.critBonus ? '<span class=\"bes-boost\">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—'" in render
