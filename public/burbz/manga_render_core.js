@@ -51,12 +51,13 @@
     var hasDepth = renderer.capabilities.isWebGL2 || renderer.extensions.has('WEBGL_depth_texture');
     var pass = { scene: null, target: null, width: 0, height: 0, size: new T.Vector2() };
     // Old WebGL devices still receive cel shading without a depth attachment.
-    if (!hasDepth) return pass;
+    if (!hasDepth || (renderer.capabilities.getMaxPrecision && renderer.capabilities.getMaxPrecision('highp') !== 'highp')) return pass;
     pass.target = new T.WebGLRenderTarget(1, 1, {
       minFilter: T.LinearFilter, magFilter: T.LinearFilter, depthBuffer: true, stencilBuffer: false
     });
     pass.target.depthTexture = new T.DepthTexture(1, 1, T.UnsignedIntType);
     pass.material = new T.ShaderMaterial({
+      precision: 'highp',
       depthTest: false, depthWrite: false,
       uniforms: {
         colour: { value: pass.target.texture }, depth: { value: pass.target.depthTexture },
@@ -64,7 +65,9 @@
       },
       vertexShader: 'varying vec2 inkUv; void main() { inkUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
       fragmentShader: [
-        'uniform sampler2D colour; uniform sampler2D depth;',
+        // Samplers default to lowp independently of float precision. Mobile GPUs
+        // can quantize depth into broad steps which the ink pass draws as stripes.
+        'uniform sampler2D colour; uniform highp sampler2D depth;',
         'uniform vec2 texel; uniform float nearClip; uniform float farClip; varying vec2 inkUv;',
         '#include <common>', '#include <packing>',
         'float distanceAt(vec2 uv) { return -perspectiveDepthToViewZ(texture2D(depth, uv).x, nearClip, farClip); }',

@@ -31,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "manga-world-v356-20260907"
+CURRENT_BUILD = "ink-precision-v357-20260907"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}
