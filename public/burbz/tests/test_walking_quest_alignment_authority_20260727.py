@@ -144,7 +144,7 @@ def test_a_quest_certifies_against_the_paths_it_was_built_from():
     assert result["status"] == "certified", "the quest is playable, not stuck loading"
 
 
-def test_router_loop_carries_complete_mapped_route_evidence():
+def test_router_loop_is_a_proposal_and_never_its_own_access_evidence():
     outward = [{"lat": 53 + i * 0.0001, "lon": -2} for i in range(31)]
     returned = [
         [-2, 53.003],
@@ -157,12 +157,11 @@ def test_router_loop_carries_complete_mapped_route_evidence():
         " fetchFn:()=>Promise.resolve({ok:true,json:()=>Promise.resolve({features:[{geometry:{coordinates:"
         + json.dumps(returned) + "}}]})}), maxTotalMs:2000"
         "}).then(loop => ({loopedBack:loop.loopedBack, points:loop.points.length, "
-        " ways:loop.alignmentWays.length, evidencePoints:loop.alignmentWays[0].length}))"
+        " ways:loop.alignmentWays.length}))"
     )
     assert result["loopedBack"] is True
-    assert result["ways"] == 1
-    assert result["evidencePoints"] == result["points"], \
-        "activation needs evidence for the outward and router-added return legs"
+    assert result["points"] > 31, "the proposed return route is still retained"
+    assert result["ways"] == 0, "router geometry cannot prove its own public access"
 
 
 def test_authoritative_evidence_never_answers_pending():
@@ -255,13 +254,15 @@ ALIGNMENT_FUNCTIONS = [
     "holdWalkQuestAlignmentPending", "alignActiveQuestRouteToMapPaths",
     "installWalkQuestAlignmentReadinessRetry", "giveUpOnWalkQuestAlignment",
     "uninstallWalkQuestAlignmentReadinessRetry", "startWalkingQuestFromOffer",
-    "activateWalkingQuestFromOffer",
+    "activateWalkingQuestFromOffer", "closeWalkQuestSheet",
 ]
 
 # Everything the alignment path touches that is not itself under test.
 ALIGNMENT_SHIM = """
 global.window = global;
 require('./quest_core.js');
+require('./walking_route_core.js');
+require('./walking_encounter_core.js');
 let now = 1000000;
 const realNow = Date.now;
 Date.now = () => now;
@@ -293,6 +294,8 @@ const WALK_QUEST_RETRY_EVENTS = ['sourcedata', 'styledata'];
 let gameState = { walkingQuests: { active: null, history: [] } };
 let walkQuestPendingActivation = null;
 let walkQuestActivationInFlight = false;
+let walkQuestActivationRequest = 0;
+let walkQuestDialogCleanup = null;
 let walkQuestAlignState = { questId: null, lastAt: 0 };
 let walkQuestRealignTimer = null;
 let walkQuestLastSave = 0;
@@ -300,7 +303,6 @@ let visibleTileWays = [];
 const visibleWalkablePathWays = () => visibleTileWays;
 const drawWalkingQuestOnMap = () => {};
 const updateWalkQuestHud = () => {};
-const closeWalkQuestSheet = () => {};
 const setQuestOverview = () => {};
 const switchScreen = () => {};
 const maybeChartLoopHome = () => {};
@@ -313,10 +315,10 @@ const likelyRowsToQuestBirds = rows => rows || [];
 const attachStoryToNewWalkingQuest = () => null;
 const fetchQuestLikelyBirds = () => Promise.resolve([]);
 const ensureOfferLoopBack = () => Promise.resolve(null);
-const mapDistanceMeters = () => 9999;
+const mapDistanceMeters = (a, b) => window.BurbzQuestCore.questHaversine(a.lat, a.lon, b.lat, b.lon);
 const questOnPositionFix = () => [];
-let liveMapHasPrecisePosition = false;
-let liveMapLastPosition = null;
+let liveMapHasPrecisePosition = true;
+let liveMapLastPosition = {lat:53,lon:-2,accuracy:10};
 """
 
 
@@ -382,7 +384,7 @@ def test_a_router_loop_fetches_authority_for_the_complete_loop_before_starting()
         const offer = {
           kind:'footpath', name:'Mapped Footpath V', ref:'way/5', points:outward,
           alignmentWays:[outward],
-          _loop:{loopedBack:true, points:loop, alignmentWays:[loop], totalLenM:900}
+          _loop:{loopedBack:true, points:loop, alignmentWays:[], totalLenM:900}
         };
         let authorityCalls = 0;
         window.BurbzQuestCore.fetchAlignmentWays = () => {
@@ -405,8 +407,8 @@ def test_a_router_loop_fetches_authority_for_the_complete_loop_before_starting()
     )
     assert result["started"] is True, "Begin This Quest must activate the routed loop"
     assert result["certification"] == "certified"
-    assert result["authorityCalls"] == 0, \
-        "the mapped hiking route already carries complete evidence and must not wait on another archive"
+    assert result["authorityCalls"] == 1, \
+        "a router proposal needs separately downloaded evidence for its complete route"
     assert not (result["last"] or "").startswith("This quest cannot be aligned safely here")
 
 
@@ -467,6 +469,44 @@ def test_a_route_off_every_mapped_path_is_refused_immediately():
     assert result["listeners"] == 0, "a refused quest is not retried on every tile event"
     assert result["pendingActivation"] is None
     assert result["last"].startswith("This quest cannot be aligned safely here")
+
+
+def test_closing_the_sheet_cancels_activation_waiting_on_authoritative_paths():
+    result = run_alignment(
+        offer_js() + """
+        (async () => {
+          const evidence=offer.alignmentWays;
+          delete offer.alignmentWays;
+          let resolveAuthority;
+          window.BurbzQuestCore.fetchAlignmentWays=()=>new Promise(resolve=>{resolveAuthority=resolve;});
+          const attempt=startWalkingQuestFromOffer(offer);
+          closeWalkQuestSheet();
+          resolveAuthority(evidence);
+          await attempt; await settle();
+          console.log(JSON.stringify({started:!!gameState.walkingQuests.active,pending:walkQuestPendingActivation,saves}));
+        })();
+        """
+    )
+    assert result == {"started": False, "pending": None, "saves": 0}
+
+
+def test_moving_area_during_authority_fetch_cannot_start_the_old_walk():
+    result = run_alignment(
+        offer_js() + """
+        (async () => {
+          const evidence=offer.alignmentWays;
+          delete offer.alignmentWays;
+          let resolveAuthority;
+          window.BurbzQuestCore.fetchAlignmentWays=()=>new Promise(resolve=>{resolveAuthority=resolve;});
+          const attempt=startWalkingQuestFromOffer(offer);
+          liveMapLastPosition={lat:53.01,lon:-2,accuracy:5};
+          resolveAuthority(evidence);
+          await attempt; await settle();
+          console.log(JSON.stringify({started:!!gameState.walkingQuests.active,saves}));
+        })();
+        """
+    )
+    assert result == {"started": False, "saves": 0}
 
 
 def test_index_asks_for_a_verdict_instead_of_waiting_on_tiles_for_ever():

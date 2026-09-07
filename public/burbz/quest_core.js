@@ -1670,7 +1670,7 @@
       // discovery corridor cannot certify a different route home.
       return {
         points: combined,
-        alignmentWays: [combined.map(function (p) { return { lat:p.lat, lon:p.lon }; })],
+        alignmentWays: [], // A router line is a proposal, never its own access evidence.
         loopedBack: true,
         returnLenM: Math.round(cand.len),
         totalLenM: Math.round(outwardLen + cand.len)
@@ -1862,19 +1862,23 @@
   function buildQuestFromOffer(offer, opts) {
     opts = opts || {};
     var rand = opts.rand || Math.random;
+    var networkRoute = offer.routeSchemaVersion === 1;
+    if (networkRoute && (!window.BurbzWalkingRouteCore || !window.BurbzWalkingRouteCore.validateOffer(offer).valid)) throw new Error('This mapped walk needs to be refreshed.');
     var rawPts = offer.points;
-    var loopStyle = offer.kind === 'adventure' ? 'loop' : offerLoopStyle(rawPts);
-    if (loopStyle === 'out-and-back') rawPts = trimRouteToLength(rawPts, OUT_AND_BACK_ONE_WAY_CAP_M);
+    var loopStyle = networkRoute ? offer.routeMode : (offer.kind === 'adventure' ? 'loop' : offerLoopStyle(rawPts));
+    if (!networkRoute && loopStyle === 'out-and-back') rawPts = trimRouteToLength(rawPts, OUT_AND_BACK_ONE_WAY_CAP_M);
     // Shape-preserving: the stored route must trace the real footpath, corners
     // included, or the drawn line sends the player the wrong way. The epsilon is
     // capped inside the certification corridor so the stored route can always be
     // certified against the very paths it was built from.
-    var pts = simplifyRoute(rawPts, 320, 1.2, ROUTE_CERTIFICATION_TOLERANCE_M * 0.6);
+    var pts = networkRoute ? rawPts.slice() : simplifyRoute(rawPts, 320, 1.2, ROUTE_CERTIFICATION_TOLERANCE_M * 0.6);
     var oneWayM = routeLengthM(pts);
-    var lenM = loopStyle === 'out-and-back' ? oneWayM * 2 : oneWayM; // walking distance incl. return leg
+    var lenM = !networkRoute && loopStyle === 'out-and-back' ? oneWayM * 2 : oneWayM; // walking distance incl. return leg
     // Flags roughly every 350m of the polyline they sit on (the one-way leg for
     // out-and-backs), 3..8 of them, chests on 2-3 random flags.
     var nFlags = Math.max(3, Math.min(8, Math.round(oneWayM / 350)));
+    // An explicit turnaround prevents an out-and-back from skipping its far end.
+    if (networkRoute && loopStyle === 'out-and-back' && nFlags % 2 === 0) nFlags++;
     var checkpoints = [];
     var npcName = QUEST_GIVER_NAMES[Math.floor(rand() * QUEST_GIVER_NAMES.length)];
     var start = pts[0];
@@ -1882,8 +1886,8 @@
     var chestSlots = [];
     for (var i = 1; i <= nFlags; i++) {
       var p = pointAtFraction(pts, i / (nFlags + 1));
-      checkpoints.push({ kind: 'flag', lat: p.lat, lon: p.lon, label: 'Waymarker ' + i, reached: false });
-      chestSlots.push(checkpoints.length - 1);
+      checkpoints.push({ kind: 'flag', lat: p.lat, lon: p.lon, label: networkRoute && loopStyle === 'out-and-back' && i === (nFlags + 1) / 2 ? 'Turnaround · follow the same path home' : 'Waymarker ' + i, reached: false, routeDistanceM: networkRoute ? oneWayM * i / (nFlags + 1) : undefined });
+      if (!(networkRoute && loopStyle === 'out-and-back' && i === (nFlags + 1) / 2)) chestSlots.push(checkpoints.length - 1);
     }
     var nChests = Math.min(chestSlots.length, lenM > 2500 ? 3 : 2);
     for (var c = 0; c < nChests; c++) {
@@ -1891,7 +1895,7 @@
       var loot = normaliseChestLoot(CHEST_LOOT[Math.floor(rand() * CHEST_LOOT.length)], 'new:' + c + ':' + slotI);
       checkpoints[slotI] = {
         kind: 'chest', lat: checkpoints[slotI].lat, lon: checkpoints[slotI].lon,
-        label: 'Treasure Chest', reached: false, loot: loot
+        label: 'Treasure Chest', reached: false, loot: loot, routeDistanceM: checkpoints[slotI].routeDistanceM
       };
     }
     // Both loop and out-and-back finishes are geographically on-route. Marker
@@ -1908,8 +1912,23 @@
       loopStyle: loopStyle,           // loop | out-and-back
       loopedBack: !!offer.loopedBack, // loop returns home along DIFFERENT paths
       route: pts.map(function (p) { return [ +p.lat.toFixed(6), +p.lon.toFixed(6) ]; }),
-      routeAlignmentVersion: 0,
-      routeCertification: { status: 'uncertified' },
+      reachRadiusM: networkRoute ? 45 : REACH_RADIUS_M,
+      routeSchemaVersion: networkRoute ? 1 : undefined,
+      routeMode: networkRoute ? offer.routeMode : undefined,
+      routeEvidence: networkRoute ? JSON.parse(JSON.stringify(offer.routeEvidence)) : undefined,
+      routeFingerprint: networkRoute ? offer.routeFingerprint : undefined,
+      uniqueLengthM: networkRoute ? offer.uniqueLengthM : undefined,
+      viaSpur: networkRoute ? offer.viaSpur : undefined,
+      warnings: networkRoute ? offer.warnings : undefined,
+      fallbackReason: networkRoute ? offer.fallbackReason : undefined,
+      returnDistanceM: networkRoute ? offer.returnDistanceM : undefined,
+      source: networkRoute ? offer.source : undefined,
+      pathShare: networkRoute ? offer.pathShare : undefined,
+      publicPathShare: networkRoute ? offer.publicPathShare : undefined,
+      sourceTimestamp: networkRoute ? offer.sourceTimestamp : undefined,
+      startDistM: networkRoute ? offer.startDistM : undefined,
+      routeAlignmentVersion: networkRoute ? ROUTE_ALIGNMENT_VERSION : 0,
+      routeCertification: networkRoute ? { status:'certified', source:'OpenStreetMap', networkVerified:true } : { status: 'uncertified' },
       lengthM: Math.round(lenM),
       checkpoints: checkpoints,
       startedAt: opts.now || Date.now(),
@@ -1928,7 +1947,7 @@
   // the finish banner is already back at the start — only the drawn route and
   // the round distance change. Returns true when the quest was upgraded.
   function upgradeQuestWithLoop(quest, loop) {
-    if (!quest || quest.completedAt) return false;
+    if (!quest || quest.completedAt || quest.routeSchemaVersion === 1) return false;
     if (quest.loopStyle !== 'out-and-back' || quest.loopedBack) return false;
     if (!loop || !loop.loopedBack || !loop.points || loop.points.length < 2) return false;
     var pts = simplifyRoute(loop.points, 320);
@@ -2032,11 +2051,25 @@
     return -1;
   }
 
+  function questReachRadiusM(quest, index) {
+    if (!quest || quest.routeSchemaVersion !== 1) return REACH_RADIUS_M;
+    var checkpoints = quest.checkpoints || [], cp = checkpoints[index];
+    if (!cp) return 45;
+    var radius = 45;
+    [checkpoints[index - 1], checkpoints[index + 1]].forEach(function (next) {
+      if (!next) return;
+      var gap = questHaversine(cp.lat, cp.lon, next.lat, next.lon);
+      if (gap > 1) radius = Math.min(radius, Math.max(15, gap * 0.45));
+    });
+    return radius;
+  }
+
   // Feed a geolocation fix into the active quest. Mutates quest; returns events.
   function questProcessFix(quest, lat, lon, accuracy, now) {
     var events = [];
     if (!quest || quest.completedAt) return events;
     now = now || Date.now();
+    if (quest.routeSchemaVersion === 1 && (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(accuracy) || accuracy > 60 || accuracy < 0)) return events;
     if (typeof accuracy === 'number' && accuracy > MAX_CHECKPOINT_ACCURACY_M) return events;
     var accurateForDistance = typeof accuracy !== 'number' || accuracy <= MAX_DISTANCE_ACCURACY_M;
     if (quest.lastFix && accurateForDistance && (typeof quest.lastFix.accuracy !== 'number' || quest.lastFix.accuracy <= MAX_DISTANCE_ACCURACY_M)) {
@@ -2052,7 +2085,7 @@
     if (nextCheckpointIndex >= 0) {
       var cp = quest.checkpoints[nextCheckpointIndex];
       var idx = nextCheckpointIndex;
-      if (questHaversine(lat, lon, cp.lat, cp.lon) <= REACH_RADIUS_M) {
+      if (questHaversine(lat, lon, cp.lat, cp.lon) <= questReachRadiusM(quest, idx)) {
         if (cp.kind === 'chest') {
           // Chest reach is only an intent. The UI transaction validates rewards,
           // writes the receipt and reached/count state durably, then shows success.
@@ -2085,7 +2118,7 @@
 
     var fin = quest.checkpoints[quest.checkpoints.length - 1];
     if (fin && fin.kind === 'finish' && !fin.reached &&
-        questHaversine(lat, lon, fin.lat, fin.lon) <= REACH_RADIUS_M) {
+        questHaversine(lat, lon, fin.lat, fin.lon) <= questReachRadiusM(quest, quest.checkpoints.length - 1)) {
       var pending = questPendingCheckpoints(quest);
       if (pending === 0) {
         fin.reached = true;
@@ -2239,8 +2272,13 @@
 
   function fetchTrailOffers(lat, lon, opts) {
     opts = opts || {};
-    return runOverpassQuery(buildOverpassQuery(lat, lon, opts.radiusM || 3000), opts)
-      .then(function (json) { return json ? parseOverpassTrails(json, lat, lon) : []; });
+    var network = window.BurbzWalkingRouteCore;
+    if (!network) return Promise.reject(new Error('Walking route module unavailable'));
+    return runOverpassQuery(network.buildOverpassQuery(lat, lon, opts.radiusM || 3000), opts)
+      .then(function (json) {
+        if (!json || !Array.isArray(json.elements) || json.remark) throw new Error('Mapped paths could not be loaded completely');
+        return network.parseOffers(json, lat, lon, opts);
+      });
   }
 
   // Complete walkable evidence for one route corridor. Unlike viewport tiles
@@ -2316,6 +2354,7 @@
     offerLoopStyle: offerLoopStyle,
     trimRouteToLength: trimRouteToLength,
     questProcessFix: questProcessFix,
+    questReachRadiusM: questReachRadiusM,
     questNextCheckpointIndex: questNextCheckpointIndex,
     questPendingCheckpoints: questPendingCheckpoints,
     questFinishIsReady: questFinishIsReady,

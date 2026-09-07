@@ -126,7 +126,7 @@ def test_render_hides_finish_flag_until_every_required_marker_is_reached():
     assert "questOnPositionFix(liveMapLastPosition.lat, liveMapLastPosition.lon" in html
 
 
-def test_visible_map_footpaths_are_merged_into_quest_discovery():
+def test_visible_map_footpaths_remain_legacy_geometry_but_do_not_supply_new_quest_access():
     features = [
         {
             "type": "Feature",
@@ -143,7 +143,24 @@ def test_visible_map_footpaths_are_merged_into_quest_discovery():
     assert offers[0]["source"] == "visible-map"
     html = HTML.read_text(encoding="utf-8")
     assert "function visibleMapWalkingQuestOffers(" in html
-    assert "mergeQuestOffers(offers, visibleMapWalkingQuestOffers(lat, lon))" in html
+    start = html.index("function discoverNearbyQuestOffers(")
+    discovery = html[start:html.index("\n}", start) + 2]
+    # Execute the actual discovery handler with a poison basemap source. A
+    # vector tile does not carry the access/node evidence required by new walks.
+    script = """
+global.window=global; require('./quest_core.js');
+const liveMapHasPrecisePosition=true, liveMapLastPosition={lat:53,lon:-2};
+const questOverview={offers:[],at:null,fetchedAt:0};
+let questOfferRequestSeq=0,walkQuestOffersCache=[];
+const mapDistanceMeters=(a,b)=>BurbzQuestCore.questHaversine(a.lat,a.lon,b.lat,b.lon);
+const mapped=[{ref:'verified-network',routeSchemaVersion:1}];
+BurbzQuestCore.fetchTrailOffers=()=>Promise.resolve(mapped);
+const visibleMapWalkingQuestOffers=()=>{throw Error('basemap must not supply quest evidence');};
+const prepareQuestOffers=offers=>offers;
+""" + discovery + "\ndiscoverNearbyQuestOffers().then(offers=>console.log(JSON.stringify(offers)));"
+    result = subprocess.run(["node", "-e", script], cwd=ROOT, text=True, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout) == [{"ref": "verified-network", "routeSchemaVersion": 1}]
 
 
 def test_release_is_versioned_for_live_pwa_refresh():
