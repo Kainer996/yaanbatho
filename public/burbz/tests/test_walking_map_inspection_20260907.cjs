@@ -47,7 +47,7 @@ function fixture(offers = [original]) {
   };
   const ctx = {
     console, Promise, maplibregl:{LngLatBounds:Bounds}, window:{maplibregl:{LngLatBounds:Bounds},BurbzWalkingQuestUI:require('../walking_quest_ui.js')},
-    liveMap:map, liveMapHasPrecisePosition:true, liveMapLastPosition:{lat:53.37,lon:-1.512,accuracy:8},
+    geographicMap3D:null, liveMap:map, liveMapHasPrecisePosition:true, liveMapLastPosition:{lat:53.37,lon:-1.512,accuracy:8},
     liveMapUserMoved:false, liveMapUserMarker:{setLngLat:point => state.markerUpdates.push(point)},
     liveMapSpawns:[], liveMapFeatureCount:0,
     questOverview:{on:false,offers:[...offers],selectedIndex:null,prevZoom:null,areaBirdsWasOpen:null},
@@ -170,5 +170,88 @@ async function main() {
     passed++;
   }
   console.log('PASS: '+passed+' walking map navigation and inspection contracts');
+
+  // Keep the eight flat-fallback contracts above independently reported so
+  // their existing pytest wrapper remains meaningful after 3D integration.
+  let geographicPassed=0;
+  const roundTrip=Object.freeze({
+    ...original,routeMode:'out-and-back',routeFingerprint:'complete-return',
+    points:Object.freeze([
+      {lat:53.3707,lon:-1.5104},{lat:53.372,lon:-1.517},
+      {lat:53.375,lon:-1.514},{lat:53.372,lon:-1.517},
+      {lat:53.3707,lon:-1.5104}
+    ].map(point=>Object.freeze(point)))
+  });
+  {
+    const {ctx,state}=fixture([roundTrip]);state.inspection=true;
+    ctx.questOverview.on=true;ctx.questOverview.selectedIndex=0;
+    const progress=Object.freeze({checkpointIndex:2,route:roundTrip.points,completed:false});
+    ctx.gameState=Object.freeze({walkingQuest:progress,coins:340,xp:82});
+    ctx.liveMapLastPosition=Object.freeze({...ctx.liveMapLastPosition});
+    const before=JSON.stringify({offer:roundTrip,position:ctx.liveMapLastPosition,state:ctx.gameState});
+    let request;
+    ctx.geographicMap3D={fitRoute:(points,options)=>{request={points,options};return true;}};
+    ctx.fitSelectedQuestRoute(roundTrip);
+    assert.ok(request);assert.notEqual(request.points,roundTrip.points,'adapter must not append GPS into the route');
+    assert.deepEqual(request.points.slice(0,-1),roundTrip.points,'every outward and repeated return vertex must be delegated');
+    assert.equal(request.points.at(-1),ctx.liveMapLastPosition,'include the precise GPS position for framing');
+    assert.equal(request.options.isCurrent(),true);assert.equal(state.fits.length,0,'successful 3D fit skips flat fitting');
+    state.inspection=false;assert.equal(request.options.isCurrent(),false,'closing the brief cancels stale terrain work');
+    state.inspection=true;ctx.questOverview.offers=[{...roundTrip}];
+    assert.equal(request.options.isCurrent(),false,'same fingerprint with a different selected offer cannot reuse stale work');
+    assert.equal(JSON.stringify({offer:roundTrip,position:ctx.liveMapLastPosition,state:ctx.gameState}),before);
+    geographicPassed++;
+  }
+  {
+    const {ctx,state}=fixture([roundTrip]);state.inspection=true;ctx.questOverview.selectedIndex=0;
+    const calls=[];
+    ctx.geographicMap3D={fitRoute:(points,options)=>{calls.push({points,options});return true;}};
+    ctx.liveMapHasPrecisePosition=false;ctx.fitSelectedQuestRoute(roundTrip);
+    assert.deepEqual(calls[0].points,roundTrip.points,'approximate GPS must not expand the route view');
+    ctx.liveMapHasPrecisePosition=true;ctx.liveMapLastPosition=null;ctx.fitSelectedQuestRoute(roundTrip);
+    assert.deepEqual(calls[1].points,roundTrip.points,'missing GPS must not create an invented start');
+    ctx.fitSelectedQuestRoute({...original,routeSchemaVersion:0});
+    assert.equal(calls.length,2,'legacy routes preserve their existing fitter');
+    assert.equal(state.fits.length,1);assert.equal(state.fits[0].options.maxZoom,14.2);
+    geographicPassed++;
+  }
+  {
+    const {ctx,state}=fixture([roundTrip]);state.inspection=true;ctx.questOverview.selectedIndex=0;
+    const before=JSON.stringify(roundTrip);let delegated=0;
+    ctx.geographicMap3D={fitRoute:(points,options)=>{
+      delegated++;assert.equal(points.length,roundTrip.points.length+1);assert.equal(options.isCurrent(),true);return false;
+    }};
+    ctx.fitSelectedQuestRoute(roundTrip);
+    assert.equal(delegated,1);assert.equal(state.fits.length,1,'failed 3D fit falls back to the complete flat view');
+    assert.deepEqual(JSON.parse(JSON.stringify(state.fits[0].points.slice(0,-1))),roundTrip.points.map(point=>[point.lon,point.lat]));
+    assert.equal(state.fits[0].options.pitch,0);assert.equal(state.fits[0].options.duration,0);
+    assert.equal(JSON.stringify(roundTrip),before);
+    geographicPassed++;
+  }
+  {
+    const {ctx,state}=fixture();state.inspection=true;let flat=false;const queries=[];
+    ctx.geographicMap3D={getPitch:(zoom,inspection)=>{queries.push({zoom,inspection});return flat?0:inspection?18:51;}};
+    ctx.tuneCameraForZoom();assert.equal(state.pitch,18,'tuning retains the controller selected-route pitch');
+    const moves=state.moves.length;ctx.tuneCameraForZoom();assert.equal(state.moves.length,moves,'settled inspection avoids another ease');
+    assert.deepEqual(queries[0],{zoom:15,inspection:true});
+    flat=true;state.pitch=32;ctx.tuneCameraForZoom();assert.equal(state.pitch,0,'2D choice stays flat during inspection');
+    state.inspection=false;state.pitch=32;ctx.tuneCameraForZoom();assert.equal(state.pitch,0,'2D choice stays flat in exploration');
+    flat=false;ctx.tuneCameraForZoom();assert.equal(state.pitch,51);
+    assert.equal(ctx.burbzPitchForZoom(16.5),51);assert.deepEqual(queries.at(-1),{zoom:16.5,inspection:false});
+    geographicPassed++;
+  }
+  {
+    const {ctx,state,buttons}=fixture([roundTrip]);let delegated=0;
+    ctx.geographicMap3D={getPitch:()=>32,fitRoute:(points,options)=>{
+      delegated++;assert.deepEqual(points.slice(0,-1),roundTrip.points);assert.equal(options.isCurrent(),true);return true;
+    }};
+    const before=JSON.stringify(roundTrip);ctx.openNetworkQuestOfferDetail(roundTrip);buttons['#wqNetworkMap'].onclick();
+    assert.equal(delegated,1);assert.equal(state.fits.length,0);
+    assert.equal(ctx.questOverview.offers[ctx.questOverview.selectedIndex],roundTrip);
+    assert.deepEqual(JSON.parse(JSON.stringify(state.draws[0].features[0].geometry.coordinates)),roundTrip.points.map(point=>[point.lon,point.lat]));
+    assert.equal(state.markerDraws,1);assert.equal(JSON.stringify(roundTrip),before);
+    geographicPassed++;
+  }
+  console.log('PASS: '+geographicPassed+' geographic map adapter contracts');
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

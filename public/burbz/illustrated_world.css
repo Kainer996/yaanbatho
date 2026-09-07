@@ -1,0 +1,119 @@
+/* v366: presentation only; marker positions and visibility remain MapLibre-owned. */
+#screen-birdex { padding-top:8px; }
+#screen-birdex #burbzModeTabs { margin:0 0 5px; padding:3px; }
+#screen-birdex .burbz-mode-btn { min-height:42px; font-size:15px; }
+#screen-birdex .filter-row { gap:5px; margin:0; padding:2px 1px 3px; min-height:36px; scrollbar-width:thin; }
+#screen-birdex .filter-btn { flex:0 0 auto; min-height:32px; padding:5px 9px; font-size:12px; line-height:1.2; border-radius:8px; text-transform:none; }
+#screen-birdex .filter-btn:focus-visible { outline:2px solid var(--accent2); outline-offset:-2px; }
+#screen-birdex #birdFamilyFilterRow .filter-btn.active { color:var(--text)!important; border-color:var(--accent2)!important; }
+#screen-birdex #birdGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,248px),1fr)); gap:14px; max-width:1120px; margin:7px auto 0; align-items:start; }
+#screen-birdex #birdGrid .bird-card { width:100%; max-width:380px; justify-self:center; }
+#screen-birdex #birdGrid .bird-card:not(.locked-card),
+#screen-birdex #birdGrid .bird-card:not(.locked-card) .bird-card-inner { height:508px; min-height:508px; }
+#screen-birdex #birdGrid .bird-card.known-species,
+#screen-birdex #birdGrid .bird-card.known-species .bird-card-inner { height:508px; min-height:508px; }
+#screen-birdex .card-front { display:flex; flex-direction:column; overflow:hidden; }
+#screen-birdex .card-art { height:270px; min-height:270px; flex:0 0 270px; }
+#screen-birdex .card-art > img:not(.card-art-wash) { object-fit:contain; }
+#screen-birdex .card-info { padding:10px 13px; gap:3px; display:flex; flex-direction:column; flex:1; }
+#screen-birdex .card-name { font-size:19px; line-height:1.15; min-height:0; white-space:normal; }
+#screen-birdex .card-nickname { font-size:13px; min-height:0; line-height:1.25; }
+#screen-birdex .card-nickname:empty { display:none; }
+#screen-birdex .card-level { top:10px; left:10px; font-size:12px; }
+#screen-birdex .card-location-btn { position:absolute; top:8px; right:8px; width:44px; height:44px; min-height:44px; margin:0; padding:10px; border-radius:50%; background:#172f29ee; color:#efffea; border:1px solid #b6d89a; box-shadow:0 2px 6px #0008; }
+#screen-birdex .card-location-btn svg { width:22px; height:22px; }
+#screen-birdex .card-location-btn:focus-visible { outline:3px solid #fff2c4; outline-offset:2px; }
+#screen-birdex .card-care-gauges { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:5px 0 3px; }
+#screen-birdex .bird-hunger-bar { margin:0; }
+#screen-birdex .bird-hunger-head { font-size:11px; text-transform:none; letter-spacing:0; }
+#screen-birdex .bird-hunger-track, #screen-birdex .card-hp-bar { height:8px; margin:0; }
+#screen-birdex .bird-hunger-note { display:none; }
+#screen-birdex .bird-hunger-bar[data-hunger-state="urgent"] .bird-hunger-note { display:block; font-size:10px; }
+#screen-birdex .card-front-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:auto; }
+#screen-birdex .card-pet-btn, #screen-birdex .card-facts-link, #screen-birdex .birdex-more-info { display:flex; justify-content:center; align-items:center; min-height:36px; margin:0; padding:6px 8px; font:700 13px/1.2 'Inter',sans-serif; cursor:pointer; border-radius:8px; }
+#screen-birdex .card-facts-link { width:100%; color:var(--accent2); border:0; background:transparent; text-decoration:underline; text-underline-offset:3px; }
+#screen-birdex .card-back { padding:24px 22px 19px; display:flex; flex-direction:column; gap:8px; overflow:auto; overscroll-behavior:contain; background:#242516 url('assets/illustrated-world-v366/card-folio.webp') center/100% 100% no-repeat; color:#f9edcf; }
+#screen-birdex .card-back .card-back-title { color:#fff0bc!important; font:700 18px/1.15 'Inter',sans-serif; }
+#screen-birdex .card-back-meta { color:#dbcda8; font-size:11px; line-height:1.4; text-transform:capitalize; margin-top:4px; }
+#screen-birdex .card-back-scientific { color:#c5cdb1; font-size:11px; font-style:italic; }
+#screen-birdex .card-back-section-label { color:#d4c795; font-size:10px; margin:0; letter-spacing:.09em; }
+#screen-birdex .card-back-stats { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; flex:none; }
+#screen-birdex .card-back-stat { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; min-height:42px; padding:5px 6px; border:1px solid #b0ad7133; border-radius:6px; background:#101b1399; box-shadow:none; }
+#screen-birdex .card-back-stat-label { color:#dadcbe; font-size:10px; text-transform:none; letter-spacing:0; line-height:1.2; }
+#screen-birdex .card-back-stat-value { color:#fff1c4; font:700 16px/1.25 'Inter',sans-serif; }
+#screen-birdex .card-back-special { padding:7px; margin:0; background:#122217aa; color:#e9dda3; border:1px solid #b9af6033; font-size:12px; line-height:1.35; }
+#screen-birdex .card-back-utilities { display:grid; grid-template-columns:1fr 1fr; gap:6px; flex:none; }
+#screen-birdex .card-back .card-pet-btn { background:#394430; color:#fff3ce; border:1px solid #c7bb7870; box-shadow:none; }
+#screen-birdex .card-back .card-facts-link { color:#fff0aa; }
+#screen-birdex .card-placement { font-size:12px; color:#f8eac5; }
+#screen-birdex .card-placement summary { min-height:30px; cursor:pointer; padding:6px 0; }
+#screen-birdex .card-back-rooms { margin:4px 0; max-height:140px; overflow:auto; }
+#screen-birdex .card-back .card-return { margin-top:auto; width:100%; }
+#screen-birdex .birdex-learning-title { color:#ffefba; font-size:19px; }
+#screen-birdex .birdex-learning-scientific, #screen-birdex .birdex-learning-value { color:#f6ebcc; font-size:12px; }
+#screen-birdex .birdex-learning-label, #screen-birdex .birdex-learning-kicker { color:#cfceaa; font-size:11px; }
+#screen-birdex .birdex-learning-fact { background:#172719aa; border:1px solid #b0ad7133; padding:6px; }
+#screen-birdex .companions-empty, #screen-birdex .birdex-window-control { grid-column:1/-1; }
+#screen-birdex .bird-card:focus-visible { outline:3px solid var(--accent2); outline-offset:3px; }
+.bird-info-education .bird-info-section { margin:0; padding:10px 0; border:0; border-bottom:1px solid #a4a16a35; }
+.bird-info-education .bird-info-section-body { font-size:14px; line-height:1.6; }
+.bird-info-education .bird-info-section-title { font-size:12px; }
+.bird-facts-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 24px; }
+.bird-facts-sources { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0; }
+.bird-facts-sources a { display:block; padding:8px 10px; font-size:12px; }
+.bird-game-details { margin-top:18px; border:1px solid var(--border); border-radius:12px; padding:12px; }
+.bird-game-details summary { cursor:pointer; font-weight:700; min-height:32px; }
+.bird-source-details { margin:12px 0; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+.bird-source-details summary { cursor:pointer; font-weight:700; min-height:32px; }
+.bird-source-details .bird-info-section-body { white-space:pre-line; }
+.bird-info-game-note { color:var(--text3); font-size:12px; line-height:1.5; }
+.bird-info-game-note a { color:var(--accent2); text-underline-offset:3px; }
+/* Atlas quadrants: frontier / village / county town / royal seat. */
+#empireMapCard { height:calc(100dvh - 230px); height:clamp(380px,calc(100dvh - 230px),880px); margin:6px 8px 10px; }
+#empireMapCard .empire-map-tools { gap:4px; top:10px; left:10px; right:10px; flex-wrap:nowrap; }
+#empireMapCard .empire-map-btn { min-height:40px; padding:7px 10px; font:700 12px/1.2 'Inter',sans-serif; text-transform:none; letter-spacing:0; color:#f3eaca; background:#192c24ee; border:1px solid #9a9d68; }
+#empireMapCard .empire-map-btn::after { content:none; }
+#empireMapCard .empire-map-btn.is-active { color:#17271e; background:#e5cc86; border-color:#fff0b3; }
+#empireMapKeyBtn { margin-left:auto; }
+#empireMapCard .empire-map-vignette { box-shadow:inset 0 0 24px #17221944; background:linear-gradient(#15251833,transparent 20%,transparent 85%,#15251833); }
+#empireWorldMap .empire-map-marker:not(.is-player) .empire-map-marker-icon { width:74px; height:74px; border:0; border-radius:0; background:transparent url('assets/illustrated-world-v366/settlements.webp') 100% 0/200% 200% no-repeat; box-shadow:none; }
+#empireWorldMap .empire-map-marker:not(.is-player) .empire-map-marker-icon > span { display:none; }
+#empireWorldMap .empire-map-marker:not(.is-player) .empire-map-marker-banner { display:none; }
+#empireWorldMap .empire-map-marker.is-frontier .empire-map-marker-icon { background-position:0 0; filter:saturate(.6) brightness(.87); }
+#empireWorldMap .empire-map-marker.is-settlement .empire-map-marker-icon,
+#empireWorldMap .empire-map-marker.is-region .empire-map-marker-icon { width:86px; height:86px; background-position:0 100%; }
+#empireWorldMap .empire-map-marker.is-liege .empire-map-marker-icon { width:98px; height:98px; background-position:100% 100%; }
+#empireWorldMap .empire-map-marker.is-world-pin .empire-map-marker-icon { width:44px; height:44px; }
+#empireWorldMap .empire-map-marker-label { margin-top:-3px; font:700 11px/1.2 'Inter',sans-serif; padding:5px 8px; color:#fff2c8; }
+@media(max-width:520px) {
+  #screen-birdex { padding-left:12px; padding-right:12px; }
+  #screen-birdex #birdGrid { grid-template-columns:1fr; }
+  .bird-facts-grid { grid-template-columns:1fr; }
+  #empireMapCard { height:calc(100dvh - 210px); min-height:390px; }
+  #empireWorldMap .empire-map-marker:not(.is-player) .empire-map-marker-icon { width:62px; height:62px; }
+  #empireWorldMap .empire-map-marker.is-liege .empire-map-marker-icon { width:80px; height:80px; }
+}
+@media(prefers-reduced-motion:reduce) { #screen-birdex .bird-card-inner { transition:none; } }
+#screen-birdex .card-back-head { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; align-items:start; flex:none; }
+#screen-birdex .card-back-meta { margin:0; text-align:right; max-width:155px; }
+#screen-birdex .card-back-scientific { grid-column:1/-1; }
+/* The collection uses the same unobstructed management layout as Academy rooms. */
+body[data-active-screen="birdex"] .merlin-perch-assembly { display:none; }
+#birdInfoModal .bird-info-close { position:sticky; top:0; display:block; width:auto; min-width:84px; min-height:40px; margin:0 0 8px auto; padding:8px 14px; z-index:2; }
+#screen-village .empire-title-row { min-height:32px; margin-bottom:6px; align-items:center; }
+#screen-village .empire-title-row .screen-title { font-size:17px; margin:0; }
+#empireCollectBar .empire-tribute-btn { min-height:34px; padding:7px 10px; margin:0 0 6px; font-size:12px; }
+#empirePagesNav { margin-bottom:6px; }
+#empirePagesNav .empire-page-tab { flex-direction:row; min-height:40px; gap:5px; }
+#empirePagesNav .ept-icon { width:32px; height:30px; }
+#empireMapCard { height:var(--atlas-height,calc(100dvh - 330px)); min-height:260px; }
+
+/* Birds is a compact collection browser, with no currency strip. */
+body[data-active-screen="birdex"] .hud-resources,
+body[data-active-screen="birdex"] #globalMoneyHud { display:none!important; }
+#screen-birdex .card-care-gauges { grid-template-columns:44px minmax(0,1fr) minmax(0,1fr); gap:9px; align-items:center; }
+#screen-birdex .card-care-gauges > .card-location-btn { position:static; margin:0; flex:none; }
+body:has(#birdInfoModal.show) .hud-resources,
+body:has(#birdInfoModal.show) #globalMoneyHud,
+body:has(#birdEquipOverlay.show) .hud-resources,
+body:has(#birdEquipOverlay.show) #globalMoneyHud { display:none!important; }

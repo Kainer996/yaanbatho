@@ -22,7 +22,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "real-sky-daylight-v243-20260810"
 PREVIOUS_RELEASE_PIN = "town-county-screens-v242-20260810"
-CURRENT_BUILD = "field-map-v365-20260907"
+CURRENT_BUILD = "illustrated-world-v366-20260907"
 DAYLIGHT_CORE_PIN = "real-sky-daylight-v243-20260810"
 
 

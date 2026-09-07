@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Sources and attribution for Burbz map terrain and illustrative woodland.">
+  <title>Terrain and map credits — Burbz</title>
+  <style>
+    :root { color-scheme:dark; font:100%/1.65 system-ui,sans-serif; background:#101b16; color:#f0e8d4; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:clamp(1rem,4vw,3rem); }
+    main { max-width:46rem; margin:0 auto; }
+    h1,h2,h3 { color:#fff3d6; line-height:1.25; }
+    h1 { font-size:clamp(1.8rem,5vw,2.65rem); margin:.9em 0 .5em; }
+    h2 { font-size:1.35rem; margin-top:2rem; }
+    h3 { font-size:1.05rem; margin-top:1.6rem; }
+    p { margin:.75rem 0; }
+    a { color:#e6c982; text-decoration-thickness:.09em; text-underline-offset:.2em; overflow-wrap:anywhere; }
+    a:hover { color:#fff3d6; }
+    a:focus-visible { outline:3px solid #f2d68f; outline-offset:5px; border-radius:2px; }
+    nav a { display:inline-block; padding:.4rem 0; }
+    section { border-top:1px solid #52614e; margin-top:1.8rem; }
+    blockquote { margin:1rem 0; padding:.8rem 1rem; border-left:3px solid #bc9b54; background:#1c2c23; }
+    blockquote p { margin:0; }
+    footer { margin-top:2rem; color:#c8ccb9; font-size:.9rem; }
+    @media print { :root { color-scheme:light; color:#111; background:white; } h1,h2,h3,a { color:#111; } blockquote { background:none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <nav aria-label="Return to game"><a href="../index.html" title="Return to the Burbz game">← Back to Burbz</a></nav>
+    <h1>Terrain and map credits</h1>
+    <p>The landscape uses real map and elevation data. The small trees illustrate mapped woodland; their positions, sizes and shapes are not a survey of individual trees.</p>
+
+    <section aria-labelledby="map-credit">
+      <h2 id="map-credit">Base map and woodland</h2>
+      <p><a href="https://openfreemap.org/">OpenFreeMap</a> · <a href="https://www.openmaptiles.org/">© OpenMapTiles</a> · <a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors</a>.</p>
+      <p>OpenStreetMap data is available under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database Licence</a>. The map retains its provider attribution.</p>
+      <p>Tree illustrations are placed inside woodland polygons identified by the <a href="https://openmaptiles.org/schema/#landcover">OpenMapTiles landcover schema</a>. Polygon holes stay clear. A green park or field alone is not treated as woodland.</p>
+    </section>
+
+    <section aria-labelledby="terrain-credit">
+      <h2 id="terrain-credit">Elevation via Mapterhorn</h2>
+      <p>Elevation © <a href="https://mapterhorn.com/attribution/">Mapterhorn</a>. Its terrain combines global Copernicus GLO-30 data with regional elevation sources where available. See the <a href="https://download.mapterhorn.com/attribution.json">complete source and licence catalogue</a> for the other regional contributors.</p>
+      <p>Elevation is displayed without vertical exaggeration. Source resolution and coverage vary. Copernicus is a surface model that can include buildings and vegetation; the combined map does not provide surveyed ground or tree heights.</p>
+
+      <h3>Copernicus GLO-30</h3>
+      <blockquote cite="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM"><p>produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved</p></blockquote>
+      <p><a href="https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM">Copernicus data, licence and required notices</a>. The notice above is the source-prescribed wording for adapted data.</p>
+    </section>
+
+    <section aria-labelledby="uk-credit">
+      <h2 id="uk-credit">United Kingdom terrain sources</h2>
+      <p>The following regional sources are listed in Mapterhorn’s catalogue under the <a href="https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/">Open Government Licence v3.0</a>.</p>
+
+      <h3>England — Environment Agency</h3>
+      <p><a href="https://www.data.gov.uk/dataset/01b3ee39-da3f-47b6-83da-dc98e73a461f/lidar-composite-digital-terrain-model-dtm-1m">LIDAR Composite Digital Terrain Model, 1 m</a>.</p>
+      <blockquote><p>© Environment Agency copyright and/or database right 2022. All rights reserved.</p></blockquote>
+
+      <h3>Scotland — Scottish Government, SEPA and Scottish Water</h3>
+      <p><a href="https://www.data.gov.uk/dataset/a4411d01-c95d-44d5-9db0-db8c2b94bc5a/lidar-for-scotland-phase-1-dtm">LiDAR for Scotland Phase 1 — DTM</a>. This source covers surveyed areas rather than all of Scotland.</p>
+      <blockquote><p>Crown copyright Scottish Government, SEPA and Scottish Water (2012).</p></blockquote>
+
+      <h3>Wales — Welsh Government and Natural Resources Wales</h3>
+      <p><a href="https://datamap.gov.wales/maps/lidar-data-download/">Wales LiDAR Digital Terrain Model, 1 m</a>.</p>
+      <blockquote><p>Contains public sector information licensed under the Open Government Licence v3.0.</p></blockquote>
+    </section>
+
+    <footer><p>Source notices checked on 7 September 2026. Terrain and woodland are visual map layers; they do not change GPS positions or walking-route geometry.</p></footer>
+  </main>
+</body>
+</html>
