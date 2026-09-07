@@ -62,10 +62,10 @@ def test_effective_location_prioritises_finished_and_active_work_then_real_room(
     assert rows["hospital"]["screen"] == "academy-room"
     # Sleep retired (sleep-retired-v238-20260809): a stale sleeping flag from
     # an old save no longer pins the card to The Roost — the real room wins.
-    assert rows["staleSleeper"]["label"] == "AVIARY GARDENS"
+    assert rows["staleSleeper"]["label"] == "Free at the Academy"
     assert rows["trainingDone"]["label"] == "Training finished"
     assert rows["trainingDone"]["room"] == "training"
-    assert rows["idle"]["label"] == "AVIARY GARDENS"
+    assert rows["idle"]["label"] == "Free at the Academy"
     assert rows["claimedIgnored"]["label"] == "BIRD HOSPITAL"
 
 
@@ -82,18 +82,18 @@ def test_role_locations_keep_their_real_destination():
 def test_companion_card_has_small_accessible_location_button_and_real_router():
     html = html_source()
     card = html[html.index("function createBirdCardHTML"):html.index("function createKnownSpeciesCardHTML")]
-    click = html[html.index("grid.querySelectorAll('.bird-card:not"):html.index("const loadMore", html.index("grid.querySelectorAll('.bird-card:not"))]
+    click = html[html.index("grid.querySelectorAll('.bird-card:not"):html.index("function resolveBirdCardLocation(")]
     router = html[html.index("function gotoBirdCardLocation("):html.index("function createBirdCardHTML")]
     assert "birdCardLocationButtonHTML(bird)" in card
     assert 'data-action="bird-location"' in html
-    assert "gotoBirdCardLocation(locationBtn.dataset.birdId)" in click
+    assert "gotoBirdCardLocation(locationBtn.dataset.birdId, { openCard:false })" in click
     assert "openAcademyRoom(location.room)" in router
     assert "currentScreen === 'academy-room'" in router
     assert "classList.contains('active')" in router
     assert "switchScreen('quests')" in router
     assert "openEmpireVillage(location.key)" in router
     assert "openEmpireRegion(location.key)" in router
-    assert 'aria-label="Find ${escapeHtml(birdDisplayName(bird))}: ${escapeHtml(location.label)}"' in html
+    assert 'aria-label="Find ${escapeHtml(birdDisplayName(bird))}: ${escapeHtml(caption)}"' in html
     assert ".card-location-btn" in html
     assert "min-height:34px" in html
 

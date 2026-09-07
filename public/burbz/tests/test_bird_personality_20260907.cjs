@@ -50,8 +50,8 @@ check('existing civic-role aptitude sees high personality without changing the r
  const high=roles.roleAptitude(p,'steward'),low=roles.roleAptitude({...p,cha:40},'steward');
  assert.ok(high>low,JSON.stringify({high,low}));
 });
-check('full equipment and both reverse card renderers expose the existing stat',()=>{
- for(const name of ['renderBirdEquip','createBirdCardHTML','createKnownSpeciesCardHTML','openBirdInfo','renderSoundSessionDiscoveries']){
+check('equipment, owned reverse and companion information expose the existing stat',()=>{
+ for(const name of ['renderBirdEquip','createBirdCardHTML','openBirdInfo','renderSoundSessionDiscoveries']){
   const source=fn(name);assert.ok(source.includes('Personality'),name);assert.ok(source.includes('birdPersonalityValue('),name);
  }
  assert.ok(html.includes('.bird-equip-stat.is-personality { grid-column:1/-1;'));

@@ -31,7 +31,7 @@ assert.equal(ui.pickupIcon({id:'frog',glyph:'frog-art'}),'frog-art','Unchanged p
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const fn=html.slice(html.indexOf('function switchScreen(name)'),html.indexOf('\nfunction activateGameHudDestination'));
 let opened=0,trail=0,notices=0,allowed=false;
-const ctx={currentScreen:'map',featureGateOpen:()=>allowed,featureUnlockHint:()=> 'Existing milestone',showToast:()=>notices++,SFX:{page:()=>{}},recordScreenTrail:()=>trail++,
+const ctx={window:{},currentScreen:'map',featureGateOpen:()=>allowed,featureUnlockHint:()=> 'Existing milestone',showToast:()=>notices++,SFX:{page:()=>{}},recordScreenTrail:()=>trail++,
  $$:()=>[],$:()=>null,document:{querySelectorAll:()=>[],body:{setAttribute:()=>{}}},syncBurbzMusicForMapZoom:()=>{},updateMerlinListeningUI:()=>{},academyViewPause:()=>{},renderInventory:()=>opened++,queueActionBadgeUpdate:()=>{}};
 vm.createContext(ctx);vm.runInContext(fn,ctx);
 ctx.switchScreen('inventory');assert.equal(opened,0);assert.equal(trail,0);assert.equal(ctx.currentScreen,'map');assert.equal(notices,1);
