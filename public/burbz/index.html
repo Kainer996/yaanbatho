@@ -4428,6 +4428,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=field-map-v365-20260907">
 <link rel="stylesheet" href="illustrated_world.css?v=illustrated-world-v366-20260907">
+<link rel="stylesheet" href="geographic_map_3d.css?v=geographic-terrain-v1-20260907">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5459,6 +5460,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
+<script src="geographic_forest_core.js?v=geographic-terrain-v1-20260907"></script>
+<script src="geographic_camera_core.js?v=geographic-terrain-v1-20260907"></script>
+<script src="geographic_marker_layer.js?v=geographic-terrain-v1-20260907"></script>
+<script src="geographic_map_3d.js?v=geographic-terrain-v1-20260907"></script>
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
@@ -6026,7 +6031,7 @@ const BURBZ_MUSIC_SILENT_ZOOM = BURBZ_MAX_ZOOM - 0.1;
 // Gentler pitch curve than before: extreme pitch (70°+) forced MapLibre to
 // stream a huge wedge of far-horizon tiles every frame, which is what made the
 // map feel slow and stuttery on phones. 44–58° keeps the Pokémon-Go feel cheap.
-function burbzPitchForZoom(zoom) { return Math.max(44, Math.min(58, 48 + (Number(zoom || BURBZ_START_ZOOM) - 14) * 3.4)); }
+function burbzPitchForZoom(zoom) { if (geographicMap3D) return geographicMap3D.getPitch(Number(zoom || BURBZ_START_ZOOM), false); return Math.max(44, Math.min(58, 48 + (Number(zoom || BURBZ_START_ZOOM) - 14) * 3.4)); }
 
 // ============================================================================
 // BIRD DIETS — what each species actually eats in the wild.
@@ -11659,8 +11664,11 @@ async function loadBirdEducation() {
 
 function getCachedBirdEducation(bird) {
   if (!birdEducationCache || !bird) return null;
-  const names = [canonicalSpeciesName(bird.species || bird.commonName), bird.commonName, bird.species, String(bird.species || '').split('(')[0].trim()].filter(Boolean);
-  const primary = Object.values(birdEducationCache).find(row => row.verifiedPrimary && (names.some(name => getEducationKey(name) === getEducationKey(canonicalSpeciesName(row.name))) || (bird.scientificName && String(row.scientificName || '').toLowerCase() === String(bird.scientificName).toLowerCase())));
+  const profile = typeof findSpeciesProfile === 'function' ? findSpeciesProfile(bird.species || bird.commonName) : null;
+  const names = [canonicalSpeciesName(bird.species || bird.commonName), bird.commonName, bird.species, String(bird.species || '').split('(')[0].trim(), profile?.name, ...(profile?.aliases || [])].filter(Boolean);
+  const scientific = [bird.scientificName, profile?.scientificName, ...(profile?.aliases || [])].filter(name => /^[A-Z][a-z]+ [a-z]+(?:\s|$)/.test(name || '')).map(name => name.trim().toLowerCase());
+  const rows = Object.values(birdEducationCache);
+  const primary = rows.find(row => row.verifiedPrimary && (names.some(name => getEducationKey(name) === getEducationKey(row.name)) || scientific.includes(String(row.scientificName || '').trim().toLowerCase())));
   if (primary) return primary;
   for (const name of names) {
     if (birdEducationCache[name]) return birdEducationCache[name];
@@ -11668,7 +11676,7 @@ function getCachedBirdEducation(bird) {
     const foundKey = Object.keys(birdEducationCache).find(key => getEducationKey(key) === target);
     if (foundKey) return birdEducationCache[foundKey];
   }
-  return null;
+  return rows.find(row => scientific.includes(String(row.scientificName || '').trim().toLowerCase())) || null;
 }
 
 function renderInfoBlock(title, body) {
@@ -11681,22 +11689,42 @@ function renderInfoBlock(title, body) {
 }
 
 function renderEducationSections(bird, education) {
-  const sources = (Array.isArray(education?.sources) ? education.sources : []).filter(source => source && /^https:\/\//i.test(source.url));
-  // Old imported rows include repeated editorial placeholders; never present those as species facts.
+  const sources = (Array.isArray(education?.sources) ? education.sources : []).filter(source => {
+    try { return source && new URL(source.url).protocol === 'https:'; } catch (_) { return false; }
+  });
+  const primary = !!education?.verifiedPrimary;
+  const wikipedia = sources.find(source => /(^|\.)wikipedia\.org$/.test(new URL(source.url).hostname));
+  // Legacy imports mix real accounts with repeated advice and game-generation metadata.
+  // Keep the source account, but never relabel those implementation notes as biology.
   const field = key => {
-    const value = education && education[key];
+    let value = education && education[key];
     if (typeof value !== 'string' || !value.trim()) return '';
-    if (!education.verifiedPrimary && /not yet|coming soon|being expanded|field-guide details are being checked|varies (?:by|across)|varies with|consult (?:the |a )?(?:local|regional)|use (?:the )?species|recognis(?:e|ed) (?:it |by)|look for (?:the )?combination|typical (?:of|for) (?:the|its)|seasonal timing|wikipedia notes/i.test(value)) return '';
+    value = value.trim();
+    if (primary) return value;
+    value = value.replace(/^.+? is represented from real field biology, not fantasy labels\.\s*/i, '');
+    if (/In Burbz|Burbz field note/i.test(value) || (key === 'behaviour' && /^Look for:/i.test(education.identification || ''))) return '';
+    if (/game stats|battle stats|range handling|circular equivalent|centroid|Burbz month|source checklist status|conservative approximations|no fabricated local prey|broad group ecology|from family ecology|broad trophic context|Game region hint|Typical Burbz behaviour note/i.test(value)) return '';
+    if (/^(?:Start with size|Check size, silhouette|Use size, silhouette|Watch how it moves|Watch feeding, flocking|Use feeding (?:clues|style)|For learning, notice|Observe (?:from (?:a )?distance|birds from distance|seasonal display|display, nesting)|Compare the range notes|Use (?:the )?(?:Wikipedia )?notes below|Use the cited sources|Check local field guides|Sourced field-guide context from Wikipedia|Look for:|Look for the species-specific)/i.test(value)) return '';
+    if (/not yet available|coming soon|being expanded|field-guide details are being checked|Regional expansion record|consult (?:the |a )?(?:local|regional)|use (?:the )?species|typical (?:of|for) (?:the|its)|seasonal timing/i.test(value)) return '';
+    if (key === 'habitat' && /range handling|Game stats are derived/i.test((education.range || '') + ' ' + (education.behaviour || ''))) return '';
+    value = value.replace(/^Look for the combination of (.+?)\. Confirm overall size[\s\S]*$/i, '$1.');
+    value = value.replace(/^Its profile is grounded in these observed behaviours: (.+?)\. Watch feeding technique[\s\S]*$/i, '$1.');
     return value;
   };
   const fields = [['Identification','identification'],['Habitat','habitat'],['Range & movement','range'],['Diet in the wild','diet'],['Behaviour','behaviour'],['Calls & song','voice'],['Breeding','breeding'],['Did you know?','interestingFact']];
+  const overview = !primary && sources.length ? field('summary') : '';
+  const longer = !primary && wikipedia ? field('wikipediaExtract') || field('wikipediaDeepDive') : '';
+  const overviewBlock = overview ? renderInfoBlock(wikipedia ? 'Wikipedia overview' : 'Source overview', overview) : '';
   const blocks = sources.length ? fields.map(([label,key]) => field(key) ? renderInfoBlock(label, field(key)) : '').join('') : '';
   const status = !birdEducationCache ? 'Loading species notes…' : 'Detailed species notes are not available here yet.';
+  const importedText = !!wikipedia && !!(overview || longer);
   return `<section class="bird-info-education" id="birdEducationBlock" aria-label="Bird facts">
     <div class="bird-info-education-title">Bird facts</div>
-    <div class="bird-info-game-note">Natural history${education?.verifiedPrimary ? ' · checked against primary bird guides' : ''}</div>
-    ${blocks ? `<div class="bird-facts-grid">${blocks}</div>` : `<p class="bird-info-section-body">${status}</p>`}
+    <div class="bird-info-game-note">Natural history${primary ? ' · checked against primary bird guides' : ' · imported source notes'}</div>
+    ${overviewBlock}${blocks ? `<div class="bird-facts-grid">${blocks}</div>` : !overview ? `<p class="bird-info-section-body">${status}</p>` : ''}
+    ${longer && longer !== overview ? `<details class="bird-source-details"><summary>Longer source account</summary>${renderInfoBlock('Wikipedia account', longer.replace(/\s*(={2,})\s*([^=]+?)\s*\1\s*/g, '\n\n$2\n'))}</details>` : ''}
     ${sources.length ? `<div class="bird-facts-sources" aria-label="Field guide sources">${sources.map(source => `<a class="bird-info-source" href="${escapeHTML(source.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(source.label || new URL(source.url).hostname)} ↗</a>`).join('')}</div>` : ''}
+    ${importedText ? '<div class="bird-info-game-note">Extract from the linked Wikipedia account and its contributors · <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>. Imported account; see the source for current details.</div>' : ''}
   </section>`;
 }
 
@@ -11715,12 +11743,19 @@ function renderBirdDietPanel(bird) {
     '</div>';
 }
 
+function birdInfoScientificName(bird, education = getCachedBirdEducation(bird)) {
+  if (/^[A-Z][a-z]+ [a-z]+(?:\s|$)/.test(education?.scientificName || '')) return education.scientificName;
+  return /^[A-Z][a-z]+ [a-z]+(?:\s|$)/.test(bird.scientificName || '') ? bird.scientificName : '';
+}
 function refreshBirdEducationBlock(birdId, bird) {
   loadBirdEducation().then(() => {
     const content = $('birdInfoContent');
     if (!content || content.dataset.currentBirdId !== String(birdId)) return;
     const block = $('birdEducationBlock');
-    if (block) block.outerHTML = renderEducationSections(bird, getCachedBirdEducation(bird));
+    const education = getCachedBirdEducation(bird);
+    if (block) block.outerHTML = renderEducationSections(bird, education);
+    const scientific = content.querySelector('[data-bird-info-scientific]');
+    if (scientific) scientific.textContent = [bird.customName ? birdSpeciesLabel(bird) : '', birdInfoScientificName(bird, education)].filter(Boolean).join(' · ');
   });
 }
 
@@ -11774,7 +11809,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-art" style="${birdHabitatBackgroundStyle(bird, rarityColor)}">${art}${specialBirdAnimationButtonHTML(bird, !!(companionForSpecies(bird.species || bird.commonName) || getDiscoveredRecordForSpecies(bird.species || bird.commonName)))}</div>
       <div>
         <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
-        <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
+        <div class="bird-info-sci" data-bird-info-scientific>${escapeHTML([bird.customName ? birdSpeciesLabel(bird) : '', birdInfoScientificName(bird, education)].filter(Boolean).join(' · '))}</div>
         <div class="bird-info-rarity">Bird information</div>
         ${bird.previewOnly ? '' : `<button class="card-pet-btn" style="margin-top:8px" onclick="renameCompanionBird('${escapeHTML(bird.id)}')">✏️ Rename companion</button>
         <button class="card-pet-btn" style="margin-top:8px" onclick="closeBirdInfo(); openBirdEquip('${escapeHTML(bird.id)}')">⚔️ Equipment</button>
@@ -18588,6 +18623,11 @@ function queueQuestCompleteNotice(q) {
 // ============================================================================
 // LIVE REAL-WORLD HABITAT MAP
 // ============================================================================
+function createGeographicMarker(options) {
+  const Marker = window.BurbzGeographicMarkers?.Marker || maplibregl.Marker;
+  return new Marker(options);
+}
+let geographicMap3D = null;
 let liveMap = null, liveMapReady = false, liveMapUserMarker = null, liveMapWatchId = null, liveMapFallbackRendered = false;
 let liveMapMarkers = [], liveMapHabitatLayers = [], liveMapPoiMarkers = [], liveMapTreeMarkers = [], liveMapBirdChips = [], liveMapTerrainEnabled = false, liveMapLastPosition = null, liveMapHasPrecisePosition = false, liveMapUpdateSeq = 0, liveMapSpawns = [], liveMapFeatureCount = 0, liveMapOverlayOpen = false, liveMapUserMoved = false, liveMapOverlayRefreshTimer = null;
 function syncBurbzMusicForMapZoom() {
@@ -18605,7 +18645,7 @@ function syncBurbzMusicForMapZoom() {
   MUSIC.setVolume(volume);
   return volume;
 }
-window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return liveMapTerrainEnabled; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get questZoomLock() { return questZoomLock; }, questZoomCeiling() { return liveMapZoomCeiling(); }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
+window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return geographicMap3D?.state.terrainActive || false; }, get geography() { return geographicMap3D; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get questZoomLock() { return questZoomLock; }, questZoomCeiling() { return liveMapZoomCeiling(); }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
 function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
@@ -18625,17 +18665,30 @@ function applyBurbzCameraPadding() {
     if (!current || Object.keys(padding).some(key => current[key] !== padding[key])) liveMap.setPadding(padding);
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { window.BurbzFieldMapUI?.apply(liveMap); }
-// 3D terrain + hillshade removed: the DEM tile downloads and terrain mesh were
-// the single biggest cause of the slow, jumpy map on phones. The painted
-// medieval styling carries the look without them.
-function enableBurbzTerrain() { if (!liveMap || liveMapTerrainEnabled) return; try { liveMap.setTerrain(null); } catch (e) {} liveMapTerrainEnabled = true; }
+// Real elevation and woodland are optional. Sustained slow movement pauses
+// the terrain mesh while retaining pitched trees and real-elevation shading.
+function enableBurbzTerrain() {
+  if (!liveMap || !window.BurbzGeographicMap3D) return;
+  if (!geographicMap3D) geographicMap3D = window.BurbzGeographicMap3D.attach(liveMap, {
+    isVisible: () => currentScreen === 'map',
+    getRoutes: () => [activeWalkingQuest()?.route, questOverview.offers[questOverview.selectedIndex]?.points].filter(Boolean),
+    onViewChange: () => {
+      if (questMapInspectionMode()) {
+        const selected = questOverview.offers[questOverview.selectedIndex];
+        if (selected) { syncQuestMapFocusLayout(); fitSelectedQuestRoute(selected); }
+      } else tuneCameraForZoom();
+    }
+  });
+  liveMapTerrainEnabled = !!geographicMap3D?.state.terrainActive;
+}
+
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
   if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':18, 'line-opacity':.32, 'line-blur':4 } }); liveMap.addLayer({ id:'burbz-quest-route-casing', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':9.5, 'line-opacity':.85, 'line-dasharray':[.135, 1.482] } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':6.4, 'line-opacity':1, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
-function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = questMapInspectionMode() ? 0 : burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
+function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = geographicMap3D ? geographicMap3D.getPitch(zoom, questMapInspectionMode()) : questMapInspectionMode() ? 0 : burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: normal play stays pinned to
 // real GPS and a one-finger swipe rotates the view. A selected quest temporarily
 // enables drag-pan so the player can inspect the route behind the briefing card.
@@ -18901,7 +18954,7 @@ function drawTrailExtrasOnMap(quest) {
       const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, npc)) : null;
       showToast('🐦 A ' + npc.species + ' is waiting on your trail' + (me !== null ? ' — ' + me + ' m away. Walk within ' + window.BurbzQuestCore.REACH_RADIUS_M + ' m to meet it!' : '!'));
     });
-    questExtraMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([npc.lon, npc.lat]).addTo(liveMap));
+    questExtraMarkers.push(createGeographicMarker({ element: el, anchor: 'center' }).setLngLat([npc.lon, npc.lat]).addTo(liveMap));
   });
   const tav = quest.trailTavern;
   if (tav) {
@@ -18917,7 +18970,7 @@ function drawTrailExtrasOnMap(quest) {
       const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, tav)) : null;
       showToast('🍻 ' + tav.name + ' has set up on your trail' + (me !== null ? ' — ' + me + ' m away. Walk there for a drink!' : '!'));
     });
-    questExtraMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
+    questExtraMarkers.push(createGeographicMarker({ element: el, anchor: 'center' }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
   }
 }
 
@@ -19781,7 +19834,7 @@ function drawWalkingQuestOnMap() {
     });
     const markerOptions = { element: el, anchor: 'center' };
     if (cp.kind === 'finish') markerOptions.offset = [14, -14]; // visual only; geographic point remains on-route
-    const mk = new maplibregl.Marker(markerOptions).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
+    const mk = createGeographicMarker(markerOptions).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
     questMapMarkers[idx] = mk;
   });
   drawTrailExtrasOnMap(quest);
@@ -20527,7 +20580,7 @@ function drawSideQuestOnMap() {
     else face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
     el.appendChild(face);
     el.addEventListener('click', ev => { ev.stopPropagation(); sideQuestClaimDiscovery(d.id); });
-    sideQuestMapMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([d.lon, d.lat]).addTo(liveMap));
+    sideQuestMapMarkers.push(createGeographicMarker({ element: el, anchor: 'center' }).setLngLat([d.lon, d.lat]).addTo(liveMap));
   });
 }
 function clearSideQuestFromMap() {
@@ -20562,7 +20615,7 @@ function drawSideQuestNpcLandmarks() {
     face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
     el.appendChild(face);
     el.addEventListener('click', ev => { ev.stopPropagation(); showSideQuestNpcLandmark(n.id); });
-    sideQuestNpcMarkers.push(new maplibregl.Marker({ element: el, anchor: 'center' }).setLngLat([n.lon, n.lat]).addTo(liveMap));
+    sideQuestNpcMarkers.push(createGeographicMarker({ element: el, anchor: 'center' }).setLngLat([n.lon, n.lat]).addTo(liveMap));
   });
 }
 function showSideQuestNpcLandmark(id) {
@@ -21203,7 +21256,7 @@ function drawQuestOverviewMarkers() {
     el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge">' + window.BurbzFieldMapUI.icon(o.routeMode === 'loop' ? 'compass' : 'trail') + '</span></span>';
     el.addEventListener('click', ev => { ev.stopPropagation(); focusQuestOnMap(i); });
     const start = o.points[0];
-    questOverview.markers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([start.lon, start.lat]).addTo(liveMap));
+    questOverview.markers.push(createGeographicMarker({ element: el, anchor: 'bottom' }).setLngLat([start.lon, start.lat]).addTo(liveMap));
   });
   const selected = questOverview.selectedIndex == null ? null : questOverview.offers[questOverview.selectedIndex];
   const chainIdx = selected && selected._chainNextIndex;
@@ -21215,7 +21268,7 @@ function drawQuestOverviewMarkers() {
     chainEl.title = 'This quest ends near the start of ' + questOverview.offers[chainIdx].name;
     chainEl.setAttribute('aria-label', chainEl.title);
     chainEl.textContent = '⌁';
-    questOverview.chainMarker = new maplibregl.Marker({ element:chainEl, anchor:'center' }).setLngLat([end.lon, end.lat]).addTo(liveMap);
+    questOverview.chainMarker = createGeographicMarker({ element:chainEl, anchor:'center' }).setLngLat([end.lon, end.lat]).addTo(liveMap);
   }
 }
 let questFocusResizeObserver = null;
@@ -21345,6 +21398,12 @@ function updateMapSideQuestButton() {
 function fitSelectedQuestRoute(offer) {
   const displayPoints = questOfferDisplayPoints(offer);
   if (!liveMap || !offer || !displayPoints.length || !window.maplibregl) return;
+  if (geographicMap3D && offer.routeSchemaVersion === 1) {
+    const points = displayPoints.slice();
+    if (liveMapHasPrecisePosition && liveMapLastPosition) points.push(liveMapLastPosition);
+    const isCurrent = () => questMapInspectionMode() && questOverview.offers[questOverview.selectedIndex] === offer;
+    if (geographicMap3D.fitRoute(points, { isCurrent })) return;
+  }
   try {
     const bounds = new maplibregl.LngLatBounds();
     displayPoints.forEach(p => bounds.extend([p.lon, p.lat]));
@@ -21588,7 +21647,7 @@ function handleLivePosition(pos, fly) {
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
-async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (!questMapInspectionMode() && opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!questMapInspectionMode() && opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = new maplibregl.Marker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return;
+async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (!questMapInspectionMode() && opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!questMapInspectionMode() && opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = createGeographicMarker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } if (!opts.precise) return;
   if (mapRegionForCoords(lat, lon) === 'unsupported') {
     liveMapSpawns = [];
     liveMapFeatureCount = 0;
@@ -22167,7 +22226,7 @@ function drawMapPickups(lat, lon) {
       if (p.type.cls) el.classList.add(p.type.cls); // gear caches shimmer, relic chests glow
       if (!inReach) el.classList.add('locked');
       el.addEventListener('click', ev => { ev.stopPropagation(); collectMapPickup(p, el); });
-      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([p.lon, p.lat]).addTo(liveMap);
+      const marker = createGeographicMarker({ element: el, anchor: 'bottom' }).setLngLat([p.lon, p.lat]).addTo(liveMap);
       marker._burbzPickup = p;
       liveMapPickupMarkers.push(marker);
     });
@@ -23929,7 +23988,7 @@ function drawVillageMarkers(lat, lon) {
       el.classList.add('owned', 'in-' + settlement.tier);
       el.style.zIndex = '4';
       el.addEventListener('click', event => { event.stopPropagation(); SFX.tap(); openEmpireTown(settlement.id); });
-      liveMapVillageMarkers.push(new maplibregl.Marker({ element:el, anchor:'bottom' }).setLngLat([v.lon, v.lat]).addTo(liveMap));
+      liveMapVillageMarkers.push(createGeographicMarker({ element:el, anchor:'bottom' }).setLngLat([v.lon, v.lat]).addTo(liveMap));
       return;
     }
     // In the vicinity = one of the nearest few AND close enough to walk to.
@@ -23951,7 +24010,7 @@ function drawVillageMarkers(lat, lon) {
       const km = v.dist >= 1000 ? (v.dist / 1000).toFixed(1) + ' km' : Math.round(v.dist) + ' m';
       showToast('🔒 ' + v.name + ' is ' + km + ' away — walk there to visit it.');
     });
-    liveMapVillageMarkers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([v.lon, v.lat]).addTo(liveMap));
+    liveMapVillageMarkers.push(createGeographicMarker({ element: el, anchor: 'bottom' }).setLngLat([v.lon, v.lat]).addTo(liveMap));
   });
 }
 
@@ -38585,10 +38644,10 @@ function createBirdCardHTML(bird, idx) {
         <div class="card-art" title="Turn card for companion details">
           <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>${art}${specialBirdAnimationButtonHTML(bird, true)}
         </div>
-        <div class="card-level">LV.${cardLv}</div>${birdCardLocationButtonHTML(bird)}
+        <div class="card-level">LV.${cardLv}</div>
         <div class="card-info">
           <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>${cardBondHeartsHTML(bird)}
-          <div class="card-care-gauges">${hungerBarHTML(hungerStatus, 'companion-card')}
+          <div class="card-care-gauges">${birdCardLocationButtonHTML(bird)}${hungerBarHTML(hungerStatus, 'companion-card')}
             <div class="card-health" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hpPct}"><div class="bird-hunger-head"><span>Health</span><span>${hpPct}%</span></div><div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpPct > 50 ? 'var(--hp-green)' : 'var(--hp-red)'}"></div></div></div>
           </div>
           <div class="card-front-actions">${feed}<button type="button" class="card-pet-btn" data-action="flip-card" aria-pressed="false">Details ↻</button></div>
@@ -38596,7 +38655,7 @@ function createBirdCardHTML(bird, idx) {
         </div>
       </div>
       <div class="card-back" inert>
-        <div class="card-back-head"><div class="card-back-title">${escapeHtml(birdDisplayName(bird))}</div><div class="card-back-meta">${escapeHtml(bird.rarity || 'common')} · LV.${cardLv} · ${cardLv >= 50 ? 'Max level' : `${cardXp}/${cardXpNeed} XP`}</div><div class="card-back-scientific">${escapeHtml(bird.scientificName || bird.species)}</div>${playerPhotoChipHTML(bird)}</div>
+        <div class="card-back-head"><div class="card-back-title">${escapeHtml(birdDisplayName(bird))}</div><div class="card-back-meta">${escapeHtml(bird.rarity || 'common')} · LV.${cardLv} · ${cardLv >= 50 ? 'Max level' : `${cardXp}/${cardXpNeed} XP`}</div><div class="card-back-scientific">${escapeHtml(birdInfoScientificName(bird))}</div>${playerPhotoChipHTML(bird)}</div>
         <div class="card-back-section-label">Companion stats</div><div class="card-back-stats">${stats.map(([name,value]) => `<div class="card-back-stat"><span class="card-back-stat-label">${name}</span><strong class="card-back-stat-value">${value}</strong></div>`).join('')}</div>
         <div class="card-back-special">${escapeHtml(bird.specialMove || 'Special move not recorded')}</div>
         <div class="card-back-utilities">${feed}<button class="card-pet-btn" data-action="toggle-favourite" data-bird-id="${id}">${birdIsFavourite(bird) ? '♥ Favourite' : '♡ Favourite'}</button><button class="card-pet-btn" data-action="rename-bird" data-bird-id="${id}">Rename</button><button class="card-pet-btn" data-action="open-equip" data-bird-id="${id}">Equipment</button></div>
@@ -42478,7 +42537,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'field-map-v365-20260907';
+const BURBZ_BUILD = 'illustrated-world-v366-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

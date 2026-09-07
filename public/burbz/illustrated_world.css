@@ -63,6 +63,9 @@
 .bird-facts-sources a { display:block; padding:8px 10px; font-size:12px; }
 .bird-game-details { margin-top:18px; border:1px solid var(--border); border-radius:12px; padding:12px; }
 .bird-game-details summary { cursor:pointer; font-weight:700; min-height:32px; }
+.bird-source-details { margin:12px 0; border:1px solid var(--border); border-radius:10px; padding:10px 12px; }
+.bird-source-details summary { cursor:pointer; font-weight:700; min-height:32px; }
+.bird-source-details .bird-info-section-body { white-space:pre-line; }
 .bird-info-game-note { color:var(--text3); font-size:12px; line-height:1.5; }
 /* Atlas quadrants: frontier / village / county town / royal seat. */
 #empireMapCard { height:calc(100dvh - 230px); height:clamp(380px,calc(100dvh - 230px),880px); margin:6px 8px 10px; }
@@ -103,3 +106,13 @@ body[data-active-screen="birdex"] .merlin-perch-assembly { display:none; }
 #empirePagesNav .empire-page-tab { flex-direction:row; min-height:40px; gap:5px; }
 #empirePagesNav .ept-icon { width:32px; height:30px; }
 #empireMapCard { height:var(--atlas-height,calc(100dvh - 330px)); min-height:260px; }
+
+/* Birds is a compact collection browser, with no currency strip. */
+body[data-active-screen="birdex"] .hud-resources,
+body[data-active-screen="birdex"] #globalMoneyHud { display:none!important; }
+#screen-birdex .card-care-gauges { grid-template-columns:44px minmax(0,1fr) minmax(0,1fr); gap:9px; align-items:center; }
+#screen-birdex .card-care-gauges > .card-location-btn { position:static; margin:0; flex:none; }
+body:has(#birdInfoModal.show) .hud-resources,
+body:has(#birdInfoModal.show) #globalMoneyHud,
+body:has(#birdEquipOverlay.show) .hud-resources,
+body:has(#birdEquipOverlay.show) #globalMoneyHud { display:none!important; }
