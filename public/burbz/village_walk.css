@@ -1,0 +1,26 @@
+/* Body-level walk viewport. Scoped so both existing appearances stay intact. */
+#villageWalk{position:fixed;inset:0;width:100%;height:100%;height:100dvh;z-index:2147483000;isolation:isolate;background:#18251e;color:#fff3d1;touch-action:none;overscroll-behavior:none;font-family:Inter,system-ui,sans-serif;user-select:none;overflow:hidden;box-sizing:border-box}
+#villageWalk:fullscreen{width:100vw;height:100dvh}
+#villageWalk *{box-sizing:border-box}
+#villageWalk canvas{position:absolute;inset:0;width:100%!important;height:100%!important;display:block;touch-action:none;outline:none}
+#villageWalk .vw-look{position:absolute;inset:0;touch-action:none;cursor:grab}
+#villageWalk .vw-look:active{cursor:grabbing}
+#villageWalk .vw-top{position:absolute;top:0;left:0;right:0;display:flex;align-items:start;gap:12px;padding:calc(12px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 25px calc(14px + env(safe-area-inset-left));background:linear-gradient(#13231ce0,transparent);pointer-events:none}
+#villageWalk button{appearance:none;background:#17291eee;color:#fff3d1;border:1px solid #bca06a;border-radius:12px;min-width:44px;min-height:44px;padding:9px 14px;font:600 13px/1.2 Inter,system-ui,sans-serif;box-shadow:0 3px 10px #10150d44;cursor:pointer;pointer-events:auto;touch-action:none}
+#villageWalk button:focus-visible{outline:3px solid #fff0ae;outline-offset:3px}
+#villageWalk .vw-title{flex:1;min-width:0;padding-top:4px;text-shadow:0 2px 4px #111}
+#villageWalk .vw-title small{display:block;color:#eed08a;letter-spacing:.15em;font-size:9px;font-weight:700;margin-bottom:4px}
+#villageWalk .vw-title strong{display:block;font:600 clamp(16px,3.4vw,23px)/1.2 Georgia,serif;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#villageWalk .vw-hint{position:absolute;bottom:calc(15px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 28px);padding:9px 14px;border-radius:18px;background:#13221de0;color:#fff2d0;font-size:11px;line-height:1.5;text-align:center;pointer-events:none;box-shadow:0 2px 7px #0004}
+#villageWalk .vw-reticle{position:absolute;top:50%;left:50%;width:4px;height:4px;border-radius:50%;background:#ffedc1b0;box-shadow:0 0 2px #12200b;pointer-events:none}
+#villageWalk .vw-stick{position:absolute;left:calc(22px + env(safe-area-inset-left));bottom:calc(35px + env(safe-area-inset-bottom));width:116px;height:116px;padding:0;border-radius:50%;border:1px solid #ffdfa48c;background:radial-gradient(#e8d9b018,#15271f85);touch-action:none;display:none}
+#villageWalk .vw-stick:before{content:'↑';position:absolute;top:7px;left:0;width:100%;color:#fff0cb8c;font-size:17px}
+#villageWalk .vw-knob{display:block;position:absolute;left:36px;top:36px;width:42px;height:42px;border:1px solid #ffedbba8;border-radius:50%;background:#efe0b24f;pointer-events:none}
+#villageWalk .vw-touch-hint{display:none;position:absolute;right:calc(27px + env(safe-area-inset-right));bottom:calc(76px + env(safe-area-inset-bottom));color:#fff0cd;font-size:11px;text-shadow:0 1px 4px #122219;pointer-events:none}
+#villageWalk.vw-touch .vw-stick,#villageWalk.vw-touch .vw-touch-hint{display:block}
+#villageWalk.vw-touch .vw-hint{bottom:calc(9px + env(safe-area-inset-bottom));font-size:10px;padding:6px 11px}
+#villageWalk .vw-error{position:absolute;inset:0;display:grid;place-content:center;padding:28px;text-align:center;background:#18291ef5;line-height:1.5}
+#villageWalk .vw-error p{max-width:330px;color:#fff0d1}
+#villageWalk .vw-error button{justify-self:center}
+#villageWalk .vw-error[hidden]{display:none}
+@media(max-height:450px){#villageWalk .vw-stick{width:96px;height:96px;bottom:calc(23px + env(safe-area-inset-bottom))}#villageWalk .vw-knob{left:26px;top:26px}#villageWalk .vw-touch-hint{bottom:calc(65px + env(safe-area-inset-bottom))}#villageWalk .vw-top{padding-top:calc(8px + env(safe-area-inset-top))}}

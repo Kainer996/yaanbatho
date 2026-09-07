@@ -1,0 +1,177 @@
+diff --git i/public/burbz/index.html w/public/burbz/index.html
+index eb22778..5803bbb 100644
+--- i/public/burbz/index.html
++++ w/public/burbz/index.html
+@@ -4791,6 +4791,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
+               <div class="settlement-stage-meta" id="villageStageMeta">Reading the settlement ledger</div>
+             </div>
+             <div class="settlement-camera-controls">
++              <button type="button" class="settlement-camera-btn" id="villageWalkBtn" aria-label="Walk around this village in fullscreen 3D" title="Walk around the village" style="width:auto;padding:0 10px;font-size:12px;gap:4px">👣 Walk</button>
+               <button type="button" class="settlement-camera-btn" data-scene-camera="village-reset" aria-label="Return the camera to the village square" title="Return to the village square">⌂</button>
+             </div>
+             <div class="settlement-scene-labels" id="villageSceneLabels" aria-hidden="true"></div>
+@@ -22766,6 +22767,7 @@ document.addEventListener('click', ev => {
+ let currentScreen = 'map';
+
+ function switchScreen(name) {
++  if (name !== currentScreen) window.BurbzVillageWalk?.close('navigation');
+   if (name === currentScreen) return;
+   if (currentScreen === 'battle') {
+     if (battleState?.aimFlight) return;
+@@ -29300,6 +29302,41 @@ let villageBuiltBuildingsKey = null;
+ let villageActive = null;
+ let villageSceneQuality = { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
+ let villageLastFrameAt = 0;
++let villageAnimationRequest = 0, villagePauseTimer = 0;
++let villageWalkLoad = null;
++$('villageWalkBtn')?.addEventListener('click', async () => {
++  const button = $('villageWalkBtn');
++  if (button.disabled) return;
++  button.disabled = true;
++  const seed = currentVillage()?.seed;
++  try {
++    if (!window.BurbzVillageWalk) {
++      if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
++        const script = document.createElement('script');
++        script.src = 'village_walk.js?v=village-walk-v1-20260907';
++        const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
++        script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
++        script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
++        document.head.appendChild(script);
++      }).catch(error => { villageWalkLoad = null; throw error; });
++      await villageWalkLoad;
++    }
++    if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
++    window.BurbzVillageWalk.open({
++      name: currentVillage().name, opener:button,
++      source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
++        movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
++      suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
++      animate: t => villageAnimateFrame(t, true),
++      resume: (reason, failed) => {
++        if (reason === 'navigation' || reason === 'pagehide') return;
++        if (failed && villageRenderer?.getContext().isContextLost()) villageFallbackMode = true;
++        if (currentScreen === 'village') { onVillageResize(); renderVillage(); }
++      }
++    });
++  } catch (error) { showToast(error.message); }
++  finally { button.disabled = false; }
++});
+
+ // ===== Step inside your buildings (step-inside-buildings-v341) ===============
+ // Tap any building you have raised — in the living village, on the town
+@@ -30086,6 +30123,7 @@ function bindEmpirePager() {
+ }
+
+ function renderVillage() {
++  if (window.BurbzVillageWalk?.isOpen()) return;
+   const stage = $('villageStage');
+   if (!stage) return;
+   empireCompleteConstructions(); // finish any timed-out builds before drawing
+@@ -30168,7 +30206,7 @@ function renderVillage() {
+     if (villageBuiltSeed !== v.seed || villageBuiltPhase !== burbzDaylightPhaseNow() || villageBuiltLifeKey !== lifeKey || villageBuiltShopsKey !== discoveredVillageShopKeys(v.seed).join('.') || villageBuiltBuildingsKey !== villageBuildingSceneKey(lifeRec)) buildVillageScene(v);
+     const loading = $('villageLoading');
+     if (loading) loading.remove();
+-    if (!villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
++    if (!villageRunning) { villageRunning = true; villageAnimationRequest = requestAnimationFrame(villageAnimate); }
+     onVillageResize();
+   } catch (err) {
+     console.warn('BURBZ village: 3D init failed, using 2D square', err);
+@@ -33396,6 +33434,9 @@ function buildVillageScene(v) {
+     return h;
+   };
+
++  villageScene.userData.walkTerrain = { radius:groundR - 2, heightAt,
++    river:layout === 'riverside' ? { x:riverPx, z:riverPz, ux:riverUx, uz:riverUz, width:riverW } : null };
++
+   // Ground, plaza and paths
+   const grassTile = 4.6; // world units per texture tile
+   const groundGeo = (() => {
+@@ -33544,6 +33585,7 @@ function buildVillageScene(v) {
+     }
+     // The footbridge carries the lane over the water
+     const bridge = villageMakeBridge(r, pal, riverW);
++    bridge.userData.walkBridge = true;
+     bridge.rotation.y = Math.PI / 2 - riverA;
+     bridge.position.set(riverPx, 0, riverPz);
+     villageScene.add(bridge);
+@@ -34112,6 +34154,7 @@ function buildVillageScene(v) {
+ }
+
+ function onVillageResize() {
++  if (window.BurbzVillageWalk?.isOpen()) return;
+   const stage = $('villageStage');
+   if (!stage || !villageRenderer || !villageCamera) return;
+   const w = stage.clientWidth, h = stage.clientHeight;
+@@ -34257,20 +34300,21 @@ function villageAnimateConstructionActors(sites, t, motion) {
+ }
+
+ function villageAnimate(ts) {
++  if (!villageRunning || window.BurbzVillageWalk?.isOpen()) { villageRunning = false; return; }
+   if (currentScreen !== 'village') { villageRunning = false; return; }
+   const stage = $('villageStage');
+   if (!settlementSceneShouldRun(true, true, stage)) {
+     settlementSceneGovernor('village').lastTs=0;
+     stage?.classList.add('is-paused');
+-    setTimeout(() => {
++    villagePauseTimer = setTimeout(() => {
+       if (!villageRunning) return;
+-      if (currentScreen === 'village') requestAnimationFrame(villageAnimate);
++      if (currentScreen === 'village') villageAnimationRequest = requestAnimationFrame(villageAnimate);
+       else villageRunning = false;
+     }, 300);
+     return;
+   }
+   stage?.classList.remove('is-paused');
+-  requestAnimationFrame(villageAnimate);
++  villageAnimationRequest = requestAnimationFrame(villageAnimate);
+   // Run at the display's native rate. Only an explicit cap (reduced motion)
+   // throttles — the v281 skip-frames cap held 60Hz phones at a juddery 30fps.
+   const interval = Number(villageSceneQuality.frameInterval) || 0;
+@@ -34282,7 +34326,7 @@ function villageAnimate(ts) {
+ }
+
+ let __villageLastT = 0;
+-function villageAnimateFrame(t) {
++function villageAnimateFrame(t, walking = false) {
+   const dtFrame = Math.max(0.016, Math.min(0.12, t - __villageLastT)); // clamp tab-switch jumps
+   __villageLastT = t;
+   const motion = settlementSceneMotionScale();
+@@ -34290,10 +34334,12 @@ function villageAnimateFrame(t) {
+   // while — never wrestle the view away from someone exploring the village.
+   // Keep the village in the player's hands; resident life supplies the motion.
+   t *= motion;
++  if (!walking) {
+   const { azimuth, polar, dist, tx, tz } = villageCam;
+   villageCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 2.5, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
+   villageCamera.lookAt(tx, 1.4, tz);
+   settlementSceneUpdateContext('village', villageCamera, villageScene);
++  }
+   villageAnimatePhysicalSigns(villageSigns, t);
+   villageAnimateTrafficActors(villageTraffic, t);
+   villageAnimateLivestockActors(villageLivestock, t);
+@@ -34472,7 +34518,7 @@ function villageAnimateFrame(t) {
+   }
+   // Dawn breaks over an open screen too: every ~10s, if the real sky has
+   // moved to a new phase, the scene rebuilds itself in the new light.
+-  if (villageShadowTick++ % 600 === 599 && villageBuiltPhase && villageBuiltPhase !== burbzDaylightPhaseNow()) {
++  if (!walking && villageShadowTick++ % 600 === 599 && villageBuiltPhase && villageBuiltPhase !== burbzDaylightPhaseNow()) {
+     villageBuiltSeed = null;
+     renderVillage();
+     return;
+@@ -34480,6 +34526,7 @@ function villageAnimateFrame(t) {
+   // The key light never moves — refreshing the shadow map at a third of the
+   // frame rate keeps walkers' and sails' shadows live at a fraction of the GPU cost
+   villageScene.userData.updatePeepContacts?.();
++  if (walking) return;
+   if (window.BurbzManga) window.BurbzManga.render(THREE, villageRenderer, villageScene, villageCamera);
+   else villageRenderer.render(villageScene, villageCamera);
+ }
+@@ -43499,6 +43546,7 @@ function recordScreenTrail(from) {
+ // Close the topmost open layer, if any. Returns true when something closed —
+ // one back press, one layer, exactly like a native app.
+ function closeTopBurbzLayer() {
++  if (window.BurbzVillageWalk?.close('back')) return true;
+   const equip = $('birdEquipOverlay');
+   if (equip && equip.classList.contains('show')) { closeBirdEquip(); return true; }
+   const shop = $('villageShopOverlay');
