@@ -1786,6 +1786,7 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
 @keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-2.8deg); } 50%{ transform: rotate(3.4deg); } }
 .pet-companion.facing-left .pet-sprite { transform: scaleX(-1); }
 .pet-companion.flying { position:fixed; z-index:260; }
+.pet-companion.merlin-in-flight { position:absolute; visibility:hidden; pointer-events:none; }
 .pet-sprite {
   width: 88px; height: 88px; margin: 0 auto; overflow: visible;
   display: flex; align-items: center; justify-content: center; position: relative; z-index: 3;
@@ -4415,6 +4416,7 @@ if (window.BurbzAppearanceCore) {
 </script>
 <link rel="stylesheet" href="woodland_ui.css?v=woodland-finish-v360-20260907">
 <link rel="stylesheet" href="comic_ui.css?v=appearance-v362-20260907">
+<link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
@@ -5500,6 +5502,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
+<script src="merlin_flight.js?v=merlin-flight-v1-20260907"></script>
+<script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v1-20260907"></script>
 <script src="diary_core.js?v=release-polish-v342-20260901"></script>
 <script>
 /* ============================================================================
@@ -41362,6 +41366,7 @@ Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProje
 // ============================================================================
 let petWanderTimer = null;
 let petFlightTimer = null;
+let merlinFlightSession = null;
 let petCareTimer = null;
 let merlinCareRefreshTimer = null;
 let petSpeechTimer = null;
@@ -41428,11 +41433,12 @@ function getPetMood() {
 }
 
 function setPetOnPerch() {
+  if (merlinFlightSession) merlinFlightSession.stop('perch', { immediate:true });
   const companion = $('petCompanion');
   if (!companion) return;
   companion.style.left = ''; companion.style.bottom = '';
   companion.style.right = ''; companion.style.top = '';
-  companion.classList.remove('flying', 'facing-left');
+  companion.classList.remove('flying', 'facing-left', 'merlin-in-flight');
   const sprite = $('petSprite');
   if (sprite) sprite.classList.remove('pet-walk');
 }
@@ -41450,7 +41456,7 @@ function renderMerlinCareMenu() {
     const hint = $('merlinTutorialDoText');
     if (hint) hint.textContent = 'One foot tucked up… ' + napSeconds + 's of wizard sleep';
   }
-  if (playBtn) { playBtn.disabled = resting || catchingBreath || pet.energy < 20; playBtn.textContent = catchingBreath ? '✨ Catching breath' : '✨ Play'; }
+  if (playBtn) { playBtn.disabled = resting || catchingBreath || pet.energy < 20 || !!merlinFlightSession?.active; playBtn.textContent = merlinFlightSession?.active ? '✨ Playing' : catchingBreath ? '✨ Catching breath' : '✨ Play'; }
   if (feedBtn) feedBtn.disabled = resting;
   $('merlinPerchAssembly')?.classList.toggle('merlin-resting', resting);
   if (resting) { clearTimeout(petFlightTimer); setPetOnPerch(); }
@@ -41509,9 +41515,10 @@ function syncMerlinPerchPresence() {
   if (perch) perch.classList.add('show');
   if (assembly) { assembly.classList.toggle('merlin-away', away); assembly.dataset.merlinStatus = away ? 'away' : 'perched'; }
   if (away) {
+    if (merlinFlightSession) merlinFlightSession.stop('away', { immediate:true });
     // He took his flight and his speech bubble with him.
     clearTimeout(petFlightTimer);
-    companion.classList.remove('flying', 'facing-left');
+    companion.classList.remove('flying', 'facing-left', 'merlin-in-flight');
     const bubble = $('petSpeech');
     if (bubble) bubble.classList.remove('show');
     closeMerlinCareMenu({ force:true });
@@ -41526,7 +41533,7 @@ function renderPetCompanion() {
   if (!sprite.querySelector('.merlin-rig')) sprite.innerHTML = merlinRigHTML();
   const away = syncMerlinPerchPresence();
   renderMerlinCareMenu();
-  if (!away && !companion.classList.contains('flying')) setPetOnPerch();
+  if (!away && !companion.classList.contains('flying') && !merlinFlightSession?.active) setPetOnPerch();
 }
 
 function openMerlinCareMenu() {
@@ -41559,25 +41566,41 @@ function closeMerlinCareMenu(options = {}) {
 function petFlyOutAndReturn() {
   const companion = $('petCompanion');
   const sprite = $('petSprite');
-  if (!companion || !sprite || !companion.classList.contains('show') || merlinIsAway() || getMerlinCare().restEndsAt || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  clearTimeout(petFlightTimer);
-  const rect = companion.getBoundingClientRect();
-  companion.style.right = 'auto'; companion.style.left = rect.left + 'px'; companion.style.top = rect.top + 'px';
-  companion.classList.add('flying'); sprite.classList.add('pet-walk');
-  const targetLeft = Math.max(10, Math.min(window.innerWidth - 104, window.innerWidth * (0.12 + Math.random() * 0.60)));
-  const targetTop = Math.max(84, Math.min(window.innerHeight - 160, window.innerHeight * (0.12 + Math.random() * 0.48)));
-  companion.classList.toggle('facing-left', targetLeft < rect.left);
-  requestAnimationFrame(() => { companion.style.left = targetLeft + 'px'; companion.style.top = targetTop + 'px'; });
-  makePetSparkles(5);
-  petFlightTimer = setTimeout(() => {
-    const from = companion.getBoundingClientRect();
-    const perchLeft = Math.max(10, window.innerWidth - 96);
-    companion.classList.toggle('facing-left', perchLeft < from.left);
-    companion.style.left = perchLeft + 'px';
-    companion.style.top = 'calc(var(--safe-top) + 76px)';
-    petFlightTimer = setTimeout(() => { setPetOnPerch(); makePetSparkles(3); }, 1850);
-  }, 2200);
+  if (!companion || !sprite || !companion.classList.contains('show') || merlinIsAway() || getMerlinCare().restEndsAt) return;
+  if (!window.BurbzMerlinFlight) return;
+  if (!merlinFlightSession) {
+    merlinFlightSession = window.BurbzMerlinFlight.create({
+      host: sprite,
+      atlasUrl: 'assets/merlin-flight/merlin-flight-v1.webp',
+      atlas: window.MERLIN_FLIGHT_ATLAS,
+      durationMs: 25000,
+      // This eligibility check is read-only: care completion/save stays in
+      // getMerlinCare. A frame must never turn into a care transaction.
+      shouldContinue: () => !merlinIsAway() && !gameState.merlinCare?.restEndsAt &&
+        !['village','battle','academy-room','town','region','county'].includes(document.body.dataset.activeScreen),
+      onTakeoff: () => {
+        companion.classList.add('flying', 'merlin-in-flight');
+        $('petSpeech')?.classList.remove('show');
+        closeMerlinCareMenu();
+        renderMerlinCareMenu();
+      },
+      onRestore: () => {
+        setPetOnPerch();
+        syncMerlinPerchPresence();
+      },
+      onFinish: () => renderMerlinCareMenu(),
+      onCare: () => openMerlinCareMenu(),
+      onError: () => {
+        const note = $('merlinCareNote');
+        if (note) note.textContent = 'Merlin enjoyed your company. His flight artwork is still loading; try Play again later.';
+      }
+    });
+  }
+  return merlinFlightSession.start();
 }
+// Read-only visual diagnostics; the session itself never owns saved game data.
+window.__burbzMerlinFlightDebug = () => merlinFlightSession?.diagnostics || { active:false, loading:false, rafCount:0, state:null };
+Object.defineProperty(window, '__burbzMerlinFlightSession', { get: () => merlinFlightSession });
 
 function startPetWander() { clearTimeout(petWanderTimer); setPetOnPerch(); }
 
@@ -41620,6 +41643,8 @@ function showMerlinBondGain(gained, leveledUp) {
 }
 
 function careForMerlin(action) {
+  // Further taps direct the current flight; they never buy a second care reward.
+  if (action === 'play' && merlinFlightSession?.active) return false;
   if (merlinIsAway()) { petSay('I am out on an errand. I will be back soon!'); return false; }
   if (getMerlinCare().restEndsAt) { renderMerlinCareMenu(); return false; }
   const bondBefore = merlinBondTotal(getMerlinCare());
