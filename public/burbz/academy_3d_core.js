@@ -10,7 +10,7 @@
   // Everything here is procedural three.js geometry: no downloaded meshes, no
   // multi-megabyte GLB over mobile data. The whole Academy — a gnarled
   // buttressed tree, treehouses that keep the character of their paintings,
-  // birds with beating wings, chimney smoke, lanterns — is a few dozen KB of
+  // chimney smoke and lanterns — is a compact collection of
   // code that builds itself on the device.
   //
   // Presentation only: it never reads or writes game state. The page hands it a
@@ -47,8 +47,8 @@
     dorm: {
       label: 'The Roost', roof: 'steep', w: 1.7, d: 1.5, h: 1.5,
       body: 'birdhouse', signature: 'round-perch-door', details: ['dormer', 'perch-brace'],
-      wall: 0xa06f42, wallDark: 0x755030, roofCol: 0x5b442b, trim: 0x8a6a3a,
-      windows: [{ x: 0, y: 0.34, z: 0.78, r: 0.30, round: true }],
+      wall: 0xa87948, wallDark: 0x624533, roofCol: 0x386c75, trim: 0xc69d62,
+      windows: [{ x: 0, y: 0.44, z: 0.78, r: 0.30, round: true }],
       extras: ['lantern-left', 'hole-door', 'rope-belt']
     },
     tavern: {
@@ -68,35 +68,35 @@
     hospital: {
       label: 'Bird Hospital', roof: 'gable', w: 2.0, d: 1.7, h: 1.45,
       body: 'cross-gable', signature: 'healing-greenhouse', details: ['greenhouse', 'herb-box'],
-      wall: 0xa67445, wallDark: 0x725030, roofCol: 0x694e30, trim: 0x8f6c3c,
-      windows: [{ x: -0.42, y: 0.34, z: 0.86, r: 0.26 }, { x: 0.42, y: 0.30, z: 0.86, r: 0.24 }],
+      wall: 0xa67445, wallDark: 0x725030, roofCol: 0x557968, trim: 0xc9ac72,
+      windows: [{ x: -0.28, y: 0.34, z: 0.86, r: 0.26 }, { x: 0.28, y: 0.30, z: 0.86, r: 0.24 }],
       extras: ['cross', 'lantern-left', 'lantern-right']
     },
     crowbar: {
       label: 'The Crowbar', roof: 'layered', w: 2.1, d: 1.8, h: 1.35,
       body: 'round', signature: 'circular-social-house', details: ['balcony-table', 'bottle-rack'],
-      wall: 0xb78148, wallDark: 0x7a5633, roofCol: 0x805f36, trim: 0xc79a4e,
+      wall: 0xb78148, wallDark: 0x7a5633, roofCol: 0x9a553f, trim: 0xc79a4e,
       windows: [{ x: 0, y: 0.34, z: 0.90, r: 0.48, wide: true, warm: true }],
       extras: ['sign', 'lantern-left', 'lantern-right', 'barrel', 'stools', 'open-front']
     },
     kitchen: {
       label: 'Kitchen & Pantry', roof: 'gable', w: 2.0, d: 1.7, h: 1.5,
       body: 'cottage', signature: 'smoking-herb-kitchen', details: ['herb-box', 'copper-pans'],
-      wall: 0xa47040, wallDark: 0x6f4c2d, roofCol: 0x5b4429, trim: 0x8d6a38,
+      wall: 0xa47040, wallDark: 0x6f4c2d, roofCol: 0xa05b42, trim: 0xc09a60,
       windows: [{ x: -0.02, y: 0.66, z: 0.80, r: 0.22, round: true }, { x: 0, y: 0.14, z: 0.88, r: 0.52, wide: true, warm: true }],
       extras: ['chimney', 'awning', 'sacks']
     },
     workshop: {
       label: 'Nest Workshop', roof: 'shingle', w: 1.9, d: 1.7, h: 1.4,
       body: 'hexagonal', signature: 'pulley-nest-workshop', details: ['pulley', 'tool-wheel'],
-      wall: 0xae7b46, wallDark: 0x765430, roofCol: 0x976f3e, trim: 0x9a7440,
+      wall: 0xae7b46, wallDark: 0x765430, roofCol: 0x507a7a, trim: 0xc3a26b,
       windows: [{ x: 0, y: 0.24, z: 0.86, r: 0.44, wide: true }],
       extras: ['roof-nest', 'hanging-nest', 'open-front']
     },
     nursery: {
       label: 'Hatchery Nursery', roof: 'egg', w: 1.6, d: 1.5, h: 1.9,
       body: 'egg', signature: 'woven-cradle-egg', details: ['woven-ribs', 'cradle-mobile'],
-      wall: 0xbc8a4c, wallDark: 0x7e5730, roofCol: 0x986d3c, trim: 0xb08c4c,
+      wall: 0xbc8a4c, wallDark: 0x7e5730, roofCol: 0x71935a, trim: 0xb08c4c,
       windows: [{ x: 0, y: 0.34, z: 0.70, r: 0.40, wide: true, warm: true }],
       extras: ['hanging-cradle', 'crossed-poles']
     },
@@ -110,28 +110,28 @@
     library: {
       label: 'The Library', roof: 'gable', w: 1.9, d: 1.7, h: 1.55,
       body: 'tower', signature: 'book-balcony-tower', details: ['book-balcony', 'reading-lamp'],
-      wall: 0x9a6c40, wallDark: 0x684a2b, roofCol: 0x554260, trim: 0xc6a44c,
-      windows: [{ x: -0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0.42, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0, y: 0.10, z: 0.90, r: 0.46, wide: true, warm: true }],
+      wall: 0x9a6c40, wallDark: 0x684a2b, roofCol: 0x665376, trim: 0xc6a44c,
+      windows: [{ x: -0.28, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0.28, y: 0.42, z: 0.86, r: 0.22, warm: true }, { x: 0, y: 0.10, z: 0.90, r: 0.46, wide: true, warm: true }],
       extras: ['open-front', 'lantern-left', 'rope-belt']
     },
     magpie_market: {
       label: 'Magpie Market', roof: 'gable', w: 2.0, d: 1.7, h: 1.30,
       body: 'cottage', signature: 'awninged-trading-stall', details: ['pub-sign', 'bottle-rack'],
-      wall: 0xb5813f, wallDark: 0x7a5630, roofCol: 0x5f4a2a, trim: 0xc79a4e,
+      wall: 0xb5813f, wallDark: 0x7a5630, roofCol: 0x665777, trim: 0xc79a4e,
       windows: [{ x: 0, y: 0.28, z: 0.88, r: 0.48, wide: true, warm: true }],
       extras: ['awning', 'sign', 'lantern-left', 'lantern-right', 'barrel', 'sacks', 'open-front']
     },
     manager_office: {
       label: "Project Manager's Office", roof: 'steep', w: 1.8, d: 1.6, h: 1.45,
       body: 'birdhouse', signature: 'plans-and-ledgers-office', details: ['map-board', 'reading-lamp'],
-      wall: 0x9b7144, wallDark: 0x684a2b, roofCol: 0x4e4938, trim: 0xc6a44c,
+      wall: 0x9b7144, wallDark: 0x684a2b, roofCol: 0x4b7069, trim: 0xc6a44c,
       windows: [{ x: 0, y: 0.34, z: 0.82, r: 0.32, round: true, warm: true }],
       extras: ['lantern-left', 'rope-belt', 'sign']
     },
     quest_roost: {
       label: 'Quest Roost', roof: 'gable', w: 1.9, d: 1.7, h: 1.35,
       body: 'faceted', signature: 'map-and-banner-roost', details: ['map-board', 'quest-banners'],
-      wall: 0xb27e46, wallDark: 0x7a5630, roofCol: 0x634a2c, trim: 0xa9803f,
+      wall: 0xb27e46, wallDark: 0x7a5630, roofCol: 0x3d7080, trim: 0xc4a16b,
       windows: [{ x: 0, y: 0.28, z: 0.88, r: 0.44, wide: true }],
       extras: ['weathervane', 'lantern-left', 'lantern-right', 'open-front']
     }
@@ -723,217 +723,276 @@
       });
     });
 
-    // ---- body ----
-    var bodyY = 0.05 + H / 2;
-    if (st.body === 'egg') {
-      var egg = new T.Mesh(new T.SphereGeometry(W * 0.56, 18, 16), wallMat);
-      egg.scale.set(1, H / (W * 1.02), 0.94);
-      egg.position.y = 0.05 + H * 0.52;
-      egg.castShadow = true; egg.receiveShadow = true;
-      g.add(egg);
-      // Timber ribs hooping the shell.
-      for (var eb = 0; eb < 5; eb++) {
-        var hoop = new T.Mesh(new T.TorusGeometry(W * 0.545 * Math.sin(0.5 + eb * 0.42), 0.028, 4, 16), trimMat);
-        hoop.rotation.x = Math.PI / 2;
-        hoop.position.y = 0.05 + H * (0.16 + eb * 0.18);
-        g.add(hoop);
+    // ---- crafted architecture: bevels, joinery and shaped roof surfaces ----
+    // Geometry carries the surface detail: no extra texture downloads or draw
+    // calls. Large readable forms first; small trim never substitutes for shape.
+    var plasterColors = {
+      dorm: 0xe5c58b, tavern: 0xe1c79d, training: 0xdfb971,
+      hospital: 0xd8e1bd, crowbar: 0xd9af78, kitchen: 0xe8cc98,
+      workshop: 0xcfa46e, nursery: 0xe8d4a3, observatory: 0x687ea1,
+      library: 0xd9c7aa, magpie_market: 0xdfbd8b, manager_office: 0xc7d2b7,
+      quest_roost: 0xd6bc91
+    };
+    var plasterMat = new T.MeshLambertMaterial({ color: plasterColors[id] });
+    var joineryMat = new T.MeshLambertMaterial({ color: 0x49352b });
+    var brassMat = new T.MeshLambertMaterial({ color: 0xd9b66d });
+    var tileMats = [0.82, 0.94, 1.06, 1.16].map(function(f) {
+      return new T.MeshLambertMaterial({ color: shade(st.roofCol, f) });
+    });
+    var craftParts = { shingles: 0, joinery: 0, bevels: 0 };
+    function bevel(w, h, d, mat, x, y, z, radius) {
+      var b = Math.min(radius || 0.025, w * 0.16, h * 0.16, d * 0.16);
+      var s = new T.Shape();
+      s.moveTo(-w / 2 + b, -h / 2 + b); s.lineTo(w / 2 - b, -h / 2 + b);
+      s.lineTo(w / 2 - b, h / 2 - b); s.lineTo(-w / 2 + b, h / 2 - b); s.closePath();
+      var geo = new T.ExtrudeGeometry(s, { depth: d - 2 * b, bevelEnabled: true,
+        bevelThickness: b, bevelSize: b, bevelSegments: 1, steps: 1, curveSegments: 1 });
+      geo.translate(0, 0, -d / 2 + b);
+      var m = new T.Mesh(geo, mat);
+      m.position.set(x || 0, y || 0, z || 0);
+      m.castShadow = true; m.receiveShadow = true;
+      craftParts.bevels++;
+      return m;
+    }
+    function beam(a, b, width, mat, parent) {
+      var av = new T.Vector3().fromArray(a), bv = new T.Vector3().fromArray(b);
+      var m = bevel(width, av.distanceTo(bv), width, mat || joineryMat);
+      m.position.copy(av).add(bv).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(new T.Vector3(0, 1, 0), bv.sub(av).normalize());
+      (parent || g).add(m); craftParts.joinery++;
+      return m;
+    }
+    // Closed thin slabs, with real thickness at the eaves. Points go round the
+    // top clockwise when seen from below, yielding outward-facing top normals.
+    function slab(points, thickness, mat) {
+      var pos = [];
+      function tri(a, b, c) { pos.push.apply(pos, a.concat(b, c)); }
+      var low = points.map(function(p) { return [p[0], p[1] - thickness, p[2]]; });
+      var cross = new T.Vector3().fromArray(points[1]).sub(new T.Vector3().fromArray(points[0]))
+        .cross(new T.Vector3().fromArray(points[2]).sub(new T.Vector3().fromArray(points[0])));
+      if (cross.y < 0) { points = points.slice().reverse(); low.reverse(); }
+      tri(points[0], points[1], points[2]); tri(points[0], points[2], points[3]);
+      tri(low[2], low[1], low[0]); tri(low[3], low[2], low[0]);
+      for (var k = 0; k < 4; k++) {
+        var n = (k + 1) % 4;
+        tri(points[n], points[k], low[k]); tri(points[n], low[k], low[n]);
       }
-    } else if (st.body === 'round' || st.body === 'hexagonal' || st.body === 'faceted') {
-      var sides = st.body === 'round' ? 16 : (st.body === 'hexagonal' ? 6 : 8);
-      var roundBody = new T.Mesh(new T.CylinderGeometry(W * 0.53, W * 0.56, H, sides), wallMat);
-      roundBody.scale.z = D / W;
-      roundBody.position.y = bodyY;
-      roundBody.castShadow = true; roundBody.receiveShadow = true;
-      g.add(roundBody);
-      // Hoops and upright ribs make these read as crafted timber buildings,
-      // not differently coloured cylinders.
-      [0.22, 0.62].forEach(function(level) {
-        var hoopBody = new T.Mesh(new T.TorusGeometry(W * 0.545, 0.035, 5, sides * 2), trimMat);
-        hoopBody.rotation.x = Math.PI / 2;
-        hoopBody.scale.z = D / W;
-        hoopBody.position.y = 0.05 + H * level;
-        g.add(hoopBody);
-      });
-      for (var rib = 0; rib < sides; rib++) {
-        var ribA = rib / sides * Math.PI * 2;
-        g.add(box(0.045, H * 0.92, 0.045, darkMat,
-          Math.sin(ribA) * W * 0.535, bodyY, Math.cos(ribA) * D * 0.535));
-      }
-    } else if (st.body === 'birdhouse') {
-      g.add(box(W * 0.88, H, D * 0.84, wallMat, 0, bodyY, -D * 0.04));
-      var birdFront = new T.Mesh(new T.CylinderGeometry(W * 0.29, W * 0.34, H * 0.72, 12), wallMat);
-      birdFront.rotation.x = Math.PI / 2;
-      birdFront.position.set(0, bodyY, D * 0.47);
-      birdFront.scale.y = 0.52;
-      birdFront.castShadow = true; birdFront.receiveShadow = true;
-      g.add(birdFront);
-      var birdRing = new T.Mesh(new T.TorusGeometry(W * 0.29, 0.045, 5, 16), trimMat);
-      birdRing.position.set(0, bodyY, D * 0.61);
-      g.add(birdRing);
-    } else if (st.body === 'pavilion') {
-      g.add(box(W, H * 0.48, D, wallMat, 0, 0.05 + H * 0.24, 0));
-      g.add(box(W, H * 0.20, D * 0.72, wallMat, 0, 0.05 + H * 0.90, -D * 0.10));
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(c) {
-        g.add(box(0.12, H * 0.48, 0.12, trimMat, c[0] * W * 0.43, 0.05 + H * 0.66, c[1] * D * 0.42));
-      });
-    } else if (st.body === 'longhall') {
-      g.add(box(W, H * 0.72, D, wallMat, 0, 0.05 + H * 0.36, 0));
-      g.add(box(W * 0.48, H * 0.38, D * 0.74, wallMat, 0, 0.05 + H * 0.81, 0));
+      var geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.computeVertexNormals();
+      var mesh = new T.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true;
+      g.add(mesh); return mesh;
+    }
+    function timberHouse(w, h, d, x, bottom, z, openFront) {
+      // Real side/back walls, not an opaque cube hiding the serving window.
+      var mid = bottom + h * 0.5;
+      g.add(bevel(w, h, 0.12, plasterMat, x, mid, z - d / 2 + 0.06));
       [-1, 1].forEach(function(side) {
-        g.add(box(W * 0.22, H * 0.44, D * 0.78, darkMat, side * W * 0.48, 0.05 + H * 0.22, 0));
+        g.add(bevel(0.12, h, d, plasterMat, x + side * (w / 2 - 0.06), mid, z));
+        g.add(bevel(w, h * 0.18, 0.13, wallMat, x, bottom + h * 0.09, z + side * (d / 2 - 0.04)));
+        g.add(bevel(w + 0.10, 0.11, 0.14, joineryMat, x, bottom + h * 0.22, z + side * d / 2));
+        g.add(bevel(w + 0.14, 0.14, 0.18, joineryMat, x, bottom + h - 0.04, z + side * d / 2));
+        [-1, 1].forEach(function(front) {
+          var px = x + side * w / 2, pz = z + front * d / 2;
+          g.add(bevel(0.14, h + 0.08, 0.14, joineryMat, px, mid, pz));
+          g.add(bevel(0.19, 0.12, 0.19, brassMat, px, bottom + h * 0.15, pz));
+          beam([px, bottom + h * 0.68, pz], [px - side * w * 0.21, bottom + h - 0.10, pz], 0.085);
+        });
+        // Side-wall Tudor bracing, silhouette-visible even when orbiting.
+        beam([x + side * (w / 2 + 0.014), bottom + h * 0.24, z - d * 0.38],
+          [x + side * (w / 2 + 0.014), bottom + h * 0.9, z + d * 0.30], 0.075);
       });
-    } else if (st.body === 'cross-gable') {
-      g.add(box(W * 0.72, H, D, wallMat, 0, bodyY, 0));
-      g.add(box(W, H * 0.70, D * 0.48, wallMat, 0, 0.05 + H * 0.35, D * 0.08));
-      g.add(box(W + 0.08, 0.09, D * 0.56, trimMat, 0, 0.05 + H * 0.70, D * 0.08));
-    } else if (st.body === 'cottage') {
-      g.add(box(W * 0.78, H, D, wallMat, -W * 0.08, bodyY, 0));
-      g.add(box(W * 0.34, H * 0.58, D * 0.78, darkMat, W * 0.43, 0.05 + H * 0.29, -D * 0.03));
-      g.add(box(W * 0.40, 0.09, D * 0.88, trimMat, W * 0.43, 0.05 + H * 0.61, -D * 0.03));
-    } else if (st.body === 'tower') {
-      g.add(box(W * 0.78, H * 0.62, D * 0.82, wallMat, 0, 0.05 + H * 0.31, 0));
-      g.add(box(W * 0.60, H * 0.48, D * 0.66, wallMat, 0, 0.05 + H * 0.79, 0));
-      g.add(box(W * 0.70, 0.10, D * 0.76, trimMat, 0, 0.05 + H * 0.60, 0));
-      for (var towerPost = -1; towerPost <= 1; towerPost += 2) {
-        g.add(box(0.10, H * 0.44, 0.10, trimMat, towerPost * W * 0.27, 0.05 + H * 0.79, D * 0.27));
+      if (!openFront) {
+        g.add(bevel(w - 0.16, h * 0.76, 0.12, plasterMat, x, bottom + h * 0.60, z + d / 2 - 0.07));
+      } else {
+        g.add(bevel(w - 0.16, h * 0.18, 0.12, plasterMat, x, bottom + h * 0.87, z + d / 2 - 0.07));
+        g.add(bevel(w - 0.08, 0.09, 0.28, trimMat, x, bottom + h * 0.25, z + d / 2 + 0.07));
       }
-    } else {
-      g.add(box(W, H, D, wallMat, 0, bodyY, 0));
-      // Vertical board-and-batten cladding.
-      var battens = Math.max(4, Math.round(W / 0.28));
-      for (var bt = 0; bt <= battens; bt++) {
-        var bx = -W / 2 + (bt / battens) * W;
-        g.add(box(0.05, H * 0.94, 0.04, darkMat, bx, bodyY, D / 2 + 0.005));
-        g.add(box(0.05, H * 0.94, 0.04, darkMat, bx, bodyY, -D / 2 - 0.005));
+      // Chamfered foundation sill and joists make the room feel supported.
+      g.add(bevel(w + 0.16, 0.13, d + 0.16, darkMat, x, bottom, z));
+      for (var j = -1; j <= 1; j++) {
+        g.add(bevel(0.10, 0.15, d + 0.34, joineryMat, x + j * w * 0.33, bottom - 0.10, z));
       }
-      for (var bs = 0; bs <= 4; bs++) {
-        var bz = -D / 2 + (bs / 4) * D;
-        g.add(box(0.04, H * 0.94, 0.05, darkMat, W / 2 + 0.005, bodyY, bz));
-        g.add(box(0.04, H * 0.94, 0.05, darkMat, -W / 2 - 0.005, bodyY, bz));
+    }
+    function gableRoof(w, d, base, rise, cx, cz) {
+      var run = w / 2 + 0.21, span = d + 0.48, rows = 6, cols = Math.max(5, Math.round(span / 0.34));
+      function at(side, u, z, lift) {
+        return [cx + side * run * u, base + rise * Math.pow(Math.max(0, 1 - u), 1.55) + 0.09 * Math.pow(u, 8) + (lift || 0), cz + z];
       }
-      // Corner posts and a waist rail.
-      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function(c) {
-        g.add(box(0.13, H + 0.06, 0.13, trimMat, c[0] * W / 2, bodyY, c[1] * D / 2));
+      [-1, 1].forEach(function(side) {
+        for (var row = 0; row < rows; row++) {
+          var u0 = row / rows, u1 = (row + 1) / rows;
+          slab([at(side,u0,-span/2,0),at(side,u1,-span/2,0),at(side,u1,span/2,0),at(side,u0,span/2,0)], 0.065, roofMat2);
+          // Staggered, individually coloured tiles; gaps expose dark underlay,
+          // not added black seam bars. Eave tiles are wider and slightly uneven.
+          for (var col = -1; col < cols; col++) {
+            var za = Math.max(-span/2, -span/2 + (col + (row % 2) * 0.5) * span/cols + 0.012);
+            var zb = Math.min(span/2, -span/2 + (col + 1 + (row % 2) * 0.5) * span/cols - 0.012);
+            if (zb - za < 0.03) continue;
+            var ua = Math.max(0, u0 - 0.016), ub = Math.min(1.015, u1 + 0.014);
+            slab([at(side,ua,za,0.045),at(side,ub,za,0.045),at(side,ub,zb,0.045),at(side,ua,zb,0.045)],
+              0.045, tileMats[(row * 3 + col + 5 + (side > 0 ? 1 : 0)) % tileMats.length]);
+            craftParts.shingles++;
+          }
+        }
+        [-1, 1].forEach(function(front) {
+          for (var seg = 0; seg < rows; seg++) {
+            beam(at(side,seg/rows,front*(span/2+0.018),-0.035), at(side,(seg+1)/rows,front*(span/2+0.018),-0.035), 0.105, trimMat);
+          }
+        });
       });
-      g.add(box(W + 0.06, 0.07, D + 0.06, trimMat, 0, 0.05 + H * 0.62, 0));
+      // Recessed plaster gables close the roof, framed with a king-post truss.
+      [-1, 1].forEach(function(front) {
+        var s = new T.Shape(); s.moveTo(-run, 0.02);
+        for (var p = 0; p <= 12; p++) {
+          var x = -1 + p / 6;
+          s.lineTo(x * run, rise * Math.pow(1 - Math.abs(x), 1.55) + 0.09 * Math.pow(Math.abs(x),8));
+        }
+        s.lineTo(run, 0.02); s.closePath();
+        var geo = new T.ExtrudeGeometry(s, {depth:0.06,bevelEnabled:false,curveSegments:1});
+        var face = new T.Mesh(geo, plasterMat);
+        face.position.set(cx, base, cz + front*d/2 - 0.03); face.castShadow = true; g.add(face);
+        beam([cx-run*.80,base+.05,cz+front*(d/2+.05)],[cx+run*.80,base+.05,cz+front*(d/2+.05)],.10);
+        beam([cx,base+.05,cz+front*(d/2+.055)],[cx,base+rise*.95,cz+front*(d/2+.055)],.095);
+        [-1,1].forEach(function(side) {
+          beam([cx+side*run*.58,base+.08,cz+front*(d/2+.055)],[cx,base+rise*.66,cz+front*(d/2+.055)],.065);
+        });
+      });
+      // Individual clay ridge caps, not a single featureless box.
+      for (var rc = 0; rc < cols; rc++) {
+        g.add(bevel(0.18,0.14,span/cols-.012,trimMat,cx,base+rise+.07,cz-span/2+(rc+.5)*span/cols));
+      }
+    }
+    function radialRoof(radius, base, rise, sides, squash) {
+      // A continuous curved roof: each tile is a frustum panel connected to
+      // the next course, not a stack of intersecting/hovering cone primitives.
+      var rows = 6;
+      function at(u, a, lift) {
+        if (sides === 4) a += Math.PI / 4;
+        var r = radius * (0.10 + 0.90*u);
+        return [Math.sin(a)*r, base+rise*Math.pow(1-u,1.55)+0.10*Math.pow(u,8)+(lift||0),Math.cos(a)*r*squash];
+      }
+      for (var row=0;row<rows;row++) {
+        for (var seg=0;seg<sides;seg++) {
+          var a=seg/sides*Math.PI*2,b=(seg+1)/sides*Math.PI*2,u=row/rows,v=(row+1)/rows;
+          slab([at(u,a,0),at(v,a,0),at(v,b,0),at(u,b,0)],.07,roofMat2);
+          var columns = sides === 4 ? 6 : 2;
+          function edge(level, f) {
+            var p=at(level,a,.038),q=at(level,b,.038);
+            return p.map(function(n,k){return n+(q[k]-n)*f;});
+          }
+          for (var tile=0;tile<columns;tile++) {
+            var left=(tile+.018)/columns,right=(tile+.982)/columns;
+            slab([edge(Math.max(0,u-.018),left),edge(v,left),edge(v,right),edge(Math.max(0,u-.018),right)],
+              .04,tileMats[(row+seg+tile)%4]); craftParts.shingles++;
+          }
+        }
+      }
+      g.add(cyl(.035,.15,.28,8,brassMat,0,base+rise+.08,0));
     }
 
-    // ---- roof: laid in overlapping shingle courses ----
+    var bodyY = 0.05 + H / 2;
     var roofBase = 0.05 + H;
-    function shingleSlope(cx, cy, cz, slopeLen, spanZ, rot, tilt) {
-      var grp = new T.Group();
-      grp.add(box(slopeLen, 0.06, spanZ, roofMat2, 0, 0, 0)); // the boarding
-      var courses = Math.max(3, Math.round(slopeLen / 0.21));
-      for (var c2 = 0; c2 < courses; c2++) {
-        var lx = ((c2 + 0.5) / courses - 0.5) * slopeLen;
-        // Each course overlaps the one below it, like real shingles.
-        grp.add(box(slopeLen / courses + 0.075, 0.055, spanZ, (c2 % 2) ? roofMat : roofMat2, lx, 0.05, 0));
-        // Split the course into tiles with visible seams.
-        var tiles = Math.max(3, Math.round(spanZ / 0.26));
-        for (var tl2 = 0; tl2 < tiles; tl2++) {
-          grp.add(box(slopeLen / courses * 0.86, 0.02, 0.035, roofMat2,
-            lx, 0.085, -spanZ / 2 + (tl2 + 0.5) * (spanZ / tiles)));
+    if (st.body === 'egg') {
+      var egg = new T.Mesh(new T.SphereGeometry(W*.53,24,18),plasterMat);
+      egg.scale.set(1,H/(W*1.02),.94); egg.position.y=.05+H*.51; g.add(egg);
+      // Curved woven basket staves follow the shell instead of floating hoops.
+      for (var stave=0;stave<16;stave++) {
+        var a=stave/16*Math.PI*2, pts=[];
+        for (var sp=0;sp<=10;sp++) {
+          var t=.24+sp/10*(Math.PI-.48);
+          pts.push(new T.Vector3(Math.sin(t)*Math.cos(a)*W*.54,.05+H*.51+Math.cos(t)*H*.53,Math.sin(t)*Math.sin(a)*W*.51));
         }
+        g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),10,.025,4,false),trimMat));
       }
-      grp.rotation.set(0, rot, tilt);
-      grp.position.set(cx, cy, cz);
-      g.add(grp);
+    } else if (st.body === 'round' || st.body === 'hexagonal' || st.body === 'faceted') {
+      var sides = st.body === 'hexagonal' ? 6 : 10;
+      // Deliberately faceted ring of panelled bays with structural uprights.
+      for (var bay=0;bay<sides;bay++) {
+        var ba=bay/sides*Math.PI*2,bb=(bay+1)/sides*Math.PI*2;
+        var a=[Math.sin(ba)*W*.51,.05,Math.cos(ba)*D*.51],b=[Math.sin(bb)*W*.51,.05,Math.cos(bb)*D*.51];
+        beam(a,[a[0],roofBase,a[2]],.115);
+        var panel=bevel(Math.hypot(b[0]-a[0],b[2]-a[2]),H-.10,.11,plasterMat,(a[0]+b[0])/2,bodyY,(a[2]+b[2])/2);
+        panel.rotation.y=Math.atan2(a[2]-b[2],b[0]-a[0]); g.add(panel);
+        [.14,.84].forEach(function(level) {beam([a[0],.05+H*level,a[2]],[b[0],.05+H*level,b[2]],.085,trimMat);});
+      }
+      // A front window bay has a real backing surface at the facade plane.
+      timberHouse(W*.66,H*.80,.24,0,.06,D*.48,false);
+    } else if (st.body === 'birdhouse') {
+      timberHouse(W,H,D,0,.05,0,false);
+      // Jettied upper storey plus a projecting circular bird-door surround.
+      g.add(bevel(W+0.16,.16,D+.12,joineryMat,0,roofBase-.17,0));
+      var surround=new T.Mesh(new T.TorusGeometry(W*.24,.075,6,24),trimMat);
+      surround.position.set(0,.05+H*(id==='dorm'?.56:.46),D/2+.075); g.add(surround);
+    } else if (st.body === 'pavilion') {
+      timberHouse(W,H,D,0,.05,0,true);
+      g.add(bevel(W*.82,.06,D*.74,wallMat,0,.19,0));
+    } else if (st.body === 'longhall') {
+      timberHouse(W,H,D,0,.05,0,true);
+      [-1,1].forEach(function(side) {
+        g.add(bevel(.18,H*.64,.18,joineryMat,side*W*.30,.05+H*.32,D*.52));
+      });
+    } else if (st.body === 'cross-gable') {
+      timberHouse(W*.90,H,D,0,.05,0,false);
+      timberHouse(W*.42,H*.55,D*.64,W*.56,.05,-D*.08,false);
+      gableRoof(W*.42,D*.64,.05+H*.55,.35,W*.56,-D*.08);
+    } else if (st.body === 'cottage') {
+      timberHouse(W,H,D,0,.05,0,st.extras.indexOf('open-front')>=0 || id==='kitchen');
+      timberHouse(W*.30,H*.54,D*.66,W*.57,.05,-D*.1,false);
+      gableRoof(W*.30,D*.66,.05+H*.54,.30,W*.57,-D*.1);
+    } else if (st.body === 'tower') {
+      timberHouse(W*.88,H,D,0,.05,0,true);
+      g.add(bevel(W+0.10,.14,D+.14,joineryMat,0,roofBase-.14,0));
+      // Reading oriel, carried by carved diagonal brackets.
+      timberHouse(W*.52,H*.35,.32,0,.05+H*.57,D*.54,false);
+      var readingGlass=new T.MeshBasicMaterial({color:GLOW_WARM,transparent:true,opacity:.92});
+      var readingPane=new T.Mesh(new T.PlaneGeometry(W*.43,H*.22),readingGlass);
+      readingPane.position.set(0,.05+H*.755,D*.54+.17);g.add(readingPane);
+      [-1,0,1].forEach(function(bar){g.add(bevel(.035,H*.24,.035,trimMat,bar*W*.14,.05+H*.755,D*.54+.195));});
+      glows.push({mat:readingGlass,warm:true,base:.92});
     }
+
+    // ---- roofs: sculpted curves and individually laid tiles ----
     if (st.roof === 'gable' || st.roof === 'steep') {
-      var pitch = st.roof === 'steep' ? 1.25 : 0.78;
-      var run = W * 0.60;
-      var slopeLen = Math.hypot(pitch, run);
-      var ang = Math.atan2(pitch, run);
-      for (var sgn = -1; sgn <= 1; sgn += 2) {
-        shingleSlope(sgn * run * 0.5, roofBase + pitch * 0.5, 0, slopeLen, D + 0.62, 0, -sgn * ang);
-      }
-      g.add(box(0.16, 0.14, D + 0.70, trimMat, 0, roofBase + pitch + 0.03, 0)); // ridge
-      // Gable-end boards.
-      [-1, 1].forEach(function(sz) {
-        var gable = new T.Mesh(new T.BufferGeometry(), darkMat);
-        var tri = new T.Shape();
-        tri.moveTo(-W * 0.6, 0); tri.lineTo(W * 0.6, 0); tri.lineTo(0, pitch);
-        gable.geometry = new T.ShapeGeometry(tri);
-        gable.position.set(0, roofBase, sz * (D / 2 + 0.02));
-        if (sz < 0) gable.rotation.y = Math.PI;
-        g.add(gable);
-        g.add(box(0.07, 0.07, 0.07, trimMat, 0, roofBase + pitch, sz * (D / 2 + 0.05)));
-      });
-      // Eave beams poking out under the overhang.
-      [-1, 1].forEach(function(sz2) {
-        for (var eb2 = -1; eb2 <= 1; eb2++) {
-          g.add(box(0.07, 0.07, 0.34, trimMat, eb2 * W * 0.34, roofBase - 0.04, sz2 * (D / 2 + 0.20)));
-        }
-      });
+      gableRoof(W,D,roofBase,st.roof==='steep'?1.15:.86,0,0);
     } else if (st.roof === 'pagoda') {
-      for (var tier = 0; tier < 2; tier++) {
-        var tw = (W + 0.95) * (1 - tier * 0.27);
-        var ty = roofBase + 0.16 + tier * 0.54;
-        var cone = new T.Mesh(new T.ConeGeometry(tw * 0.72, 0.46, 4, 1), tier ? roofMat2 : roofMat);
-        cone.rotation.y = Math.PI / 4;
-        cone.position.y = ty;
-        cone.castShadow = true; cone.receiveShadow = true;
-        g.add(cone);
-        // Ribbed tiles running down each pitch, and upturned eave tips.
-        for (var e = 0; e < 4; e++) {
-          var ea = e * Math.PI / 2 + Math.PI / 4;
-          var tipM = cyl(0.035, 0.055, 0.34, 5, trimMat, Math.sin(ea) * tw * 0.50, ty - 0.02, Math.cos(ea) * tw * 0.50);
-          tipM.rotation.set(Math.cos(ea) * 0.8, 0, -Math.sin(ea) * 0.8);
-          g.add(tipM);
-          g.add(box(0.10, 0.10, 0.10, trimMat, Math.sin(ea) * tw * 0.56, ty + 0.10, Math.cos(ea) * tw * 0.56));
-        }
-      }
-      g.add(cyl(0.055, 0.075, 0.40, 6, trimMat, 0, roofBase + 1.20, 0));
-      g.add(new T.Mesh(new T.SphereGeometry(0.09, 8, 6), trimMat).translateY(roofBase + 1.42));
+      // Two connected sweeping hips with a small clerestory between them.
+      radialRoof(W*.82,roofBase-.10,.69,4,D/W);
+      timberHouse(W*.42,.30,D*.42,0,roofBase+.49,0,false);
+      radialRoof(W*.58,roofBase+.73,.50,4,D/W);
     } else if (st.roof === 'layered') {
-      for (var L = 0; L < 3; L++) {
-        var lw = (W + 0.80) * (1 - L * 0.19);
-        var ly = roofBase + 0.04 + L * 0.30;
-        var ring2 = new T.Mesh(new T.ConeGeometry(lw * 0.62, 0.32, 9, 1), L % 2 ? roofMat2 : roofMat);
-        ring2.position.y = ly;
-        ring2.castShadow = true; ring2.receiveShadow = true;
-        g.add(ring2);
-        // A shingle lip under each tier instead of loose floating boards.
-        var lip = new T.Mesh(new T.CylinderGeometry(lw * 0.635, lw * 0.60, 0.07, 18), roofMat2);
-        lip.position.y = ly - 0.15;
-        g.add(lip);
-      }
-      g.add(cyl(0.04, 0.05, 0.30, 5, trimMat, 0, roofBase + 1.02, 0));
+      radialRoof(W*.68,roofBase-.02,.85,16,D/W);
+      g.add(cyl(.25,.29,.22,12,plasterMat,0,roofBase+.83,0));
+      radialRoof(.43,roofBase+.92,.27,12,1);
     } else if (st.roof === 'shingle') {
-      for (var hc = 0; hc < 4; hc++) {
-        var hr = (W + 0.62) * 0.6 * (1 - hc * 0.21);
-        var hut = new T.Mesh(new T.ConeGeometry(hr, 0.34, 10, 1), hc % 2 ? roofMat2 : roofMat);
-        hut.position.y = roofBase + 0.06 + hc * 0.235;
-        hut.castShadow = true; hut.receiveShadow = true;
-        g.add(hut);
-      }
+      radialRoof(W*.67,roofBase,.94,12,D/W);
     } else if (st.roof === 'dome') {
-      var dome = new T.Mesh(new T.SphereGeometry(W * 0.62, 22, 12, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
-      dome.position.y = roofBase - 0.04;
-      dome.castShadow = true; dome.receiveShadow = true;
-      g.add(dome);
-      for (var mr = 0; mr < 6; mr++) {
-        var rib2 = new T.Mesh(new T.TorusGeometry(W * 0.625, 0.024, 4, 16, Math.PI), trimMat);
-        rib2.rotation.y = mr * Math.PI / 6;
-        rib2.rotation.z = Math.PI / 2;
-        rib2.position.y = roofBase - 0.04;
-        g.add(rib2);
+      // Fluted copper-blue shell, raised brass meridians, stepped drum.
+      g.add(cyl(W*.59,W*.59,.18,24,joineryMat,0,roofBase-.02,0));
+      for (var gore=0;gore<12;gore++) {
+        var dome=new T.Mesh(new T.SphereGeometry(W*.61,4,10,gore*Math.PI/6,Math.PI/6,0,Math.PI/2),tileMats[gore%4]);
+        dome.position.y=roofBase+.07; dome.castShadow=true; g.add(dome);
+        var points=[];
+        for(var mer=0;mer<=12;mer++){
+          var polar=mer/12*Math.PI/2, az=gore*Math.PI/6;
+          points.push(new T.Vector3(-Math.cos(az)*Math.sin(polar)*W*.618,roofBase+.07+Math.cos(polar)*W*.618,Math.sin(az)*Math.sin(polar)*W*.618));
+        }
+        g.add(new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),12,.026,5,false),brassMat));
       }
-      var band = new T.Mesh(new T.TorusGeometry(W * 0.63, 0.045, 5, 22), trimMat);
-      band.rotation.x = Math.PI / 2;
-      band.position.y = roofBase - 0.02;
-      g.add(band);
-      // Little brass stars studding the dome.
-      for (var stz = 0; stz < 9; stz++) {
-        var sph = 0.5 + rng() * 0.9, sth = rng() * Math.PI * 2;
-        g.add(new T.Mesh(new T.OctahedronGeometry(0.05), trimMat).translateX(Math.sin(sph) * Math.cos(sth) * W * 0.63)
-          .translateY(roofBase - 0.04 + Math.cos(sph) * W * 0.63).translateZ(Math.sin(sph) * Math.sin(sth) * W * 0.63));
-      }
+      var rim=new T.Mesh(new T.TorusGeometry(W*.615,.045,6,32),brassMat);
+      rim.rotation.x=Math.PI/2; rim.position.y=roofBase+.07; g.add(rim);
     } else if (st.roof === 'egg') {
-      var cap = new T.Mesh(new T.SphereGeometry(W * 0.31, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), roofMat);
-      cap.position.y = 0.05 + H * 0.97;
-      g.add(cap);
+      // Leaf-shaped petal canopy shelters the woven nursery.
+      radialRoof(W*.59,roofBase-.21,.42,8,.94);
     }
+    // Deep knee-braces and pinned ironwork beneath every suspended platform.
+    [-1,1].forEach(function(side) {
+      [-1,1].forEach(function(front) {
+        beam([side*W*.19,-.58,front*D*.19],[side*W*.48,-.07,front*D*.44],.14);
+        var peg=cyl(.035,.035,.12,8,brassMat,side*W*.48,-.08,front*(D*.44+.06));
+        peg.rotation.x=Math.PI/2; g.add(peg);
+      });
+    });
+    g.userData.architecture = { version:358, signature:st.signature, parts:craftParts };
 
     // ---- openings: dark interior, frames, mullions, sills, shutters ----
     (st.windows || []).forEach(function(w) {
@@ -1042,12 +1101,12 @@
       // Stone stack, laid in courses, with an iron cowl.
       for (var ch = 0; ch < 5; ch++) {
         var cw = 0.34 - ch * 0.012;
-        g.add(box(cw, 0.17, cw, ch % 2 ? new T.MeshLambertMaterial({ color: 0x6b6156 }) : new T.MeshLambertMaterial({ color: 0x7a6f62 }),
+        g.add(bevel(cw, 0.17, cw, ch % 2 ? new T.MeshLambertMaterial({ color: 0x6b6156 }) : new T.MeshLambertMaterial({ color: 0x7a6f62 }),
           W * 0.30, roofBase + 0.42 + ch * 0.17, -D * 0.10));
       }
-      g.add(box(0.44, 0.08, 0.44, ironMat, W * 0.30, roofBase + 1.30, -D * 0.10));
-      g.add(box(0.30, 0.10, 0.30, ironMat, W * 0.30, roofBase + 1.40, -D * 0.10));
-      g.userData.chimney = new T.Vector3(W * 0.30, roofBase + 1.52, -D * 0.10);
+      g.add(bevel(0.44, 0.08, 0.44, ironMat, W * 0.30, roofBase + 1.21, -D * 0.10));
+      g.add(bevel(0.30, 0.10, 0.30, ironMat, W * 0.30, roofBase + 1.30, -D * 0.10));
+      g.userData.chimney = new T.Vector3(W * 0.30, roofBase + 1.37, -D * 0.10);
     }
     if (ex.indexOf('cross') >= 0) {
       var crossMat = new T.MeshBasicMaterial({ color: 0x9ef0b8 });
@@ -1157,20 +1216,21 @@
     }
     if (ex.indexOf('telescope') >= 0) {
       var scope = new T.Group();
-      scope.add(cyl(0.06, 0.095, 0.68, 12, new T.MeshLambertMaterial({ color: 0x9a8a5c })));
-      scope.add(new T.Mesh(new T.TorusGeometry(0.075, 0.018, 4, 12), trimMat).translateY(0.14));
-      scope.add(new T.Mesh(new T.TorusGeometry(0.095, 0.02, 4, 12), trimMat).translateY(-0.30));
-      scope.add(cyl(0.04, 0.045, 0.16, 8, trimMat, 0, 0.42, 0));
-      scope.rotation.set(-0.85, 0.5, 0);
-      scope.position.set(-W * 0.20, 0.05 + H * 0.74, D * 0.24);
+      scope.add(cyl(0.12,0.065,0.76,16,brassMat));
+      [.18,.36].forEach(function(y){var ring=new T.Mesh(new T.TorusGeometry(y>.2?.125:.10,.022,5,16),joineryMat);ring.rotation.x=Math.PI/2;ring.position.y=y;scope.add(ring);});
+      scope.add(cyl(.043,.04,.16,8,trimMat,0,-.43,0));
+      var lens=new T.Mesh(new T.CircleGeometry(.109,20),new T.MeshBasicMaterial({color:0x9ccede}));
+      lens.rotation.x=-Math.PI/2;lens.position.y=.383;scope.add(lens);
+      scope.rotation.set(1.05,0.5,0);
+      scope.position.set(-W*.18,.74,D/2+.34);
       g.add(scope);
-      // Tripod.
+      // A real observing balcony, with the tripod outside the closed wall.
+      g.add(bevel(W*.86,.10,.76,wallMat,0,0,D/2+.25));
       for (var tl = 0; tl < 3; tl++) {
-        var ta = tl * 2.1;
-        var tleg = cyl(0.022, 0.028, 0.46, 5, trimMat, -W * 0.20 + Math.sin(ta) * 0.11, 0.05 + H * 0.40, D * 0.24 + Math.cos(ta) * 0.11);
-        tleg.rotation.set(Math.cos(ta) * 0.24, 0, -Math.sin(ta) * 0.24);
-        g.add(tleg);
+        var ta = tl * Math.PI*2/3;
+        beam([-W*.18,.73,D/2+.34],[-W*.18+Math.sin(ta)*.22,.06,D/2+.34+Math.cos(ta)*.22],.045,trimMat);
       }
+      [-1,1].forEach(function(side){beam([side*W*.31,-.30,D*.25],[side*W*.31,-.04,D/2+.48],.08);});
       g.userData.scope = scope;
     }
     if (ex.indexOf('weathervane') >= 0) {
@@ -1189,11 +1249,21 @@
       g.add(new T.Mesh(new T.TorusGeometry(0.13, 0.02, 4, 14), trimMat).translateX(-W * 0.40).translateY(roofBase + 0.46).translateZ(D * 0.28).rotateX(Math.PI / 2));
     }
     if (ex.indexOf('awning') >= 0) {
-      var aw = box(W + 0.62, 0.07, 0.62, new T.MeshLambertMaterial({ color: 0x53381f }), 0, 0.05 + H * 0.76, D / 2 + 0.28);
-      aw.rotation.x = -0.30;
-      g.add(aw);
+      var clothMats = [new T.MeshLambertMaterial({color:0xe1cea0}),
+        new T.MeshLambertMaterial({color:id==='kitchen'?0x658377:0x8e5162})];
+      var awningW=W+0.28, awningTop=.05+H*.86, awningFront=.05+H*.66;
+      for(var stripe=0;stripe<8;stripe++) {
+        var ax0=-awningW/2+stripe*awningW/8, ax1=ax0+awningW/8;
+        for(var fold=0;fold<3;fold++) {
+          var f0=fold/3,f1=(fold+1)/3;
+          function fabricY(f){return awningTop+(awningFront-awningTop)*f-.07*Math.sin(f*Math.PI);}
+          slab([[ax0,fabricY(f0),D/2+.02+f0*.62],[ax1,fabricY(f0),D/2+.02+f0*.62],
+            [ax1,fabricY(f1),D/2+.02+f1*.62],[ax0,fabricY(f1),D/2+.02+f1*.62]],.024,clothMats[stripe%2]);
+        }
+        g.add(bevel(awningW/8-.005,.10,.035,clothMats[stripe%2],(ax0+ax1)/2,awningFront-.045,D/2+.64));
+      }
       [-1, 1].forEach(function(ax) {
-        g.add(cyl(0.03, 0.035, 0.62, 5, trimMat, ax * (W * 0.46), 0.05 + H * 0.48, D / 2 + 0.50));
+        g.add(cyl(0.035,0.042,awningFront-.05,6,trimMat,ax*(W*.46),(.05+awningFront)/2,D/2+.61));
       });
       // Herbs hung under the awning.
       for (var hb = 0; hb < 5; hb++) {
@@ -1240,11 +1310,14 @@
     var detail = st.details || [];
     function hasDetail(name) { return detail.indexOf(name) >= 0; }
     if (hasDetail('dormer')) {
-      g.add(box(W * 0.42, H * 0.34, 0.24, wallMat, W * 0.18, roofBase + 0.22, D / 2 + 0.06));
-      var dormerRoof = new T.Mesh(new T.ConeGeometry(W * 0.30, 0.30, 4), roofMat);
-      dormerRoof.rotation.y = Math.PI / 4;
-      dormerRoof.position.set(W * 0.18, roofBase + 0.47, D / 2 + 0.06);
-      g.add(dormerRoof);
+      timberHouse(W*.36,.32,.38,W*.20,roofBase+.10,D*.40,false);
+      gableRoof(W*.36,.38,roofBase+.42,.28,W*.20,D*.40);
+      var dormerGlass=new T.MeshBasicMaterial({color:GLOW_WARM,transparent:true,opacity:.92});
+      var dormerPane=new T.Mesh(new T.CircleGeometry(.095,16),dormerGlass);
+      dormerPane.position.set(W*.20,roofBase+.28,D*.40+.205);g.add(dormerPane);
+      var dormerFrame=new T.Mesh(new T.TorusGeometry(.105,.018,5,16),trimMat);
+      dormerFrame.position.copy(dormerPane.position);g.add(dormerFrame);
+      glows.push({mat:dormerGlass,warm:true,base:.92});
     }
     if (hasDetail('perch-brace')) {
       var perch = cyl(0.035, 0.045, W * 0.72, 6, trimMat, 0, 0.05 + H * 0.24, D / 2 + 0.30);
@@ -1381,10 +1454,11 @@
       });
     }
     if (hasDetail('woven-ribs')) {
-      [-0.30, -0.10, 0.10, 0.30].forEach(function(rx) {
-        var wovenRib = new T.Mesh(new T.TorusGeometry(W * 0.42, 0.018, 4, 14, Math.PI), trimMat);
-        wovenRib.rotation.y = Math.PI / 2;
-        wovenRib.position.set(rx * W, 0.05 + H * 0.56, D / 2 + 0.03);
+      [.65,1.03,1.42,1.83,2.22,2.60].forEach(function(polar) {
+        var wovenRib = new T.Mesh(new T.TorusGeometry(Math.sin(polar)*(W*.53+.018),.018,5,28),trimMat);
+        wovenRib.scale.y=.94;
+        wovenRib.rotation.x=Math.PI/2;
+        wovenRib.position.y=.05+H*.51+Math.cos(polar)*H*.5196;
         g.add(wovenRib);
       });
     }

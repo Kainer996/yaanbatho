@@ -5393,7 +5393,7 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_alive_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="manga_render_core.js?v=ink-precision-v357-20260907"></script>
-<script src="academy_3d_core.js?v=manga-world-v356-20260907"></script>
+<script src="academy_3d_core.js?v=crafted-academy-v358-20260907"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -31547,13 +31547,24 @@ function villageMakeOverheadFlock(r, pal, count) {
   const flock = new THREE.Group();
   const members = [];
   const bodyMat = new THREE.MeshLambertMaterial({ color:new THREE.Color(pal.timber).offsetHSL(0.58, -0.25, 0.14) });
-  const wingGeo = new THREE.BoxGeometry(0.12, 0.025, 0.28);
+  // Model in shoulder space, not about the wing's centre. The inner edge
+  // overlaps the torso through the full stroke; mirrored geometry (not a
+  // negative object scale) keeps face winding and the ink silhouette correct.
+  const outline = new THREE.Shape();
+  [[.052,-.018],[.064,.09],[-.005,.23],[-.095,.31],[-.073,.19],[-.11,.20],[-.07,.07],[-.07,-.018]].forEach(([x,z],i) => i ? outline.lineTo(x,z) : outline.moveTo(x,z));
+  outline.closePath();
+  const wingGeo = new THREE.ExtrudeGeometry(outline, { depth:.016, bevelEnabled:false, steps:1 });
+  wingGeo.rotateX(Math.PI / 2); wingGeo.translate(0, .008, 0);
+  const rightGeo = wingGeo.clone(); rightGeo.rotateX(Math.PI);
+  const bodyGeo = new THREE.SphereGeometry(0.075, 10, 8);
   for (let i = 0; i < Math.max(2, Math.min(9, Number(count) || 3)); i++) {
     const bird = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.075, 5, 4), bodyMat);
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.scale.set(1.65, 0.8, 0.82); bird.add(body);
-    const left = new THREE.Mesh(wingGeo, bodyMat), right = new THREE.Mesh(wingGeo, bodyMat);
-    left.position.z = 0.16; right.position.z = -0.16; bird.add(left, right);
+    const left = new THREE.Mesh(wingGeo, bodyMat), right = new THREE.Mesh(rightGeo, bodyMat);
+    left.position.z = 0.04; right.position.z = -0.04;
+    left.userData.shoulderRoot = right.userData.shoulderRoot = [0,0,0];
+    bird.add(left, right);
     bird.position.set(-i * 0.42 + (i % 2) * 0.18, Math.abs(i - 1) * 0.08, (i % 2 ? 1 : -1) * (0.22 + Math.floor(i / 2) * 0.24));
     bird.scale.setScalar(0.78 + r() * 0.24);
     bird.userData = { left, right, phase:r() * Math.PI * 2 };
@@ -42119,7 +42130,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'ink-precision-v357-20260907';
+const BURBZ_BUILD = 'crafted-academy-v358-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
