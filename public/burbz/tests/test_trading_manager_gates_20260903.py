@@ -250,9 +250,9 @@ def test_blocked_purchase_paths_return_before_mutating_money_or_stock():
 
 def test_release_and_all_changed_academy_cores_are_pwa_pinned():
     source, sw = html(), SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = 'crafted-academy-v358-20260907';" in source
+    assert f"const BURBZ_BUILD = 'comic-ui-v359-20260907';" in source
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
-    assert cache_line.rstrip("';").endswith("crafted-academy-v358-20260907")
+    assert cache_line.rstrip("';").endswith("comic-ui-v359-20260907")
     for core in ("academy_treehouse_core.js", "academy_alive_core.js", "academy_3d_core.js"):
         core_release = "crafted-academy-v358-20260907" if core == "academy_3d_core.js" else RELEASE
         pin = f"{core}?v={core_release}"

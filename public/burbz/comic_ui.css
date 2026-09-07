@@ -1,0 +1,321 @@
+/* Burbz v359 — printed adventure UI. Presentation only: no bird-image filters,
+   scene overlays, DOM replacement, input interception or gameplay changes. */
+@font-face { font-family:'Russo One'; font-style:normal; font-weight:400; font-display:swap; src:url('assets/comic-ui/fonts/russo-one.woff2') format('woff2'); }
+@font-face { font-family:'Rajdhani'; font-style:normal; font-weight:700; font-display:swap; src:url('assets/comic-ui/fonts/rajdhani-bold.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:100 900; font-display:swap; src:url('assets/comic-ui/fonts/inter-latin.woff2') format('woff2'); }
+:root {
+  --comic-ink:#152828;
+  --comic-paper:#fff9e8;
+  --comic-white:#fffef8;
+  --comic-yellow:#ffda38;
+  --comic-teal:#73dfcd;
+  --comic-coral:#ff967b;
+  --comic-muted:#4c605a;
+  --comic-edge:3px solid var(--comic-ink);
+  --comic-shadow:4px 5px 0 var(--comic-ink);
+  --comic-print:url('assets/comic-ui/ink-paper-v359.webp');
+  --bg:#f7edcf; --bg2:#fff9e8; --bg3:#ecedcc; --bg4:#d8dfc3;
+  --text:#152828; --text2:#364e47; --text3:#526258;
+  --accent:#765007; --accent2:#145e58; --accent3:#b7830a;
+  --common:#546059; --uncommon:#246939; --rare:#146976; --epic:#764396; --legendary:#79500a;
+  --panel-edge:#152828; --panel-light:#fffef8;
+}
+html, body.comic-ui { background:var(--bg); color:var(--comic-ink); }
+body.comic-ui { font-size:15px; }
+.comic-ui #app { background:var(--bg); }
+.comic-ui :is(.screen:not(#screen-map),.bird-equip-overlay) {
+  background-color:var(--bg);
+  background-image:linear-gradient(0deg,rgba(255,249,232,.92),rgba(255,249,232,.84)),var(--comic-print);
+  background-size:auto,cover; background-position:center; color:var(--comic-ink);
+}
+.comic-ui :is(.particles,.speed-lines) { display:none; }
+
+/* The fixed chrome remains the same size; all thirteen destinations retain
+   their stable positions and their actual locked/available state. */
+.comic-ui .header { background:var(--comic-yellow); border-bottom:3px solid var(--comic-ink); box-shadow:0 3px 0 rgba(21,40,40,.16); }
+.comic-ui .header-logo { filter:none; background:var(--comic-ink); padding:4px; border-radius:5px; }
+.comic-ui .hud-level-badge { background:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:5px; box-shadow:none; }
+.comic-ui :is(.hud-lv-label,.hud-lv-num) { color:var(--comic-paper); }
+.comic-ui .hud-xp { background:var(--comic-white); border:2px solid var(--comic-ink); border-radius:4px; }
+.comic-ui .hud-xp-fill { background:var(--comic-teal); }
+.comic-ui .hud-xp-text { color:var(--comic-ink); text-shadow:none; line-height:12px; }
+.comic-ui .hud-chip { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:1px 2px 0 var(--comic-ink); }
+.comic-ui :is(.hud-chip-value,.hud-chip-label,.global-money-label,.global-money-hud .hud-chip-value) { color:var(--comic-ink); }
+.comic-ui .global-money-hud { background:var(--comic-yellow); border:var(--comic-edge); border-radius:8px; box-shadow:3px 3px 0 var(--comic-ink); }
+.comic-ui :is(.header-settings,.header-profile-btn,.header-diary-btn) { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:7px; box-shadow:2px 2px 0 var(--comic-ink); color:var(--comic-ink); }
+.comic-ui .bottom-dock { background:var(--comic-paper); border-top:3px solid var(--comic-ink); box-shadow:0 -4px 0 var(--comic-teal); backdrop-filter:none; }
+.comic-ui .bottom-dock-anchor { background:var(--comic-yellow); border:3px solid var(--comic-ink); border-bottom:0; border-radius:10px 10px 0 0; box-shadow:3px -3px 0 var(--comic-ink); }
+.comic-ui .nav-item { color:var(--comic-ink); border-radius:6px; }
+.comic-ui .nav-item.active { background:var(--comic-teal); color:var(--comic-ink); box-shadow:inset 0 -3px 0 var(--comic-ink); }
+.comic-ui .nav-item.active .nav-icon { filter:none; }
+.comic-ui .nav-icon::before { background:none; }
+.comic-ui .nav-label { font-weight:900; color:inherit; }
+.comic-ui .nav-scan .nav-icon { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:8px; box-shadow:none; }
+.comic-ui .nav-scan .nav-label { color:var(--comic-ink); }
+.comic-ui #bottomDock .nav-item.is-locked { background:transparent; color:#586358; box-shadow:none; }
+.comic-ui #bottomDock .nav-item.is-locked .nav-label { color:#586358; }
+
+/* Reading hierarchy: headings are comic caption strips, not text on texture. */
+.comic-ui .screen-title { color:var(--comic-ink); font-family:'Russo One','Rajdhani',sans-serif; font-size:21px; line-height:1.25; letter-spacing:0; padding:10px 12px; margin-bottom:18px; background:var(--comic-yellow); border:var(--comic-edge); border-radius:3px 10px 3px 3px; box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui .screen-title::before,.comic-ui .screen-title::after { display:none; }
+.comic-ui :is(.quest-section-title,.quest-board-title,.academy-section-title,.town-section-title,.stores-panel-title,.forge-section-title,.training-hub-title) { color:var(--comic-ink); font-weight:900; }
+.comic-ui :is(.quest-section-title,.quest-category-summary) { letter-spacing:.02em; }
+
+/* Opaque paper surfaces. Explicit component list intentionally excludes bird
+   artwork, room paintings, map canvases and 3D world geometry. */
+.comic-ui :is(
+  .birdex-stats,.burbz-economy-card,.burbz-economy-stat,.companions-empty,
+  .quest-card,.player-quest-card,.quest-board-card,.quest-category,.quest-away-card,
+  .resource-quest-card,.starter-quest-card,.expedition-panel,.expedition-card,
+  .training-hall-panel,.training-session-card,.training-notice-board,.training-template-card,
+  .profile-header,.profile-stat-card,.profile-badge,.cloud-card,.leaderboard-card,.leaderboard-row,
+  .stores-forge-btn,.stores-treasury,.stores-panel,.stores-summary-card,.stores-res-card,.magpie-row,
+  .academy-building-card,.academy-builder-status,.academy-builder-wallet,.academy-locked-room,
+  .academy-campus,.academy-bird-row,.room-add-panel,.room-bird-option,.training-hub-room,
+  .kitchen-fold,.kitchen-guest,.kitchen-diet-guidance,.feed-menu-col,.feed-receipt,
+  .kitchen-roster-row,.feed-sheet-chef,.chef-board,.chef-board-food,.kitchen-larder-item,
+  .room-bird-grid,.academy-room-title-card,.training-master-nameplate,.training-master-vacant,
+  .merlin-care-menu,.merlin-diet-summary,.merlin-care-meta,.pet-speech,
+  .sound-session-shelf,.merlin-data-note,.scan-result-latest,.scan-encounter-card,
+  .modal-sheet,.recruit-sheet,.barracks-recruit-sheet,.barracks-detail-card,.barracks-recruit-row,
+  .quest-overlay-panel,.quest-log-list,.role-picker-sheet,.role-picker-copy,.role-post-card,
+  .role-holder,.role-candidate,.role-empty,.role-post-row,.bird-info-summary,.bird-info-stat,
+  .bird-info-fact,.diet-disclosure,.bird-quiz-card,.bird-quiz-question,.qcc-item,
+  .town-sheet,.town-sheet-row,.town-hero,.town-section,.town-resource,.town-project,.town-provision,
+  .town-network,.town-advice,.province-panel,.province-income-line,.province-ruin,.province-construction,
+  .empire-village-hub,.empire-stat-chip,.empire-village-row,.empire-empty,.empire-drawer,
+  .empire-ghost,.empire-onboarding,.empire-map-key,.empire-map-tapcard,.empire-travel-card,
+  .realm-section,.realm-region-row,.realm-liege-row,.realm-hint,.trade-route-row,.region-hall-head,
+  .village-claim-note,.village-owned-banner,.liberation-head,.merge-banner,.realm-empire-banner,
+  .shop-panel,.shop-item,.settlement-scene-inspector,.settlement-scene-label,.settlement-stage-status,
+  .walk-quest-offer,.map-quest-focus-card,.map-quest-hud,.wq-npc-panel,.wq-summary-stat,.wq-bonus-blurb,
+  .tavern-fact,.tavern-drink,.tavern-bought,.trail-pocket-note,.map-bird-preview-card,
+  .merlin-clue-notebook,.merlin-clue-card,.inbox-card,.feed-note-card,.completion-notice,
+  .bird-equip-hero,.bird-equip-stats,.bird-equip-stat,.bird-equip-bond,.bird-personal-story,
+  .bird-equip-picker,.forge-picker,.forge-picker-row,.forge-stat-card,.forge-slot,
+  .forge-upgrade-card,.forge-recipe,.forge-job,.forge-mat-card
+) { background:var(--comic-white); color:var(--comic-ink); border:var(--comic-edge); border-radius:8px; box-shadow:var(--comic-shadow); backdrop-filter:none; }
+.comic-ui :is(.quest-card,.player-quest-card,.quest-board-card,.academy-building-card,.forge-recipe,.stores-panel,.town-section,.profile-stat-card) { margin-bottom:14px; }
+.comic-ui :is(.stores-treasury-stat,.card-stat,.card-back-stat,.barracks-detail-stat,.bird-equip-slot,.kitchen-bridge-item,.feed-food,.chef-board-mastery,.diary-stat) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:5px; box-shadow:1px 2px 0 var(--comic-ink); }
+.comic-ui :is(.bird-equip-rarity,.bird-family-badge,.special-character-badge,.bird-size-chip,.inventory-pill,.quest-duration,.quest-log-loot-chip,.visit-chip,.map-habitat-chip,.town-builder-chip,.kitchen-chip,.kitchen-eat-chip) { background:var(--comic-teal); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:5px; text-shadow:none; }
+.comic-ui :is(.special-character-panel,.birdex-learning-fact,.card-back-special,.birdex-more-info) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); }
+.comic-ui :is(.card-front,.card-back) { background:var(--comic-white); color:var(--comic-ink); border:3px solid var(--comic-ink); box-shadow:4px 5px 0 var(--comic-ink); }
+.comic-ui .bird-card.undiscovered .card-front { background:#e0e6cf; }
+.comic-ui :is(.card-name,.card-back-name,.bird-equip-name,.bird-equip-stat-value,.bond-title,.profile-stat-num,.birdex-stat-num,.burbz-economy-num,.quest-name,.quest-away-name,.quest-board-name,.qc-name,.src-name,.ssc-count,.stt-value,.slr-yield,.forge-recipe-name,.fu-name,.sfb-title,.realm-title,.merge-banner-title,.town-name,.academy-room-title,.map-bird-preview-name) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui :is(.quest-desc,.quest-progress-text,.quest-away-desc,.qc-desc,.src-copy,.src-route,.stores-hint,.magpie-note,.cloud-status,.academy-building-desc,.forge-recipe-desc,.fu-copy,.sound-session-shelf-empty,.bird-equip-description,.bird-personal-story p,.bird-info-summary p,.settings-note) { color:var(--comic-muted); text-shadow:none; font-size:13px; line-height:1.5; }
+.comic-ui :is(.stores-treasury-stat .stt-label,.stores-summary-card .ssc-label,.stores-ledger-row .slr-meta,.bird-equip-stat-label,.bird-equip-sub,.bird-info-stat-label,.quest-category-summary .qc-count,.map-bird-preview-sub,.realm-sub-title) { color:var(--comic-muted); text-shadow:none; }
+
+/* Tabs are thick, solid ink-and-paper controls. Selected never relies on
+   colour alone: it also gains an inset baseline and heavy text. */
+.comic-ui :is(.burbz-mode-tabs,.forge-tabs,.scan-mode-toggle,.empire-pages-nav) { background:var(--comic-paper); border:var(--comic-edge); border-radius:8px; box-shadow:3px 3px 0 var(--comic-ink); }
+.comic-ui :is(.filter-btn,.burbz-mode-btn,.forge-tab,.scan-mode-btn,.stores-tab,.leaderboard-tab,.empire-page-tab,.town-policy,.training-duration-chip,.quest-duration-choice,.quest-bird-chip,.quest-equip-chip,.barracks-recruit-sort-btn) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:5px; text-shadow:none; box-shadow:none; font-weight:800; }
+.comic-ui :is(.filter-btn,.burbz-mode-btn,.forge-tab,.scan-mode-btn,.stores-tab,.leaderboard-tab,.empire-page-tab,.town-policy,.barracks-recruit-sort-btn).active,
+.comic-ui :is(.training-duration-chip,.quest-duration-choice,.quest-bird-chip,.quest-equip-chip).selected { background:var(--comic-teal); color:var(--comic-ink); border-color:var(--comic-ink); box-shadow:inset 0 -3px 0 var(--comic-ink); }
+.comic-ui :is(.empire-page-tab .ept-label,.empire-page-tab .ept-count,.stores-tab .st-count) { color:var(--comic-ink); text-shadow:none; }
+
+/* Keep individual control dimensions/handlers; these rules only restyle. */
+.comic-ui :is(
+  .scan-btn,.quest-go-btn,.quest-claim-btn,.quest-send-btn,.resource-quest-go,.wq-detail-start,
+  .map-quest-focus-primary,.wq-npc-ok,.expedition-start-btn,.academy-build-btn,.academy-btn,
+  .academy-send-btn,.academy-move-btn,.room-bird-add-btn,.training-hub-cta,.training-bird-btn,
+  .kitchen-roster-feed-btn,.card-feed-btn,.chef-feed-all,.chef-board-serve,.feed-note-ok,
+  .merlin-care-action,.bond-preen-btn,.recruit-btn,.barracks-detail-recruit,.barracks-recruit-launch,
+  .forge-craft-btn,.forge-upgrade-btn,.forge-collect-btn,.forge-transmute-btn,.stores-collect-btn,
+  .magpie-btn,.src-sell-btn,.province-build-btn,.province-clear-btn,.village-claim-btn,
+  .empire-tribute-btn,.merge-banner-btn,.empire-tapcard-btn,.town-action,.shop-buy-btn,
+  .cloud-btn,.leaderboard-refresh-btn,.settings-feedback,.settings-inbox,.inbox-actions button,
+  .card-pet-btn,.card-location-btn,.card-photo-btn,.starter-bird-btn,.academy-grad-btn,
+  .settlement-scene-action,.bird-info-wiki,.capture-name-btn,.bird-quiz-option
+) { background:var(--comic-yellow); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:2px 3px 0 var(--comic-ink); text-shadow:none; font-weight:800; }
+.comic-ui :is(.academy-btn.primary,.quest-send-btn,.scan-btn,.chef-feed-all,.stores-collect-btn) { border-width:3px; box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui :is(.settings-danger,.inbox-actions button.danger,.forge-cancel-btn) { background:#ffe2d9; color:#862c24; border:2px solid #862c24; border-radius:6px; }
+.comic-ui :is(.quest-send-btn,.scan-btn,.forge-craft-btn,.academy-build-btn,.village-claim-btn,.magpie-btn):disabled { background:#e0e0ce; color:#556059; box-shadow:none; opacity:.65; }
+.comic-ui :is(.quest-claim-btn,.quest-go-btn,.quest-send-btn,.forge-craft-btn,.merlin-care-action,.academy-build-btn):active:not(:disabled) { transform:translate(2px,2px); box-shadow:none; }
+
+/* Map and scene labels become opaque captions, never a filter on the world. */
+.comic-ui :is(.map-hud-card,.map-weather,.map-nearby-card,.map-locate-btn,.map-overlay-btn,.map-bird-overlay,.map-area-birds-panel,.map-quest-btn,.map-zoom-btn,.empire-map-btn,.empire-ledger-btn,.academy-view-toggle,.academy-tree-light-toggle,.settlement-camera-btn,.bi-bar-btn,.region-hall-back,.region-hall-atlas,.town-nav button,.village-town-link) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:7px; box-shadow:2px 3px 0 var(--comic-ink); backdrop-filter:none; text-shadow:none; }
+.comic-ui .live-map-shell.clean-cloud-map .map-area-birds-panel { background:var(--comic-paper); border:2px solid var(--comic-ink); }
+.comic-ui :is(.map-quest-btn,.map-quest-focus-primary,.empire-ledger-btn) { background:var(--comic-yellow); }
+.comic-ui :is(.map-area-birds-title,.map-area-birds-sub,.map-area-birds-count,.map-quest-btn span,.map-quest-btn b,.empire-map-status,.settlement-stage-hint,.academy-3d-hint) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui :is(.map-area-birds-count,.settlement-stage-hint,.academy-3d-hint,.settlement-stage-status,.treehouse-room-name,.treehouse-room-count) { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:5px; color:var(--comic-ink); }
+.comic-ui :is(.academy-stage-3d,.academy-treehouse,.village-stage,.town-stage,.empire-map-card,.county-map-card,.academy-room-hero,.merlin-listener-stage) { border:3px solid var(--comic-ink); border-radius:10px; box-shadow:4px 5px 0 var(--comic-ink); }
+
+/* Bubbles, forms and feedback use the same print language. */
+.comic-ui .merlin-tutorial-bubble { background:var(--comic-paper); border:3px solid var(--comic-ink); border-radius:12px; box-shadow:5px 6px 0 var(--comic-ink); }
+.comic-ui .merlin-tutorial-bubble::before { border-right-color:var(--comic-ink); }
+.comic-ui .merlin-tutorial-bubble::after { border-right-color:var(--comic-paper); }
+.comic-ui :is(.merlin-tutorial-title,.merlin-tutorial-text) { color:var(--comic-ink); }
+.comic-ui :is(.merlin-tutorial-kicker,.merlin-tutorial-chapter,.merlin-tutorial-count) { color:#66500c; }
+.comic-ui :is(.merlin-tutorial-nav,.merlin-tutorial-do,.merlin-tutorial-task-skip) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:6px; }
+.comic-ui .merlin-tutorial-nav.primary { background:var(--comic-yellow); color:var(--comic-ink); border:2px solid var(--comic-ink); box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui .merlin-tutorial-task { background:var(--comic-yellow); color:var(--comic-ink); border:2px solid var(--comic-ink); box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui :is(.toast,.completion-notice) { background:var(--comic-yellow); color:var(--comic-ink); border:var(--comic-edge); border-radius:7px; box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui :is(.modal-title,.quest-overlay-title,.shop-title,.town-sheet-title,.bird-info-name,.completion-notice-title,.feed-note-title,.role-picker-title) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui :is(.modal-handle,.settings-toggle) { background:#b4bba5; }
+.comic-ui .settings-toggle.on { background:var(--comic-teal); }
+.comic-ui .settings-toggle { border:2px solid var(--comic-ink); }
+.comic-ui :is(input:not([type=range]):not([type=checkbox]):not([type=radio]),textarea,select) { background:var(--comic-white); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:6px; padding:8px; }
+.comic-ui :is(input,textarea)::placeholder { color:#526258; }
+.comic-ui :is(.modal-close,.recruit-close,.quest-overlay-close,.shop-close,.town-sheet-close,.town-sheet-back,.role-picker-close,.merlin-care-close,.bird-equip-close,.bird-info-close,.training-hub-close,.barracks-recruit-close,.barracks-detail-back,.map-bird-preview-close,.completion-notice-close) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:2px 2px 0 var(--comic-ink); }
+.comic-ui :is(button,a,[tabindex],summary,input,select,textarea):focus-visible { outline:3px solid #067e87; outline-offset:3px; }
+.comic-ui :is(.cloud-card,.bird-info-summary,.merlin-data-note,.settings-row) a { color:#145e58; text-decoration:underline; }
+.comic-ui :is(.cloud-card,.bird-info-summary,.merlin-data-note,.settings-row) a:visited { color:#764396; }
+.comic-ui .diary-book { background:var(--comic-yellow); border:3px solid var(--comic-ink); box-shadow:5px 6px 0 var(--comic-ink); }
+.comic-ui .diary-page { background:var(--comic-paper); border:2px solid var(--comic-ink); box-shadow:none; }
+
+/* Forge's older screen-specific rules have higher specificity than shared
+   components. Keep the existing anvil painting, change its desk and labels. */
+.comic-ui #screen-forge :is(.forge-upgrade-card,.forge-recipe,.forge-job.empty) { background:var(--comic-white); border:var(--comic-edge); box-shadow:var(--comic-shadow); }
+.comic-ui #screen-forge .forge-tab.active { background:var(--comic-teal); color:var(--comic-ink); border-color:var(--comic-ink); }
+.comic-ui .forge-upgrade-details { background:var(--comic-paper); border-top:2px solid var(--comic-ink); }
+.comic-ui #screen-forge :is(.forge-upgrade-details summary,.forge-workshop-kicker,.forge-workshop .fu-title,.forge-upgrade-cost,.forge-recipe-group,.fr-name) { color:var(--comic-ink); }
+.comic-ui #screen-forge :is(.fr-cost,.fr-time,.fu-copy) { color:var(--comic-muted); }
+.comic-ui #screen-forge .fr-stats { color:#246939; }
+.comic-ui :is(.quest-all-done,.player-quest-count,.tutorial-nav-pointer .tnp-text) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); }
+.comic-ui :is(.quest-duration-choice strong,.quest-bird-chip-name,.quest-bird-chip-note,.bird-equip-topbar,.bird-equip-topbar .bet-title) { color:var(--comic-ink); }
+.comic-ui .bird-equip-topbar { background:var(--comic-yellow); border-bottom:3px solid var(--comic-ink); }
+.comic-ui :is(.quest-bird-chip-art,.quest-overlay-icon) { background:var(--comic-paper); border-color:var(--comic-ink); }
+.comic-ui :is(.academy-room-back,.role-badge,.role-badge-art,.training-master-change) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui :is(.merlin-care-title,.merlin-care-kicker,.merlin-care-note,.merlin-listener-status,.merlin-listener-activity,.bird-equip-title) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui :is(.merlin-bond-value,.merlin-bond-gain) { color:#764396; text-shadow:none; }
+.comic-ui :is(.card-level,.card-power,.scan-result-count) { background:var(--comic-paper); border:2px solid var(--comic-ink); color:var(--comic-ink)!important; text-shadow:none; }
+.comic-ui .card-back-title { color:var(--comic-ink)!important; }
+.comic-ui .live-map-shell.clean-cloud-map .map-area-birds-panel { background:transparent; border:0; box-shadow:none; }
+.comic-ui .map-area-birds-toggle { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:2px 3px 0 var(--comic-ink); padding:5px; }
+.comic-ui .live-map-shell.clean-cloud-map :is(.map-area-birds-title,.map-area-birds-sub,.map-area-bird-name,.map-area-bird-rarity) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui .live-map-shell.clean-cloud-map .map-area-bird { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:6px; }
+.comic-ui .live-map-shell.clean-cloud-map .map-area-birds-list > .map-area-birds-sub { background:var(--comic-paper); border:2px solid var(--comic-ink); padding:5px; border-radius:5px; }
+.comic-ui :is(.empire-map-status,.empire-ghost-count) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); }
+.comic-ui .nav-action-badge { background:#b52635; color:#fff; border-color:var(--comic-ink); box-shadow:1px 2px 0 var(--comic-ink); }
+.comic-ui .quest-duration-choice.selected span { color:var(--comic-ink); }
+.comic-ui :is(.kitchen-roster-supply.has-food,.training-template-card b) { color:#246939!important; }
+.comic-ui #screen-forge .fr-name { color:var(--comic-ink)!important; }
+.comic-ui #screen-forge .fr-cost .short { color:#a52a26; }
+.comic-ui .type-chip { color:var(--comic-ink)!important; background:var(--comic-paper)!important; border-width:2px; }
+.comic-ui .sq-slot-num { background:var(--comic-yellow); color:var(--comic-ink); border:1px solid var(--comic-ink); }
+.comic-ui .shop-scroll-body { background:var(--comic-paper); }
+.comic-ui .shop-head-copy { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:6px; padding:8px; }
+.comic-ui :is(.shop-name,.shop-desc) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui .shop-icon { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); }
+.comic-ui .village-shop-scene-head { filter:none; }
+.comic-ui .bi-line.warn { color:#79500a; }
+
+/* Battlefield: original bird portraits are unchanged. This new environment
+   sits underneath them, with readable caption plates and comic action keys. */
+.comic-ui #screen-battle { padding-top:12px; }
+.comic-ui .battle-select::before { content:'THE FRONT LINE'; display:flex; align-items:flex-end; height:132px; margin-bottom:14px; padding:12px; border:var(--comic-edge); border-radius:8px; box-shadow:var(--comic-shadow); background:linear-gradient(0deg,var(--comic-yellow),transparent 55%),url('assets/comic-ui/battlefield-v359.webp') center 23%/cover; color:var(--comic-ink); font:22px/1.1 'Russo One',sans-serif; letter-spacing:.02em; }
+.comic-ui :is(.league-header,.league-rival,.sq-board,.roster-empty,.bench-row,.battle-squad-stat,.battle-synergy-preview,.arena-synergy-banner,.battle-result-rewards) { background:var(--comic-paper); border:var(--comic-edge); border-radius:8px; color:var(--comic-ink); box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui :is(.league-header,.league-rival,.sq-board) { margin-bottom:14px; }
+.comic-ui :is(.rival-card,.rival-card.evil) { background:#ffe1cc; border:2px solid var(--comic-ink); border-radius:7px; color:var(--comic-ink); box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui :is(.rival-card .rc-name,.rival-card .rc-level,.league-name,.league-desc,.league-rival-title,.sq-board-title,.sq-slot .ss-name,.sq-slot .ss-lv,.battle-synergy-preview,.battle-synergy-preview strong) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui :is(.sq-slot.filled,.pick-card,.pick-card.picked,.battle-team-card) { background:var(--comic-white); border:2px solid var(--comic-ink); border-radius:7px; box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui .sq-slot.empty { background:var(--comic-paper); color:var(--comic-muted); border:2px dashed var(--comic-muted); border-radius:7px; }
+.comic-ui :is(.sq-forge-btn,.battle-forge-btn,.battle-again-btn,.battle-start-btn) { background:var(--comic-yellow); color:var(--comic-ink); border:var(--comic-edge); border-radius:7px; box-shadow:3px 4px 0 var(--comic-ink); text-shadow:none; }
+.comic-ui .battle-start-btn:disabled { background:#d8ddcc; color:#526258; box-shadow:none; }
+.comic-ui .battle-start-dock { padding-bottom:5px; filter:none; }
+.comic-ui .battle-start-btn::after { display:none; }
+.comic-ui .battle-arena { background:#f1d374 url('assets/comic-ui/battlefield-v359.webp') center/cover; border:3px solid var(--comic-ink); border-radius:10px; padding:8px; box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui .arena-timeline { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:5px; padding:4px 6px; }
+.comic-ui .arena-timeline .tl-label { color:var(--comic-ink); font-weight:900; }
+.comic-ui .tl-chip { border:2px solid var(--comic-ink); border-radius:5px; }
+.comic-ui .tl-chip.now { outline:3px solid var(--comic-teal); box-shadow:none; }
+.comic-ui .arena-squad { padding:8px 0 0; }
+.comic-ui .battle-arena.live > .arena-squad.player { margin-top:auto; }
+.comic-ui .arena-squad .arena-unit { background:rgba(255,254,248,.92); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui .arena-squad.opponent .arena-unit { background:#ffe1cc; border-color:var(--comic-ink); }
+.comic-ui .arena-squad.player .arena-unit { background:#d4f6df; border-color:var(--comic-ink); }
+.comic-ui .arena-unit .au-name { color:var(--comic-ink); font-weight:900; }
+.comic-ui .arena-unit.acting { border-color:var(--comic-ink); outline:3px solid var(--comic-yellow); box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui .arena-unit.targetable { border:2px dashed #9d2e25; outline:2px solid #ffe2d9; box-shadow:2px 3px 0 #9d2e25; }
+.comic-ui .arena-unit.target-locked { border:3px solid var(--comic-ink); outline:3px solid var(--comic-coral); box-shadow:3px 4px 0 var(--comic-ink); }
+.comic-ui .arena-unit :is(.au-turn-flag,.au-target-flag) { background:var(--comic-yellow); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:3px; padding:1px 5px; letter-spacing:0; }
+.comic-ui .arena-unit .au-target-flag { background:var(--comic-coral); }
+.comic-ui .arena-unit .au-dmg-preview { background:var(--comic-paper); color:#922a21; border:2px solid var(--comic-ink); border-radius:4px; }
+.comic-ui .arena-unit .au-dmg-preview.se { color:#15584b; }
+.comic-ui .arena-unit :is(.au-hpbar,.au-crbar) { background:#7b8674; border:1px solid var(--comic-ink); border-radius:2px; }
+.comic-ui .arena-unit .au-hpbar { height:7px; }
+.comic-ui .arena-unit .au-crbar { height:4px; }
+.comic-ui .arena-unit .au-status span { background:var(--comic-paper); color:var(--comic-ink); border:1px solid var(--comic-ink); border-radius:3px; }
+.comic-ui .arena-unit .au-barrier { background:var(--comic-paper); color:#145e58; border:1px solid var(--comic-ink); }
+.comic-ui .battle-log { background:rgba(255,249,232,.95); border:2px solid var(--comic-ink); border-radius:5px; margin-block:8px 0; }
+.comic-ui .battle-log-entry { color:var(--comic-ink); }
+.comic-ui .battle-log-entry.fact-msg { color:#15584b; }
+.comic-ui .battle-log-entry.system-msg { color:#6e4b06; }
+.comic-ui .arena-actions { margin-top:8px; padding-top:0; padding-bottom:4px; gap:6px; }
+.comic-ui .battle-arena.live .arena-actions:empty { display:none; }
+.comic-ui .battle-log:empty { visibility:hidden; padding:0; border:0; margin:0; }
+.comic-ui .arena-actions .move-btn { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:6px; box-shadow:2px 3px 0 var(--comic-ink); }
+.comic-ui .arena-actions .move-btn.signature { background:var(--comic-yellow); }
+.comic-ui .arena-actions .move-btn.potion-btn { background:var(--comic-teal); }
+.comic-ui .arena-actions .move-btn.attack-confirm-btn { background:var(--comic-coral); border-width:3px; animation:none; }
+.comic-ui .arena-actions .move-btn :is(.mv-name,.mv-meta,.mv-cost) { color:var(--comic-ink); text-shadow:none; }
+.comic-ui .arena-actions .move-btn:has(.mv-cost) .mv-name { display:block; padding-right:26px; }
+.comic-ui .arena-actions .move-btn:disabled { background:#daddce; opacity:.65; box-shadow:none; }
+.comic-ui :is(.arena-turn-banner,.arena-waiting) { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); border-radius:4px; padding:5px; }
+.comic-ui .battle-aim-panel { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:6px; margin-top:auto; }
+.comic-ui .battle-aim-panel :is(label,small) { color:var(--comic-ink); }
+.comic-ui .battle-aim-buttons button { background:var(--comic-paper); border:2px solid var(--comic-ink); color:var(--comic-ink); }
+.comic-ui .battle-aim-buttons button:last-child { background:var(--comic-coral); color:var(--comic-ink); }
+.comic-ui .battle-result-screen { min-height:100%; padding:30px 16px; background:linear-gradient(0deg,rgba(255,249,232,.90),rgba(255,249,232,.1)),url('assets/comic-ui/battlefield-v359.webp') center/cover; border:var(--comic-edge); border-radius:8px; }
+.comic-ui :is(.battle-result-title.victory,.battle-result-title.defeat) { display:inline-block; padding:8px 12px; background:var(--comic-yellow); color:var(--comic-ink); border:var(--comic-edge); box-shadow:var(--comic-shadow); text-shadow:none; }
+.comic-ui .battle-result-rewards .rw-row b { color:#6e4b06 !important; }
+@media (min-width:768px) {
+  .comic-ui #screen-battle { padding-inline:max(16px,calc((100% - 960px)/2)); }
+  .comic-ui .battle-arena.live .arena-squad { width:min(100%,560px); align-self:center; }
+  .comic-ui .battle-arena.live .arena-unit .au-art { max-height:110px; }
+  .comic-ui .battle-select::before { height:180px; }
+}
+@media (max-height:740px) {
+  .comic-ui .battle-arena { padding:5px; }
+  .comic-ui .battle-arena.live .arena-squad { padding-top:5px; margin-bottom:5px; }
+  .comic-ui .battle-arena.live .arena-unit { padding:4px 3px 5px; }
+  .comic-ui .battle-arena.live .arena-actions { gap:5px; padding-top:5px; }
+}
+@media (max-height:640px) {
+  .comic-ui .battle-aim-panel { padding:5px 8px; gap:2px; }
+  .comic-ui .battle-arena.live .arena-squad { padding-top:4px; }
+  .comic-ui .battle-arena.live .arena-unit .au-hpbar { height:5px; }
+  .comic-ui .battle-arena.live .move-btn { min-height:44px; padding:6px 8px; }
+  .comic-ui .battle-arena.live .arena-actions { padding-top:3px; }
+}
+@media (min-width:700px) and (max-height:500px) {
+  .comic-ui .battle-arena.live { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto auto; grid-template-areas:'banner banner' 'enemy player' 'actions actions'; gap:4px 12px; padding:4px; }
+  .comic-ui .battle-arena.live > .arena-synergy-banner { grid-area:banner; margin:0; }
+  .comic-ui .battle-arena.live > .arena-squad.opponent { grid-area:enemy; }
+  .comic-ui .battle-arena.live > .arena-squad.player { grid-area:player; margin-top:0; }
+  .comic-ui .battle-arena.live > .arena-squad { width:100%; padding-top:4px; margin-bottom:0; align-self:start; }
+  .comic-ui .battle-arena.live .arena-unit .au-art { height:36px; max-height:36px; aspect-ratio:auto; object-fit:contain; }
+  .comic-ui .battle-arena.live :is(.arena-actions,.battle-aim-panel) { grid-area:actions; margin:0; padding-top:0; }
+  .comic-ui .battle-arena.live .arena-actions:empty { display:none; }
+  .comic-ui .battle-arena.live .arena-turn-banner { padding:1px 2px; font-size:11px; line-height:1.2; }
+  .comic-ui .battle-arena.live .battle-aim-panel:not([hidden]) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:'label target' 'slider buttons'; padding:3px 8px; column-gap:12px; }
+  .comic-ui .battle-aim-panel label { grid-area:label; }
+  .comic-ui .battle-aim-panel input { grid-area:slider; }
+  .comic-ui #battleAimTarget { grid-area:target; }
+  .comic-ui .battle-aim-buttons { grid-area:buttons; align-self:center; }
+  .comic-ui .battle-aim-panel small { display:none; }
+  .comic-ui .arena-actions:has(.attack-confirm-btn) { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .comic-ui .arena-actions .attack-confirm-btn { grid-column:1/3 !important; }
+}
+
+/* The generated print is decoration, kept outside text-heavy reading areas. */
+.comic-ui :is(.profile-header,.forge-upgrade-card,.quest-overlay-panel,.barracks-recruit-sheet) { background-image:linear-gradient(90deg,rgba(255,254,248,.96),rgba(255,254,248,.90)),var(--comic-print); background-size:cover; }
+@media (min-width:768px) {
+  .comic-ui .screen-title { font-size:25px; }
+  .comic-ui .screen:not(#screen-map) { background-image:linear-gradient(0deg,rgba(255,249,232,.85),rgba(255,249,232,.70)),var(--comic-print); }
+}
+@media (max-width:480px) {
+  .comic-ui .header { padding-inline:8px; gap:6px; }
+  .comic-ui .screen-title { font-size:18px; padding:9px 10px; }
+  .comic-ui :is(.header-settings,.header-profile-btn,.header-diary-btn) { flex-shrink:0; }
+  .comic-ui .hud-chip { padding:2px 1px; }
+  .comic-ui .hud-chip-value { font-size:11px; }
+  .comic-ui .bottom-dock-anchor { padding-inline:4px; }
+}
+@media (hover:hover) {
+  .comic-ui :is(.quest-go-btn,.quest-claim-btn,.forge-craft-btn,.academy-build-btn,.magpie-btn,.merlin-care-action):hover:not(:disabled) { background:var(--comic-teal); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .comic-ui :is(.nav-item,.filter-btn,.forge-tab,.quest-go-btn,.quest-claim-btn,.scan-btn) { transition:none; }
+  .comic-ui :is(.arena-unit,.move-btn) { animation:none !important; transition:none !important; }
+}
