@@ -2566,7 +2566,15 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-overlay { position:fixed; inset:0; z-index:1370; display:none; flex-direction:column; background:radial-gradient(120% 90% at 50% 0%, #171208 0%, #0a0805 45%, #000 100%); }
 .bird-equip-overlay.show { display:flex; }
 .bird-equip-scroll { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:14px 14px calc(24px + env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
-#birdEquipBody { will-change:transform; }
+#birdEquipViewport { overflow:hidden; }
+#birdEquipTrack { position:relative; will-change:transform; }
+.bird-equip-panel { width:100%; min-width:0; }
+.bird-equip-neighbour { position:absolute; top:0; left:0; pointer-events:none; }
+.bird-equip-art-fallback { position:absolute; inset:0; display:grid; place-items:center; font-size:100px; }
+.bird-equip-art-fallback[hidden],.bird-equip-art[hidden] { display:none; }
+.bird-equip-portrait > .bird-equip-art { position:absolute; inset:0; }
+.bird-equip-pager button.bep-arrow { background:transparent; border:0; min-width:44px; min-height:32px; font-size:24px; }
+.bird-equip-announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .bird-equip-pager { display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 8px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
 .bird-equip-pager .bep-arrow { color:var(--accent); font-size:14px; line-height:1; }
 .bird-equip-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -5214,7 +5222,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="bird-equip-title">Companion card</div>
         <button class="bird-equip-close" onclick="closeBirdEquip()">✕ CLOSE</button>
       </div>
-      <div id="birdEquipBody"></div>
+      <div id="birdEquipViewport"><div id="birdEquipTrack"><div id="birdEquipBody" class="bird-equip-panel"></div></div></div>
+      <div id="birdEquipAnnouncement" class="bird-equip-announcement" aria-live="polite" aria-atomic="true"></div>
     </div>
   </div>
 
@@ -37703,101 +37712,167 @@ function openBirdEquip(birdId) {
 }
 
 // ---- Swipe between companions (equip-card-swipe-v297) ----------------------
-// On the back of one bird's card, a horizontal swipe slides that card away
-// and the next companion's card slides in from the other side — flipping
-// through the whole collection in flock order, wrapping at the ends. The
-// gesture follows the finger; a vertical drag still scrolls as before.
-const BIRD_EQUIP_SWIPE_COMMIT_PX = 70; // drag this far to change bird
-const BIRD_EQUIP_SWIPE_AXIS_PX = 14;   // drift before the axis locks
+// Three real panels share one moving track. Neighbour portraits load before
+// the gesture; the incoming DOM survives a commit, including its decoded art.
+const BIRD_EQUIP_SWIPE_COMMIT_PX = 70;
+const BIRD_EQUIP_SWIPE_AXIS_PX = 14;
 let birdEquipSwipeBound = false;
 let birdEquipSwipeAnimating = false;
+const birdEquipSwipe = { motion:null, frame:0, gesture:null, x:0, suppressUntil:0 };
 
 function birdEquipRoster() {
   return (gameState.flock || []).filter(b => b && b.id);
 }
-// The companion `delta` steps away in the collection, wrapping around.
+// Preserve the existing collection order and wrapping at both ends.
 function birdEquipNeighbour(delta) {
   const roster = birdEquipRoster();
   if (roster.length < 2) return null;
   const at = roster.findIndex(b => b.id === birdEquipState.birdId);
+  if (at < 0) return null;
   return roster[(((at < 0 ? 0 : at) + delta) % roster.length + roster.length) % roster.length];
 }
-// Commit a swipe: slide the current card out, swap the bird, slide the new
-// card in from the opposite side. delta 1 = swiped left = next companion.
-function birdEquipSwipeTo(delta) {
-  const next = birdEquipNeighbour(delta);
-  const body = $('birdEquipBody');
-  if (!next || !body || birdEquipSwipeAnimating) return false;
-  birdEquipSwipeAnimating = true;
-  const dir = delta > 0 ? 1 : -1;
-  birdEquipState = { birdId: next.id, slotPicker: null };
-  body.style.transition = 'transform .16s ease-in, opacity .16s ease-in';
-  body.style.transform = 'translateX(' + (-dir * 55) + '%)';
-  body.style.opacity = '0';
-  SFX.tap();
-  vibrate(12);
-  setTimeout(() => {
-    renderBirdEquip();
+function birdEquipSwipePaint(x) {
+  birdEquipSwipe.x = x;
+  const track = $('birdEquipTrack');
+  if (track) track.style.transform = 'translate3d(' + x + 'px,0,0)';
+}
+function birdEquipSwipeStop(freeze = false) {
+  const track = $('birdEquipTrack');
+  const motion = birdEquipSwipe.motion;
+  let x = birdEquipSwipe.x;
+  if (motion && freeze && track) x = new DOMMatrixReadOnly(getComputedStyle(track).transform).m41;
+  if (motion) { motion.onfinish = null; motion.cancel(); }
+  birdEquipSwipe.motion = null;
+  birdEquipSwipeAnimating = false;
+  cancelAnimationFrame(birdEquipSwipe.frame);
+  birdEquipSwipe.frame = 0;
+  birdEquipSwipePaint(freeze ? x : 0);
+  return freeze ? x : 0;
+}
+function birdEquipSwipeReset() {
+  birdEquipSwipe.gesture = null;
+  birdEquipSwipeStop();
+}
+function birdEquipPrepareNeighbours() {
+  const body = $('birdEquipBody'), track = $('birdEquipTrack');
+  if (!body || !track) return;
+  for (const panel of [...track.children]) if (panel !== body) panel.remove();
+  body.className = 'bird-equip-panel';
+  body.style.transform = '';
+  body.inert = false;
+  body.removeAttribute('aria-hidden');
+  body.dataset.birdId = birdEquipState.birdId;
+  for (const delta of [-1, 1]) {
+    const bird = birdEquipNeighbour(delta);
+    if (!bird) continue;
+    const panel = document.createElement('div');
+    panel.className = 'bird-equip-panel bird-equip-neighbour';
+    panel.dataset.birdId = bird.id;
+    panel.dataset.delta = delta;
+    panel.style.transform = 'translateX(' + delta * 100 + '%)';
+    panel.inert = true;
+    panel.setAttribute('aria-hidden', 'true');
+    renderBirdEquip(panel, bird);
+    track.appendChild(panel);
+  }
+}
+function birdEquipSwipeSettle(delta) {
+  const body = $('birdEquipBody'), track = $('birdEquipTrack');
+  if (!body || !track) return false;
+  const next = delta && birdEquipNeighbour(delta);
+  const incoming = next && track.querySelector('[data-delta="' + delta + '"]');
+  // A roster refresh invalidates old previews, never resurrects a removed bird.
+  if (delta && (!next || incoming?.dataset.birdId !== String(next.id))) { renderBirdEquip(); return false; }
+  const width = track.clientWidth;
+  const from = birdEquipSwipeStop(true);
+  const to = delta ? -delta * width : 0;
+  const finish = () => {
+    birdEquipSwipeStop();
+    if (!delta) return;
+    if (birdEquipNeighbour(delta)?.id !== next.id || !$('birdEquipOverlay').classList.contains('show')) { renderBirdEquip(); return; }
+    if (body.contains(document.activeElement)) $('birdEquipOverlay').querySelector('.bird-equip-close')?.focus({ preventScroll:true });
+    body.removeAttribute('id');
+    incoming.id = 'birdEquipBody';
+    incoming.className = 'bird-equip-panel';
+    incoming.style.transform = '';
+    incoming.removeAttribute('data-delta');
+    birdEquipState = { birdId:next.id, slotPicker:null };
+    birdEquipPrepareNeighbours();
     const scroll = document.querySelector('#birdEquipOverlay .bird-equip-scroll');
     if (scroll) scroll.scrollTop = 0;
-    body.style.transition = 'none';
-    body.style.transform = 'translateX(' + (dir * 55) + '%)';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      body.style.transition = 'transform .2s ease-out, opacity .2s ease-out';
-      body.style.transform = 'translateX(0)';
-      body.style.opacity = '1';
-      setTimeout(() => { birdEquipSwipeAnimating = false; body.style.transition = ''; }, 220);
-    }));
-  }, 160);
-  return true;
+    $('birdEquipAnnouncement').textContent = birdDisplayName(next);
+    SFX.tap();
+    try { vibrate(8); } catch (e) { /* Unsupported device: a visual change is enough. */ }
+  };
+  if (!width || matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(to - from) < 1) { finish(); return !!delta; }
+  birdEquipSwipeAnimating = true;
+  const motion = track.animate([
+    { transform:'translate3d(' + from + 'px,0,0)' },
+    { transform:'translate3d(' + to + 'px,0,0)' }
+  ], { duration:Math.max(100, 230 * Math.min(1, Math.abs(to - from) / width)), easing:'cubic-bezier(.2,.75,.25,1)', fill:'forwards' });
+  birdEquipSwipe.motion = motion;
+  motion.onfinish = finish;
+  return !!delta;
+}
+function birdEquipSwipeTo(delta) {
+  if (birdEquipSwipeAnimating || !birdEquipNeighbour(delta)) return false;
+  birdEquipSwipe.gesture = null;
+  return birdEquipSwipeSettle(delta > 0 ? 1 : -1);
 }
 function bindBirdEquipSwipe() {
   if (birdEquipSwipeBound) return;
   const scroll = document.querySelector('#birdEquipOverlay .bird-equip-scroll');
   if (!scroll) return;
   birdEquipSwipeBound = true;
-  let startX = 0, startY = 0, dx = 0, axis = null, tracking = false;
   scroll.addEventListener('touchstart', e => {
-    if (birdEquipSwipeAnimating || !e.touches.length) return;
-    tracking = true; axis = null; dx = 0;
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    if (e.touches.length !== 1) {
+      if (birdEquipSwipe.gesture) { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); }
+      return;
+    }
+    if (!e.target.closest('#birdEquipTrack') || e.target.closest('button,a,input,select,textarea,[contenteditable]') || !birdEquipNeighbour(1)) return;
+    const touch = e.touches[0];
+    birdEquipSwipe.gesture = { id:touch.identifier, startX:touch.clientX, startY:touch.clientY, base:birdEquipSwipeStop(true), dx:0, axis:null, width:$('birdEquipTrack').clientWidth };
   }, { passive: true });
-  scroll.addEventListener('touchmove', e => {
-    if (!tracking || !e.touches.length) return;
-    dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    // Lock the gesture to one axis after a little drift, then let a
-    // horizontal drag pull the card with the finger.
-    if (!axis) {
+  document.addEventListener('touchmove', e => {
+    const g = birdEquipSwipe.gesture;
+    if (!g) return;
+    if (e.touches.length !== 1) { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); return; }
+    const touch = [...e.touches].find(t => t.identifier === g.id);
+    if (!touch) return;
+    const dx = touch.clientX - g.startX, dy = touch.clientY - g.startY;
+    if (!g.axis) {
       if (Math.abs(dx) < BIRD_EQUIP_SWIPE_AXIS_PX && Math.abs(dy) < BIRD_EQUIP_SWIPE_AXIS_PX) return;
-      axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (g.axis === 'y') { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); return; }
     }
-    if (axis !== 'x') return;
-    e.preventDefault();
-    const body = $('birdEquipBody');
-    if (!body) return;
-    body.style.transition = 'none';
-    body.style.transform = 'translateX(' + dx + 'px)';
-    body.style.opacity = String(Math.max(0.55, 1 - Math.abs(dx) / 420));
+    if (e.cancelable) e.preventDefault();
+    g.dx = Math.max(-g.width, Math.min(g.width, g.base + dx));
+    birdEquipSwipe.suppressUntil = Date.now() + 350;
+    if (!birdEquipSwipe.frame) birdEquipSwipe.frame = requestAnimationFrame(() => {
+      birdEquipSwipe.frame = 0;
+      if (birdEquipSwipe.gesture === g) birdEquipSwipePaint(g.dx);
+    });
   }, { passive: false });
-  const settle = () => {
-    if (!tracking) return;
-    tracking = false;
-    if (axis !== 'x') return;
-    const body = $('birdEquipBody');
-    if (Math.abs(dx) >= BIRD_EQUIP_SWIPE_COMMIT_PX && birdEquipSwipeTo(dx < 0 ? 1 : -1)) return;
-    // Not far enough — or the flock has only one bird: spring back home.
-    if (body) {
-      body.style.transition = 'transform .18s ease-out, opacity .18s ease-out';
-      body.style.transform = 'translateX(0)';
-      body.style.opacity = '1';
-    }
+  const settle = (e, cancelled) => {
+    const g = birdEquipSwipe.gesture;
+    if (!g || (!cancelled && ![...e.changedTouches].some(t => t.identifier === g.id))) return;
+    birdEquipSwipe.gesture = null;
+    if (g.axis !== 'x') { if (g.base) birdEquipSwipeSettle(0); return; }
+    cancelAnimationFrame(birdEquipSwipe.frame); birdEquipSwipe.frame = 0;
+    birdEquipSwipePaint(g.dx);
+    birdEquipSwipe.suppressUntil = Date.now() + 350;
+    birdEquipSwipeSettle(!cancelled && Math.abs(g.dx) >= BIRD_EQUIP_SWIPE_COMMIT_PX ? (g.dx < 0 ? 1 : -1) : 0);
   };
-  scroll.addEventListener('touchend', settle);
-  scroll.addEventListener('touchcancel', settle);
+  document.addEventListener('touchend', e => settle(e, false));
+  document.addEventListener('touchcancel', e => settle(e, true));
+  scroll.addEventListener('click', e => {
+    if (e.detail && Date.now() < birdEquipSwipe.suppressUntil && e.target.closest('#birdEquipTrack')) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  window.addEventListener('resize', birdEquipSwipeReset, { passive:true });
 }
 
 function closeBirdEquip() {
+  birdEquipSwipeReset();
   $('birdEquipOverlay').classList.remove('show');
   birdEquipState.slotPicker = null;
   if (birdEquipReturnFocus?.isConnected) birdEquipReturnFocus.focus({ preventScroll:true });
@@ -37808,8 +37883,9 @@ function birdEquipHandleKeydown(event) {
   const overlay = $('birdEquipOverlay');
   if (!overlay?.classList.contains('show')) return;
   if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeBirdEquip(); return; }
+  if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !event.target?.closest('input,select,textarea,[contenteditable]')) { event.preventDefault(); birdEquipSwipeTo(event.key === 'ArrowRight' ? 1 : -1); return; }
   if (event.key !== 'Tab') return;
-  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length);
+  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length && !el.closest('[inert]'));
   if (!controls.length) return;
   const first = controls[0], last = controls[controls.length - 1];
   if (!overlay.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
@@ -37868,19 +37944,32 @@ function birdEquipPlaceholderIcon(slot) {
   return '<img class="bird-equip-placeholder" src="assets/bird-card/' + slot + '.webp" alt="" width="64" height="64" aria-hidden="true">';
 }
 
-function renderBirdEquip() {
-  const body = $('birdEquipBody');
+function birdEquipArtReady(img) {
+  const source = img.currentSrc;
+  const reveal = () => {
+    if (img.currentSrc === source && img.naturalWidth) img.previousElementSibling.hidden = true;
+  };
+  // Keep the reserved fallback visible until the bitmap is actually decoded.
+  if (img.decode) img.decode().then(reveal).catch(() => {});
+  else reveal();
+}
+
+function renderBirdEquip(target, previewBird) {
+  const body = target || $('birdEquipBody');
   if (!body) return;
-  const bird = (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
-  if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; return; }
+  if (!previewBird) birdEquipSwipeReset();
+  const bird = previewBird || (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
+  const slotPicker = previewBird ? null : birdEquipState.slotPicker;
+  if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; if (!previewBird) birdEquipPrepareNeighbours(); return; }
   const L = lootCore();
   const loadout = birdLoadout(bird.id);
   const bonus = birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
   const artUrl = getBirdArtUrl(bird);
-  const art = artUrl
-    ? '<img class="bird-equip-art" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
-    : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
+  const fallback = '<div class="bird-equip-art-fallback" role="img" aria-label="' + escapeHtml(bird.commonName || bird.species) + '">' + (bird.emoji || '🐦') + '</div>';
+  const art = fallback + (artUrl
+    ? '<img class="bird-equip-art" loading="eager" decoding="async" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '" onload="birdEquipArtReady(this)" onerror="this.hidden=true;this.previousElementSibling.hidden=false">'
+    : '');
 
   const favourite = birdIsFavourite(bird);
   const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" aria-label="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
@@ -37934,7 +38023,7 @@ function renderBirdEquip() {
     const meta = FORGE_SLOT_META[slot];
     const item = L.gearById(loadout[slot]);
     const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
-    const open = birdEquipState.slotPicker === slot;
+    const open = slotPicker === slot;
     return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' aria-expanded="' + open + '" aria-controls="birdEquipSlotPicker" onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
       '<div class="beq-icon">' + (item ? gearIconHTML(item) : birdEquipPlaceholderIcon(slot)) + '</div>' +
       '<div><div class="beq-slot-label">' + meta.label + '</div>' +
@@ -37943,8 +38032,8 @@ function renderBirdEquip() {
   }).join('') + '</div>';
 
   let picker = '';
-  if (birdEquipState.slotPicker) {
-    const slot = birdEquipState.slotPicker;
+  if (slotPicker) {
+    const slot = slotPicker;
     const owned = Object.entries(gameState.inventory.gear || {}).filter(([, n]) => (Number(n) || 0) > 0)
       .map(([id, n]) => ({ item: L.gearById(id), count: n })).filter(x => x.item && x.item.slot === slot)
       .sort((a, b) => L.rarityIndex(b.item.rarity) - L.rarityIndex(a.item.rarity));
@@ -37971,10 +38060,11 @@ function renderBirdEquip() {
   const roster = birdEquipRoster();
   const at = roster.findIndex(b => b.id === bird.id);
   const pager = roster.length > 1
-    ? '<div class="bird-equip-pager"><span class="bep-arrow">‹</span> ' + (at + 1) + ' of ' + roster.length + ' companions — swipe for the next <span class="bep-arrow">›</span></div>'
+    ? '<div class="bird-equip-pager"><button type="button" class="bep-arrow" aria-label="Previous companion" onclick="birdEquipSwipeTo(-1)">‹</button> ' + (at + 1) + ' of ' + roster.length + ' companions — swipe for the next <button type="button" class="bep-arrow" aria-label="Next companion" onclick="birdEquipSwipeTo(1)">›</button></div>'
     : '';
 
   body.innerHTML = pager + '<div class="bird-equip-layout"><section class="bird-equip-profile" aria-label="Companion portrait and stats">' + hero + stats + '</section><section class="bird-equip-details" aria-label="Bond and equipment">' + bondPanel + slots + picker + notes + forgeLink + '</section></div>';
+  if (!previewBird) birdEquipPrepareNeighbours();
 }
 
 // ============================================================================
@@ -41249,7 +41339,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
+Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.

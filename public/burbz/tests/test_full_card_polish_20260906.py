@@ -10,6 +10,7 @@ def test_renderer_keeps_item_art_stats_picker_and_preen_gating():
  code=fn('birdEquipPlaceholderIcon')+fn('renderBirdEquip')+"""
 const L=require('./loot_crafting_core.js'),window={BurbzLootCore:L},lootCore=()=>L;
 const body={innerHTML:''},$=()=>body;
+const birdEquipSwipeReset=()=>{},birdEquipPrepareNeighbours=()=>{};
 const bird={id:'robin',commonName:'Robin',species:'Robin',scientificName:'Erithacus rubecula',level:3,xp:40,power:162,rarity:'common',maxHp:70,atk:26,mag:68,def:44,spd:50,bond:{}};
 const gameState={flock:[bird],inventory:{gear:{thorn_talons:1}}};
 const birdEquipState={birdId:'robin',slotPicker:'weapon'},loadout={weapon:'thorn_talons'};
@@ -37,7 +38,7 @@ renderBirdEquip();const ready=body.innerHTML;canPreen=false;renderBirdEquip();co
 
 def test_dialog_keyboard_wraps_and_escape_closes_without_touching_game():
  code=fn('birdEquipHandleKeydown')+"""
-let focused='',closed=0,prevented=0;const first={getClientRects:()=>[1],focus(){focused='first';}},last={getClientRects:()=>[1],focus(){focused='last';}};
+let focused='',closed=0,prevented=0;const first={getClientRects:()=>[1],closest:()=>null,focus(){focused='first';}},last={getClientRects:()=>[1],closest:()=>null,focus(){focused='last';}};
 const overlay={classList:{contains:()=>true},querySelectorAll:()=>[first,last],contains:el=>el===first||el===last};
 const $=()=>overlay,document={activeElement:first},closeBirdEquip=()=>closed++;
 const key=(key,shiftKey=false)=>birdEquipHandleKeydown({key,shiftKey,preventDefault(){prevented++;},stopPropagation(){}});
