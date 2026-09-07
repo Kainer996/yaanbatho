@@ -93,7 +93,9 @@ function contrastAudit(){
     await page.screenshot({path:path.join(out,'screenshots',mode+'-confirm-'+w+'x'+h+'.png')});
     assert(fit.bottom<=fit.nav&&fit.scroll<=1,'attack confirmation fits '+JSON.stringify(fit));
   }
+  const physicalHpBefore=await run(()=>battleState.battle.teams.opponent.map(f=>f.hp));
   await page.locator('#arenaActions .attack-confirm-btn').tap();
+  await page.waitForFunction(before=>window.__burbzArenaDebug.battle().teams.opponent.some((f,i)=>f.hp<before[i]),physicalHpBefore,{timeout:15000});
   await page.waitForTimeout(4500);
   results.push({screen:'combat-interactions',aimCancelledWithoutDamage:true,aimCastDamagedOpponent:true,physicalTargetAndConfirm:true});
   // Render an isolated victory fixture through the actual result/reward handler.

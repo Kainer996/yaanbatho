@@ -1,7 +1,8 @@
 # Bright comic UI and battlefield, v359
 
-Status: implemented and verified locally on `codex/burbz-comic-ui-v359`;
-not published. Live remains v358 until release is authorised.
+Release candidate on `codex/burbz-comic-ui-v359`, with publication authorised
+by Yaan on 2026-09-07. Merge and deployment state are recorded in the PR;
+the checks below describe the tested release content.
 
 Yaan requested bold, bright comic panels throughout the UI and a generated
 battlefield in the same manga/cel-shaded style as the world. `comic_ui.css`
@@ -71,5 +72,7 @@ in-memory source selection; it never writes to that old deployment.
 Run `python3 -m pytest public/burbz/tests/test_comic_ui_v359.py -q` for the
 new static checks. The build/cache marker is `comic-ui-v359-20260907`.
 The six new runtime URLs are in all three service-worker shell lists;
-the legacy updater also includes their licences and artwork README.
+the legacy updater also includes their licences and artwork README. Both
+generated WebPs use its local-only artwork staging list, never its GitHub
+download loop; this is covered by the release regression test.
 Publish only through the normal reviewed GitHub/guarded Burbz sync workflow.

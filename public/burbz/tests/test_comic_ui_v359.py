@@ -32,6 +32,12 @@ def test_every_runtime_asset_is_required_offline_and_in_legacy_updater():
             assert f"'./{asset}'" in block
     for asset in ASSETS:
         assert f'"{asset.split("?")[0]}"' in updater
+    downloads = re.search(r"\nFILES=\(([\s\S]+?)\n\)", updater)[1]
+    local_art = re.search(r"\nLFS_FILES=\(([\s\S]+?)\n\)", updater)[1]
+    for asset in ASSETS:
+        if asset.endswith(".webp"):
+            assert f'"{asset}"' not in downloads, "art must never enter the GitHub download loop"
+            assert f'"{asset}"' in local_art
 
 
 def test_generated_images_and_licensed_fonts_are_real_and_bounded():

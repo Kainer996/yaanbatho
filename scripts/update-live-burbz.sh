@@ -28,6 +28,8 @@ BASE="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/public/burbz"
 # local source instead: the live directory as it stands, or the repo checkout
 # this script is running from. Full backup: /var/backups/burbz-art/.
 LFS_FILES=(
+  "assets/comic-ui/ink-paper-v359.webp"
+  "assets/comic-ui/battlefield-v359.webp"
   "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"
   "bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png"
 )
@@ -38,8 +40,6 @@ FILES=(
   "index.html"
   "sw.js"
   "comic_ui.css"
-  "assets/comic-ui/ink-paper-v359.webp"
-  "assets/comic-ui/battlefield-v359.webp"
   "assets/comic-ui/fonts/inter-latin.woff2"
   "assets/comic-ui/fonts/rajdhani-bold.woff2"
   "assets/comic-ui/fonts/russo-one.woff2"
