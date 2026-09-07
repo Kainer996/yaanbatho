@@ -3190,6 +3190,12 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .merlin-tutorial-task-kicker { color:var(--accent); font:900 9px/1 'Rajdhani',sans-serif; letter-spacing:.14em; text-transform:uppercase; }
 .merlin-tutorial-task-text { margin-top:3px; color:var(--text); font-size:12px; line-height:1.35; }
 .merlin-tutorial-spotlight.soft { box-shadow:0 0 26px rgba(240,199,103,.8), inset 0 0 16px rgba(240,199,103,.26); }
+/* Tutorial text follows the actual panel surface in each Appearance theme. */
+.woodland-ui :is(.merlin-tutorial-title,.merlin-tutorial-text) { color:#fff4dc; }
+.woodland-ui .merlin-tutorial-do { color:#fff1bd; background:linear-gradient(135deg,#564322,#302516); border-color:#d6a84f; }
+.woodland-ui :is(.merlin-tutorial-speaker,.merlin-tutorial-chapter,.merlin-tutorial-counter,.merlin-tutorial-nav) { color:#efd49a; }
+.woodland-ui .merlin-tutorial-nav.primary { color:#fff4dc; background:linear-gradient(135deg,#684b1f,#3d2b11); }
+.comic-ui :is(.merlin-tutorial-speaker,.merlin-tutorial-chapter,.merlin-tutorial-counter) { color:#66500c; }
 @media (prefers-reduced-motion: reduce) { .merlin-tutorial-do, .merlin-tutorial-do .mtd-hand { animation:none; } }
 @media (max-width:430px) {
   .merlin-tutorial-stage { padding:0 9px; }
@@ -42519,7 +42525,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'companion-life-v363-20260907';
+const BURBZ_BUILD = 'tutorial-contrast-v364-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
