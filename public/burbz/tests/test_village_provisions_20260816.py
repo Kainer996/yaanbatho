@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "companion-card-polish-v355-20260906"
+CURRENT_BUILD = "manga-world-v356-20260907"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

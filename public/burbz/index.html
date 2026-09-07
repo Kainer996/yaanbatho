@@ -5392,7 +5392,8 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 <script src="academy_treehouse_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="academy_alive_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
-<script src="academy_3d_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
+<script src="manga_render_core.js?v=manga-world-v356-20260907"></script>
+<script src="academy_3d_core.js?v=manga-world-v356-20260907"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -32973,6 +32974,7 @@ function ensureVillageRenderer(stage) {
 
 function disposeVillageScene() {
   if (!villageScene) return;
+  window.BurbzManga?.dispose(villageRenderer);
   settlementSceneClearContext('village');
   villageScene.traverse(o => {
     if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
@@ -34191,7 +34193,8 @@ function villageAnimateFrame(t) {
   // The key light never moves — refreshing the shadow map at a third of the
   // frame rate keeps walkers' and sails' shadows live at a fraction of the GPU cost
   villageScene.userData.updatePeepContacts?.();
-  villageRenderer.render(villageScene, villageCamera);
+  if (window.BurbzManga) window.BurbzManga.render(THREE, villageRenderer, villageScene, villageCamera);
+  else villageRenderer.render(villageScene, villageCamera);
 }
 
 // Local-only debug hook so the village generator can be exercised headlessly
@@ -34471,6 +34474,7 @@ function ensureTownRenderer(stage) {
 
 function disposeTownScene() {
   if (!townScene) return;
+  window.BurbzManga?.dispose(townRenderer);
   settlementSceneClearContext('town');
   townScene.traverse(o => {
     if (o.isInstancedMesh && typeof o.dispose === 'function') o.dispose();
@@ -35196,7 +35200,8 @@ function townAnimateFrame(t) {
     return;
   }
   townScene.userData.updatePeepContacts?.();
-  townRenderer.render(townScene, townCamera);
+  if (window.BurbzManga) window.BurbzManga.render(THREE, townRenderer, townScene, townCamera);
+  else townRenderer.render(townScene, townCamera);
 }
 function onTownResize() {
   if (!townRenderer || !townCamera) return;
@@ -42114,7 +42119,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'companion-card-polish-v355-20260906';
+const BURBZ_BUILD = 'manga-world-v356-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

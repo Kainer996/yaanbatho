@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Manga world v356 (`manga-world-v356-20260907`): the 3D Academy, villages and towns use `manga_render_core.js` for stepped diffuse lighting, cool shadow colours and screen-space ink. Existing model geometry, texture maps, transparent effects, emissive windows, room taps and game state are preserved. The renderer uses one colour/depth target at the scene's existing adaptive resolution plus one full-screen draw, with cel-only fallback when depth textures are unavailable. Dispose its target when a scene rebuilds or the Academy stops. Keep the module in all service-worker shell lists and the legacy updater. Test with `tests/run_manga_world_v356.cjs`; screenshots compare matching scenes with and without the treatment. No physical-phone frame-rate claim is implied by software WebGL tests.
+
 > **Read this first.** Notes from Claude to the next version of Claude (and to
 > Yaan's other agents). This file exists so nobody re-learns the hard lessons
 > the slow way. It is deliberately plain, complete, and honest about the sharp
