@@ -7,6 +7,9 @@
 #liveMapShell .geographic-map-status { padding:3px 6px; border-radius:5px; color:#fff1cd; background:#243022e8; font:10px/1.4 'Inter',sans-serif; }
 #liveMapShell.quest-focused .geographic-map-control { top:14px; bottom:auto; left:50%; right:auto; transform:translateX(-50%); }
 #liveMapShell.quest-focused .geographic-map-status { display:none; }
+@media(max-width:360px) {
+  #liveMapShell.quest-focused .geographic-map-control { left:12px; right:auto; top:74px; transform:none; }
+}
 .comic-ui #liveMapShell .geographic-map-toggle { border:2px solid #152828; box-shadow:3px 3px #152828; }
 @media(max-height:520px) { #liveMapShell .geographic-map-control { bottom:16px; right:70px; } #liveMapShell .geographic-map-status { display:none; } }
 @media(orientation:landscape) and (max-height:560px) {

@@ -375,7 +375,7 @@
       const core=root.BurbzGeographicCameraCore, rect=container.getBoundingClientRect();
       if(!core)return null;
       const elements=fitOptions.occluders||Array.from(doc?.querySelectorAll(
-        '#mapQuestFocusCard.show, #liveMapShell .map-zoom-controls, #liveMapShell .map-locate-btn, #liveMapShell .map-quest-btn, #liveMapShell .geographic-map-control, #liveMapShell .map-area-birds-panel.collapsed')||[]);
+        '#mapQuestFocusCard.show, #liveMapShell .map-zoom-controls, #liveMapShell .map-locate-btn, #liveMapShell .map-quest-btn, #liveMapShell .geographic-map-control, #liveMapShell .map-area-birds-panel.collapsed, #liveMapShell .maplibregl-ctrl-attrib')||[]);
       const occluders=elements.filter(e=>e&&e.getClientRects().length).map(e=>{
         const b=e.getBoundingClientRect();return {left:b.left-rect.left,top:b.top-rect.top,right:b.right-rect.left,bottom:b.bottom-rect.top};
       });
@@ -436,7 +436,10 @@
       const screen=container.closest('.screen');
       if(screen&&root.MutationObserver){observer=new root.MutationObserver(visibilityChanged);observer.observe(screen,{attributes:true,attributeFilter:['class','hidden']});}
       const card=doc.getElementById?.('mapQuestFocusCard');
-      if(card&&root.ResizeObserver){cardObserver=new root.ResizeObserver(()=>{resizeRefit=true;schedule(120);});cardObserver.observe(card);}
+      const credit=container.querySelector?.('.maplibregl-ctrl-attrib');
+      if((card||credit)&&root.ResizeObserver){cardObserver=new root.ResizeObserver(()=>{resizeRefit=true;schedule(120);});
+        if(card)cardObserver.observe(card);if(credit)cardObserver.observe(credit);
+      }
     }
     on('style.load',install);
     const cancelPendingFit=e=>{pendingFit=null;activePointers.add(e.pointerId);};

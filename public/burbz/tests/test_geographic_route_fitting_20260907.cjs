@@ -89,19 +89,22 @@ function fixture(options={}) {
   const cardTop=options.cardTop??Math.round(height*.60);
   const cardRect={left:mapRect.left,top:mapRect.top+cardTop,right:mapRect.right,bottom:mapRect.bottom};
   const card=element(cardRect),occluders=options.occluders||[card],observers=[];
+  const creditRect=options.credit?{...options.credit}:null,credit=creditRect?element(creditRect):null;
+  container.querySelector=selector=>selector==='.maplibregl-ctrl-attrib'?credit:null;
   let doc;
   if(options.document){
-    doc=new Events();doc.hidden=false;doc.getElementById=id=>id==='mapQuestFocusCard'?card:null;doc.querySelectorAll=()=>occluders;
+    doc=new Events();doc.hidden=false;doc.getElementById=id=>id==='mapQuestFocusCard'?card:null;
+    doc.querySelectorAll=selector=>credit&&selector.includes('.maplibregl-ctrl-attrib')?[...occluders,credit]:occluders;
     doc.createElement=()=>{
       const button=new Events(),span={},status={};button.setAttribute=()=>{};button.querySelector=()=>span;
       return {querySelector:selector=>selector==='button'?button:status,remove(){}};
     };
   }
   class ResizeObserver {
-    constructor(callback){this.callback=callback;this.disconnected=false;observers.push(this);}
-    observe(target){this.target=target;}
+    constructor(callback){this.callback=callback;this.disconnected=false;this.targets=new Set();observers.push(this);}
+    observe(target){this.target=target;this.targets.add(target);}
     disconnect(){this.disconnected=true;}
-    notify(){if(!this.disconnected)this.callback([{target:this.target}]);}
+    notify(target=this.target){if(!this.disconnected&&this.targets.has(target))this.callback([{target}]);}
   }
   const gameState=freeze({player:{coins:235,xp:19},walkingQuest:{checkpointIndex:3,route:[{lon:-1.52,lat:53.365}],returnLeg:true},settings:{appearance:'comic'}});
   const ctx={console,performance:{now:()=>time},devicePixelRatio:1,BurbzGeographicCameraCore:cameraCore,gameState,
@@ -119,8 +122,9 @@ function fixture(options={}) {
     mapRect.right=mapRect.left+width;mapRect.bottom=mapRect.top+height;
     cardRect.right=mapRect.right;cardRect.bottom=mapRect.bottom;cardRect.top=mapRect.top+nextCardTop;
   }
-  return {controller,map,camera,calls,container,canvas,occluders,timers,gameState,tick,doc,card,observers,resize,
-    resizeCard:top=>{cardRect.top=mapRect.top+top;},notifyCard:()=>observers.forEach(observer=>observer.notify()),advance:ms=>{time+=ms;}};
+  return {controller,map,camera,calls,container,canvas,occluders,timers,gameState,tick,doc,card,credit,creditRect,observers,resize,
+    resizeCard:top=>{cardRect.top=mapRect.top+top;},notifyCard:()=>observers.forEach(observer=>observer.notify(card)),
+    notifyCredit:()=>observers.forEach(observer=>observer.notify(credit)),advance:ms=>{time+=ms;}};
 }
 const route=freeze([
   {lon:-1.525,lat:53.361},{lon:-1.516,lat:53.358},{lon:-1.514,lat:53.367},
@@ -309,4 +313,28 @@ test('hidden and disposed maps do not run retained viewport or card refits',()=>
     }else assert.ok(f.observers.every(observer=>observer.disconnected));
     f.controller.dispose();
   }
+});
+
+test('expanding attribution refits every route vertex outside the credit panel and releases its observer',()=>{
+  const f=fixture({document:true,credit:{left:370,top:372,right:414,bottom:396}});
+  assert.equal(f.observers.length,1);
+  assert.ok(f.observers[0].targets.has(f.card));assert.ok(f.observers[0].targets.has(f.credit),'credit changes must be observed alongside the brief');
+  const before=JSON.stringify(route);
+  assert.equal(f.controller.fitRoute(route,{isCurrent:()=>true}),true);f.tick(1000);f.advance(16000);
+  const initial=f.calls.fits.length,mapRect=f.container.getBoundingClientRect();
+  Object.assign(f.creditRect,{left:mapRect.left+16,top:mapRect.top+220,right:mapRect.right-16,bottom:mapRect.top+306});
+  const expanded={left:16,top:220,right:374,bottom:306};
+  const covered=route.map(point=>f.map.project([point.lon,point.lat])).some(point=>
+    point.x>=expanded.left&&point.x<=expanded.right&&point.y>=expanded.top&&point.y<=expanded.bottom);
+  assert.ok(covered,'expanded credit panel must really cover the previous fit in this regression fixture');
+  for(let i=0;i<30;i++)f.notifyCredit();f.tick(1000);
+  assert.ok(f.calls.fits.length>initial&&f.calls.fits.length<=initial+3,'credit resize burst should schedule one bounded refit');
+  assert.equal(f.controller.state.fit.points,route.length);allVisible(f,route);
+  const area=f.controller.state.fit.area;
+  assert.ok(area.right<=expanded.left-14||area.left>=expanded.right+14||area.bottom<=expanded.top-14||area.top>=expanded.bottom+14,
+    'safe area must exclude the expanded credit rectangle and its margin');
+  assert.equal(JSON.stringify(route),before);
+  f.controller.dispose();assert.ok(f.observers.every(observer=>observer.disconnected));
+  const jumps=f.calls.jumps.length;f.notifyCredit();f.map.emit('resize');f.tick(1000);
+  assert.equal(f.calls.jumps.length,jumps,'disposed attribution observer must not move the camera');
 });
