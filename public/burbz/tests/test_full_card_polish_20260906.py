@@ -10,7 +10,7 @@ def test_renderer_keeps_item_art_stats_picker_and_preen_gating():
  code=fn('birdEquipPlaceholderIcon')+fn('renderBirdEquip')+"""
 const L=require('./loot_crafting_core.js'),window={BurbzLootCore:L},lootCore=()=>L;
 const body={innerHTML:''},$=()=>body;
-const birdEquipSwipeReset=()=>{},birdEquipPrepareNeighbours=()=>{};
+const birdEquipSwipeReset=()=>{},birdEquipPrepareNeighbours=()=>{},specialBirdAnimationButtonHTML=()=>'';
 const bird={id:'robin',commonName:'Robin',species:'Robin',scientificName:'Erithacus rubecula',level:3,xp:40,power:162,rarity:'common',maxHp:70,atk:26,mag:68,def:44,spd:50,bond:{}};
 const gameState={flock:[bird],inventory:{gear:{thorn_talons:1}}};
 const birdEquipState={birdId:'robin',slotPicker:'weapon'},loadout={weapon:'thorn_talons'};

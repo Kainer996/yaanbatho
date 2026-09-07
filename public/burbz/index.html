@@ -5496,6 +5496,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="uk_bird_alias_completion_20260803.js?v=uk-bird-alias-completion-v216-20260803"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
+<link rel="stylesheet" href="special_bird_sprites.css?v=special-card-sprites-20260907">
+<script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
@@ -11783,7 +11785,7 @@ function openBirdInfo(birdId) {
   $('birdInfoContent').dataset.currentBirdId = String(birdId);
   $('birdInfoContent').innerHTML = `
     <div class="bird-info-hero">
-      <div class="bird-info-art" style="${birdHabitatBackgroundStyle(bird, rarityColor)}">${art}</div>
+      <div class="bird-info-art" style="${birdHabitatBackgroundStyle(bird, rarityColor)}">${art}${specialBirdAnimationButtonHTML(bird, !!(companionForSpecies(bird.species || bird.commonName) || getDiscoveredRecordForSpecies(bird.species || bird.commonName)))}</div>
       <div>
         <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
         <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
@@ -23261,6 +23263,20 @@ function specialBirdCharacterFor(bird) {
       description:'A mighty corvid witch from the rookery, channelling a storm of ancient magic directly through her natural wings.'
     };
   }
+  if (keys.some(key => key === 'carrion crow' || key === 'corvus corone')) {
+    return {
+      id:'brandon-lee', defaultName:'Brandon Lee', title:'Brandon Lee',
+      role:'Carrion Crow', icon:'🪶',
+      description:'The familiar dark-feathered Carrion Crow. Tap his unlocked portrait for a nod and a feather ruffle.'
+    };
+  }
+  if (keys.some(key => key === 'peregrine falcon' || key === 'falco peregrinus')) {
+    return {
+      id:'peregrine-falcon', defaultName:null, title:'Peregrine Falcon',
+      role:'Falcon', icon:'🪽',
+      description:'An alert Peregrine Falcon. Tap the unlocked portrait for a glance and a wing stretch.'
+    };
+  }
   if (keys.some(key => key === 'magpie' || key === 'pica pica')) {
     return {
       id:'market-magpie', defaultName:'The Market Magpie', title:'The Market Magpie',
@@ -23284,13 +23300,21 @@ function applySpecialBirdCharacter(bird) {
   bird.specialCharacterId = character.id;
   bird.specialCharacterTitle = character.title;
   bird.specialCharacterRole = character.role;
-  bird.specialMove = character.move;
+  if (character.move) bird.specialMove = character.move;
   if (character.magicPower) {
     bird.specialMagicPower = character.magicPower;
     bird.mag = Math.max(Number(bird.mag) || 0, character.magicPower);
   }
-  if (!String(bird.customName || '').trim()) bird.customName = character.defaultName;
+  if (character.defaultName && !String(bird.customName || '').trim()) bird.customName = character.defaultName;
   return bird;
+}
+function specialBirdAnimationButtonHTML(bird, unlocked) {
+  if (!unlocked) return '';
+  const key = window.BurbzSpecialBirdSprites?.keyFor(bird);
+  if (!key) return '';
+  return '<button type="button" class="special-bird-play" data-special-bird="' + key +
+    '" aria-label="Animate ' + escapeHtml(birdDisplayName(bird)) +
+    '" title="Tap to animate this character"><span class="special-bird-hint">Tap to animate</span></button>';
 }
 function specialBirdCharacterBadgeHTML(bird) {
   const character = specialBirdCharacterFor(bird);
@@ -23306,13 +23330,12 @@ function specialBirdCharacterPanelHTML(bird) {
     '</div><div class="special-character-title">' + escapeHtml(character.title) +
     '</div><div class="special-character-copy">' + escapeHtml(character.description) +
     (character.magicPower ? ' Magic power: ' + escapeHtml(character.magicPower) + '.' : '') +
-    ' Signature move: ' + escapeHtml(character.move) + '.</div></div>';
+    ((character.move || bird.specialMove) ? ' Signature move: ' + escapeHtml(character.move || bird.specialMove) + '.' : '') + '</div></div>';
 }
 // Easter egg: every Herring Gull is called Steven. Nobody knows why.
 // Least of all Steven.
 function easterEggBirdName(bird) {
-  const species = String((bird && (bird.commonName || bird.species)) || '');
-  return /herring gull/i.test(species) ? 'Steven' : null;
+  return specialBirdCharacterFor(bird)?.id === 'steven-herring-gull' ? 'Steven' : null;
 }
 function applyEasterEggBirdName(bird) {
   if (bird && !String(bird.customName || '').trim()) {
@@ -37833,7 +37856,7 @@ function bindBirdEquipSwipe() {
       if (birdEquipSwipe.gesture) { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); }
       return;
     }
-    if (!e.target.closest('#birdEquipTrack') || e.target.closest('button,a,input,select,textarea,[contenteditable]') || !birdEquipNeighbour(1)) return;
+    if (!e.target.closest('#birdEquipTrack') || e.target.closest('button:not(.special-bird-play),a,input,select,textarea,[contenteditable]') || !birdEquipNeighbour(1)) return;
     const touch = e.touches[0];
     birdEquipSwipe.gesture = { id:touch.identifier, startX:touch.clientX, startY:touch.clientY, base:birdEquipSwipeStop(true), dx:0, axis:null, width:$('birdEquipTrack').clientWidth };
   }, { passive: true });
@@ -37969,7 +37992,8 @@ function renderBirdEquip(target, previewBird) {
   const loadout = birdLoadout(bird.id);
   const bonus = birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  const artUrl = getBirdArtUrl(bird);
+  const cardArt = window.BurbzSpecialBirdSprites?.keyFor(bird) ? birdCardImgAttrs(bird) : null;
+  const artUrl = cardArt?.src || getBirdArtUrl(bird);
   const fallback = '<div class="bird-equip-art-fallback" role="img" aria-label="' + escapeHtml(bird.commonName || bird.species) + '">' + (bird.emoji || '🐦') + '</div>';
   const art = fallback + (artUrl
     ? '<img class="bird-equip-art" loading="eager" decoding="async" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '" onload="birdEquipArtReady(this)" onerror="this.hidden=true;this.previousElementSibling.hidden=false">'
@@ -37982,7 +38006,7 @@ function renderBirdEquip(target, previewBird) {
   const xp = Math.max(0, Number(bird.xp) || 0);
   const xpPercent = level >= 50 ? 100 : Math.min(100, xp / xpGoal * 100);
   const hero = '<div class="bird-equip-hero" style="--companion-rarity:' + rarityColor + ';">' +
-    '<div class="bird-equip-portrait">' + art + favBtn +
+    '<div class="bird-equip-portrait">' + art + specialBirdAnimationButtonHTML(bird, true) + favBtn +
     '<span class="bird-equip-rarity">' + escapeHtml(bird.rarity || 'common') + '</span></div>' +
     '<div class="bird-equip-identity"><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
@@ -38556,6 +38580,7 @@ function createBirdCardHTML(bird, idx) {
             ${artBg}
             ${birdIcon}
             ${birdFamilyBadgeHTML(bird)}
+            ${specialBirdAnimationButtonHTML(bird, true)}
           </div>
           <div class="card-level" title="${cardXpTitle}">LV.${cardLv}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
@@ -38649,6 +38674,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
             ${artBg}
             ${birdIcon}
             ${birdFamilyBadgeHTML(bird)}
+            ${specialBirdAnimationButtonHTML(bird, true)}
           </div>
           <div class="card-level">DISCOVERED</div>
           <div class="card-power" style="color:${rarityColor}">&#128176;${cost}</div>

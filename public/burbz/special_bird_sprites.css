@@ -1,0 +1,37 @@
+/* The sprite occupies the existing picture rectangle and never sizes a card. */
+.card-art > .special-bird-canvas,
+.bird-equip-portrait > .special-bird-canvas,
+.bird-info-art > .special-bird-canvas {
+  position:absolute; inset:0; display:block; width:100%; height:100%; object-fit:contain;
+  pointer-events:none; z-index:2; opacity:var(--special-bird-opacity,1);
+}
+.special-bird-playing > img:not(.card-art-wash),
+.special-bird-playing > .bird-equip-art-fallback,
+.special-bird-playing > .bird-equip-art-emoji,
+.special-bird-playing > .bird-emoji { opacity:calc(1 - var(--special-bird-opacity,1)); }
+.card-art > button.special-bird-play,
+.bird-equip-portrait > button.special-bird-play,
+.bird-info-art > button.special-bird-play {
+  position:absolute; inset:0; width:100%; height:100%; min-width:44px; min-height:44px;
+  margin:0; padding:0; border:0; border-radius:inherit; background:transparent;
+  box-shadow:none; color:#fff7e5; cursor:pointer; z-index:3; transform:none;
+  -webkit-tap-highlight-color:transparent; touch-action:pan-y;
+}
+button.special-bird-play .special-bird-hint {
+  position:absolute; right:7px; bottom:7px; max-width:calc(100% - 14px);
+  padding:4px 7px; border:1px solid #c0a269; border-radius:999px;
+  color:#fff7e5; background:rgba(25,21,18,.93); font:700 10px/1.2 system-ui,sans-serif;
+  letter-spacing:.01em; text-transform:none; box-shadow:0 2px 5px #0006;
+}
+.bird-equip-portrait:has(.special-bird-play), .bird-info-art:has(.special-bird-play) { position:relative; overflow:hidden; }
+.bird-equip-portrait:has(.special-bird-play) > .bird-equip-fav { z-index:5; }
+.bird-equip-portrait:has(.special-bird-play) > .bird-equip-rarity { pointer-events:none; z-index:4; }
+.card-art:has(.special-bird-play) > .bird-family-badge,
+.card-art:has(.special-bird-play) > .special-character-badge { pointer-events:none; }
+button.special-bird-play:focus-visible { outline:3px solid #f3cc70; outline-offset:-5px; }
+body.comic-ui button.special-bird-play .special-bird-hint { background:#fff4ce; color:#211c16; border:2px solid #30271c; box-shadow:2px 2px 0 #30271c; }
+@media (prefers-reduced-motion: reduce) {
+  button.special-bird-play { display:none!important; }
+  .special-bird-canvas { display:none!important; }
+  .special-bird-playing > img { visibility:visible; }
+}
