@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "appearance-v362-20260907"
+CURRENT_BUILD = "companion-life-v363-20260907"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

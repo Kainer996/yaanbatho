@@ -1786,6 +1786,7 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
 @keyframes merlin-twig-flutter { 0%,100%{ transform: rotate(-2.8deg); } 50%{ transform: rotate(3.4deg); } }
 .pet-companion.facing-left .pet-sprite { transform: scaleX(-1); }
 .pet-companion.flying { position:fixed; z-index:260; }
+.pet-companion.merlin-in-flight { position:absolute; visibility:hidden; pointer-events:none; }
 .pet-sprite {
   width: 88px; height: 88px; margin: 0 auto; overflow: visible;
   display: flex; align-items: center; justify-content: center; position: relative; z-index: 3;
@@ -2566,7 +2567,15 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-overlay { position:fixed; inset:0; z-index:1370; display:none; flex-direction:column; background:radial-gradient(120% 90% at 50% 0%, #171208 0%, #0a0805 45%, #000 100%); }
 .bird-equip-overlay.show { display:flex; }
 .bird-equip-scroll { flex:1; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:14px 14px calc(24px + env(safe-area-inset-bottom)); max-width:460px; width:100%; margin:0 auto; }
-#birdEquipBody { will-change:transform; }
+#birdEquipViewport { overflow:hidden; }
+#birdEquipTrack { position:relative; will-change:transform; }
+.bird-equip-panel { width:100%; min-width:0; }
+.bird-equip-neighbour { position:absolute; top:0; left:0; pointer-events:none; }
+.bird-equip-art-fallback { position:absolute; inset:0; display:grid; place-items:center; font-size:100px; }
+.bird-equip-art-fallback[hidden],.bird-equip-art[hidden] { display:none; }
+.bird-equip-portrait > .bird-equip-art { position:absolute; inset:0; }
+.bird-equip-pager button.bep-arrow { background:transparent; border:0; min-width:44px; min-height:32px; font-size:24px; }
+.bird-equip-announcement { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
 .bird-equip-pager { display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 8px; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--text3); }
 .bird-equip-pager .bep-arrow { color:var(--accent); font-size:14px; line-height:1; }
 .bird-equip-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -2636,6 +2645,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-stats { gap:1px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.18); border-radius:15px; overflow:hidden; margin:12px 0 0; }
 .bird-equip-stat { border:0; border-radius:0; background:#17130d; padding:13px 5px; }
 .bird-equip-stat .bes-label { font-size:10px; }
+.bird-equip-stat.is-personality { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.bird-equip-stat.is-personality .bes-label { font-size:12px; letter-spacing:.04em; color:var(--text2); }
 .bird-equip-stat .bes-value { font-size:19px; margin-top:5px; }
 .bird-equip-stat .bes-boost { font-size:11px; }
 .bird-equip-section-label { font-size:12px; margin:6px 0 10px; }
@@ -4405,6 +4416,7 @@ if (window.BurbzAppearanceCore) {
 </script>
 <link rel="stylesheet" href="woodland_ui.css?v=woodland-finish-v360-20260907">
 <link rel="stylesheet" href="comic_ui.css?v=appearance-v362-20260907">
+<link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
@@ -5212,7 +5224,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="bird-equip-title">Companion card</div>
         <button class="bird-equip-close" onclick="closeBirdEquip()">✕ CLOSE</button>
       </div>
-      <div id="birdEquipBody"></div>
+      <div id="birdEquipViewport"><div id="birdEquipTrack"><div id="birdEquipBody" class="bird-equip-panel"></div></div></div>
+      <div id="birdEquipAnnouncement" class="bird-equip-announcement" aria-live="polite" aria-atomic="true"></div>
     </div>
   </div>
 
@@ -5483,12 +5496,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="uk_bird_alias_completion_20260803.js?v=uk-bird-alias-completion-v216-20260803"></script>
 <script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>
 <script src="bird_art_release_20260803.js?v=manga-warrior-habitats-20260803"></script>
+<link rel="stylesheet" href="special_bird_sprites.css?v=special-card-sprites-20260907">
+<script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
+<script src="merlin_flight.js?v=merlin-flight-v1-20260907"></script>
+<script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v1-20260907"></script>
 <script src="diary_core.js?v=release-polish-v342-20260901"></script>
 <script>
 /* ============================================================================
@@ -6942,7 +6959,7 @@ function loadState() {
     if (b.training.chaBonus == null) b.training.chaBonus = 0;
     if (b.training.magBonus == null) b.training.magBonus = 0;
     b = migrateBirdToBiologyStats(b);
-    if (b.cha == null) b.cha = generateBirdStats(b.species || b.commonName || 'Unknown Bird', null, b.rarity || 'common').cha || 40;
+    migrateBirdPersonality(b);
     // Magic-stat migration: birds saved before Skyclash learn their MAG now.
     if (b.mag == null) {
       const magBase = generateBirdStats(b.species || b.commonName || 'Unknown Bird', null, b.rarity || 'common').mag;
@@ -7109,6 +7126,7 @@ function mergeCloudState(cloudState) {
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
   merged.flock.forEach(b => { if (b && typeof b === 'object') applySpecialBirdCharacter(b); }); // cloud special characters too
+  merged.flock.forEach(migrateBirdPersonality);
   const core = dietHungerCore();
   const hungerMigrated = core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
   return migrateGamePlaceNames(hungerMigrated);
@@ -11767,7 +11785,7 @@ function openBirdInfo(birdId) {
   $('birdInfoContent').dataset.currentBirdId = String(birdId);
   $('birdInfoContent').innerHTML = `
     <div class="bird-info-hero">
-      <div class="bird-info-art" style="${birdHabitatBackgroundStyle(bird, rarityColor)}">${art}</div>
+      <div class="bird-info-art" style="${birdHabitatBackgroundStyle(bird, rarityColor)}">${art}${specialBirdAnimationButtonHTML(bird, !!(companionForSpecies(bird.species || bird.commonName) || getDiscoveredRecordForSpecies(bird.species || bird.commonName)))}</div>
       <div>
         <div class="bird-info-name">${escapeHTML(birdDisplayName(bird))}</div>
         <div class="bird-info-sci">${escapeHTML(bird.customName ? birdSpeciesLabel(bird) + ' · ' + (bird.scientificName || bird.species) : (bird.scientificName || bird.species))}</div>
@@ -11787,7 +11805,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-stat"><span class="bird-info-stat-label">SPD</span><span class="bird-info-stat-value">${bird.spd || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">INT</span><span class="bird-info-stat-value">${bird.int || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">STAM</span><span class="bird-info-stat-value">${bird.stamina || 0}</span></div>
-      <div class="bird-info-stat"><span class="bird-info-stat-label">CHA</span><span class="bird-info-stat-value">${bird.cha || 0}</span></div>
+      <div class="bird-info-stat"><span class="bird-info-stat-label">Personality (CHA)</span><span class="bird-info-stat-value">${birdPersonalityValue(bird)}</span></div>
     </div>
     ${renderBirdSizePanel(bird)}
     ${renderBirdPostLine(bird)}
@@ -11879,7 +11897,7 @@ function renderBirdPostLine(bird) {
 // ============================================================================
 const BURBZ_CHARM = {
   robin: 10, feral_pigeon: 10, rock_pigeon: 10,
-  wren: 9,
+  wren: 9, goldcrest: 9, // Game design: a tiny, vocal bird with a big leadership personality.
   australian_magpie: 9, willie_wagtail: 9, common_myna: 9, silver_gull: 9,
   laughing_kookaburra: 9, rainbow_lorikeet: 9, australian_white_ibis: 9,
   herring_gull: 9, sulphur_crested_cockatoo: 9,
@@ -11904,7 +11922,7 @@ const BURBZ_CHARM = {
   eurasian_coot: 5, dusky_moorhen: 5, little_raven: 5, australian_raven: 5,
   eastern_rosella: 5, red_rumped_parrot: 5, red_browed_finch: 5,
   yellow_tailed_black_cockatoo: 5, golden_whistler: 5,
-  goldcrest: 4, chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
+  chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
   grey_wagtail: 4, kestrel: 4, little_owl: 4, lapwing: 4, swift: 4,
   great_spotted_woodpecker: 4, cormorant: 4, gannet: 4, razorbill: 4,
   dipper: 4, sand_martin: 4, pied_flycatcher: 4, yellowhammer: 4,
@@ -11938,6 +11956,34 @@ function speciesCharmBase(profile) {
   if (/bold|tame|confiding|social|curious|urban|gregarious|noisy|cheeky|garden/.test(traits)) score += 2;
   if (/shy|secretive|wary|elusive|skulk|solitary|nocturnal|remote/.test(traits)) score -= 2;
   return clamp(score, 1, 10);
+}
+
+// Personality is the existing Charm/CHA stat, shared with diplomacy and civic
+// roles. It is a game rating, separate from physical size and personal bond.
+function birdPersonalityValue(bird) {
+  if (!bird) return 0;
+  const species = bird.species || bird.commonName || bird.name || bird.scientificName || '';
+  const profile = findSpeciesProfile(species) || findSpeciesProfile(bird.scientificName);
+  const saved = Number(bird.cha);
+  const hasSaved = bird.cha != null && Number.isFinite(saved);
+  if (hasSaved) return saved;
+  const base = profile ? speciesCharmBase(profile) * 10 : generateBirdStats(species, null, bird.rarity || 'common').cha;
+  const level = Math.max(1, Number(bird.level) || 1);
+  const levelMult = level > 1 ? 1 + level * 0.04 : 1;
+  const minimum = clamp(Math.floor((base || 40) * levelMult) + (Number(bird.training?.chaBonus) || 0), 10, 999);
+  return minimum;
+}
+
+function migrateBirdPersonality(bird) {
+  if (!bird || typeof bird !== 'object') return bird;
+  const profile = findSpeciesProfile(bird.species || bird.commonName || bird.name) || findSpeciesProfile(bird.scientificName);
+  const current = birdPersonalityValue(bird);
+  // Raise only Goldcrest's old baseline, keeping any higher trained value.
+  // Reapplying on local/cloud loads is idempotent; no other stat is rerolled.
+  bird.cha = profile?.id === 'goldcrest'
+    ? Math.max(current, birdPersonalityValue({ ...bird, cha:null }))
+    : current;
+  return bird;
 }
 
 // ============================================================================
@@ -23164,7 +23210,17 @@ function discoveryKeysForSpecies(name) {
 }
 function getDiscoveredRecordForSpecies(name) {
   const book = gameState.discoveredSpecies || {};
-  for (const key of discoveryKeysForSpecies(name)) if (book[key]) return book[key];
+  const keys = new Set(discoveryKeysForSpecies(name));
+  const profile = findSpeciesProfile(name);
+  [profile?.id, profile?.scientificName, profile?.scientific].filter(Boolean).forEach(value => keys.add(speciesKey(value)));
+  for (const key of keys) if (book[key]) return book[key];
+  // Old/cloud records can be indexed by a former name or catalogue ID. Match
+  // their saved identity as well; a missing current alias index is not a new bird.
+  for (const [savedKey, record] of Object.entries(book)) {
+    if (!record) continue;
+    if ([savedKey, record.species, record.commonName, record.scientificName, record.name]
+      .some(value => value && keys.has(speciesKey(canonicalSpeciesName(value))))) return record;
+  }
   return null;
 }
 function inventoryItemCount() { return Object.values((gameState.inventory && gameState.inventory.items) || {}).reduce((sum, n) => sum + (Number(n) || 0), 0); }
@@ -23207,6 +23263,20 @@ function specialBirdCharacterFor(bird) {
       description:'A mighty corvid witch from the rookery, channelling a storm of ancient magic directly through her natural wings.'
     };
   }
+  if (keys.some(key => key === 'carrion crow' || key === 'corvus corone')) {
+    return {
+      id:'brandon-lee', defaultName:'Brandon Lee', title:'Brandon Lee',
+      role:'Carrion Crow', icon:'🪶',
+      description:'The familiar dark-feathered Carrion Crow. Tap his unlocked portrait for a nod and a feather ruffle.'
+    };
+  }
+  if (keys.some(key => key === 'peregrine falcon' || key === 'falco peregrinus')) {
+    return {
+      id:'peregrine-falcon', defaultName:null, title:'Peregrine Falcon',
+      role:'Falcon', icon:'🪽',
+      description:'An alert Peregrine Falcon. Tap the unlocked portrait for a glance and a wing stretch.'
+    };
+  }
   if (keys.some(key => key === 'magpie' || key === 'pica pica')) {
     return {
       id:'market-magpie', defaultName:'The Market Magpie', title:'The Market Magpie',
@@ -23230,13 +23300,21 @@ function applySpecialBirdCharacter(bird) {
   bird.specialCharacterId = character.id;
   bird.specialCharacterTitle = character.title;
   bird.specialCharacterRole = character.role;
-  bird.specialMove = character.move;
+  if (character.move) bird.specialMove = character.move;
   if (character.magicPower) {
     bird.specialMagicPower = character.magicPower;
     bird.mag = Math.max(Number(bird.mag) || 0, character.magicPower);
   }
-  if (!String(bird.customName || '').trim()) bird.customName = character.defaultName;
+  if (character.defaultName && !String(bird.customName || '').trim()) bird.customName = character.defaultName;
   return bird;
+}
+function specialBirdAnimationButtonHTML(bird, unlocked) {
+  if (!unlocked) return '';
+  const key = window.BurbzSpecialBirdSprites?.keyFor(bird);
+  if (!key) return '';
+  return '<button type="button" class="special-bird-play" data-special-bird="' + key +
+    '" aria-label="Animate ' + escapeHtml(birdDisplayName(bird)) +
+    '" title="Tap to animate this character"><span class="special-bird-hint">Tap to animate</span></button>';
 }
 function specialBirdCharacterBadgeHTML(bird) {
   const character = specialBirdCharacterFor(bird);
@@ -23252,13 +23330,12 @@ function specialBirdCharacterPanelHTML(bird) {
     '</div><div class="special-character-title">' + escapeHtml(character.title) +
     '</div><div class="special-character-copy">' + escapeHtml(character.description) +
     (character.magicPower ? ' Magic power: ' + escapeHtml(character.magicPower) + '.' : '') +
-    ' Signature move: ' + escapeHtml(character.move) + '.</div></div>';
+    ((character.move || bird.specialMove) ? ' Signature move: ' + escapeHtml(character.move || bird.specialMove) + '.' : '') + '</div></div>';
 }
 // Easter egg: every Herring Gull is called Steven. Nobody knows why.
 // Least of all Steven.
 function easterEggBirdName(bird) {
-  const species = String((bird && (bird.commonName || bird.species)) || '');
-  return /herring gull/i.test(species) ? 'Steven' : null;
+  return specialBirdCharacterFor(bird)?.id === 'steven-herring-gull' ? 'Steven' : null;
 }
 function applyEasterEggBirdName(bird) {
   if (bird && !String(bird.customName || '').trim()) {
@@ -35773,7 +35850,9 @@ function rememberDiscoveredBird(bird, opts = {}) {
   const key = speciesKey(canonical);
   if (!key) return false;
   const existing = getDiscoveredRecordForSpecies(canonical);
+  const isNew = !existing && !companionForSpecies(canonical);
   const record = {
+    ...existing,
     key,
     species: canonical,
     commonName: canonical,
@@ -35790,12 +35869,14 @@ function rememberDiscoveredBird(bird, opts = {}) {
   };
   gameState.discoveredSpecies[key] = record;
   discoveryKeysForSpecies(canonical).forEach(aliasKey => { if (aliasKey && aliasKey !== key) gameState.discoveredSpecies[aliasKey] = record; });
-  if (!existing && !opts.silent) {
+  // Claim in the saved Birdex before any reward/UI callback can re-enter.
+  // A legacy companion already counts even when its discovery index is absent.
+  if (isNew && !opts.silent) {
     addCoins(discoveryRewardForBird(bird));
     if (typeof logDiary === 'function') logDiary('discover', { species: canonical, rarity: record.rarity });
   }
-  if (!existing) updateQuestProgress('discover', 1);
-  return !existing;
+  if (isNew) updateQuestProgress('discover', 1);
+  return isNew;
 }
 
 function createBirdFromDiscovery(record) {
@@ -35966,6 +36047,7 @@ function renderSoundSessionDiscoveries() {
           '<div class="scan-session-discovery-back-head"><div class="scan-session-discovery-back-name">' + escapeHtml(row.name) + '</div><div class="scan-session-discovery-back-rarity">' + escapeHtml(String(row.rarity || 'common')) + '</div></div>' +
           '<div class="scan-session-discovery-summary">' + escapeHtml(summary) + '</div>' +
           '<div class="scan-session-discovery-facts"><div><strong>Habitat:</strong> ' + escapeHtml(habitat) + '</div><div><strong>Diet:</strong> ' + escapeHtml(diet) + '</div></div>' +
+          '<div class="scan-session-discovery-facts"><strong>Personality (CHA):</strong> ' + birdPersonalityValue(discoveryBird) + '</div>' +
           '<div class="scan-session-discovery-actions"><button type="button" class="scan-session-birdex-btn" data-action="show-in-birdex">Show in Birdex</button><button type="button" class="scan-session-flip-back" data-action="flip-discovery-back" aria-label="Flip ' + escapeHtml(row.name) + ' card back">↩</button></div>' +
         '</div></div></article>';
   }).join('');
@@ -36019,7 +36101,18 @@ function recordSoundSessionDiscovery(bird, isNewDiscovery) {
     isNew: !!isNewDiscovery
   });
   renderSoundSessionDiscoveries();
+  if (!isNewDiscovery) flashSoundSessionBird(speciesKey(canonical));
   return recorded;
+}
+
+function flashSoundSessionBird(key) {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const tile = [...document.querySelectorAll('#soundSessionShelfGrid .sound-session-tile')]
+    .find(el => speciesKey(canonicalSpeciesName(el.dataset.speciesName)) === key);
+  const icon = tile?.querySelector('.sound-session-tile-art');
+  if (!icon?.animate) return;
+  icon.getAnimations().forEach(animation => animation.cancel());
+  icon.animate([{ opacity:0.65 }, { opacity:1 }], { duration:420, easing:'ease-out' });
 }
 window.__burbzSoundDiscoveryDebug = {
   add: (bird, isNewDiscovery = true) => recordSoundSessionDiscovery(bird, isNewDiscovery),
@@ -36153,12 +36246,9 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (isNew) newDiscoveries.push(bird);
     fetchBirdArt(bird.species);
     if (soundSession) {
-      const recorded = recordSoundSessionDiscovery(bird, isNew);
-      // The full-width encounter banner announces a species ONCE per listening
-      // session — the first time it is heard. When the same bird keeps calling
-      // it only ticks up its tile on the session shelf instead of re-covering
-      // the screen every window.
-      if (!recorded || !(Number(recorded.count) > 1)) showScanEncounterCard(bird, isNew, opts.source);
+      recordSoundSessionDiscovery(bird, isNew);
+      // The persisted Birdex owns the announcement, across listening sessions.
+      if (isNew) showScanEncounterCard(bird, isNew, opts.source);
     } else {
       const resultEl = $('scanResult');
       resultEl.classList.remove('sound-session');
@@ -36169,7 +36259,7 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
       $('scanResultConf').textContent = opts.source === 'sound'
         ? `${Math.round((bird.confidence || 0) * 100)}/100 model score | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`
         : `${Math.round((bird.confidence || 0) * 100)}% confidence | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`;
-      showScanEncounterCard(bird, isNew, opts.source);
+      if (isNew) showScanEncounterCard(bird, isNew, opts.source);
     }
     try { questRegisterBirdEncounter(bird); }
     catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
@@ -36181,14 +36271,13 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (!soundSession) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   }
-  // Birds heard again (already discovered): level a travelling companion, or
-  // offer recruitment outside a listening session.
+  // Re-sightings update the field record, never player or companion XP.
+  // Explicit recruitment and quest rewards remain owned by their own actions.
   surfaced.filter(bird => !newDiscoveries.includes(bird)).forEach(bird => {
     const existing = companionForSpecies(bird.species);
-    if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(bird.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!soundSession) { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Barracks.'); }
+    if (!existing && !soundSession && opts.source !== 'sound') { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Barracks.'); }
   });
-
+  saveState(); // Persist lastSeenAt / sightingCount for known, unrecruited birds too.
   checkBadges();
   return surfaced;
 }
@@ -37650,101 +37739,167 @@ function openBirdEquip(birdId) {
 }
 
 // ---- Swipe between companions (equip-card-swipe-v297) ----------------------
-// On the back of one bird's card, a horizontal swipe slides that card away
-// and the next companion's card slides in from the other side — flipping
-// through the whole collection in flock order, wrapping at the ends. The
-// gesture follows the finger; a vertical drag still scrolls as before.
-const BIRD_EQUIP_SWIPE_COMMIT_PX = 70; // drag this far to change bird
-const BIRD_EQUIP_SWIPE_AXIS_PX = 14;   // drift before the axis locks
+// Three real panels share one moving track. Neighbour portraits load before
+// the gesture; the incoming DOM survives a commit, including its decoded art.
+const BIRD_EQUIP_SWIPE_COMMIT_PX = 70;
+const BIRD_EQUIP_SWIPE_AXIS_PX = 14;
 let birdEquipSwipeBound = false;
 let birdEquipSwipeAnimating = false;
+const birdEquipSwipe = { motion:null, frame:0, gesture:null, x:0, suppressUntil:0 };
 
 function birdEquipRoster() {
   return (gameState.flock || []).filter(b => b && b.id);
 }
-// The companion `delta` steps away in the collection, wrapping around.
+// Preserve the existing collection order and wrapping at both ends.
 function birdEquipNeighbour(delta) {
   const roster = birdEquipRoster();
   if (roster.length < 2) return null;
   const at = roster.findIndex(b => b.id === birdEquipState.birdId);
+  if (at < 0) return null;
   return roster[(((at < 0 ? 0 : at) + delta) % roster.length + roster.length) % roster.length];
 }
-// Commit a swipe: slide the current card out, swap the bird, slide the new
-// card in from the opposite side. delta 1 = swiped left = next companion.
-function birdEquipSwipeTo(delta) {
-  const next = birdEquipNeighbour(delta);
-  const body = $('birdEquipBody');
-  if (!next || !body || birdEquipSwipeAnimating) return false;
-  birdEquipSwipeAnimating = true;
-  const dir = delta > 0 ? 1 : -1;
-  birdEquipState = { birdId: next.id, slotPicker: null };
-  body.style.transition = 'transform .16s ease-in, opacity .16s ease-in';
-  body.style.transform = 'translateX(' + (-dir * 55) + '%)';
-  body.style.opacity = '0';
-  SFX.tap();
-  vibrate(12);
-  setTimeout(() => {
-    renderBirdEquip();
+function birdEquipSwipePaint(x) {
+  birdEquipSwipe.x = x;
+  const track = $('birdEquipTrack');
+  if (track) track.style.transform = 'translate3d(' + x + 'px,0,0)';
+}
+function birdEquipSwipeStop(freeze = false) {
+  const track = $('birdEquipTrack');
+  const motion = birdEquipSwipe.motion;
+  let x = birdEquipSwipe.x;
+  if (motion && freeze && track) x = new DOMMatrixReadOnly(getComputedStyle(track).transform).m41;
+  if (motion) { motion.onfinish = null; motion.cancel(); }
+  birdEquipSwipe.motion = null;
+  birdEquipSwipeAnimating = false;
+  cancelAnimationFrame(birdEquipSwipe.frame);
+  birdEquipSwipe.frame = 0;
+  birdEquipSwipePaint(freeze ? x : 0);
+  return freeze ? x : 0;
+}
+function birdEquipSwipeReset() {
+  birdEquipSwipe.gesture = null;
+  birdEquipSwipeStop();
+}
+function birdEquipPrepareNeighbours() {
+  const body = $('birdEquipBody'), track = $('birdEquipTrack');
+  if (!body || !track) return;
+  for (const panel of [...track.children]) if (panel !== body) panel.remove();
+  body.className = 'bird-equip-panel';
+  body.style.transform = '';
+  body.inert = false;
+  body.removeAttribute('aria-hidden');
+  body.dataset.birdId = birdEquipState.birdId;
+  for (const delta of [-1, 1]) {
+    const bird = birdEquipNeighbour(delta);
+    if (!bird) continue;
+    const panel = document.createElement('div');
+    panel.className = 'bird-equip-panel bird-equip-neighbour';
+    panel.dataset.birdId = bird.id;
+    panel.dataset.delta = delta;
+    panel.style.transform = 'translateX(' + delta * 100 + '%)';
+    panel.inert = true;
+    panel.setAttribute('aria-hidden', 'true');
+    renderBirdEquip(panel, bird);
+    track.appendChild(panel);
+  }
+}
+function birdEquipSwipeSettle(delta) {
+  const body = $('birdEquipBody'), track = $('birdEquipTrack');
+  if (!body || !track) return false;
+  const next = delta && birdEquipNeighbour(delta);
+  const incoming = next && track.querySelector('[data-delta="' + delta + '"]');
+  // A roster refresh invalidates old previews, never resurrects a removed bird.
+  if (delta && (!next || incoming?.dataset.birdId !== String(next.id))) { renderBirdEquip(); return false; }
+  const width = track.clientWidth;
+  const from = birdEquipSwipeStop(true);
+  const to = delta ? -delta * width : 0;
+  const finish = () => {
+    birdEquipSwipeStop();
+    if (!delta) return;
+    if (birdEquipNeighbour(delta)?.id !== next.id || !$('birdEquipOverlay').classList.contains('show')) { renderBirdEquip(); return; }
+    if (body.contains(document.activeElement)) $('birdEquipOverlay').querySelector('.bird-equip-close')?.focus({ preventScroll:true });
+    body.removeAttribute('id');
+    incoming.id = 'birdEquipBody';
+    incoming.className = 'bird-equip-panel';
+    incoming.style.transform = '';
+    incoming.removeAttribute('data-delta');
+    birdEquipState = { birdId:next.id, slotPicker:null };
+    birdEquipPrepareNeighbours();
     const scroll = document.querySelector('#birdEquipOverlay .bird-equip-scroll');
     if (scroll) scroll.scrollTop = 0;
-    body.style.transition = 'none';
-    body.style.transform = 'translateX(' + (dir * 55) + '%)';
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-      body.style.transition = 'transform .2s ease-out, opacity .2s ease-out';
-      body.style.transform = 'translateX(0)';
-      body.style.opacity = '1';
-      setTimeout(() => { birdEquipSwipeAnimating = false; body.style.transition = ''; }, 220);
-    }));
-  }, 160);
-  return true;
+    $('birdEquipAnnouncement').textContent = birdDisplayName(next);
+    SFX.tap();
+    try { vibrate(8); } catch (e) { /* Unsupported device: a visual change is enough. */ }
+  };
+  if (!width || matchMedia('(prefers-reduced-motion: reduce)').matches || Math.abs(to - from) < 1) { finish(); return !!delta; }
+  birdEquipSwipeAnimating = true;
+  const motion = track.animate([
+    { transform:'translate3d(' + from + 'px,0,0)' },
+    { transform:'translate3d(' + to + 'px,0,0)' }
+  ], { duration:Math.max(100, 230 * Math.min(1, Math.abs(to - from) / width)), easing:'cubic-bezier(.2,.75,.25,1)', fill:'forwards' });
+  birdEquipSwipe.motion = motion;
+  motion.onfinish = finish;
+  return !!delta;
+}
+function birdEquipSwipeTo(delta) {
+  if (birdEquipSwipeAnimating || !birdEquipNeighbour(delta)) return false;
+  birdEquipSwipe.gesture = null;
+  return birdEquipSwipeSettle(delta > 0 ? 1 : -1);
 }
 function bindBirdEquipSwipe() {
   if (birdEquipSwipeBound) return;
   const scroll = document.querySelector('#birdEquipOverlay .bird-equip-scroll');
   if (!scroll) return;
   birdEquipSwipeBound = true;
-  let startX = 0, startY = 0, dx = 0, axis = null, tracking = false;
   scroll.addEventListener('touchstart', e => {
-    if (birdEquipSwipeAnimating || !e.touches.length) return;
-    tracking = true; axis = null; dx = 0;
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+    if (e.touches.length !== 1) {
+      if (birdEquipSwipe.gesture) { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); }
+      return;
+    }
+    if (!e.target.closest('#birdEquipTrack') || e.target.closest('button:not(.special-bird-play),a,input,select,textarea,[contenteditable]') || !birdEquipNeighbour(1)) return;
+    const touch = e.touches[0];
+    birdEquipSwipe.gesture = { id:touch.identifier, startX:touch.clientX, startY:touch.clientY, base:birdEquipSwipeStop(true), dx:0, axis:null, width:$('birdEquipTrack').clientWidth };
   }, { passive: true });
-  scroll.addEventListener('touchmove', e => {
-    if (!tracking || !e.touches.length) return;
-    dx = e.touches[0].clientX - startX;
-    const dy = e.touches[0].clientY - startY;
-    // Lock the gesture to one axis after a little drift, then let a
-    // horizontal drag pull the card with the finger.
-    if (!axis) {
+  document.addEventListener('touchmove', e => {
+    const g = birdEquipSwipe.gesture;
+    if (!g) return;
+    if (e.touches.length !== 1) { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); return; }
+    const touch = [...e.touches].find(t => t.identifier === g.id);
+    if (!touch) return;
+    const dx = touch.clientX - g.startX, dy = touch.clientY - g.startY;
+    if (!g.axis) {
       if (Math.abs(dx) < BIRD_EQUIP_SWIPE_AXIS_PX && Math.abs(dy) < BIRD_EQUIP_SWIPE_AXIS_PX) return;
-      axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      g.axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      if (g.axis === 'y') { birdEquipSwipe.gesture = null; birdEquipSwipeSettle(0); return; }
     }
-    if (axis !== 'x') return;
-    e.preventDefault();
-    const body = $('birdEquipBody');
-    if (!body) return;
-    body.style.transition = 'none';
-    body.style.transform = 'translateX(' + dx + 'px)';
-    body.style.opacity = String(Math.max(0.55, 1 - Math.abs(dx) / 420));
+    if (e.cancelable) e.preventDefault();
+    g.dx = Math.max(-g.width, Math.min(g.width, g.base + dx));
+    birdEquipSwipe.suppressUntil = Date.now() + 350;
+    if (!birdEquipSwipe.frame) birdEquipSwipe.frame = requestAnimationFrame(() => {
+      birdEquipSwipe.frame = 0;
+      if (birdEquipSwipe.gesture === g) birdEquipSwipePaint(g.dx);
+    });
   }, { passive: false });
-  const settle = () => {
-    if (!tracking) return;
-    tracking = false;
-    if (axis !== 'x') return;
-    const body = $('birdEquipBody');
-    if (Math.abs(dx) >= BIRD_EQUIP_SWIPE_COMMIT_PX && birdEquipSwipeTo(dx < 0 ? 1 : -1)) return;
-    // Not far enough — or the flock has only one bird: spring back home.
-    if (body) {
-      body.style.transition = 'transform .18s ease-out, opacity .18s ease-out';
-      body.style.transform = 'translateX(0)';
-      body.style.opacity = '1';
-    }
+  const settle = (e, cancelled) => {
+    const g = birdEquipSwipe.gesture;
+    if (!g || (!cancelled && ![...e.changedTouches].some(t => t.identifier === g.id))) return;
+    birdEquipSwipe.gesture = null;
+    if (g.axis !== 'x') { if (g.base) birdEquipSwipeSettle(0); return; }
+    cancelAnimationFrame(birdEquipSwipe.frame); birdEquipSwipe.frame = 0;
+    birdEquipSwipePaint(g.dx);
+    birdEquipSwipe.suppressUntil = Date.now() + 350;
+    birdEquipSwipeSettle(!cancelled && Math.abs(g.dx) >= BIRD_EQUIP_SWIPE_COMMIT_PX ? (g.dx < 0 ? 1 : -1) : 0);
   };
-  scroll.addEventListener('touchend', settle);
-  scroll.addEventListener('touchcancel', settle);
+  document.addEventListener('touchend', e => settle(e, false));
+  document.addEventListener('touchcancel', e => settle(e, true));
+  scroll.addEventListener('click', e => {
+    if (e.detail && Date.now() < birdEquipSwipe.suppressUntil && e.target.closest('#birdEquipTrack')) { e.preventDefault(); e.stopImmediatePropagation(); }
+  }, true);
+  window.addEventListener('resize', birdEquipSwipeReset, { passive:true });
 }
 
 function closeBirdEquip() {
+  birdEquipSwipeReset();
   $('birdEquipOverlay').classList.remove('show');
   birdEquipState.slotPicker = null;
   if (birdEquipReturnFocus?.isConnected) birdEquipReturnFocus.focus({ preventScroll:true });
@@ -37755,8 +37910,9 @@ function birdEquipHandleKeydown(event) {
   const overlay = $('birdEquipOverlay');
   if (!overlay?.classList.contains('show')) return;
   if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeBirdEquip(); return; }
+  if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !event.target?.closest('input,select,textarea,[contenteditable]')) { event.preventDefault(); birdEquipSwipeTo(event.key === 'ArrowRight' ? 1 : -1); return; }
   if (event.key !== 'Tab') return;
-  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length);
+  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length && !el.closest('[inert]'));
   if (!controls.length) return;
   const first = controls[0], last = controls[controls.length - 1];
   if (!overlay.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
@@ -37815,19 +37971,33 @@ function birdEquipPlaceholderIcon(slot) {
   return '<img class="bird-equip-placeholder" src="assets/bird-card/' + slot + '.webp" alt="" width="64" height="64" aria-hidden="true">';
 }
 
-function renderBirdEquip() {
-  const body = $('birdEquipBody');
+function birdEquipArtReady(img) {
+  const source = img.currentSrc;
+  const reveal = () => {
+    if (img.currentSrc === source && img.naturalWidth) img.previousElementSibling.hidden = true;
+  };
+  // Keep the reserved fallback visible until the bitmap is actually decoded.
+  if (img.decode) img.decode().then(reveal).catch(() => {});
+  else reveal();
+}
+
+function renderBirdEquip(target, previewBird) {
+  const body = target || $('birdEquipBody');
   if (!body) return;
-  const bird = (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
-  if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; return; }
+  if (!previewBird) birdEquipSwipeReset();
+  const bird = previewBird || (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
+  const slotPicker = previewBird ? null : birdEquipState.slotPicker;
+  if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; if (!previewBird) birdEquipPrepareNeighbours(); return; }
   const L = lootCore();
   const loadout = birdLoadout(bird.id);
   const bonus = birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  const artUrl = getBirdArtUrl(bird);
-  const art = artUrl
-    ? '<img class="bird-equip-art" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '">'
-    : '<div class="bird-equip-art-emoji">' + (bird.emoji || '🐦') + '</div>';
+  const cardArt = window.BurbzSpecialBirdSprites?.keyFor(bird) ? birdCardImgAttrs(bird) : null;
+  const artUrl = cardArt?.src || getBirdArtUrl(bird);
+  const fallback = '<div class="bird-equip-art-fallback" role="img" aria-label="' + escapeHtml(bird.commonName || bird.species) + '">' + (bird.emoji || '🐦') + '</div>';
+  const art = fallback + (artUrl
+    ? '<img class="bird-equip-art" loading="eager" decoding="async" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '" onload="birdEquipArtReady(this)" onerror="this.hidden=true;this.previousElementSibling.hidden=false">'
+    : '');
 
   const favourite = birdIsFavourite(bird);
   const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" aria-label="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
@@ -37836,7 +38006,7 @@ function renderBirdEquip() {
   const xp = Math.max(0, Number(bird.xp) || 0);
   const xpPercent = level >= 50 ? 100 : Math.min(100, xp / xpGoal * 100);
   const hero = '<div class="bird-equip-hero" style="--companion-rarity:' + rarityColor + ';">' +
-    '<div class="bird-equip-portrait">' + art + favBtn +
+    '<div class="bird-equip-portrait">' + art + specialBirdAnimationButtonHTML(bird, true) + favBtn +
     '<span class="bird-equip-rarity">' + escapeHtml(bird.rarity || 'common') + '</span></div>' +
     '<div class="bird-equip-identity"><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
@@ -37853,6 +38023,7 @@ function renderBirdEquip() {
     stat('🛡️ DEF', bird.def || 0, 'def') +
     stat('🪽 SPD', bird.spd || 0, 'spd') +
     '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
+    '<div class="bird-equip-stat is-personality" title="Personality uses Charm (CHA), the diplomacy and leadership stat"><div class="bes-label">Personality (CHA)</div><div class="bes-value">' + birdPersonalityValue(bird) + '</div></div>' +
     '</div>';
 
   // The bond panel — this bird's friendship, grown by preening and feeding.
@@ -37880,7 +38051,7 @@ function renderBirdEquip() {
     const meta = FORGE_SLOT_META[slot];
     const item = L.gearById(loadout[slot]);
     const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
-    const open = birdEquipState.slotPicker === slot;
+    const open = slotPicker === slot;
     return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' aria-expanded="' + open + '" aria-controls="birdEquipSlotPicker" onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
       '<div class="beq-icon">' + (item ? gearIconHTML(item) : birdEquipPlaceholderIcon(slot)) + '</div>' +
       '<div><div class="beq-slot-label">' + meta.label + '</div>' +
@@ -37889,8 +38060,8 @@ function renderBirdEquip() {
   }).join('') + '</div>';
 
   let picker = '';
-  if (birdEquipState.slotPicker) {
-    const slot = birdEquipState.slotPicker;
+  if (slotPicker) {
+    const slot = slotPicker;
     const owned = Object.entries(gameState.inventory.gear || {}).filter(([, n]) => (Number(n) || 0) > 0)
       .map(([id, n]) => ({ item: L.gearById(id), count: n })).filter(x => x.item && x.item.slot === slot)
       .sort((a, b) => L.rarityIndex(b.item.rarity) - L.rarityIndex(a.item.rarity));
@@ -37917,10 +38088,11 @@ function renderBirdEquip() {
   const roster = birdEquipRoster();
   const at = roster.findIndex(b => b.id === bird.id);
   const pager = roster.length > 1
-    ? '<div class="bird-equip-pager"><span class="bep-arrow">‹</span> ' + (at + 1) + ' of ' + roster.length + ' companions — swipe for the next <span class="bep-arrow">›</span></div>'
+    ? '<div class="bird-equip-pager"><button type="button" class="bep-arrow" aria-label="Previous companion" onclick="birdEquipSwipeTo(-1)">‹</button> ' + (at + 1) + ' of ' + roster.length + ' companions — swipe for the next <button type="button" class="bep-arrow" aria-label="Next companion" onclick="birdEquipSwipeTo(1)">›</button></div>'
     : '';
 
   body.innerHTML = pager + '<div class="bird-equip-layout"><section class="bird-equip-profile" aria-label="Companion portrait and stats">' + hero + stats + '</section><section class="bird-equip-details" aria-label="Bond and equipment">' + bondPanel + slots + picker + notes + forgeLink + '</section></div>';
+  if (!previewBird) birdEquipPrepareNeighbours();
 }
 
 // ============================================================================
@@ -38408,6 +38580,7 @@ function createBirdCardHTML(bird, idx) {
             ${artBg}
             ${birdIcon}
             ${birdFamilyBadgeHTML(bird)}
+            ${specialBirdAnimationButtonHTML(bird, true)}
           </div>
           <div class="card-level" title="${cardXpTitle}">LV.${cardLv}</div>
           <div class="card-power" style="color:${rarityColor}">&#9889;${bird.power || 0}</div>
@@ -38445,7 +38618,7 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-back-stat"><span class="card-back-stat-label">DEF</span><strong class="card-back-stat-value">${bird.def || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.def||50)/1.2)}%;background:var(--accent2)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">SPD</span><strong class="card-back-stat-value">${bird.spd || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.spd||50)/1.2)}%;background:var(--uncommon)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">MAG</span><strong class="card-back-stat-value">${bird.mag || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.mag||40)/1.2)}%;background:var(--epic)"></div></div></div>
-            <div class="card-back-stat"><span class="card-back-stat-label">CHA</span><strong class="card-back-stat-value">${bird.cha || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.cha||40)/1.2)}%;background:var(--legendary)"></div></div></div>
+            <div class="card-back-stat" title="Personality uses Charm (CHA), the diplomacy and leadership stat"><span class="card-back-stat-label">Personality</span><strong class="card-back-stat-value">${birdPersonalityValue(bird)}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,birdPersonalityValue(bird)/1.2)}%;background:var(--legendary)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">INT</span><strong class="card-back-stat-value">${bird.int || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.int||50)/1.2)}%;background:var(--rare)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">STAM</span><strong class="card-back-stat-value">${bird.stamina || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.stamina||50)/1.2)}%;background:var(--accent3)"></div></div></div>
             <div class="card-back-stat is-carry" title="Loads this bird brings home from a quest"><span class="card-back-stat-label">CARRY</span><strong class="card-back-stat-value">${birdCardCarryCapacity(bird)}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${birdCardCarryPct(bird)}%;background:var(--hp-yellow)"></div></div></div>
@@ -38501,6 +38674,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
             ${artBg}
             ${birdIcon}
             ${birdFamilyBadgeHTML(bird)}
+            ${specialBirdAnimationButtonHTML(bird, true)}
           </div>
           <div class="card-level">DISCOVERED</div>
           <div class="card-power" style="color:${rarityColor}">&#128176;${cost}</div>
@@ -38524,6 +38698,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
           ${playerPhotoChipHTML(bird, 'floating')}
           <div class="birdex-learning-kicker">Real bird</div>
           <div class="birdex-learning-title">${escapeHtml(bird.commonName || bird.species)}</div>
+          <div class="birdex-learning-fact" title="Game stat for diplomacy and leadership"><span class="birdex-learning-label">Personality (CHA)</span><strong class="birdex-learning-value">${birdPersonalityValue(bird)}</strong></div>
           <div class="birdex-learning-scientific"><span class="birdex-learning-label">Scientific name</span>${escapeHtml(bird.scientificName || info.scientificName || 'Not recorded')}</div>
           <div class="birdex-learning-facts">
             <div class="birdex-learning-fact"><span class="birdex-learning-label">Habitat</span><span class="birdex-learning-value">${escapeHtml(info.habitat || 'Field-guide details are being checked.')}</span></div>
@@ -41194,7 +41369,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
+Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -41217,6 +41392,7 @@ Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProje
 // ============================================================================
 let petWanderTimer = null;
 let petFlightTimer = null;
+let merlinFlightSession = null;
 let petCareTimer = null;
 let merlinCareRefreshTimer = null;
 let petSpeechTimer = null;
@@ -41283,11 +41459,12 @@ function getPetMood() {
 }
 
 function setPetOnPerch() {
+  if (merlinFlightSession) merlinFlightSession.stop('perch', { immediate:true });
   const companion = $('petCompanion');
   if (!companion) return;
   companion.style.left = ''; companion.style.bottom = '';
   companion.style.right = ''; companion.style.top = '';
-  companion.classList.remove('flying', 'facing-left');
+  companion.classList.remove('flying', 'facing-left', 'merlin-in-flight');
   const sprite = $('petSprite');
   if (sprite) sprite.classList.remove('pet-walk');
 }
@@ -41305,7 +41482,7 @@ function renderMerlinCareMenu() {
     const hint = $('merlinTutorialDoText');
     if (hint) hint.textContent = 'One foot tucked up… ' + napSeconds + 's of wizard sleep';
   }
-  if (playBtn) { playBtn.disabled = resting || catchingBreath || pet.energy < 20; playBtn.textContent = catchingBreath ? '✨ Catching breath' : '✨ Play'; }
+  if (playBtn) { playBtn.disabled = resting || catchingBreath || pet.energy < 20 || !!merlinFlightSession?.active; playBtn.textContent = merlinFlightSession?.active ? '✨ Playing' : catchingBreath ? '✨ Catching breath' : '✨ Play'; }
   if (feedBtn) feedBtn.disabled = resting;
   $('merlinPerchAssembly')?.classList.toggle('merlin-resting', resting);
   if (resting) { clearTimeout(petFlightTimer); setPetOnPerch(); }
@@ -41364,9 +41541,10 @@ function syncMerlinPerchPresence() {
   if (perch) perch.classList.add('show');
   if (assembly) { assembly.classList.toggle('merlin-away', away); assembly.dataset.merlinStatus = away ? 'away' : 'perched'; }
   if (away) {
+    if (merlinFlightSession) merlinFlightSession.stop('away', { immediate:true });
     // He took his flight and his speech bubble with him.
     clearTimeout(petFlightTimer);
-    companion.classList.remove('flying', 'facing-left');
+    companion.classList.remove('flying', 'facing-left', 'merlin-in-flight');
     const bubble = $('petSpeech');
     if (bubble) bubble.classList.remove('show');
     closeMerlinCareMenu({ force:true });
@@ -41381,7 +41559,7 @@ function renderPetCompanion() {
   if (!sprite.querySelector('.merlin-rig')) sprite.innerHTML = merlinRigHTML();
   const away = syncMerlinPerchPresence();
   renderMerlinCareMenu();
-  if (!away && !companion.classList.contains('flying')) setPetOnPerch();
+  if (!away && !companion.classList.contains('flying') && !merlinFlightSession?.active) setPetOnPerch();
 }
 
 function openMerlinCareMenu() {
@@ -41414,25 +41592,41 @@ function closeMerlinCareMenu(options = {}) {
 function petFlyOutAndReturn() {
   const companion = $('petCompanion');
   const sprite = $('petSprite');
-  if (!companion || !sprite || !companion.classList.contains('show') || merlinIsAway() || getMerlinCare().restEndsAt || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  clearTimeout(petFlightTimer);
-  const rect = companion.getBoundingClientRect();
-  companion.style.right = 'auto'; companion.style.left = rect.left + 'px'; companion.style.top = rect.top + 'px';
-  companion.classList.add('flying'); sprite.classList.add('pet-walk');
-  const targetLeft = Math.max(10, Math.min(window.innerWidth - 104, window.innerWidth * (0.12 + Math.random() * 0.60)));
-  const targetTop = Math.max(84, Math.min(window.innerHeight - 160, window.innerHeight * (0.12 + Math.random() * 0.48)));
-  companion.classList.toggle('facing-left', targetLeft < rect.left);
-  requestAnimationFrame(() => { companion.style.left = targetLeft + 'px'; companion.style.top = targetTop + 'px'; });
-  makePetSparkles(5);
-  petFlightTimer = setTimeout(() => {
-    const from = companion.getBoundingClientRect();
-    const perchLeft = Math.max(10, window.innerWidth - 96);
-    companion.classList.toggle('facing-left', perchLeft < from.left);
-    companion.style.left = perchLeft + 'px';
-    companion.style.top = 'calc(var(--safe-top) + 76px)';
-    petFlightTimer = setTimeout(() => { setPetOnPerch(); makePetSparkles(3); }, 1850);
-  }, 2200);
+  if (!companion || !sprite || !companion.classList.contains('show') || merlinIsAway() || getMerlinCare().restEndsAt) return;
+  if (!window.BurbzMerlinFlight) return;
+  if (!merlinFlightSession) {
+    merlinFlightSession = window.BurbzMerlinFlight.create({
+      host: sprite,
+      atlasUrl: 'assets/merlin-flight/merlin-flight-v1.webp',
+      atlas: window.MERLIN_FLIGHT_ATLAS,
+      durationMs: 25000,
+      // This eligibility check is read-only: care completion/save stays in
+      // getMerlinCare. A frame must never turn into a care transaction.
+      shouldContinue: () => !merlinIsAway() && !gameState.merlinCare?.restEndsAt &&
+        !['village','battle','academy-room','town','region','county'].includes(document.body.dataset.activeScreen),
+      onTakeoff: () => {
+        companion.classList.add('flying', 'merlin-in-flight');
+        $('petSpeech')?.classList.remove('show');
+        closeMerlinCareMenu();
+        renderMerlinCareMenu();
+      },
+      onRestore: () => {
+        setPetOnPerch();
+        syncMerlinPerchPresence();
+      },
+      onFinish: () => renderMerlinCareMenu(),
+      onCare: () => openMerlinCareMenu(),
+      onError: () => {
+        const note = $('merlinCareNote');
+        if (note) note.textContent = 'Merlin enjoyed your company. His flight artwork is still loading; try Play again later.';
+      }
+    });
+  }
+  return merlinFlightSession.start();
 }
+// Read-only visual diagnostics; the session itself never owns saved game data.
+window.__burbzMerlinFlightDebug = () => merlinFlightSession?.diagnostics || { active:false, loading:false, rafCount:0, state:null };
+Object.defineProperty(window, '__burbzMerlinFlightSession', { get: () => merlinFlightSession });
 
 function startPetWander() { clearTimeout(petWanderTimer); setPetOnPerch(); }
 
@@ -41475,6 +41669,8 @@ function showMerlinBondGain(gained, leveledUp) {
 }
 
 function careForMerlin(action) {
+  // Further taps direct the current flight; they never buy a second care reward.
+  if (action === 'play' && merlinFlightSession?.active) return false;
   if (merlinIsAway()) { petSay('I am out on an errand. I will be back soon!'); return false; }
   if (getMerlinCare().restEndsAt) { renderMerlinCareMenu(); return false; }
   const bondBefore = merlinBondTotal(getMerlinCare());
@@ -42323,7 +42519,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'appearance-v362-20260907';
+const BURBZ_BUILD = 'companion-life-v363-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

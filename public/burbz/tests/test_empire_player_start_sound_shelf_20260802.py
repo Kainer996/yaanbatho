@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "appearance-v362-20260907"
+RELEASE_PIN = "companion-life-v363-20260907"
 # This release's own marker stays on the cache lineage even after later
 # releases move BURBZ_BUILD on.
 OWN_RELEASE_PIN = "empire-player-start-sound-shelf-v196-20260802"
@@ -115,20 +115,18 @@ def test_session_shelf_renders_art_tiles_from_the_session_history():
 
 
 # ---------------------------------------------------------------------------
-# 3. Encounter banner pops once per species per session
+# 3. Encounter banner pops once per persisted species
 # ---------------------------------------------------------------------------
 
 def test_encounter_banner_only_pops_on_first_hearing_of_a_species():
     html = HTML.read_text(encoding="utf-8")
     handle = html[html.index("function handleBirdCandidates("):html.index("function showCatalogUnmatchedRecognition(")]
     sound_branch = handle[handle.index("if (soundSession) {"):handle.index("} else {")]
-    # The session history's own repeat count is the gate: count 1 = first
-    # hearing this session → banner; count > 1 = the same bird again → silent.
-    assert "const recorded = recordSoundSessionDiscovery(bird, isNew);" in sound_branch
-    assert "if (!recorded || !(Number(recorded.count) > 1)) showScanEncounterCard(bird, isNew, opts.source);" in sound_branch
-    # Photo scans (and other non-session sources) keep the banner every time.
+    # Persisted discovery, not the session count, owns the announcement.
+    assert "recordSoundSessionDiscovery(bird, isNew);" in sound_branch
+    assert "if (isNew) showScanEncounterCard(bird, isNew, opts.source);" in sound_branch
     else_branch = handle[handle.index("} else {"):handle.index("try { questRegisterBirdEncounter(bird); }")]
-    assert "showScanEncounterCard(bird, isNew, opts.source);" in else_branch
+    assert "if (isNew) showScanEncounterCard(bird, isNew, opts.source);" in else_branch
     # No unconditional call remains after the branch.
     tail = handle[handle.index("try { questRegisterBirdEncounter(bird); }"):]
     assert "showScanEncounterCard" not in tail

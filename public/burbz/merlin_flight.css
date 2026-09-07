@@ -1,0 +1,60 @@
+/* This explicit play surface sits below existing modal controls. It never
+   makes the viewport canvas a touch target or filters canonical bird art. */
+.merlin-flight-layer {
+  position: fixed; inset: 0 auto auto 0; z-index: 262;
+  pointer-events: none; contain: layout style;
+  --flight-ink: #f2e5c7; --flight-edge: rgba(220, 186, 116, .48);
+  --flight-panel: rgba(36, 32, 24, .91); --flight-accent: #ead198;
+}
+.merlin-flight-canvas { position: absolute; inset: 0; display: block; pointer-events: none; }
+.merlin-flight-sky {
+  position: absolute; box-sizing: border-box; overflow: visible;
+  pointer-events: none; touch-action: none; user-select: none; -webkit-user-select: none;
+  border: 1px dashed var(--flight-edge); border-radius: 28px;
+  background: linear-gradient(160deg, rgba(209, 233, 200, .035), rgba(225, 225, 175, .012));
+  box-shadow: inset 0 0 35px rgba(227, 232, 192, .025);
+}
+.merlin-flight-sky.is-finishing { pointer-events: none; }
+.merlin-flight-sky.is-finishing .merlin-flight-hit { pointer-events: none; }
+.merlin-flight-touchfield { position: absolute; inset: 0; pointer-events: none; }
+.merlin-flight-hit { position: absolute; display: block; pointer-events: auto; touch-action: none; }
+.merlin-flight-sky:focus-visible { outline: 2px solid var(--flight-accent); outline-offset: 4px; }
+.merlin-flight-sky-label {
+  position: absolute; top: 10px; left: 18px; color: var(--flight-ink);
+  font: 700 9px/1.4 system-ui, sans-serif; letter-spacing: .18em;
+  opacity: .9; pointer-events: none; text-shadow: 0 1px 3px #191d15;
+  padding: 3px 6px; border-radius: 5px; background: var(--flight-panel);
+}
+.merlin-flight-toolbar {
+  position: absolute; left: 7px; right: 7px; bottom: 7px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 46px; padding: 0 3px 0 12px; box-sizing: border-box;
+  color: var(--flight-ink); background: var(--flight-panel);
+  border: 1px solid var(--flight-edge); border-radius: 17px;
+  box-shadow: 0 4px 14px rgba(13, 17, 10, .18);
+  pointer-events: auto;
+}
+.merlin-flight-status { font: 600 11px/1.35 system-ui, sans-serif; max-width: 30em; }
+.merlin-flight-actions { display: flex; flex: 0 0 auto; align-items: center; }
+.merlin-flight-finish {
+  position: relative; z-index: 1; flex: 0 0 auto; min-width: 64px; min-height: 44px;
+  margin: 0; padding: 8px 12px; color: var(--flight-accent);
+  border: 0; border-radius: 14px; background: transparent;
+  font: 700 12px/1.2 system-ui, sans-serif; cursor: pointer; touch-action: manipulation;
+}
+.merlin-flight-finish:hover { background: rgba(232, 208, 153, .1); }
+.merlin-flight-finish:focus-visible { outline: 2px solid var(--flight-accent); outline-offset: -4px; }
+.merlin-flight-finish:disabled { opacity: .65; }
+.merlin-flight-care { min-width: 52px; padding-inline: 8px; }
+body.comic-ui .merlin-flight-layer {
+  --flight-ink: #30291e; --flight-edge: rgba(47, 43, 29, .6);
+  --flight-panel: rgba(255, 246, 218, .95); --flight-accent: #2b5b53;
+}
+body.comic-ui .merlin-flight-toolbar { box-shadow: 2px 3px 0 rgba(41, 39, 27, .72); border-width: 2px; }
+body.comic-ui .merlin-flight-sky-label { text-shadow: 0 1px 3px #f8edd0; }
+.merlin-flight-layer.is-reduced-motion .merlin-flight-sky { background: transparent; }
+@media (max-height: 440px) {
+  .merlin-flight-sky-label { top: 6px; left: 12px; }
+  .merlin-flight-toolbar { left: 4px; right: 4px; bottom: 4px; }
+  .merlin-flight-status { font-size: 10px; }
+}

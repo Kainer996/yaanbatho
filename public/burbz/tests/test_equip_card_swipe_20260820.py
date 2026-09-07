@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "equip-card-swipe-v297-20260820"
-CURRENT_BUILD = "appearance-v362-20260907"
+CURRENT_BUILD = "companion-life-v363-20260907"
 
 
 def run_node(source: str) -> dict:
@@ -48,16 +48,9 @@ global.window = global;
 const gameState = { flock: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] };
 let birdEquipState = { birdId: 'b', slotPicker: 'weapon' };
 let birdEquipSwipeAnimating = false;
-const body = { style: {} };
-const scrollBox = { scrollTop: 99 };
-const $ = () => body;
-global.document = { querySelector: () => scrollBox };
-const renders = [];
-const renderBirdEquip = () => renders.push(birdEquipState.birdId);
-const setTimeout = fn => fn();
-const requestAnimationFrame = fn => fn();
-const SFX = { tap: () => {} };
-const vibrate = () => {};
+const birdEquipSwipe = { gesture:{} };
+const settlements = [];
+const birdEquipSwipeSettle = delta => { settlements.push(delta); return true; };
 """
     return stubs + functions + "\n" + probe
 
@@ -79,23 +72,22 @@ console.log(JSON.stringify({ next: (birdEquipState.birdId = 'b', birdEquipNeighb
     assert out["lonely"] is None  # one bird: nothing to swipe to
 
 
-def test_a_committed_swipe_swaps_the_bird_and_slides_the_card():
+def test_navigation_dispatches_to_the_track_and_blocks_duplicate_button_commits():
+    # Actual animation, DOM identity and commit effects are exercised in
+    # run_continuous_card_swipe_20260907.cjs with real touch + intermediate frames.
     out = run_node(swipe_harness("""
-const ok = birdEquipSwipeTo(1);   // swipe left → next companion
-const first = { ok, bird: birdEquipState.birdId, picker: birdEquipState.slotPicker,
-                transform: body.style.transform, scrollTop: scrollBox.scrollTop, renders: renders.length };
-birdEquipSwipeAnimating = false;  // the stubbed timers finish instantly
-const back = birdEquipSwipeTo(-1);
-console.log(JSON.stringify({ first, backOk: back, backBird: birdEquipState.birdId }));
+const forward = birdEquipSwipeTo(1);
+const clearedGesture = birdEquipSwipe.gesture === null;
+birdEquipSwipeAnimating = true;
+const duplicate = birdEquipSwipeTo(-1);
+birdEquipSwipeAnimating = false;
+const backward = birdEquipSwipeTo(-1);
+gameState.flock = [{ id:'b' }];
+const lonely = birdEquipSwipeTo(1);
+console.log(JSON.stringify({forward,backward,duplicate,lonely,clearedGesture,settlements}));
 """))
-    first = out["first"]
-    assert first["ok"] is True
-    assert first["bird"] == "c"          # b → c on a left swipe
-    assert first["picker"] is None       # the gear picker closes on a swap
-    assert first["renders"] == 1         # the new card rendered
-    assert first["scrollTop"] == 0       # …scrolled back to the top
-    assert "translateX" in first["transform"]  # …and slid into place
-    assert out["backOk"] is True and out["backBird"] == "b"
+    assert out == {"forward": True, "backward": True, "duplicate": False,
+                   "lonely": False, "clearedGesture": True, "settlements": [1, -1]}
 
 
 # ---------------------------------------------------------------------------
@@ -127,7 +119,7 @@ def test_the_pager_names_the_gesture_and_the_place_in_the_deck():
     assert "swipe for the next" in render
     assert "roster.length > 1" in render  # one bird: no pager, nothing to swipe
     assert ".bird-equip-pager {" in html  # styled
-    assert "#birdEquipBody { will-change:transform; }" in html
+    assert "#birdEquipTrack { position:relative; will-change:transform; }" in html
     assert "overflow-x:hidden" in html  # the sliding card never widens the page
 
 

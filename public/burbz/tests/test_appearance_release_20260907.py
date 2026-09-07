@@ -2,6 +2,7 @@ from pathlib import Path
 import re, subprocess
 ROOT=Path(__file__).resolve().parents[1]
 RELEASE='appearance-v362-20260907'
+CURRENT_BUILD='companion-life-v363-20260907'
 
 def test_appearance_behavior():
     subprocess.run(['node',str(ROOT/'tests/test_appearance_v362.cjs')],check=True)
@@ -16,8 +17,8 @@ def test_all_themes_and_switch_are_required_offline():
     assert html.index('appearance_core.js?v=')<html.index('<body')
     assert 'BurbzAppearanceCore.choose(gameState.settings, input.value, () => durableSaveState(), document)' in html
     assert "appearance: 'normal'" in html
-    assert f"const BURBZ_BUILD = '{RELEASE}';" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)'",sw)[1].endswith('-'+RELEASE)
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
+    assert re.search(r"const BURBZ_CACHE = '([^']+)'",sw)[1].endswith('-'+CURRENT_BUILD)
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
     for name in ['appearance_core.js','appearance_ui.css','comic_ui.css']:
         assert f'"{name}"' in updater
