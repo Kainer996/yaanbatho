@@ -1,0 +1,21 @@
+/* Small installation pages using the existing portfolio design. */
+.app-header { gap: 20px; flex-wrap: wrap; padding-top: 18px; padding-bottom: 18px; }
+.app-header a, .app-install a:not(.btn) { color: var(--fg); }
+.app-header a:focus-visible, .app-install a:focus-visible { outline: 2px solid var(--fg); outline-offset: 5px; }
+.app-install { max-width: 850px; padding-bottom: 64px; font-size: 19px; }
+.app-install .page-header { padding: 60px 0 25px; }
+.app-install .page-header h1 { font-size: clamp(1.7rem, 6vw, 3rem); overflow-wrap: anywhere; }
+.app-install .page-header p { max-width: 720px; }
+.app-label { text-transform: uppercase; font-size: 15px; letter-spacing: .12em; }
+.app-download { text-align: center; margin-bottom: 32px; }
+.app-download p { margin-top: 12px; }
+.app-install section { padding: 24px 0; }
+.app-install h2 { font-size: clamp(1.2rem, 4vw, 1.7rem); }
+.app-install p + p { margin-top: 16px; }
+.app-install p a, .app-back a { text-decoration: underline; text-underline-offset: 4px; }
+.app-install code { font-size: .82em; overflow-wrap: anywhere; }
+.app-install pre { white-space: pre-wrap; overflow-wrap: anywhere; padding: 20px; margin: 20px 0; border: 1px solid var(--border); background: var(--muted); }
+.app-install .btn { white-space: normal; }
+.app-skip { position: absolute; left: 10px; top: -100px; z-index: 2000; padding: 10px; background: #fff; color: #000; }
+.app-skip:focus { top: 10px; }
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } html { scroll-behavior: auto; } }
