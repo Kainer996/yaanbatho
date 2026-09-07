@@ -46,7 +46,7 @@ def test_nearby_quest_routes_use_distinct_palette_and_dark_casing():
 
 def test_quest_route_clarity_release_is_cached_offline():
     sw = SW.read_text(encoding="utf-8")
-    assert "./quest_core.js?v=ordered-quest-markers-v224-20260804" in sw
+    assert "./quest_core.js?v=walking-quests-v361-20260907" in sw
 
 
 def test_nearby_quests_prioritise_public_paths_and_known_hiking_routes():
@@ -189,14 +189,14 @@ def test_show_quests_reveals_and_frames_every_local_offer():
     assert "updateShowQuestsButton" in html
 
 
-def test_show_quests_frames_local_starts_at_a_close_readable_zoom():
+def test_show_quests_frames_complete_routes_without_clipping_them_to_a_minimum_zoom():
     html = HTML.read_text(encoding="utf-8")
     fit = html.split("function fitAllLocalQuestRoutes", 1)[1].split("function setQuestOverview", 1)[0]
-    assert "const QUEST_OVERVIEW_MIN_ZOOM = 14.8" in html
     assert "const start = offer && offer.points && offer.points[0]" in fit
-    assert "questOfferDisplayPoints" not in fit
+    assert "questOfferDisplayPoints(offer).forEach(p => bounds.extend([p.lon, p.lat]))" in fit
     assert "liveMap.cameraForBounds" in fit
-    assert "Math.max(QUEST_OVERVIEW_MIN_ZOOM" in fit
+    assert "Math.min(QUEST_OVERVIEW_MAX_ZOOM, camera.zoom)" in fit
+    assert "Math.max(QUEST_OVERVIEW_MIN_ZOOM" not in fit
 
 
 def test_overview_markers_are_distance_labelled_circles_that_open_the_full_brief():
@@ -220,7 +220,7 @@ def test_distance_markers_use_inner_visual_offsets_without_moving_maplibre_ancho
 def test_show_quests_release_is_query_busted_and_cached_offline():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=ordered-quest-markers-v224-20260804"
+    marker = "quest_core.js?v=walking-quests-v361-20260907"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
