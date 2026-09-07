@@ -1,6 +1,6 @@
 # Broad bird information coverage, 7 September 2026
 
-`data/bird-education-enrichment-v366.json` adds 141 imported encyclopedia
+`data/bird-education-enrichment-v366.json` adds 372 imported encyclopedia
 accounts under existing game common-name keys. Merge after the four older
 education datasets and before the 20 verified primary-guide profiles. These
 rows must **not** be passed through the `verifiedPrimary` loader.
@@ -10,7 +10,9 @@ canonical profile names, plus profile-only Blackcap. These are catalogue
 counts, not an independently deduplicated taxonomy. The additive object covers
 all 56 original unmatched entries, Fork-tailed Swift which lost all visible
 facts after boilerplate filtering, 70 summaries containing game prose, and
-legacy imports that pointed to a group, split page or disambiguation. Reasons
+legacy imports that pointed to a group, split page or disambiguation. A second
+pass enriches all 231 remaining rendered entries with fewer than 40 factual
+words. Reasons
 are retained per row; some categories overlap. The dataset does not change
 gameplay names, saves, encounter rules, aliases or biological identities.
 
@@ -22,13 +24,13 @@ used its exact common-name article because the legacy binomial spelling
 `acuflavida` did not resolve. All responses were checked for missing pages,
 disambiguation and empty extracts. Each row records the exact article title,
 page ID, revision ID, revision timestamp, retrieval time, permanent revision
-link and source link. These are imported secondary accounts, not 141 newly
+link and source link. These are imported secondary accounts, not 372 newly
 reviewed primary-authority profiles. Their factual depth and freshness vary.
 
 Long accounts contain complete selected paragraphs and source section headings,
 ordered for field-guide reading, up to 5,500 characters each. Original full API
 responses are retained in task research files, outside shipped assets. The
-shipped object is approximately 927 kB before compression. Summary and longer
+shipped object is approximately 2.17 MB before compression. Summary and longer
 account should both be available; attribution and source links must remain
 visible. Show the longer account collapsed initially.
 
@@ -65,6 +67,14 @@ Every row links the source and exact revision; these preserve access to
 article history and contributor attribution. No images or other media were
 copied. See
 [Wikipedia reuse guidance](https://en.wikipedia.org/wiki/Wikipedia:Reusing_Wikipedia_content).
+
+Six exceptionally short Wikipedia stubs are supplemented with original factual
+field notes from BirdLife Australia, BirdLife Northern Queensland, the
+Australian Museum, the Australian Bird Study Association, an ornithological
+identification discussion in Antiquity and Michael Dahlem’s documented field
+observations. Each field has a source link and per-row provenance, separate
+from the Wikipedia excerpt. A few source accounts themselves remain short;
+these are retained faithfully instead of padded with invented content.
 
 The small BTO taxonomy notes are original concise paraphrases, with direct
 source links; no BTO source text was copied verbatim.

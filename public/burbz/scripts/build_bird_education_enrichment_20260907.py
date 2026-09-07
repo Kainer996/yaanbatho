@@ -4,6 +4,7 @@ parser.add_argument('--records',type=pathlib.Path,required=True)
 parser.add_argument('--output',type=pathlib.Path,required=True)
 args=parser.parse_args()
 records=json.loads(args.records.read_text())
+supplements=json.loads((pathlib.Path(__file__).resolve().parent/'fixtures/bird-education-supplements-v366.json').read_text())
 out=args.output
 notes={
  'Feral Pigeon':'Feral pigeons descend from domestic Rock Doves (Columba livia). They are a feral form of that species, with variable plumage, rather than a separate wild species.',
@@ -24,6 +25,12 @@ scientific={
  "Stejneger's Stonechat":'Saxicola maurus stejnegeri',
  "Cabot's Tern":'Thalasseus acuflavidus',
  'Musk Lorikeet':'Trichoglossus concinnus',
+ 'Chinese Goshawk':'Tachyspiza soloensis',
+ 'Chestnut-rumped Heathwren':'Hylacola pyrrhopygia',
+ "Victoria's Riflebird":'Ptiloris victoriae',
+ 'White-lined Honeyeater':'Meliphaga albilineata',
+ 'Plum-headed Finch':'Emblema modestum',
+ 'Star Finch':'Emblema ruficauda',
  'White-winged Chough':'Corcorax melanorhamphos',
 }
 def tidy(text):
@@ -82,6 +89,12 @@ for name,r in sorted(records.items()):
                 paragraph=tidy(match.group(1).split('\n\n')[0])
                 if paragraph and len(paragraph)<2000: overview+='\n\n'+paragraph
                 if len(overview.split())>=40: break
+    if len(overview.split()) < 40:
+        for paragraph in re.split(r'\n\s*\n',account):
+            paragraph=re.sub(r'^==[^\n]+==\n','',paragraph).strip()
+            if paragraph and re.sub(r'\s+',' ',paragraph) not in re.sub(r'\s+',' ',overview) and len(paragraph)<1800:
+                overview+='\n\n'+paragraph
+            if len(overview.split())>=40:break
     note=notes.get(name)
     if note:overview=note+'\n\n'+overview
     revision='https://en.wikipedia.org/w/index.php?oldid='+str(r['revisionId'])
@@ -90,5 +103,14 @@ for name,r in sorted(records.items()):
     if name=="Stejneger's Stonechat":sources.append({'label':'BTO — British List taxonomy','url':'https://www.bto.org/learn/about-birds/british-list'})
     data[name]={'title':name,'scientificName':scientific.get(name,r['scientificName']),'requestedScientificName':r['scientificName'],'sourceTitle':r['pageTitle'],'summary':overview,'wikipediaExtract':account,'encyclopediaImport':True,'sources':sources,'wikipediaAttribution':{'source':r['url'],'pageTitle':r['pageTitle'],'pageid':r['pageid'],'revisionId':r['revisionId'],'revisionTimestamp':r['revisionTimestamp'],'revisionUrl':revision,'retrieved':r['retrieved'],'authors':'Wikipedia contributors','license':'CC BY-SA 4.0','licenseUrl':r['licenseUrl'],'changes':'Selected complete paragraphs and source sections; section order adjusted for field-guide reading; empty pronunciation marks removed. Summary is an excerpt, preceded by a taxonomy note where stated.'},'enrichmentReason':r['reasons']}
     if note:data[name]['taxonomyNote']=note
+    if name in supplements:
+        supplement=supplements[name]
+        data[name].update(supplement['fields'])
+        data[name]['sources'].append(supplement['source'])
+        data[name]['fieldNotesProvenance']={'source':supplement['source']['url'],'fields':list(supplement['fields']),'reviewed':'2026-09-07','method':'Original concise paraphrases; these supplementary fields are separate from the Wikipedia excerpts.'}
+    if r['scientificName'] != data[name]['scientificName'] and not note:
+        note='The linked account uses '+data[name]['scientificName']+'; the stored catalogue name is '+str(r['scientificName'])+'. This education entry follows the same named bird in that source.'
+        data[name]['taxonomyNote']=note
+        data[name]['summary']=note+'\n\n'+data[name]['summary']
 out.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')
 print(json.dumps({'rows':len(data),'bytes':out.stat().st_size,'sha256':hashlib.sha256(out.read_bytes()).hexdigest(),'maxAccountChars':max(len(r['wikipediaExtract']) for r in data.values()),'minAccountWords':min(len(r['wikipediaExtract'].split()) for r in data.values())}))

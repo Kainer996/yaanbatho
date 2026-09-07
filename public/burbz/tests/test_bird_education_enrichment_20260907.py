@@ -16,7 +16,7 @@ def test_every_original_missing_entry_and_post_filter_swift_has_an_account():
 
 
 def test_imports_do_not_claim_primary_verification_or_replace_priority_names():
-    assert len(DATA) == 141
+    assert len(DATA) == 372
     assert not {r['name'] for r in PRIMARY} & DATA.keys()
     assert all(r.get('encyclopediaImport') is True and not r.get('verifiedPrimary') for r in DATA.values())
 
@@ -24,8 +24,10 @@ def test_imports_do_not_claim_primary_verification_or_replace_priority_names():
 def test_accounts_are_bounded_factual_text_with_reproducible_attribution():
     for name, row in DATA.items():
         assert row['title'] == name
-        assert len(row['summary'].split()) >= 25, name
-        assert 150 <= len(row['wikipediaExtract'].split()), name
+        assert len(' '.join(row.get(k,'') for k in ('summary','identification','habitat','voice','behaviour')).split()) >= 40, name
+        assert 20 <= len(row['wikipediaExtract'].split()), name
+        if name not in GAPS['shortAccountNames']:
+            assert len(row['wikipediaExtract'].split()) >= 150, name
         assert len(row['wikipediaExtract']) <= 5500, name
         assert '<script' not in row['summary'].lower()
         assert 'game stats' not in row['summary'].lower()
@@ -59,3 +61,21 @@ def test_bad_group_and_disambiguation_imports_are_replaced_by_species_subjects()
     expected = {'Capercaillie':'Western capercaillie', 'Pied Flycatcher':'European pied flycatcher', 'Curlew':'Eurasian curlew', 'Ruff':'Ruff (bird)', 'Woodcock':'Eurasian woodcock', 'Wild Turkey':'Wild turkey', 'Northern Goshawk':'Eurasian goshawk'}
     for name, subject in expected.items():
         assert DATA[name]['sourceTitle'] == subject
+
+
+def test_short_legacy_accounts_now_have_substantial_source_information():
+    assert len(GAPS["shortAccountNames"]) == 231
+    assert not set(GAPS["shortAccountNames"]) - DATA.keys()
+    for name in GAPS["shortAccountNames"]:
+        row = DATA[name]
+        assert len(' '.join(row.get(k,'') for k in ('summary','identification','habitat','voice','behaviour')).split()) >= 40, name
+        assert len(row['wikipediaExtract'].split()) >= 20, name
+
+
+def test_tiny_encyclopedia_stubs_have_independently_sourced_field_notes():
+    for name in ("Mountain Thornbill", "Sandstone Shrike-thrush", "Silver-crowned Friarbird", "Slaty-backed Thornbill", "Spotted Quail-thrush", "Western Shrike-tit"):
+        row = DATA[name]
+        provenance = row["fieldNotesProvenance"]
+        assert provenance["fields"]
+        assert all(row[field].strip() for field in provenance["fields"])
+        assert any(s["url"] == provenance["source"] for s in row["sources"])
