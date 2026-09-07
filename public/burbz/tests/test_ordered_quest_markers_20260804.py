@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "tutorial-contrast-v364-20260907"
+CURRENT_BUILD = "field-map-v365-20260907"
 
 
 def run_core(expression: str):

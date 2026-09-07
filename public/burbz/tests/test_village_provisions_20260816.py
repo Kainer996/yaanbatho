@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "tutorial-contrast-v364-20260907"
+CURRENT_BUILD = "field-map-v365-20260907"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

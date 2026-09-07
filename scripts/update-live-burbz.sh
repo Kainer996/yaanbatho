@@ -43,6 +43,8 @@ FILES=(
   "comic_ui.css"
   "appearance_core.js"
   "appearance_ui.css"
+  "field_map_ui.js"
+  "field_map_ui.css"
 
   "special_bird_sprites.js"
   "special_bird_sprites.css"
