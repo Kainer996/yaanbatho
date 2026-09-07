@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "woodland-finish-v360-20260907"
+CURRENT_BUILD = "walking-quests-v361-20260907"
 
 
 def function_source(source: str, name: str) -> str:

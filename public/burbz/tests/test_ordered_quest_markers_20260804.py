@@ -6,8 +6,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE = "ordered-quest-markers-v224-20260804"
-CURRENT_BUILD = "woodland-finish-v360-20260907"
+RELEASE = "walking-quests-v361-20260907"
+CURRENT_BUILD = "walking-quests-v361-20260907"
 
 
 def run_core(expression: str):

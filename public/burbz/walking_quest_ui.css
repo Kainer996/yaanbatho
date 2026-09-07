@@ -1,5 +1,6 @@
 /* The walking trail lives in warm ink, walnut and aged brass. Scope is limited
    to its sheets, journal and map brief; unrelated quests retain their styling. */
+body:has(#walkQuestSheet.open, #wqNpcDialog) #tutorialNavPointer { display:none; }
 :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) {
   --wq-paper:#f4ead4;
   --wq-muted:#c8bba0;
@@ -113,8 +114,8 @@
   background:radial-gradient(ellipse at 50% 0,#63523160,transparent 50%),#17150f; box-shadow:inset 0 1px 0 #fff2,0 20px 80px #000c;
 }
 :is(#wqNpcDialog,#walkQuestSheet) .wq-close { position:absolute; top:10px; right:10px; z-index:1; width:44px; height:44px; display:grid; place-items:center; border:1px solid #d6a84f66; border-radius:50%; background:#14120ed9; color:var(--wq-paper); cursor:pointer; }
-:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art { height:220px; display:grid; place-items:center; margin:10px 20px 0; background:radial-gradient(ellipse at 50% 70%,#a281384d,transparent 65%); }
-:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art img { width:100%; height:100%; object-fit:contain; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art { height:220px; display:flex; align-items:center; justify-content:center; margin:10px 20px 0; background:radial-gradient(ellipse at 50% 70%,#a281384d,transparent 65%); }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-height:100%; object-fit:contain; }
 :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-content { padding:16px 24px 24px; }
 :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-title { margin:5px 0; font:400 24px/1.2 'Russo One',sans-serif; color:var(--wq-paper); }
 :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-title:focus { outline:none; }
@@ -203,3 +204,22 @@ button.quest-marker-pin:focus-visible { outline:3px solid #f0c767; outline-offse
 #liveMapShell .wq-offer-pin.muted { min-width:44px; min-height:44px; }
 #liveMapShell .quest-marker .wq-marker-encounter { position:absolute; right:-12px; bottom:-7px; width:27px; height:27px; border:1px solid #b49a61; border-radius:50%; background:#211b10; display:grid; place-items:center; overflow:hidden; }
 #liveMapShell .quest-marker .wq-marker-encounter img { width:26px; height:26px; object-fit:contain; }
+
+/* Inspection reserves the upper map for the walk and a compact brief below. */
+body:has(#liveMapShell.quest-focused) :is(#tutorialNavPointer,#petSpeech) { display:none; }
+#liveMapShell.quest-focused .map-zoom-controls { top:76px; bottom:auto; left:10px; right:auto; gap:6px; opacity:.9; }
+@media (max-width:600px) {
+  #mapQuestFocusCard { padding:11px; }
+  #mapQuestFocusCard.show { animation:none; }
+  #mapQuestFocusCard #mapQuestFocusBrief,
+  #mapQuestFocusCard #mapQuestFocusFacts .wq-route-start { display:none; }
+  #mapQuestFocusCard .map-quest-focus-meta { margin:7px 0 6px; gap:4px; }
+  #mapQuestFocusCard .map-quest-focus-chip { padding:4px 7px; }
+  #mapQuestFocusCard #mapQuestFocusFacts { margin:7px 0 9px; }
+  #mapQuestFocusCard .wq-route-facts .wq-route-metrics { padding:8px; }
+  #mapQuestFocusCard .wq-route-shape { margin:7px 0 0; line-height:1.4; }
+  #mapQuestFocusCard .map-quest-focus-actions { display:grid; grid-template-columns:minmax(74px,.8fr) minmax(116px,1.5fr) 44px; gap:6px; }
+  #mapQuestFocusCard .map-quest-focus-primary { min-width:0; min-height:46px; font-size:11px; }
+  #mapQuestFocusCard #mapQuestFocusDetails { min-width:0; padding:8px 6px; }
+  #mapQuestFocusCard .map-quest-focus-secondary { min-width:44px; }
+}

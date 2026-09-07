@@ -29,7 +29,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "quest-zoom-lock-v282-20260818"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "woodland-finish-v360-20260907"
+CURRENT_BUILD = "walking-quests-v361-20260907"
 
 CONSTANTS = ("QUEST_WALK_ZOOM_FLOOR", "QUEST_WALK_ZOOM_CEILING", "QUEST_WALK_FRAME_MIN_M")
 
@@ -112,8 +112,9 @@ def test_the_lock_applies_on_every_quest_redraw():
 
 
 def test_the_lock_retunes_on_every_position_fix():
-    fix = HTML[HTML.index("const checkpointProgressed ="):]
-    assert "applyQuestZoomLock();" in fix[:900]
+    fix = function_source("questOnPositionFix")
+    assert "applyQuestZoomLock();" in fix
+    assert fix.index("applyQuestZoomLock();") > fix.index("const checkpointProgressed =")
 
 
 def test_the_lock_lifts_when_the_quest_leaves_the_map():

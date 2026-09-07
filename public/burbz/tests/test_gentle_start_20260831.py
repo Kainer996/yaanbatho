@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "onboarding_gate_core.js"
 UPDATER = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "gentle-start-v338-20260831"
-CURRENT_BUILD = "woodland-finish-v360-20260907"
+CURRENT_BUILD = "walking-quests-v361-20260907"
 
 
 def html_text() -> str:

@@ -166,7 +166,7 @@ const prepareQuestOffers=offers=>offers;
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=ordered-quest-markers-v224-20260804"
+    marker = "quest_core.js?v=walking-quests-v361-20260907"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

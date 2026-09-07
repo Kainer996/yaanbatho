@@ -69,6 +69,7 @@
       startLabel: startDistance,
       source: typeof route.source === 'string' ? route.source : '',
       sourceDate: sourceDate,
+      fallbackReason: mode === 'out-and-back' && typeof route.fallbackReason === 'string' ? route.fallbackReason : '',
       warnings: Array.isArray(route.warnings) ? route.warnings.filter(w => typeof w === 'string' && w.trim()).slice(0, 6) : []
     };
   }
@@ -85,11 +86,12 @@
     const stats = routeStats(offer);
     const opts = options || {};
     const source = stats.source ? '<span>Route data: ' + escapeHtml(stats.source) + (stats.sourceDate ? ' · ' + escapeHtml(stats.sourceDate) : '') + '.</span> ' : '';
+    const fallback = stats.fallbackReason ? '<p>' + escapeHtml(stats.fallbackReason) + '</p>' : '';
     const warnings = stats.warnings.length ? '<ul class="wq-route-warnings">' + stats.warnings.map(w => '<li>' + escapeHtml(w) + '</li>').join('') + '</ul>' : '';
     return '<div class="wq-route-facts' + (opts.compact ? ' is-compact' : '') + '">' + metrics(stats) +
       '<div class="wq-route-shape">' + icon(stats.mode === 'loop' ? 'loop' : 'path') + '<span><strong>' + escapeHtml(stats.modeLabel) + '</strong> · ' + escapeHtml(stats.modeNote) + '</span></div>' +
       '<div class="wq-route-start">' + icon('pin') + '<span>Start: ' + escapeHtml(stats.startDistance) + '</span></div>' +
-      (!opts.compact ? '<details class="wq-route-details"><summary>About this route</summary><div>' + source + 'Walking time is an estimate at 4.5 km/h, excluding stops and travel to the start. Map access and conditions can change; follow signs.' + warnings + '</div></details>' : '') + '</div>';
+      (!opts.compact ? '<details class="wq-route-details"><summary>About this route</summary><div>' + fallback + source + 'Walking time is an estimate at 4.5 km/h, excluding stops and travel to the start. Map access and conditions can change; follow signs.' + warnings + '</div></details>' : '') + '</div>';
   }
   function offerCard(offer, index, options) {
     const route = offer || {};

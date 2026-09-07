@@ -7,6 +7,7 @@ HTML = (ROOT / "index.html").read_text()
 CSS = (ROOT / "woodland_ui.css").read_text()
 SW = (ROOT / "sw.js").read_text()
 RELEASE = "woodland-finish-v360-20260907"
+CURRENT_BUILD = "walking-quests-v361-20260907"
 ASSETS = [
     f"woodland_ui.css?v={RELEASE}",
     "assets/comic-ui/battlefield-v359.webp",
@@ -17,10 +18,10 @@ ASSETS = [
 
 
 def test_page_and_cache_advance_together():
-    assert f"const BURBZ_BUILD = '{RELEASE}';" in HTML
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in HTML
     assert f'<link rel="stylesheet" href="{ASSETS[0]}">' in HTML
     assert '<body class="woodland-ui">' in HTML
-    assert re.search(r"const BURBZ_CACHE = '([^']+)'", SW)[1].endswith(RELEASE)
+    assert re.search(r"const BURBZ_CACHE = '([^']+)'", SW)[1].endswith(CURRENT_BUILD)
 
 
 def test_every_runtime_asset_is_required_offline_and_in_legacy_updater():
