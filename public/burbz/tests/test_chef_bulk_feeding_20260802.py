@@ -24,7 +24,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE_PIN = "roost-retired-v302-20260820"
-CURRENT_BUILD = "manga-world-v356-20260907"
+CURRENT_BUILD = "ink-precision-v357-20260907"
 PREVIOUS_RELEASE_PIN = "chef-bulk-feeding-v202-20260802"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
 # Gardener. A core ships under the tag of the release that last touched it.

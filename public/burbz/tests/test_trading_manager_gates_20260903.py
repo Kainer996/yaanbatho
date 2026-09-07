@@ -250,11 +250,11 @@ def test_blocked_purchase_paths_return_before_mutating_money_or_stock():
 
 def test_release_and_all_changed_academy_cores_are_pwa_pinned():
     source, sw = html(), SW_PATH.read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = 'manga-world-v356-20260907';" in source
+    assert f"const BURBZ_BUILD = 'ink-precision-v357-20260907';" in source
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
-    assert cache_line.rstrip("';").endswith("manga-world-v356-20260907")
+    assert cache_line.rstrip("';").endswith("ink-precision-v357-20260907")
     for core in ("academy_treehouse_core.js", "academy_alive_core.js", "academy_3d_core.js"):
-        core_release = "manga-world-v356-20260907" if core == "academy_3d_core.js" else RELEASE
+        core_release = "ink-precision-v357-20260907" if core == "academy_3d_core.js" else RELEASE
         pin = f"{core}?v={core_release}"
         assert pin in source
         assert f"'./{pin}'" in sw
