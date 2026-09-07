@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "comic-ui-v359-20260907"
+RELEASE_PIN = "woodland-finish-v360-20260907"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 

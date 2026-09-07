@@ -1,0 +1,130 @@
+/* v360: burnished brass, warm ink and parchment text. Presentation only.
+   Original palette, rarity colours, geometry and input ownership stay intact. */
+@font-face { font-family:'Russo One'; font-style:normal; font-weight:400; font-display:swap; src:url('assets/comic-ui/fonts/russo-one.woff2') format('woff2'); }
+@font-face { font-family:'Rajdhani'; font-style:normal; font-weight:700; font-display:swap; src:url('assets/comic-ui/fonts/rajdhani-bold.woff2') format('woff2'); }
+@font-face { font-family:'Inter'; font-style:normal; font-weight:100 900; font-display:swap; src:url('assets/comic-ui/fonts/inter-latin.woff2') format('woff2'); }
+.woodland-ui {
+  --ui-edge:rgba(214,168,79,.32);
+  --ui-surface:linear-gradient(155deg,#282318 0%,#15130e 48%,#0d0d0a 100%);
+  --ui-shadow:inset 0 1px 0 rgba(255,235,183,.13),inset 0 -1px 0 #0009,0 6px 16px #0005;
+  --ui-button:linear-gradient(180deg,#554329 0%,#302719 48%,#211c13 100%);
+  background:#000; color:var(--text);
+}
+.woodland-ui .screen:not(#screen-map) { background:radial-gradient(ellipse at 50% 0%,#241d114d,transparent 65%),#080706; }
+.woodland-ui .header { background:linear-gradient(180deg,#221c12,#080706 85%); border-bottom:1px solid var(--ui-edge); box-shadow:0 3px 18px #0009,inset 0 1px 0 #f0c76714; }
+.woodland-ui :is(.hud-chip,.hud-level-badge,.header-settings,.header-profile-btn,.header-diary-btn) { border-color:var(--ui-edge); background:var(--ui-surface); box-shadow:inset 0 1px 0 #fff1,0 2px 4px #0006; }
+.woodland-ui .hud-xp { background:#080706; box-shadow:inset 0 2px 3px #0009; }
+.woodland-ui .hud-xp-fill { background:linear-gradient(180deg,#f0c767,#d6a84f 45%,#8f6f2a); box-shadow:0 0 8px #d6a84f55; }
+.woodland-ui .hud-chip-label { color:var(--text2); }
+.woodland-ui .bottom-dock { background:linear-gradient(180deg,#1c1810f5,#080706); border-top:1px solid var(--ui-edge); box-shadow:0 -8px 24px #0009,inset 0 1px 0 #fff1; }
+.woodland-ui .bottom-dock-anchor { background:linear-gradient(180deg,#2a2317,#100e0a); border-color:var(--ui-edge); box-shadow:inset 0 1px 0 #f0c76733; }
+.woodland-ui .nav-item.active { background:linear-gradient(180deg,#d6a84f1c,#d6a84f08); box-shadow:inset 0 -2px 0 var(--accent); }
+.woodland-ui #bottomDock .nav-item.is-locked { box-shadow:none; background:transparent; }
+.woodland-ui .screen-title { color:var(--text); letter-spacing:.035em; line-height:1.2; text-shadow:0 2px 2px #000; padding-block:7px 13px; }
+.woodland-ui :is(.quest-section-title,.academy-section-title,.town-section-title,.stores-panel-title,.forge-section-title,.training-hub-title) { color:var(--legendary); letter-spacing:.05em; }
+/* Main surfaces are bevelled once; nested data stays quiet and readable. */
+.woodland-ui :is(.quest-card,.player-quest-card,.quest-board-card,.quest-category,.quest-away-card,
+ .resource-quest-card,.starter-quest-card,.expedition-panel,.training-hall-panel,.training-session-card,
+ .profile-header,.cloud-card,.leaderboard-card,.stores-treasury,.stores-panel,.stores-summary-card,
+ .academy-building-card,.academy-builder-status,.academy-campus,.room-add-panel,.training-hub-room,
+ .kitchen-fold,.feed-menu-col,.chef-board,.merlin-care-menu,.sound-session-shelf,
+ .modal-sheet,.recruit-sheet,.barracks-recruit-sheet,.quest-overlay-panel,.role-picker-sheet,
+ .town-sheet,.town-hero,.town-section,.province-panel,.empire-village-hub,.empire-empty,.realm-section,
+ .region-hall-head,.merge-banner,.shop-panel,.walk-quest-offer,.map-quest-focus-card,
+ .merlin-clue-notebook,.inbox-card,.completion-notice,.bird-equip-bond,.bird-personal-story,
+ .bird-equip-picker,.forge-picker,.forge-upgrade-card,.forge-recipe,.forge-job,.forge-mat-card,
+ .league-header,.league-rival,.sq-board,.battle-result-rewards) {
+  background:var(--ui-surface); border:1px solid var(--ui-edge); border-radius:14px; box-shadow:var(--ui-shadow);
+}
+.woodland-ui :is(.bird-equip-stat,.bird-equip-slot,.card-stat,.stores-treasury-stat,.town-resource,.profile-stat-card,.forge-stat-card) {
+  background:linear-gradient(180deg,#ffffff06,#00000020); border-color:#d6a84f22; box-shadow:inset 0 1px 0 #ffffff09; border-radius:9px;
+}
+.woodland-ui :is(.quest-desc,.quest-progress-text,.quest-away-desc,.src-copy,.stores-hint,.cloud-status,.academy-building-desc,.forge-recipe-desc,.sound-session-shelf-empty,.bird-equip-description,.bird-personal-story p,.settings-note) { color:var(--text2); line-height:1.55; }
+.woodland-ui :is(.card-front,.card-back) { border-color:var(--ui-edge); box-shadow:inset 0 1px 0 #fff2,0 5px 14px #0008; }
+.woodland-ui :is(.bird-equip-stat-value,.profile-stat-num,.stt-value,.slr-yield) { font-variant-numeric:tabular-nums; }
+.woodland-ui :is(.burbz-mode-tabs,.forge-tabs,.scan-mode-toggle,.empire-pages-nav) { background:#080706; border:1px solid #d6a84f26; border-radius:12px; box-shadow:inset 0 2px 4px #0008; }
+.woodland-ui :is(.filter-btn,.burbz-mode-btn,.forge-tab,.scan-mode-btn,.stores-tab,.leaderboard-tab,.empire-page-tab,.town-policy) { border-color:#d6a84f20; color:var(--text2); border-radius:9px; }
+.woodland-ui :is(.filter-btn,.burbz-mode-btn,.forge-tab,.scan-mode-btn,.stores-tab,.leaderboard-tab,.empire-page-tab,.town-policy).active { background:var(--ui-button); color:var(--legendary); box-shadow:inset 0 1px 0 #ffe6a638,inset 0 -2px 0 var(--accent); }
+.woodland-ui :is(.quest-go-btn,.quest-claim-btn,.quest-send-btn,.academy-btn,.academy-build-btn,.forge-craft-btn,
+ .scan-btn,.town-action,.magpie-btn,.merlin-care-action,.battle-start-btn,.battle-again-btn,.sq-forge-btn,
+ .battle-forge-btn,.role-appoint-btn,.stores-collect-btn,.chef-feed-all,.move-btn,.battle-aim-buttons button) {
+  min-height:44px; background:var(--ui-button); border:1px solid #b8944c; border-radius:10px; color:#f4ead4;
+  box-shadow:inset 0 1px 0 #ffe6a647,inset 0 -2px 0 #0007,0 3px 6px #0006; text-shadow:0 1px 2px #000;
+  transition:background-color .15s,box-shadow .15s,border-color .15s;
+}
+.woodland-ui :is(.quest-claim-btn,.scan-btn,.academy-btn.primary,.battle-start-btn):not(:disabled) { background:linear-gradient(180deg,#806232,#594320 52%,#3b2c17); border-color:var(--accent); }
+.woodland-ui :is(.quest-send-btn,.scan-btn,.forge-craft-btn,.academy-build-btn,.battle-start-btn,.move-btn):disabled { background:#1b1913; color:#9d9176; border-color:#66543766; box-shadow:inset 0 1px 0 #ffffff09; text-shadow:none; }
+.woodland-ui :is(.quest-go-btn,.quest-claim-btn,.forge-craft-btn,.academy-build-btn,.move-btn):active:not(:disabled) { box-shadow:inset 0 2px 5px #0008; }
+.woodland-ui :is(.settings-danger,.forge-cancel-btn) { color:#e8a293; border-color:#a75d4b; }
+.woodland-ui :is(.modal-overlay,.bird-equip-overlay) { background-color:rgba(0,0,0,.88); }
+.woodland-ui :is(.merlin-tutorial-bubble,.map-hud-card,.map-weather,.map-area-birds-panel,.academy-view-toggle,
+ .settlement-camera-btn,.settlement-scene-inspector,.settlement-scene-label,.town-nav button,.bi-bar-btn) { background:linear-gradient(145deg,#30291cf5,#100f0af5); color:var(--text); border:1px solid var(--ui-edge); box-shadow:var(--ui-shadow); }
+.woodland-ui :is(.academy-stage-3d,.academy-treehouse,.village-stage,.town-stage,.empire-map-card,.county-map-card,.academy-room-hero,.merlin-listener-stage) { border-color:var(--ui-edge); box-shadow:0 0 0 1px #000,0 8px 24px #0008; }
+.woodland-ui :is(.modal-sheet,.role-picker-sheet,.bird-equip-picker) :is(input,textarea,select) { background:#090907; border:1px solid #d6a84f40; border-radius:8px; color:var(--text); box-shadow:inset 0 2px 4px #0007; }
+.woodland-ui :where(button,a,[tabindex],summary,input,select):focus-visible { outline:2px solid var(--legendary); outline-offset:3px; }
+/* Keep the new illustrated battlefield, under a warm dark lighting layer. */
+.woodland-ui .battle-arena { background:linear-gradient(#0b100db8,#100e0bb8),#15130e url('assets/comic-ui/battlefield-v359.webp') center/cover; border:1px solid var(--ui-edge); }
+.woodland-ui .arena-squad .arena-unit { background:linear-gradient(155deg,#292b22e8,#10130fea); border-color:#d6a84f55; box-shadow:inset 0 1px 0 #fff1,0 4px 8px #0008; }
+.woodland-ui .arena-squad.opponent .arena-unit { background:linear-gradient(155deg,#35251fe8,#1a1210ea); }
+.woodland-ui .arena-unit.acting { border-color:var(--legendary); box-shadow:0 0 0 1px var(--accent),0 0 14px #d6a84f33; }
+.woodland-ui .arena-unit.targetable { border:2px dashed #e8a293; }
+.woodland-ui .arena-unit.target-locked { outline:2px solid #e8a293; }
+.woodland-ui :is(.battle-log,.arena-timeline,.battle-aim-panel,.arena-turn-banner) { background:#100e0af2; border-color:var(--ui-edge); color:var(--text); }
+.woodland-ui .battle-log-entry { color:var(--text2); }
+.woodland-ui .arena-actions .move-btn { padding:8px 10px; }
+.woodland-ui .arena-actions .move-btn:has(.mv-cost) .mv-name { display:block; padding-right:26px; }
+.woodland-ui .arena-actions:empty { display:none; }
+@media (hover:hover) {
+ .woodland-ui :is(.quest-go-btn,.quest-claim-btn,.forge-craft-btn,.academy-build-btn,.magpie-btn,.move-btn):hover:not(:disabled) { border-color:#f0c767; box-shadow:inset 0 1px 0 #ffe6a65c,0 0 12px #d6a84f22,0 3px 6px #0006; }
+}
+@media (min-width:768px) {
+ .woodland-ui .screen-title { margin-bottom:20px; }
+ .woodland-ui #screen-battle { padding-inline:max(16px,calc((100% - 960px)/2)); }
+ .woodland-ui .battle-arena.live .arena-squad { width:min(100%,560px); align-self:center; }
+ .woodland-ui .battle-arena.live .arena-unit .au-art { max-height:110px; }
+}
+@media (max-width:480px) {
+ .woodland-ui .header { padding-inline:8px; gap:6px; }
+ .woodland-ui :is(.header-settings,.header-profile-btn,.header-diary-btn) { flex-shrink:0; }
+ .woodland-ui .screen-title { font-size:19px; }
+ .woodland-ui :is(.quest-desc,.academy-building-desc,.forge-recipe-desc) { font-size:13px; }
+}
+
+/* Retain v359 short-screen battle layout safeguards. */
+@media (max-height:740px) {
+  .woodland-ui .battle-arena { padding:5px; }
+  .woodland-ui .battle-arena.live .arena-squad { padding-top:5px; margin-bottom:5px; }
+  .woodland-ui .battle-arena.live .arena-unit { padding:4px 3px 5px; }
+  .woodland-ui .battle-arena.live .arena-actions { gap:5px; padding-top:5px; }
+}
+@media (max-height:640px) {
+  .woodland-ui .battle-aim-panel { padding:5px 8px; gap:2px; }
+  .woodland-ui .battle-arena.live .arena-squad { padding-top:4px; }
+  .woodland-ui .battle-arena.live .arena-unit .au-hpbar { height:5px; }
+  .woodland-ui .battle-arena.live .move-btn { min-height:44px; padding:6px 8px; }
+  .woodland-ui .battle-arena.live .arena-actions { padding-top:3px; }
+}
+@media (min-width:700px) and (max-height:500px) {
+  .woodland-ui .battle-arena.live { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:auto auto auto; grid-template-areas:'banner banner' 'enemy player' 'actions actions'; gap:4px 12px; padding:4px; }
+  .woodland-ui .battle-arena.live > .arena-synergy-banner { grid-area:banner; margin:0; }
+  .woodland-ui .battle-arena.live > .arena-squad.opponent { grid-area:enemy; }
+  .woodland-ui .battle-arena.live > .arena-squad.player { grid-area:player; margin-top:0; }
+  .woodland-ui .battle-arena.live > .arena-squad { width:100%; padding-top:4px; margin-bottom:0; align-self:start; }
+  .woodland-ui .battle-arena.live .arena-unit .au-art { height:36px; max-height:36px; aspect-ratio:auto; object-fit:contain; }
+  .woodland-ui .battle-arena.live :is(.arena-actions,.battle-aim-panel) { grid-area:actions; margin:0; padding-top:0; }
+  .woodland-ui .battle-arena.live .arena-actions:empty { display:none; }
+  .woodland-ui .battle-arena.live .arena-turn-banner { padding:1px 2px; font-size:11px; line-height:1.2; }
+  .woodland-ui .battle-arena.live .battle-aim-panel:not([hidden]) { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:'label target' 'slider buttons'; padding:3px 8px; column-gap:12px; }
+  .woodland-ui .battle-aim-panel label { grid-area:label; }
+  .woodland-ui .battle-aim-panel input { grid-area:slider; }
+  .woodland-ui #battleAimTarget { grid-area:target; }
+  .woodland-ui .battle-aim-buttons { grid-area:buttons; align-self:center; }
+  .woodland-ui .battle-aim-panel small { display:none; }
+  .woodland-ui .arena-actions:has(.attack-confirm-btn) { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .woodland-ui .arena-actions .attack-confirm-btn { grid-column:1/3 !important; }
+}
+
+
+@media (prefers-reduced-motion:reduce) {
+ .woodland-ui :is(.nav-item,.filter-btn,.forge-tab,.quest-go-btn,.quest-claim-btn,.scan-btn,.arena-unit,.move-btn) { animation:none !important; transition:none !important; }
+}

@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 
 BURBZ = Path(__file__).resolve().parent.parent
-CURRENT_BUILD = "comic-ui-v359-20260907"
+CURRENT_BUILD = "woodland-finish-v360-20260907"
 
 
 def node_json(script):

@@ -39,7 +39,7 @@ PHOTO_SCRIPTS_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/sc
 FILES=(
   "index.html"
   "sw.js"
-  "comic_ui.css"
+  "woodland_ui.css"
   "assets/comic-ui/fonts/inter-latin.woff2"
   "assets/comic-ui/fonts/rajdhani-bold.woff2"
   "assets/comic-ui/fonts/russo-one.woff2"

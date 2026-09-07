@@ -1,15 +1,14 @@
-"""Presentation-only comic release: assets, cache and protected render paths."""
+"""Presentation-only woodland finish: assets, cache and protected render paths."""
 from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text()
-CSS = (ROOT / "comic_ui.css").read_text()
+CSS = (ROOT / "woodland_ui.css").read_text()
 SW = (ROOT / "sw.js").read_text()
-RELEASE = "comic-ui-v359-20260907"
+RELEASE = "woodland-finish-v360-20260907"
 ASSETS = [
-    f"comic_ui.css?v={RELEASE}",
-    "assets/comic-ui/ink-paper-v359.webp",
+    f"woodland_ui.css?v={RELEASE}",
     "assets/comic-ui/battlefield-v359.webp",
     "assets/comic-ui/fonts/inter-latin.woff2",
     "assets/comic-ui/fonts/rajdhani-bold.woff2",
@@ -20,7 +19,7 @@ ASSETS = [
 def test_page_and_cache_advance_together():
     assert f"const BURBZ_BUILD = '{RELEASE}';" in HTML
     assert f'<link rel="stylesheet" href="{ASSETS[0]}">' in HTML
-    assert '<body class="comic-ui">' in HTML
+    assert '<body class="woodland-ui">' in HTML
     assert re.search(r"const BURBZ_CACHE = '([^']+)'", SW)[1].endswith(RELEASE)
 
 
