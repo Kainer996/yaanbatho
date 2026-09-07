@@ -1450,6 +1450,12 @@
     };
     var rng = mulberry32(20260730);
 
+    function renderScene() {
+      var manga = typeof globalThis !== 'undefined' && globalThis.BurbzManga;
+      if (manga) manga.render(T, st.renderer, st.scene, st.camera);
+      else st.renderer.render(st.scene, st.camera);
+    }
+
     function hourNow() {
       try {
         if (adapter.hourOfDay) {
@@ -1520,7 +1526,7 @@
       applyStaticRoomGlows(st.treeLightActive);
       // Reduced-motion mode has no animation loop to repaint the button's
       // choice, so draw its one still frame immediately.
-      if (!st.running && st.renderer && st.scene && st.camera) st.renderer.render(st.scene, st.camera);
+      if (!st.running && st.renderer && st.scene && st.camera) renderScene();
       return st.treeLightActive;
     }
 
@@ -2127,7 +2133,7 @@
 
       // Shadows are static: re-render the map only when something changed.
       if (st.shadowTick < 2) { st.renderer.shadowMap.needsUpdate = true; st.shadowTick++; }
-      st.renderer.render(st.scene, st.camera);
+      renderScene();
     }
 
     function applyDaylight(boost) {
@@ -2175,7 +2181,7 @@
         var rc = st.cam;
         st.camera.position.set(Math.sin(rc.az) * Math.sin(rc.polar) * rc.dist, Math.cos(rc.polar) * rc.dist + 3.6, Math.cos(rc.az) * Math.sin(rc.polar) * rc.dist);
         st.camera.lookAt(0, 7.8, 0);
-        st.renderer.render(st.scene, st.camera);
+        renderScene();
         return true;
       }
       if (st.running) return true;
@@ -2202,6 +2208,7 @@
     }
 
     function disposeScene() {
+      if (typeof globalThis !== 'undefined' && globalThis.BurbzManga) globalThis.BurbzManga.dispose(st.renderer);
       if (!st.scene) return;
       st.scene.traverse(function(o) {
         if (o.isInstancedMesh && o.dispose) o.dispose();
