@@ -23164,7 +23164,17 @@ function discoveryKeysForSpecies(name) {
 }
 function getDiscoveredRecordForSpecies(name) {
   const book = gameState.discoveredSpecies || {};
-  for (const key of discoveryKeysForSpecies(name)) if (book[key]) return book[key];
+  const keys = new Set(discoveryKeysForSpecies(name));
+  const profile = findSpeciesProfile(name);
+  [profile?.id, profile?.scientificName, profile?.scientific].filter(Boolean).forEach(value => keys.add(speciesKey(value)));
+  for (const key of keys) if (book[key]) return book[key];
+  // Old/cloud records can be indexed by a former name or catalogue ID. Match
+  // their saved identity as well; a missing current alias index is not a new bird.
+  for (const [savedKey, record] of Object.entries(book)) {
+    if (!record) continue;
+    if ([savedKey, record.species, record.commonName, record.scientificName, record.name]
+      .some(value => value && keys.has(speciesKey(canonicalSpeciesName(value))))) return record;
+  }
   return null;
 }
 function inventoryItemCount() { return Object.values((gameState.inventory && gameState.inventory.items) || {}).reduce((sum, n) => sum + (Number(n) || 0), 0); }
@@ -35773,7 +35783,9 @@ function rememberDiscoveredBird(bird, opts = {}) {
   const key = speciesKey(canonical);
   if (!key) return false;
   const existing = getDiscoveredRecordForSpecies(canonical);
+  const isNew = !existing && !companionForSpecies(canonical);
   const record = {
+    ...existing,
     key,
     species: canonical,
     commonName: canonical,
@@ -35790,12 +35802,14 @@ function rememberDiscoveredBird(bird, opts = {}) {
   };
   gameState.discoveredSpecies[key] = record;
   discoveryKeysForSpecies(canonical).forEach(aliasKey => { if (aliasKey && aliasKey !== key) gameState.discoveredSpecies[aliasKey] = record; });
-  if (!existing && !opts.silent) {
+  // Claim in the saved Birdex before any reward/UI callback can re-enter.
+  // A legacy companion already counts even when its discovery index is absent.
+  if (isNew && !opts.silent) {
     addCoins(discoveryRewardForBird(bird));
     if (typeof logDiary === 'function') logDiary('discover', { species: canonical, rarity: record.rarity });
   }
-  if (!existing) updateQuestProgress('discover', 1);
-  return !existing;
+  if (isNew) updateQuestProgress('discover', 1);
+  return isNew;
 }
 
 function createBirdFromDiscovery(record) {
@@ -36019,7 +36033,18 @@ function recordSoundSessionDiscovery(bird, isNewDiscovery) {
     isNew: !!isNewDiscovery
   });
   renderSoundSessionDiscoveries();
+  if (!isNewDiscovery) flashSoundSessionBird(speciesKey(canonical));
   return recorded;
+}
+
+function flashSoundSessionBird(key) {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const tile = [...document.querySelectorAll('#soundSessionShelfGrid .sound-session-tile')]
+    .find(el => speciesKey(canonicalSpeciesName(el.dataset.speciesName)) === key);
+  const icon = tile?.querySelector('.sound-session-tile-art');
+  if (!icon?.animate) return;
+  icon.getAnimations().forEach(animation => animation.cancel());
+  icon.animate([{ opacity:0.65 }, { opacity:1 }], { duration:420, easing:'ease-out' });
 }
 window.__burbzSoundDiscoveryDebug = {
   add: (bird, isNewDiscovery = true) => recordSoundSessionDiscovery(bird, isNewDiscovery),
@@ -36153,12 +36178,9 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (isNew) newDiscoveries.push(bird);
     fetchBirdArt(bird.species);
     if (soundSession) {
-      const recorded = recordSoundSessionDiscovery(bird, isNew);
-      // The full-width encounter banner announces a species ONCE per listening
-      // session — the first time it is heard. When the same bird keeps calling
-      // it only ticks up its tile on the session shelf instead of re-covering
-      // the screen every window.
-      if (!recorded || !(Number(recorded.count) > 1)) showScanEncounterCard(bird, isNew, opts.source);
+      recordSoundSessionDiscovery(bird, isNew);
+      // The persisted Birdex owns the announcement, across listening sessions.
+      if (isNew) showScanEncounterCard(bird, isNew, opts.source);
     } else {
       const resultEl = $('scanResult');
       resultEl.classList.remove('sound-session');
@@ -36169,7 +36191,7 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
       $('scanResultConf').textContent = opts.source === 'sound'
         ? `${Math.round((bird.confidence || 0) * 100)}/100 model score | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`
         : `${Math.round((bird.confidence || 0) * 100)}% confidence | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`;
-      showScanEncounterCard(bird, isNew, opts.source);
+      if (isNew) showScanEncounterCard(bird, isNew, opts.source);
     }
     try { questRegisterBirdEncounter(bird); }
     catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
@@ -36181,14 +36203,13 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     if (!soundSession) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   }
-  // Birds heard again (already discovered): level a travelling companion, or
-  // offer recruitment outside a listening session.
+  // Re-sightings update the field record, never player or companion XP.
+  // Explicit recruitment and quest rewards remain owned by their own actions.
   surfaced.filter(bird => !newDiscoveries.includes(bird)).forEach(bird => {
     const existing = companionForSpecies(bird.species);
-    if (existing) { levelUpBird(existing, 15); addPlayerXp(5); saveState(); showToast(bird.commonName + ' spotted again! Companion +15 XP'); }
-    else if (!soundSession) { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Barracks.'); }
+    if (!existing && !soundSession && opts.source !== 'sound') { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Barracks.'); }
   });
-
+  saveState(); // Persist lastSeenAt / sightingCount for known, unrecruited birds too.
   checkBadges();
   return surfaced;
 }
