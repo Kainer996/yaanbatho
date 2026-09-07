@@ -14,6 +14,7 @@ const bird={id:'robin',commonName:'Robin',species:'Robin',scientificName:'Eritha
 const gameState={flock:[bird],inventory:{gear:{thorn_talons:1}}};
 const birdEquipState={birdId:'robin',slotPicker:'weapon'},loadout={weapon:'thorn_talons'};
 const birdLoadout=()=>loadout,birdGearBonuses=()=>({atk:12}),RARITY_COLORS={common:'#aaa'},getBirdArtUrl=()=>'/original-robin.png';
+const birdPersonalityValue=b=>b.cha||0;
 const escapeHtml=s=>s,birdIsFavourite=()=>false,birdDisplayName=b=>b.commonName,birdSpeciesLabel=b=>b.species,XP_PER_LEVEL=()=>200;
 let canPreen=true;const birdBondCore=()=>({MAX_BOND_LEVEL:5,bondProgress:()=>({level:1,pct:20,xp:20,next:100,title:'New friend'}),canPreen:()=>({ok:canPreen,remainingMs:20}),describeWait:()=> '20 min'});
 const ensureBirdBond=()=>{},EQUIP_SLOT_ORDER=['weapon','armour','trinket','spell','potion'];

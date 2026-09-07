@@ -2636,6 +2636,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-equip-stats { gap:1px; border:1px solid rgba(214,168,79,.22); background:rgba(214,168,79,.18); border-radius:15px; overflow:hidden; margin:12px 0 0; }
 .bird-equip-stat { border:0; border-radius:0; background:#17130d; padding:13px 5px; }
 .bird-equip-stat .bes-label { font-size:10px; }
+.bird-equip-stat.is-personality { grid-column:1/-1; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.bird-equip-stat.is-personality .bes-label { font-size:12px; letter-spacing:.04em; color:var(--text2); }
 .bird-equip-stat .bes-value { font-size:19px; margin-top:5px; }
 .bird-equip-stat .bes-boost { font-size:11px; }
 .bird-equip-section-label { font-size:12px; margin:6px 0 10px; }
@@ -6942,7 +6944,7 @@ function loadState() {
     if (b.training.chaBonus == null) b.training.chaBonus = 0;
     if (b.training.magBonus == null) b.training.magBonus = 0;
     b = migrateBirdToBiologyStats(b);
-    if (b.cha == null) b.cha = generateBirdStats(b.species || b.commonName || 'Unknown Bird', null, b.rarity || 'common').cha || 40;
+    migrateBirdPersonality(b);
     // Magic-stat migration: birds saved before Skyclash learn their MAG now.
     if (b.mag == null) {
       const magBase = generateBirdStats(b.species || b.commonName || 'Unknown Bird', null, b.rarity || 'common').mag;
@@ -7109,6 +7111,7 @@ function mergeCloudState(cloudState) {
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
   merged.flock.forEach(b => { if (b && typeof b === 'object') applySpecialBirdCharacter(b); }); // cloud special characters too
+  merged.flock.forEach(migrateBirdPersonality);
   const core = dietHungerCore();
   const hungerMigrated = core && typeof core.migrateHungerState === 'function' ? core.migrateHungerState(merged, Date.now()) : merged;
   return migrateGamePlaceNames(hungerMigrated);
@@ -11787,7 +11790,7 @@ function openBirdInfo(birdId) {
       <div class="bird-info-stat"><span class="bird-info-stat-label">SPD</span><span class="bird-info-stat-value">${bird.spd || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">INT</span><span class="bird-info-stat-value">${bird.int || 0}</span></div>
       <div class="bird-info-stat"><span class="bird-info-stat-label">STAM</span><span class="bird-info-stat-value">${bird.stamina || 0}</span></div>
-      <div class="bird-info-stat"><span class="bird-info-stat-label">CHA</span><span class="bird-info-stat-value">${bird.cha || 0}</span></div>
+      <div class="bird-info-stat"><span class="bird-info-stat-label">Personality (CHA)</span><span class="bird-info-stat-value">${birdPersonalityValue(bird)}</span></div>
     </div>
     ${renderBirdSizePanel(bird)}
     ${renderBirdPostLine(bird)}
@@ -11879,7 +11882,7 @@ function renderBirdPostLine(bird) {
 // ============================================================================
 const BURBZ_CHARM = {
   robin: 10, feral_pigeon: 10, rock_pigeon: 10,
-  wren: 9,
+  wren: 9, goldcrest: 9, // Game design: a tiny, vocal bird with a big leadership personality.
   australian_magpie: 9, willie_wagtail: 9, common_myna: 9, silver_gull: 9,
   laughing_kookaburra: 9, rainbow_lorikeet: 9, australian_white_ibis: 9,
   herring_gull: 9, sulphur_crested_cockatoo: 9,
@@ -11904,7 +11907,7 @@ const BURBZ_CHARM = {
   eurasian_coot: 5, dusky_moorhen: 5, little_raven: 5, australian_raven: 5,
   eastern_rosella: 5, red_rumped_parrot: 5, red_browed_finch: 5,
   yellow_tailed_black_cockatoo: 5, golden_whistler: 5,
-  goldcrest: 4, chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
+  chiffchaff: 4, blackcap: 4, jay: 4, raven: 4,
   grey_wagtail: 4, kestrel: 4, little_owl: 4, lapwing: 4, swift: 4,
   great_spotted_woodpecker: 4, cormorant: 4, gannet: 4, razorbill: 4,
   dipper: 4, sand_martin: 4, pied_flycatcher: 4, yellowhammer: 4,
@@ -11938,6 +11941,34 @@ function speciesCharmBase(profile) {
   if (/bold|tame|confiding|social|curious|urban|gregarious|noisy|cheeky|garden/.test(traits)) score += 2;
   if (/shy|secretive|wary|elusive|skulk|solitary|nocturnal|remote/.test(traits)) score -= 2;
   return clamp(score, 1, 10);
+}
+
+// Personality is the existing Charm/CHA stat, shared with diplomacy and civic
+// roles. It is a game rating, separate from physical size and personal bond.
+function birdPersonalityValue(bird) {
+  if (!bird) return 0;
+  const species = bird.species || bird.commonName || bird.name || bird.scientificName || '';
+  const profile = findSpeciesProfile(species) || findSpeciesProfile(bird.scientificName);
+  const saved = Number(bird.cha);
+  const hasSaved = bird.cha != null && Number.isFinite(saved);
+  if (hasSaved) return saved;
+  const base = profile ? speciesCharmBase(profile) * 10 : generateBirdStats(species, null, bird.rarity || 'common').cha;
+  const level = Math.max(1, Number(bird.level) || 1);
+  const levelMult = level > 1 ? 1 + level * 0.04 : 1;
+  const minimum = clamp(Math.floor((base || 40) * levelMult) + (Number(bird.training?.chaBonus) || 0), 10, 999);
+  return minimum;
+}
+
+function migrateBirdPersonality(bird) {
+  if (!bird || typeof bird !== 'object') return bird;
+  const profile = findSpeciesProfile(bird.species || bird.commonName || bird.name) || findSpeciesProfile(bird.scientificName);
+  const current = birdPersonalityValue(bird);
+  // Raise only Goldcrest's old baseline, keeping any higher trained value.
+  // Reapplying on local/cloud loads is idempotent; no other stat is rerolled.
+  bird.cha = profile?.id === 'goldcrest'
+    ? Math.max(current, birdPersonalityValue({ ...bird, cha:null }))
+    : current;
+  return bird;
 }
 
 // ============================================================================
@@ -35980,6 +36011,7 @@ function renderSoundSessionDiscoveries() {
           '<div class="scan-session-discovery-back-head"><div class="scan-session-discovery-back-name">' + escapeHtml(row.name) + '</div><div class="scan-session-discovery-back-rarity">' + escapeHtml(String(row.rarity || 'common')) + '</div></div>' +
           '<div class="scan-session-discovery-summary">' + escapeHtml(summary) + '</div>' +
           '<div class="scan-session-discovery-facts"><div><strong>Habitat:</strong> ' + escapeHtml(habitat) + '</div><div><strong>Diet:</strong> ' + escapeHtml(diet) + '</div></div>' +
+          '<div class="scan-session-discovery-facts"><strong>Personality (CHA):</strong> ' + birdPersonalityValue(discoveryBird) + '</div>' +
           '<div class="scan-session-discovery-actions"><button type="button" class="scan-session-birdex-btn" data-action="show-in-birdex">Show in Birdex</button><button type="button" class="scan-session-flip-back" data-action="flip-discovery-back" aria-label="Flip ' + escapeHtml(row.name) + ' card back">↩</button></div>' +
         '</div></div></article>';
   }).join('');
@@ -37874,6 +37906,7 @@ function renderBirdEquip() {
     stat('🛡️ DEF', bird.def || 0, 'def') +
     stat('🪽 SPD', bird.spd || 0, 'spd') +
     '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
+    '<div class="bird-equip-stat is-personality" title="Personality uses Charm (CHA), the diplomacy and leadership stat"><div class="bes-label">Personality (CHA)</div><div class="bes-value">' + birdPersonalityValue(bird) + '</div></div>' +
     '</div>';
 
   // The bond panel — this bird's friendship, grown by preening and feeding.
@@ -38466,7 +38499,7 @@ function createBirdCardHTML(bird, idx) {
             <div class="card-back-stat"><span class="card-back-stat-label">DEF</span><strong class="card-back-stat-value">${bird.def || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.def||50)/1.2)}%;background:var(--accent2)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">SPD</span><strong class="card-back-stat-value">${bird.spd || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.spd||50)/1.2)}%;background:var(--uncommon)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">MAG</span><strong class="card-back-stat-value">${bird.mag || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.mag||40)/1.2)}%;background:var(--epic)"></div></div></div>
-            <div class="card-back-stat"><span class="card-back-stat-label">CHA</span><strong class="card-back-stat-value">${bird.cha || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.cha||40)/1.2)}%;background:var(--legendary)"></div></div></div>
+            <div class="card-back-stat" title="Personality uses Charm (CHA), the diplomacy and leadership stat"><span class="card-back-stat-label">Personality</span><strong class="card-back-stat-value">${birdPersonalityValue(bird)}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,birdPersonalityValue(bird)/1.2)}%;background:var(--legendary)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">INT</span><strong class="card-back-stat-value">${bird.int || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.int||50)/1.2)}%;background:var(--rare)"></div></div></div>
             <div class="card-back-stat"><span class="card-back-stat-label">STAM</span><strong class="card-back-stat-value">${bird.stamina || 0}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${Math.min(100,(bird.stamina||50)/1.2)}%;background:var(--accent3)"></div></div></div>
             <div class="card-back-stat is-carry" title="Loads this bird brings home from a quest"><span class="card-back-stat-label">CARRY</span><strong class="card-back-stat-value">${birdCardCarryCapacity(bird)}</strong><div class="card-back-stat-bar"><div class="card-back-stat-fill" style="width:${birdCardCarryPct(bird)}%;background:var(--hp-yellow)"></div></div></div>
@@ -38545,6 +38578,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
           ${playerPhotoChipHTML(bird, 'floating')}
           <div class="birdex-learning-kicker">Real bird</div>
           <div class="birdex-learning-title">${escapeHtml(bird.commonName || bird.species)}</div>
+          <div class="birdex-learning-fact" title="Game stat for diplomacy and leadership"><span class="birdex-learning-label">Personality (CHA)</span><strong class="birdex-learning-value">${birdPersonalityValue(bird)}</strong></div>
           <div class="birdex-learning-scientific"><span class="birdex-learning-label">Scientific name</span>${escapeHtml(bird.scientificName || info.scientificName || 'Not recorded')}</div>
           <div class="birdex-learning-facts">
             <div class="birdex-learning-fact"><span class="birdex-learning-label">Habitat</span><span class="birdex-learning-value">${escapeHtml(info.habitat || 'Field-guide details are being checked.')}</span></div>

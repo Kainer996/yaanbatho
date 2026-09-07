@@ -100,8 +100,8 @@ def test_index_wires_charm_throughout():
     assert "wren: 9," in html
     assert "BURBZ_PERSONALITY" not in html
     # CHA is shown on the bird info card and the card back
-    assert 'bird-info-stat-label">CHA' in html
-    assert 'card-back-stat-label">CHA' in html
+    assert 'bird-info-stat-label">Personality (CHA)' in html
+    assert 'card-back-stat-label">Personality' in html
     # The Crowbar trains Charm and says so
     assert "crowbar:     { stat:'cha',     label:'CHA' }" in html
     assert "+1 CHA every 30 min" in html

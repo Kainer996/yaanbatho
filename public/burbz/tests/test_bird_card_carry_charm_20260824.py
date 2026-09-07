@@ -315,7 +315,7 @@ def back_stats(source: str):
 def test_the_card_back_carries_every_stat_the_front_does():
     rows = back_stats(html_text())
     labels = [label for label, _ in rows]
-    assert labels == ["HP", "ATK", "DEF", "SPD", "MAG", "CHA", "INT", "STAM", "CARRY"]
+    assert labels == ["HP", "ATK", "DEF", "SPD", "MAG", "Personality", "INT", "STAM", "CARRY"]
     # Carrying last, and in a colour no combat stat already uses.
     colours = [colour for _, colour in rows]
     assert colours[-1] == "--hp-yellow"
