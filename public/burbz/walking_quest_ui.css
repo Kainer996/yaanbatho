@@ -1,0 +1,225 @@
+/* The walking trail lives in warm ink, walnut and aged brass. Scope is limited
+   to its sheets, journal and map brief; unrelated quests retain their styling. */
+body:has(#walkQuestSheet.open, #wqNpcDialog) #tutorialNavPointer { display:none; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) {
+  --wq-paper:#f4ead4;
+  --wq-muted:#c8bba0;
+  --wq-brass:#d6a84f;
+  --wq-edge:#aa854a70;
+  --wq-green:#b2c69d;
+  --wq-panel:linear-gradient(145deg,#30271a,#18160f 60%,#10110d);
+}
+#walkQuestSheet .quest-overlay-panel {
+  width:min(100%,620px); box-sizing:border-box; padding:22px 20px 24px;
+  color:var(--wq-paper); background:radial-gradient(ellipse at 0 0,#67502c38,transparent 55%),#14120d;
+  border:1px solid var(--wq-edge); box-shadow:inset 0 1px 0 #ffdea025,0 14px 50px #000b;
+}
+#walkQuestSheet .quest-board-hero { align-items:center; gap:14px; padding-right:32px; }
+#walkQuestSheet .quest-board-art { width:64px; height:64px; flex:none; object-fit:contain; }
+#walkQuestSheet .quest-board-title { font-size:22px; line-height:1.15; color:var(--wq-paper); }
+#walkQuestSheet .quest-board-intro { margin-top:7px; font-size:13px; line-height:1.55; color:var(--wq-muted); }
+#walkQuestSheet .quest-overlay-close { min-width:44px; min-height:44px; top:8px; right:8px; color:var(--wq-paper); }
+#walkQuestSheet .quest-desc { line-height:1.55; color:var(--wq-muted); }
+#walkQuestSheet .wq-expedition > h2 { padding-right:36px; margin:7px 0 14px; color:var(--wq-paper); font:400 24px/1.25 'Russo One',sans-serif; overflow-wrap:anywhere; }
+#walkQuestSheet .wq-story-preview { margin:18px 0; padding:15px 16px; border-left:3px solid #aa854a; border-radius:0 10px 10px 0; background:linear-gradient(90deg,#67502c22,#0001); }
+#walkQuestSheet .wq-story-preview h3 { margin:0 0 8px; font-size:15px; color:var(--wq-paper); line-height:1.4; }
+#walkQuestSheet .wq-story-preview p { margin:0; font-size:13px; line-height:1.65; color:var(--wq-muted); }
+#walkQuestSheet .wq-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+#walkQuestSheet .wq-actions > button { flex:1; min-height:46px; min-width:130px; padding:12px; border:1px solid #b48c4f; border-radius:10px; background:linear-gradient(#72572e,#42331c); color:var(--wq-paper); font:700 12px/1.4 'Inter',sans-serif; }
+#walkQuestSheet .wq-actions > button + button { background:#2c291a; border-color:var(--wq-edge); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-icon {
+  width:20px; height:20px; flex:none; vertical-align:middle; color:inherit;
+}
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-eyebrow {
+  display:block; color:var(--wq-brass); font:700 10px/1.4 'Inter',sans-serif; letter-spacing:.1em; text-transform:uppercase;
+}
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) :is(.wq-offer-card,.wq-encounter-card,.wq-choice,.wq-primary,.wq-close):focus-visible {
+  outline:3px solid #f0c767; outline-offset:3px;
+}
+#walkQuestSheet .wq-offer-card {
+  display:block; width:100%; margin:12px 0; padding:16px; box-sizing:border-box; text-align:left;
+  color:var(--wq-paper); border:1px solid var(--wq-edge); border-radius:14px; background:var(--wq-panel);
+  box-shadow:inset 0 1px 0 #ffe3a920,inset 0 -2px 0 #0006,0 5px 12px #0004; font-family:inherit;
+  overflow:hidden; cursor:pointer; transition:border-color .15s,background .15s;
+}
+#walkQuestSheet .wq-offer-card.is-selected { border-color:var(--wq-brass); box-shadow:inset 3px 0 0 var(--wq-brass),0 5px 12px #0004; }
+#walkQuestSheet .wq-offer-top { display:flex; align-items:center; gap:12px; }
+#walkQuestSheet .wq-offer-emblem {
+  display:grid; place-items:center; width:44px; height:44px; flex:none; color:var(--wq-brass);
+  background:linear-gradient(150deg,#59452a,#262417); border:1px solid #d6a84f66; border-radius:12px;
+  box-shadow:inset 0 1px 0 #fff1,0 2px 4px #0005;
+}
+#walkQuestSheet .wq-offer-emblem .wq-icon { width:25px; height:25px; }
+#walkQuestSheet .wq-offer-heading { min-width:0; flex:1; }
+#walkQuestSheet .wq-offer-name { display:block; margin-top:4px; color:var(--wq-paper); font-size:16px; font-weight:800; line-height:1.3; overflow-wrap:anywhere; }
+#walkQuestSheet .wq-offer-arrow { color:var(--wq-brass); flex:none; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-metrics {
+  display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding:14px 0; margin:12px 0 0; border-top:1px solid #d6a84f26;
+}
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric { display:flex; align-items:flex-start; gap:7px; min-width:0; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric > .wq-icon { width:17px; height:17px; margin-top:1px; color:var(--wq-brass); }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric > span { display:block; min-width:0; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric strong { display:block; font-size:15px; line-height:1.2; font-weight:750; color:var(--wq-paper); font-variant-numeric:tabular-nums; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric span span { display:block; margin-top:4px; color:var(--wq-muted); font-size:10px; line-height:1.35; }
+:is(#walkQuestSheet,#mapQuestFocusCard) :is(.wq-offer-start,.wq-route-start) { display:flex; align-items:center; gap:7px; color:var(--wq-muted); font-size:11px; line-height:1.45; }
+:is(#walkQuestSheet,#mapQuestFocusCard) :is(.wq-offer-start,.wq-route-start) .wq-icon { width:15px; height:15px; color:var(--wq-brass); }
+#walkQuestSheet .wq-offer-start { padding-top:10px; border-top:1px solid #d6a84f20; }
+#walkQuestSheet .wq-offer-note { display:block; margin-top:6px; font-size:11px; color:var(--wq-muted); line-height:1.4; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-facts { margin:12px 0; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-facts .wq-route-metrics { border:1px solid #d6a84f30; border-radius:11px; padding:14px 12px; background:#0002; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-shape { display:flex; gap:8px; align-items:flex-start; font-size:12px; line-height:1.5; margin:12px 0 8px; color:var(--wq-muted); }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-shape > .wq-icon { color:var(--wq-green); margin-top:1px; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-shape strong { color:var(--wq-paper); }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-details { margin-top:10px; color:var(--wq-muted); font-size:11px; line-height:1.55; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-details summary { display:list-item; min-height:44px; box-sizing:border-box; padding:12px 0; cursor:pointer; color:var(--wq-paper); }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-details > div { padding:0 0 12px; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-warnings { padding-left:18px; margin:8px 0 0; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-section-head { display:flex; align-items:center; gap:8px; margin:20px 0 8px; color:var(--wq-brass); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-section-head h3 { margin:0; flex:1; font-size:15px; line-height:1.35; color:var(--wq-paper); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-section-head > span { font-size:11px; color:var(--wq-muted); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounters { display:grid; gap:10px; margin-top:12px; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-card {
+  display:flex; align-items:center; gap:12px; width:100%; min-width:0; box-sizing:border-box; padding:10px;
+  font-family:inherit; color:var(--wq-paper); text-align:left; border:1px solid #d6a84f3d; border-radius:12px;
+  background:linear-gradient(120deg,#42362050,#161710); box-shadow:inset 0 1px 0 #fff1;
+}
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) button.wq-encounter-card { min-height:44px; cursor:pointer; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-art {
+  display:block; width:86px; height:96px; flex:none; overflow:hidden; border-radius:9px;
+  background:radial-gradient(ellipse at 50% 70%,#d6a84f25,transparent 70%);
+}
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-art img { display:block; width:100%; height:100%; object-fit:contain; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-copy { display:block; flex:1; min-width:0; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-copy > strong { display:block; margin:5px 0 2px; font-size:14px; line-height:1.3; overflow-wrap:anywhere; color:var(--wq-paper); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-status { display:flex; align-items:center; gap:4px; font-size:10px; line-height:1.35; color:var(--wq-brass); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-status .wq-icon { width:13px; height:13px; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .is-discovered .wq-encounter-status { color:var(--wq-green); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) :is(.wq-encounter-role,.wq-encounter-lore) { display:block; font-size:11px; line-height:1.5; color:var(--wq-muted); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-fiction { display:block; margin:3px 0; color:var(--wq-muted); font-size:9px; line-height:1.4; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-lore { margin-top:6px; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-outcome { display:block; margin-top:8px; padding-left:8px; border-left:2px solid var(--wq-green); color:var(--wq-paper); font-size:11px; line-height:1.55; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-arrow { color:var(--wq-brass); flex:none; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-encounters.is-compact { grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .is-compact .wq-encounter-card { display:block; padding:7px 5px 10px; text-align:center; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .is-compact .wq-encounter-art { width:100%; height:70px; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .is-compact .wq-encounter-copy > strong { font-size:11px; line-height:1.35; margin-top:4px; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .is-compact .wq-encounter-status { justify-content:center; font-size:9px; flex-wrap:wrap; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .is-compact .wq-encounter-status .wq-icon { display:none; }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-fiction-note { display:flex; align-items:flex-start; gap:7px; margin:12px 0; font-size:11px; line-height:1.55; color:var(--wq-muted); }
+:is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-fiction-note .wq-icon { width:17px; height:17px; margin-top:1px; color:var(--wq-brass); }
+#wqNpcDialog { padding:20px; box-sizing:border-box; background:#050604d9; backdrop-filter:blur(4px); overflow-y:auto; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-panel {
+  position:relative; display:block; width:min(100%,530px); max-height:calc(100dvh - 40px); box-sizing:border-box;
+  padding:0; overflow-y:auto; overscroll-behavior:contain; border:1px solid #d6a84f88; border-radius:18px;
+  background:radial-gradient(ellipse at 50% 0,#63523160,transparent 50%),#17150f; box-shadow:inset 0 1px 0 #fff2,0 20px 80px #000c;
+}
+:is(#wqNpcDialog,#walkQuestSheet) .wq-close { position:absolute; top:10px; right:10px; z-index:1; width:44px; height:44px; display:grid; place-items:center; border:1px solid #d6a84f66; border-radius:50%; background:#14120ed9; color:var(--wq-paper); cursor:pointer; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art { height:220px; display:flex; align-items:center; justify-content:center; margin:10px 20px 0; background:radial-gradient(ellipse at 50% 70%,#a281384d,transparent 65%); }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art img { display:block; width:100%; height:100%; min-width:0; min-height:0; max-height:100%; object-fit:contain; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-content { padding:16px 24px 24px; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-title { margin:5px 0; font:400 24px/1.2 'Russo One',sans-serif; color:var(--wq-paper); }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-title:focus { outline:none; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-role { margin:6px 0 14px; color:var(--wq-brass); font-size:12px; line-height:1.4; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-lore { font-size:14px; line-height:1.65; color:var(--wq-paper); margin:12px 0; }
+:is(#wqNpcDialog,#walkQuestSheet) :is(.wq-discovery-prompt,.wq-discovery-outcome) { margin:16px 0 8px; color:var(--wq-paper); font-size:13px; line-height:1.6; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-outcome { border-left:2px solid var(--wq-green); padding-left:12px; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-encounter-choices { display:grid; gap:8px; margin:18px 0 12px; }
+:is(#wqNpcDialog,#walkQuestSheet) :is(.wq-choice,.wq-primary) { min-height:46px; box-sizing:border-box; width:100%; padding:12px 14px; border:1px solid #bc9555; border-radius:10px; font:700 12px/1.4 'Inter',sans-serif; color:var(--wq-paper); cursor:pointer; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-choice { background:#2c291a; text-align:left; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-primary { margin-top:10px; background:linear-gradient(#765a31,#44331b); box-shadow:inset 0 1px 0 #ffde9d3d,0 3px 5px #0005; }
+:is(#wqNpcDialog,#walkQuestSheet) .wq-choice-saved { display:flex; gap:7px; align-items:center; color:var(--wq-green); font-size:12px; line-height:1.45; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-empty { padding:26px 18px; margin:14px 0; border:1px dashed var(--wq-edge); border-radius:14px; text-align:center; background:#0002; }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-empty > .wq-icon { width:34px; height:34px; color:var(--wq-brass); }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-empty h3 { font-size:16px; margin:12px 0 7px; color:var(--wq-paper); }
+:is(#walkQuestSheet,#mapQuestFocusCard) .wq-empty p { font-size:13px; line-height:1.55; color:var(--wq-muted); }
+:is(#walkQuestSheet,#mapQuestFocusCard,#walkingQuestsList) .wq-empty-copy { color:var(--wq-muted); font-size:12px; line-height:1.55; }
+#mapQuestFocusCard { border-color:#bb914c99; background:linear-gradient(145deg,#30271af7,#11130dfb); border-radius:17px; }
+#mapQuestFocusCard .map-quest-focus-head { grid-template-columns:44px minmax(0,1fr) 44px; gap:9px; }
+#mapQuestFocusCard .map-quest-focus-art { width:44px; height:44px; }
+#mapQuestFocusCard .map-quest-focus-close { width:44px; height:44px; }
+#mapQuestFocusCard .map-quest-focus-distance { font-size:10px; line-height:1.4; color:var(--wq-muted); letter-spacing:.02em; text-transform:none; }
+#mapQuestFocusCard .map-quest-focus-name { white-space:normal; overflow-wrap:anywhere; font-size:14px; line-height:1.3; }
+#mapQuestFocusCard .map-quest-focus-meta:has(.wq-route-facts) { display:block; }
+#mapQuestFocusCard .map-quest-focus-primary { min-height:46px; border:1px solid #c8a05c; color:var(--wq-paper); background:linear-gradient(#795c30,#46341a); }
+#mapQuestFocusCard .map-quest-focus-secondary { min-height:46px; min-width:46px; color:var(--wq-paper); border-color:var(--wq-edge); background:#30291b; }
+#mapQuestFocusCard .map-quest-focus-actions { flex-wrap:wrap; }
+#mapQuestFocusCard .map-quest-focus-primary { min-width:140px; }
+#mapQuestFocusCard #mapQuestFocusDetails { min-height:46px; padding:10px 12px; border:1px solid var(--wq-edge); border-radius:12px; background:#30291b; color:var(--wq-paper); font:700 11px/1.35 'Inter',sans-serif; }
+#mapQuestFocusCard #mapQuestFocusFacts { margin:12px 0; }
+#mapQuestFocusCard .wq-route-facts { margin:0; }
+#mapQuestFocusCard .wq-route-facts .wq-route-metrics { margin:0; }
+#mapQuestFocusCard .wq-route-shape { font-size:11px; }
+/* Optional semantic map markers; location is always owned by route geometry. */
+.wq-route-pin { display:grid; place-items:center; width:38px; height:38px; box-sizing:border-box; border:2px solid #d6a84f; border-radius:50% 50% 50% 8px; background:#26251a; color:#f4ead4; box-shadow:0 2px 0 #000,0 4px 12px #0008; }
+.wq-route-pin .wq-icon { width:22px; height:22px; }
+.wq-route-pin.is-discovered { border-color:#b2c69d; background:#283427; }
+.wq-route-pin:focus-visible { outline:3px solid #f0c767; outline-offset:3px; }
+button.quest-marker-pin { display:grid; place-items:center; min-width:44px; min-height:44px; appearance:none; padding:0; margin:0; border:0; border-radius:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
+button.quest-marker-pin:focus-visible { outline:3px solid #f0c767; outline-offset:2px; border-radius:10px; }
+@media (hover:hover) {
+  #walkQuestSheet .wq-offer-card:hover { border-color:#e1b761; background:linear-gradient(145deg,#3a301f,#1b1c12); }
+  :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) :is(button.wq-encounter-card,.wq-choice):hover { border-color:var(--wq-brass); }
+}
+@media (max-width:390px) {
+  #walkQuestSheet .quest-overlay-panel { padding:20px 12px; }
+  #walkQuestSheet .quest-board-hero { gap:10px; }
+  #walkQuestSheet .quest-board-art { width:50px; height:50px; }
+  #walkQuestSheet .quest-board-title { font-size:20px; }
+  #walkQuestSheet .wq-offer-card { padding:13px 11px; }
+  #walkQuestSheet .wq-offer-top { gap:9px; }
+  #walkQuestSheet .wq-offer-name { font-size:14px; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-metrics { gap:6px; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric { gap:5px; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric strong { font-size:13px; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric > .wq-icon { width:14px; height:14px; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-facts .wq-route-metrics { padding:12px 8px; }
+  :is(#walkQuestSheet,#walkingQuestsList) .wq-encounter-art { width:68px; height:84px; }
+  :is(#walkQuestSheet,#walkingQuestsList) .wq-encounter-card { gap:9px; padding:8px; }
+  #wqNpcDialog { padding:10px; }
+  :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-panel { max-height:calc(100dvh - 20px); }
+  :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art { height:180px; }
+  :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-content { padding:14px 18px 20px; }
+}
+@media (max-width:340px) {
+  #walkQuestSheet .wq-offer-arrow { display:none; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric > .wq-icon { display:none; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .wq-metric strong { font-size:14px; }
+  :is(#walkQuestSheet,#mapQuestFocusCard) .is-compact .wq-encounter-art { height:58px; }
+}
+@media (max-height:650px) {
+  :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-art { height:145px; }
+  :is(#wqNpcDialog,#walkQuestSheet) .wq-discovery-content { padding-top:8px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  #walkQuestSheet .wq-offer-card { transition:none; }
+}
+
+/* Embedded encounters use the existing walk sheet's one scroll container. */
+#walkQuestSheet .wq-discovery-panel.is-embedded { width:100%; max-width:none; max-height:none; overflow:visible; margin:0; border:0; background:none; box-shadow:none; animation:none; }
+#walkQuestSheet .wq-discovery-panel.is-embedded .wq-discovery-content { padding:14px 0 10px; }
+#walkQuestSheet #wqEncounterBack { min-height:46px; width:100%; margin-top:8px; border:1px solid #bc9555; border-radius:10px; background:linear-gradient(#765a31,#44331b); color:var(--wq-paper); }
+#walkQuestSheet .wq-attribution { color:var(--wq-muted); font-size:11px; line-height:1.55; margin:15px 0; }
+
+/* Trailhead coordinates stay exact; small visual states retain touch targets. */
+#liveMapShell .wq-offer-pin.muted { min-width:44px; min-height:44px; }
+#liveMapShell .quest-marker .wq-marker-encounter { position:absolute; right:-12px; bottom:-7px; width:27px; height:27px; border:1px solid #b49a61; border-radius:50%; background:#211b10; display:grid; place-items:center; overflow:hidden; }
+#liveMapShell .quest-marker .wq-marker-encounter img { width:26px; height:26px; object-fit:contain; }
+
+/* Inspection reserves the upper map for the walk and a compact brief below. */
+body:has(#liveMapShell.quest-focused) :is(#tutorialNavPointer,#petSpeech) { display:none; }
+#liveMapShell.quest-focused .map-zoom-controls { top:76px; bottom:auto; left:10px; right:auto; gap:6px; opacity:.9; }
+@media (max-width:600px) {
+  #mapQuestFocusCard { padding:11px; }
+  #mapQuestFocusCard.show { animation:none; }
+  #mapQuestFocusCard #mapQuestFocusBrief,
+  #mapQuestFocusCard #mapQuestFocusFacts .wq-route-start { display:none; }
+  #mapQuestFocusCard .map-quest-focus-meta { margin:7px 0 6px; gap:4px; }
+  #mapQuestFocusCard .map-quest-focus-chip { padding:4px 7px; }
+  #mapQuestFocusCard #mapQuestFocusFacts { margin:7px 0 9px; }
+  #mapQuestFocusCard .wq-route-facts .wq-route-metrics { padding:8px; }
+  #mapQuestFocusCard .wq-route-shape { margin:7px 0 0; line-height:1.4; }
+  #mapQuestFocusCard .map-quest-focus-actions { display:grid; grid-template-columns:minmax(74px,.8fr) minmax(116px,1.5fr) 44px; gap:6px; }
+  #mapQuestFocusCard .map-quest-focus-primary { min-width:0; min-height:46px; font-size:11px; }
+  #mapQuestFocusCard #mapQuestFocusDetails { min-width:0; padding:8px 6px; }
+  #mapQuestFocusCard .map-quest-focus-secondary { min-width:44px; }
+}

@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "comic-ui-v359-20260907"
+CURRENT_BUILD = "appearance-v362-20260907"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 
