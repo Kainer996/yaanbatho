@@ -4394,11 +4394,25 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 #bottomDock .nav-item.is-locked .nav-label::after { content:' ·'; }
 
 </style>
+<script src="appearance_core.js?v=appearance-v362-20260907"></script>
+<script>
+// Apply the saved palette before the first paint; older saves start in Normal.
+if (window.BurbzAppearanceCore) {
+  let theme = 'normal';
+  try { theme = BurbzAppearanceCore.readStoredTheme(localStorage); } catch (_) {}
+  BurbzAppearanceCore.apply(theme, document);
+}
+</script>
 <link rel="stylesheet" href="woodland_ui.css?v=woodland-finish-v360-20260907">
+<link rel="stylesheet" href="comic_ui.css?v=appearance-v362-20260907">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
+<link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 </head>
 <body class="woodland-ui">
+<script>
+if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentElement.getAttribute('data-appearance'), document);
+</script>
 
 <div id="app">
   <!-- Ambient particles -->
@@ -5097,6 +5111,11 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
       <div class="modal-handle"></div>
       <button type="button" class="quest-overlay-close" id="settingsCloseBtn" aria-label="Close settings">✕</button>
       <div class="modal-title">Settings</div>
+      <div class="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" class="settings-tab" id="settingsGeneralTab" role="tab" aria-selected="true" aria-controls="settingsGeneralPanel">General</button>
+        <button type="button" class="settings-tab" id="settingsAppearanceTab" role="tab" aria-selected="false" aria-controls="settingsAppearancePanel" tabindex="-1">Appearance</button>
+      </div>
+      <div id="settingsGeneralPanel" role="tabpanel" aria-labelledby="settingsGeneralTab">
       <button type="button" class="settings-row settings-feedback" id="sendFeedbackBtn" aria-label="Send feedback, report a bug, or suggest an idea">
         <div>
           <div class="settings-label">💌 Send Feedback</div>
@@ -5152,6 +5171,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
         <span style="color: var(--accent2); font-size: 18px;">&#9654;</span>
       </div>
       <div class="settings-danger" id="resetDataBtn">RESET ALL DATA</div>
+      </div>
+      <div id="settingsAppearancePanel" role="tabpanel" aria-labelledby="settingsAppearanceTab" hidden>
+        <fieldset>
+          <legend>Choose your look</legend>
+          <p class="appearance-intro">Make Alderwing feel like home. Switch styles whenever you like.</p>
+          <div class="appearance-options">
+            <label class="appearance-option">
+              <span class="appearance-preview" aria-hidden="true"></span>
+              <span><strong>Normal</strong><span class="appearance-description">Warm woodland, parchment and brass.</span><span class="appearance-selected" aria-hidden="true">Selected</span></span>
+              <input type="radio" name="appearanceTheme" value="normal" aria-label="Normal" checked>
+            </label>
+            <label class="appearance-option">
+              <span class="appearance-preview is-comic" aria-hidden="true"></span>
+              <span><strong>Comic Book</strong><span class="appearance-description">Bright paper, bold ink and comic colour.</span><span class="appearance-selected" aria-hidden="true">Selected</span></span>
+              <input type="radio" name="appearanceTheme" value="comic" aria-label="Comic Book">
+            </label>
+          </div>
+        </fieldset>
+        <p id="appearanceStatus" role="status" aria-live="polite">Your choice is saved automatically.</p>
+      </div>
       <div class="settings-build" id="settingsBuildLine"></div>
     </div>
   </div>
@@ -6679,7 +6718,7 @@ const DEFAULT_STATE = {
   forgeJobs: [], // commissions on the Fletcher's anvil: { id, gearId, startMs, endMs }
   quests: {},
   questsLastReset: null,
-  settings: { sfx: true, music: true, particles: true, vibration: true },
+  settings: { sfx: true, music: true, particles: true, vibration: true, appearance: 'normal' },
   badges: {},
   merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE },
   birdCare: defaultBirdCare(), // Default per-bird care state
@@ -6803,6 +6842,8 @@ function loadState() {
   }
   ensureAcademyBuildings(needsAcademyBuilderGrant);
   gameState.settings = { ...DEFAULT_STATE.settings, ...(gameState.settings && typeof gameState.settings === 'object' ? gameState.settings : {}) };
+  gameState.settings.appearance = gameState.settings.appearance === 'comic' ? 'comic' : 'normal';
+  if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(gameState.settings.appearance, document);
   gameState.quests = (gameState.quests && typeof gameState.quests === 'object' && !Array.isArray(gameState.quests)) ? gameState.quests : {};
   gameState.badges = (gameState.badges && typeof gameState.badges === 'object' && !Array.isArray(gameState.badges)) ? gameState.badges : {};
   gameState.discoveredSpecies = (gameState.discoveredSpecies && typeof gameState.discoveredSpecies === 'object' && !Array.isArray(gameState.discoveredSpecies)) ? gameState.discoveredSpecies : {};
@@ -42282,7 +42323,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'walking-quests-v361-20260907';
+const BURBZ_BUILD = 'appearance-v362-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -43100,7 +43141,50 @@ $('replayTutorialBtn')?.addEventListener('keydown', event => {
 $('sendFeedbackBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackPrompt(); });
 $('feedbackInboxBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} openFeedbackInbox(); });
 
+function showSettingsSection(id, focus = false) {
+  document.querySelectorAll('#settingsModal [role="tab"]').forEach(tab => {
+    const selected = tab.id === id;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+    $(tab.getAttribute('aria-controls')).hidden = !selected;
+    if (selected && focus) tab.focus();
+  });
+}
+document.querySelectorAll('#settingsModal [role="tab"]').forEach((tab, index, tabs) => {
+  tab.addEventListener('click', () => showSettingsSection(tab.id));
+  tab.addEventListener('keydown', event => {
+    let next;
+    if (event.key === 'ArrowRight') next = (index + 1) % tabs.length;
+    if (event.key === 'ArrowLeft') next = (index + tabs.length - 1) % tabs.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = tabs.length - 1;
+    if (next == null) return;
+    event.preventDefault();
+    showSettingsSection(tabs[next].id, true);
+  });
+});
+document.querySelectorAll('input[name="appearanceTheme"]').forEach(input => {
+  input.addEventListener('change', () => {
+    if (!input.checked || !window.BurbzAppearanceCore) return;
+    const result = BurbzAppearanceCore.choose(gameState.settings, input.value, () => durableSaveState(), document);
+    $('appearanceStatus').textContent = result.ok
+      ? (result.theme === 'comic' ? 'Comic Book selected. Your choice is saved.' : 'Normal selected. Your choice is saved.')
+      : 'Could not save your choice. Your previous style is still selected. Please try again.';
+    // Theme borders and text metrics can change the area above an open map brief.
+    const offer = questOverview.offers[questOverview.selectedIndex];
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (questMapInspectionMode() && questOverview.on && offer &&
+          offer === questOverview.offers[questOverview.selectedIndex] && $('mapQuestFocusCard')?.classList.contains('show')) {
+        syncQuestMapFocusLayout();
+        fitSelectedQuestRoute(offer);
+      }
+    }));
+  });
+});
+
 $('settingsBtn').addEventListener('click', () => {
+  showSettingsSection('settingsGeneralTab');
+  if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(gameState.settings.appearance, document);
   $('settingsModal').classList.add('show');
   SFX.tap();
 });

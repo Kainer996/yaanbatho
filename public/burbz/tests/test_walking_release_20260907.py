@@ -5,6 +5,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 RELEASE = "walking-quests-v361-20260907"
+CURRENT_BUILD = "appearance-v362-20260907"
 RUNTIMES = (
     "walking_route_core.js",
     "walking_encounter_core.js",
@@ -39,9 +40,9 @@ def test_changed_quest_builder_and_entire_feature_are_required_offline():
 def test_entry_page_and_worker_use_matching_walking_release():
     index = (ROOT / "index.html").read_text(encoding="utf-8")
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert f"const BURBZ_BUILD = '{RELEASE}';" in index
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in index
     cache = re.search(r"const BURBZ_CACHE = '([^']+)';", sw)
-    assert cache and cache.group(1).endswith("-" + RELEASE)
+    assert cache and cache.group(1).endswith("-" + CURRENT_BUILD)
     for runtime in RUNTIMES:
         assert f'<script src="{runtime}?v={RELEASE}"></script>' in index
     assert f'<link rel="stylesheet" href="{STYLE}?v={RELEASE}">' in index

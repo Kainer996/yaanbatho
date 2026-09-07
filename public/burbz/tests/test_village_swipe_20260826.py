@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "village-swipe-v332-20260826"
-CURRENT_BUILD = "walking-quests-v361-20260907"
+CURRENT_BUILD = "appearance-v362-20260907"
 
 
 def run_node(source: str) -> dict:

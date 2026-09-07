@@ -1,0 +1,74 @@
+/* Both existing themes stay loaded; a single root preference chooses the look. */
+#settingsModal .modal-sheet { max-height:88vh; max-height:88dvh; }
+#settingsModal .settings-tabs { display:flex; gap:6px; padding:5px; margin:0 0 18px; border:1px solid var(--accent3); border-radius:12px; background:var(--bg2); }
+#settingsModal .settings-tab { flex:1; min-height:44px; padding:10px 12px; color:var(--text2); font:700 14px/1.3 'Inter',sans-serif; border-radius:8px; }
+#settingsModal .settings-tab[aria-selected="true"] { color:var(--text); background:var(--bg4); box-shadow:inset 0 -3px var(--accent); }
+#settingsModal [role="tabpanel"][hidden] { display:none !important; }
+#settingsAppearancePanel { padding:3px 0 14px; }
+#settingsAppearancePanel fieldset { border:0; min-width:0; }
+#settingsAppearancePanel legend { color:var(--text); font:400 20px/1.3 'Russo One',sans-serif; margin-bottom:8px; }
+#settingsAppearancePanel .appearance-intro { color:var(--text2); font-size:13px; line-height:1.55; margin-bottom:18px; }
+#settingsAppearancePanel .appearance-options { display:grid; gap:12px; }
+#settingsAppearancePanel .appearance-option { display:grid; grid-template-columns:64px minmax(0,1fr) 22px; align-items:center; gap:13px; padding:15px 13px; border:2px solid var(--accent3); border-radius:13px; background:var(--bg2); color:var(--text); cursor:pointer; }
+#settingsAppearancePanel .appearance-option:has(:checked) { border-color:var(--accent); box-shadow:inset 0 0 0 1px var(--accent); background:var(--bg4); }
+#settingsAppearancePanel .appearance-option:focus-within { outline:3px solid var(--accent2); outline-offset:3px; }
+#settingsAppearancePanel .appearance-option strong { display:block; font-size:16px; line-height:1.3; }
+#settingsAppearancePanel .appearance-description { display:block; margin-top:4px; color:var(--text2); font-size:12px; line-height:1.5; }
+#settingsAppearancePanel .appearance-selected { display:none; margin-top:5px; font-size:11px; font-weight:800; color:var(--accent); }
+#settingsAppearancePanel .appearance-option:has(:checked) .appearance-selected { display:block; }
+#settingsAppearancePanel input[type="radio"] { width:19px; height:19px; padding:0; accent-color:var(--accent); cursor:pointer; }
+#settingsAppearancePanel .appearance-preview { width:64px; height:57px; padding:11px 8px 7px; border:1px solid #d6a84f; border-radius:8px; background:linear-gradient(#544026 0 10px,#11100d 10px); box-shadow:inset 0 1px #ffe9b76b,0 3px 5px #0005; }
+#settingsAppearancePanel .appearance-preview::before { content:''; display:block; height:19px; margin:4px 0; border:1px solid #8f6f2a; border-radius:3px; background:#292215; }
+#settingsAppearancePanel .appearance-preview::after { content:''; display:block; width:27px; height:5px; background:#d6a84f; border-radius:2px; }
+#settingsAppearancePanel .appearance-preview.is-comic { border:2px solid #152828; background:linear-gradient(#ffda38 0 10px,#fff9e8 10px); box-shadow:3px 3px #152828; }
+#settingsAppearancePanel .appearance-preview.is-comic::before { border:2px solid #152828; background:#73dfcd; }
+#settingsAppearancePanel .appearance-preview.is-comic::after { background:#152828; }
+#appearanceStatus { min-height:20px; margin:14px 0 0; color:var(--text2); font-size:12px; line-height:1.5; }
+.comic-ui #settingsModal .settings-tabs { border:2px solid var(--comic-ink); background:var(--comic-paper); }
+.comic-ui #settingsModal .settings-tab[aria-selected="true"] { background:var(--comic-teal); color:var(--comic-ink); box-shadow:inset 0 -3px var(--comic-ink); }
+.comic-ui #settingsAppearancePanel .appearance-option { border-color:var(--comic-ink); background:var(--comic-white); box-shadow:3px 3px var(--comic-ink); }
+.comic-ui #settingsAppearancePanel .appearance-option:has(:checked) { background:var(--comic-yellow); box-shadow:inset 0 0 0 1px var(--comic-ink),3px 3px var(--comic-ink); }
+
+/* The v361 quest layouts stay identical; only their woodland surfaces change. */
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) {
+  --wq-paper:var(--comic-ink); --wq-muted:var(--comic-muted); --wq-brass:#765007;
+  --wq-edge:var(--comic-ink); --wq-green:#246939; --wq-panel:var(--comic-white);
+}
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog) :is(.quest-overlay-panel,.wq-discovery-panel),
+.comic-ui #mapQuestFocusCard { background:var(--comic-paper); color:var(--comic-ink); border:3px solid var(--comic-ink); box-shadow:4px 5px var(--comic-ink); }
+.comic-ui #walkQuestSheet :is(.wq-offer-card,.wq-story-preview) { background:var(--comic-white); border-color:var(--comic-ink); box-shadow:2px 3px var(--comic-ink); }
+.comic-ui #walkQuestSheet .wq-offer-card.is-selected { background:var(--comic-yellow); border-color:var(--comic-ink); box-shadow:inset 3px 0 var(--comic-ink),2px 3px var(--comic-ink); }
+.comic-ui #walkQuestSheet .wq-offer-emblem { background:var(--comic-teal); color:var(--comic-ink); border:2px solid var(--comic-ink); box-shadow:none; }
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) .wq-encounter-card { background:var(--comic-white); border:2px solid var(--comic-ink); box-shadow:2px 3px var(--comic-ink); }
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) :is(.wq-encounter-art,.wq-discovery-art) { background:radial-gradient(ellipse at 50% 70%,#ffda3860,transparent 70%); }
+.comic-ui :is(#walkQuestSheet,#mapQuestFocusCard) .wq-route-facts .wq-route-metrics { background:var(--comic-white); border:2px solid var(--comic-ink); }
+.comic-ui #walkQuestSheet .wq-offer-start { border-color:#15282840; }
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog) :is(.wq-close,.wq-choice,.wq-primary,.wq-actions > button,#wqEncounterBack),
+.comic-ui #mapQuestFocusCard :is(.map-quest-focus-primary,.map-quest-focus-secondary,#mapQuestFocusDetails) { background:var(--comic-yellow); color:var(--comic-ink); border:2px solid var(--comic-ink); box-shadow:2px 3px var(--comic-ink); }
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog) :is(.wq-close,.wq-choice,.wq-actions > button + button),
+.comic-ui #mapQuestFocusCard :is(.map-quest-focus-secondary,#mapQuestFocusDetails) { background:var(--comic-teal); }
+.comic-ui :is(#walkQuestSheet,#mapQuestFocusCard) .wq-empty { background:var(--comic-white); border-color:var(--comic-ink); }
+.comic-ui #walkQuestSheet .wq-discovery-panel.is-embedded { border:0; background:none; box-shadow:none; }
+.comic-ui :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) :is(.wq-offer-card,.wq-encounter-card,.wq-choice,.wq-primary,.wq-close):focus-visible { outline-color:#067e87; }
+.comic-ui .wq-route-pin { background:var(--comic-paper); color:var(--comic-ink); border-color:var(--comic-ink); box-shadow:2px 3px var(--comic-ink); }
+.comic-ui .wq-route-pin.is-discovered { background:var(--comic-teal); }
+.comic-ui #liveMapShell .quest-marker .wq-marker-encounter { background:var(--comic-paper); border-color:var(--comic-ink); }
+@media (hover:hover) {
+  .comic-ui #walkQuestSheet .wq-offer-card:hover { background:var(--comic-yellow); border-color:var(--comic-ink); }
+  .comic-ui :is(#walkQuestSheet,#wqNpcDialog,#mapQuestFocusCard,#walkingQuestsList) :is(button.wq-encounter-card,.wq-choice):hover { border-color:#145e58; }
+}
+@media (max-width:350px) {
+  #settingsAppearancePanel .appearance-option { grid-template-columns:50px minmax(0,1fr) 19px; gap:9px; padding:12px 9px; }
+  #settingsAppearancePanel .appearance-preview { width:50px; }
+}
+.comic-ui #mapQuestFocusCard .map-quest-focus-name { color:var(--comic-ink); }
+.comic-ui #mapQuestFocusCard :is(.map-quest-focus-brief,.map-quest-focus-chip) { color:var(--comic-muted); }
+.comic-ui #mapQuestFocusCard .map-quest-focus-chip { background:var(--comic-white); border-color:#15282840; }
+.comic-ui #mapQuestFocusCard .map-quest-focus-close { color:var(--comic-ink); background:var(--comic-teal); border:2px solid var(--comic-ink); box-shadow:2px 3px var(--comic-ink); }
+/* Keep a readable map above the brief on short phones; details remain scrollable. */
+@media (max-width:600px) and (max-height:600px) {
+  #liveMapShell.quest-focused .map-zoom-controls { flex-direction:row; top:62px; }
+  #mapQuestFocusCard { max-height:min(var(--quest-focus-max-height,100%),max(160px,calc(100% - 150px))); scroll-padding-bottom:60px; }
+  #mapQuestFocusCard :is(.map-quest-focus-meta,.wq-route-shape) { display:none; }
+  #mapQuestFocusCard .map-quest-focus-actions { position:sticky; bottom:0; z-index:1; padding-top:6px; background:var(--bg2); box-shadow:0 -5px 8px var(--bg2); }
+}

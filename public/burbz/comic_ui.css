@@ -3,7 +3,7 @@
 @font-face { font-family:'Russo One'; font-style:normal; font-weight:400; font-display:swap; src:url('assets/comic-ui/fonts/russo-one.woff2') format('woff2'); }
 @font-face { font-family:'Rajdhani'; font-style:normal; font-weight:700; font-display:swap; src:url('assets/comic-ui/fonts/rajdhani-bold.woff2') format('woff2'); }
 @font-face { font-family:'Inter'; font-style:normal; font-weight:100 900; font-display:swap; src:url('assets/comic-ui/fonts/inter-latin.woff2') format('woff2'); }
-:root {
+html[data-appearance="comic"] {
   --comic-ink:#152828;
   --comic-paper:#fff9e8;
   --comic-white:#fffef8;
@@ -20,7 +20,7 @@
   --common:#546059; --uncommon:#246939; --rare:#146976; --epic:#764396; --legendary:#79500a;
   --panel-edge:#152828; --panel-light:#fffef8;
 }
-html, body.comic-ui { background:var(--bg); color:var(--comic-ink); }
+html[data-appearance="comic"], body.comic-ui { background:var(--bg); color:var(--comic-ink); }
 body.comic-ui { font-size:15px; }
 .comic-ui #app { background:var(--bg); }
 .comic-ui :is(.screen:not(#screen-map),.bird-equip-overlay) {
