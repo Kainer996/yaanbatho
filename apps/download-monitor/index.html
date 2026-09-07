@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Download Monitor — Yaan Batho</title>
+    <meta name="description" content="A native Linux dashboard for local download activity, with live progress where available and clear labels when the outcome is unknown.">
+    <link rel="canonical" href="https://yaanbatho.com/apps/download-monitor/">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="../install.css">
+</head>
+<body>
+    <a class="app-skip" href="#app-content">Skip to content</a>
+    <header><div class="container app-header">
+        <a class="logo" href="/">Yaan Batho</a>
+        <a href="/#work">← Selected works</a>
+    </div></header>
+    <main id="app-content" class="container app-install">
+        <div class="page-header">
+            <p class="app-label">Desktop app · Linux · tested on Omarchy</p>
+            <h1>Download Monitor</h1>
+            <p>A native Linux dashboard for local download activity, with live progress where available and clear labels when the outcome is unknown.</p>
+        </div>
+        <div class="app-download">
+            <a class="btn btn-primary" href="download-monitor-source-2026-09-07.zip" download>Download source ZIP ↓</a>
+            <p>Source release · 7 September 2026 · includes installer and README</p>
+            <p><a href="README.md">Read the README</a> · <a href="SHA256SUMS">SHA-256 checksum</a></p>
+        </div>
+
+        <section class="content-section">
+            <h2>Before you install</h2>
+            <p>Requires system Python 3.10+, PyGObject, GTK 4 and libadwaita 1 on a graphical Linux desktop. On Arch/Omarchy the packages are <code>python</code>, <code>python-gobject</code>, <code>gtk4</code> and <code>libadwaita</code>. There is no Windows or macOS build.</p>
+            <p>This is a local monitor. It cannot start, pause, resume or cancel downloads. A fresh install starts with no saved observations or queue.</p>
+        </section>
+        <section class="content-section">
+            <h2>Install and open</h2>
+            <p>Extract the ZIP. Open a terminal in <code>download-monitor-source</code> and run these commands as your normal desktop user, without sudo:</p>
+            <pre><code>bash install.sh
+bash "$HOME/.local/share/download-monitor/launch.sh"</code></pre>
+            <p>The installer checks the GTK dependencies and adds an application-menu entry. It does not change your top bar or window-manager settings.</p>
+        </section>
+        <section class="content-section">
+            <h2>What it can see</h2>
+            <p>Supported Chromium-family download records, writable outputs of your curl, wget, wget2 and aria2c processes, and up to 500 files at the top level of Downloads. Browser history may lag; terminal tools often expose no reliable total or final outcome.</p>
+            <p>There is no dedicated Firefox, torrent, package-manager or remote-machine integration. Unavailable totals and uncertain states remain marked unknown. The Queue tab can display local dependency requests; it does not execute transfers.</p>
+            <p>Double-click a card to open its folder. Close or Escape exits without changing transfers. Data stays on your computer; the website receives none of it. See the README for full coverage and removal instructions.</p>
+        </section>
+        <p class="app-back"><a href="/#work">← Back to selected works</a></p>
+    </main>
+</body>
+</html>

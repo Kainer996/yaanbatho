@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Telly — Yaan Batho</title>
+    <meta name="description" content="A classic television cabinet for official BBC iPlayer, ITVX and Channel 4 pages, with 16 channel presets.">
+    <link rel="canonical" href="https://yaanbatho.com/apps/telly/">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="../install.css">
+</head>
+<body>
+    <a class="app-skip" href="#app-content">Skip to content</a>
+    <header><div class="container app-header">
+        <a class="logo" href="/">Yaan Batho</a>
+        <a href="/#work">← Selected works</a>
+    </div></header>
+    <main id="app-content" class="container app-install">
+        <div class="page-header">
+            <p class="app-label">Desktop app · Omarchy Linux · x86-64</p>
+            <h1>Telly</h1>
+            <p>A classic television cabinet for official BBC iPlayer, ITVX and Channel 4 pages, with 16 channel presets.</p>
+        </div>
+        <div class="app-download">
+            <a class="btn btn-primary" href="telly-source-2026-09-07.zip" download>Download source ZIP ↓</a>
+            <p>Source release · 7 September 2026 · includes installer and README</p>
+            <p><a href="README.md">Read the README</a> · <a href="SHA256SUMS">SHA-256 checksum</a></p>
+        </div>
+
+        <section class="content-section">
+            <h2>Before you install</h2>
+            <p>Built and tested on Omarchy Linux. Requires system Python 3.10+ with PySide6 (Qt 6), Node.js 18+, and X11 or XWayland with libX11. The browser installer also needs curl, ar (binutils), tar and xz. There is no Windows or macOS build.</p>
+            <p><strong>Authenticated broadcaster playback is not yet verified.</strong> ITVX does not officially list Linux support. Accounts, location restrictions and playback remain controlled by each broadcaster.</p>
+        </section>
+        <section class="content-section">
+            <h2>Install and open</h2>
+            <p>Extract the ZIP. Open a terminal in <code>telly-source</code> and run these commands as your normal desktop user, without sudo:</p>
+            <pre><code>bash install.sh
+bash "$HOME/.local/share/telly/launch.sh"</code></pre>
+            <p>The installer adds Telly to your application menu. It uses installed Google Chrome if available; otherwise it downloads a private x86-64 Chrome runtime directly from Google.</p>
+            <p>Choose a channel and use <strong>Sign in</strong> on the cabinet. Sign in in the normal Chrome window, close it, then use the broadcaster’s <strong>Watch live</strong> control.</p>
+        </section>
+        <section class="content-section">
+            <h2>Your own television</h2>
+            <p>Switch channels with the dial or presets. Drag the title area to move, and the edges to resize. Close × stays visible in fullscreen. Escape leaves fullscreen first, then closes the normal window.</p>
+            <p>Sign-ins and settings stay in your local Telly profile. The ZIP contains application source, with no browser profile or saved settings. See the README for browser updates and removal instructions.</p>
+        </section>
+        <p class="app-back"><a href="/#work">← Back to selected works</a></p>
+    </main>
+</body>
+</html>
