@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "tutorial-contrast-v364-20260907"
+RELEASE_PIN = "field-map-v365-20260907"
 
 
 def function_source(name: str) -> str:

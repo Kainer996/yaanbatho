@@ -1,0 +1,54 @@
+/* A readable illustrated field map: quiet terrain, brass instruments, clear trails. */
+#liveMapShell { --field-ink:#263c30; --field-paper:#fff1cd; --field-brass:#d6b975; --field-panel:#202b20; }
+#screen-map #liveMapShell { height:calc(100% - var(--nav-height) - var(--safe-bottom)); min-height:0; }
+/* The invisible lower edge of Merlin's wrapper must not swallow map taps. */
+body[data-active-screen="map"] #petCompanion:not(.flying):not(.merlin-in-flight) { pointer-events:none; }
+body[data-active-screen="map"] #petCompanion:not(.merlin-in-flight) #petSprite { pointer-events:auto; }
+#burbzLiveMap { background:#71816a; }
+#burbzLiveMap::after { background:radial-gradient(ellipse at 50% 55%,transparent 50%,#26352529 100%); }
+#liveMapShell .map-sky-haze { height:18%; background:linear-gradient(#eee4bb30,transparent); }
+#liveMapShell .map-playfield-vignette { box-shadow:inset 0 0 36px #15291b24; }
+#liveMapShell .field-map-icon { display:block; width:23px; height:23px; flex:none; }
+#liveMapShell .map-quest-btn { top:64px; min-width:156px; height:52px; padding:5px 10px 5px 6px; gap:8px; border-radius:12px; border-color:#e4cb8b; color:var(--field-paper); background:linear-gradient(130deg,#43513a,#1c281f); box-shadow:inset 0 1px #fff3,0 3px 9px #15221466; }
+#liveMapShell .map-quest-btn::after { display:none; }
+#liveMapShell .map-quest-btn .map-quest-btn-label { color:var(--field-paper); font:800 12px/1.2 'Rajdhani',sans-serif; letter-spacing:.05em; }
+#liveMapShell .map-quest-btn .field-map-emblem { display:grid; place-items:center; width:38px; height:38px; border-radius:50%; color:#f2d594; border:1px solid #d6b9758c; background:radial-gradient(circle at 35% 20%,#758262,#2a3928); box-shadow:inset 0 0 0 3px #263a2a,0 1px 3px #0004; }
+#liveMapShell .map-side-quest-btn { top:122px; height:44px; min-width:144px; background:linear-gradient(130deg,#413b29,#24271c); }
+#liveMapShell .map-side-quest-btn .field-map-emblem { width:31px; height:31px; }
+#liveMapShell .map-side-quest-btn .field-map-icon { width:20px; height:20px; }
+#liveMapShell .map-quest-btn[aria-pressed="true"] { border-color:#fff3c7; box-shadow:inset 3px 0 #e8d18d,0 3px 9px #15221466; }
+#liveMapShell .map-zoom-controls { top:184px; bottom:auto; right:12px; gap:4px; padding:4px; border:1px solid #d6b975; border-radius:12px; background:#243022ed; box-shadow:0 3px 10px #15221455; }
+#liveMapShell .map-zoom-btn { display:grid; place-items:center; width:40px; height:40px; border:0; border-radius:8px; background:transparent; color:var(--field-paper); box-shadow:none; }
+#liveMapShell .map-locate-btn { display:grid!important; place-items:center; top:286px; bottom:auto; right:12px; width:48px; height:44px; border:1px solid #d6b975; border-radius:12px; color:var(--field-paper); background:#243022ed; box-shadow:0 3px 10px #15221455; }
+#liveMapShell .map-area-birds-toggle { padding:7px; border:1px solid #d6b97580; border-radius:10px; background:#243022ed; color:var(--field-paper); }
+#liveMapShell .map-area-birds-title,#liveMapShell .map-area-birds-sub { color:var(--field-paper); text-shadow:none; }
+#liveMapShell .map-area-birds-list { margin-top:6px; }
+#liveMapShell .map-area-bird { background:#243022e8; border-color:#d6b97555; box-shadow:0 2px 6px #15221444; }
+#liveMapShell .wq-offer-pin { min-width:44px; min-height:44px; }
+#liveMapShell .wq-offer-pin .wq-offer-badge { width:44px; height:44px; border:2px solid #e9d398; border-radius:50% 50% 50% 5px; background:linear-gradient(145deg,#53664a,#233f30); color:#fff1bd; box-shadow:0 2px 0 #263523,0 3px 8px #10241866; }
+#liveMapShell .wq-offer-pin .wq-offer-distance { color:#263b2d; background:#fff1d4; border:1px solid #5f704e; border-radius:6px; font-size:11px; box-shadow:0 2px 5px #10241833; }
+#liveMapShell .wq-offer-pin.selected .wq-offer-badge { animation:none; outline:3px solid #fff1bd; outline-offset:3px; background:#294b3c; }
+#liveMapShell .wq-offer-pin.muted .wq-offer-badge { width:20px; height:20px; opacity:.7; border-width:1px; }
+#liveMapShell .wq-offer-pin.muted .field-map-icon { display:none; }
+#liveMapShell .burbz-pickup-marker .burbz-pickup-orb { color:#ffe8ae; border:1px solid #d4be80; background:linear-gradient(135deg,#4a593b,#263724); box-shadow:0 2px 7px #15221455; animation:none; }
+#liveMapShell .burbz-pickup-marker .field-map-icon { width:23px; height:23px; }
+#liveMapShell .burbz-pickup-marker.locked .burbz-pickup-orb { opacity:.7; filter:saturate(.5); border-style:dashed; }
+#liveMapShell .burbz-pickup-marker:focus-visible { outline:3px solid #fff1bd; outline-offset:2px; border-radius:10px; }
+#liveMapShell .maplibregl-ctrl-attrib.maplibregl-compact { opacity:.8; }
+#liveMapShell .maplibregl-ctrl-attrib a { color:#fff1d4!important; }
+#liveMapShell.quest-focused .map-quest-btn { top:64px; width:48px; min-width:0; height:48px; opacity:1; }
+#liveMapShell.quest-focused .map-side-quest-btn { top:120px; }
+#liveMapShell.quest-focused .map-zoom-controls { top:176px; opacity:1; }
+#liveMapShell.quest-focused .map-locate-btn { top:278px; }
+.comic-ui #liveMapShell { --field-paper:#fff9e8; }
+.comic-ui #liveMapShell :is(.map-quest-btn,.map-zoom-controls,.map-locate-btn,.map-area-birds-toggle) { border:2px solid #152828; box-shadow:3px 3px #152828; }
+.comic-ui #liveMapShell .map-area-bird { color:#152828; background:#fff9e8; border:2px solid #152828; }
+.comic-ui #liveMapShell .map-area-bird :is(.map-area-bird-name,.map-area-bird-rarity) { color:#152828; }
+@media (max-width:350px) { #liveMapShell .map-quest-btn { min-width:144px; right:8px; } #liveMapShell .map-side-quest-btn { min-width:134px; } }
+@media (orientation:landscape) and (max-height:560px) {
+  #liveMapShell .map-quest-btn,#liveMapShell.quest-focused .map-quest-btn { top:12px; right:108px; }
+  #liveMapShell .map-side-quest-btn,#liveMapShell.quest-focused .map-side-quest-btn { top:12px; right:276px; }
+  #liveMapShell .map-zoom-controls,#liveMapShell.quest-focused .map-zoom-controls { grid-template-columns:repeat(2,40px); top:auto; bottom:12px; }
+  #liveMapShell .map-locate-btn,#liveMapShell.quest-focused .map-locate-btn { top:auto; bottom:12px; right:112px; height:50px; }
+}
+@media (prefers-reduced-motion:reduce) { #liveMapShell .wq-offer-badge { animation:none!important; } }

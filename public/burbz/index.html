@@ -4426,6 +4426,7 @@ if (window.BurbzAppearanceCore) {
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
+<link rel="stylesheet" href="field_map_ui.css?v=field-map-v365-20260907">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5479,6 +5480,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
+<script src="field_map_ui.js?v=field-map-v365-20260907"></script>
 <script src="quest_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
@@ -18657,41 +18659,7 @@ function applyBurbzCameraPadding() {
   } catch (e) {}
 }
 async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
-function styleBurbzMapLayers() { if (!liveMap) return; const style = liveMap.getStyle(); (style.layers || []).forEach(layer => { const id = layer.id || ''; const srcLayer = layer['source-layer'] || ''; try {
-  if (layer.type === 'background') liveMap.setPaintProperty(id, 'background-color', '#15291d');
-  if (/water|river|stream/i.test(id)) { if (layer.type === 'fill') liveMap.setPaintProperty(id, 'fill-color', '#345f69'); if (layer.type === 'line') liveMap.setPaintProperty(id, 'line-color', '#6fc7d8'); }
-  if (/road|transport|street|path|track/i.test(id) && layer.type === 'line') {
-    liveMap.setPaintProperty(id, 'line-color', ['match', ['get','class'], ['motorway','trunk','primary'], '#a47a3d', ['secondary','tertiary'], '#8f6f35', ['path','track','footway','bridleway'], '#7a6b40', '#6e5b36']);
-    liveMap.setPaintProperty(id, 'line-opacity', .74);
-    // Footpaths and tracks read as worn medieval trails.
-    if (/path|track/i.test(id)) { try { liveMap.setPaintProperty(id, 'line-dasharray', [1.6, 1.4]); } catch (e2) {} }
-  }
-  if (/building/i.test(id)) {
-    // Keep flat building footprints for a richer, more detailed map (they read
-    // as clustered timber/stone dwellings), but drop the modern 3D extrusions.
-    if (layer.type === 'fill-extrusion') { liveMap.setLayoutProperty(id, 'visibility', 'none'); }
-    else if (layer.type === 'fill') {
-      liveMap.setLayoutProperty(id, 'visibility', 'visible');
-      try { liveMap.setPaintProperty(id, 'fill-color', ['interpolate', ['linear'], ['zoom'], 14, '#3a3428', 17, '#463d2c']); } catch (e0) {}
-      try { liveMap.setPaintProperty(id, 'fill-opacity', ['interpolate', ['linear'], ['zoom'], 13, 0, 14.5, .55, 17, .82]); } catch (e0) {}
-      try { liveMap.setPaintProperty(id, 'fill-outline-color', '#6a5738'); } catch (e0) {}
-    }
-  }
-  if (layer.type === 'symbol') {
-    // No modern road furniture in a medieval realm: hide street names, road
-    // numbers/shields, house numbers, transit and one-way arrows entirely.
-    const isRoadText = /transportation_name|housenumber|aerodrome_label/i.test(srcLayer) || /shield|highway|road[-_]|junction|oneway|ref|ferry|aeroway|transit|railway/i.test(id);
-    if (isRoadText) { liveMap.setLayoutProperty(id, 'visibility', 'none'); }
-    else if (/label|place|poi/i.test(id) || /^poi$/i.test(srcLayer)) {
-      liveMap.setLayoutProperty(id, 'visibility', id.match(/place|settlement|country|city|town/i) ? 'visible' : 'none');
-    }
-    if (liveMap.getLayoutProperty(id, 'visibility') !== 'none' && liveMap.getPaintProperty(id, 'text-color') !== undefined) {
-      liveMap.setPaintProperty(id, 'text-color', '#d7c184');
-      try { liveMap.setPaintProperty(id, 'text-halo-color', 'rgba(16,24,14,.85)'); } catch (e3) {}
-    }
-  }
-  if (/park|landcover|landuse|wood|forest|grass/i.test(id) && (layer.type === 'fill' || layer.type === 'background')) { if (liveMap.getPaintProperty(id, 'fill-color') !== undefined) liveMap.setPaintProperty(id, 'fill-color', '#274b2e'); if (liveMap.getPaintProperty(id, 'fill-opacity') !== undefined) liveMap.setPaintProperty(id, 'fill-opacity', .54); }
-} catch(e) {} }); }
+function styleBurbzMapLayers() { window.BurbzFieldMapUI?.apply(liveMap); }
 // 3D terrain + hillshade removed: the DEM tile downloads and terrain mesh were
 // the single biggest cause of the slow, jumpy map on phones. The painted
 // medieval styling carries the look without them.
@@ -21265,7 +21233,7 @@ function drawQuestOverviewMarkers() {
     const displayOffset = o.routeSchemaVersion === 1 ? {x:0,y:0} : questPinDisplayOffset(i);
     el.style.setProperty('--quest-pin-x', displayOffset.x + 'px');
     el.style.setProperty('--quest-pin-y', displayOffset.y + 'px');
-    el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge"><img class="wq-offer-badge-art" src="assets/ui/quest-compass-emblem.webp" alt="" decoding="async"></span></span>';
+    el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge">' + window.BurbzFieldMapUI.icon(o.routeMode === 'loop' ? 'compass' : 'trail') + '</span></span>';
     el.addEventListener('click', ev => { ev.stopPropagation(); focusQuestOnMap(i); });
     const start = o.points[0];
     questOverview.markers.push(new maplibregl.Marker({ element: el, anchor: 'bottom' }).setLngLat([start.lon, start.lat]).addTo(liveMap));
@@ -22224,7 +22192,11 @@ function drawMapPickups(lat, lon) {
       .slice(0, zoomedOut ? 26 : 14))
     .forEach(({ p, dist }) => {
       const inReach = dist <= MAP_PICKUP_RANGE_M;
-      const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + p.type.glyph + '</div>');
+      const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + window.BurbzFieldMapUI.pickupIcon(p.type) + '</div>');
+      el.setAttribute('role', 'button'); el.tabIndex = 0;
+      el.title = p.type.label + (inReach ? ' — gather' : ' — walk closer to gather');
+      el.setAttribute('aria-label', el.title);
+      el.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ev.stopPropagation(); el.click(); } });
       if (p.type.cls) el.classList.add(p.type.cls); // gear caches shimmer, relic chests glow
       if (!inReach) el.classList.add('locked');
       el.addEventListener('click', ev => { ev.stopPropagation(); collectMapPickup(p, el); });
@@ -22686,6 +22658,13 @@ function applyFeatureGates() {
       item.title = hint;
     }
   });
+  ['hudCoinsChip','hudTimberChip','hudStoneChip'].forEach(id => {
+    const item = $(id); if (!item) return;
+    const locked = map.inventory === false;
+    item.setAttribute('aria-disabled', String(locked));
+    const label = id === 'hudCoinsChip' ? 'Coins' : id === 'hudTimberChip' ? 'Timber' : 'Stone';
+    item.setAttribute('aria-label', label + (locked ? ' — ' + featureUnlockHint('inventory') : ' — open Royal Stores'));
+  });
   // Stable rows and positions from the first frame through every unlock.
   document.querySelectorAll('#bottomNav .dock-pair, #bottomNav .dock-row').forEach(row => { row.hidden = false; });
   document.body.classList.remove('dock-compact');
@@ -22766,6 +22745,8 @@ document.addEventListener('click', ev => {
 let currentScreen = 'map';
 
 function switchScreen(name) {
+  // Every Stores shortcut uses the same existing progression gate as the dock.
+  if (name === 'inventory' && !featureGateOpen('inventory')) { showToast(featureUnlockHint('inventory')); return false; }
   if (name === currentScreen) return;
   if (currentScreen === 'battle') {
     if (battleState?.aimFlight) return;
@@ -42525,7 +42506,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'tutorial-contrast-v364-20260907';
+const BURBZ_BUILD = 'field-map-v365-20260907';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -43794,6 +43775,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 }
 
 // Run
+window.BurbzFieldMapUI?.controls(document);
 init();
 
 })();
