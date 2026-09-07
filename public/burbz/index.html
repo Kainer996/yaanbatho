@@ -11644,14 +11644,15 @@ async function loadBirdEducation() {
       fetchBirdEducationDataset(BIRD_EDUCATION_UK50_URL, false),
       fetchBirdEducationDataset(BIRD_EDUCATION_REGIONAL_20260715_URL, false),
       fetchBirdEducationDataset(BIRD_EDUCATION_NATIONAL_20260715_URL, false),
+      fetchBirdEducationDataset('/burbz/data/bird-education-enrichment-v366.json?v=illustrated-world-v366-20260907', false),
       fetchBirdEducationDataset('/burbz/data/bird-facts-v366.json?v=illustrated-world-v366-20260907', false)
-    ]).then(([base, uk50, regional20260715, national20260715, verified]) => {
+    ]).then(([base, uk50, regional20260715, national20260715, enrichment, verified]) => {
       const mergedExistingEducation = { ...(base || {}), ...(uk50 || {}) };
       const verifiedEducation = {};
       for (const row of (verified.species || [])) {
         if (row && row.name && Array.isArray(row.sources) && row.sources.length) verifiedEducation[row.name] = { ...row, verifiedPrimary:true };
       }
-      birdEducationCache = { ...mergedExistingEducation, ...(regional20260715 || {}), ...(national20260715 || {}), ...verifiedEducation };
+      birdEducationCache = { ...mergedExistingEducation, ...(regional20260715 || {}), ...(national20260715 || {}), ...(enrichment || {}), ...verifiedEducation };
       return birdEducationCache;
     }).catch(err => {
       console.warn('BURBZ: UK50 education dataset unavailable', err);
@@ -11701,11 +11702,13 @@ function renderEducationSections(bird, education) {
     if (typeof value !== 'string' || !value.trim()) return '';
     value = value.trim();
     if (primary) return value;
+    // These revision-pinned imports contain selected source paragraphs, not the old templates.
+    if (education.encyclopediaImport && ['summary','wikipediaExtract'].includes(key)) return value;
     value = value.replace(/^.+? is represented from real field biology, not fantasy labels\.\s*/i, '');
-    if (/In Burbz|Burbz field note/i.test(value) || (key === 'behaviour' && /^Look for:/i.test(education.identification || ''))) return '';
+    if (/In Burbz (?:its|the) stats|Burbz field note/i.test(value) || (key === 'behaviour' && /^Look for:/i.test(education.identification || ''))) return '';
     if (/game stats|battle stats|range handling|circular equivalent|centroid|Burbz month|source checklist status|conservative approximations|no fabricated local prey|broad group ecology|from family ecology|broad trophic context|Game region hint|Typical Burbz behaviour note/i.test(value)) return '';
     if (/^(?:Start with size|Check size, silhouette|Use size, silhouette|Watch how it moves|Watch feeding, flocking|Use feeding (?:clues|style)|For learning, notice|Observe (?:from (?:a )?distance|birds from distance|seasonal display|display, nesting)|Compare the range notes|Use (?:the )?(?:Wikipedia )?notes below|Use the cited sources|Check local field guides|Sourced field-guide context from Wikipedia|Look for:|Look for the species-specific)/i.test(value)) return '';
-    if (/not yet available|coming soon|being expanded|field-guide details are being checked|Regional expansion record|consult (?:the |a )?(?:local|regional)|use (?:the )?species|typical (?:of|for) (?:the|its)|seasonal timing/i.test(value)) return '';
+    if (/^(?:not yet available|coming soon|being expanded|field-guide details are being checked|Regional expansion record|consult (?:the |a )?(?:local|regional)|use (?:the )?species|typical (?:of|for) (?:the|its)|seasonal timing)/i.test(value)) return '';
     if (key === 'habitat' && /range handling|Game stats are derived/i.test((education.range || '') + ' ' + (education.behaviour || ''))) return '';
     value = value.replace(/^Look for the combination of (.+?)\. Confirm overall size[\s\S]*$/i, '$1.');
     value = value.replace(/^Its profile is grounded in these observed behaviours: (.+?)\. Watch feeding technique[\s\S]*$/i, '$1.');
@@ -11837,6 +11840,7 @@ function openBirdInfo(birdId) {
 
   if (!education) refreshBirdEducationBlock(birdId, bird);
   $('birdInfoModal').classList.add('show');
+  $('birdInfoModal').querySelector('.bird-info-sheet').scrollTop = 0;
   $('birdInfoClose')?.focus({preventScroll:true});
   SFX.tap();
   vibrate(10);

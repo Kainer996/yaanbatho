@@ -26,12 +26,17 @@ assert(nationalHTML.includes('Papasula abbotti'));assert(!nationalHTML.includes(
 run("birdEducationCache={Alternate:{title:'Alternate',scientificName:'Passer domesticus',summary:'scientific identity'}}");
 assert.equal(run("getCachedBirdEducation({species:'House Sparrow',scientificName:'Passer domesticus'}).summary"),'scientific identity','Legacy facts can match an exact binomial without changing gameplay identity');
 const data=JSON.parse(fs.readFileSync(path.join(root,'data/bird-facts-v366.json')));assert(data.species.length>=20);assert.equal(new Set(data.species.map(x=>x.scientificName)).size,data.species.length);
+const enrichment=JSON.parse(fs.readFileSync(path.join(root,'data/bird-education-enrichment-v366.json')));
+for(const name of ['Capercaillie','Fork-tailed Swift']){
+ ctx.account=enrichment[name];const rendered=run("renderEducationSections({species:'Test'},account)");
+ assert(rendered.includes('Wikipedia overview'));assert(rendered.includes('Longer source account'));assert(!rendered.includes('not available here yet'));
+}
 for(const row of data.species){assert(row.name&&row.scientificName&&row.identification);assert(row.sources.length);for(const source of row.sources){const u=new URL(source.url);assert.equal(u.protocol,'https:');assert(/(^|\.)(rspb\.org\.uk|bto\.org|allaboutbirds\.org)$/.test(u.hostname));}}
 vm.runInContext(fn('globalMoneyHudMutationNeedsSync'),ctx);
 assert.equal(run("globalMoneyHudMutationNeedsSync({target:{closest:()=>({})}})"),false,'Clipped map transformations do not force HUD layout');
 assert.equal(run("globalMoneyHudMutationNeedsSync({target:{closest:()=>null}})"),true,'Overlay and header mutations still update the fallback coin HUD');
 const sw=fs.readFileSync(path.join(root,'sw.js'),'utf8'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
-for(const file of ['illustrated_world.css?v=illustrated-world-v366-20260907','data/bird-facts-v366.json?v=illustrated-world-v366-20260907','assets/illustrated-world-v366/card-folio.webp','assets/illustrated-world-v366/settlements.webp',...['village_walk.js','village_walk_core.js','village_walk_scene.js','village_walk.css'].map(f=>f+'?v=village-walk-v1-20260907'),...['geographic_forest_core.js','geographic_forest_worker.js','geographic_camera_core.js','geographic_marker_layer.js','geographic_map_3d.js','geographic_map_3d.css'].map(f=>f+'?v=geographic-terrain-v1-20260907'),'data/geographic-terrain-credits.html']){
+for(const file of ['illustrated_world.css?v=illustrated-world-v366-20260907','data/bird-facts-v366.json?v=illustrated-world-v366-20260907','data/bird-education-enrichment-v366.json?v=illustrated-world-v366-20260907','assets/illustrated-world-v366/card-folio.webp','assets/illustrated-world-v366/settlements.webp',...['village_walk.js','village_walk_core.js','village_walk_scene.js','village_walk.css'].map(f=>f+'?v=village-walk-v1-20260907'),...['geographic_forest_core.js','geographic_forest_worker.js','geographic_camera_core.js','geographic_marker_layer.js','geographic_map_3d.js','geographic_map_3d.css'].map(f=>f+'?v=geographic-terrain-v1-20260907'),'data/geographic-terrain-credits.html']){
  assert.equal(sw.split("'./"+file+"'").length-1,3,file+' in all offline sets');assert(updater.includes('"'+file.split('?')[0]+'"'));assert(fs.statSync(path.join(root,file.split('?')[0])).size>0);
 }
 console.log('Illustrated world: sourced identity lookup, escaped facts, honest missing data, source validation and atomic offline dependencies passed.');

@@ -53,6 +53,7 @@ FILES=(
   "geographic_map_3d.js"
   "geographic_map_3d.css"
   "data/geographic-terrain-credits.html"
+  "data/bird-education-enrichment-v366.json"
   "data/bird-facts-v366.json"
   "assets/illustrated-world-v366/card-folio.webp"
   "assets/illustrated-world-v366/settlements.webp"
