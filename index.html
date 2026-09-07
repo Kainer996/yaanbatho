@@ -9,27 +9,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yaan Batho — Creative Studio</title>
-    <meta name="description" content="Yaan Batho's creative studio: films, browser games, music and series — built in public.">
+    <title>Yaan Batho — Apps, Games, Films &amp; Music</title>
+    <meta name="description" content="Explore apps, browser games, films and electronic music by Yaan Batho. Try the projects, listen to Kainer and Il Diablo, or discuss a creative brief.">
     
     <link rel="alternate" type="application/json" href="/agent-catalog.json" title="Agent Tools Catalog">
     <link rel="ai-discovery" href="/llms.txt">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Yaan Batho — Creative Studio","url":"https://yaanbatho.com","description":"Creative studio by Yaan Batho: films, series, browser games, travel tools and music.","potentialAction":{"@type":"SearchAction","target":"https://yaanbatho.com/agent-tools.html"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","@id":"https://yaanbatho.com/#website","name":"Yaan Batho","alternateName":"Yaan Batho — Creative Studio","url":"https://yaanbatho.com/","description":"Apps, browser games, films and electronic music by Yaan Batho.","creator":{"@id":"https://yaanbatho.com/#person"}}</script>
 
     <!-- Canonical -->
     <link rel="canonical" href="https://yaanbatho.com/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Yaan Batho — Creative Studio" />
-    <meta property="og:description" content="Films, browser games, music and series — the creative studio of Yaan Batho, built in public." />
+    <meta property="og:title" content="Yaan Batho — Apps, Games, Films &amp; Music" />
+    <meta property="og:description" content="Explore the projects, play a browser game, listen to Kainer and Il Diablo, or discuss a creative brief with Yaan Batho." />
+    <meta property="og:site_name" content="Yaan Batho" />
     <meta property="og:url" content="https://yaanbatho.com/" />
     <meta property="og:image" content="https://yaanbatho.com/images/hero-banner.jpg" />
 
     <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Yaan Batho — Creative Studio" />
-    <meta name="twitter:description" content="Films, browser games, music and series — the creative studio of Yaan Batho, built in public." />
+    <meta name="twitter:title" content="Yaan Batho — Apps, Games, Films &amp; Music" />
+    <meta name="twitter:description" content="Explore the projects, play a browser game, listen to Kainer and Il Diablo, or discuss a creative brief with Yaan Batho." />
     <meta name="twitter:image" content="https://yaanbatho.com/images/hero-banner.jpg" />
 
     <!-- Person JSON-LD for LLM Discovery -->
@@ -37,37 +38,20 @@
     {
       "@context": "https://schema.org",
       "@type": "Person",
+      "@id": "https://yaanbatho.com/#person",
       "name": "Yaan Batho",
-      "alternateName": ["Yaan"],
-      "description": "Creator and builder running a public creative studio: films, series, browser games, music and useful internet experiments.",
+      "alternateName": ["Kainer", "Il Diablo"],
+      "description": "Creator of apps, browser games, films and electronic music.",
       "url": "https://yaanbatho.com/",
-      "image": "https://yaanbatho.com/images/hero-banner.jpg",
-      "jobTitle": "Universe Builder",
       "sameAs": [
-        "https://robotique.world",
-        "https://instagram.com/robotiqueworld",
-        "https://instagram.com/yaanbatho",
-        "https://x.com/yaanbatho",
-        "https://github.com/yaanbatho"
-      ],
-      "knowsAbout": [
-        "Artificial Intelligence",
-        "Futurism",
-        "Media Production",
-        "Video Production",
-        "Brain-Computer Interfaces",
-        "Creative Technology",
-        "Product Development",
-        "Sound Design",
-        "Game Development",
-        "Brand Design"
+        "https://github.com/Kainer996"
       ]
     }
     </script>
 
     <link rel="preload" as="image" href="images/hero-banner.jpg">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@400;500;600;700&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/lumenform.css?v=10">
+    <link rel="stylesheet" href="css/lumenform.css?v=11">
     <link rel="stylesheet" href="css/lumenform-world.css?v=10">
     <noscript>
         <style>
@@ -76,11 +60,13 @@
             .lf-reveal, .lf-line > span, .lf-hero-title { opacity: 1 !important; transform: none !important; }
             .lf-work-stage { display: none !important; }
             .lf-work-panel { grid-template-rows: 1fr !important; }
+            .lf-work-panel-inner { opacity: 1 !important; transform: none !important; padding: 6px 6px 26px 16px; }
             .lf-work-chev { display: none !important; }
         </style>
     </noscript>
 </head>
 <body class="lf">
+    <a class="lf-skip-link" href="#lf-main">Skip to content</a>
 
     <!-- ── Boot loader ─────────────────────────────────────────── -->
     <div id="lf-loader" aria-hidden="true">
@@ -99,31 +85,35 @@
                 <img src="images/logo-cyborg.png" alt="" class="lf-logo-mark">
                 <span class="lf-logo-type">YAAN BATHO<small>creative studio</small></span>
             </a>
-            <nav class="lf-nav" id="lf-nav">
+            <nav class="lf-nav" id="lf-nav" aria-label="Main navigation">
                 <a href="#studio">Studio</a>
-                <a href="#work">Foundry</a>
-                <a href="#capabilities">Engine&nbsp;Room</a>
+                <a href="#work">Work</a>
+                <a href="#capabilities">Skills</a>
                 <a href="#crew">Crew</a>
                 <a href="#contact">Contact</a>
                 <a href="projects.html" class="lf-nav-ext">Archive ↗</a>
                 <a href="music.html" class="lf-nav-ext">Music ↗</a>
                 <a href="/burbz/inbox.html" class="lf-nav-ext" title="Private tester feedback inbox">Burbz Feedback Inbox ↗</a>
             </nav>
-            <button class="lf-burger" id="lf-burger" aria-label="Toggle menu" aria-expanded="false">
+            <button class="lf-burger" id="lf-burger" aria-label="Toggle menu" aria-controls="lf-nav" aria-expanded="false">
                 <span></span><span></span>
             </button>
         </div>
     </header>
 
-    <main id="lf-main">
+    <main id="lf-main" tabindex="-1">
 
         <!-- ════ LVL 00 · SURFACE — hero ════ -->
         <section class="lf-hero" id="surface" data-level="00" data-level-name="SURFACE">
             <img src="images/lumenform/flywheel.svg" alt="" class="lf-gear lf-gear-hero" data-gear="0.06" aria-hidden="true">
 
-            <h1 class="lf-sr-only">Yaan Batho — Creative Studio</h1>
             <div class="lf-hero-content">
                 <p class="lf-hero-kicker lf-reveal"><span class="lf-dot"></span>CREATIVE STUDIO · EST. 2026</p>
+                <h1 class="lf-hero-sub lf-reveal">I’m Yaan Batho. I build apps and browser games, make films, and produce electronic music.</h1>
+                <div class="lf-hero-cta lf-reveal">
+                    <a href="#work" class="lf-btn lf-btn-solid" data-magnetic>Explore my work <span class="lf-btn-arrow" aria-hidden="true">↓</span></a>
+                    <a href="#contact" class="lf-btn lf-btn-ghost" data-magnetic>Discuss a project</a>
+                </div>
                 <figure class="lf-hero-frame lf-reveal">
                     <img src="images/hero-banner.jpg" alt="Yaan Batho in the studio with the crew — aliens, robots and friends" fetchpriority="high">
                 </figure>
@@ -143,11 +133,6 @@
                     <img src="images/lumenform/flywheel.svg" alt="" class="lf-wallworks-gear gear-left" data-gear="-0.1">
                 </div>
 
-                <p class="lf-hero-sub lf-reveal">I make films, browser games, music and series — a creative studio, built in public.</p>
-                <div class="lf-hero-cta lf-reveal">
-                    <a href="#work" class="lf-btn lf-btn-solid" data-magnetic>Enter the Foundry <span class="lf-btn-arrow">↓</span></a>
-                    <a href="#contact" class="lf-btn lf-btn-ghost" data-magnetic>Start a Transmission</a>
-                </div>
             </div>
 
             <div class="lf-hero-foot" aria-hidden="true">
@@ -191,7 +176,7 @@
                 </h2>
                 <div class="lf-studio-cols">
                     <p class="lf-reveal">This is the creative studio of <a href="bio.html">Yaan Batho</a>. I make films and series — like Orion's Barrel, a sitcom set in a space bar — build browser games, and produce music.</p>
-                    <p class="lf-reveal">It's all built in public, and most of it you can watch, play or listen to right here on the site. Have a look around.</p>
+                    <p class="lf-reveal">Explore the apps and games in the Foundry, or listen to my electronic music as <a href="music.html">Kainer and Il Diablo</a>. Most projects are ready to try here on the site.</p>
                 </div>
             </div>
         </section>
@@ -461,10 +446,10 @@
                     <span class="lf-line"><span>MAKE LIGHT</span></span>
                     <span class="lf-line"><span>WORK<em>.</em></span></span>
                 </h2>
-                <p class="lf-contact-sub lf-reveal">Need a cinematic world, a weird prototype, a game loop or an automation built quickly? Send the brief — the foundry is hot.</p>
+                <p class="lf-contact-sub lf-reveal">Have an idea for an app, browser game, film or automation? Tell me who it’s for, what it needs to do, and your budget and timing.</p>
                 <div class="lf-hero-cta lf-reveal">
                     <a href="mailto:hello@yaanbatho.com" class="lf-btn lf-btn-solid lf-btn-big" data-magnetic>hello@yaanbatho.com</a>
-                    <a href="contact.html" class="lf-btn lf-btn-ghost" data-magnetic>Contact Bay ↗</a>
+                    <a href="contact.html" class="lf-btn lf-btn-ghost" data-magnetic>Write a project brief ↗</a>
                 </div>
             </div>
         </section>
@@ -499,7 +484,7 @@
                     <a href="now.html">Now</a>
                     <a href="uses.html">Uses</a>
                     <a href="https://twitter.com/yaanbatho" target="_blank" rel="noopener">Twitter / X</a>
-                    <a href="https://github.com/yaanbatho" target="_blank" rel="noopener">GitHub</a>
+                    <a href="https://github.com/Kainer996" target="_blank" rel="noopener">GitHub</a>
                     <a href="mailto:hello@yaanbatho.com">Email</a>
                 </div>
             </div>
@@ -516,7 +501,7 @@
         <span>MUSIC</span>
     </a>
 
-    <script src="js/lumenform.js?v=10"></script>
+    <script src="js/lumenform.js?v=11"></script>
     <script src="js/lumenform-world.js?v=10"></script>
 </body>
 </html>

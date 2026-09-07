@@ -15,35 +15,10 @@
   /* ── Boot loader ─────────────────────────────────────────────── */
   function initLoader() {
     const loader = document.getElementById('lf-loader');
-    const fill = document.getElementById('lf-loader-fill');
-    const line = document.getElementById('lf-loader-line');
-    if (!loader) return;
-
-    const lines = ['calibrating light…', 'oiling the cogs…', 'waking the astronaut…', 'doors opening'];
-    let p = 0, li = 0;
-
-    const tick = setInterval(() => {
-      p = Math.min(p + 14 + Math.random() * 18, 100);
-      if (fill) fill.style.width = p + '%';
-      if (line && li < lines.length - 1 && p > (li + 1) * 28) line.textContent = lines[++li];
-      if (p >= 100) {
-        clearInterval(tick);
-        if (line) line.textContent = lines[lines.length - 1];
-        setTimeout(() => {
-          loader.classList.add('done');
-          document.body.classList.add('lf-booted');
-          revealHero();
-        }, 280);
-      }
-    }, REDUCED ? 30 : 130);
-
-    // failsafe — never trap anyone behind the loader
-    setTimeout(() => {
-      clearInterval(tick);
-      loader.classList.add('done');
-      document.body.classList.add('lf-booted');
-      revealHero();
-    }, 3200);
+    // The page is ready. Do not make visitors wait for simulated progress.
+    if (loader) loader.classList.add('done');
+    document.body.classList.add('lf-booted');
+    revealHero();
   }
 
   /* ── Hero title: split into letters ──────────────────────────── */
@@ -73,9 +48,7 @@
     heroRevealed = true;
     const title = document.getElementById('lf-hero-title');
     if (title) title.classList.add('in');
-    document.querySelectorAll('.lf-hero .lf-reveal').forEach((el, i) => {
-      setTimeout(() => el.classList.add('in-view'), 450 + i * 140);
-    });
+    document.querySelectorAll('.lf-hero .lf-reveal').forEach(el => el.classList.add('in-view'));
   }
 
   /* ── Scroll reveals ──────────────────────────────────────────── */
@@ -167,6 +140,12 @@
         nav.classList.remove('open');
         burger.setAttribute('aria-expanded', 'false');
       }));
+      nav.addEventListener('keydown', event => {
+        if (event.key !== 'Escape' || !nav.classList.contains('open')) return;
+        nav.classList.remove('open');
+        burger.setAttribute('aria-expanded', 'false');
+        burger.focus();
+      });
     }
 
     // active section highlight
@@ -230,11 +209,19 @@
       entry.classList.toggle('open', open);
       const head = entry.querySelector('.lf-work-head');
       if (head) head.setAttribute('aria-expanded', String(open));
+      const panel = entry.querySelector('.lf-work-panel');
+      if (panel) panel.inert = !open;
     }
 
     entries.forEach((entry, i) => {
       const head = entry.querySelector('.lf-work-head');
       if (!head) return;
+      const panel = entry.querySelector('.lf-work-panel');
+      if (panel) {
+        panel.id = panel.id || 'lf-work-panel-' + (i + 1);
+        head.setAttribute('aria-controls', panel.id);
+      }
+      setOpen(entry, entry.classList.contains('open'));
       head.addEventListener('mouseenter', () => show(i));
       head.addEventListener('focus', () => show(i));
       head.addEventListener('click', () => {
