@@ -18,6 +18,7 @@ fs.mkdirSync(out, { recursive: true });
       page.on('console',m=>{if(m.type()==='error'&&/Shader|VALIDATE|GL_INVALID|Framebuffer/.test(m.text())) errors.push(m.text());});
       const run=(fn,arg=null)=>page.evaluate(([fn,arg])=>window.__testEval('('+fn+')('+JSON.stringify(arg)+')'),[fn.toString(),arg]);
       await page.goto('http://127.0.0.1:8765/burbz/',{waitUntil:'domcontentloaded'});
+      assert.deepEqual(errors,[], 'game must boot without script errors: '+JSON.stringify(errors));
       await page.waitForTimeout(1700);
       if(await page.locator('#introSkipBtn').isVisible()) await page.locator('#introSkipBtn').tap();
       await page.waitForTimeout(500);

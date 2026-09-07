@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "ink-precision-v357-20260907"
+CURRENT_BUILD = "crafted-academy-v358-20260907"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -448,7 +448,7 @@ def test_every_core_this_release_edited_ships_under_its_new_tag():
     assert "bird_roles_core.js?v=%s" % ROLES_CORE_PIN in html
     assert "academy_treehouse_core.js?v=%s" % ACADEMY_CORE_PIN in html
     for core in ("academy_alive_core.js", "academy_3d_core.js"):
-        pin = "%s?v=%s" % (core, "manga-world-v356-20260907" if core == "academy_3d_core.js" else ACADEMY_PRESENTATION_PIN)
+        pin = "%s?v=%s" % (core, "crafted-academy-v358-20260907" if core == "academy_3d_core.js" else ACADEMY_PRESENTATION_PIN)
         assert pin in html and "'./%s'" % pin in sw
     for core in EDITED_CORES:
         pin = "%s?v=%s" % (core, "little-folk-residents-v350-20260905")
