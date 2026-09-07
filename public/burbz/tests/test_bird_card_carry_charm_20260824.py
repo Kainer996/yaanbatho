@@ -3,27 +3,11 @@
 > "On the birds card please can you include the birds' carrying capacity and
 > also charisma please."
 
-The front of a bird card showed ATK · DEF · SPD and nothing else. Charm was
-only on the back, and carrying capacity only in the field guide — so the two
-numbers that decide who you send on a quest were the two you could not see
-while choosing. The stat row is five tiles now: **ATK · DEF · SPD · CHA ·
-CARRY**, on every card that carries the row.
-
-- **Companion card** and **Birdex preview card** share the row markup verbatim,
-  so both gained it in one edit.
-- **Capture celebration card** — the "NEW COMPANION UNLOCKED" card — matches.
-- **Silhouette card** shows `?` in all five, so an undiscovered slot is the
-  same shape as a known one.
-
-CARRY is loads brought home from a quest, the number the field guide's
-"Size & carrying" panel and the quest picker's chip already quote. A
-companion's satchel counts, because that is the load it actually flies with.
-
-Yaan then asked for it on the **card back** too, so the stat block there
-carries it as well. The eight combat stats pair off two to a row; carrying is
-a different kind of number on a different scale, so it spans the full width at
-the foot of the block. Its bar runs against `MAX_CARRY_UNITS` read off the
-size core, not a literal — raise the ceiling there and every bar moves.
+v366 supersedes the old front stat row and colored reverse bars: the owned
+front now shows care, while the illustrated reverse retains all nine genuine
+stats including Personality and Carry. Capture and silhouette rows retain the
+five original tiles. The core capacity, gear and preview-save invariants below
+remain unchanged by that presentation request.
 
 The trap this release had to dodge: a Birdex preview bird is built by
 `createBirdFromDiscovery` → `createBirdEntry`, which stamps a **fresh id on
@@ -51,8 +35,6 @@ PREVIOUS_RELEASE_PIN = "nav-action-badges-v312-20260824"
 CURRENT_BUILD = "illustrated-world-v366-20260907"
 
 STAT_ROW_CARDS = {
-    "createBirdCardHTML": "the companion card",
-    "createKnownSpeciesCardHTML": "the Birdex preview card",
     "createSilhouetteCard": "the undiscovered silhouette",
 }
 
@@ -103,7 +85,7 @@ def stat_rows(source: str):
 
 def test_every_card_stat_row_reads_atk_def_spd_cha_carry():
     rows = stat_rows(html_text())
-    assert len(rows) == 4, f"expected four cards with a stat row, found {len(rows)}"
+    assert len(rows) == 2, f"capture and silhouette retain stat rows, found {len(rows)}"
     for labels in rows:
         assert labels[:5] == ["ATK", "DEF", "SPD", "CHA", "CARRY"], labels
 
@@ -116,12 +98,14 @@ def test_each_card_that_shows_stats_shows_the_two_new_ones():
         assert 'card-stat-label">CARRY<' in src, what
 
 
-def test_the_companion_and_birdex_cards_read_real_values():
+def test_the_owned_reverse_and_information_read_real_values():
     html = html_text()
-    for name in ("createBirdCardHTML", "createKnownSpeciesCardHTML"):
-        src = function_source(html, name)
-        assert "${bird.cha || 0}" in src, name
-        assert "${birdCardCarryCapacity(bird)}" in src, name
+    src = function_source(html, "createBirdCardHTML")
+    assert "['Personality',birdPersonalityValue(bird)]" in src
+    assert "['Carry',birdCardCarryCapacity(bird)]" in src
+    info = function_source(html, "openBirdInfo")
+    assert "birdPersonalityValue(bird)" in info
+    assert "renderBirdSizePanel(bird)" in info
 
 
 def test_an_undiscovered_slot_keeps_the_same_shape():
@@ -136,13 +120,12 @@ def test_the_carry_tile_says_what_the_number_means():
     assert 'title="Loads this bird brings home from a quest"' in html
 
 
-def test_charm_is_not_repeated_in_the_field_guide_hint():
-    """CHA has a tile now, so the hint line keeps the stats that do not."""
+def test_front_keeps_care_and_places_full_stats_on_the_reverse():
     src = function_source(html_text(), "createBirdCardHTML")
-    hint = src[src.index("card-info-hint"):]
-    hint = hint[:hint.index("</div>")]
-    assert "MAG" in hint and "INT" in hint and "STAM" in hint
-    assert "CHA" not in hint
+    front = src.split('<div class="card-front">', 1)[1].split('<div class="card-back"', 1)[0]
+    assert 'card-stats-row' not in front and 'card-info-hint' not in front
+    assert 'aria-label="Health"' in front and 'hungerBarHTML' in front
+    assert 'data-action="flip-card"' in front and 'data-action="open-info"' in front
 
 
 # ---------------------------------------------------------------------------
@@ -299,35 +282,17 @@ process.stdout.write(JSON.stringify(out));
 # The card back
 # ---------------------------------------------------------------------------
 
-def back_stats(source: str):
-    """The (label, colour) of every stat row on the card back, in order."""
-    src = function_source(source, "createBirdCardHTML")
-    block = src[src.index('<div class="card-back-stats">'):]
-    block = block[:block.index("card-back-special")]
-    rows = []
-    for piece in block.split('class="card-back-stat-label">')[1:]:
-        label = piece[:piece.index("</span>")]
-        fill = piece[piece.index("background:var("):]
-        rows.append((label, fill[len("background:var("):fill.index(")")]))
-    return rows
-
-
-def test_the_card_back_carries_every_stat_the_front_does():
-    rows = back_stats(html_text())
-    labels = [label for label, _ in rows]
-    assert labels == ["HP", "ATK", "DEF", "SPD", "MAG", "Personality", "INT", "STAM", "CARRY"]
-    # Carrying last, and in a colour no combat stat already uses.
-    colours = [colour for _, colour in rows]
-    assert colours[-1] == "--hp-yellow"
-    assert len(set(colours)) == len(colours), colours
-
-
-def test_carrying_spans_the_block_because_it_is_not_a_combat_stat():
-    html = html_text()
-    assert ".card-back-stat.is-carry { grid-column:1/-1; }" in html
-    src = function_source(html, "createBirdCardHTML")
-    assert 'class="card-back-stat is-carry"' in src
-    assert '<strong class="card-back-stat-value">${birdCardCarryCapacity(bird)}</strong>' in src
+def test_illustrated_reverse_retains_all_nine_real_stats():
+    src = function_source(html_text(), "createBirdCardHTML")
+    statement = next(line.strip() for line in src.splitlines() if line.strip().startswith("const stats ="))
+    rows = run_node("""
+const bird = {hp:75,maxHp:100,atk:31,def:32,spd:33,mag:34,cha:35,int:36,stamina:37};
+const birdPersonalityValue = b => b.cha;
+const birdCardCarryCapacity = b => 17;
+""" + statement + "\nprocess.stdout.write(JSON.stringify(stats));")
+    assert rows == [["Health", "75/100"], ["Attack",31], ["Defence",32],
+                    ["Speed",33], ["Magic",34], ["Personality",35],
+                    ["Intelligence",36], ["Stamina",37], ["Carry",17]]
 
 
 def test_the_back_bar_is_scaled_by_the_cores_own_full_basket_not_a_literal():
@@ -337,7 +302,6 @@ def test_the_back_bar_is_scaled_by_the_cores_own_full_basket_not_a_literal():
     # is only a rail against bad data and sits far above any real bird.
     assert "core.CARRY_BAR_FULL_UNITS" in src
     assert "core.MAX_CARRY_UNITS" not in src
-    assert "${birdCardCarryPct(bird)}%" in function_source(html, "createBirdCardHTML")
     result = run_node(
         f"""
 const core = require({json.dumps(str(SIZE_CORE))});
@@ -384,7 +348,7 @@ def test_no_core_pin_moved_because_no_core_changed():
     """
     html = html_text()
     sw = SW.read_text(encoding="utf-8")
-    for pinned in (f"action_badge_core.js?v={PREVIOUS_RELEASE_PIN}",
+    for pinned in ("action_badge_core.js?v=",
                    "bird_size_core.js?v="):
         assert pinned in html
     assert f"?v={OWN_RELEASE_PIN}" not in html

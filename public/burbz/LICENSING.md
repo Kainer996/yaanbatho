@@ -147,3 +147,8 @@ not retained, so its exact acoustics cannot be reconstructed from screenshots.
 ## Geographic elevation and woodland (v366)
 
 Geographic elevation is supplied by Mapterhorn under its upstream source licences, including Copernicus GLO-30 and UK government LiDAR DTMs. Keep the accessible [terrain credits](data/geographic-terrain-credits.html), prescribed Copernicus adaptation notice, Environment Agency and Scottish source statements, Open Government Licence links, and Mapterhorn’s complete attribution catalogue. The base map continues to credit OpenFreeMap, OpenMapTiles and OpenStreetMap contributors under their existing terms. Woodland tree meshes are original geometric illustrations inside mapped polygons; they do not represent surveyed individual trees. Mapterhorn’s BSD code licence does not replace any elevation-data licence.
+
+
+## v366 imported natural-history accounts
+
+Text and adaptations in `data/bird-education-enrichment-v366.json` are attributed to Wikipedia contributors under CC BY-SA4.0, with exact source/revision links, retrieval metadata and changes recorded in each account. The renderer preserves source and licence attribution for existing imported Wikipedia accounts too. Primary-guide paraphrases remain separately identified. See `BIRD_EDUCATION_ENRICHMENT_V366.md` and `BIRD_FACTS_V366.md` for provenance and source-subject limits.

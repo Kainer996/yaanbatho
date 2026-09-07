@@ -11704,6 +11704,7 @@ function renderEducationSections(bird, education) {
     if (primary) return value;
     // These revision-pinned imports contain selected source paragraphs, not the old templates.
     if (education.encyclopediaImport && ['summary','wikipediaExtract'].includes(key)) return value;
+    if (key === 'diet' && /^Mostly plant material or seeds with seasonal invertebrates where typical for the group\.?$/i.test(value)) return '';
     value = value.replace(/^.+? is represented from real field biology, not fantasy labels\.\s*/i, '');
     if (/In Burbz (?:its|the) stats|Burbz field note/i.test(value) || (key === 'behaviour' && /^Look for:/i.test(education.identification || ''))) return '';
     if (/game stats|battle stats|range handling|circular equivalent|centroid|Burbz month|source checklist status|conservative approximations|no fabricated local prey|broad group ecology|from family ecology|broad trophic context|Game region hint|Typical Burbz behaviour note/i.test(value)) return '';

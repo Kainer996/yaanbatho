@@ -23,6 +23,10 @@ const national=JSON.parse(fs.readFileSync(path.join(root,'data/national-bird-com
 ctx.national=national;
 const nationalHTML=run("renderEducationSections({species:\"Abbott's Booby\"},national)");
 assert(nationalHTML.includes('Papasula abbotti'));assert(!nationalHTML.includes('Game stats'));assert(!nationalHTML.includes('centroid'));assert(!nationalHTML.includes('Broad omnivorous'));assert(!nationalHTML.includes('source checklist status'));
+const defaultDiet='Mostly plant material or seeds with seasonal invertebrates where typical for the group.';
+ctx.national.diet=defaultDiet;
+const withoutDefault=run("renderEducationSections({species:\"Abbott's Booby\"},national)");
+assert(!withoutDefault.includes(defaultDiet));assert(withoutDefault.includes('Papasula abbotti'),'Filtering a generic diet retains the factual source overview');
 run("birdEducationCache={Alternate:{title:'Alternate',scientificName:'Passer domesticus',summary:'scientific identity'}}");
 assert.equal(run("getCachedBirdEducation({species:'House Sparrow',scientificName:'Passer domesticus'}).summary"),'scientific identity','Legacy facts can match an exact binomial without changing gameplay identity');
 const data=JSON.parse(fs.readFileSync(path.join(root,'data/bird-facts-v366.json')));assert(data.species.length>=20);assert.equal(new Set(data.species.map(x=>x.scientificName)).size,data.species.length);
