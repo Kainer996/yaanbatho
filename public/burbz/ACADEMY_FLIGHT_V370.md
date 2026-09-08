@@ -24,7 +24,9 @@ The Library and Magpie Market now use generated paintings instead of inline plac
 - `interior_life_core.js` supplies stable claims and reachable navigation; `interior_life.js` owns transient pickups and at most twelve visible indoor actors. The index adapter owns durable rewards, actual census/companion membership and existing service handoffs. Full resident brains run independently of the outdoor rendering budget.
 - All four new modules and three WebPs are registered in every worker shell list and the legacy updater. Lazy walking/flight module URLs are pinned to v371; the cache suffix preserves all earlier lineage.
 
-## Verification
+## Original v370 verification
+
+For current flight controls, use the v371 runners below. The v370 flight and PWA runners retain their original control/build expectations; the following records the original release evidence.
 
 Core runner: `node tests/test_academy_flight_v370.cjs`. Checks all 46 supported plans, reachable finds/furniture/exit paths, finite geometry, disposal, stable claims, flight collision and landing. Existing needs and interior cores remain covered.
 
