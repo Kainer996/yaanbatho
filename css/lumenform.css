@@ -596,13 +596,30 @@ section[data-level] { scroll-margin-top: calc(var(--lf-header-h) + 6px); }
   50%      { opacity: 0.35; }
 }
 
-.lf-hero-sub {
-  max-width: 760px;
-  margin: 0 auto;
+.lf-burbz-launch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--lf-red-hot);
+  border-radius: 999px;
+  background: rgba(204, 0, 0, 0.16);
   color: var(--lf-white);
-  font-size: clamp(18px, 2vw, 24px);
-  font-weight: 500;
-  line-height: 1.5;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lf-burbz-launch:hover { background: var(--lf-red-dark); }
+
+.lf-hero-sub {
+  max-width: 640px;
+  margin: 0 auto;
+  color: var(--lf-grey);
+  font-size: clamp(15px, 1.5vw, 18px);
 }
 
 .lf-hero-cta {
