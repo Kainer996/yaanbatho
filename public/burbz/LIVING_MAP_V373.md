@@ -2,7 +2,7 @@
 
 Build/cache: `living-map-v373-20260908`.
 
-The geographic forest keeps its initial density through zoom changes and rendering-quality reductions. Phones begin with 360 trees, desktops with 1000; slow frames adjust resolution and the established terrain fallback. Fixed dense placement is opt-in, so daily woodland timber IDs remain unchanged. Verified elevations survive DEM reloads, and identical placement requests do not rebuild the forest.
+The geographic forest keeps its initial density through zoom changes and rendering-quality reductions. Map containers up to 600 CSS pixels wide begin with a 360-tree budget, wider containers with 1,000; slow frames adjust resolution and the established terrain fallback. Fixed dense placement is opt-in, so daily woodland timber IDs remain unchanged. Verified elevations survive DEM reloads, and identical placement requests do not rebuild the forest.
 
 ## Exploring
 
@@ -28,15 +28,17 @@ Evidence is retained at `/root/burbz-living-map-v373-evidence/`.
 
 146 focused Node cases cover forest identities, holes/routes/budgets, elevation caches, worker lifecycle, OSM exclusions, arrival gates, asynchronous cancellation, failed-save cleanup, model geometry and surface animation/disposal. The installed v372→v373 runner verifies automatic activation, old saves, all new cached modules, geographic catalogue/visit retention and offline village gathering, rooms, Academy flight and finds.
 
+Run these commands from `public/burbz`:
+
 ```sh
 python3 -m pytest tests/test_geographic_forest_20260907.py tests/test_geographic_map_3d_20260907.py tests/test_geographic_places_20260908.py -q
 node tests/run_living_map_v373.cjs
 node tests/run_living_map_pwa_v373.cjs
 ```
 
-The interaction runner uses a local preview on port 8872 and verifies repeated entry, unchanged active quest and saved reload. Final broad suite: 2,111 passed, 5 skipped and the exact same 42 baseline failures as v372.
+The interaction runner requires `public/` served locally on port 8872 and verifies repeated entry, unchanged active quest and saved reload. Final broad suite: 2,111 passed, 5 skipped and the exact same 42 baseline failures as v372.
 
-The PWA runner accepts `PLAYWRIGHT_MODULE`, `CHROME_PATH`, `BASELINE_ROOT` and `EVIDENCE_DIR`. Browser performance uses Chromium/SwiftShader, not a physical phone. Publication and exact final validation are recorded by the release owner.
+Both browser runners accept `PLAYWRIGHT_MODULE`, `CHROME_PATH` and `EVIDENCE_DIR`. The PWA runner starts its own server on port 8876 and also accepts `BASELINE_ROOT`, pointing to a v372 `public/burbz` directory (default `/root/burbz-v372-baseline/public/burbz`). Browser performance uses Chromium/SwiftShader, not a physical phone. Publication and exact final validation are recorded by the release owner.
 
 ## Source references
 
