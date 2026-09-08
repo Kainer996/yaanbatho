@@ -4430,7 +4430,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
-<link rel="stylesheet" href="illustrated_world.css?v=illustrated-world-v366-20260907">
+<link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
 <link rel="stylesheet" href="geographic_map_3d.css?v=map-pictures-v374-20260908">
 </head>
 <body class="woodland-ui">
@@ -38045,10 +38045,17 @@ let birdEquipReturnFocus = null;
 const EQUIP_SLOT_ORDER = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
 
 function openBirdEquip(birdId) {
-  const bird = (gameState.flock || []).find(b => b.id === birdId);
+  let bird = (gameState.flock || []).find(b => b.id === birdId);
+  if (!bird && String(birdId).startsWith('preview:')) {
+    const species=String(birdId).slice(8);
+    bird=companionForSpecies(species);
+    if (!bird && getDiscoveredRecordForSpecies(species)) bird=createRosterBird(species);
+  }
   if (!bird) return;
   if (!$('birdEquipOverlay').classList.contains('show')) birdEquipReturnFocus = document.activeElement;
-  birdEquipState = { birdId: birdId, slotPicker: null };
+  birdEquipState = { birdId: bird.id, slotPicker: null, previewBird:bird.previewOnly ? bird : null };
+  $('birdEquipOverlay').querySelector('.bird-equip-title').textContent=bird.previewOnly ? 'Birdex card' : 'Companion card';
+  $('birdEquipOverlay').querySelector('.bird-equip-scroll').scrollTop=0;
   renderBirdEquip();
   $('birdEquipOverlay').classList.add('show');
   $('birdEquipOverlay').querySelector('.bird-equip-close')?.focus({ preventScroll:true });
@@ -38067,6 +38074,7 @@ let birdEquipSwipeAnimating = false;
 const birdEquipSwipe = { motion:null, frame:0, gesture:null, x:0, suppressUntil:0 };
 
 function birdEquipRoster() {
+  if (birdEquipState.previewBird) return [];
   return (gameState.flock || []).filter(b => b && b.id);
 }
 // Preserve the existing collection order and wrapping at both ends.
@@ -38221,7 +38229,8 @@ function closeBirdEquip() {
   birdEquipSwipeReset();
   $('birdEquipOverlay').classList.remove('show');
   birdEquipState.slotPicker = null;
-  if (birdEquipReturnFocus?.isConnected) birdEquipReturnFocus.focus({ preventScroll:true });
+  const returnTarget=birdEquipReturnFocus?.isConnected ? birdEquipReturnFocus : [...document.querySelectorAll('#birdGrid .bird-card')].find(card=>card.dataset.birdId===birdEquipState.birdId);
+  returnTarget?.focus({ preventScroll:true });
   birdEquipReturnFocus = null;
 }
 
@@ -38231,7 +38240,7 @@ function birdEquipHandleKeydown(event) {
   if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); closeBirdEquip(); return; }
   if ((event.key === 'ArrowLeft' || event.key === 'ArrowRight') && !event.target?.closest('input,select,textarea,[contenteditable]')) { event.preventDefault(); birdEquipSwipeTo(event.key === 'ArrowRight' ? 1 : -1); return; }
   if (event.key !== 'Tab') return;
-  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]')).filter(el => el.getClientRects().length && !el.closest('[inert]'));
+  const controls = Array.from(overlay.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"], summary')).filter(el => el.getClientRects().length && (!el.checkVisibility || el.checkVisibility()) && !el.closest('[inert]'));
   if (!controls.length) return;
   const first = controls[0], last = controls[controls.length - 1];
   if (!overlay.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
@@ -38243,18 +38252,21 @@ document.addEventListener('keydown', birdEquipHandleKeydown);
 
 
 function birdEquipOpenSlot(slot) {
+  if (!birdEquipOwnsCurrent()) return;
   birdEquipState.slotPicker = birdEquipState.slotPicker === slot ? null : slot;
   SFX.tap();
   renderBirdEquip();
 }
 
 function birdEquipSet(slot, gearId) {
+  if (!birdEquipOwnsCurrent()) return;
   if (!equipItemOnBird(birdEquipState.birdId, slot, gearId)) return;
   birdEquipState.slotPicker = null;
   renderBirdEquip();
 }
 
 function birdEquipClear(slot) {
+  if (!birdEquipOwnsCurrent()) return;
   if (!unequipItemFromBird(birdEquipState.birdId, slot)) return;
   birdEquipState.slotPicker = null;
   renderBirdEquip();
@@ -38265,6 +38277,7 @@ function birdEquipToggleFavourite() {
 }
 
 function birdEquipPreen() {
+  if (!birdEquipOwnsCurrent()) return;
   const result = preenBird(birdEquipState.birdId);
   renderBirdEquip();
   // Hearts go on after the re-render so the fresh hero keeps them.
@@ -38286,6 +38299,32 @@ function spawnBondHearts() {
   }
 }
 
+function birdEquipOwnsCurrent() {
+  return !birdEquipState.previewBird && (gameState.flock || []).some(b=>b.id===birdEquipState.birdId);
+}
+
+function birdEquipCare(action) {
+  if (!birdEquipOwnsCurrent()) return;
+  const id=birdEquipState.birdId;
+  if (action==='rename') { renameCompanionBird(id); renderBirdEquip(); }
+  else if (action==='feed') { closeBirdEquip(); openFeedSheet(id); }
+  else if (action==='find') { closeBirdEquip(); gotoBirdCardLocation(id,{openCard:false}); }
+}
+
+function birdEquipRecruit() {
+  const bird=birdEquipState.previewBird;
+  if (!bird) return;
+  if (!isAcademyRoomBuilt('tavern')) { closeBirdEquip(); gotoTavernRecruit(); return; }
+  const record=getDiscoveredRecordForSpecies(bird.species || bird.commonName);
+  if (!record) return;
+  closeBirdEquip();
+  if (!birdexRecruitBird(record.key || speciesKey(bird.species || bird.commonName))) openBirdEquip(bird.id);
+}
+
+function birdEquipFactsHTML(bird) {
+  return renderEducationSections(bird,getCachedBirdEducation(bird)).replace('id="birdEducationBlock"','data-card-facts');
+}
+
 function birdEquipPlaceholderIcon(slot) {
   return '<img class="bird-equip-placeholder" src="assets/bird-card/' + slot + '.webp" alt="" width="64" height="64" aria-hidden="true">';
 }
@@ -38304,12 +38343,13 @@ function renderBirdEquip(target, previewBird) {
   const body = target || $('birdEquipBody');
   if (!body) return;
   if (!previewBird) birdEquipSwipeReset();
-  const bird = previewBird || (gameState.flock || []).find(b => b.id === birdEquipState.birdId);
+  const bird = previewBird || (gameState.flock || []).find(b => b.id === birdEquipState.birdId) || birdEquipState.previewBird;
   const slotPicker = previewBird ? null : birdEquipState.slotPicker;
   if (!bird || !window.BurbzLootCore) { body.innerHTML = '<div class="inventory-empty">This bird has flown — reopen from your flock.</div>'; if (!previewBird) birdEquipPrepareNeighbours(); return; }
   const L = lootCore();
-  const loadout = birdLoadout(bird.id);
-  const bonus = birdGearBonuses(bird);
+  const unowned=!!bird.previewOnly;
+  const loadout = unowned ? {} : birdLoadout(bird.id);
+  const bonus = unowned ? {} : birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
   const cardArt = window.BurbzSpecialBirdSprites?.keyFor(bird) ? birdCardImgAttrs(bird) : null;
   const artUrl = cardArt?.src || getBirdArtUrl(bird);
@@ -38318,8 +38358,8 @@ function renderBirdEquip(target, previewBird) {
     ? '<img class="bird-equip-art" loading="eager" decoding="async" src="' + escapeHtml(artUrl) + '" alt="' + escapeHtml(bird.commonName || bird.species) + '" onload="birdEquipArtReady(this)" onerror="this.hidden=true;this.previousElementSibling.hidden=false">'
     : '');
 
-  const favourite = birdIsFavourite(bird);
-  const favBtn = '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" aria-label="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
+  const favourite = !unowned && birdIsFavourite(bird);
+  const favBtn = unowned ? '' : '<button class="bird-equip-fav' + (favourite ? ' on' : '') + '" onclick="birdEquipToggleFavourite()" aria-pressed="' + favourite + '" aria-label="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '" title="' + (favourite ? 'Remove from favourites' : 'Mark as a favourite') + '">' + (favourite ? '❤️' : '🤍') + '</button>';
   const level = Math.max(1, Number(bird.level) || 1);
   const xpGoal = XP_PER_LEVEL(level);
   const xp = Math.max(0, Number(bird.xp) || 0);
@@ -38341,6 +38381,9 @@ function renderBirdEquip(target, previewBird) {
     stat('✨ MAG', bird.mag || 0, 'mag') +
     stat('🛡️ DEF', bird.def || 0, 'def') +
     stat('🪽 SPD', bird.spd || 0, 'spd') +
+    stat('INT', bird.int || 0, 'int') +
+    stat('Stamina', bird.stamina || 0, 'stamina') +
+    stat('Carry', birdCardCarryCapacity(bird), 'carry') +
     '<div class="bird-equip-stat"><div class="bes-label">🎯 CRIT</div><div class="bes-value">' + (bonus.critBonus ? '<span class="bes-boost">+' + Math.round(bonus.critBonus * 100) + '%</span>' : '—') + '</div></div>' +
     '<div class="bird-equip-stat is-personality" title="Personality uses Charm (CHA), the diplomacy and leadership stat"><div class="bes-label">Personality (CHA)</div><div class="bes-value">' + birdPersonalityValue(bird) + '</div></div>' +
     '</div>';
@@ -38348,7 +38391,7 @@ function renderBirdEquip(target, previewBird) {
   // The bond panel — this bird's friendship, grown by preening and feeding.
   const bondCore = birdBondCore();
   let bondPanel = '';
-  if (bondCore) {
+  if (bondCore && !unowned) {
     ensureBirdBond(bird);
     const bp = bondCore.bondProgress(bird.bond);
     const gate = bondCore.canPreen(bird.bond, Date.now());
@@ -38371,7 +38414,7 @@ function renderBirdEquip(target, previewBird) {
     const item = L.gearById(loadout[slot]);
     const color = item && L.RARITY_META[item.rarity] ? L.RARITY_META[item.rarity].color : '';
     const open = slotPicker === slot;
-    return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' aria-expanded="' + open + '" aria-controls="birdEquipSlotPicker" onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
+    return '<button class="bird-equip-slot' + (item ? ' filled' : '') + (open ? ' open' : '') + '"' + (item && !open ? ' style="border-color:' + color + '88;"' : '') + ' aria-expanded="' + open + '" aria-controls="birdEquipSlotPicker"' + (unowned ? ' disabled' : '') + ' onclick="birdEquipOpenSlot(\'' + slot + '\')">' +
       '<div class="beq-icon">' + (item ? gearIconHTML(item) : birdEquipPlaceholderIcon(slot)) + '</div>' +
       '<div><div class="beq-slot-label">' + meta.label + '</div>' +
       (item ? '<div class="beq-item" style="color:' + color + ';">' + escapeHtml(item.label) + '</div><div class="beq-meta">' + forgeGearStatLine(item) + '</div>' : '<div class="beq-meta">' + meta.hint + '</div>') +
@@ -38410,7 +38453,26 @@ function renderBirdEquip(target, previewBird) {
     ? '<div class="bird-equip-pager"><button type="button" class="bep-arrow" aria-label="Previous companion" onclick="birdEquipSwipeTo(-1)">‹</button> ' + (at + 1) + ' of ' + roster.length + ' companions — swipe for the next <button type="button" class="bep-arrow" aria-label="Next companion" onclick="birdEquipSwipeTo(1)">›</button></div>'
     : '';
 
-  body.innerHTML = pager + '<div class="bird-equip-layout"><section class="bird-equip-profile" aria-label="Companion portrait and stats">' + hero + stats + '</section><section class="bird-equip-details" aria-label="Bond and equipment">' + bondPanel + slots + picker + notes + forgeLink + '</section></div>';
+  const care=unowned ? '' : '<div class="full-card-care">' + hungerBarHTML(hungerStatusForBird(bird),'full-card') + '<span class="full-card-health">Health <b>'+escapeHtml(bird.hp ?? bird.maxHp ?? 0)+' / '+escapeHtml(bird.maxHp || 0)+'</b></span></div>' + '<div class="full-card-actions"><button type="button" onclick="birdEquipCare(\'feed\')">Feed</button><button type="button" onclick="birdEquipCare(\'rename\')">Rename</button><button type="button" onclick="birdEquipCare(\'find\')">Find them</button></div>';
+  const recruitment=unowned ? '<div class="full-card-recruit"><span>Recruit this bird to choose its equipment.</span><button type="button" onclick="birdEquipRecruit()">'+(isAcademyRoomBuilt('tavern') ? 'Recruit · '+recruitCostForBird(bird)+' coins' : 'Open the Barracks')+'</button></div>' : '';
+  const special='<div class="full-card-special"><span>Special move</span><strong>'+escapeHtml(bird.specialMove || 'Not recorded')+'</strong></div>';
+  const facts='<details class="full-card-facts"><summary>Bird facts &amp; companion details</summary><div data-full-card-education>'+birdEquipFactsHTML(bird)+'</div>'+birdPersonalStoryHTML(bird)+specialBirdCharacterPanelHTML(bird)+renderBirdSizePanel(bird)+renderBirdPostLine(bird)+renderBirdDietPanel(bird)+(unowned ? '' : '<details class="card-placement"><summary>Academy placement</summary>'+academyRoomButtonsHTML(bird)+'</details>')+'</details>';
+  body.innerHTML = pager + '<div class="bird-equip-layout"><section class="bird-equip-profile" aria-label="Companion portrait and stats">' + hero + stats + care + special + '</section><section class="bird-equip-details" aria-label="Equipment and bond">' + recruitment + slots + picker + bondPanel + '<details class="full-card-battle"><summary>Using equipment in battle</summary>'+notes+forgeLink+'</details>' + facts + '</section></div>';
+  body.querySelectorAll('[data-action="send-room"]').forEach(button=>button.addEventListener('click',()=>{
+    if (!birdEquipOwnsCurrent() || button.dataset.birdId!==birdEquipState.birdId) return;
+    cardSendBirdToRoom(button.dataset.birdId,button.dataset.room);
+    renderBirdEquip();
+  }));
+  if (!previewBird) {
+    loadBirdEducation().then(()=>{
+      if (!$('birdEquipOverlay').classList.contains('show')) return;
+      for (const panel of $('birdEquipTrack').children) {
+        const shown=(gameState.flock || []).find(b=>b.id===panel.dataset.birdId) || birdEquipState.previewBird;
+        const block=panel.querySelector('[data-full-card-education]');
+        if (shown && block) block.innerHTML=birdEquipFactsHTML(shown);
+      }
+    });
+  }
   if (!previewBird) birdEquipPrepareNeighbours();
 }
 
@@ -38672,15 +38734,7 @@ function wireBirdexCardActions(grid) {
   // Attach card actions. Locked codex cards do not reveal species.
   grid.querySelectorAll('.bird-card:not(.undiscovered):not(.locked-card)').forEach(card => {
     card.tabIndex = 0;
-    const flip = () => {
-      const flipped = card.classList.toggle('flipped');
-      const front = card.querySelector('.card-front'), back = card.querySelector('.card-back');
-      const moveFocus = card.contains(document.activeElement) && document.activeElement !== card;
-      if (front) front.inert = flipped;
-      if (back) back.inert = !flipped;
-      card.querySelectorAll('[data-action="flip-card"]').forEach(btn => btn.setAttribute('aria-pressed', String(flipped)));
-      if (moveFocus) (card.querySelector((flipped ? '.card-back' : '.card-front') + ' [data-action="flip-card"]') || card).focus({preventScroll:true});
-    };
+    const flip = () => { openBirdEquip(card.dataset.birdId); };
     const back = card.querySelector('.card-back'); if (back) back.inert = true;
     card.addEventListener('keydown', (e) => {
       if (e.target === card && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); e.stopPropagation(); flip(); }
@@ -38751,6 +38805,7 @@ function wireBirdexCardActions(grid) {
         return;
       }
       if (e.target.closest('button, a, input, select, textarea, summary, [role="button"]')) return;
+      e.stopPropagation();
       flip();
     });
   });
@@ -38881,10 +38936,10 @@ function createBirdCardHTML(bird, idx) {
   const art = cardArt ? `${cardArtWashHTML(cardArt)}<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(birdSpeciesLabel(bird))}" loading="lazy">` : `<div class="bird-emoji">${bird.emoji || '🐦'}</div>`;
   const feed = `<button type="button" class="card-pet-btn card-feed-btn" data-action="feed-bird" data-feed-key="${id}">Feed</button>`;
   const stats = [['Health',`${bird.hp ?? bird.maxHp ?? 100}/${bird.maxHp || 100}`],['Attack',bird.atk || 0],['Defence',bird.def || 0],['Speed',bird.spd || 0],['Magic',bird.mag || 0],['Personality',birdPersonalityValue(bird)],['Intelligence',bird.int || 0],['Stamina',bird.stamina || 0],['Carry',birdCardCarryCapacity(bird)]];
-  return `<div class="bird-card bird-family-outline" data-owned-bird-card tabindex="0" role="group" aria-label="${escapeHtml(birdDisplayName(bird))} — press Enter to turn card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
+  return `<div class="bird-card bird-family-outline" data-owned-bird-card tabindex="0" role="group" aria-label="${escapeHtml(birdDisplayName(bird))} — press Enter to open full card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
     <div class="bird-card-inner">
       <div class="card-front">
-        <div class="card-art" title="Turn card for companion details">
+        <div class="card-art" title="Open full companion card">
           <div class="card-art-bg" style="${birdHabitatBackgroundStyle(bird, rarityColor)}"></div>${art}${specialBirdAnimationButtonHTML(bird, true)}
         </div>
         <div class="card-level">LV.${cardLv}</div>
@@ -38893,8 +38948,7 @@ function createBirdCardHTML(bird, idx) {
           <div class="card-care-gauges">${birdCardLocationButtonHTML(bird)}${hungerBarHTML(hungerStatus, 'companion-card')}
             <div class="card-health" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hpPct}"><div class="bird-hunger-head"><span>Health</span><span>${hpPct}%</span></div><div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpPct > 50 ? 'var(--hp-green)' : 'var(--hp-red)'}"></div></div></div>
           </div>
-          <div class="card-front-actions">${feed}<button type="button" class="card-pet-btn" data-action="flip-card" aria-pressed="false">Details ↻</button></div>
-          <button type="button" class="card-facts-link" data-action="open-info" data-bird-id="${id}">Bird information ↗</button>
+          <div class="card-front-actions">${feed}<button type="button" class="card-pet-btn" data-action="flip-card" aria-pressed="false">Full card ↻</button></div>
         </div>
       </div>
       <div class="card-back" inert>
@@ -38952,7 +39006,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
             <div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>
             <div class="card-species">Birdex unlocked · ${bird.rarity.toUpperCase()}</div>
             <button type="button" class="recruit-btn" data-action="${recruitAction}" data-discovery-key="${key}" ${recruitDisabled ? 'disabled' : ''}>${recruitLabel}</button>
-            <button type="button" class="card-facts-link" data-action="open-info">Bird information ↗</button><button type="button" class="card-pet-btn" data-action="flip-card">Details ↻</button>
+            <button type="button" class="card-pet-btn" data-action="flip-card">Full card ↻</button>
           </div>
         </div>
         <div class="card-back birdex-learning-back">
@@ -41630,7 +41684,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
+Object.assign(window, { academyBuildBuilding, birdEquipCare, birdEquipRecruit, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -42780,7 +42834,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'map-pictures-v374-20260908';
+const BURBZ_BUILD = 'full-cards-v375-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

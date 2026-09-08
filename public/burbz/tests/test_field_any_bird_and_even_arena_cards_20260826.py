@@ -270,7 +270,7 @@ def test_tapping_your_own_bird_fields_it():
     assert "or tap another bird" in function_source("renderArena")
 
 
-CURRENT_BUILD = "map-pictures-v374-20260908"
+CURRENT_BUILD = "full-cards-v375-20260908"
 # battle_core.js pins the release that last CHANGED it, not the head build —
 # later releases that leave the core alone must not churn every phone's cache.
 BATTLE_CORE_PIN = "little-folk-residents-v350-20260905"

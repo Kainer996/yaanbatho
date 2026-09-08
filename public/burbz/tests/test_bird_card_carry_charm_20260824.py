@@ -32,7 +32,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 
 OWN_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 PREVIOUS_RELEASE_PIN = "nav-action-badges-v312-20260824"
-CURRENT_BUILD = "map-pictures-v374-20260908"
+CURRENT_BUILD = "full-cards-v375-20260908"
 
 STAT_ROW_CARDS = {
     "createSilhouetteCard": "the undiscovered silhouette",
@@ -125,7 +125,8 @@ def test_front_keeps_care_and_places_full_stats_on_the_reverse():
     front = src.split('<div class="card-front">', 1)[1].split('<div class="card-back"', 1)[0]
     assert 'card-stats-row' not in front and 'card-info-hint' not in front
     assert 'aria-label="Health"' in front and 'hungerBarHTML' in front
-    assert 'data-action="flip-card"' in front and 'data-action="open-info"' in front
+    assert 'data-action="flip-card"' in front and 'Full card' in front
+    assert 'data-action="open-info"' not in front  # Facts now share the full card.
 
 
 # ---------------------------------------------------------------------------
