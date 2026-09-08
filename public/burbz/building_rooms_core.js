@@ -38,6 +38,8 @@ function plan({buildingId='cabin',seed=0,homeId='',variant}={}){
   put(row[1],right,-d/2+1.5,row[1]==='fireplace'?(mirror>0?3:1):(k%5===0?1:0));
   put(row[2],right,d/2-2.1,k%3===1?1:0);
   put(row[3],left,d/2-1.9,k%4===0?1:0);
+  // Narrow screens should arrive facing the cabin's distinctive furnishing.
+  const focal=p.props[1];p.spawn.yaw=Math.atan2(p.spawn.x-focal.x,p.spawn.z-focal.z);p.spawn.pitch=-.08;
   put('rug',0,-.1);if(k>=16)put('chest',0,-d/2+.9);
  }else{
   put(row[3],0,-d/2+1.5);
