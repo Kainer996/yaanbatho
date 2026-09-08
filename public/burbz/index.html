@@ -4431,7 +4431,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=field-map-v365-20260907">
 <link rel="stylesheet" href="illustrated_world.css?v=illustrated-world-v366-20260907">
-<link rel="stylesheet" href="geographic_map_3d.css?v=geographic-terrain-v1-20260907">
+<link rel="stylesheet" href="geographic_map_3d.css?v=woodland-harvest-v372-20260908">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5464,10 +5464,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
-<script src="geographic_forest_core.js?v=geographic-terrain-v1-20260907"></script>
-<script src="geographic_camera_core.js?v=geographic-terrain-v1-20260907"></script>
-<script src="geographic_marker_layer.js?v=geographic-terrain-v1-20260907"></script>
-<script src="geographic_map_3d.js?v=geographic-terrain-v1-20260907"></script>
+<script src="geographic_forest_core.js?v=woodland-harvest-v372-20260908"></script>
+<script src="geographic_camera_core.js?v=woodland-harvest-v372-20260908"></script>
+<script src="geographic_marker_layer.js?v=woodland-harvest-v372-20260908"></script>
+<script src="geographic_map_3d.js?v=woodland-harvest-v372-20260908"></script>
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
@@ -18685,6 +18685,17 @@ function enableBurbzTerrain() {
   if (!liveMap || !window.BurbzGeographicMap3D) return;
   if (!geographicMap3D) geographicMap3D = window.BurbzGeographicMap3D.attach(liveMap, {
     isVisible: () => currentScreen === 'map',
+    getTimberView: () => {
+      const p=liveMapLastPosition;if(!p)return null;
+      const dy=.007,dx=dy/Math.max(.2,Math.cos(p.lat*Math.PI/180));
+      return {center:[p.lon,p.lat],bounds:[p.lon-dx,p.lat-dy,p.lon+dx,p.lat+dy]};
+    },
+    onTimber: supplies => {
+      const signature=supplies.map(p=>p.key).sort().join('|');
+      if(signature===liveWoodlandTimberSignature)return;
+      liveWoodlandTimberSignature=signature;liveWoodlandTimber=supplies;liveMapLootFeatureStamp++;
+      if(liveMapLastPosition)drawMapPickups(liveMapLastPosition.lat,liveMapLastPosition.lon);
+    },
     getRoutes: () => [activeWalkingQuest()?.route, questOverview.offers[questOverview.selectedIndex]?.points].filter(Boolean),
     onViewChange: () => {
       if (questMapInspectionMode()) {
@@ -22112,6 +22123,8 @@ function ensureMapPickupState() {
 // mapped feature; broad landcover (a wood, a moor, the sea) reaches further
 // than a point feature because its mapped centre can sit deep inside it.
 // Away from every feature the ground reads as streets — town loot.
+let liveWoodlandTimber=[],liveWoodlandTimberSignature='';
+const WOODLAND_TIMBER_TYPE={id:'woodland_timber',glyph:'🪵',label:'Woodland timber',cls:'starter',grant(){addBranches(6);return '+6 timber';}};
 let liveMapLootFeatures = [];    // [{lat, lon, habitat}] from the last fetch
 let liveMapLootFeatureStamp = 0; // bumps on refresh so drawn loot re-reads the land
 const PICKUP_HABITAT_RANGE_M = 320;
@@ -22223,7 +22236,7 @@ function drawMapPickups(lat, lon) {
   // out by the daily loot cap below.
   starterTimberPickupsNear(lat, lon)
     .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
-    .concat(mapPickupsNear(lat, lon)
+    .concat(liveWoodlandTimber.map(p=>({...p,woodland:true,seed:burbzHash32(p.key),type:WOODLAND_TIMBER_TYPE})).concat(mapPickupsNear(lat, lon))
       .filter(p => !state.collected[p.key])
       .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
       .sort((a, b) => a.dist - b.dist)
@@ -22252,6 +22265,8 @@ function collectMapPickup(pickup, el) {
     showToast(toastGlyph + ' ' + pickup.type.label + ' — walk closer to gather it!');
     return;
   }
+  if(pickup.woodland&&!me){showToast('Allow precise location to gather woodland timber.');return;}
+  const pickupSnapshot=pickup.woodland?snapshotGameState():null;
   let rewardText;
   if (pickup.starterIndex != null) {
     rewardText = collectStarterTimber(pickup);
@@ -22263,7 +22278,9 @@ function collectMapPickup(pickup, el) {
     const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
     rewardText = pickup.type.grant(r);
   }
-  saveState(); updateHeader();
+  if(pickup.woodland){try{durableSaveState({throwOnFailure:true});}catch(error){restoreGameStateSnapshot(pickupSnapshot);showToast('Could not save. Your timber is still here; try again.');return;}}
+  else saveState();
+  updateHeader();
   SFX.questComplete(); vibrate(25);
   // Pop a little reward flourish where the item stood, then fade the marker.
   const shell = $('liveMapShell');
@@ -29326,6 +29343,18 @@ let villageActive = null;
 let villageSceneQuality = { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
 let villageLastFrameAt = 0;
 let villageAnimationRequest = 0, villagePauseTimer = 0;
+function villageHarvestAdapter(seed) {
+  return {
+    available: node => window.BurbzVillageHarvestCore.available(gameState,seed,node,Date.now()),
+    collect: node => {
+      const snapshot=snapshotGameState();let reward;
+      try { reward=window.BurbzVillageHarvestCore.claim(gameState,seed,node,Date.now());
+        if(!reward)return null;durableSaveState({throwOnFailure:true});
+      } catch(error) { restoreGameStateSnapshot(snapshot);throw error; }
+      try { updateHeader(); } catch(_) {} return reward;
+    }
+  };
+}
 // Village rewards and claim flags share one durable transaction. Failed writes
 // restore the existing state tree so an item can be retried without duplication.
 function villageDiscoveryAdapter(seed) {
@@ -29373,7 +29402,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=bird-flight-controls-v371-20260908';
+        script.src = 'village_walk.js?v=woodland-harvest-v372-20260908';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29393,7 +29422,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
       name: currentVillage().name, seed, opener:button, interiors: buildingRoomsAdapter(),
-      discoveries: villageDiscoveryAdapter(seed),
+      discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed),
       source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
       suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
@@ -32279,6 +32308,7 @@ function villageMakeTree(r, pal) {
   const leafMat = new THREE.MeshLambertMaterial({ color: leafHue });
   const darkLeafMat = new THREE.MeshLambertMaterial({ color: leafHue.clone().offsetHSL(0, 0, -0.08) });
   const s = 0.85 + r() * 0.75;
+  tree.userData.harvestRadius = .28 * s;
 
   // Root flare + tapered trunk
   const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * s, 0.28 * s, 1.6 * s, 7), trunkMat);
@@ -33355,6 +33385,11 @@ function villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt) {
   const bushGeo = new THREE.IcosahedronGeometry(0.6, 0); bushGeo.translate(0, 0.42, 0);
   const rockGeo = new THREE.DodecahedronGeometry(0.5, 0); rockGeo.translate(0, 0.3, 0);
 
+  // Original geometry anchors survive static walking batches.
+  g.userData.harvestNodes=[...pines.map(it=>({...it,kind:'wood',radius:.22*it.s})),
+    ...leafs.map(it=>({...it,kind:'wood',radius:.24*it.s})),
+    ...rocks.map(it=>({...it,kind:'stone',radius:.5*it.s}))]
+    .map(it=>({kind:it.kind,x:it.x,y:heightAt(it.x,it.z)-.06,z:it.z,radius:it.radius}));
   instanced(pineTrunkGeo, pines, null, trunkColor);
   instanced(pineCrownGeo, pines, it => 0.9 + (it.tone + 0.5) * 0.3, leafColor);
   if (snowy) { // snow settles on the pine tips
@@ -42724,7 +42759,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-flight-controls-v371-20260908';
+const BURBZ_BUILD = 'woodland-harvest-v372-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

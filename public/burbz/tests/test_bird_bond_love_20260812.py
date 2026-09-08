@@ -17,7 +17,7 @@ CORE = (ROOT / "bird_bond_core.js").read_text(encoding="utf-8")
 UPDATER = (ROOT.parents[1] / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 OWN_RELEASE_PIN = "bird-bond-love-v256-20260812"
 PREVIOUS_RELEASE_PIN = "raven-weight-and-wit-v255-20260812"
-CURRENT_BUILD = "bird-flight-controls-v371-20260908"
+CURRENT_BUILD = "woodland-harvest-v372-20260908"
 
 
 def _node(source: str):

@@ -303,7 +303,7 @@ function workerHarness() {
 
 test('worker imports only the fixed local versioned core and returns the exact pure placement with request id',()=>{
   const worker=workerHarness(),request={id:37,features:[feature(small)],view,options:{maxTrees:40}};
-  assert.deepEqual(worker.imports,['geographic_forest_core.js?v=geographic-terrain-v1-20260907']);
+  assert.deepEqual(worker.imports,['geographic_forest_core.js?v=woodland-harvest-v372-20260908']);
   worker.send(request);assert.equal(worker.messages.length,1);assert.equal(worker.messages[0].id,37);
   assert.deepEqual(worker.messages[0].result,core.placeTrees(request.features,view,request.options));
 });
@@ -321,4 +321,32 @@ test('worker contains malformed and over-budget requests and remains usable for 
 test('worker ignores uncorrelatable ids instead of echoing arbitrary request objects',()=>{
   const worker=workerHarness();for(const id of [undefined,{},Infinity,'x'.repeat(129)])worker.send({id,features:[],view});
   assert.equal(worker.messages.length,0);
+});
+
+test('woodland timber stays inside real polygons and holes, with fixed coordinates across zoom and visual quality',()=>{
+  const g=geometry(small.coordinates[0],ring(-1.5023,53.3787,-1.5007,53.3803)),features=[feature(g)];
+  const before=JSON.stringify([features,view]),expected=core.timber(features,view);assert.ok(expected.length>10&&expected.length<=96);
+  assert.equal(new Set(expected.map(t=>t.key)).size,expected.length);
+  for(const t of expected){assert.ok(core.pointInWoodland([t.lon,t.lat],g));assert.match(t.key,/^woodland:/);assert.equal(t.quantity,6);}
+  for(const zoom of [10,13,14,17,19])assert.deepEqual(core.timber(features,{...view,zoom,density:.01,maxTrees:1,routeSegments:[[[view.bounds[0],53.38],[view.bounds[2],53.38]]]}),expected);
+  assert.equal(JSON.stringify([features,view]),before);
+  assert.deepEqual(core.timber(features,null),[]);assert.deepEqual(core.timber([],view),[]);
+  assert.deepEqual(core.timber([feature(g,{properties:{class:'grass'}})],view),[]);
+});
+test('duplicate or clipped woodland tiles never mint another timber identity',()=>{
+  const left=feature(geometry(ring(-1.503,53.378,-1.5015,53.381))),right=feature(geometry(ring(-1.5015,53.378,-1.500,53.381)));
+  const expected=core.timber([feature(small)],view);
+  assert.deepEqual(core.timber([left,right],view),expected);
+  assert.deepEqual(core.timber([right,left,feature(small),feature(small)],view),expected);
+  const shifted=core.timber([feature(small)],{...view,center:[-1.501,53.38],bounds:[-1.502,53.378,-1.499,53.382]});
+  const byId=new Map(expected.map(t=>[t.key,t]));assert.ok(shifted.some(t=>byId.has(t.key)));
+  for(const t of shifted)if(byId.has(t.key))assert.deepEqual(t,byId.get(t.key),'GPS movement cannot relocate an existing reward');
+});
+test('worker timber equals fixed core output while visual tree budgets and route clearings vary',()=>{
+  const worker=workerHarness(),expected=core.timber([feature(small)],view);
+  for(const [i,settings] of [{maxTrees:1,density:.1},{maxTrees:1000,routeSegments:[[[-1.5015,53.377],[-1.5015,53.382]]],clearanceM:50}].entries()){
+    worker.send({id:i,features:[feature(small)],view:{...view,zoom:19},timberView:view,options:settings});
+    assert.deepEqual(worker.messages[i].result.timber,expected);
+  }
+  assert.notEqual(worker.messages[0].result.trees.length,worker.messages[1].result.trees.length);
 });

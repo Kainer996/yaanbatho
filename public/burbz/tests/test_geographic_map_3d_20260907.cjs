@@ -81,7 +81,7 @@ function fixture(options={}) {
   map.setCenter=map.flyTo=map.easeTo=map.fitBounds=()=>{throw new Error('renderer must not own GPS/camera');};
   const placements=[],viewChanges=[];
   const trees=options.trees||[{id:'oak-a',longitude:-1.7801,latitude:53.3501,variant:0,size:1},{id:'fir-b',longitude:-1.7799,latitude:53.3499,variant:1,size:.9}];
-  const core={placeTrees:(features,view,settings)=>{placements.push({features:clone(features),view:clone(view),settings:clone(settings)});return options.useActualCore?require('../geographic_forest_core.js').placeTrees(features,view,settings):{trees,diagnostics:{sampled:trees.length}};}};
+  const core={timber:(features,view)=>require('../geographic_forest_core.js').timber(features,view),placeTrees:(features,view,settings)=>{placements.push({features:clone(features),view:clone(view),settings:clone(settings)});return options.useActualCore?require('../geographic_forest_core.js').placeTrees(features,view,settings):{trees,diagnostics:{sampled:trees.length}};}};
   class FakeWorker {
     constructor(url) { workerAttempts++;if(options.workerConstructorThrows)throw Error('Worker blocked by policy');this.url=url;this.messages=[];this.terminated=0;workers.push(this); }
     postMessage(message) { if(options.workerPostThrows||this.postFailure)throw Error('DataCloneError: cannot post placement');this.messages.push(clone(message)); }
@@ -98,7 +98,7 @@ function fixture(options={}) {
   if(options.worker)ctx.Worker=FakeWorker;
   vm.createContext(ctx);vm.runInContext(source,ctx,{filename:'geographic_map_3d.js'});
   const api=ctx.BurbzGeographicMap3D;
-  const attach=()=>api.attach(map,{document:doc,getRoutes:()=>options.routes||[],isVisible:()=>!container.cssHidden,onViewChange:enabled=>viewChanges.push(enabled)});
+  const attach=(extra={})=>api.attach(map,{document:doc,getRoutes:()=>options.routes||[],isVisible:()=>!container.cssHidden,onViewChange:enabled=>viewChanges.push(enabled),...extra});
   function wireActualRotate(){
     // Run the shipped pointer handler, with MapLibre jumpTo's synchronous move
     // events: setBearing does not leave isMoving true for the later render.
@@ -150,6 +150,30 @@ test('attach is idempotent and allocates one control and forest layer',()=>{
 test('style deferred attach installs only after style load and can rebuild a replaced style',()=>{
   const f=fixture({styleLoaded:false}),c=f.attach();assert.equal(f.map.sources.size,0);f.map.styleLoaded=true;f.map.emit('style.load');f.tick();const first=f.map.getLayer(FOREST);assert.ok(first);
   for(const id of [...f.map.layers.keys()])f.map.removeLayer(id);f.map.sources.clear();f.map.terrain=null;f.map.emit('style.load');f.tick();assert.ok(f.map.getLayer(FOREST));assert.notEqual(f.map.getLayer(FOREST),first);assert.equal(f.map.getTerrain()?.source,DEM,'replacement style must reactivate terrain as well as recreating its source');assert.equal(f.parent.children.length,2);c.dispose();assert.equal(f.gl.live.size,0);
+});
+test('attach after the initial style.load installs at idle exactly once, then removes the recovery listener',()=>{
+  const f=fixture({styleLoaded:false});f.map.emit('style.load');const c=f.attach();
+  f.map.emit('idle');f.tick();assert.equal(f.map.getLayer(FOREST),undefined,'dirty style waits');
+  f.map.styleLoaded=true;f.map.emit('idle');f.tick();assert.ok(f.map.getLayer(FOREST));assert.equal(c.state.terrainActive,true);assert.ok(c.state.trees>0);
+  const sourceCount=f.map.calls.filter(x=>x[0]==='addSource').length,layerCount=f.map.calls.filter(x=>x[0]==='addLayer').length;
+  for(let i=0;i<20;i++)f.map.emit('idle');f.tick();
+  assert.equal(f.map.calls.filter(x=>x[0]==='addSource').length,sourceCount);assert.equal(f.map.calls.filter(x=>x[0]==='addLayer').length,layerCount);
+  assert.equal(f.parent.children.length,2);c.dispose();const calls=f.map.calls.length;f.map.emit('idle');f.tick();assert.equal(f.map.calls.length,calls);assert.equal(f.gl.live.size,0);
+});
+test('worker timber follows the fixed player view and discards stale or hidden completions',()=>{
+  const f=fixture({worker:true}),supplies=[],timberView={bounds:[-1.79,53.34,-1.77,53.36],center:[-1.78,53.35]};
+  const c=f.attach({getTimberView:()=>timberView,onTimber:items=>supplies.push(clone(items))});f.tick();const w=f.workers[0],first=w.messages[0];assert.deepEqual(first.timberView,timberView);
+  c.refresh();f.tick();w.reply(first.id,{trees:f.trees,diagnostics:{},timber:[{key:'stale'}]});assert.equal(supplies.length,0);
+  const next=w.messages[1];w.reply(next.id,{trees:f.trees,diagnostics:{},timber:[{key:'current'}]});assert.deepEqual(supplies,[[{key:'current'}]]);
+  c.refresh();f.tick();const pending=w.messages[2];f.doc.hidden=true;f.doc.emit('visibilitychange');w.reply(pending.id,{trees:f.trees,diagnostics:{},timber:[{key:'hidden'}]});assert.equal(supplies.length,1);c.dispose();
+});
+test('blocked workers still supply fixed timber in 2D without drawing a hidden forest',()=>{
+  const features=[{properties:{class:'wood'},geometry:{type:'Polygon',coordinates:[[[-1.79,53.34],[-1.77,53.34],[-1.77,53.36],[-1.79,53.36],[-1.79,53.34]]]}}];
+  const timberView={bounds:[-1.79,53.34,-1.77,53.36],center:[-1.78,53.35]},supplies=[];
+  const f=fixture({worker:true,workerConstructorThrows:true,features}),c=f.attach({getTimberView:()=>timberView,onTimber:items=>supplies.push(clone(items))});f.tick();assert.ok(supplies[0].length>10);
+  const before=supplies[0];c.setEnabled(false);f.tick();assert.deepEqual(supplies.at(-1),before);assert.equal(c.state.terrainActive,false);
+  f.map.getLayer(FOREST).render(f.gl,{defaultProjectionData:{mainMatrix:IDENTITY}});assert.equal(f.gl.draws.length,0);
+  const count=supplies.length;f.doc.hidden=true;f.doc.emit('visibilitychange');c.refresh();f.tick();assert.equal(supplies.length,count);c.dispose();
 });
 test('woodland query discovers provider source and sends only explicit landcover semantics',()=>{
   const features=[{type:'Feature',properties:{class:'wood',subclass:'forest'},geometry:{type:'Polygon',coordinates:[[[-1.8,53.3],[-1.7,53.3],[-1.7,53.4],[-1.8,53.3]]]}}];
@@ -353,6 +377,12 @@ test('the shipped setBearing pointer gesture is measured despite jumpTo isMoving
 test('holding a stationary pointer never becomes a slow-map measurement',()=>{
   const f=fixture(),c=f.attach();f.tick();f.canvas.emit('pointerdown',{pointerId:7});movingFrames(f,30,200);assert.equal(c.state.terrainReduced,false);
   f.map.emit('move');movingFrames(f,30,200);assert.equal(c.state.terrainReduced,false,'a single old camera movement must expire during a stationary hold');c.dispose();
+});
+test('real pointer-driven camera changes still measure stalls longer than 400ms',()=>{
+  const f=fixture(),c=f.attach();f.tick();f.wireActualRotate();f.canvas.emit('pointerdown',{pointerId:7,clientX:100});
+  for(let i=1;i<=16;i++){f.canvas.emit('pointermove',{pointerId:7,clientX:100+i*4});f.advance(550);f.map.emit('render');}
+  assert.notEqual(f.map.getBearing(),0);assert.equal(c.state.terrainReduced,true,'long real render stalls must not be discarded as expired gestures');
+  f.doc.emit('pointerup',{pointerId:7});f.tick();c.dispose();
 });
 test('pointer-driven rotation defers worker uploads and placement until pointer release',()=>{
   const f=fixture({worker:true}),c=f.attach();f.tick();const worker=f.workers[0];f.canvas.emit('pointerdown',{pointerId:2});f.map.emit('move');worker.reply(worker.messages[0].id);assert.equal(c.state.forestBuilds,0);

@@ -3,7 +3,7 @@
  * Only this fixed same-origin core is loaded; messages cannot select a URL.
  */
 'use strict';
-importScripts('geographic_forest_core.js?v=geographic-terrain-v1-20260907');
+importScripts('geographic_forest_core.js?v=woodland-harvest-v372-20260908');
 self.onmessage = function(event) {
   const request = event && event.data;
   const id = request && request.id;
@@ -18,7 +18,9 @@ self.onmessage = function(event) {
     const options = request.options || {};
     if (options.routeSegments != null && (!Array.isArray(options.routeSegments) ||
         options.routeSegments.length > core.LIMITS.maxRouteSegments)) throw new Error('Forest route budget exceeded or invalid request.');
-    self.postMessage({id, result:core.placeTrees(features,request.view,options)});
+    const result=core.placeTrees(features,request.view,options);
+    if(request.timberView)result.timber=core.timber(features,request.timberView);
+    self.postMessage({id,result});
   } catch (error) {
     self.postMessage({id, error:error && typeof error.message === 'string' ? error.message.slice(0,240) : 'Forest placement failed.'});
   }

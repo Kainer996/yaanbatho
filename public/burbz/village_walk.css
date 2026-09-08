@@ -62,3 +62,10 @@
 #villageWalk .il-close{position:sticky;top:0;background:#17291e}
 @media(max-height:450px){#villageWalk .af-right{bottom:28px}#villageWalk .af-right input{height:92px}#villageWalk .af-land{bottom:155px;right:20px}#villageWalk.af-flight:not(.vr-inside) .vr-door{bottom:155px;right:230px}#villageWalk .af-status{top:66px}#villageWalk .il-use{bottom:164px}#villageWalk .il-panel{top:12px;bottom:12px}}
 #villageWalk.af-perched:not(.vr-inside) .af-right,#villageWalk.af-perched:not(.vr-inside) .vw-stick{display:none}
+
+/* Nature gathering stays above the movement controls on narrow phones. */
+#villageWalk .vh-use {position:absolute;z-index:6;bottom:180px;left:50%;transform:translateX(-50%);max-width:calc(100% - 28px);padding:12px 18px;border:2px solid #d5bc7f;border-radius:12px;background:#243c2b;color:#fff2cd;font:700 14px system-ui;box-shadow:0 3px 0 #121f18;touch-action:manipulation;}
+#villageWalk .vh-use:disabled {opacity:.75;}
+#villageWalk .vh-status {position:absolute;z-index:6;top:calc(50% - 80px);left:14px;right:14px;text-align:center;color:#fff2cd;background:#17261de8;border-radius:8px;padding:9px;pointer-events:none;font:600 13px system-ui;}
+#villageWalk .vh-use[hidden],#villageWalk .vh-status[hidden] {display:none;}
+@media(max-height:480px){#villageWalk .vh-use{bottom:98px;}#villageWalk .vh-status{top:140px;}}
