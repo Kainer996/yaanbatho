@@ -1,7 +1,7 @@
 /* On-demand fullscreen first-person adapter. One borrowed canvas, one RAF owner. */
 (function(root){
   'use strict';
-  const REV='academy-flight-v370-20260908';
+  const REV='bird-flight-controls-v371-20260908';
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -94,7 +94,7 @@
         const buttons=[...(s.uiBusy?el.querySelector('.il-panel:not([hidden]),.vd-panel:not([hidden])')||el:el).querySelectorAll('button,input,[tabindex="0"]')].filter(b=>b.getClientRects().length&&!b.closest('[hidden]'));
         const i=buttons.indexOf(document.activeElement);e.preventDefault();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();return;
       }
-      if(s.flight&&(e.target.tagName==='INPUT'||e.target.closest('[data-flight]')&&['Space','Enter'].includes(e.code)))return;
+      if(s.flight&&e.target.tagName==='INPUT')return;
       if(!e.repeat&&(s.flight?.key(e.code)||s.rooms?.key(e.code)||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
       if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
@@ -152,7 +152,8 @@
         const {camera,renderer,scene}=s.source;
         if(!s.room){s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}else s.flight?.update(0);
         s.rooms?.update(ts/1000);
-        camera.position.set(s.player.x,s.player.y+(options.flight ? .45 : core.EYE),s.player.z);camera.rotation.set(s.player.pitch,s.player.yaw,0,'YXZ');camera.updateMatrixWorld();
+        const motion=s.flight?.camera(dt)||{bob:0,pitch:0,roll:0};
+        camera.position.set(s.player.x,s.player.y+(options.flight ? .45 : core.EYE)+motion.bob,s.player.z);camera.rotation.set(s.player.pitch+motion.pitch,s.player.yaw,motion.roll,'YXZ');camera.updateMatrixWorld();
         if(root.BurbzManga)root.BurbzManga.render(root.THREE,renderer,s.room?.scene||scene,camera);else renderer.render(s.room?.scene||scene,camera);
         if(s.intervals.length>=60||(s.intervals.length>=12&&s.intervals.reduce((a,b)=>a+b,0)>1600)){
           const q=core.quality(s.dpr,s.maxDpr,s.intervals,s.fastStreak);s.fastStreak=q.fastStreak;s.intervals=[];
@@ -177,8 +178,8 @@
       options.suspend?.();Object.assign(camera,{fov:68,near:.08,far:110});
       on(canvas,'webglcontextlost',e=>{e.preventDefault();fail(Error('The graphics connection was interrupted.'));});
       resize();s.resizeObserver=new ResizeObserver(resize);s.resizeObserver.observe(el);
-      if(options.flight&&!s.room){el.querySelector('.vw-title small').textContent='BIRD FLIGHT';el.querySelector('.vw-exit').textContent='← Academy';stick.setAttribute('aria-label','Flight direction: pitch and turn');}
-      hint.textContent=s.room?'Left thumb: walk · Drag to look · E interact':options.flight?(touch?'Left stick: steer · Hold to fly · Right slider: height':'W/S fly · Arrows look · Space/Shift climb/dive · F land') : touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
+      if(options.flight&&!s.room){el.querySelector('.vw-title small').textContent='BIRD FLIGHT';el.querySelector('.vw-exit').textContent='← Academy';stick.setAttribute('aria-label','Fly: forward, backward and strafe');}
+      hint.textContent=s.room?'Left thumb: walk · Drag to look · E interact':options.flight?(touch?'Left stick: move · Right thumb: look · Slider: height':'WASD move · Drag/arrows look · Space/Shift height · F land') : touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
       look.focus({preventScroll:true});resume();
     }).catch(fail);
   }

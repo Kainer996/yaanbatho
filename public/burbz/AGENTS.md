@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Flight controls v371: left stick/WASD translate forward/back/strafe, right-thumb drag aims the head, and one spring height slider controls ascent/descent. Keep head pitch independent of altitude. Camera-only wingbeat bob/pitch accompanies forward ascent; forward descent glides flat and heading turns bank smoothly. Reduced motion, landing, rooms and interruptions clear added camera offsets without altering body collision/returns. Controls and regression runners: ACADEMY_FLIGHT_V370.md.
+
 Academy flight and living interiors v370 adds bird flight on the actual borrowed Academy renderer, landing decks and twelve current building interiors, finite transactional room finds, authentic named home/work/service inhabitants and daily needs-driven routines. Preserve exact landing/card returns, real mesh collision, renderer lifecycle, existing service/assignment gates, full census identities and the twelve-actor indoor cap. New Library/Market/Office paintings complete room artwork. Register four new flight/life modules and three images in all worker lists and the updater. Details, controls, tests and measured limits: ACADEMY_FLIGHT_V370.md.
 
 Interior arrival v369 aims the initial cabin view at its signature furniture while preserving the doorway spawn, collision and controls; retain this framing on narrow phones.
