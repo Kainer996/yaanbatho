@@ -26,4 +26,8 @@ All three room modules and changed walking assets are in every service-worker sh
 - `tests/run_building_rooms_pwa_v368.cjs`: installed v367 automatically upgrades, retains save/currency, visits a room offline and reopens the same room after an offline reload.
 - Existing walk/discovery core and browser suites preserve village quests, loot, lore and saved journal behaviour.
 
-The full Python suite retains the same 42 failing cases as v367; none was introduced by interiors. Physical-phone performance has not been measured. Browser screenshots and interaction tests use Chromium with software WebGL and phone-shaped viewports.
+The full Python suite reports **2,104 passed, 5 skipped and 42 failed**. These are the same 42 failing cases as v367; none was introduced by interiors. Physical-phone performance has not been measured. Browser screenshots and interaction tests use Chromium with software WebGL and phone-shaped viewports.
+
+Run the Node commands from `public/burbz`. For browser interaction and gallery runs, serve the repository's `public/` directory on `127.0.0.1:8871`; the interaction runner also accepts `QA_URL`. All three browser runners accept `PLAYWRIGHT_MODULE`, `CHROME_PATH` and `EVIDENCE_DIR`. The PWA runner starts its own server on port 8876 and needs `BASELINE_ROOT` pointing to a v367 `public/burbz` directory; it defaults to `/root/burbz-village-discoveries/public/burbz`.
+
+Release evidence is in `/root/burbz-interiors-v368-evidence/`: `results.json`, `pwa/results.json`, the 33 images in `gallery/`, `pytest-final.txt`, and the baseline comparison in `release/test-summary.json`.
