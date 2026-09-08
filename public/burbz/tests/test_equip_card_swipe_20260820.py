@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "equip-card-swipe-v297-20260820"
-CURRENT_BUILD = "interior-arrival-v369-20260908"
+CURRENT_BUILD = "academy-flight-v370-20260908"
 
 
 def run_node(source: str) -> dict:

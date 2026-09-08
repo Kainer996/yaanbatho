@@ -3597,6 +3597,9 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .academy-tree-light-toggle { position:absolute; left:20px; top:12px; z-index:20; min-height:36px; max-width:calc(100% - 122px); padding:0 12px; border-radius:12px; background:linear-gradient(135deg,rgba(34,19,8,.90),rgba(11,8,6,.82)); border:1px solid rgba(255,188,88,.52); color:#ffe1a1; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:11px; letter-spacing:.07em; text-transform:uppercase; backdrop-filter:blur(8px); box-shadow:0 4px 18px rgba(0,0,0,.30), inset 0 0 16px rgba(255,167,63,.08); transition:transform .16s ease,box-shadow .3s ease,background .3s ease; }
 .academy-tree-light-toggle[aria-pressed="true"] { background:linear-gradient(135deg,rgba(117,58,13,.95),rgba(41,21,8,.92)); border-color:rgba(255,214,131,.90); color:#fff4ca; box-shadow:0 0 22px rgba(255,174,69,.38),inset 0 0 18px rgba(255,201,103,.20); }
 .academy-tree-light-toggle:active { transform:scale(.96); }
+.academy-flight-launch { position:absolute;right:20px;top:58px;z-index:20;min-height:44px;padding:8px 16px;border:1px solid #d9b572;border-radius:12px;background:#273d30;color:#ffe8b4;font-weight:800;}
+.academy-flight-launch[hidden]{display:none}
+.academy-explore-room{display:block;margin:10px auto;min-height:44px;padding:10px 22px;border:1px solid #d9b572;border-radius:12px;background:#273d30;color:#ffe8b4;font-weight:800;}
 .academy-3d-hint { position:absolute; left:50%; bottom:26px; transform:translateX(-50%); z-index:19; padding:6px 12px; border-radius:999px; background:rgba(8,7,5,.62); border:1px solid rgba(255,255,255,.10); color:var(--text2); font-size:10px; letter-spacing:.04em; pointer-events:none; backdrop-filter:blur(6px); opacity:1; transition:opacity .6s ease; }
 .academy-3d-hint.faded { opacity:0; }
 
@@ -4698,6 +4701,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — hold, then drag to look around, tap a building to go inside" hidden></div>
         <button class="academy-tree-light-toggle" id="academyTreeLightBtn" type="button" aria-pressed="false" onclick="toggleAcademyTreeLights()" hidden>✨ Light the tree</button>
         <button class="academy-view-toggle" id="academyViewToggle" type="button" onclick="toggleAcademyView()">🌳 3D</button>
+        <button class="academy-flight-launch" id="academyFlightBtn" type="button" onclick="flyAcademy()" hidden>🪽 Fly around</button>
         <div class="academy-3d-hint" id="academy3dHint" hidden>Hold, then drag to look around · pinch to zoom · tap a building</div>
       </div>
 
@@ -5438,7 +5442,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="academy_alive_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="manga_render_core.js?v=ink-precision-v357-20260907"></script>
-<script src="academy_3d_core.js?v=crafted-academy-v358-20260907"></script>
+<script src="academy_3d_core.js?v=academy-flight-v370-20260908"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5475,7 +5479,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="peep_needs_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="peep_needs_core.js?v=academy-flight-v370-20260908"></script>
 <script src="settlement_life_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="settlement_models.js?v=little-folk-residents-v350-20260905"></script>
 <script src="settlement_lighting.js?v=little-folk-residents-v350-20260905"></script>
@@ -14370,6 +14374,7 @@ function applyAcademyView() {
   const hint = $('academy3dHint');
   if (!wrap2d || !stage3d) return;
   const want3d = academyViewMode() === '3d' && academySupports3D();
+  if($('academyFlightBtn'))$('academyFlightBtn').hidden=!want3d;
   if (want3d) {
     try {
       const eng = academy3dEnsure();
@@ -17935,7 +17940,9 @@ const ACADEMY_ROOM_INTERIOR_ASSETS = {
   crowbar: 'assets/academy-interiors-manga/crowbar-v2-animated-20260819.webp',
   kitchen: 'assets/academy-interiors-manga/kitchen-v2-animated-20260819.webp',
   workshop: 'assets/academy-interiors-manga/workshop.png',
-  manager_office: 'assets/academy-interiors-manga/roost.png',
+  manager_office: 'assets/academy-rooms-v370/manager-office.webp',
+  library: 'assets/academy-rooms-v370/library.webp',
+  magpie_market: 'assets/academy-rooms-v370/magpie-market.webp',
   nursery: 'assets/academy-interiors-manga/nursery.png',
   observatory: 'assets/academy-interiors-manga/observatory.png',
   quest_roost: 'assets/academy-interiors-manga/quest-roost.png'
@@ -17943,7 +17950,7 @@ const ACADEMY_ROOM_INTERIOR_ASSETS = {
 
 function ACADEMY_ROOM_SCENES(room, label) {
   const src = ACADEMY_ROOM_INTERIOR_ASSETS[room];
-  // Rooms without a painted interior (the Library) draw their inline scene.
+  // The inline scene remains a fallback for unknown or future room IDs.
   if (!src) return ACADEMY_ROOM_SVG_FALLBACKS(room, label);
   return `<img class="academy-room-bg" src="${src}" alt="${label} interior" draggable="false" decoding="async">`;
 }
@@ -18185,7 +18192,7 @@ function renderAcademyRoomInterior() {
     const sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label));
     if (room === 'tavern') {
       const waiting = barracksRecruitCandidates().length;
-      root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + rolePostBadgeHTML('academy', 'tavern') + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML([], room) + '</div></div>' +
+      root.innerHTML = academyExploreButton(room) + '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + rolePostBadgeHTML('academy', 'tavern') + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">Recruitment office · ' + waiting + ' bird' + (waiting === 1 ? '' : 's') + ' awaiting review</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML([], room) + '</div></div>' +
         '<div class="room-add-panel"><div class="room-add-title">Recruitment register</div>' + renderAcademyRecruitmentPanelHTML() + '</div>';
       $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
       root.querySelector('[data-action="open-barracks-recruits"]')?.addEventListener('click', openBarracksRecruitOverlay);
@@ -18247,14 +18254,14 @@ function renderAcademyRoomInterior() {
     const roomAddPanel = counterRoom ? '' : '<div class="room-add-panel"><div class="room-add-title">Add a bird to this room</div><div class="room-bird-list">' + addRows + '</div></div>';
     const stageBirds = academyRoomStageBirds(birds, room);
     const trainingMaster = room === 'training' ? trainingMasterActorHTML() : '';
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + roleBadge + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + trainingPanel + kitchenPanel + marketPanel + managerPanel + roomAddPanel;
+    root.innerHTML = academyExploreButton(room) + '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-topbar-left">' + roleBadge + '<div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">' + roomSub + '</div></div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div><div class="academy-room-stage">' + roomBirdGridHTML(stageBirds, room) + trainingMaster + '</div></div>' + trainingPanel + kitchenPanel + marketPanel + managerPanel + roomAddPanel;
   } catch (err) {
     // Never leave the player on a blank screen: draw the room scene (or a
     // plain backdrop) with a working Back button and a friendly note instead.
     console.warn('BURBZ academy room render failed:', err);
     let sceneSvg = '';
     try { sceneSvg = ACADEMY_ROOM_SCENES(room, escapeHtml(cfg.label)); } catch (e2) { sceneSvg = ''; }
-    root.innerHTML = '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">This room had trouble loading its furniture — the scene is safe to explore.</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div></div><div class="room-add-panel"><div class="room-add-title">Room details could not load</div><div class="academy-empty">Head back to the tree and reopen this room. If it keeps happening, tell Yaan — the room scene above still works.</div></div>';
+    root.innerHTML = academyExploreButton(room) + '<div class="academy-room-hero">' + sceneSvg + '<div class="academy-room-vignette"></div><div class="academy-room-topbar"><div class="academy-room-title-card"><div class="academy-room-title">' + cfg.icon + ' ' + cfg.label + '</div><div class="academy-room-sub">This room had trouble loading its furniture — the scene is safe to explore.</div></div><button class="academy-room-back" id="academyRoomBackBtn">Back</button></div></div><div class="room-add-panel"><div class="room-add-title">Room details could not load</div><div class="academy-empty">Head back to the tree and reopen this room. If it keeps happening, tell Yaan — the room scene above still works.</div></div>';
   }
   $('academyRoomBackBtn')?.addEventListener('click', () => switchScreen('academy'));
   root.querySelectorAll('[data-action="room-add-bird"]').forEach(btn => btn.addEventListener('click', () => { academyMoveBird(btn.dataset.birdId, room); renderAcademyRoomInterior(); }));
@@ -29109,6 +29116,7 @@ function burbzDaylightPalette(pal, daylight) {
 
 // Humanoid identities live in the economy save; these are only the visible models.
 const settlementResidentActors = { village:[], town:[] };
+const settlementResidentBrains = { village:[], town:[] };
 function settlementResidentDescription(data) {
   const p=data.resident;
   if(!p)return 'A neighbour in the settlement.';
@@ -29126,7 +29134,7 @@ function settlementBuildingNeighbours(seed,buildingId) {
 }
 function settlementPopulateResidents(kind, records, scene, targets, budget, pal) {
   const life = window.BurbzSettlementLife;
-  settlementResidentActors[kind] = [];
+  settlementResidentActors[kind] = [];settlementResidentBrains[kind]=[];
   if (!life) return;
   // Retire decorative townsfolk. A paid construction crew may still visit;
   // its builders are humanoid Peeps, identified separately from the resident census.
@@ -29183,7 +29191,7 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
     const b=EMPIRE_BUILDING_INDEX[d.id];
     return b && (b.need==='water'||b.need==='joy') && (!b.workers||serviceCrews.get(d.seed)?.staffed[d.id]);
   });
-  function destination(door,key){const path=route(door);return door&&path?{key:key+':'+door.seed+':'+door.id+':'+(door.homeId||'')+':'+door.entry.x.toFixed(3)+':'+door.entry.z.toFixed(3),point:door.entry,path}:null;}
+  function destination(door,key){const path=route(door);return door&&path?{key:key+':'+door.seed+':'+door.id+':'+(door.homeId||'')+':'+door.entry.x.toFixed(3)+':'+door.entry.z.toFixed(3),point:door.entry,path,target:{seed:door.seed,buildingId:door.id,homeId:door.homeId||''}}:null;}
   function routeFrom(memory,target){
     let exit=null;
     if(memory.route?.length){
@@ -29198,24 +29206,27 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
     return exit?exit.concat([...target.path].reverse().slice(1)):null;
   }
   const census=records.flatMap(rec=>ensureVillageEconomy(rec).residentLedger?.residents || []);
-  for(const resident of life.visibleResidents(census,Math.min(budget,census.length))) {
+  const visibleIds=new Set(life.visibleResidents(census,Math.min(budget,census.length)).map(p=>p.id));
+  for(const resident of census) {
     const seed=Number(resident.id.split(':resident:')[0]);
     const home=resident.homeId?doors.find(d=>d.seed===seed&&d.homeId===resident.homeId):null;
     const job=doors.find(d=>d.seed===seed&&d.id===resident.jobId);
     const homeRoute=route(home),jobRoute=route(job);
-    const model=window.BurbzSettlementModels.resident(THREE,resident);
+    const model=visibleIds.has(resident.id)?window.BurbzSettlementModels.resident(THREE,resident):new THREE.Group();
+    model.userData.resident=resident;
     model.userData.npc={role:'resident',name:resident.name};
     model.userData.wardSeed=seed;
     model.userData.paths={home:homeRoute || [home?.entry || green],leisure:homeRoute || [home?.entry || green],work:job&&homeRoute&&jobRoute?homeRoute.concat([...jobRoute].reverse().slice(1)):null};
     model.userData.pathBlocked=!homeRoute || (!!job&&!jobRoute);
     const chooseService=need=>serviceDoors.filter(d=>EMPIRE_BUILDING_INDEX[d.id].need===need&&route(d)).sort((a,b)=>Number(b.seed===seed)-Number(a.seed===seed)||Math.hypot(a.entry.x-(home?.entry.x||green.x),a.entry.z-(home?.entry.z||green.z))-Math.hypot(b.entry.x-(home?.entry.x||green.x),b.entry.z-(home?.entry.z||green.z)))[0];
     model.userData.peepEnvironment={life,routeFrom,sceneKey:kind+':'+records.map(r=>r.seed).sort().join(','),destinations:{
+      food:destination(doors.find(d=>d.seed===seed&&['tavern','farm','hut'].includes(d.id)&&route(d)),'food'),
       home:destination(home,'home'),work:destination(job,'work'),well:destination(chooseService('water'),'well'),fun:destination(chooseService('joy'),'fun'),
       green:{key:'green',point:green,path:[green]}
     }};
 
-    scene.add(model);villageNpcs.push(model);
-    settlementResidentActors[kind].push(model);
+    settlementResidentBrains[kind].push(model);
+    if(visibleIds.has(resident.id)){scene.add(model);villageNpcs.push(model);settlementResidentActors[kind].push(model);}
   }
   if(kind==='town') townWalkers.push(...settlementResidentActors[kind]);
   else villageWalkers.push(...settlementResidentActors[kind]);
@@ -29248,7 +29259,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)settlementS
 window.addEventListener('pagehide',settlementSaveNeeds);
 function settlementAnimateResidents(kind, now, motion) {
   const date=new Date(now),hour=date.getHours()+date.getMinutes()/60;
-  for(const model of settlementResidentActors[kind]) {
+  for(const model of settlementResidentBrains[kind]) {
     const u=model.userData;
     const state=window.BurbzPeepNeeds.advance(u.resident,u.peepEnvironment,now,hour);
     settlementNeedsDirty=true;
@@ -29362,7 +29373,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=interior-arrival-v369-20260908';
+        script.src = 'village_walk.js?v=academy-flight-v370-20260908';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29397,17 +29408,88 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
   finally { button.disabled = false; }
 });
 
-// Interiors read existing ownership and level; visits never create or spend anything.
+// Academy visits borrow the original renderer; owned rooms retain their services.
+async function flyAcademy(roomId) {
+  if (window.BurbzVillageWalk?.isOpen()) return;
+  if(roomId && !isAcademyRoomBuilt(roomId))return;
+  const button=$('academyFlightBtn'),fromRoom=!!roomId;
+  if(button?.disabled)return;if(button)button.disabled=true;
+  try {
+    if(fromRoom){localStorage.setItem(ACADEMY_VIEW_KEY,'3d');switchScreen('academy');applyAcademyView();}
+    const requestedScreen=currentScreen;
+    if(requestedScreen!=='academy')return;
+    await ensureVillageWalkModule();
+    if(currentScreen!==requestedScreen||academyViewMode()!=='3d')return;
+    const engine=academy3dEnsure();if(!engine||!engine.start())throw Error('The 3D Academy is unavailable.');
+    const st=engine._state;
+    window.BurbzVillageWalk.open({name:'The Academy',flight:true,room:roomId?{scope:'academy',buildingId:roomId}:null,interiors:buildingRoomsAdapter(),
+      source:()=>({scene:st.scene,renderer:st.renderer,camera:st.camera,buildings:st.houses,movers:[]}),
+      suspend:()=>{st.borrowed=true;engine.pause();clearInterval(academyTreeLightTimer);},
+      resume:(reason,failed)=>{st.borrowed=false;if(reason==='navigation'||reason==='pagehide')return;
+        if(failed&&st.renderer?.getContext().isContextLost()){academy3dBroken=true;engine.stop();ACADEMY_3D=null;}
+        if(currentScreen==='academy'){applyAcademyView();if(fromRoom&&reason!=='building-action')openAcademyRoom(roomId);}
+      }
+    });
+  }catch(error){showToast(error.message);}finally{if(button?.isConnected)button.disabled=false;}
+}
+window.flyAcademy=flyAcademy;
+function academyExploreButton(room){return isAcademyRoomBuilt(room)?'<button class="academy-explore-room" type="button" onclick="flyAcademy(\''+room+'\')">Explore inside · 3D</button>':'';}
+
+// Interiors read existing ownership; only explicit finite finds grant saved rewards.
+const interiorGreetingMemory=new Set();
 function buildingRoomsAdapter() {
   return {
+    collected:(target,id)=>window.BurbzInteriorLifeCore.collected(gameState,target,id),
+    collect:(target,id)=>{
+      if(!buildingRoomsAdapter().describe(target))return null;
+      const snapshot=snapshotGameState();let text;
+      try{const item=window.BurbzInteriorLifeCore.claim(gameState,target,id);if(!item)return null;
+        const reward=item.reward;gameState.player.coins+=reward.coins||0;
+        for(const [key,n]of Object.entries(reward.materials||{})){if(!window.BurbzLootCore.materialById(key))throw Error('That material is unavailable.');gameState.inventory.items[key]=(gameState.inventory.items[key]||0)+n;}
+        durableSaveState({throwOnFailure:true});
+        text=[reward.coins?'+'+reward.coins+' coins':'',...Object.entries(reward.materials||{}).map(([key,n])=>'+'+n+' '+window.BurbzLootCore.materialById(key).label)].filter(Boolean).join(' · ');
+      }catch(error){restoreGameStateSnapshot(snapshot);throw error;}
+      try{updateHeader();}catch(_){}return text;
+    },
+    people:target=>{
+      if(target.scope==='academy'){
+        return (gameState.flock||[]).flatMap(bird=>{
+          const loc=resolveBirdCardLocation(bird);if(loc.screen!=='academy-room')return [];
+          let room=loc.room,activity=loc.label;
+          if(room==='outdoors'){
+            const hour=academyLocalHour(),offset=window.BurbzInteriorLifeCore.hash(bird.id)%3;
+            const visits=hour<9?['kitchen','quest_roost','outdoors']:hour<17?['library','workshop','outdoors']:['crowbar','kitchen','outdoors'];
+            room=visits[offset];activity=room==='kitchen'?'Visiting the feeding table':room==='crowbar'?'Catching up with friends':'Exploring the Academy';
+          }
+          if(room!==target.buildingId||!isAcademyRoomBuilt(room))return[];
+          return [{id:bird.id,name:birdDisplayName(bird),species:bird.species,bird:true,activity,home:'the Academy tree',job:loc.kind==='academy-post'?loc.label:null}];
+        });
+      }
+      const kind=currentScreen==='town'?'town':'village';settlementAnimateResidents(kind,Date.now(),settlementSceneMotionScale());
+      return settlementResidentBrains[kind].flatMap(model=>{const p=model.userData.resident,r=model.userData.routine,t=r?.room;
+        if(!r?.inside||!t||Number(t.seed)!==Number(target.seed)||t.buildingId!==target.buildingId||(target.homeId&&target.homeId!==t.homeId))return[];
+        return[{id:p.id,name:p.name,activity:r.activity,mood:r.mood,need:r.need,home:p.homeId,job:p.jobId,thirst:r.thirst,energy:r.energy,fun:r.fun}];
+      });
+    },
+    talk:(target,person)=>{
+      const greeted=interiorGreetingMemory.has(person.id);interiorGreetingMemory.add(person.id);
+      const hello=greeted?'Good to see you again.':'Hello, I’m '+person.name+'.';
+      const job=person.job?(EMPIRE_BUILDING_INDEX[person.job]?.name||person.job):null;
+      const home=person.bird?'the Academy tree':person.home?(EMPIRE_BUILDING_INDEX[person.home.split(':')[0]]?.name||'my cabin'):'a place of my own, when one is ready';
+      const hour=academyLocalHour();const next=person.bird?'I’ll keep to my post if you give me an assignment.':hour<8?'I’ll head to work after breakfast.':hour<12?'I’m looking forward to a meal at midday.':hour<17?'After work I like a turn around the green.':hour<21?'I’ll stop by the gathering places before heading home.':'It’s time to rest at home.';
+      return hello+'\n\n'+(person.activity||'Taking a little break')+'. '+(person.need?person.need+'. ':'')+'\n\nHome: '+home+'.'+(job?' Work: '+job+'.':'')+'\n\n'+next;
+    },
     describe: target => {
+      if(target.scope==='academy'){const cfg=ACADEMY_ROOMS[target.buildingId];if(cfg&&isAcademyRoomBuilt(target.buildingId))return{name:cfg.label};if(target.buildingId==='dorm'&&isAcademyBuildingBuilt('dorm'))return{name:'The Roost'};return null;}
       const rec = empireVillageRecordBySeed(Number(target.seed) >>> 0);
       const building = EMPIRE_BUILDING_INDEX[target.buildingId];
       if (!rec || !building || villageBuildingLevel(rec, building.id) <= 0) return null;
+      if(target.homeId&&!window.BurbzSettlementLife.homeSlots(ensureVillageEconomy(rec).buildings,EMPIRE_BUILDINGS).some(h=>h.id===target.homeId))return null;
       return { name:villageBuildingTier(building, villageBuildingLevel(rec, building.id)).name };
     },
     open: (target, action) => {
       if (!buildingRoomsAdapter().describe(target)) return;
+      if(target.scope==='academy'){openAcademyRoom(target.buildingId==='dorm'?'outdoors':target.buildingId);return;}
       if (action === 'bar' && target.buildingId === 'tavern') villageOpenShop('tavern', target.seed);
       else openBuildingInterior(target.seed, target.buildingId);
     }
@@ -42642,7 +42724,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'interior-arrival-v369-20260908';
+const BURBZ_BUILD = 'academy-flight-v370-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

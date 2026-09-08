@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "interior-arrival-v369-20260908"
+RELEASE_PIN = "academy-flight-v370-20260908"
 PREVIOUS_RELEASE_PIN = "merlin-bond-meter-v197-20260802"
 
 
@@ -86,11 +86,9 @@ def test_library_is_wired_into_the_page():
     assert "library:'assets/academy-buildings/library.svg'" in html
     assert "library: { label:'THE LIBRARY', icon:'📚', buildingId:'library'" in html
     assert "library:     { stat:'int',     label:'INT' }" in html
-    # The interior is the inline SVG scene: the fallback path must exist and
-    # the Library must NOT have a painted-PNG interior entry that would
-    # bypass it.
+    # The finished room painting replaces the placeholder; keep a safe fallback.
     assert "if (!src) return ACADEMY_ROOM_SVG_FALLBACKS(room, label);" in html
-    assert "library: 'assets/academy-interiors-manga" not in html
+    assert "library: 'assets/academy-rooms-v370/library.webp'" in html
     assert "library() {" in html  # the inline interior scene itself
 
 

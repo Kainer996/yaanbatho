@@ -44,3 +44,27 @@
 #villageWalk .vr-door[hidden],#villageWalk .vr-service[hidden],#villageWalk.vr-inside .vd-hud,#villageWalk.vr-inside .vd-panel{display:none}
 @media(max-height:450px){#villageWalk .vr-door{bottom:110px;max-width:260px}#villageWalk .vr-service{bottom:52px}}
 #villageWalk .vw-error{z-index:10}
+
+/* Bird flight: physical controls remain reachable with two thumbs. */
+#villageWalk .af-controls[hidden],#villageWalk .il-panel[hidden],#villageWalk .il-use[hidden],#villageWalk .af-land[hidden]{display:none}
+#villageWalk .af-lift{position:absolute;left:22px;bottom:160px;display:flex;gap:8px}
+#villageWalk .af-lift button{width:50px;min-height:48px;font-size:25px}
+#villageWalk .af-forward{position:absolute;left:24px;bottom:222px;min-height:48px}
+#villageWalk .af-right{position:absolute;right:18px;bottom:65px;display:flex;align-items:center;gap:6px}
+#villageWalk .af-right button{width:44px;min-height:48px;padding:0;font-size:24px}
+#villageWalk .af-right input{writing-mode:vertical-lr;direction:rtl;appearance:auto;width:38px;height:126px;accent-color:#edc879;touch-action:none}
+#villageWalk .af-land{position:absolute;right:20px;bottom:225px;max-width:calc(100% - 40px);border:2px solid #edc879;background:#355c42}
+#villageWalk .af-status{position:absolute;left:16px;top:86px;font-size:12px;background:#17291eee;padding:9px 12px;border-radius:9px}
+#villageWalk .af-beak{position:absolute;left:calc(50% - 12px);bottom:-9px;width:24px;height:34px;background:#ca9c46;clip-path:polygon(50% 0,100% 100%,0 100%);pointer-events:none}
+#villageWalk.af-flight .vw-touch-hint{display:none}
+#villageWalk.af-flight:not(.vr-inside) .vr-door{bottom:285px}
+#villageWalk .il-use{position:absolute;left:20px;right:20px;bottom:282px;margin:auto;width:max-content;max-width:calc(100% - 40px);background:#35573f;border:2px solid #ebc774}
+#villageWalk .il-panel{position:absolute;z-index:4;inset:80px max(14px,calc((100% - 520px)/2)) 24px;background:#17291e;border:2px solid #c9a867;border-radius:16px;overflow:auto;padding:16px;touch-action:pan-y;overscroll-behavior:contain;box-shadow:0 12px 50px #0008;color:#fff3d1}
+#villageWalk .il-panel *{touch-action:pan-y}
+#villageWalk .il-panel h2{font:600 24px/1.25 Georgia,serif;color:#ffdc8b;margin:20px 0 12px}
+#villageWalk .il-panel p{font:16px/1.65 Inter,system-ui,sans-serif;white-space:pre-line;color:#fff3d1}
+#villageWalk .il-close{position:sticky;top:0;background:#17291e}
+@media(max-height:450px){#villageWalk .af-lift{left:138px;bottom:30px}#villageWalk .af-forward{left:138px;bottom:90px}#villageWalk .af-right{bottom:28px}#villageWalk .af-right input{height:92px}#villageWalk .af-land{bottom:145px;right:20px}#villageWalk.af-flight:not(.vr-inside) .vr-door{bottom:145px;right:230px}#villageWalk .af-status{top:66px}#villageWalk .il-use{bottom:164px}#villageWalk .il-panel{top:12px;bottom:12px}}
+@media(max-width:350px) and (min-height:451px){#villageWalk .af-forward{bottom:280px}#villageWalk .af-land{bottom:220px;font-size:12px}#villageWalk .af-lift{bottom:160px}#villageWalk .af-right{right:7px;gap:2px}}
+
+#villageWalk.af-perched:not(.vr-inside) .af-lift,#villageWalk.af-perched:not(.vr-inside) .af-forward,#villageWalk.af-perched:not(.vr-inside) .af-right,#villageWalk.af-perched:not(.vr-inside) .vw-stick{display:none}

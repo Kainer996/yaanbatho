@@ -55,3 +55,16 @@ test('need rates use elapsed time rather than frame count',()=>{
   const a=fixture(),b=fixture();for(let i=0;i<100;i++)a.tick(.1);for(let i=0;i<10;i++)b.tick(1);
   for(const k of ['thirst','energy','fun'])assert.ok(Math.abs(a.p.lifeMemory[k]-b.p.lifeMemory[k])<1e-8);
 });
+test('individual schedules include meals, a workday, evening visits and home',()=>{
+ const f=fixture();f.env.destinations.food={key:'food',point:{x:2,z:4},path:[{x:2,z:4},{x:0,z:0}]};
+ assert.equal(needs.schedule(f.p,7.5,f.env),'food');assert.equal(needs.schedule(f.p,10,f.env),'work');assert.equal(needs.schedule(f.p,12.75,f.env),'food');assert.equal(needs.schedule(f.p,15,f.env),'work');assert.equal(needs.schedule(f.p,20,f.env),'fun');assert.equal(needs.schedule(f.p,23,f.env),'home');
+ delete f.env.destinations.food;assert.equal(needs.schedule(f.p,7.5,f.env),'green');
+});
+test('hunger triggers a real trip and is relieved only at an existing food destination',()=>{
+ const f=fixture({hunger:80});f.env.destinations.food={key:'food',point:{x:0,z:4},path:[{x:0,z:4},{x:0,z:0}],target:{seed:1,buildingId:'tavern',homeId:''}};
+ const before=f.p.lifeMemory.hunger;assert.equal(f.tick().activity,'Going for a meal');assert(f.p.lifeMemory.hunger>=before);const state=f.until(s=>s.activity==='Having a meal');assert.equal(state.inside,true);assert.equal(state.room.buildingId,'tavern');const hungry=f.p.lifeMemory.hunger;f.tick();assert(f.p.lifeMemory.hunger<hungry);
+});
+test('indoor work occupancy preserves the real destination and save identity',()=>{
+ const f=fixture();f.env.destinations.work.target={seed:1,buildingId:'hut',homeId:''};const state=f.tick(1,10);assert.equal(state.inside,true);assert.equal(state.room.buildingId,'hut');assert.equal(state.x,8);assert.equal(f.p.homeId,'cabin:0');assert.equal(f.p.jobId,'hut');
+ const saved=needs.sanitize(JSON.parse(JSON.stringify(f.p.lifeMemory)));assert.equal(saved.hunger,f.p.lifeMemory.hunger);
+});
