@@ -40,7 +40,7 @@ function fakeGL(options={}) {
     gl['create'+type]=()=>{const h={type,id:++serial};gl.live.add(h);return h;};
     gl['delete'+type]=h=>gl.live.delete(h);
   }
-  for (const name of ['shaderSource','compileShader','attachShader','linkProgram','bindVertexArray','enableVertexAttribArray','vertexAttribPointer','vertexAttribDivisor','useProgram','enable','depthFunc','depthMask','disable','cullFace','uniform1f'])gl[name]=()=>{};
+  for (const name of ['shaderSource','compileShader','attachShader','linkProgram','bindVertexArray','enableVertexAttribArray','vertexAttribPointer','vertexAttribDivisor','useProgram','enable','depthFunc','depthMask','disable','cullFace','uniform1f','getParameter','uniform4fv'])gl[name]=()=>{};
   gl.bindBuffer=(type,buffer)=>{gl.boundBuffer=buffer;};
   gl.bufferData=(target,data,usage)=>{gl.uploads.push({buffer:gl.boundBuffer,usage,data:typeof data==='number'?data:Array.from(data)});};
   gl.getShaderParameter=()=>++gl.shaderChecks!==options.failShader;

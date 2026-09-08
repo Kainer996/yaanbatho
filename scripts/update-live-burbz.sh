@@ -55,6 +55,8 @@ FILES=(
   "geographic_surfaces.js"
   "geographic_places_core.js"
   "geographic_details_scene.js"
+  "geographic_daynight_core.js"
+  "geographic_daynight.js"
   "geographic_places.js"
   "geographic_places.css"
   "data/geographic-terrain-credits.html"

@@ -4,9 +4,13 @@
  const VS=`#version 300 es
  precision highp float;
  layout(location=0) in vec3 position; layout(location=1) in vec3 normal; layout(location=2) in vec3 color;
- uniform mat4 matrix; uniform float outline; out vec3 shade;
+ uniform mat4 matrix; uniform float outline; uniform float u_sun;uniform float u_warm;uniform vec4 u_lamps[8];out vec3 shade;
  void main(){float light=dot(normal,normalize(vec3(-.55,.65,1.)));float band=light>.65?1.12:light>.12?.90:.65;
- shade=outline>0.?vec3(.10,.20,.16):mix(vec3(.16,.27,.24),color,band*.86);
+ shade=mix(vec3(.16,.27,.24),color,band*.86);vec3 world=position;
+      vec3 lit=mix(shade*vec3(.30,.43,.67),shade,u_sun);
+      lit+=shade*vec3(.16,.05,-.04)*u_warm;
+      if(u_sun<.999)for(int i=0;i<8;i++){vec4 lamp=u_lamps[i];float fall=max(0.,1.-distance(world,lamp.xyz)/max(1.,lamp.w));lit+=vec3(1.,.43,.10)*fall*fall*(1.-u_sun)*.68;}
+ shade=outline>0.?mix(vec3(.025,.045,.075),vec3(.10,.20,.16),u_sun):lit;
  gl_Position=matrix*vec4(position+normal*outline*.07,1.);}`;
  const FS=`#version 300 es
  precision highp float; in vec3 shade; out vec4 outputColor; void main(){outputColor=vec4(shade,1.);}`;
@@ -38,11 +42,11 @@
  function create(map,options){
   const state={objects:0,vertices:0,draws:0,builds:0,errors:[]},heights=new Map();let records=[],dirty=true,disposed=false;
   const layer={id:ID,type:'custom',renderingMode:'3d',
-   onAdd(map,gl){this.gl=gl;const shader=(type,code)=>{const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const error=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(error);}return s;};
+   onAdd(map,gl){this.gl=gl;const priorVAO=gl.getParameter(gl.VERTEX_ARRAY_BINDING),priorBuffer=gl.getParameter(gl.ARRAY_BUFFER_BINDING);const shader=(type,code)=>{const s=gl.createShader(type);gl.shaderSource(s,code);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){const error=gl.getShaderInfoLog(s);gl.deleteShader(s);throw Error(error);}return s;};
     let vs,fs;try{vs=shader(gl.VERTEX_SHADER,VS);fs=shader(gl.FRAGMENT_SHADER,FS);this.program=gl.createProgram();gl.attachShader(this.program,vs);gl.attachShader(this.program,fs);gl.linkProgram(this.program);if(!gl.getProgramParameter(this.program,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(this.program));
-     this.matrix=gl.getUniformLocation(this.program,'matrix');this.outline=gl.getUniformLocation(this.program,'outline');this.vao=gl.createVertexArray();this.buffer=gl.createBuffer();gl.bindVertexArray(this.vao);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);
+     this.matrix=gl.getUniformLocation(this.program,'matrix');this.outline=gl.getUniformLocation(this.program,'outline');this.sun=gl.getUniformLocation(this.program,'u_sun');this.warm=gl.getUniformLocation(this.program,'u_warm');this.lamps=gl.getUniformLocation(this.program,'u_lamps[0]');this.vao=gl.createVertexArray();this.buffer=gl.createBuffer();gl.bindVertexArray(this.vao);gl.bindBuffer(gl.ARRAY_BUFFER,this.buffer);
      for(let i=0;i<3;i++){gl.enableVertexAttribArray(i);gl.vertexAttribPointer(i,3,gl.FLOAT,false,36,i*12);}gl.bindVertexArray(null);gl.bindBuffer(gl.ARRAY_BUFFER,null);dirty=true;
-    }catch(e){state.errors.push(e.message);this.onRemove(map,gl);}finally{if(vs)gl.deleteShader(vs);if(fs)gl.deleteShader(fs);}
+    }catch(e){state.errors.push(e.message);this.onRemove(map,gl);}finally{if(vs)gl.deleteShader(vs);if(fs)gl.deleteShader(fs);gl.bindVertexArray(priorVAO);gl.bindBuffer(gl.ARRAY_BUFFER,priorBuffer);}
    },
    upload(){if(!this.program||disposed)return;const geo=root.BurbzGeographicMap3D,c=map.getCenter();this.origin=geo.mercator(c.lng,c.lat);this.scale=1/(40075016.68557849*Math.cos(c.lat*Math.PI/180));
     const terrain=!!map.getTerrain(),ready=terrain&&map.isSourceLoaded(DEM),chunks=[],bounds=map.getBounds(),marginLat=.0005,marginLon=marginLat/Math.max(.2,Math.cos(c.lat*Math.PI/180));this.anchors=[];let size=0,count=0;
@@ -59,11 +63,12 @@
      for(let i=0;i<base.length;i+=9){out[i]=base[i]*s+x;out[i+1]=base[i+1]*s+y;out[i+2]=base[i+2]*s+elevation+.1;for(let k=3;k<9;k++)out[i+k]=base[i+k];}chunks.push(out);size+=out.length;count++;
     }
     const data=new Float32Array(size);let offset=0;for(const chunk of chunks){data.set(chunk,offset);offset+=chunk.length;}
-    this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.buffer);this.gl.bufferData(this.gl.ARRAY_BUFFER,data,this.gl.STATIC_DRAW);this.gl.bindBuffer(this.gl.ARRAY_BUFFER,null);
+    const priorBuffer=this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING);this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.buffer);this.gl.bufferData(this.gl.ARRAY_BUFFER,data,this.gl.STATIC_DRAW);this.gl.bindBuffer(this.gl.ARRAY_BUFFER,priorBuffer);
     state.objects=count;state.vertices=size/9;state.builds++;while(heights.size>600)heights.delete(heights.keys().next().value);dirty=false;
    },
    render(gl,args){if(!this.program||!state.vertices||map.getZoom()<13||!options.visible())return;const matrix=args?.defaultProjectionData?.mainMatrix;if(!matrix)return;
-    gl.useProgram(this.program);gl.uniformMatrix4fv(this.matrix,false,root.BurbzGeographicMap3D.localMatrix(matrix,this.origin,this.scale));gl.bindVertexArray(this.vao);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(true);gl.disable(gl.BLEND);gl.enable(gl.CULL_FACE);
+    const light=root.BurbzGeographicDayNight?.lighting(map,this.origin,this.scale);
+    gl.useProgram(this.program);gl.uniform1f(this.sun,light?.sun??1);gl.uniform1f(this.warm,light?.warm??0);gl.uniform4fv(this.lamps,light?.lights||new Float32Array(32));gl.uniformMatrix4fv(this.matrix,false,root.BurbzGeographicMap3D.localMatrix(matrix,this.origin,this.scale));gl.bindVertexArray(this.vao);gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(true);gl.disable(gl.BLEND);gl.enable(gl.CULL_FACE);
     for(let pass=0;pass<2;pass++){gl.cullFace(pass?gl.BACK:gl.FRONT);gl.uniform1f(this.outline,pass?0:1);gl.drawArrays(gl.TRIANGLES,0,state.vertices);}gl.bindVertexArray(null);gl.cullFace(gl.BACK);gl.disable(gl.CULL_FACE);gl.depthMask(false);state.draws=2;
    },
    onRemove(map,gl){if(this.vao)gl.deleteVertexArray(this.vao);if(this.buffer)gl.deleteBuffer(this.buffer);if(this.program)gl.deleteProgram(this.program);this.vao=this.buffer=this.program=null;heights.clear();}

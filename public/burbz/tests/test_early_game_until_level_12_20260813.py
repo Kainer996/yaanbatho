@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "early-game-until-level-12-v262-20260813"
-CURRENT_BUILD = "full-cards-v375-20260908"
+CURRENT_BUILD = "night-quests-v376-20260908"
 
 
 def function_source(html: str, name: str) -> str:

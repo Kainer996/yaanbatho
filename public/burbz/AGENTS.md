@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Night questing v376 applies the existing local-clock cycle to the geographic map, with bounded modeled trail torches and native soft light pools. Preserve geography/GPS/save authority, verified elevations, hidden/gesture/reduced-motion pauses, shared GL binding restoration and matching offline/updater pins. Liberation Return must select and save the Villages page before navigation so the birdhouse is visible; three-claim progress explains the existing 16-folk/75%-happy/5-km manual merge rules. Evidence and lifecycle details: [NIGHT_QUESTS_V376.md](NIGHT_QUESTS_V376.md).
+
 Full cards v375 restores two Birdex/Companion portrait columns and routes card taps/keyboard directly to the compact complete card with all five equipment slots. Preserve owned-only action guards, sourced expandable facts, visible-control focus trapping, decoded swipe neighbours and the existing recruitment celebration. Details and evidence: [FULL_CARDS_V375.md](FULL_CARDS_V375.md).
 
 Map pictures v374 restores the original quest compass/scroll artwork and full-colour pickup glyphs. Woodland supply cells are thinned to one-third of the original stable catalogue; surviving daily claim IDs and coordinates stay unchanged. At most four nearby or eight wide-view woodland markers show, and each woodland tap grants one timber atomically. GPS/range, rollback and duplicate-claim guards remain. Starter tutorial bundles and village first-person harvesting retain their existing rules. Evidence and update checks: [MAP_PICTURES_V374.md](MAP_PICTURES_V374.md).
