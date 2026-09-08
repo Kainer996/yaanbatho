@@ -28,7 +28,7 @@ The Library and Magpie Market now use generated paintings instead of inline plac
 
 Core runner: `node tests/test_academy_flight_v370.cjs`. Checks all 46 supported plans, reachable finds/furniture/exit paths, finite geometry, disposal, stable claims, flight collision and landing. Existing needs and interior cores remain covered.
 
-Browser runners use the disposable fixture from `tests/village_walk_fixture_20260907.cjs`, local `public/` server on port 8871, Playwright and Chromium. They never use a personal save:
+Run the Node commands from `public/burbz`. Browser interaction runners use the disposable fixture from `tests/village_walk_fixture_20260907.cjs` and a local `public/` server on port 8871 (overridable with `QA_URL`). The PWA runner starts its own server on port 8876 and accepts `BASELINE_ROOT` pointing to a v369 `public/burbz` directory, defaulting to `/root/burbz-v369-baseline/public/burbz`. All browser runners accept `PLAYWRIGHT_MODULE`, `CHROME_PATH` and `EVIDENCE_DIR`; they use synthetic saves, not personal saves:
 
 - `tests/run_academy_flight_v370.cjs`: all twelve real approaches, landing, entry, exact returns, collection and simultaneous touch/slider controls at 390×844, 320×568 and 844×390.
 - `tests/run_interior_life_v370.cjs`: actual resident/home/work identity, assigned bird, dialogue, failed-save rollback/retry, invalid home/unbuilt claim refusal, direct-card return and decoded painting screenshots.
