@@ -347,5 +347,12 @@
     return answer;
   }
 
-  return { placeTrees, isWoodlandFeature, pointInWoodland, DEFAULTS, LIMITS };
+  // Fixed spacing and IDs: phone quality, camera zoom and route clearings
+  // cannot mint another supply. These are game finds, not surveyed deadwood.
+  function timber(features, view) {
+    if (!view) return [];
+    return placeTrees(features,{...view,zoom:14},{maxTrees:96,maxCandidates:4000,clearanceM:0}).trees
+      .map(t=>({key:'woodland:'+t.id,lat:t.latitude,lon:t.longitude,quantity:6}));
+  }
+  return { placeTrees, timber, isWoodlandFeature, pointInWoodland, DEFAULTS, LIMITS };
 });

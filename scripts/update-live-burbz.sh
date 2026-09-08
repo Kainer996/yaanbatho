@@ -59,6 +59,8 @@ FILES=(
   "assets/illustrated-world-v366/settlements.webp"
   "academy_flight_core.js"
   "academy_flight.js"
+  "village_harvest_core.js"
+  "village_harvest.js"
   "interior_life_core.js"
   "interior_life.js"
   "assets/academy-rooms-v370/magpie-market.webp"

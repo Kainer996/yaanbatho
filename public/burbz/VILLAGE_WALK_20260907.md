@@ -2,6 +2,8 @@
 
 Implementation handoff, 2026-09-07. Release/cache promotion belongs to the coordinating Burbz owner. This additive commit does not itself enable the button until its companion index patch is applied.
 
+This records the original walking implementation. Later integrated features include [village discoveries](VILLAGE_DISCOVERIES_V367.md), [building interiors](WALKABLE_INTERIORS_V368.md), [Academy flight and indoor life](ACADEMY_FLIGHT_V370.md), and [v372 wood/stone gathering](WOODLAND_HARVEST_V372.md); their current modules and save/reward contracts extend the original dependency list and behavior below.
+
 ## Integration
 
 Apply `VILLAGE_WALK_INTEGRATION.patch` to `index.html` (based on main 59708118bfc23811d6950ae977e0d96ba9ac5d73). The patch was exercised in the implementation task's isolated checkout. It adds the small **👣 Walk** button beside the village camera reset, a lazy controller loader, a scene adapter, terrain metadata, an optional animation-only argument, and lifecycle/back guards. Preserve any newer Stores/navigation gate while integrating the `switchScreen` hunk. The adapter borrows the exact current `villageScene`, `villageRenderer`, `villageCamera` and `villageBuildings`; nothing is regenerated into a different village.

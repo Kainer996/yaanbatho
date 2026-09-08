@@ -5,7 +5,7 @@
   if (root) root.BurbzGeographicMap3D = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
   'use strict';
-  const VERSION = 'geographic-terrain-v1-20260907';
+  const VERSION = 'woodland-harvest-v372-20260908';
   const DEM_ID = 'burbz-geographic-dem';
   const SHADE_DEM_ID = 'burbz-geographic-shade-dem';
   const FOREST_ID = 'burbz-geographic-forest';
@@ -190,14 +190,16 @@
     if(controllers.has(map))return controllers.get(map);
     const doc=options.document||root.document, container=map.getContainer();
     const state={version:VERSION,enabled:true,visible:true,terrainActive:false,terrainReduced:false,elevation:'loading',
-      webgl:'pending',trees:0,elevationPendingTrees:0,zoom:map.getZoom(),tier:3,draws:0,
+      webgl:'pending',trees:0,elevationPendingTrees:0,zoom:map.getZoom(),tier:container.clientWidth<=600?1:3,draws:0,
       errors:[],renderedFrames:0,forestBuilds:0,buildMs:0,frameP90:null,pixelRatio:null,placement:null,inspectionPitch:32,fit:null,worker:'idle'};
     let timer=null,disposed=false,layer=null,sourceId=null,control=null,toggle=null,status=null;
     let lastRender=0,lastAdapt=0,frames=[],observer=null,intersection=null,contextLost=false,demErrors=0,performanceViewChange=false,performanceQualityPending=false;
     const listeners=[];
     let pendingFit=null, lastFit=null,resizeRefit=false,fitting=false,cardObserver=null;
-    const activePointers=new Set();let lastPointerMove=-Infinity;
-    const interacting=()=>map.isMoving()||(activePointers.size>0&&now()-lastPointerMove<400);
+    const activePointers=new Set();let lastPointerMove=-Infinity,pointerFramePending=false;
+    // Defer placement throughout a hold. Measure only frames requested by
+    // movement, including a delayed frame arriving after the 400ms window.
+    const interacting=()=>map.isMoving()||activePointers.size>0;
     let worker=null,workerFailed=false,job=0,inflight=null,queued=null,deferredPlacement=null;
     function stopPlacement() {
       if(worker){worker.onmessage=null;worker.onerror=null;worker.terminate();}worker=null;inflight=null;queued=null;deferredPlacement=null;job++;state.worker='paused';
@@ -211,9 +213,10 @@
       try{worker.postMessage(request);}catch(e){workerFallback();}
     }
     function acceptPlacement(result,elapsed) {
-      if(disposed||!state.enabled||!state.visible||!layer)return;
+      if(disposed||!state.visible||!layer)return;
       if(interacting()){deferredPlacement={result,elapsed};return;}
       layer.upload(result.trees,map);state.placement=result.diagnostics;state.forestBuilds++;
+      if(result.timber)options.onTimber?.(result.timber);
       state.buildMs=elapsed;map.triggerRepaint();
     }
     function place(features,view,placementOptions) {
@@ -232,12 +235,13 @@
         };
         worker.onerror=()=>{if(worker===instance&&!disposed)workerFallback();};
       }catch(e){workerFailed=true;state.worker='fallback';}
-      const request={id:++job,features,view,options:placementOptions,started:now()};
+      const request={id:++job,features,view,options:placementOptions,timberView:options.getTimberView?.(),started:now()};
       if(worker){if(inflight)queued=request;else dispatch(request);return;}
       // Worker restrictions must not block the map. The synchronous fallback
       // has a much smaller illustration budget and only runs after interaction.
       state.worker='fallback';
       const result=core.placeTrees(features,view,{...placementOptions,maxTrees:Math.min(180,placementOptions.maxTrees)});
+      if(request.timberView)result.timber=core.timber(features,request.timberView);
       acceptPlacement(result,now()-request.started);
     }
     function on(name, fn){map.on(name,fn);listeners.push([name,fn]);}
@@ -327,7 +331,7 @@
           pending.refits++;fitRoute(pending.points,pending.options,true);
         }else pendingFit=null;
       }
-      if(!state.enabled||!state.visible||!sourceId||state.zoom<12||!layer)return;
+      if((!state.enabled&&!options.onTimber)||!state.visible||!sourceId||state.zoom<12||!layer)return;
       if(interacting()){schedule(180);return;}
       if(deferredPlacement){const saved=deferredPlacement;deferredPlacement=null;acceptPlacement(saved.result,saved.elapsed);}
       const core=root.BurbzGeographicForestCore;
@@ -442,13 +446,17 @@
       }
     }
     on('style.load',install);
+    // Attach also runs inside MapLibre's load callback, after other game
+    // layers have dirtied the style. Its initial style.load has already fired
+    // and isStyleLoaded() is temporarily false: finish installing at idle.
+    on('idle',()=>{if(!layer&&map.isStyleLoaded())install();});
     const cancelPendingFit=e=>{pendingFit=null;activePointers.add(e.pointerId);};
-    const endPointer=e=>{activePointers.delete(e.pointerId);if(!activePointers.size){lastRender=0;frames=[];schedule(80);}};
+    const endPointer=e=>{activePointers.delete(e.pointerId);if(!activePointers.size){lastRender=0;frames=[];pointerFramePending=false;schedule(80);}};
     const mapCanvas=map.getCanvasContainer?.();
     mapCanvas?.addEventListener('pointerdown',cancelPendingFit,{passive:true});
     mapCanvas?.addEventListener('pointerleave',endPointer,{passive:true});
     doc?.addEventListener('pointerup',endPointer,true);doc?.addEventListener('pointercancel',endPointer,true);
-    on('move',()=>{if(activePointers.size)lastPointerMove=now();});
+    on('move',()=>{if(activePointers.size){lastPointerMove=now();pointerFramePending=true;}});
     on('moveend',()=>{state.zoom=map.getZoom();syncTerrain();schedule(80);});
     on('resize',()=>{state.visible=visible();applyQuality();resizeRefit=true;schedule(120);});
     on('sourcedata',e=>{if(e.sourceId===sourceId||e.sourceId===DEM_ID||/^burbz-quest/.test(e.sourceId||''))schedule(180);});
@@ -461,7 +469,9 @@
     });
     on('render',()=>{
       const t=now();
-      if(!state.visible||!interacting()){lastRender=0;frames=[];return;}
+      const measuring=map.isMoving()||(activePointers.size>0&&(pointerFramePending||t-lastPointerMove<400));
+      pointerFramePending=false;
+      if(!state.visible||!measuring){lastRender=0;frames=[];return;}
       if(lastRender)frames.push(t-lastRender);lastRender=t;
       if(state.terrainActive&&!state.terrainReduced&&state.elevation==='ready'&&frames.length>=12&&frames.reduce((sum,n)=>sum+n,0)>=2000){
         const sorted=frames.slice().sort((a,b)=>a-b),p90=sorted[Math.floor((sorted.length-1)*.9)];
