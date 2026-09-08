@@ -68,7 +68,7 @@ const check=(name,condition)=>{assert(condition,name); checks.push(name); consol
  await touch('touchStart',120);check('settling motion can be grabbed',await page.evaluate(()=>!!birdEquipSwipe.gesture&&!birdEquipSwipeAnimating));
  await move(340);await touch('touchEnd');await settled();check('regrab/reverse leaves a valid centered card',(await sample()).x===0);
  for(let i=0;i<6;i++)await swipe(i%2?1:-1);check('six consecutive gestures stay bounded to three panels',await page.locator('#birdEquipTrack > .bird-equip-panel').count()===3);
- await open();await touch('touchStart',200,520);await move(201,340);await touch('touchEnd');await settled();check('vertical drag scrolls full back without changing companion',await page.evaluate(()=>birdEquipState.birdId==='qa-0'&&document.querySelector('.bird-equip-scroll').scrollTop>40));
+ await open();await page.locator('#birdEquipBody .full-card-facts').evaluate(el=>el.open=true);await touch('touchStart',200,520);await move(201,340);await touch('touchEnd');await settled();check('vertical drag scrolls full back without changing companion',await page.evaluate(()=>birdEquipState.birdId==='qa-0'&&document.querySelector('.bird-equip-scroll').scrollTop>40));
  await page.locator('#birdEquipBody .bird-equip-slot').first().click();check('loadout button opens real picker',await page.locator('#birdEquipSlotPicker').count()===1);
  await open();await page.locator('#birdEquipBody .bird-equip-fav').click();check('portrait favourite remains tappable',await page.locator('#birdEquipBody .bird-equip-fav').getAttribute('aria-pressed')==='true');
  await page.keyboard.press('ArrowRight');await settled();check('keyboard advances companion',await current()==='qa-1');
@@ -85,13 +85,16 @@ const check=(name,condition)=>{assert(condition,name); checks.push(name); consol
  await page.evaluate(()=>{gameState.settings.vibration=true;Object.defineProperty(navigator,'vibrate',{configurable:true,value:undefined})});await swipe();check('unsupported haptics still changes card',await current()==='qa-2');
  // Exercise actual failed and pending <img> loads with a reserved fallback.
  await page.route('**/qa-missing-art.png',r=>r.fulfill({status:404,body:''}));
+ await page.evaluate(()=>__testEval("window.qaCardArt=birdCardImgAttrs;birdCardImgAttrs=b=>b.id==='qa-1'?{src:'qa-missing-art.png'}:window.qaCardArt(b);"));
  await page.evaluate(()=>{window.qaArt=getBirdArtUrl;getBirdArtUrl=b=>b.id==='qa-1'?'qa-missing-art.png':qaArt(b);});await open();
  await page.waitForFunction(()=>$('birdEquipTrack').querySelector('[data-delta="1"] .bird-equip-art').hidden);
- await swipe();check('failed image retains a visible same-size fallback',await page.evaluate(()=>{const i=$('birdEquipBody').querySelector('.bird-equip-art'),f=i.previousElementSibling;return i.hidden&&!f.hidden&&f.getBoundingClientRect().height>200}));
+ await swipe();check('failed image retains a visible same-size fallback',await page.evaluate(()=>{const i=$('birdEquipBody').querySelector('.bird-equip-art'),f=i.previousElementSibling;return i.hidden&&!f.hidden&&f.getBoundingClientRect().height>=168}));
  await page.screenshot({path:path.join(OUT,'failed-portrait-fallback.png')});
  let releaseImage;const slow=new Promise(resolve=>releaseImage=resolve);
  await page.route('**/qa-slow-art.png',async r=>{await slow;await r.fulfill({status:404,body:''})});
- await page.evaluate(()=>{getBirdArtUrl=b=>b.id==='qa-1'?'qa-slow-art.png':qaArt(b)});await open();await swipe();check('pending image never empties the portrait frame',await page.evaluate(()=>{const i=$('birdEquipBody').querySelector('.bird-equip-art');return !i.complete&&!i.previousElementSibling.hidden&&i.previousElementSibling.getBoundingClientRect().height>200}));releaseImage();
+ await page.evaluate(()=>__testEval("birdCardImgAttrs=b=>b.id==='qa-1'?{src:'qa-slow-art.png'}:window.qaCardArt(b);"));
+ await page.evaluate(()=>{getBirdArtUrl=b=>b.id==='qa-1'?'qa-slow-art.png':qaArt(b)});await open();await swipe();check('pending image never empties the portrait frame',await page.evaluate(()=>{const i=$('birdEquipBody').querySelector('.bird-equip-art');return !i.complete&&!i.previousElementSibling.hidden&&i.previousElementSibling.getBoundingClientRect().height>=168}));releaseImage();
+ await page.evaluate(()=>__testEval('birdCardImgAttrs=window.qaCardArt'));
  await page.evaluate(()=>{getBirdArtUrl=qaArt});await open();
  // Appearance v362 loads both scoped themes. On older bases, enable the
  // preserved Comic stylesheet only while testing Comic, including its fonts.

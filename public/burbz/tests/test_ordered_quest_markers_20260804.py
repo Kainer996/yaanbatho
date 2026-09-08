@@ -7,7 +7,8 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "map-pictures-v374-20260908"
+CURRENT_BUILD = "full-cards-v375-20260908"
+QUEST_CORE_PIN = "map-pictures-v374-20260908"
 
 
 def run_core(expression: str):
@@ -77,8 +78,8 @@ def test_map_removes_completed_waymarkers_and_prioritises_only_the_next_marker()
 def test_release_reaches_the_live_pwa_instead_of_an_old_cached_core():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    assert f"quest_core.js?v={CURRENT_BUILD}" in html
-    assert f"./quest_core.js?v={CURRENT_BUILD}" in sw
+    assert f"quest_core.js?v={QUEST_CORE_PIN}" in html
+    assert f"./quest_core.js?v={QUEST_CORE_PIN}" in sw
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     cache_line = next(line for line in sw.splitlines() if line.startswith("const BURBZ_CACHE = "))
     assert RELEASE in cache_line

@@ -34,9 +34,9 @@ if(merlinTutActive)endMerlinTutorial(false);
 switchScreen('birdex');
 gameState.flock=gameState.flock.filter(b=>b.id.startsWith('qa-'));
 openBirdEquip(gameState.flock[0].id);
-document.body.classList.toggle('comic-ui',qaParams.get('theme')==='comic');
-document.body.classList.toggle('woodland-ui',qaParams.get('theme')!=='comic');
+BurbzAppearanceCore.apply(qaParams.get('theme'),document);
 window.qaHaptics=[];
+window.__testEval=code=>eval(code);
 Object.assign(window,{$,renderBirdEquip,birdEquipNeighbour,gameState,birdEquipSwipe});
 Object.defineProperty(window,'birdEquipState',{get:()=>birdEquipState});
 Object.defineProperty(window,'birdEquipSwipeAnimating',{get:()=>birdEquipSwipeAnimating});
@@ -50,7 +50,7 @@ class Handler(BaseHTTPRequestHandler):
         request_path = unquote(urlsplit(self.path).path)
         if request_path == '/burbz/after.html':
             html = (ROOT / 'index.html').read_text()
-            marker = '// Run\ninit();'
+            marker = '\ninit();'
             assert marker in html
             data = html.replace(marker, SEED + '\n' + marker + '\n' + AFTER).encode()
             mime = 'text/html'

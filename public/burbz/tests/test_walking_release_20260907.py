@@ -5,7 +5,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "map-pictures-v374-20260908"
+CURRENT_BUILD = "full-cards-v375-20260908"
 RUNTIMES = (
     "walking_route_core.js",
     "walking_encounter_core.js",
@@ -13,7 +13,7 @@ RUNTIMES = (
     "quest_core.js",
 )
 def pin(path):
-    return CURRENT_BUILD if path == "quest_core.js" else RELEASE
+    return "map-pictures-v374-20260908" if path == "quest_core.js" else RELEASE
 
 STYLE = "walking_quest_ui.css"
 ART = tuple(
@@ -51,7 +51,7 @@ def test_entry_page_and_worker_use_matching_walking_release():
     assert f'<link rel="stylesheet" href="{STYLE}?v={RELEASE}">' in index
     # Dependencies must be available when the monolith first calls them.
     assert index.index(f'<script src="walking_route_core.js?v={RELEASE}') < index.index(
-        f'<script src="quest_core.js?v={CURRENT_BUILD}'
+        f'<script src="quest_core.js?v={pin("quest_core.js")}'
     )
 
 
