@@ -5,7 +5,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "illustrated-world-v366-20260907"
+CURRENT_BUILD = "village-discoveries-v367-20260908"
 RUNTIMES = (
     "walking_route_core.js",
     "walking_encounter_core.js",

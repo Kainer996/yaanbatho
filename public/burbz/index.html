@@ -29314,6 +29314,48 @@ let villageActive = null;
 let villageSceneQuality = { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
 let villageLastFrameAt = 0;
 let villageAnimationRequest = 0, villagePauseTimer = 0;
+// Village rewards and claim flags share one durable transaction. Failed writes
+// restore the existing state tree so an item can be retried without duplication.
+function villageDiscoveryAdapter(seed) {
+  const core = () => window.BurbzVillageDiscoveryCore;
+  const record = () => gameState.villageDiscoveries?.villages?.[String(Number(seed))];
+  function transaction(action) {
+    const snapshot = snapshotGameState();
+    try {
+      const result = action();
+      if (!result) return result;
+      if (result.reward) {
+        const reward = result.reward;
+        gameState.player.coins += Number(reward.coins || 0);
+        gameState.player.branches += Number(reward.branches || 0);
+        Object.entries(reward.gear || {}).forEach(([id,qty]) => {
+          if (!window.BurbzLootCore.gearById(id)) throw Error('That equipment is unavailable.');
+          gameState.inventory.gear[id] = (gameState.inventory.gear[id] || 0) + qty;
+        });
+        Object.entries(reward.materials || {}).forEach(([id,qty]) => {
+          if (!window.BurbzLootCore.materialById(id)) throw Error('That material is unavailable.');
+          gameState.inventory.items[id] = (gameState.inventory.items[id] || 0) + qty;
+        });
+      }
+      durableSaveState({throwOnFailure:true});
+      return result;
+    } catch (error) { restoreGameStateSnapshot(snapshot); throw error; }
+  }
+  return {
+    prepare: () => { if (record()) return; transaction(() => { core().village(gameState,seed,crypto.getRandomValues(new Uint32Array(1))[0]); return {prepared:true}; }); },
+    record,
+    act: (type,id,giver) => {
+      const result = transaction(() => core().act(record(),type,id,giver));
+      // Presentation follows commit; a HUD error must never roll back paid loot.
+      if (result?.reward) { try { updateHeader(); } catch (_) {} }
+      return result;
+    },
+    rewardText: reward => [reward.coins ? '+'+reward.coins+' coins' : '', reward.branches ? '+'+reward.branches+' branches' : '',
+      ...Object.entries(reward.gear || {}).map(([id,n]) => '+'+n+' '+window.BurbzLootCore.gearById(id).label+' (equipment)'),
+      ...Object.entries(reward.materials || {}).map(([id,n]) => '+'+n+' '+window.BurbzLootCore.materialById(id).label)
+    ].filter(Boolean).join(' · ')
+  };
+}
 let villageWalkLoad = null;
 $('villageWalkBtn')?.addEventListener('click', async () => {
   const button = $('villageWalkBtn');
@@ -29324,7 +29366,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=village-walk-v1-20260907';
+        script.src = 'village_walk.js?v=village-discoveries-v367-20260908';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29335,6 +29377,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
       name: currentVillage().name, opener:button,
+      discoveries: villageDiscoveryAdapter(seed),
       source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
       suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
@@ -42542,7 +42585,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'illustrated-world-v366-20260907';
+const BURBZ_BUILD = 'village-discoveries-v367-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

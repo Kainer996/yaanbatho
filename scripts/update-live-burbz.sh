@@ -61,6 +61,9 @@ FILES=(
   "village_walk_core.js"
   "village_walk_scene.js"
   "village_walk.css"
+  "village_discovery_content.js"
+  "village_discovery_core.js"
+  "village_discoveries.js"
 
   "special_bird_sprites.js"
   "special_bird_sprites.css"
