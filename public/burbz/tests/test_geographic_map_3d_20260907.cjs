@@ -57,12 +57,13 @@ function fixture(options={}) {
   const timers=new Map();const observers=[],workers=[];let workerAttempts=0;
   const doc=new Events();doc.hidden=!!options.hidden;doc.createElement=()=>new Element();
   const parent=new Element(),container=new Element(),canvas=new Element();parent.appendChild(container);container.appendChild(canvas);container.screen=new Element();
+  if(options.width!=null)container.clientWidth=container.width=options.width;
   const gl=fakeGL(options.gl);
   const map=new Events();map.sources=new Map();map.layers=new Map();map.calls=[];map.queries=[];
   map.zoom=15;map.center={lng:-1.78,lat:53.35};map.moving=false;map.styleLoaded=options.styleLoaded!==false;map.demLoaded=options.demLoaded!==false;map.elevation=options.elevation??320;
   const styleLayers=[{id:'real-woodland',type:'fill',source:'actual-vector-id','source-layer':'landcover'},{id:'real-roads',type:'line',source:'actual-vector-id','source-layer':'transportation'}];
   map.getContainer=()=>container;map.getCanvasContainer=()=>canvas;map.getCenter=()=>({...map.center});map.getZoom=()=>map.zoom;
-  map.getBounds=()=>({getWest:()=>-1.79,getSouth:()=>53.34,getEast:()=>-1.77,getNorth:()=>53.36});
+  map.bounds=[-1.79,53.34,-1.77,53.36];map.getBounds=()=>({getWest:()=>map.bounds[0],getSouth:()=>map.bounds[1],getEast:()=>map.bounds[2],getNorth:()=>map.bounds[3]});
   map.getStyle=()=>({sources:{'actual-vector-id':{type:'vector'}},layers:[...styleLayers,...map.layers.values()]});
   map.getSource=id=>map.sources.get(id);map.getLayer=id=>map.layers.get(id);
   map.addSource=(id,data)=>{assert.ok(!map.sources.has(id),'duplicate source');map.sources.set(id,data);map.calls.push(['addSource',id]);};
@@ -111,7 +112,8 @@ function fixture(options={}) {
     vm.runInContext(handler+'\nwireMapRotateOnly();',ctx);
   }
   function tick(ms=200) { const target=time+ms;let jobs=0;while(true){const next=[...timers].filter(([,v])=>v.due<=target).sort((a,b)=>a[1].due-b[1].due)[0];if(!next)break;assert.ok(++jobs<50,'unbounded self-scheduling');time=next[1].due;timers.delete(next[0]);next[1].fn();}time=target; }
-  return {api,attach,map,gl,doc,parent,container,canvas,placements,trees,timers,observers,workers,viewChanges,wireActualRotate,get workerAttempts(){return workerAttempts;},tick,advance:ms=>{time+=ms;},setTime:value=>{time=value;}};
+  const shiftView=(delta=.001)=>{map.center.lng+=delta;map.bounds=map.bounds.map((v,i)=>i%2===0?v+delta:v);map.emit('moveend');};
+  return {api,attach,map,gl,doc,parent,container,canvas,placements,trees,timers,observers,workers,viewChanges,wireActualRotate,shiftView,get workerAttempts(){return workerAttempts;},tick,advance:ms=>{time+=ms;},setTime:value=>{time=value;}};
 }
 
 // The numeric helpers are also used by the actual GPU upload path below.
@@ -163,9 +165,9 @@ test('attach after the initial style.load installs at idle exactly once, then re
 test('worker timber follows the fixed player view and discards stale or hidden completions',()=>{
   const f=fixture({worker:true}),supplies=[],timberView={bounds:[-1.79,53.34,-1.77,53.36],center:[-1.78,53.35]};
   const c=f.attach({getTimberView:()=>timberView,onTimber:items=>supplies.push(clone(items))});f.tick();const w=f.workers[0],first=w.messages[0];assert.deepEqual(first.timberView,timberView);
-  c.refresh();f.tick();w.reply(first.id,{trees:f.trees,diagnostics:{},timber:[{key:'stale'}]});assert.equal(supplies.length,0);
+  f.shiftView();c.refresh();f.tick();w.reply(first.id,{trees:f.trees,diagnostics:{},timber:[{key:'stale'}]});assert.equal(supplies.length,0);
   const next=w.messages[1];w.reply(next.id,{trees:f.trees,diagnostics:{},timber:[{key:'current'}]});assert.deepEqual(supplies,[[{key:'current'}]]);
-  c.refresh();f.tick();const pending=w.messages[2];f.doc.hidden=true;f.doc.emit('visibilitychange');w.reply(pending.id,{trees:f.trees,diagnostics:{},timber:[{key:'hidden'}]});assert.equal(supplies.length,1);c.dispose();
+  f.shiftView();c.refresh();f.tick();const pending=w.messages[2];f.doc.hidden=true;f.doc.emit('visibilitychange');w.reply(pending.id,{trees:f.trees,diagnostics:{},timber:[{key:'hidden'}]});assert.equal(supplies.length,1);c.dispose();
 });
 test('blocked workers still supply fixed timber in 2D without drawing a hidden forest',()=>{
   const features=[{properties:{class:'wood'},geometry:{type:'Polygon',coordinates:[[[-1.79,53.34],[-1.77,53.34],[-1.77,53.36],[-1.79,53.36],[-1.79,53.34]]]}}];
@@ -189,10 +191,11 @@ test('frozen GPS route and provider geometry remain unchanged during renderer wo
   const routes=deepFreeze([[{lon:-1.78,lat:53.35},{lon:-1.779,lat:53.351}]]),features=deepFreeze([{properties:{class:'wood'},geometry:{type:'Polygon',coordinates:[]}}]);
   const before=JSON.stringify({routes,features});const f=fixture({routes,features}),c=f.attach();f.tick();f.map.emit('moveend');f.tick();c.setEnabled(false);f.tick();c.setEnabled(true);f.tick();assert.equal(JSON.stringify({routes,features}),before);c.dispose();
 });
-test('hundreds of map events coalesce to one scheduled rebuild',()=>{
+test('hundreds of unchanged map events do no placement work and one changed view rebuilds once',()=>{
   const f=fixture(),c=f.attach();f.tick();const initial=c.state.forestBuilds;
   for(let i=0;i<500;i++){f.map.emit('sourcedata',{sourceId:'actual-vector-id'});f.map.emit('moveend');c.refresh();}
-  assert.equal(f.timers.size,1);f.tick(500);assert.equal(c.state.forestBuilds,initial+1);assert.equal(f.timers.size,0);f.tick(10000);assert.equal(c.state.forestBuilds,initial+1);c.dispose();
+  assert.equal(f.timers.size,1);f.tick(500);assert.equal(c.state.forestBuilds,initial);assert.equal(f.timers.size,0);
+  f.shiftView();for(let i=0;i<500;i++)c.refresh();f.tick(500);assert.equal(c.state.forestBuilds,initial+1);f.tick(10000);assert.equal(c.state.forestBuilds,initial+1);c.dispose();
 });
 test('an initially hidden map never activates terrain or builds trees',()=>{
   const f=fixture({hidden:true}),c=f.attach();assert.ok(!f.map.calls.some(x=>x[0]==='setTerrain'&&x[1]),'hidden attach activates terrain');f.tick();assert.equal(f.placements.length,0);c.dispose();
@@ -213,6 +216,37 @@ test('one transient DEM error is tolerated but persistent errors degrade to flat
 });
 test('a finite zero query cannot certify DEM readiness before source loading',()=>{
   const f=fixture({demLoaded:false,elevation:0}),c=f.attach();f.tick();assert.notEqual(c.state.elevation,'ready');assert.equal(c.state.trees,0);assert.equal(c.state.elevationPendingTrees,2);f.map.demLoaded=true;f.map.emit('sourcedata',{sourceId:DEM,isSourceLoaded:true});f.tick();assert.equal(c.state.elevation,'ready');assert.equal(c.state.trees,2);c.dispose();
+});
+test('verified elevations survive DEM reload while unverified points wait for real readiness',()=>{
+  const f=fixture(),c=f.attach();f.tick();const layer=f.map.getLayer(FOREST),initial=c.state.forestBuilds;
+  assert.equal(layer.elevations.get('oak-a'),320);f.map.demLoaded=false;f.map.elevation=0;
+  layer.upload([...f.trees,{id:'new',longitude:-1.78,latitude:53.351,variant:0,size:1}],f.map);
+  assert.equal(c.state.trees,2);assert.equal(c.state.elevationPendingTrees,1);assert.equal(layer.elevations.get('oak-a'),320);assert.equal(layer.elevations.has('new'),false);
+  const upload=f.gl.uploads.filter(u=>u.usage===f.gl.DYNAMIC_DRAW).slice(-2);assert.ok(upload.every(u=>Math.abs(u.data[2]-320.15)<.001),'zero sentinel cannot lower verified trees');
+  f.map.demLoaded=true;f.map.elevation=400;f.map.emit('sourcedata',{sourceId:DEM});f.tick();
+  assert.equal(c.state.trees,3);assert.equal(c.state.elevationPendingTrees,0);assert.equal(layer.elevations.get('new'),400);assert.equal(layer.elevations.get('oak-a'),400);assert.equal(c.state.forestBuilds,initial,'DEM readiness uploads cached geometry without a new placement');
+  f.map.elevation=null;f.map.emit('sourcedata',{sourceId:DEM});f.tick();assert.equal(c.state.trees,3);assert.equal(layer.elevations.get('oak-a'),400,'null per-point samples retain verified height');c.dispose();assert.equal(layer.elevations.size,0);
+});
+test('verified elevation cache is bounded and context replacement starts without stale heights',()=>{
+  const f=fixture(),c=f.attach();f.tick();const layer=f.map.getLayer(FOREST);
+  const trees=Array.from({length:2505},(_,i)=>({id:'bounded-'+i,longitude:-1.78+i*.0000001,latitude:53.35,variant:i%2,size:1}));
+  layer.upload(trees,f.map);assert.equal(layer.elevations.size,2400);assert.equal(layer.elevations.has('bounded-2504'),true);assert.equal(layer.elevations.has('bounded-0'),false);
+  f.map.emit('webglcontextlost');f.map.demLoaded=false;f.map.elevation=0;f.map.emit('webglcontextrestored');f.tick();
+  assert.equal(layer.elevations.size,0);assert.notEqual(f.map.getLayer(FOREST),layer);assert.equal(c.state.trees,0);assert.equal(c.state.elevationPendingTrees,2);c.dispose();
+});
+test('identical inflight and completed worker requests are deduplicated, but changed bounds and timber views are not',()=>{
+  const f=fixture({worker:true}),timber={bounds:[-1.79,53.34,-1.77,53.36],center:[-1.78,53.35]},c=f.attach({getTimberView:()=>timber});f.tick();const w=f.workers[0],first=w.messages[0];
+  for(const zoom of [16,15.99,14,16]){f.map.zoom=zoom;f.map.emit('moveend');f.tick();}assert.equal(w.messages.length,1);
+  w.reply(first.id);for(let i=0;i<20;i++){c.refresh();f.tick();}assert.equal(w.messages.length,1);assert.equal(c.state.forestBuilds,1);
+  f.map.bounds[2]+=.001;f.map.emit('moveend');f.tick();assert.equal(w.messages.length,2);w.reply(w.messages[1].id);
+  timber.center[0]+=.001;c.refresh();f.tick();assert.equal(w.messages.length,3);assert.equal(w.messages[2].timberView.center[0],timber.center[0]);c.dispose();
+});
+test('phone density and IDs survive quality downshift and worker fallback at the original bounded budget',()=>{
+  const features=[{properties:{class:'wood'},geometry:{type:'Polygon',coordinates:[[[-1.79,53.34],[-1.77,53.34],[-1.77,53.36],[-1.79,53.36],[-1.79,53.34]]]}}];
+  const f=fixture({width:390,useActualCore:true,features,worker:true,workerConstructorThrows:true}),c=f.attach();f.tick();
+  assert.equal(c.state.forestBudget,360);assert.equal(c.state.trees,360);const layer=f.map.getLayer(FOREST),before=layer.trees.map(t=>t.id).sort();
+  f.map.moving=true;movingFrames(f,16,200);movingFrames(f,70,120);f.map.moving=false;f.map.emit('moveend');f.tick();assert.equal(c.state.tier,0);assert.equal(c.state.terrainReduced,true);assert.equal(c.state.forestBudget,360);assert.equal(c.state.trees,360);
+  assert.deepEqual(layer.trees.map(t=>t.id).sort(),before);assert.ok(f.placements.every(p=>p.settings.maxTrees===360&&p.settings.dense===true));assert.equal(f.workerAttempts,1);c.dispose();
 });
 test('GPU upload keeps signed geographic offsets and rendered height finite',()=>{
   const f=fixture(),c=f.attach();f.tick();const layer=f.map.getLayer(FOREST);assert.equal(layer.count,2);
@@ -287,7 +321,7 @@ test('worker concurrency retains only the latest queued view and discards stale 
   w.reply(latest.id);assert.equal(c.state.forestBuilds,1);assert.equal(c.state.trees,2);f.tick(10000);assert.equal(w.messages.length,2);assert.equal(f.timers.size,0);c.dispose();
 });
 for(const pause of ['hidden','flat','context loss','dispose'])test(`worker termination on ${pause} discards queued and late placements`,()=>{
-  const f=fixture({worker:true}),c=f.attach();f.tick();const w=f.workers[0],first=w.messages[0];c.refresh();f.tick();assert.equal(w.messages.length,1);
+  const f=fixture({worker:true}),c=f.attach();f.tick();const w=f.workers[0],first=w.messages[0];f.shiftView();c.refresh();f.tick();assert.equal(w.messages.length,1);
   if(pause==='hidden'){f.doc.hidden=true;f.doc.emit('visibilitychange');}
   else if(pause==='flat')c.setEnabled(false);
   else if(pause==='context loss')f.map.emit('webglcontextlost');
@@ -302,27 +336,27 @@ test('an error queued by a terminated worker cannot terminate its replacement',(
   const f=fixture({worker:true}),c=f.attach();f.tick();const old=f.workers[0];f.doc.hidden=true;f.doc.emit('visibilitychange');f.doc.hidden=false;f.doc.emit('visibilitychange');f.tick();const current=f.workers[1];
   old.fail();assert.equal(current.terminated,0,'obsolete worker error terminated the current worker');current.reply(current.messages[0].id);assert.equal(c.state.forestBuilds,1);assert.equal(f.placements.length,0);c.dispose();
 });
-test('worker constructor rejection falls back once with at most 180 trees',()=>{
-  const f=fixture({worker:true,workerConstructorThrows:true}),c=f.attach();f.tick();assert.equal(f.workerAttempts,1);assert.equal(c.state.worker,'fallback');assert.equal(f.placements[0].settings.maxTrees,180);assert.equal(c.state.trees,2);
-  for(let i=0;i<3;i++){c.refresh();f.tick();}assert.equal(f.workerAttempts,1);assert.ok(f.placements.every(p=>p.settings.maxTrees<=180));c.dispose();
+test('worker constructor rejection falls back once while retaining the fixed bounded forest budget',()=>{
+  const f=fixture({worker:true,workerConstructorThrows:true}),c=f.attach();f.tick();assert.equal(f.workerAttempts,1);assert.equal(c.state.worker,'fallback');assert.equal(f.placements[0].settings.maxTrees,1000);assert.equal(c.state.trees,2);
+  for(let i=0;i<3;i++){f.shiftView();c.refresh();f.tick();}assert.equal(f.workerAttempts,1);assert.equal(f.placements.length,4);assert.ok(f.placements.every(p=>p.settings.maxTrees===1000&&p.settings.dense===true));c.dispose();
 });
 for(const error of ['script','placement'])test(`worker ${error} failure terminates once and recovers through bounded synchronous fallback`,()=>{
   const f=fixture({worker:true}),c=f.attach();f.tick();const w=f.workers[0];
   if(error==='script')w.fail();else w.reject(w.messages[0].id);
-  assert.equal(w.terminated,1);f.tick(500);assert.equal(c.state.worker,'fallback');assert.equal(f.workers.length,1);assert.equal(c.state.forestBuilds,1);assert.equal(f.placements[0].settings.maxTrees,180);f.tick(10000);assert.equal(f.placements.length,1);assert.equal(f.timers.size,0);c.dispose();
+  assert.equal(w.terminated,1);f.tick(500);assert.equal(c.state.worker,'fallback');assert.equal(f.workers.length,1);assert.equal(c.state.forestBuilds,1);assert.equal(f.placements[0].settings.maxTrees,1000);f.tick(10000);assert.equal(f.placements.length,1);assert.equal(f.timers.size,0);c.dispose();
 });
 test('synchronous worker postMessage failure cannot strand every later placement',()=>{
-  const f=fixture({worker:true,workerPostThrows:true}),c=f.attach();f.tick(500);c.refresh();f.tick(500);
-  assert.equal(c.state.worker,'fallback');assert.equal(f.workers.length,1);assert.equal(f.workers[0].terminated,1);assert.ok(c.state.forestBuilds>0);assert.ok(f.placements.every(p=>p.settings.maxTrees<=180));assert.equal(f.timers.size,0);c.dispose();
+  const f=fixture({worker:true,workerPostThrows:true}),c=f.attach();f.tick(500);f.shiftView();c.refresh();f.tick(500);
+  assert.equal(c.state.worker,'fallback');assert.equal(f.workers.length,1);assert.equal(f.workers[0].terminated,1);assert.equal(c.state.forestBuilds,2);assert.ok(f.placements.every(p=>p.settings.maxTrees===1000));assert.equal(f.timers.size,0);c.dispose();
 });
 test('failure to dispatch the latest queued worker request also recovers without an uncaught callback',()=>{
-  const f=fixture({worker:true}),c=f.attach();f.tick();const w=f.workers[0];c.refresh();f.tick();w.postFailure=true;
-  assert.doesNotThrow(()=>w.reply(w.messages[0].id));f.tick(500);assert.equal(w.terminated,1);assert.equal(c.state.worker,'fallback');assert.equal(c.state.forestBuilds,1);assert.equal(f.placements[0].settings.maxTrees,180);assert.equal(f.timers.size,0);c.dispose();
+  const f=fixture({worker:true}),c=f.attach();f.tick();const w=f.workers[0];f.shiftView();c.refresh();f.tick();w.postFailure=true;
+  assert.doesNotThrow(()=>w.reply(w.messages[0].id));f.tick(500);assert.equal(w.terminated,1);assert.equal(c.state.worker,'fallback');assert.equal(c.state.forestBuilds,1);assert.equal(f.placements[0].settings.maxTrees,1000);assert.equal(f.placements[0].view.center[0],f.map.center.lng);assert.equal(f.timers.size,0);c.dispose();
 });
 test('worker completion during a gesture defers GPU uploads until interaction ends',()=>{
   const f=fixture({worker:true}),c=f.attach();f.tick();const w=f.workers[0],before=f.gl.uploads.length;
   f.map.moving=true;w.reply(w.messages[0].id);assert.equal(c.state.forestBuilds,0);assert.equal(f.gl.uploads.length,before);
-  f.map.moving=false;f.map.emit('moveend');f.tick();assert.equal(c.state.forestBuilds,1);assert.ok(f.gl.uploads.length>before);assert.equal(w.messages.length,2);
+  f.map.moving=false;f.shiftView();f.tick();assert.equal(c.state.forestBuilds,1);assert.ok(f.gl.uploads.length>before);assert.equal(w.messages.length,2);
   w.reply(w.messages[1].id);f.tick(10000);assert.equal(c.state.forestBuilds,2);assert.equal(f.timers.size,0);c.dispose();
 });
 test('a long interaction defers placement with one timer and backgrounding cancels retries',()=>{
@@ -386,7 +420,7 @@ test('real pointer-driven camera changes still measure stalls longer than 400ms'
 });
 test('pointer-driven rotation defers worker uploads and placement until pointer release',()=>{
   const f=fixture({worker:true}),c=f.attach();f.tick();const worker=f.workers[0];f.canvas.emit('pointerdown',{pointerId:2});f.map.emit('move');worker.reply(worker.messages[0].id);assert.equal(c.state.forestBuilds,0);
-  c.refresh();f.tick(180);assert.equal(worker.messages.length,1);assert.equal(c.state.forestBuilds,0);
+  f.shiftView();c.refresh();f.tick(180);assert.equal(worker.messages.length,1);assert.equal(c.state.forestBuilds,0);
   f.doc.emit('pointercancel',{pointerId:2});f.tick();assert.equal(c.state.forestBuilds,1);assert.equal(worker.messages.length,2);c.dispose();
 });
 test('pointerleave ends custom rotation and releases deferred map work',()=>{

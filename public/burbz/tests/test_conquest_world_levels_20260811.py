@@ -19,7 +19,7 @@ SW_PATH = ROOT / "sw.js"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "conquest-world-levels-v248-20260811"
 PREVIOUS_RELEASE_PIN = "battle-faint-auto-hospital-v247-20260811"
-CURRENT_BUILD = "woodland-harvest-v372-20260908"
+CURRENT_BUILD = "living-map-v373-20260908"
 
 
 def run_node(script: str):

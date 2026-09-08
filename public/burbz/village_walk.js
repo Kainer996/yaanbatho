@@ -1,7 +1,7 @@
 /* On-demand fullscreen first-person adapter. One borrowed canvas, one RAF owner. */
 (function(root){
   'use strict';
-  const REV='woodland-harvest-v372-20260908';
+  const REV='living-map-v373-20260908';
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();

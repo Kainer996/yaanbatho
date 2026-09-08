@@ -5,13 +5,16 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "woodland-harvest-v372-20260908"
+CURRENT_BUILD = "living-map-v373-20260908"
 RUNTIMES = (
     "walking_route_core.js",
     "walking_encounter_core.js",
     "walking_quest_ui.js",
     "quest_core.js",
 )
+def pin(path):
+    return CURRENT_BUILD if path == "quest_core.js" else RELEASE
+
 STYLE = "walking_quest_ui.css"
 ART = tuple(
     f"assets/walking-quests/{name}.webp"
@@ -29,7 +32,7 @@ def test_changed_quest_builder_and_entire_feature_are_required_offline():
     # In particular, merely mentioning quest_core in BURBZ_ASSETS is not
     # enough: installation uses INSTALL_REQUIRED and fallback checks CORE.
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    dependencies = tuple(f"./{path}?v={RELEASE}" for path in (*RUNTIMES, STYLE))
+    dependencies = tuple(f"./{path}?v={pin(path)}" for path in (*RUNTIMES, STYLE))
     dependencies += tuple(f"./{path}" for path in ART)
     for name in ("BURBZ_ASSETS", "BURBZ_CORE", "BURBZ_INSTALL_REQUIRED"):
         entries = shell_list(sw, name)
@@ -44,11 +47,11 @@ def test_entry_page_and_worker_use_matching_walking_release():
     cache = re.search(r"const BURBZ_CACHE = '([^']+)';", sw)
     assert cache and cache.group(1).endswith("-" + CURRENT_BUILD)
     for runtime in RUNTIMES:
-        assert f'<script src="{runtime}?v={RELEASE}"></script>' in index
+        assert f'<script src="{runtime}?v={pin(runtime)}"></script>' in index
     assert f'<link rel="stylesheet" href="{STYLE}?v={RELEASE}">' in index
     # Dependencies must be available when the monolith first calls them.
     assert index.index(f'<script src="walking_route_core.js?v={RELEASE}') < index.index(
-        f'<script src="quest_core.js?v={RELEASE}'
+        f'<script src="quest_core.js?v={CURRENT_BUILD}'
     )
 
 
