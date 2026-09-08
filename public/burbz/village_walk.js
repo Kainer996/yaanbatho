@@ -1,7 +1,7 @@
 /* On-demand fullscreen first-person adapter. One borrowed canvas, one RAF owner. */
 (function(root){
   'use strict';
-  const REV='village-walk-v1-20260907';
+  const REV='village-discoveries-v367-20260908';
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -16,6 +16,7 @@
   function load(){
     if(!dependencies)dependencies=Promise.all([
       script('village_walk_core.js','BurbzVillageWalkCore'),script('village_walk_scene.js','BurbzVillageWalkScene'),
+      script('village_discovery_content.js','BurbzVillageDiscoveryContent').then(()=>script('village_discovery_core.js','BurbzVillageDiscoveryCore')).then(()=>script('village_discoveries.js','BurbzVillageDiscoveries')),
       new Promise((resolve,reject)=>{
         if(document.getElementById('villageWalkStyle')?.sheet){resolve();return;}
         document.getElementById('villageWalkStyle')?.remove();
@@ -27,13 +28,15 @@
   }
   function isOpen(){return !!session;}
   function close(reason='exit'){
-    const s=session;if(!s)return false;session=null;s.closed=true;
+    const s=session;if(!s)return false;
+    if(['back','escape'].includes(reason)&&s.discoveries?.closePanel())return true;
+    session=null;s.closed=true;
     cancelAnimationFrame(s.raf);s.abort.abort();s.resizeObserver?.disconnect();s.reset?.();
     if(document.pointerLockElement&&s.root.contains(document.pointerLockElement))document.exitPointerLock?.();
     if(document.fullscreenElement===s.root)Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
     if(document.webkitFullscreenElement===s.root)document.webkitExitFullscreen?.();
     if(s.canvas&&s.parent){s.parent.insertBefore(s.canvas,s.next?.parentNode===s.parent?s.next:null);s.canvas.style.cssText=s.canvasStyle;}
-    s.unbatch?.();
+    s.discoveries?.dispose();s.unbatch?.();
     if(s.snapshot){
       const {camera,renderer}=s.source,save=s.snapshot;
       camera.position.copy(save.position);camera.quaternion.copy(save.quaternion);Object.assign(camera,save.lens);camera.updateProjectionMatrix();
@@ -84,9 +87,11 @@
     on(document,'keydown',e=>{
       if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();close('escape');return;}
       if(e.code==='Tab'){
-        const buttons=[...el.querySelectorAll('button,[tabindex="0"]')].filter(b=>b.getClientRects().length&&!b.closest('[hidden]'));
+        const buttons=[...(s.uiBusy?el.querySelector('.vd-panel'):el).querySelectorAll('button,[tabindex="0"]')].filter(b=>b.getClientRects().length&&!b.closest('[hidden]'));
         const i=buttons.indexOf(document.activeElement);e.preventDefault();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();return;
       }
+      if(!e.repeat&&s.discoveries?.key(e.code)){e.preventDefault();e.stopImmediatePropagation();return;}
+      if(s.uiBusy)return;
       if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
     },{capture:true});
     on(document,'keyup',e=>{keys.delete(e.code);},{capture:true});
@@ -95,10 +100,10 @@
     for(const event of ['touchstart','touchmove','touchend','touchcancel','wheel','dblclick','contextmenu'])on(el,event,e=>{
       e.stopPropagation();
       // Exit/fullscreen buttons must keep the browser's synthetic touch click.
-      if(e.cancelable&&!e.target.closest('button:not(.vw-stick)'))e.preventDefault();
+      if(e.cancelable&&!e.target.closest('.vd-panel,button:not(.vw-stick)'))e.preventDefault();
     },{passive:false});
     function pointerDown(e){
-      if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed)return;
+      if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy)return;
       if(e.pointerType==='touch')el.classList.add('vw-touch');
       const node=e.currentTarget,type=node===stick?'move':'look';
       if([...pointers.values()].some(p=>p.type===type))return;
@@ -139,7 +144,7 @@
         const turn=Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
         s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))*turn));
         const {camera,renderer,scene}=s.source;
-        s.options.animate?.(ts/1000);
+        s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);
         camera.position.set(s.player.x,s.player.y+core.EYE,s.player.z);camera.rotation.set(s.player.pitch,s.player.yaw,0,'YXZ');camera.updateMatrixWorld();
         if(root.BurbzManga)root.BurbzManga.render(root.THREE,renderer,scene,camera);else renderer.render(scene,camera);
         if(s.intervals.length>=60||(s.intervals.length>=12&&s.intervals.reduce((a,b)=>a+b,0)>1600)){
@@ -157,6 +162,7 @@
       s.world=root.BurbzVillageWalkScene.create(root.THREE,scene,source.buildings,source.movers,scene.userData.walkTerrain);
       s.unbatch=root.BurbzVillageWalkScene.batch(root.THREE,scene,source.movers);
       const spawn=s.world.spawn();s.player={...spawn,yaw:Math.atan2(spawn.x,spawn.z),pitch:-.04};
+      s.discoveries=root.BurbzVillageDiscoveries.attach(s);
       s.canvas=canvas;s.parent=canvas.parentNode;s.next=canvas.nextSibling;s.canvasStyle=canvas.style.cssText;el.prepend(canvas);
       options.suspend?.();Object.assign(camera,{fov:68,near:.08,far:110});
       on(canvas,'webglcontextlost',e=>{e.preventDefault();fail(Error('The graphics connection was interrupted.'));});
@@ -168,8 +174,8 @@
   function diagnostics(){
     const s=session;if(!s)return {open:false};
     const sorted=s.samples.slice().sort((a,b)=>a-b),mean=sorted.reduce((a,b)=>a+b,0)/(sorted.length||1);
-    return {open:true,ready:!!s.player,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
+    return {open:true,discoveries:s.discoveries?.diagnostics(),ready:!!s.player,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
   }
   root.BurbzVillageWalk={open,close,isOpen};
-  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,world:()=>session?.world,resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,world:()=>session?.world,place:(p)=>{if(session?.world.allowed(p.x,p.z)){Object.assign(session.player,p,{y:session.world.height(p.x,p.z)});return true;}return false;},resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
 })(typeof globalThis!=='undefined'?globalThis:this);
