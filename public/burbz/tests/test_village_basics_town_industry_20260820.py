@@ -24,7 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "trail-mode-v329-20260825"
-CURRENT_BUILD = "academy-flight-v370-20260908"
+CURRENT_BUILD = "bird-flight-controls-v371-20260908"
 
 # The Iron Foundry and the Entertainment House are town industry too — they
 # arrived with the towns-3D release and the pin had not been told.

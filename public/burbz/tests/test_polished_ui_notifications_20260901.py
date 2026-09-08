@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "polished-ui-notifications-v339-20260901"
-CURRENT_BUILD = "academy-flight-v370-20260908"
+CURRENT_BUILD = "bird-flight-controls-v371-20260908"
 PREVIOUS_RELEASE_PIN = "gentle-start-v338-20260831"
 
 
