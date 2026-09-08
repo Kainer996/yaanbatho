@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "polished-ui-notifications-v339-20260901"
-CURRENT_BUILD = "living-map-v373-20260908"
+CURRENT_BUILD = "map-pictures-v374-20260908"
 PREVIOUS_RELEASE_PIN = "gentle-start-v338-20260831"
 
 

@@ -218,7 +218,7 @@ def test_index_wires_alignment_into_start_resume_and_walking():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = HTML.read_text(encoding="utf-8")
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=living-map-v373-20260908"
+    marker = "quest_core.js?v=map-pictures-v374-20260908"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw
