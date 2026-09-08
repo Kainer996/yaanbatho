@@ -5,7 +5,7 @@
   if (root) root.BurbzGeographicMap3D = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
   'use strict';
-  const VERSION = 'woodland-harvest-v372-20260908';
+  const VERSION = 'living-map-v373-20260908';
   const DEM_ID = 'burbz-geographic-dem';
   const SHADE_DEM_ID = 'burbz-geographic-shade-dem';
   const FOREST_ID = 'burbz-geographic-forest';
@@ -149,12 +149,20 @@
         this.trees=trees;
         const center=map.getCenter();this.origin=mercator(center.lng,center.lat);
         this.scale=1/(EARTH*Math.cos(center.lat*Math.PI/180));
-        const batches=[[],[]]; let missing=0;
+        const batches=[[],[]],terrainReady=state.terrainActive&&map.isSourceLoaded(DEM_ID); let missing=0;
+        this.elevations ||= new Map();
         trees.forEach(t=>{
           const xy=mercator(t.longitude,t.latitude);
           // Keep the displayed world copy next to the current map centre.
           xy[0]+=Math.round(this.origin[0]-xy[0]);
-          let elevation=state.terrainActive?(map.isSourceLoaded(DEM_ID)?map.queryTerrainElevation([t.longitude,t.latitude]):null):0;
+          // The whole DEM source becomes "not loaded" during every zoom.
+          // Preserve previously verified heights until replacement tiles arrive.
+          // New points still wait: zero can mean "DEM not ready", not sea level.
+          let elevation=state.terrainActive?(terrainReady?map.queryTerrainElevation([t.longitude,t.latitude]):null):0;
+          if(state.terrainActive){
+            if(Number.isFinite(elevation))this.elevations.set(t.id,elevation);
+            else elevation=this.elevations.get(t.id);
+          }
           if(elevation==null || !Number.isFinite(elevation)){missing++;return;}
           const kind=t.variant===1?1:0, hash=String(t.id).split('').reduce((n,c)=>(Math.imul(n,31)+c.charCodeAt(0))|0,7)>>>0;
           batches[kind].push((xy[0]-this.origin[0])/this.scale,-(xy[1]-this.origin[1])/this.scale,
@@ -163,6 +171,7 @@
         this.count=0;
         this.meshes.forEach((m,i)=>{m.count=batches[i].length/6;this.count+=m.count;this.gl.bindBuffer(this.gl.ARRAY_BUFFER,m.instances);this.gl.bufferData(this.gl.ARRAY_BUFFER,new Float32Array(batches[i]),this.gl.DYNAMIC_DRAW);});
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER,null);state.trees=this.count;state.elevationPendingTrees=missing;
+        while(this.elevations.size>2400)this.elevations.delete(this.elevations.keys().next().value);
       },
       render(gl,args) {
         if(!state.visible || !state.enabled || state.webgl!=='instanced' || !this.count || state.zoom<12)return;
@@ -180,6 +189,7 @@
         // MapLibre owns invalidation. Static woodland never runs its own RAF.
       },
       onRemove(map,gl) {
+        this.elevations?.clear();
         this.meshes.forEach(m=>{gl.deleteVertexArray(m.vao);gl.deleteBuffer(m.mesh);gl.deleteBuffer(m.instances);});
         this.meshes=[]; if(this.program)gl.deleteProgram(this.program); this.program=null;
       }
@@ -192,7 +202,11 @@
     const state={version:VERSION,enabled:true,visible:true,terrainActive:false,terrainReduced:false,elevation:'loading',
       webgl:'pending',trees:0,elevationPendingTrees:0,zoom:map.getZoom(),tier:container.clientWidth<=600?1:3,draws:0,
       errors:[],renderedFrames:0,forestBuilds:0,buildMs:0,frameP90:null,pixelRatio:null,placement:null,inspectionPitch:32,fit:null,worker:'idle'};
+    // Keep the density of the initial good view. Terrain stalls may lower
+    // resolution, but cannot permanently turn a dense forest into a sparse one.
+    state.forestBudget=PROFILES[state.tier].trees;
     let timer=null,disposed=false,layer=null,sourceId=null,control=null,toggle=null,status=null;
+    let lastPlacementKey=null,elevationDirty=false;
     let lastRender=0,lastAdapt=0,frames=[],observer=null,intersection=null,contextLost=false,demErrors=0,performanceViewChange=false,performanceQualityPending=false;
     const listeners=[];
     let pendingFit=null, lastFit=null,resizeRefit=false,fitting=false,cardObserver=null;
@@ -202,7 +216,7 @@
     const interacting=()=>map.isMoving()||activePointers.size>0;
     let worker=null,workerFailed=false,job=0,inflight=null,queued=null,deferredPlacement=null;
     function stopPlacement() {
-      if(worker){worker.onmessage=null;worker.onerror=null;worker.terminate();}worker=null;inflight=null;queued=null;deferredPlacement=null;job++;state.worker='paused';
+      if(worker){worker.onmessage=null;worker.onerror=null;worker.terminate();}worker=null;inflight=null;queued=null;deferredPlacement=null;lastPlacementKey=null;job++;state.worker='paused';
     }
     function workerFallback() {
       workerFailed=true;stopPlacement();state.worker='fallback';schedule(200);
@@ -222,6 +236,10 @@
     function place(features,view,placementOptions) {
       const core=root.BurbzGeographicForestCore;
       if(!core)return;
+      const timberView=options.getTimberView?.();
+      const key=JSON.stringify([features,{...view,zoom:view.zoom<13?view.zoom:16},placementOptions,timberView]);
+      if(key===lastPlacementKey)return;
+      lastPlacementKey=key;
       if(!worker && !workerFailed && root.Worker)try {
         worker=new root.Worker(workerURL);const instance=worker;state.worker='ready';
         worker.onmessage=event=>{
@@ -235,12 +253,12 @@
         };
         worker.onerror=()=>{if(worker===instance&&!disposed)workerFallback();};
       }catch(e){workerFailed=true;state.worker='fallback';}
-      const request={id:++job,features,view,options:placementOptions,timberView:options.getTimberView?.(),started:now()};
+      const request={id:++job,features,view,options:placementOptions,timberView,started:now()};
       if(worker){if(inflight)queued=request;else dispatch(request);return;}
-      // Worker restrictions must not block the map. The synchronous fallback
-      // has a much smaller illustration budget and only runs after interaction.
+      // Fixed-grid work remains bounded and only runs after interaction.
+      // Worker restrictions must not silently halve the visible tree density.
       state.worker='fallback';
-      const result=core.placeTrees(features,view,{...placementOptions,maxTrees:Math.min(180,placementOptions.maxTrees)});
+      const result=core.placeTrees(features,view,placementOptions);
       if(request.timberView)result.timber=core.timber(features,request.timberView);
       acceptPlacement(result,now()-request.started);
     }
@@ -333,6 +351,7 @@
       }
       if((!state.enabled&&!options.onTimber)||!state.visible||!sourceId||state.zoom<12||!layer)return;
       if(interacting()){schedule(180);return;}
+      if(elevationDirty&&layer.trees?.length){elevationDirty=false;layer.upload(layer.trees,map);map.triggerRepaint();}
       if(deferredPlacement){const saved=deferredPlacement;deferredPlacement=null;acceptPlacement(saved.result,saved.elapsed);}
       const core=root.BurbzGeographicForestCore;
       if(!core)return;
@@ -342,7 +361,7 @@
         const bounded=features.slice(0,256).map(f=>({type:'Feature',sourceLayer:'landcover',properties:f.properties,geometry:f.geometry}));
         const bounds=map.getBounds(),center=map.getCenter();
         place(bounded,{bounds:[bounds.getWest(),bounds.getSouth(),bounds.getEast(),bounds.getNorth()],center:[center.lng,center.lat],zoom:state.zoom},
-          {maxTrees:PROFILES[state.tier].trees,routeSegments:routeSegments(),clearanceM:10});
+          {maxTrees:state.forestBudget,dense:true,routeSegments:routeSegments(),clearanceM:10});
         state.prepareMs=now()-started;
         if(state.terrainActive&&map.isSourceLoaded(DEM_ID)){state.elevation='ready';paintStatus();}
       }catch(e){state.errors.push(String(e.message||e));state.errors=state.errors.slice(-8);}
@@ -362,7 +381,7 @@
           'hillshade-exaggeration':.26,'hillshade-shadow-color':'#29483c','hillshade-highlight-color':'#eedfb6',
           'hillshade-accent-color':'#6f8465','hillshade-illumination-direction':315,'hillshade-illumination-anchor':'map'
         }},before);
-        if(!map.getLayer(FOREST_ID)){layer=makeForestLayer(state);map.addLayer(layer);}
+        if(!map.getLayer(FOREST_ID)){lastPlacementKey=null;layer=makeForestLayer(state);map.addLayer(layer);}
         applyQuality();syncTerrain();schedule(30);
       }catch(e){state.errors.push(String(e.message||e));}
     }
@@ -459,7 +478,7 @@
     on('move',()=>{if(activePointers.size){lastPointerMove=now();pointerFramePending=true;}});
     on('moveend',()=>{state.zoom=map.getZoom();syncTerrain();schedule(80);});
     on('resize',()=>{state.visible=visible();applyQuality();resizeRefit=true;schedule(120);});
-    on('sourcedata',e=>{if(e.sourceId===sourceId||e.sourceId===DEM_ID||/^burbz-quest/.test(e.sourceId||''))schedule(180);});
+    on('sourcedata',e=>{if(e.sourceId===DEM_ID)elevationDirty=true;if(e.sourceId===sourceId||e.sourceId===DEM_ID||/^burbz-quest/.test(e.sourceId||''))schedule(180);});
     on('error',e=>{
       if(e.sourceId!==DEM_ID)return;
       if(++demErrors<3)return;

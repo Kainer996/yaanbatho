@@ -296,12 +296,14 @@
     }
     d.acceptedPolygons=polygons.length;
     if(!polygons.length){d.status=d.budgetLimited?'budget-exhausted':'empty';return answer;}
-    const stride=2**Math.max(0,17-Math.floor(view.zoom));
+    // Dense map illustration uses one stable world grid. The ordinary nested
+    // LOD remains available to fixed resource placement and other callers.
+    const stride=options.dense?2:2**Math.max(0,17-Math.floor(view.zoom));
     d.lodStride=stride;d.gridSpacingMercatorM=WORLD_M/GRID*stride;
     const regions=[];
     // Coarser anchors are exhausted before finer anchors. This retains every
     // lower-zoom tree even when the shared tree budget caps a denser view.
-    for(let level=16;level>=stride;level/=2){
+    for(let level=options.dense?stride:16;level>=stride;level/=2){
       const cells=GRID/level,cx=(view.center[0]+180)/360*cells,cy=mercY(view.center[1])*cells;
       polygons.forEach(p=>{
         const b=p.bounds,west=Math.max(b.west,view.west),east=Math.min(b.east,view.east),south=Math.max(b.south,view.south),north=Math.min(b.north,view.north);

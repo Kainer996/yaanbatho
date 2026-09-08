@@ -303,7 +303,7 @@ function workerHarness() {
 
 test('worker imports only the fixed local versioned core and returns the exact pure placement with request id',()=>{
   const worker=workerHarness(),request={id:37,features:[feature(small)],view,options:{maxTrees:40}};
-  assert.deepEqual(worker.imports,['geographic_forest_core.js?v=woodland-harvest-v372-20260908']);
+  assert.deepEqual(worker.imports,['geographic_forest_core.js?v=living-map-v373-20260908']);
   worker.send(request);assert.equal(worker.messages.length,1);assert.equal(worker.messages[0].id,37);
   assert.deepEqual(worker.messages[0].result,core.placeTrees(request.features,view,request.options));
 });
@@ -349,4 +349,26 @@ test('worker timber equals fixed core output while visual tree budgets and route
     assert.deepEqual(worker.messages[i].result.timber,expected);
   }
   assert.notEqual(worker.messages[0].result.trees.length,worker.messages[1].result.trees.length);
+});
+
+test('dense illustration retains every complete record across integer and fractional zoom cycles',()=>{
+  const expected=place(undefined,{...view,zoom:16},{dense:true,maxTrees:360});assert.equal(expected.trees.length,360);assert.equal(expected.diagnostics.lodStride,2);
+  for(const zoom of [15.99,15,14.99,14,13,16,19,16]){
+    const actual=place(undefined,{...view,zoom},{dense:true,maxTrees:360});assert.deepEqual(records(actual),records(expected));assert.equal(actual.diagnostics.lodStride,2);
+  }
+  assert.equal(place(undefined,{...view,zoom:12.99},{dense:true}).trees.length,0,'existing minimum zoom remains enforced');
+});
+test('dense illustration preserves holes, route clearance, duplicate rejection and original inputs',()=>{
+  const g=geometry(small.coordinates[0],ring(-1.5023,53.3787,-1.5007,53.3803)),f=feature(g),route=[[-1.5026,53.377],[-1.5026,53.382]];
+  const options={dense:true,maxTrees:360,routeSegments:[route],clearanceM:12},before=JSON.stringify([f,view,options]);
+  const result=place([f,f],view,options);assert.ok(result.trees.length>20);assert.equal(new Set(ids(result)).size,result.trees.length);
+  for(const tree of result.trees){assert.ok(core.pointInWoodland(point(tree),g));assert.ok(distanceToSegment(point(tree),route)>=12-1e-7);}
+  assert.deepEqual(records(result),records(place([f],view,options)));assert.equal(JSON.stringify([f,view,options]),before);
+  assert.ok(place([f],view,{...options,maxCandidates:7}).diagnostics.candidates<=7);
+});
+test('dense illustration is opt-in and cannot change the existing timber anchor catalogue',()=>{
+  const ordinary=place(undefined,{...view,zoom:14},{maxTrees:96,maxCandidates:4000,clearanceM:0});assert.equal(ordinary.diagnostics.lodStride,8);
+  const expected=core.placeTrees([feature(small)],{...view,zoom:14},{maxTrees:96,maxCandidates:4000,clearanceM:0}).trees.map(t=>({key:'woodland:'+t.id,lat:t.latitude,lon:t.longitude,quantity:6}));
+  assert.deepEqual(core.timber([feature(small)],view),expected);
+  const dense=place(undefined,{...view,zoom:14},{dense:true,maxTrees:96});assert.notDeepEqual(ids(dense),ids(ordinary));
 });

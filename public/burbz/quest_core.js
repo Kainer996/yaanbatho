@@ -2291,6 +2291,7 @@
   }
 
   window.BurbzQuestCore = {
+    fetchGeographicDetails: query => runOverpassQuery(query),
     questHaversine: questHaversine,
     destPoint: destPoint,
     routeLengthM: routeLengthM,

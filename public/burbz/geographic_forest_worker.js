@@ -3,7 +3,7 @@
  * Only this fixed same-origin core is loaded; messages cannot select a URL.
  */
 'use strict';
-importScripts('geographic_forest_core.js?v=woodland-harvest-v372-20260908');
+importScripts('geographic_forest_core.js?v=living-map-v373-20260908');
 self.onmessage = function(event) {
   const request = event && event.data;
   const id = request && request.id;
