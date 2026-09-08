@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "village-discoveries-v367-20260908"
+RELEASE_PIN = "walkable-interiors-v368-20260908"
 
 
 def function_source(name: str) -> str:

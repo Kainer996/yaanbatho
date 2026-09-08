@@ -37,3 +37,10 @@
 #villageWalk .vd-close{position:sticky;top:0;background:#17291e;z-index:1}
 #villageWalk .vd-panel[hidden],#villageWalk .vd-interact[hidden]{display:none}
 @media(max-height:450px){#villageWalk .vd-journal,#villageWalk .vd-guide{top:62px}#villageWalk .vd-interact{bottom:52px;max-width:260px}#villageWalk .vd-panel{top:12px;bottom:12px}}
+
+/* Interior controls occupy a separate reachable row above nearby discoveries. */
+#villageWalk .vr-door,#villageWalk .vr-service{position:absolute;right:20px;bottom:218px;max-width:calc(100% - 40px);background:#374c3c;border:2px solid #dfbd79}
+#villageWalk .vr-service{bottom:155px}
+#villageWalk .vr-door[hidden],#villageWalk .vr-service[hidden],#villageWalk.vr-inside .vd-hud,#villageWalk.vr-inside .vd-panel{display:none}
+@media(max-height:450px){#villageWalk .vr-door{bottom:110px;max-width:260px}#villageWalk .vr-service{bottom:52px}}
+#villageWalk .vw-error{z-index:10}
