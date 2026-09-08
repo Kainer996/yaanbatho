@@ -1,5 +1,7 @@
 # Woodland trees and gathering v372
 
+Build/cache suffix: `woodland-harvest-v372-20260908`.
+
 Real-map dark-green woods now display the existing faceted oak/pine tree meshes, with cel shading and ink outlines. They are illustrative trees inside provider woodland polygons, not individually surveyed trees. The missed initial MapLibre style event is recovered on idle when the style is ready.
 
 ## Playing
@@ -23,11 +25,11 @@ A map container no wider than 600 CSS pixels starts with at most 360 trees and D
 
 Real provider geometry near longitude -1.786, latitude 53.349 reproduced the original failure: the old controller remained pending with zero trees despite 40 loaded woodland features. After repair the same scene rendered 360 trees in four draws and found 24 six-timber bundles. Worker build was about 17 ms, preparation about 4 ms in the recorded software-rendered browser.
 
-The 390×844 Chromium/SwiftShader comparison measured the final 40 rotation frames at mean 73.3 ms / p90 100.1 ms, compared with the broken pre-change map at 77.5 ms / p90 100.0 ms. This is a software-GPU regression check, not a phone FPS measurement. The initial terrain workload was slower until adaptation paused the mesh; physical-phone/outdoor performance is unmeasured.
+The 390×844 Chromium/SwiftShader comparison measured the final 40 rotation frames at mean 73.3 ms, compared with the broken pre-change map at 77.5 ms; p90 was about 100 ms in both. This is a software-GPU regression check, not a phone FPS measurement. The initial terrain workload was slower until adaptation paused the mesh; physical-phone/outdoor performance is unmeasured.
 
 Focused verification: 115 Node cases across forest, map lifecycle and harvesting; all three Python wrappers pass. Browser coverage includes actual village wood/stone rewards, duplicates, failed-save retry, narrow/landscape layouts, disposal and reload. Installed v371→v372 activation preserves old saves, caches new modules, supports offline gathering, interiors and flight, and retains gathered wood after reload. Forest collection additionally checks GPS absence, distance, failed-save rollback, duplicate claims and reload.
 
-Commands:
+Commands, run from `public/burbz`:
 
 ```sh
 node --test tests/test_geographic_forest_20260907.cjs tests/test_geographic_map_3d_20260907.cjs tests/test_village_harvest_v372.cjs
@@ -35,4 +37,4 @@ node tests/run_woodland_harvest_v372.cjs
 node tests/run_woodland_harvest_pwa_v372.cjs
 ```
 
-Browser runners need `PLAYWRIGHT_MODULE`, `CHROME_PATH` and the local preview on port 8872 (PWA runner serves its own port 8876). Evidence: `/root/burbz-woodland-v372-evidence/`. Broad suite: 2,105 passed and five skipped; the same 42 failing cases reproduce on v371, with no newly failing case. Publication and public verification are recorded separately by the release owner.
+Browser runners accept `PLAYWRIGHT_MODULE`, `CHROME_PATH` and `EVIDENCE_DIR`. Serve `public/` on port 8872 for the interaction runner; the PWA runner serves its own port 8876 and accepts `BASELINE_ROOT` pointing to a v371 `public/burbz` tree (default `/root/burbz-v371-baseline/public/burbz`). Evidence: `/root/burbz-woodland-v372-evidence/`, including `before-map.json`, `release-map.json`, `harvest/results.json` and `pwa/results.json`. Broad suite: 2,105 passed and five skipped; the same 42 failing cases reproduce on v371, with no newly failing case. Publication and public verification are recorded separately by the release owner.

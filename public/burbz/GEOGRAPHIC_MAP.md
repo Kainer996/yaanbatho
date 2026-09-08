@@ -2,6 +2,8 @@
 
 Implementation notes for `geographic-terrain-v1-20260907`, checked 7 September 2026. This document describes the modules and their integration contracts; it is not a release or deployment record.
 
+The v372 update recovers a missed initial style event on idle and adds verified woodland timber supplies. Current controls, budgets and measured evidence: [Woodland trees and gathering](WOODLAND_HARVEST_V372.md).
+
 ## Data and representation
 
 The existing OpenFreeMap base style and original vector geometry remain authoritative. Preserve its OpenFreeMap, OpenMapTiles and OpenStreetMap attribution on every map surface. `geographic_map_3d.js` adds Mapterhorn XYZ elevation tiles at `https://tiles.mapterhorn.com/{z}/{x}/{y}.webp`, with `encoding: 'terrarium'`, `tileSize: 512`, and `maxzoom: 13`. The z13 cap is an application rendering/download budget, not Mapterhorn’s provider limit; the separate hillshade source is capped at z12. Terrain uses **exaggeration 1**. [Mapterhorn data access](https://mapterhorn.com/data-access/)
@@ -15,12 +17,14 @@ The runtime queries actual OpenMapTiles `landcover` polygons with `class=wood`. 
 | File | Responsibility |
 | --- | --- |
 | `geographic_map_3d.js` / `.css` | Optional MapLibre terrain, restrained hillshade, tree meshes, quality adaptation and map controls. |
-| `geographic_forest_core.js` | Pure polygon validation and deterministic tree placement. |
+| `geographic_forest_core.js` | Pure polygon validation, deterministic tree placement and fixed woodland supply anchors. |
 | `geographic_forest_worker.js` | Fixed local import of the versioned forest core; bounded request/result protocol. |
 | `geographic_camera_core.js` | Screen-space route framing around actual controls, cards and expanded attribution. |
 | `geographic_marker_layer.js` | Batched public `map.project` positioning of the existing interactive DOM markers. |
 
 `placeTrees(features, {bounds, center, zoom}, options)` returns `{trees, diagnostics}`. Each tree has a stable world-cell ID, longitude, latitude, size multiplier and variant 0–3. Polygon and MultiPolygon holes are preserved, invalid holes reject the entire source feature, and duplicate/clipped tiles share world-cell IDs. Coarser zoom samples survive finer levels. The default tree budget is 600, with a hard maximum of 1,200; feature, vertex, candidate and geometry-work limits are also explicit in `LIMITS`.
+
+The controller starts containers up to 600 CSS pixels wide at 360 trees and DPR 1.25. `timber(features, view)` returns up to 96 `{key, lat, lon, quantity: 6}` supplies using zoom-14 anchors and a 4,000-candidate limit. Supply identity ignores tree quality, zoom and route clearings. The worker receives optional `timberView` and returns supplies alongside trees; the controller's `onTimber` callback passes them to the existing collection adapter, which owns GPS/range checks and daily durable claims.
 
 Optional route segments clear tree centers around the actual supplied geometry. The 64 m spatial index accepts at most 2,048 segments and 65,536 corridor references; invalid or excessive input suppresses illustration rather than dropping a late return leg. This clearance does not certify routes or change their geometry. The controller passes selected/active route segments before additional visible road clearings.
 
@@ -36,9 +40,9 @@ Terrain is optional. At least 12 moving-frame intervals spanning two seconds wit
 
 Persistent DEM errors disable elevation while preserving the existing base map and game; offline views can use already available/cached base-map content. Unavailable regions are not replaced with invented elevation. Remote terrain tiles are view-dependent requests, not mandatory region downloads in the app shell. Preserve the existing offline fallback and keep local modules, worker dependencies and the credits page in the release owner’s appropriate service-worker/updater lists. Add the same-origin credits link alongside Mapterhorn’s DEM attribution; retain all base-provider credits.
 
-Load `geographic_marker_layer.js?v=geographic-terrain-v1-20260907` before creating geographic game markers. Keep its release/cache registration alongside the geographic renderer, camera, forest core and worker; the worker must be able to import its matching core offline. Do not restore native terrain-depth occlusion through a private Marker override: it reintroduces synchronous GPU readback. Preserve the caller-owned DOM handlers and coordinates when choosing the marker constructor, and keep projected route framing independent of marker visibility.
+Load `geographic_marker_layer.js?v=woodland-harvest-v372-20260908` before creating geographic game markers. Keep its release/cache registration alongside the geographic renderer, camera, forest core and worker; the worker must be able to import its matching core offline. Do not restore native terrain-depth occlusion through a private Marker override: it reintroduces synchronous GPU readback. Preserve the caller-owned DOM handlers and coordinates when choosing the marker constructor, and keep projected route framing independent of marker visibility.
 
-Behavior checks have five Python wrappers and matching Node suites: `tests/test_geographic_forest_20260907.*`, `tests/test_geographic_camera_20260907.*`, `tests/test_geographic_map_3d_20260907.*`, `tests/test_geographic_route_fitting_20260907.*` and `tests/test_geographic_markers_20260907.*`. Run the wrappers or the corresponding Node files with `node --test-reporter=tap`. They cover geometry/holes, deterministic placement, budgets, route clearance, worker messaging, renderer/camera lifecycle, actual route fitting and batched marker behavior. All five wrappers pass with **153 underlying Node checks**, including the shipped drag-to-rotate handler, adaptive terrain thresholds, visibility cleanup, real route fitting, and cached marker visibility. Release integration adds its own index, cache and browser checks. Browser emulation and simulated GPS do not establish physical-phone performance or outdoor GPS validation; no fixed frame-rate guarantee follows from these tests.
+Behavior checks have five Python wrappers and matching Node suites: `tests/test_geographic_forest_20260907.*`, `tests/test_geographic_camera_20260907.*`, `tests/test_geographic_map_3d_20260907.*`, `tests/test_geographic_route_fitting_20260907.*` and `tests/test_geographic_markers_20260907.*`. Run the wrappers or the corresponding Node files with `node --test-reporter=tap`. They cover geometry/holes, deterministic placement, budgets, route clearance, worker messaging, renderer/camera lifecycle, actual route fitting and batched marker behavior. The original 7 September validation recorded five passing wrappers with **153 underlying Node checks**, including the shipped drag-to-rotate handler, adaptive terrain thresholds, visibility cleanup, real route fitting, and cached marker visibility. The v372 additions and current focused counts are recorded in [WOODLAND_HARVEST_V372.md](WOODLAND_HARVEST_V372.md); release integration also checks the index, cache and browser behavior. Browser emulation and simulated GPS do not establish physical-phone performance or outdoor GPS validation; no fixed frame-rate guarantee follows from these tests.
 
 ## Proposed shared-document additions
 
