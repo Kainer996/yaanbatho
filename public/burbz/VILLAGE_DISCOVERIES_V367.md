@@ -1,6 +1,6 @@
 # Village discoveries v367
 
-Local release candidate based on main `c8aa650c`; publication is pending owner approval.
+Release candidate based on main `c8aa650c`; Yaan approved publication on 8 September 2026. The guarded GitHub/VPS release and final live verification follow this recorded candidate.
 
 ## Player behavior
 
