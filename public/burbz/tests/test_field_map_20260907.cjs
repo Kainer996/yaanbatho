@@ -26,12 +26,14 @@ assert.equal(paints.place_city['text-halo-width'],1.6);
 assert.equal(layouts.building_3d.visibility,'none');
 assert.equal(layouts.highway_name.visibility,'none');
 assert.equal(paints.highway_path['line-width'],undefined,'Provider road widths preserved');
-assert.match(ui.pickupIcon({id:'starter_timber',glyph:'x'}),/<svg/);
+assert.equal(ui.pickupIcon({id:'starter_timber',glyph:'🪵'}),'🪵');
+assert.equal(ui.pickupIcon({id:'woodland_timber',glyph:'🪵'}),'🪵');
+assert.equal(ui.pickupIcon({id:'xp',glyph:'📜'}),'📜');
 assert.equal(ui.pickupIcon({id:'frog',glyph:'frog-art'}),'frog-art','Unchanged pickups retain their specific icon');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const fn=html.slice(html.indexOf('function switchScreen(name)'),html.indexOf('\nfunction activateGameHudDestination'));
 let opened=0,trail=0,notices=0,allowed=false;
-const ctx={window:{},currentScreen:'map',featureGateOpen:()=>allowed,featureUnlockHint:()=> 'Existing milestone',showToast:()=>notices++,SFX:{page:()=>{}},recordScreenTrail:()=>trail++,
+const ctx={geographicPlaces:null,window:{},currentScreen:'map',featureGateOpen:()=>allowed,featureUnlockHint:()=> 'Existing milestone',showToast:()=>notices++,SFX:{page:()=>{}},recordScreenTrail:()=>trail++,
  $$:()=>[],$:()=>null,document:{querySelectorAll:()=>[],body:{setAttribute:()=>{}}},syncBurbzMusicForMapZoom:()=>{},updateMerlinListeningUI:()=>{},academyViewPause:()=>{},renderInventory:()=>opened++,queueActionBadgeUpdate:()=>{}};
 vm.createContext(ctx);vm.runInContext(fn,ctx);
 ctx.switchScreen('inventory');assert.equal(opened,0);assert.equal(trail,0);assert.equal(ctx.currentScreen,'map');assert.equal(notices,1);
@@ -43,7 +45,7 @@ assert.equal(gate.unlockedFeatures({...input,claimedIds:['start']}).inventory,tr
 assert.equal(gate.unlockedFeatures({...input,evidence:{inventory:true}}).inventory,true);
 assert.equal(gate.unlockedFeatures({...input,playerLevel:12}).inventory,true);
 for(const file of ['field_map_ui.js','field_map_ui.css']){
- const pin=file+'?v=field-map-v365-20260907';
+ const pin=file+'?v=map-pictures-v374-20260908';
  assert.ok(html.includes(pin));
  assert.equal(fs.readFileSync(path.join(root,'sw.js'),'utf8').split(pin).length-1,3);
  assert.ok(fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8').includes('"'+file+'"'));

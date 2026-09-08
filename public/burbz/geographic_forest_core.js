@@ -354,7 +354,9 @@
   function timber(features, view) {
     if (!view) return [];
     return placeTrees(features,{...view,zoom:14},{maxTrees:96,maxCandidates:4000,clearanceM:0}).trees
-      .map(t=>({key:'woodland:'+t.id,lat:t.latitude,lon:t.longitude,quantity:6}));
+      // Retain one in three original grid cells, preserving surviving claim IDs.
+      .filter(t=>{const [,x,y]=t.id.split(':').map(Number);return (Math.floor(x/8)+Math.floor(y/8))%3===0;})
+      .map(t=>({key:'woodland:'+t.id,lat:t.latitude,lon:t.longitude,quantity:1}));
   }
   return { placeTrees, timber, isWoodlandFeature, pointInWoodland, DEFAULTS, LIMITS };
 });

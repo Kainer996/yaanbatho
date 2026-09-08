@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 QUEST_CORE_PATH = ROOT / "quest_core.js"
-QUEST_CORE_PIN = "living-map-v373-20260908"
+QUEST_CORE_PIN = "map-pictures-v374-20260908"
 ACADEMY_CORE_PIN = "roost-retired-v302-20260820"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 ACADEMY_CORE_PIN = "barracks-tutorial-callout-v354-20260906"

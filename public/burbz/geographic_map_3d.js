@@ -5,7 +5,7 @@
   if (root) root.BurbzGeographicMap3D = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function(root) {
   'use strict';
-  const VERSION = 'living-map-v373-20260908';
+  const VERSION = 'map-pictures-v374-20260908';
   const DEM_ID = 'burbz-geographic-dem';
   const SHADE_DEM_ID = 'burbz-geographic-shade-dem';
   const FOREST_ID = 'burbz-geographic-forest';

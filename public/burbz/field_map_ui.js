@@ -15,18 +15,10 @@
     stone:'<path d="m3 17 3-9 8-5 6 5 2 9-6 4H7l-4-4Zm3-9 6 7 8-7M3 17l9-2 4 6M14 3l-2 12"/>'
   };
   function icon(name){return '<svg class="field-map-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(SHAPES[name]||SHAPES.compass)+'</svg>';}
-  function pickupIcon(type){
-    const id=type?.id||'';
-    if(/timber|twig|driftwood|deadfall/.test(id))return icon('timber');
-    if(id==='xp')return icon('notes');
-    if(/coin/.test(id))return icon('coin');
-    if(/gear|relic/.test(id))return icon('chest');
-    if(/stone|grit|pebble/.test(id))return icon('stone');
-    return type?.glyph||icon('compass');
-  }
+  function pickupIcon(type){return type?.glyph||icon('compass');}
   function controls(doc){
     [['mapLocateBtn','locate'],['mapZoomInBtn','plus'],['mapZoomOutBtn','minus'],['mapQuestPhotoBtn','camera'],['mapQuestFocusBoard','list']].forEach(([id,name])=>{const e=doc.getElementById(id);if(e)e.innerHTML=icon(name);});
-    [['mapQuestShowBtn','trail'],['mapSideQuestBtn','compass']].forEach(([id,name])=>{const e=doc.getElementById(id)?.querySelector('.map-quest-btn-art');if(e){const badge=doc.createElement('span');badge.className='map-quest-btn-art field-map-emblem';badge.innerHTML=icon(name);e.replaceWith(badge);}});
+
   }
   function apply(map){
     if(!map)return;

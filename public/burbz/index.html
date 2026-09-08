@@ -4429,9 +4429,9 @@ if (window.BurbzAppearanceCore) {
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
-<link rel="stylesheet" href="field_map_ui.css?v=field-map-v365-20260907">
+<link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=illustrated-world-v366-20260907">
-<link rel="stylesheet" href="geographic_map_3d.css?v=living-map-v373-20260908">
+<link rel="stylesheet" href="geographic_map_3d.css?v=map-pictures-v374-20260908">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5464,21 +5464,21 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
-<script src="geographic_forest_core.js?v=living-map-v373-20260908"></script>
-<script src="geographic_camera_core.js?v=living-map-v373-20260908"></script>
-<script src="geographic_marker_layer.js?v=living-map-v373-20260908"></script>
-<script src="geographic_map_3d.js?v=living-map-v373-20260908"></script>
-<script src="geographic_surfaces.js?v=living-map-v373-20260908"></script>
-<link rel="stylesheet" href="geographic_places.css?v=living-map-v373-20260908">
-<script src="geographic_places_core.js?v=living-map-v373-20260908"></script>
-<script src="geographic_details_scene.js?v=living-map-v373-20260908"></script>
-<script src="geographic_places.js?v=living-map-v373-20260908"></script>
+<script src="geographic_forest_core.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_map_3d.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
+<link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
+<script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_details_scene.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_places.js?v=map-pictures-v374-20260908"></script>
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
-<script src="field_map_ui.js?v=field-map-v365-20260907"></script>
-<script src="quest_core.js?v=living-map-v373-20260908"></script>
+<script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
+<script src="quest_core.js?v=map-pictures-v374-20260908"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
@@ -21294,7 +21294,7 @@ function drawQuestOverviewMarkers() {
     const displayOffset = o.routeSchemaVersion === 1 ? {x:0,y:0} : questPinDisplayOffset(i);
     el.style.setProperty('--quest-pin-x', displayOffset.x + 'px');
     el.style.setProperty('--quest-pin-y', displayOffset.y + 'px');
-    el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge">' + window.BurbzFieldMapUI.icon(o.routeMode === 'loop' ? 'compass' : 'trail') + '</span></span>';
+    el.innerHTML = '<span class="wq-offer-stack"><span class="wq-offer-distance">' + escapeHtml(questMarkerDistanceText(o)) + '</span><span class="wq-offer-badge"><img class="wq-offer-badge-art" src="assets/ui/quest-compass-emblem.webp" alt="" decoding="async"></span></span>';
     el.addEventListener('click', ev => { ev.stopPropagation(); focusQuestOnMap(i); });
     const start = o.points[0];
     questOverview.markers.push(createGeographicMarker({ element: el, anchor: 'bottom' }).setLngLat([start.lon, start.lat]).addTo(liveMap));
@@ -22142,7 +22142,7 @@ function ensureMapPickupState() {
 // than a point feature because its mapped centre can sit deep inside it.
 // Away from every feature the ground reads as streets — town loot.
 let liveWoodlandTimber=[],liveWoodlandTimberSignature='';
-const WOODLAND_TIMBER_TYPE={id:'woodland_timber',glyph:'🪵',label:'Woodland timber',cls:'starter',grant(){addBranches(6);return '+6 timber';}};
+const WOODLAND_TIMBER_TYPE={id:'woodland_timber',glyph:'🪵',label:'Woodland timber',cls:'starter',grant(){addBranches(1);return '+1 timber';}};
 let liveMapLootFeatures = [];    // [{lat, lon, habitat}] from the last fetch
 let liveMapLootFeatureStamp = 0; // bumps on refresh so drawn loot re-reads the land
 const PICKUP_HABITAT_RANGE_M = 320;
@@ -22250,6 +22250,7 @@ function drawMapPickups(lat, lon) {
   const state = ensureMapPickupState();
   liveMapPickupMarkers.forEach(m => m.remove());
   liveMapPickupMarkers = [];
+  let woodlandShown = 0;
   // Starter timber first: guaranteed, always in the vicinity, never crowded
   // out by the daily loot cap below.
   starterTimberPickupsNear(lat, lon)
@@ -22258,7 +22259,9 @@ function drawMapPickups(lat, lon) {
       .filter(p => !state.collected[p.key])
       .map(p => ({ p, dist: mapDistanceMeters(p, { lat, lon }) }))
       .sort((a, b) => a.dist - b.dist)
-      .slice(0, zoomedOut ? 26 : 14))
+      .slice(0, zoomedOut ? 26 : 14)
+      // A dense woodland must not refill the old marker cap after thinning.
+      .filter(({p})=>!p.woodland||woodlandShown++ < (zoomedOut ? 8 : 4)))
     .forEach(({ p, dist }) => {
       const inReach = dist <= MAP_PICKUP_RANGE_M;
       const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + window.BurbzFieldMapUI.pickupIcon(p.type) + '</div>');
@@ -29420,7 +29423,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=living-map-v373-20260908';
+        script.src = 'village_walk.js?v=map-pictures-v374-20260908';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -42777,7 +42780,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-map-v373-20260908';
+const BURBZ_BUILD = 'map-pictures-v374-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
