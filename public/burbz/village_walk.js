@@ -1,7 +1,7 @@
 /* On-demand fullscreen first-person adapter. One borrowed canvas, one RAF owner. */
 (function(root){
   'use strict';
-  const REV='interior-arrival-v369-20260908';
+  const REV='academy-flight-v370-20260908';
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -15,6 +15,8 @@
   }
   function load(){
     if(!dependencies)dependencies=Promise.all([
+      script('interior_life_core.js','BurbzInteriorLifeCore').then(()=>script('interior_life.js','BurbzInteriorLife')),
+      script('academy_flight_core.js','BurbzAcademyFlightCore').then(()=>script('academy_flight.js','BurbzAcademyFlight')),
       script('building_rooms_core.js','BurbzBuildingRoomsCore').then(()=>script('building_rooms_scene.js','BurbzBuildingRoomsScene')).then(()=>script('building_rooms.js','BurbzBuildingRooms')),
       script('village_walk_core.js','BurbzVillageWalkCore'),script('village_walk_scene.js','BurbzVillageWalkScene'),
       script('village_discovery_content.js','BurbzVillageDiscoveryContent').then(()=>script('village_discovery_core.js','BurbzVillageDiscoveryCore')).then(()=>script('village_discoveries.js','BurbzVillageDiscoveries')),
@@ -30,7 +32,7 @@
   function isOpen(){return !!session;}
   function close(reason='exit'){
     const s=session;if(!s)return false;
-    if(['back','escape'].includes(reason)&&s.discoveries?.closePanel())return true;
+    if(['back','escape'].includes(reason)&&(s.rooms?.closePanel?.()||s.discoveries?.closePanel()))return true;
     if(!s.failed&&['exit','back','escape'].includes(reason)&&s.rooms?.leave())return true;
     session=null;s.closed=true;
     cancelAnimationFrame(s.raf);s.abort.abort();s.resizeObserver?.disconnect();s.reset?.();
@@ -38,7 +40,7 @@
     if(document.fullscreenElement===s.root)Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
     if(document.webkitFullscreenElement===s.root)document.webkitExitFullscreen?.();
     if(s.canvas&&s.parent){s.parent.insertBefore(s.canvas,s.next?.parentNode===s.parent?s.next:null);s.canvas.style.cssText=s.canvasStyle;}
-    s.rooms?.dispose();s.discoveries?.dispose();s.unbatch?.();
+    s.rooms?.dispose();s.flight?.dispose();s.discoveries?.dispose();s.unbatch?.();
     if(s.snapshot){
       const {camera,renderer}=s.source,save=s.snapshot;
       camera.position.copy(save.position);camera.quaternion.copy(save.quaternion);Object.assign(camera,save.lens);camera.updateProjectionMatrix();
@@ -77,7 +79,7 @@
     on(document,'fullscreenchange',fullChange);on(document,'webkitfullscreenchange',fullChange);
     full.hidden=!(el.requestFullscreen||el.webkitRequestFullscreen);fullscreen();exit.focus({preventScroll:true});
     const keys=new Set(),pointers=new Map(),input={side:0,forward:0};
-    s.reset=()=>{keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';};
+    s.reset=()=>{keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();};
     function fail(error){
       if(s.closed)return;s.failed=true;cancelAnimationFrame(s.raf);s.raf=0;s.reset();
       const box=el.querySelector('.vw-error');box.hidden=false;box.querySelector('p').textContent='Walking is unavailable here. '+(error.message||'Please return to the village and try again.');
@@ -89,12 +91,13 @@
     on(document,'keydown',e=>{
       if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();close('escape');return;}
       if(e.code==='Tab'){
-        const buttons=[...(s.uiBusy?el.querySelector('.vd-panel'):el).querySelectorAll('button,[tabindex="0"]')].filter(b=>b.getClientRects().length&&!b.closest('[hidden]'));
+        const buttons=[...(s.uiBusy?el.querySelector('.il-panel:not([hidden]),.vd-panel:not([hidden])')||el:el).querySelectorAll('button,input,[tabindex="0"]')].filter(b=>b.getClientRects().length&&!b.closest('[hidden]'));
         const i=buttons.indexOf(document.activeElement);e.preventDefault();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();return;
       }
-      if(!e.repeat&&(s.rooms?.key(e.code)||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
+      if(s.flight&&(e.target.tagName==='INPUT'||e.target.closest('[data-flight]')&&['Space','Enter'].includes(e.code)))return;
+      if(!e.repeat&&(s.flight?.key(e.code)||s.rooms?.key(e.code)||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
-      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
+      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
     },{capture:true});
     on(document,'keyup',e=>{keys.delete(e.code);},{capture:true});
     // Body-level gesture isolation prevents the dock/page/village swipe stack
@@ -102,7 +105,7 @@
     for(const event of ['touchstart','touchmove','touchend','touchcancel','wheel','dblclick','contextmenu'])on(el,event,e=>{
       e.stopPropagation();
       // Exit/fullscreen buttons must keep the browser's synthetic touch click.
-      if(e.cancelable&&!e.target.closest('.vd-panel,button:not(.vw-stick)'))e.preventDefault();
+      if(e.cancelable&&!e.target.closest('.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
     },{passive:false});
     function pointerDown(e){
       if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy)return;
@@ -142,13 +145,14 @@
         const core=root.BurbzVillageWalkCore,dt=s.last?(ts-s.last)/1000:0;
         if(s.last&&dt>0){s.intervals.push(dt*1000);s.samples.push(dt*1000);if(s.samples.length>600)s.samples.shift();}
         s.last=ts;s.frames++;
-        core.move(s.player,{side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)},dt,s.world);
+        if(s.flight&&!s.room)s.flight.update(dt);
+        else core.move(s.player,{side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)},dt,s.world);
         const turn=Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
         s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))*turn));
         const {camera,renderer,scene}=s.source;
-        if(!s.room){s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}
+        if(!s.room){s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}else s.flight?.update(0);
         s.rooms?.update(ts/1000);
-        camera.position.set(s.player.x,s.player.y+core.EYE,s.player.z);camera.rotation.set(s.player.pitch,s.player.yaw,0,'YXZ');camera.updateMatrixWorld();
+        camera.position.set(s.player.x,s.player.y+(options.flight ? .45 : core.EYE),s.player.z);camera.rotation.set(s.player.pitch,s.player.yaw,0,'YXZ');camera.updateMatrixWorld();
         if(root.BurbzManga)root.BurbzManga.render(root.THREE,renderer,s.room?.scene||scene,camera);else renderer.render(s.room?.scene||scene,camera);
         if(s.intervals.length>=60||(s.intervals.length>=12&&s.intervals.reduce((a,b)=>a+b,0)>1600)){
           const q=core.quality(s.dpr,s.maxDpr,s.intervals,s.fastStreak);s.fastStreak=q.fastStreak;s.intervals=[];
@@ -162,9 +166,10 @@
       if(!root.THREE||!source?.scene||!source.renderer||source.renderer.getContext().isContextLost())throw Error('This browser cannot render the 3D village.');
       s.source=source;const {renderer,camera,scene}=source,canvas=renderer.domElement,size=renderer.getSize(new root.THREE.Vector2());
       s.snapshot={position:camera.position.clone(),quaternion:camera.quaternion.clone(),lens:{fov:camera.fov,near:camera.near,far:camera.far,aspect:camera.aspect},dpr:renderer.getPixelRatio(),width:size.x,height:size.y};
-      s.world=options.room?root.BurbzBuildingRoomsCore.world(root.BurbzBuildingRoomsCore.plan(options.room)):root.BurbzVillageWalkScene.create(root.THREE,scene,source.buildings,source.movers,scene.userData.walkTerrain);
-      s.unbatch=options.room?null:root.BurbzVillageWalkScene.batch(root.THREE,scene,source.movers);
-      const spawn=s.world.spawn();s.player={...spawn,yaw:Math.atan2(spawn.x,spawn.z),pitch:-.04};
+      s.flight=options.flight?root.BurbzAcademyFlight.attach(s,input,keys):null;
+      s.world=s.flight?s.flight.world:options.room?root.BurbzBuildingRoomsCore.world(root.BurbzBuildingRoomsCore.plan(options.room)):root.BurbzVillageWalkScene.create(root.THREE,scene,source.buildings,source.movers,scene.userData.walkTerrain);
+      s.unbatch=options.room||options.flight?null:root.BurbzVillageWalkScene.batch(root.THREE,scene,source.movers);
+      const spawn=s.world.spawn();s.player={...spawn,yaw:spawn.yaw??Math.atan2(spawn.x,spawn.z),pitch:spawn.pitch??-.04};
       s.discoveries=root.BurbzVillageDiscoveries.attach(s);
       s.rooms=root.BurbzBuildingRooms.attach(s);
       if(options.room&&!s.rooms.enter(options.room))throw Error("This building is not ready to enter.");
@@ -172,15 +177,16 @@
       options.suspend?.();Object.assign(camera,{fov:68,near:.08,far:110});
       on(canvas,'webglcontextlost',e=>{e.preventDefault();fail(Error('The graphics connection was interrupted.'));});
       resize();s.resizeObserver=new ResizeObserver(resize);s.resizeObserver.observe(el);
-      hint.textContent=touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
+      if(options.flight&&!s.room){el.querySelector('.vw-title small').textContent='BIRD FLIGHT';el.querySelector('.vw-exit').textContent='← Academy';stick.setAttribute('aria-label','Flight direction: pitch and turn');}
+      hint.textContent=s.room?'Left thumb: walk · Drag to look · E interact':options.flight?(touch?'Left stick: steer · Hold to fly · Right slider: height':'W/S fly · Arrows look · Space/Shift climb/dive · F land') : touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
       look.focus({preventScroll:true});resume();
     }).catch(fail);
   }
   function diagnostics(){
     const s=session;if(!s)return {open:false};
     const sorted=s.samples.slice().sort((a,b)=>a-b),mean=sorted.reduce((a,b)=>a+b,0)/(sorted.length||1);
-    return {open:true,interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
+    return {open:true,flight:s.flight?.diagnostics(),interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
   }
   root.BurbzVillageWalk={open,close,isOpen};
-  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,world:()=>session?.world,place:(p)=>{if(session?.world.allowed(p.x,p.z)){Object.assign(session.player,p,{y:session.world.height(p.x,p.z)});return true;}return false;},resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,world:()=>session?.world,place:(p)=>{if(session?.world.allowed(p.x,p.z)){Object.assign(session.player,p,{y:session.flight&&!session.room?p.y??session.player.y:session.world.height(p.x,p.z)});return true;}return false;},resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
 })(typeof globalThis!=='undefined'?globalThis:this);

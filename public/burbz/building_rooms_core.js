@@ -25,8 +25,33 @@ const CABINS=[
 ];
 const ROOMS={tavern:['The village pub',12,13,'bar','tables','fireplace',0x944d3f],chapel:['The chapel',10,13,'altar','pews','organ',0x737ba0],market:['Market hall',12,11,'stall','stalls','scales',0xa9854f],storehouse:['The storehouse',11,12,'crates','racks','barrels',0x78907c],foundry:['The foundry',11,12,'forge','anvil','workbench',0x9b5e46],entertainment:['The gathering hall',12,12,'stage','tables','music',0x8d6689],farm:['The farmhouse',10,11,'oven','produce','workbench',0x7c8b54],hut:['The food lodge',9,10,'oven','produce','barrels',0x7f9161],well:['The pump house',8,9,'pump','barrels','workbench',0x5c8c8c],lumberhut:['The woodcutter’s hut',8,10,'woodpile','workbench','saw',0x937452],minehut:['The miner’s hut',8,10,'ore','workbench','racks',0x7c858b],lumber:['The sawmill',11,13,'saw','woodpile','workbench',0x8b724c],quarry:['The stone workshop',11,12,'stone','workbench','ore',0x92948c]};
 function hash(value){let n=2166136261;for(const c of String(value))n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0;}
-const SIZES={bed:[1.65,2.35],bunk:[1.7,2.4],fireplace:[2,1],armchair:[1,1],shelf:[1.6,.6],workbench:[2,1],loom:[1.8,1.4],mapdesk:[1.8,1.1],telescope:[1.4,1.4],piano:[1.9,.9],oven:[1.8,1.1],teatable:[1.5,1.5],bar:[7,1.1],altar:[2.8,1.2],organ:[2,1],stage:[5,2],stall:[2.4,1.4],forge:[2.6,1.7],pump:[1.8,1.8],saw:[2.8,1.5],stone:[2.2,1.8],anvil:[1.4,1],pew:[2.5,.7],table:[1.8,1.6],rug:[2,3]};
-function plan({buildingId='cabin',seed=0,homeId='',variant}={}){
+const SIZES={bookwall:[5.1,.65],tradecounter:[5.2,1.3],registry:[1.85,1.3],medicine:[1.85,1.3],treasure:[1.85,1.3],panrack:[1.85,1.3],weapons:[1.85,1.3],planningboard:[1.95,1.25],questboard:[1.95,.6],nestbench:[1.8,1.2],bed:[1.65,2.35],bunk:[1.7,2.4],fireplace:[2,1],armchair:[1,1],shelf:[1.6,.6],workbench:[2,1],loom:[1.8,1.4],mapdesk:[1.8,1.1],telescope:[1.4,1.4],piano:[1.9,.9],oven:[1.8,1.1],teatable:[1.5,1.5],bar:[7,1.1],altar:[2.8,1.2],organ:[2,1],stage:[5,2],stall:[2.4,1.4],forge:[2.6,1.7],pump:[1.8,1.8],saw:[2.8,1.5],stone:[2.2,1.8],anvil:[1.4,1],pew:[2.5,.7],table:[1.8,1.6],rug:[2,3]};
+const ACADEMY={
+ dorm:['The Roost',9,10,'nest','perches','shelf',0x53838b],
+ tavern:['The Barracks',11,12,'registry','perches','target',0x637484],
+ training:['Training Hall',12,13,'target','trainingrail','weapons',0x648092],
+ hospital:['Bird Hospital',11,12,'medicine','nests','planter',0x739c87],
+ crowbar:['The Crowbar',12,13,'bar','tables','piano',0xad6950],
+ kitchen:['Kitchen & Pantry',11,12,'oven','produce','panrack',0xb38051],
+ workshop:['Nest Workshop',11,12,'nestbench','workbench','spools',0x61918a],
+ nursery:['Hatchery Nursery',10,11,'cradle','nests','mobile',0x98aa6f],
+ observatory:['Moon Observatory',12,12,'telescope','mapdesk','globe',0x707fab],
+ library:['The Library',11,11,'bookwall','shelves','mapdesk',0x8f7c5a],
+ magpie_market:['Magpie Market',12,11,'tradecounter','stalls','treasure',0xa18e58],
+ manager_office:["Project Manager’s Office",11,11,'planningboard','mapdesk','registry',0x758776],
+ quest_roost:['Quest Roost',11,12,'questboard','perches','globe',0x899c78]
+};
+function academyPlan(id){
+ const row=ACADEMY[id];if(!row)throw Error('No Academy room for this building');
+ const w=row[1],d=row[2],p={scope:'academy',buildingId:id,variant:null,name:row[0],width:w,depth:d,height:4.2,accent:row[6],props:[],spawn:{x:0,y:0,z:d/2-1.2,yaw:0,pitch:0},exit:{x:0,z:d/2-.65},action:{x:0,z:-d/2+3.2,kind:'academy-service',label:'Use '+row[0]}};
+ function put(type,x,z,turn=0){const size=SIZES[type]||[1.5,1.2];p.props.push({type,x,z,rot:turn*Math.PI/2,w:turn%2?size[1]:size[0],d:turn%2?size[0]:size[1],solid:type!=='rug'});}
+ put(row[3],0,-d/2+1.5);
+ for(const x of [-w/2+1.8,w/2-1.8])for(const z of [-1.1,d/2-2.6])put(({nests:'nest',perches:'perch',shelves:'shelf',stalls:'stall',tables:'table'})[row[4]]||row[4],x,z);
+ put(row[5],-w/2+1.8,-d/2+1.5);put('rug',0,1);
+ return p;
+}
+function plan({buildingId='cabin',seed=0,homeId='',variant,scope}={}){
+ if(scope==='academy')return academyPlan(buildingId);
  const cabin=buildingId==='cabin'||buildingId==='cottages';if(!cabin&&!ROOMS[buildingId])throw Error('No room for this building');
  const k=Number.isInteger(variant)?((variant%20)+20)%20:hash(seed+':'+buildingId+':'+homeId)%20;
  const row=cabin?CABINS[k]:ROOMS[buildingId];const w=cabin?row[5]:row[1],d=cabin?row[6]:row[2],accent=cabin?row[4]:row[6];
@@ -53,5 +78,5 @@ function plan({buildingId='cabin',seed=0,homeId='',variant}={}){
  return p;
 }
 function world(p){const r=.27;return{segments:[],polygons:[],radius:Math.hypot(p.width,p.depth),height:()=>0,spawn:()=>({...p.spawn}),allowed(x,z){return Number.isFinite(x+z)&&Math.abs(x)<p.width/2-r&&Math.abs(z)<p.depth/2-r&&!p.props.some(o=>o.solid&&Math.abs(x-o.x)<o.w/2+r&&Math.abs(z-o.z)<o.d/2+r);}};}
-return{CABINS,ROOMS,plan,world,hash};
+return{CABINS,ROOMS,ACADEMY,plan,world,hash};
 });

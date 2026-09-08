@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "interior-arrival-v369-20260908"
+CURRENT_BUILD = "academy-flight-v370-20260908"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -401,11 +401,11 @@ def test_the_room_is_built_into_the_tree_the_3d_scene_and_the_ambience():
     assert "%s:'assets/academy-buildings-manga/market.png'" % ROOM_ID in html
     assert "./assets/academy-buildings-manga/market.png" in SW.read_text(encoding="utf-8")
     assert '.treehouse-room-node[data-room="%s"]' % ROOM_ID in html, "its own lean on its own bough"
-    # It has no painted interior, so it draws its own scene like the Library.
+    # Its finished room painting replaces the inline placeholder; fallback stays.
     assert "magpie_market() {" in html
     assert "ACADEMY_ROOM_INTERIOR_ASSETS" in html
     interiors = html[html.index("const ACADEMY_ROOM_INTERIOR_ASSETS = {"):]
-    assert ROOM_ID not in interiors[:interiors.index("};")]
+    assert "magpie_market: 'assets/academy-rooms-v370/magpie-market.webp'" in interiors[:interiors.index("};")]
 
     three_d = CORE_3D.read_text(encoding="utf-8")
     assert re.search(r"%s:\s*\{ angle:" % ROOM_ID, three_d), "it needs a bough in 3D"
@@ -448,7 +448,7 @@ def test_every_core_this_release_edited_ships_under_its_new_tag():
     assert "bird_roles_core.js?v=%s" % ROLES_CORE_PIN in html
     assert "academy_treehouse_core.js?v=%s" % ACADEMY_CORE_PIN in html
     for core in ("academy_alive_core.js", "academy_3d_core.js"):
-        pin = "%s?v=%s" % (core, "crafted-academy-v358-20260907" if core == "academy_3d_core.js" else ACADEMY_PRESENTATION_PIN)
+        pin = "%s?v=%s" % (core, "academy-flight-v370-20260908" if core == "academy_3d_core.js" else ACADEMY_PRESENTATION_PIN)
         assert pin in html and "'./%s'" % pin in sw
     for core in EDITED_CORES:
         pin = "%s?v=%s" % (core, "little-folk-residents-v350-20260905")

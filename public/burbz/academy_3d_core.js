@@ -2002,6 +2002,7 @@
     }
 
     function resize() {
+      if (st.borrowed) return ;
       if (!st.cont || !st.renderer) return;
       var w = st.cont.clientWidth, h = st.cont.clientHeight;
       if (!w || !h) return;
@@ -2239,6 +2240,7 @@
 
     // ---- lifecycle ----
     function start() {
+      if (st.borrowed) return true;
       if (!mount()) return false;
       if (!st.scene) {
         buildScene();
@@ -2273,6 +2275,7 @@
 
     // A building went up (or the player moved one): rebuild the tree's cast.
     function refresh() {
+      if (st.borrowed) return ;
       if (!st.scene) return;
       var key = builtRooms().slice().sort().join(',');
       if (key === st.builtKey) return;
