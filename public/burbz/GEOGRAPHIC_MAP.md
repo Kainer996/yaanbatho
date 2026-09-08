@@ -21,7 +21,7 @@ The runtime queries actual OpenMapTiles `landcover` polygons with `class=wood`. 
 | `geographic_forest_worker.js` | Fixed local import of the versioned forest core; bounded request/result protocol. |
 | `geographic_camera_core.js` | Screen-space route framing around actual controls, cards and expanded attribution. |
 | `geographic_marker_layer.js` | Batched public `map.project` positioning of the existing interactive DOM markers. |
-| `geographic_surfaces.js` / `geographic_details.js` | Bounded grass and water styling, explicit waterfall meshes and settlement-style building geometry. |
+| `geographic_surfaces.js` / `geographic_details_scene.js` | Bounded grass and water styling, explicit waterfall meshes and settlement-style building geometry. |
 | `geographic_places_core.js` / `geographic_places.js` / `.css` | Walking-node eligibility, fictional place catalogue/cards, verified arrival and temporary furnished-room visits. |
 
 `placeTrees(features, {bounds, center, zoom}, options)` returns `{trees, diagnostics}`. Each tree has a stable world-cell ID, longitude, latitude, size multiplier and variant 0–3. Polygon and MultiPolygon holes are preserved, invalid holes reject the entire source feature, and duplicate/clipped tiles share world-cell IDs. Coarser zoom samples survive finer levels in the default mode; the renderer opts into `dense: true` for a fixed grid across zooms. The default tree budget is 600, with a hard maximum of 1,200; feature, vertex, candidate and geometry-work limits are also explicit in `LIMITS`.
