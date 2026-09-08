@@ -18,3 +18,8 @@
   #liveMapShell.quest-focused .geographic-map-control { left:calc(min(288px, 36%) + 24px); right:auto; top:72px; bottom:auto; transform:none; align-items:flex-start; }
   #liveMapShell.quest-focused .map-zoom-controls { left:calc(min(288px, 36%) + 24px); }
 }
+/* Only the playfield changes with the real local clock; controls retain contrast. */
+#liveMapShell[data-map-phase] .map-sky-haze { background:linear-gradient(180deg,rgba(17,32,65,calc(var(--map-night,0)*.42)),rgba(236,155,98,calc(var(--map-warm,0)*.16)) 40%,transparent); }
+#liveMapShell[data-map-phase=night] .map-playfield-vignette { box-shadow:inset 0 0 75px #07101f66; }
+#liveMapShell[data-map-phase=night] :is(.wq-marker-number,.wq-offer-badge,.burbz-pickup-orb) { filter:drop-shadow(0 0 7px #f6bc6759); }
+#liveMapShell[data-map-phase=night] .geographic-place-marker { box-shadow:0 0 12px #f6bc6766; }

@@ -4431,7 +4431,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
-<link rel="stylesheet" href="geographic_map_3d.css?v=map-pictures-v374-20260908">
+<link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5467,11 +5467,13 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_forest_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
-<script src="geographic_map_3d.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_map_3d.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="geographic_details_scene.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_daynight_core.js?v=night-quests-v376-20260908"></script>
+<script src="geographic_daynight.js?v=night-quests-v376-20260908"></script>
+<script src="geographic_details_scene.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_places.js?v=map-pictures-v374-20260908"></script>
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
@@ -18688,6 +18690,7 @@ function styleBurbzMapLayers() { window.BurbzFieldMapUI?.apply(liveMap); }
 // Real elevation and woodland are optional. Sustained slow movement pauses
 // the terrain mesh while retaining pitched trees and real-elevation shading.
 let geographicPlaces = null;
+let geographicDayNight = null;
 function enableBurbzTerrain() {
   if (!liveMap || !window.BurbzGeographicMap3D) return;
   if (!geographicMap3D) geographicMap3D = window.BurbzGeographicMap3D.attach(liveMap, {
@@ -18720,7 +18723,11 @@ function enableBurbzTerrain() {
     fetch:query=>window.BurbzQuestCore.fetchGeographicDetails(query),
     data:()=>gameState.geographicPlaces,
     save:next=>{const old=gameState.geographicPlaces;gameState.geographicPlaces=next;const result=saveState();if(!result?.ok){gameState.geographicPlaces=old;return false;}return true;},
-    refreshMap:()=>{geographicMap3D?.refresh();window.BurbzGeographicSurfaces?.attach(liveMap).refresh();}
+    refreshMap:()=>{geographicMap3D?.refresh();window.BurbzGeographicSurfaces?.attach(liveMap).refresh();geographicDayNight?.refresh();}
+  });
+  if(!geographicDayNight && window.BurbzGeographicDayNight) geographicDayNight=BurbzGeographicDayNight.attach(liveMap,{
+    isVisible:()=>currentScreen==='map'&&!geographicPlaces?.inside,
+    getRoutes:()=>[activeWalkingQuest()?.route,questOverview.offers[questOverview.selectedIndex]?.points].filter(Boolean)
   });
   liveMapTerrainEnabled = !!geographicMap3D?.state.terrainActive;
 }
@@ -19519,6 +19526,7 @@ function walkQuestRouteGeoJSON(quest) {
 function drawWalkingQuestRoute() {
   if (!liveMap) return;
   try { const src = liveMap.getSource('burbz-quest-route'); if (src) src.setData(walkQuestRouteGeoJSON(activeWalkingQuest())); } catch (e) {}
+  geographicDayNight?.refresh();
 }
 function clearWalkingQuestFromMap() {
   questMapMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
@@ -21273,6 +21281,7 @@ function questOverviewGeoJSON() {
 function drawQuestOverviewLines() {
   if (!liveMap) return;
   try { const src = liveMap.getSource('burbz-quest-offers'); if (src) src.setData(questOverviewGeoJSON()); } catch (e) {}
+  geographicDayNight?.refresh();
 }
 function clearQuestOverviewMarkers() {
   questOverview.markers.forEach(m => { try { m.remove(); } catch (e) {} });
@@ -24311,10 +24320,13 @@ function returnToLiberatedVillage() {
   villageActive = { seed:pending.seed >>> 0, name:pending.name, lat:pending.lat, lon:pending.lon };
   gameState.lastVillage = villageActive;
   empire.pendingLiberation = null;
+  villageVisitingWard = false;
+  empireLedgerOnlyMode = false;
+  showEmpirePage('villages', { silent:true });
   saveState();
   switchScreen('village');
   renderVillage();
-  setTimeout(() => $('empireVillageHub')?.scrollIntoView({ behavior:'smooth', block:'start' }), 180);
+  setTimeout(() => $('villageClaimBar')?.scrollIntoView({ behavior:'smooth', block:'start' }), 180);
 }
 const EMPIRE_TERRITORY_RADIUS_M = 2200;
 const EMPIRE_MAP_LOAD_TIMEOUT_MS = 12000;
@@ -27382,6 +27394,11 @@ function renderVillageClaimBar() {
     const when = rec && rec.claimedAt ? new Date(rec.claimedAt).toLocaleDateString() : '';
     const settle = empireSettlementOfSeed(v.seed);
     bar.innerHTML = '<div class="village-owned-banner">🕊️ ' + escapeHtml(v.name) + ' is liberated' + (when ? ' · freed ' + escapeHtml(when) : '') + (settle ? ' · ' + settle.icon + ' part of the ' + escapeHtml(settle.label) : '') + '</div>';
+    const freeVillages = empireVillages().filter(rec => !empireSettlementOfSeed(rec.seed));
+    if (freeVillages.length >= 3 && !empireTownMergeCandidates().length) {
+      const readyCount = freeVillages.filter(rec => villageMergeReady(rec)?.ready).length;
+      bar.innerHTML += '<div class="village-owned-banner" role="status">⭐ Town progress: ' + readyCount + ' villages ready. ' + (readyCount < 3 ? 'Grow three villages to 16 folk and 75% happiness each to unlock Merge.' : 'Three ready villages must be within 5 km of each other to unlock Merge.') + '</div>';
+    }
     return;
   }
   const cost = birdhouseCostForNextVillage();
@@ -42834,7 +42851,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'full-cards-v375-20260908';
+const BURBZ_BUILD = 'night-quests-v376-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

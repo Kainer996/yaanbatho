@@ -91,6 +91,7 @@
     layout(location=4) in vec2 a_style;
     uniform mat4 u_matrix;
     uniform float u_outline;
+    uniform float u_sun;uniform float u_warm;uniform vec4 u_lamps[8];
     out vec3 v_color;
     void main() {
       float s=sin(a_style.x), c=cos(a_style.x);
@@ -101,7 +102,11 @@
       float light=dot(normal,normalize(vec3(-.55,.65,1.0)));
       float band=light>.65?1.12:light>.12?.90:.65;
       vec3 shade=mix(vec3(.16,.27,.24),a_color,band*.86);
-      v_color=u_outline>0.?vec3(.10,.20,.16):shade*(.92+a_style.y*.15);
+      vec3 world=p+a_instance.xyz;
+      vec3 lit=mix(shade*vec3(.30,.43,.67),shade,u_sun);
+      lit+=shade*vec3(.16,.05,-.04)*u_warm;
+      if(u_sun<.999)for(int i=0;i<8;i++){vec4 lamp=u_lamps[i];float fall=max(0.,1.-distance(world,lamp.xyz)/max(1.,lamp.w));lit+=vec3(1.,.43,.10)*fall*fall*(1.-u_sun)*.68;}
+      v_color=u_outline>0.?mix(vec3(.025,.045,.075),vec3(.10,.20,.16),u_sun):lit*(.92+a_style.y*.15);
       gl_Position=u_matrix*vec4(p+a_instance.xyz,1.);
     }`;
   const FRAGMENT = `#version 300 es
@@ -120,7 +125,8 @@
     return {
       id:FOREST_ID, type:'custom', renderingMode:'3d', meshes:[], count:0,
       onAdd(map,gl) {
-        this.gl=gl;
+        this.gl=gl;this.map=map;
+        const priorVAO=gl.getParameter(gl.VERTEX_ARRAY_BINDING),priorBuffer=gl.getParameter(gl.ARRAY_BUFFER_BINDING);
         let vs=null,fs=null;
         try {
           if(!gl.drawArraysInstanced || !gl.createVertexArray) throw new Error('WebGL2 instancing unavailable');
@@ -129,6 +135,7 @@
           gl.linkProgram(this.program); gl.deleteShader(vs); gl.deleteShader(fs);vs=null;fs=null;
           if(!gl.getProgramParameter(this.program,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(this.program));
           this.matrix=gl.getUniformLocation(this.program,'u_matrix'); this.outline=gl.getUniformLocation(this.program,'u_outline');
+          this.sun=gl.getUniformLocation(this.program,'u_sun');this.warm=gl.getUniformLocation(this.program,'u_warm');this.lamps=gl.getUniformLocation(this.program,'u_lamps[0]');
           for(let kind=0;kind<2;kind++) {
             const geometry=treeGeometry(kind), vao=gl.createVertexArray(), mesh=gl.createBuffer(), instances=gl.createBuffer();
             gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER,mesh); gl.bufferData(gl.ARRAY_BUFFER,geometry,gl.STATIC_DRAW);
@@ -142,7 +149,7 @@
         } catch(e) { state.webgl='unavailable'; state.errors.push(String(e.message||e));
           if(vs)gl.deleteShader(vs);if(fs)gl.deleteShader(fs);
           if(this.program){gl.deleteProgram(this.program);this.program=null;}
-        }
+        } finally {gl.bindVertexArray(priorVAO);gl.bindBuffer(gl.ARRAY_BUFFER,priorBuffer);}
       },
       upload(trees,map) {
         if(state.webgl!=='instanced')return;
@@ -168,9 +175,9 @@
           batches[kind].push((xy[0]-this.origin[0])/this.scale,-(xy[1]-this.origin[1])/this.scale,
             elevation+.15,14*clamp(Number(t.size)||1,.65,1.6),hash/4294967296*Math.PI*2,(hash%101)/100);
         });
-        this.count=0;
+        this.count=0;const priorBuffer=this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING);
         this.meshes.forEach((m,i)=>{m.count=batches[i].length/6;this.count+=m.count;this.gl.bindBuffer(this.gl.ARRAY_BUFFER,m.instances);this.gl.bufferData(this.gl.ARRAY_BUFFER,new Float32Array(batches[i]),this.gl.DYNAMIC_DRAW);});
-        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,null);state.trees=this.count;state.elevationPendingTrees=missing;
+        this.gl.bindBuffer(this.gl.ARRAY_BUFFER,priorBuffer);state.trees=this.count;state.elevationPendingTrees=missing;
         while(this.elevations.size>2400)this.elevations.delete(this.elevations.keys().next().value);
       },
       render(gl,args) {
@@ -178,6 +185,8 @@
         const matrix=args?.defaultProjectionData?.mainMatrix;
         if(!matrix)return;
         gl.useProgram(this.program);gl.uniformMatrix4fv(this.matrix,false,localMatrix(matrix,this.origin,this.scale));
+        const light=root.BurbzGeographicDayNight?.lighting(this.map,this.origin,this.scale);
+        gl.uniform1f(this.sun,light?.sun??1);gl.uniform1f(this.warm,light?.warm??0);gl.uniform4fv(this.lamps,light?.lights||new Float32Array(32));
         gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.depthMask(true);gl.disable(gl.BLEND);gl.enable(gl.CULL_FACE);
         // One reversed hull and one cel pass per shared tree mesh: <=4 draws.
         for(let pass=0;pass<2;pass++) {
