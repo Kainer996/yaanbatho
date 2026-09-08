@@ -39,7 +39,7 @@ SW = ROOT / "sw.js"
 CORE = ROOT / "building_interior_core.js"
 DEPLOY = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "step-inside-buildings-v341-20260901"
-CURRENT_BUILD = "village-discoveries-v367-20260908"
+CURRENT_BUILD = "walkable-interiors-v368-20260908"
 ART_RELEASE_PIN = "generated-building-interiors-v344-20260902"
 PREVIOUS_RELEASE_PIN = "no-arms-card-art-v340-20260901"
 ART_DIR = ROOT / "assets" / "building-interiors-manga"
@@ -225,7 +225,7 @@ def test_the_alehouse_pours_from_inside():
     card = function_source(html, "villageBuildingSheetHTML")
     assert "STEP UP TO THE BAR" in card
     render = function_source(html, "renderBuildingInterior")
-    assert "villageOpenShop('tavern')" in render
+    assert "villageOpenShop('tavern', seed)" in render
 
 
 def test_the_fallback_village_still_opens_every_built_door():

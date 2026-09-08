@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
+const core=require('../building_rooms_core.js'),walk=require('../village_walk_core.js');
+const context={console};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lib/three.min.js'),'utf8'),context);for(const f of ['settlement_models.js','building_rooms_core.js','building_rooms_scene.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../'+f),'utf8'),context);
+const plans=[...core.CABINS.map((_,variant)=>core.plan({variant})),...Object.keys(core.ROOMS).map(buildingId=>core.plan({buildingId}))];assert.equal(core.CABINS.length,20);
+assert.equal(new Set(plans.slice(0,20).map(p=>JSON.stringify([p.width,p.depth,p.props]))).size,20,'twenty different floor plans, not palette swaps');
+const seen=new Set();for(let seed=0;seed<1000;seed++){const p=core.plan({seed,homeId:'home-1'});assert.deepEqual(p,core.plan({seed,homeId:'home-1'}));seen.add(p.variant);}assert.equal(seen.size,20);
+for(const p of plans){const w=core.world(p);assert(w.allowed(p.spawn.x,p.spawn.z),p.name+' spawn');assert(!w.allowed(0,p.depth/2+1));assert(!w.allowed(NaN,0));
+ const step=.2,queue=[[0,Math.round(p.spawn.z/step)]],visited=new Set(queue.map(k=>k.join(',')));for(let i=0;i<queue.length;i++){const [x,z]=queue[i];for(const [dx,dz]of [[1,0],[-1,0],[0,1],[0,-1]]){const xx=x+dx,zz=z+dz,key=xx+','+zz;if(!visited.has(key)&&w.allowed(xx*step,zz*step)){visited.add(key);queue.push([xx,zz]);}}}
+ assert(queue.some(([x,z])=>Math.hypot(x*step-p.exit.x,z*step-p.exit.z)<.5),p.name+' exit reachable');
+ if(p.action)assert(queue.some(([x,z])=>Math.hypot(x*step-p.action.x,z*step-p.action.z)<.5),'bar reachable');
+ for(const o of p.props){assert(Math.abs(o.x)+o.w/2<=p.width/2+.01,p.name+' prop in walls');assert(Math.abs(o.z)+o.d/2<=p.depth/2+.01,p.name+' prop in walls');if(o.solid)assert(!w.allowed(o.x,o.z));assert(queue.some(([x,z])=>Math.hypot(x*step-o.x,z*step-o.z)<Math.max(o.w,o.d)/2+1),p.name+' can approach '+o.type);}
+ const player={...p.spawn};for(let i=0;i<1000;i++)walk.move(player,{forward:1},.05,w);assert(w.allowed(player.x,player.z),p.name+' swept wall collision');
+ const room=context.BurbzBuildingRoomsScene.create(context.THREE,p);let triangles=0,draws=0,disposed=0,geometries=0;room.scene.traverse(o=>{if(!o.geometry)return;geometries++;o.geometry.addEventListener('dispose',()=>disposed++);for(const n of o.geometry.attributes.position.array)assert(Number.isFinite(n));triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;draws++;});assert(triangles<65000,p.name+' triangle budget '+triangles);assert(draws<25,p.name+' draw budget '+draws);room.dispose();assert.equal(disposed,geometries,'all room meshes released');console.log(p.name,triangles+' triangles',draws+' draws',queue.length+' walkable samples');
+}
+console.log('PASS 20 unique cabins + 13 civic/service rooms, deterministic plans, reachability, collision, finite geometry and disposal');

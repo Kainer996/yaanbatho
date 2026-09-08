@@ -28675,6 +28675,7 @@ function renderTownScreen() {
 // The living town at the top of the screen. Every yard the governor raises
 // stands in its quarter, and every one of them can be tapped and run.
 function renderTownSquare(settle) {
+  if (window.BurbzVillageWalk?.isOpen()) return;
   const stage = $('townStage'); if (!stage) return;
   const snap = townEconomySnapshot(settle);
   const primary = townPrimarySeatRow(settle), state = primary && primary.state;
@@ -28691,7 +28692,7 @@ function renderTownSquare(settle) {
   if (!window.THREE || townFallbackMode) { renderTownFallback(settle); return; }
   try {
     ensureTownRenderer(stage); if (townBuiltKey !== townSceneKey(settle) || townBuiltPhase !== burbzDaylightPhaseNow()) buildTownScene(settle);
-    $('townLoading')?.remove(); if (!townRunning) { townRunning = true; requestAnimationFrame(townAnimate); } onTownResize();
+    $('townLoading')?.remove(); if (!townRunning) { townRunning = true; townAnimationRequest = requestAnimationFrame(townAnimate); } onTownResize();
   } catch (err) { console.warn('BURBZ town: 3D init failed, using the quarter list', err); townFallbackMode = true; renderTownFallback(settle); }
 }
 function renderTownFallback(settle) {
@@ -29357,16 +29358,11 @@ function villageDiscoveryAdapter(seed) {
   };
 }
 let villageWalkLoad = null;
-$('villageWalkBtn')?.addEventListener('click', async () => {
-  const button = $('villageWalkBtn');
-  if (button.disabled) return;
-  button.disabled = true;
-  const seed = currentVillage()?.seed;
-  try {
+async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=village-discoveries-v367-20260908';
+        script.src = 'village_walk.js?v=walkable-interiors-v368-20260908';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29374,9 +29370,18 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
       }).catch(error => { villageWalkLoad = null; throw error; });
       await villageWalkLoad;
     }
+}
+
+$('villageWalkBtn')?.addEventListener('click', async () => {
+  const button = $('villageWalkBtn');
+  if (button.disabled) return;
+  button.disabled = true;
+  const seed = currentVillage()?.seed;
+  try {
+    await ensureVillageWalkModule();
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
-      name: currentVillage().name, opener:button,
+      name: currentVillage().name, seed, opener:button, interiors: buildingRoomsAdapter(),
       discoveries: villageDiscoveryAdapter(seed),
       source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
@@ -29391,6 +29396,53 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
   } catch (error) { showToast(error.message); }
   finally { button.disabled = false; }
 });
+
+// Interiors read existing ownership and level; visits never create or spend anything.
+function buildingRoomsAdapter() {
+  return {
+    describe: target => {
+      const rec = empireVillageRecordBySeed(Number(target.seed) >>> 0);
+      const building = EMPIRE_BUILDING_INDEX[target.buildingId];
+      if (!rec || !building || villageBuildingLevel(rec, building.id) <= 0) return null;
+      return { name:villageBuildingTier(building, villageBuildingLevel(rec, building.id)).name };
+    },
+    open: (target, action) => {
+      if (!buildingRoomsAdapter().describe(target)) return;
+      if (action === 'bar' && target.buildingId === 'tavern') villageOpenShop('tavern', target.seed);
+      else openBuildingInterior(target.seed, target.buildingId);
+    }
+  };
+}
+async function walkBuildingInterior(button) {
+  const view = buildingInteriorOpenView;
+  if (!view || button.disabled) return;
+  const screen = currentScreen;
+  if (!['village','town'].includes(screen)) return;
+  button.disabled = true;
+  try {
+    await ensureVillageWalkModule();
+    if (buildingInteriorOpenView !== view || currentScreen !== screen || !buildingRoomsAdapter().describe(view)) return;
+    const town = screen === 'town';
+    const source = town ? {scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,movers:[]} : {scene:villageScene,renderer:villageRenderer,camera:villageCamera,buildings:villageBuildings,movers:[]};
+    if (!source.scene || !source.renderer) throw Error('Open the 3D settlement view to visit this room.');
+    const roomTarget = {...view};
+    for(const b of source.buildings){if(b.userData.buildingId!==view.buildingId||(b.userData.wardSeed&&Number(b.userData.wardSeed)!==view.seed))continue;
+      b.traverse(model=>{if(roomTarget.homeId===undefined&&model.userData.architecture&&model.userData.door)roomTarget.homeId=model.userData.homeId||'';});
+      if(roomTarget.homeId!==undefined)break;
+    }
+    closeBuildingInterior();
+    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,seed:view.seed,room:roomTarget,interiors:buildingRoomsAdapter(),source:()=>source,
+      suspend:()=>{ if(town){townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);} else {villageRunning=false;cancelAnimationFrame(villageAnimationRequest);clearTimeout(villagePauseTimer);} },
+      resume:(reason,failed)=>{
+        if(reason==='navigation'||reason==='pagehide')return;
+        if(failed&&source.renderer.getContext().isContextLost()){if(town)townFallbackMode=true;else villageFallbackMode=true;}
+        if(currentScreen===screen){if(town){onTownResize();renderTownScreen();}else{onVillageResize();renderVillage();}
+          if(reason!=='building-action')openBuildingInterior(view.seed,view.buildingId,view.mode);}
+      }
+    });
+  } catch(error) { showToast(error.message); }
+  finally { if(button.isConnected)button.disabled=false; }
+}
 
 // ===== Step inside your buildings (step-inside-buildings-v341) ===============
 // Tap any building you have raised — in the living village, on the town
@@ -29544,7 +29596,7 @@ function renderBuildingInterior() {
     (facts.level > 0 ? 'Level ' + facts.level + ' of ' + building.maxLevel : 'A staked plot, ready to build') +
     (settle ? ' · ' + escapeHtml(rec.name) + ' ward of ' + escapeHtml(townDisplayName(settle)) : '') + '</div></div>' +
     '<button class="shop-close" type="button" aria-label="Close ' + escapeHtml(label) + '" onclick="closeBuildingInterior()">&times;</button></div>' +
-    '</div><div class="shop-scroll-body building-interior-body">' + body + '</div></section>';
+    '</div><div class="shop-scroll-body building-interior-body">' + (facts.level > 0 ? '<button type="button" class="bi-bar-btn" data-action="interior-walk">WALK INSIDE · 3D</button>' : '') + body + '</div></section>';
   overlay.classList.add('show');
   // One delegated handler answers every card button, so the tested town card
   // keeps its own action names and simply works in here too.
@@ -29554,14 +29606,15 @@ function renderBuildingInterior() {
       const btn = ev.target.closest('[data-action]');
       if (!btn || btn.disabled || !buildingInteriorOpenView) return;
       const act = btn.dataset.action;
-      if (act === 'sheet-close') { SFX.tap(); closeBuildingInterior(); }
+      if (act === 'interior-walk') { walkBuildingInterior(btn); }
+      else if (act === 'sheet-close') { SFX.tap(); closeBuildingInterior(); }
       else if (act === 'sheet-ledger') { SFX.tap(); closeBuildingInterior(); openTownLedgerSheet(); }
       else if (act === 'sheet-build') {
         const link = empireSettlementOfSeed(Number(btn.dataset.seed) >>> 0);
         const s = link ? canonicalEmpireSettlement(empireSettlementById(link.id)) : null;
         if (s) { townBuildAtWard(s.id, btn.dataset.seed, btn.dataset.building); renderBuildingInterior(); }
       }
-      else if (act === 'interior-bar') { SFX.tap(); closeBuildingInterior(); villageOpenShop('tavern'); }
+      else if (act === 'interior-bar') { const seed=buildingInteriorOpenView.seed; SFX.tap(); closeBuildingInterior(); villageOpenShop('tavern', seed); }
     });
   }
   const closeButton = overlay.querySelector('.shop-close');
@@ -29770,7 +29823,7 @@ function settlementSceneUpdateContext(kind, camera, scene) {
 }
 function settlementSceneWake(kind) {
   if (kind === 'village' && currentScreen === 'village' && !villageRunning) { villageRunning = true; requestAnimationFrame(villageAnimate); }
-  if (kind === 'town' && currentScreen === 'town' && !townRunning) { townRunning = true; requestAnimationFrame(townAnimate); }
+  if (kind === 'town' && currentScreen === 'town' && !townRunning) { townRunning = true; townAnimationRequest = requestAnimationFrame(townAnimate); }
 }
 function settlementSceneResetCamera(kind) {
   const cam = kind === 'village' ? villageCam : townCam;
@@ -34724,6 +34777,7 @@ function villageMakeTownHall(r, pal, hallLevel, isCity) {
 // registries; buildTownScene marks their lengths and moves the new entries
 // into the town's own lists when the build completes.
 let townScene = null, townRenderer = null, townCamera = null, townRunning = false;
+let townAnimationRequest = 0, townPauseTimer = 0;
 let townDistrictGroups = [], townEconBuildings = [], townSigns = [], townTorches = [], townSmokes = [], townWindmills = [];
 let townWalkers = [], townRoofBirds = [], townCloths = [], townNpcs = [], townChickens = [], townClouds = [];
 let townTraffic = [], townLivestock = [], townFlocks = [], townConstructionSites = [];
@@ -35511,20 +35565,22 @@ function buildTownScene(settle) {
 }
 
 function townAnimate(ts) {
+  townAnimationRequest = 0;
+  if (!townRunning || window.BurbzVillageWalk?.isOpen()) { townRunning = false; return; }
   if (currentScreen !== 'town') { townRunning = false; return; }
   const stage = $('townStage');
   if (!settlementSceneShouldRun(true, true, stage)) {
     settlementSceneGovernor('town').lastTs=0;
     stage?.classList.add('is-paused');
-    setTimeout(() => {
+    townPauseTimer = setTimeout(() => {
       if (!townRunning) return;
-      if (currentScreen === 'town') requestAnimationFrame(townAnimate);
+      if (currentScreen === 'town') townAnimationRequest = requestAnimationFrame(townAnimate);
       else townRunning = false;
     }, 300);
     return;
   }
   stage?.classList.remove('is-paused');
-  requestAnimationFrame(townAnimate);
+  townAnimationRequest = requestAnimationFrame(townAnimate);
   // Native rate here too — see villageAnimate.
   const interval = Number(townSceneQuality.frameInterval) || 0;
   if (interval && ts && townLastFrameAt && ts - townLastFrameAt < interval) return;
@@ -35609,6 +35665,7 @@ function townAnimateFrame(t) {
   else townRenderer.render(townScene, townCamera);
 }
 function onTownResize() {
+  if (window.BurbzVillageWalk?.isOpen()) return;
   if (!townRenderer || !townCamera) return;
   const stage = $('townStage');
   if (!stage) return;
@@ -35663,13 +35720,13 @@ function villageShopAmbientHTML(shopKey) {
   return motes + steam + glow;
 }
 
-function villageOpenShop(shopKey) {
+function villageOpenShop(shopKey, settlementSeed) {
   const shop = VILLAGE_SHOPS[shopKey];
   const overlay = $('villageShopOverlay');
   if (!shop || !overlay) return;
   // A trade's door only opens once the player has found it on a real walk
   // (the player's own Alehouse counts as its own discovery).
-  const shopVillage = currentVillage();
+  const shopVillage = settlementSeed === undefined ? currentVillage() : empireVillageRecordBySeed(Number(settlementSeed) >>> 0);
   if (shopVillage && !villageShopIsOpenTo(shopVillage.seed, shopKey)) {
     showToast('🚪 ' + shop.name + ' hasn\'t been found yet — walk a quest in this land to discover it.');
     return;
@@ -42585,7 +42642,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-discoveries-v367-20260908';
+const BURBZ_BUILD = 'walkable-interiors-v368-20260908';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
