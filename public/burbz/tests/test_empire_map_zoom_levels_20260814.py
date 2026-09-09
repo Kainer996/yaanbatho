@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "scan-home-v378-20260909"
+CURRENT_BUILD = "player-home-v379-20260909"
 PREVIOUS_RELEASE_PIN = "player-built-village-v267-20260814"
 
 LIEGE, COUNTY, SETTLEMENT, VILLAGE = 0, 1, 2, 3

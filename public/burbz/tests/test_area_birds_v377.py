@@ -13,8 +13,8 @@ def test_area_birds_behavior(script):
 def test_area_birds_offline_release():
     html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text()
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
-    assert "const BURBZ_BUILD = 'scan-home-v378-20260909';" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('scan-home-v378-20260909')
+    assert "const BURBZ_BUILD = 'player-home-v379-20260909';" in html
+    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('player-home-v379-20260909')
     for file in ['area_birds.css','area_birds_core.js','area_birds.js','area_birds_taxonomy.js','geographic_map_3d.js']:
         assert f'{file}?v={RELEASE}' in html
         assert f'"{file}"' in updater

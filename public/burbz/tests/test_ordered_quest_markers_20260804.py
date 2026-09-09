@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "scan-home-v378-20260909"
+CURRENT_BUILD = "player-home-v379-20260909"
 QUEST_CORE_PIN = "map-pictures-v374-20260908"
 
 

@@ -25,7 +25,7 @@ AUDIO_CORE = (BURBZ / "audio_core.js").read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 DEPLOY = (REPO / "scripts" / "update-live-burbz.sh").read_text(encoding="utf-8")
 
-RELEASE_PIN = "scan-home-v378-20260909"
+RELEASE_PIN = "player-home-v379-20260909"
 OWN_RELEASE_PIN = "quiet-wand-whole-art-v304-20260821"
 
 

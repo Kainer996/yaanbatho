@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "village-provisions-v272-20260816"
-CURRENT_BUILD = "scan-home-v378-20260909"
+CURRENT_BUILD = "player-home-v379-20260909"
 PREVIOUS_RELEASE_PIN = "fish-in-the-water-v271-20260815"
 
 

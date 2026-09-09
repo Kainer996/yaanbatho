@@ -96,9 +96,9 @@ def test_the_game_lands_on_the_sound_tab_without_opening_the_microphone():
     landing = function_source("landOnSoundScanScreen")
     assert "switchScreen('scan')" in landing
     assert "startContinuousSoundListening" not in landing
-    # A walk already underway keeps the map.
-    assert "sideQuestActive()" in landing
-    assert "activeWalkingQuest()" in landing
+    # v379 always returns to the desk without ending or modifying a saved walk.
+    assert "sideQuestActive()" not in landing
+    assert "activeWalkingQuest()" not in landing
     # init() is the last function in the file, so read it to the end.
     init = HTML.split("function init() {", 1)[1]
     assert "landOnSoundScanScreen();" in init
