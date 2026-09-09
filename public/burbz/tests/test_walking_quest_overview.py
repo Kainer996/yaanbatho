@@ -83,14 +83,14 @@ def test_quest_chain_links_endpoints_to_nearby_next_starts_only():
     assert result == [1, None, None]
 
 
-def test_area_birds_has_a_persistent_accessible_toggle():
+def test_area_birds_opens_a_separate_accessible_screen():
     html = HTML.read_text(encoding="utf-8")
-    assert 'id="mapAreaBirdsToggle"' in html
-    assert 'aria-controls="mapAreaBirdsList"' in html
-    assert 'aria-expanded="true"' in html
-    assert "BURBZ_AREA_BIRDS_OPEN_KEY" in html
-    assert "setAreaBirdsOpen" in html
-    assert ".map-area-birds-panel.collapsed" in html
+    assert html.count('id="mapAreaBirdsToggle"') == 1
+    assert 'aria-label="Open Area Birds"' in html
+    assert 'id="screen-area-birds"' in html
+    assert 'id="mapAreaBirdsList"' not in html
+    assert "switchScreen('area-birds')" in html
+    assert "function setAreaBirdsOpen() {}" in html
 
 
 def test_map_has_one_premium_show_quests_control_not_two_competing_buttons():

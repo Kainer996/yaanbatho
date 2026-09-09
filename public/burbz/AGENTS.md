@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Area Birds v377 replaces the entire map sidebar with one button and a separate 2D local field guide. Preserve complete regional/range candidates, scientific identity deduplication, honest GBIF record-frequency estimates, coarse-location requests, cache/error/abort boundaries and no discovery/reward mutations. Keep all four new assets in every worker list and the guarded updater, with the changed geographic renderer pin. Details, scientific limits and checks: [AREA_BIRDS_V377.md](AREA_BIRDS_V377.md).
+
 Night questing v376 applies the existing local-clock cycle to the geographic map, with bounded modeled trail torches and native soft light pools. Preserve geography/GPS/save authority, verified elevations, hidden/gesture/reduced-motion pauses, shared GL binding restoration and matching offline/updater pins. Liberation Return must select and save the Villages page before navigation so the birdhouse is visible; three-claim progress explains the existing 16-folk/75%-happy/5-km manual merge rules. Evidence and lifecycle details: [NIGHT_QUESTS_V376.md](NIGHT_QUESTS_V376.md).
 
 Full cards v375 restores two Birdex/Companion portrait columns and routes card taps/keyboard directly to the compact complete card with all five equipment slots. Preserve owned-only action guards, sourced expandable facts, visible-control focus trapping, decoded swipe neighbours and the existing recruitment celebration. Details and evidence: [FULL_CARDS_V375.md](FULL_CARDS_V375.md).

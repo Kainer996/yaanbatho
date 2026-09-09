@@ -4431,6 +4431,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
+<link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 </head>
 <body class="woodland-ui">
@@ -4478,6 +4479,15 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
   <div class="screens">
 
     <!-- LIVE MAP SCREEN -->
+    <section class="screen" id="screen-area-birds" aria-labelledby="areaBirdsTitle">
+      <div class="area-birds-page">
+        <button type="button" id="areaBirdsBack" class="area-birds-back">← Back to map</button>
+        <header class="area-birds-header"><div class="area-birds-eyebrow">THE LOCAL FIELD GUIDE</div><h1 id="areaBirdsTitle">Birds around you</h1><p id="areaBirdsLocation">Finding your area…</p></header>
+        <div class="area-birds-tools"><label>Find a bird<input id="areaBirdsSearch" type="search" placeholder="Name or species" autocomplete="off"></label><label>Order by<select id="areaBirdsSort"><option value="likely">Most likely first</option><option value="rare">Rarest first</option><option value="name">Name A–Z</option></select></label></div>
+        <p id="areaBirdsStatus" role="status"></p><button type="button" id="areaBirdsRefresh" class="area-birds-back">Update local records</button><div id="areaBirdsList" class="area-birds-grid"></div>
+        <details class="area-birds-method"><summary>How this order is estimated</summary><div id="areaBirdsMethod"></div></details>
+      </div>
+    </section>
     <div class="screen active" id="screen-map">
       <div class="live-map-shell clean-cloud-map" id="liveMapShell">
         <div id="burbzLiveMap" aria-label="Live Burbz habitat map"></div><div class="map-fallback-grid" id="mapFallbackGrid" aria-hidden="true"></div>
@@ -4490,7 +4500,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div id="mapQuestFocusFacts"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-secondary" id="mapQuestFocusDetails">Walk details</button><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
-        <aside class="map-area-birds-panel glass" id="mapAreaBirdsPanel" aria-live="polite"><button class="map-area-birds-toggle" id="mapAreaBirdsToggle" aria-controls="mapAreaBirdsList" aria-expanded="true"><span class="map-area-birds-heading"><span class="map-area-birds-title">Area birds</span><span class="map-area-birds-sub">Common → rare</span></span><span class="map-area-birds-count" id="mapAreaBirdsCount"><span id="mapAreaBirdsCountValue">0</span><span class="map-area-birds-chevron" aria-hidden="true">⌄</span></span></button><div class="map-area-birds-list" id="mapAreaBirdsList"></div></aside>
+        <button type="button" class="map-area-birds-tab" id="mapAreaBirdsToggle" aria-label="Open Area Birds">Area Birds <span aria-hidden="true">›</span></button>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
         <div class="map-nearby-card" id="mapNearbyCard"><div class="map-nearby-icon" id="mapNearbyIcon">🐦</div><div><div class="map-nearby-title" id="mapNearbyTitle">Birds nearby</div><div class="map-nearby-copy" id="mapNearbyCopy"></div></div><button class="map-scan-orb" id="mapScanBtn" aria-label="Open scan mode">Scan</button><button class="map-village-orb" id="mapVillageBtn" aria-label="Enter the village">&#127984;</button></div>
@@ -5467,10 +5477,13 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_forest_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
-<script src="geographic_map_3d.js?v=night-quests-v376-20260908"></script>
+<script src="geographic_map_3d.js?v=area-birds-v377-20260909"></script>
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
+<script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
+<script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
+<script src="area_birds.js?v=area-birds-v377-20260909"></script>
 <script src="geographic_daynight_core.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_daynight.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_details_scene.js?v=night-quests-v376-20260908"></script>
@@ -21658,7 +21671,7 @@ function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn 
   const showBtn = $('mapQuestShowBtn'); if (showBtn && !showBtn.dataset.wired) { showBtn.dataset.wired = '1'; showBtn.addEventListener('click', showAllLocalQuests); updateShowQuestsButton(); }
   const sideBtn = $('mapSideQuestBtn'); if (sideBtn && !sideBtn.dataset.wired) { sideBtn.dataset.wired = '1'; sideBtn.addEventListener('click', openMapSideQuest); updateMapSideQuestButton(); }
   const questHud = $('mapQuestHud'); if (questHud && !questHud.dataset.wired) { questHud.dataset.wired = '1'; questHud.addEventListener('click', () => { SFX.tap(); openActiveWalkQuestSheet(); }); }
-  const areaBirdsToggle = $('mapAreaBirdsToggle'); if (areaBirdsToggle && !areaBirdsToggle.dataset.wired) { areaBirdsToggle.dataset.wired = '1'; setAreaBirdsOpen(areaBirdsOpenPreference(), false); areaBirdsToggle.addEventListener('click', () => { SFX.tap(); setAreaBirdsOpen(!areaBirdsToggle.getAttribute('aria-expanded').includes('true')); }); }
+  const areaBirdsToggle = $('mapAreaBirdsToggle'); if (areaBirdsToggle && !areaBirdsToggle.dataset.wired) { areaBirdsToggle.dataset.wired = '1'; areaBirdsToggle.addEventListener('click', () => { SFX.tap(); switchScreen('area-birds'); }); }
   const focusClose = $('mapQuestFocusClose'); if (focusClose && !focusClose.dataset.wired) { focusClose.dataset.wired = '1'; focusClose.addEventListener('click', () => setQuestOverview(false)); }
   const focusBoard = $('mapQuestFocusBoard'); if (focusBoard && !focusBoard.dataset.wired) { focusBoard.dataset.wired = '1'; focusBoard.addEventListener('click', () => { setQuestOverview(false); openQuestBoard(); }); } }
 function startLiveGeolocation() { if (!navigator.geolocation || liveMapWatchId !== null) { if (!navigator.geolocation) setMapLabels('Location unavailable', 'This browser cannot provide location, so Burbz will not pretend you are somewhere else.'); return; } navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Tap ⌖ and allow location to reveal the Kingdom of Alderwing around your own phone.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); liveMapWatchId = navigator.geolocation.watchPosition(pos => handleLivePosition(pos, false), () => {}, { enableHighAccuracy:true, timeout:15000, maximumAge:0 }); }
@@ -21715,7 +21728,7 @@ async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accura
   if (!movedFar && !staleAge && liveMapSpawns.length) { drawMapPickups(lat, lon); return; }
   liveMapLastSpawnFetch = { lat, lon, at: Date.now() };
   const seq = ++liveMapUpdateSeq;
-  const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; setLootHabitatFeatures(features); const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
+  const features = await fetchNearbyHabitatFeatures(lat, lon).catch(() => []); if (seq !== liveMapUpdateSeq) return; areaBirdHabitatEvidence = features; setLootHabitatFeatures(features); const spawns = buildBirdSpawns(lat, lon, features); liveMapSpawns = spawns; liveMapFeatureCount = features.length; drawBirdSpawns(spawns); updateNearbyCard(spawns, features.length); if (liveMapOverlayOpen) renderLikelyBirdOverlay(spawns, features.length, 'Your live position'); }
 async function fetchNearbyHabitatFeatures(lat, lon, radius = 1400) { radius = Math.max(300, Math.min(8000, Math.round(radius))); const query = `[out:json][timeout:8];(node(around:${radius},${lat},${lon})[natural];way(around:${radius},${lat},${lon})[natural];relation(around:${radius},${lat},${lon})[natural];node(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];way(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];relation(around:${radius},${lat},${lon})[leisure~"park|garden|nature_reserve"];node(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];way(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];relation(around:${radius},${lat},${lon})[landuse~"forest|meadow|grass|farmland|orchard|recreation_ground|allotments"];node(around:${radius},${lat},${lon})[waterway];way(around:${radius},${lat},${lon})[waterway];node(around:${radius},${lat},${lon})[water];way(around:${radius},${lat},${lon})[water];);out center tags 70;`; const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8' }, body:'data=' + encodeURIComponent(query) }); if (!res.ok) throw new Error('Overpass ' + res.status); const data = await res.json(); return (data.elements || []).map(el => ({ lat:el.lat || (el.center && el.center.lat), lon:el.lon || (el.center && el.center.lon), tags:el.tags || {} })).filter(f => Number.isFinite(f.lat) && Number.isFinite(f.lon)); }
 function classifyHabitat(tags = {}) { const natural = tags.natural || '', landuse = tags.landuse || '', leisure = tags.leisure || '', waterway = tags.waterway || ''; if (natural === 'coastline' || tags.place === 'sea' || /beach|bay|strait/.test(natural)) return 'coast'; if (waterway || /water|river|stream|lake|pond|reservoir/.test(natural + ' ' + (tags.water || ''))) return 'water'; if (/wetland|marsh|reedbed|fen|bog/.test(natural)) return 'wetland'; if (/heath/.test(natural)) return 'heath'; if (/tree|wood|forest|scrub/.test(natural) || /forest|orchard/.test(landuse)) return 'woodland'; if (/park|garden|nature_reserve|recreation_ground/.test(leisure + ' ' + landuse)) return 'park'; if (/farmland|farmyard|allotments/.test(landuse)) return 'farmland'; if (/grassland|meadow|grass/.test(natural + ' ' + landuse)) return 'grassland'; if (/peak|fell|scree/.test(natural)) return 'hills'; return 'urban'; }
 function coordInBox(lat, lon, box) {
@@ -22336,40 +22349,67 @@ function collectMapPickup(pickup, el) {
   }
   showToast(toastGlyph + ' ' + rewardText);
 }
-let liveMapAreaRows = [];
-const BURBZ_AREA_BIRDS_OPEN_KEY = 'burbz_area_birds_open';
-function areaBirdsOpenPreference() {
-  try { return localStorage.getItem(BURBZ_AREA_BIRDS_OPEN_KEY) !== '0'; } catch (e) { return true; }
+let areaBirdHabitatEvidence = [];
+let areaBirdsBound = false;
+function areaBirdsCatalogue(context) {
+  if (!context.position || context.region === 'unsupported') return [];
+  const region = context.region, {lat,lon} = context.position;
+  const expansions = region === 'uk' ? [UK50,UK26,UK_FINAL,UK4] : region === 'au' ? [AU_EXP,AU50] : [];
+  const metadata = new Map();
+  expansions.forEach(pack => (pack.profiles || []).forEach(p => metadata.set(normaliseSpeciesKey(p.name),p)));
+  const national = new Map(NATIONAL.profiles.filter(p => p.regionData?.[region]).map(p => [normaliseSpeciesKey(p.name),p]));
+  const names = [...new Set([...(REGION_AREA_SPECIES[region] || []),...[...national.values()].map(p => p.name)])];
+  return names.filter(name => speciesAllowedInRegion(name,region)).map(name => {
+    const base = findSpeciesProfile(name) || {}, supplement = metadata.get(normaliseSpeciesKey(name)), nat = national.get(normaliseSpeciesKey(name));
+    const profile = supplement || nat || base, regional = nat?.regionData?.[region];
+    const habitats = [...new Set([...(regional?.habitats || profile.habitats || []),...Object.entries(REGIONAL_HABITAT_BIRD_POOLS[region] || {}).filter(([h,pool]) => h !== 'default' && pool.includes(name)).map(([h]) => h)])];
+    const eligible = month => {
+      if (nat) return NATIONAL.isEligible(region,name,lat,lon,month);
+      if (!speciesNativeToRegion(name,region)) return false;
+      return expansions.every(pack => !pack.isEligible || pack.isEligible(name,lat,lon,month));
+    };
+    const months = regional?.months || profile.months || null;
+    const identity = window.BurbzAreaBirdsTaxonomy?.byName[name];
+    return {name,scientific:identity?.scientific || base.scientificName || base.scientific || profile.scientificName || profile.scientific || '',canonical:identity?.canonical,recordKeys:identity?.keys,recordMatchVerified:!!identity?.verified,excluded:regional?.status === 'B',bird:{...base,commonName:name},habitats,months,inRange:Array.from({length:12},(_,i)=>i+1).some(eligible),sources:profile.sources || []};
+  });
 }
-function setAreaBirdsOpen(open, persist = true) {
-  const panel = $('mapAreaBirdsPanel'), toggle = $('mapAreaBirdsToggle');
-  open = !!open;
-  panel?.classList.toggle('collapsed', !open);
-  if (toggle) {
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    toggle.setAttribute('aria-label', open ? 'Hide area birds' : 'Show area birds');
-  }
-  if (persist) { try { localStorage.setItem(BURBZ_AREA_BIRDS_OPEN_KEY, open ? '1' : '0'); } catch (e) {} }
+function renderAreaBirdsScreen() {
+  if (!window.BurbzAreaBirds) return;
+  if (!areaBirdsBound) { BurbzAreaBirds.bind(); areaBirdsBound = true; }
+  BurbzAreaBirds.show({
+    visible:() => currentScreen === 'area-birds',
+    context:() => { const position=liveMapLastPosition,region=position?mapRegionForCoords(position.lat,position.lon):'unsupported';return {position,precise:liveMapHasPrecisePosition,region,regionName:({uk:'United Kingdom',au:'Australia',es:'Spain'})[region] || 'Your area',stale:!position?.at || Date.now()-position.at>300000,habitats:[...new Set(areaBirdHabitatEvidence.map(f=>classifyHabitat(f.tags)))],labels:HABITAT_LABELS}; },
+    catalogue:areaBirdsCatalogue,
+    art:row => birdOnlyImgHTML(row.bird,'area-bird-art').replace('<img ','<img loading="lazy" decoding="async" '),
+    preview:row => { SFX.tap(); showMapBirdPreview({species:row.name,bird:row.bird,habitats:new Set(row.habitats.map(h=>HABITAT_LABELS[h]||h)),rarityLabel:row.likelihood+' · '+row.frequency}); },
+    back:() => { SFX.tap(); handleBurbzBackPress(); if(currentScreen === 'map') $('mapAreaBirdsToggle')?.focus({preventScroll:true}); }
+  });
 }
-function renderAreaBirdColumns(spawns = liveMapSpawns) { const list = $('mapAreaBirdsList'); if (!list) return; const rows = likelyBirdRows(spawns || []); liveMapAreaRows = rows.slice(0,9); const count = $('mapAreaBirdsCountValue'); if (count) count.textContent = String(liveMapAreaRows.length); list.innerHTML = liveMapAreaRows.map((row, i) => { const img = birdOnlyImgHTML(row.bird || { commonName:row.species }, 'map-area-bird-art'); return `<div class="map-area-bird" data-area-bird="${i}" data-rarity="${escapeHtml(row.rarityLabel)}">${img}<div><div class="map-area-bird-name">${escapeHtml(row.species)}</div><div class="map-area-bird-rarity">${escapeHtml(row.rarityLabel)}</div></div></div>`; }).join('') || '<div class="map-area-birds-sub">Walk here to reveal local birds.</div>';
-  if (!list.dataset.wired) { list.dataset.wired = '1'; list.addEventListener('click', ev => { const card = ev.target.closest('[data-area-bird]'); if (!card) return; const row = liveMapAreaRows[Number(card.dataset.areaBird)]; if (row) { SFX.tap(); showMapBirdPreview(row); } }); } }
+// Quest entry/exit kept these hooks; the map now always has one compact tab.
+function areaBirdsOpenPreference() { return false; }
+function setAreaBirdsOpen() {}
+function renderAreaBirdColumns() { if (currentScreen === 'area-birds') renderAreaBirdsScreen(); }
 
 // Tap a potential bird on the map screen → big art + its full name.
+function closeMapBirdPreview() { const el=$('mapBirdPreview');if(!el)return false;const focus=el.returnFocus;el.remove();focus?.focus({preventScroll:true});return true; }
 function showMapBirdPreview(row) {
-  document.getElementById('mapBirdPreview')?.remove();
+  closeMapBirdPreview();
   const bird = row.bird || { commonName: row.species };
   const art = getBirdArtUrl(bird);
   const habitats = row.habitats ? [...row.habitats].slice(0, 3).join(' · ') : '';
   const el = document.createElement('div');
   el.id = 'mapBirdPreview';
   el.className = 'map-bird-preview';
+  el.returnFocus = document.activeElement;
+  el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',row.species);
   el.innerHTML = '<div class="map-bird-preview-card">' +
     (art ? '<img src="' + art + '" alt="' + escapeHtml(row.species) + '">' : '<div style="font-size:96px">' + (row.emoji || '🐦') + '</div>') +
     '<div class="map-bird-preview-name">' + escapeHtml(row.species) + '</div>' +
     '<div class="map-bird-preview-sub">' + escapeHtml(row.rarityLabel || '') + (habitats ? ' · likely near ' + escapeHtml(habitats) : '') + '</div>' +
     '<button class="map-bird-preview-close">Close</button></div>';
-  el.addEventListener('click', ev => { if (ev.target === el || ev.target.classList.contains('map-bird-preview-close')) el.remove(); });
-  document.body.appendChild(el);
+  el.addEventListener('click', ev => { if (ev.target === el || ev.target.classList.contains('map-bird-preview-close')) closeMapBirdPreview(); });
+  el.addEventListener('keydown',ev=>{if(ev.key==='Escape'){ev.preventDefault();ev.stopPropagation();closeMapBirdPreview();}else if(ev.key==='Tab'){ev.preventDefault();el.querySelector('button').focus();}});
+  document.body.appendChild(el);el.querySelector('button').focus({preventScroll:true});
 }
 function drawBirdSpawns(spawns) { if (!liveMap) { buildFallbackHabitatMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon, liveMapLastPosition.source, spawns); return; } liveMapMarkers.forEach(marker => marker.remove()); liveMapPoiMarkers.forEach(marker => marker.remove()); liveMapBirdChips.forEach(el => el.remove()); liveMapMarkers = []; liveMapPoiMarkers = []; liveMapBirdChips = []; ensureBurbzMapSources(); enableBurbzTerrain(); drawHabitatOverlayZones(spawns); drawTreeMarkers(spawns); drawVillageMarkers(liveMapLastPosition.lat, liveMapLastPosition.lon); drawMapPickups(liveMapLastPosition.lat, liveMapLastPosition.lon); renderAreaBirdColumns(spawns); }
 function addMapBirdChip(coords, species, birdSymbol, spawn) { const shell = $('liveMapShell'); if (!shell || !liveMap) return; const point = liveMap.project(coords); const chip = makeHtmlMarker('burbz-map-bird-chip', `<div class="burbz-marker-orb">${birdSymbol}</div><div class="burbz-marker-label">${escapeHtml(species)}</div>`); chip.style.left = Math.max(56, Math.min(shell.clientWidth - 56, point.x)) + 'px'; chip.style.top = Math.max(190, Math.min(shell.clientHeight - 190, point.y)) + 'px'; chip.addEventListener('click', () => updateNearbyCard([spawn], 1)); shell.appendChild(chip); liveMapBirdChips.push(chip); }
@@ -22851,6 +22891,7 @@ function switchScreen(name) {
     try { item.scrollIntoView({ block:'nearest', inline:'nearest', behavior:'smooth' }); } catch (e) {}
   });
 
+  if (name !== currentScreen && currentScreen === 'area-birds') window.BurbzAreaBirds?.leave();
   if (name !== currentScreen) { geographicPlaces?.close(); window.BurbzVillageWalk?.close('navigation'); }
   currentScreen = name;
   document.body.setAttribute('data-active-screen', name);
@@ -22860,6 +22901,7 @@ function switchScreen(name) {
   // Screen-specific init
   if (name === 'map') renderLiveMap();
   if (name === 'birdex') renderBirdex();
+  if (name === 'area-birds') { renderAreaBirdsScreen(); $('areaBirdsBack')?.focus({preventScroll:true}); }
   if (name === 'battle') renderBattleSelect();
   if (name === 'academy') { wireAcademyZones(); renderAcademy(); applyAcademyView(); }
   else academyViewPause();
@@ -42851,7 +42893,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'night-quests-v376-20260908';
+const BURBZ_BUILD = 'area-birds-v377-20260909';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -42899,7 +42941,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'academy_tour', chapter:'Academy', title:'Recruit companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks lets you recruit birds you have discovered. The Kitchen supplies their food.', id:'lesson-22' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Build the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Merlin covers the cost. Tap Build on the Kitchen, then place it on the tree to prepare your companions’ food.', action:{ event:'kitchen-built', mode:'free', hint:'Build the Kitchen and place it on the tree' }, id:'kitchen-build-v354' },
   { chapterId:'academy_tour', chapter:'Academy', title:'Explore the map', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Tap Map. Player Quests will guide you through the other buildings.', action:{ event:'tab:map', hint:'Tap Map' }, id:'lesson-25' },
-  { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The map follows your location. Area Birds suggests nearby species; it does not confirm sightings.', id:'lesson-26' },
+  { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The map follows your location. Open Area Birds for the local field guide; its records are estimates, not confirmed sightings.', id:'lesson-26' },
   { chapterId:'explore', chapter:'The Real World', title:'Walking quests', screen:'map', target:'#mapQuestShowBtn', text:'Tap Show Quests to find walking quests on nearby public paths.', id:'lesson-27' },
   { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera or Sound. Confirmed discoveries appear in your Birdex.', id:'lesson-29' },
   { chapterId:'scan', chapter:'Discovery', title:'Sound identification', screen:'scan', target:'#scanSoundBtn', text:'Sound uploads short microphone clips for bird identification. Location help is optional.', id:'lesson-30' },
@@ -43833,6 +43875,7 @@ function recordScreenTrail(from) {
 // Close the topmost open layer, if any. Returns true when something closed —
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
+  if(closeMapBirdPreview())return true;
   if (window.BurbzVillageWalk?.close('back')) return true;
   if (geographicPlaces?.close()) return true;
   if ($('burbzFeedSheet')?.classList.contains('open')) { closeFeedSheet(); return true; }
