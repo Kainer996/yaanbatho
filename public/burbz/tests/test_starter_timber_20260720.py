@@ -71,7 +71,7 @@ def test_starter_timber_is_wired_into_the_live_map_and_stops_after_both_openers(
     draw = html[draw_start:html.index("\nfunction collectMapPickup", draw_start)]
     assert "starterTimberPickupsNear(lat, lon)" in draw
     collect_start = html.index("function collectMapPickup(")
-    collect = html[collect_start:html.index("\nlet liveMapAreaRows", collect_start)]
+    collect = html[collect_start:html.index("\nlet areaBirdHabitatEvidence", collect_start)]
     assert "collectStarterTimber(pickup)" in collect
     assert "isAcademyBuildingBuilt('tavern')) return true;" in html
     assert "starterTimber: { taken: {} }" in html      # default state entry

@@ -407,7 +407,7 @@
       const core=root.BurbzGeographicCameraCore, rect=container.getBoundingClientRect();
       if(!core)return null;
       const elements=fitOptions.occluders||Array.from(doc?.querySelectorAll(
-        '#mapQuestFocusCard.show, #liveMapShell .map-zoom-controls, #liveMapShell .map-locate-btn, #liveMapShell .map-quest-btn, #liveMapShell .geographic-map-control, #liveMapShell .map-area-birds-panel.collapsed, #liveMapShell .maplibregl-ctrl-attrib')||[]);
+        '#mapQuestFocusCard.show, #liveMapShell .map-zoom-controls, #liveMapShell .map-locate-btn, #liveMapShell .map-quest-btn, #liveMapShell .geographic-map-control, #liveMapShell .map-area-birds-tab, #liveMapShell .maplibregl-ctrl-attrib')||[]);
       const occluders=elements.filter(e=>e&&e.getClientRects().length).map(e=>{
         const b=e.getBoundingClientRect();return {left:b.left-rect.left,top:b.top-rect.top,right:b.right-rect.left,bottom:b.bottom-rect.top};
       });
