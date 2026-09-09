@@ -4431,6 +4431,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
+<link rel="stylesheet" href="player_home.css?v=player-home-v379-20260909">
 <link rel="stylesheet" href="scan_home.css?v=scan-home-v378-20260909">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4533,6 +4534,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
     <!-- SCAN SCREEN -->
     <div class="screen" id="screen-scan" data-scan-path="camera-only">
+      <div class="scan-home-command-bar"><span>ALDERWING · COMMAND CENTRE</span><button type="button" id="playerHomeStand">Stand up · Your house</button></div>
       <div class="scan-home-hero">
         <img class="scan-home-backdrop" src="assets/home-v378/woodland-lookout.webp" alt="" fetchpriority="high">
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Wonder is<br>just outside.</h1></div>
@@ -5533,6 +5535,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="player_home_core.js?v=player-home-v379-20260909"></script>
+<script src="player_home_scene.js?v=player-home-v379-20260909"></script>
+<script src="player_home.js?v=player-home-v379-20260909"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -7157,6 +7162,7 @@ function mergeCloudState(cloudState) {
   const merged = { ...current, ...(cloudState && typeof cloudState === 'object' ? cloudState : {}) };
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
+  if (globalThis.BurbzPlayerHomeCore) merged.playerHome = globalThis.BurbzPlayerHomeCore.normalize(merged.playerHome, true);
   merged.flock.forEach(b => { if (b && typeof b === 'object') applySpecialBirdCharacter(b); }); // cloud special characters too
   merged.flock.forEach(migrateBirdPersonality);
   const core = dietHungerCore();
@@ -7209,6 +7215,7 @@ function signOutCloud() {
 }
 
 function refreshAllScreens() {
+  window.BurbzPlayerHome?.close('save-replaced');
   loadState();
   updateHeader();
   initQuests();
@@ -42939,7 +42946,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'scan-home-v378-20260909';
+const BURBZ_BUILD = 'player-home-v379-20260909';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -43649,14 +43656,14 @@ function endMerlinTutorial(completed) {
 // First launch: after the intro video, Merlin tells the Tale of Burbz.
 function maybeStartMerlinTutorial(delay = 600) {
   if (merlinChaptersSeen().includes('story')) return;
-  setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
+  setTimeout(() => { if (!merlinTutActive && !window.BurbzPlayerHome?.isOpen()) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
 }
 
 // Gradual teaching: each remaining chapter fires the first time its screen
 // opens — plus the guided-flow hand-offs, which fire on progress instead of
 // screens and survive reloads (an interrupted beat re-fires on the next visit).
 function maybeStartMerlinChapterForScreen(screenName) {
-  if (merlinTutActive) return;
+  if (merlinTutActive || window.BurbzPlayerHome?.isOpen()) return;
   // The story always comes first; hold screen chapters until Merlin has spoken.
   if (!merlinChaptersSeen().includes('story')) return;
   const seen = merlinChaptersSeen();
@@ -43922,6 +43929,7 @@ function recordScreenTrail(from) {
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
   if(closeMapBirdPreview())return true;
+  if (window.BurbzPlayerHome?.back()) return true;
   if (window.BurbzVillageWalk?.close('back')) return true;
   if (geographicPlaces?.close()) return true;
   if ($('burbzFeedSheet')?.classList.contains('open')) { closeFeedSheet(); return true; }
@@ -44103,12 +44111,36 @@ function addDemoBirds() {
 // ============================================================================
 // Burbz opens where the game begins: Merlin's wand, listening for real birds.
 // The microphone stays off until the player asks for it — landing on the tab
-// only shows the wand. A walk already underway keeps the map instead, and
-// Merlin's own tutorial pulls the screen it needs a moment later.
+// only shows the controls. Returning players begin at their command desk;
+// saved walks remain available through their existing routes.
+// The personal clearing is separate from claimed villages and their economy.
+function initializePlayerHome() {
+  if (!window.BurbzPlayerHome || !window.BurbzPlayerHomeCore) { maybeShowIntroCutscene(); return; }
+  const veteran = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1' || gameState.player.level > 1 || gameState.flock.length > 0;
+  gameState.playerHome = BurbzPlayerHomeCore.normalize(gameState.playerHome, veteran);
+  saveState();
+  BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),grade:burbzDaylightGradeNow,
+    commit:action=>{
+      const proposal=BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
+      if(!proposal.ok)return proposal;
+      const before=gameState.playerHome,branches=gameState.player.branches;
+      gameState.playerHome=proposal.home;gameState.player.branches=proposal.wallet.branches;
+      const saved=durableSaveState();
+      if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
+      try{updateHeader();}catch(e){}return{ok:true};
+    },
+    command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');$('screen-scan')?.classList.add('ph-stand-transition');setTimeout(()=>$('screen-scan')?.classList.remove('ph-stand-transition'),600);maybeStartMerlinTutorial(650);},
+    onClose:()=>{document.body.classList.add('player-at-desk');}
+  });
+  $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutActive)endMerlinTutorial(false);BurbzPlayerHome.open('room');});
+  document.body.classList.add('player-at-desk');
+  if(gameState.playerHome.intro!=='done')BurbzPlayerHome.open(gameState.playerHome.intro==='desk'?'room':'overview');
+  else maybeShowIntroCutscene();
+}
+
 function landOnSoundScanScreen() {
   try {
-    if (typeof sideQuestActive === 'function' && sideQuestActive()) return;
-    if (typeof activeWalkingQuest === 'function' && activeWalkingQuest()) return;
+    // Returning players wake at the command desk; active walks remain saved.
     switchScreen('scan');
   } catch (e) {}
 }
@@ -44135,7 +44167,7 @@ function init() {
   landOnSoundScanScreen();
   const buildLine = $('settingsBuildLine');
   if (buildLine) buildLine.textContent = 'Build ' + BURBZ_BUILD;
-  maybeShowIntroCutscene();
+  initializePlayerHome();
   if (typeof updateMerlinFlowPointer === 'function') setTimeout(updateMerlinFlowPointer, 900);
   resumeSideQuestIfAny();
   startPetWander();

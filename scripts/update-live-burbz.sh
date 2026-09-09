@@ -28,6 +28,10 @@ BASE="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/public/burbz"
 # local source instead: the live directory as it stands, or the repo checkout
 # this script is running from. Full backup: /var/backups/burbz-art/.
 LFS_FILES=(
+  "player_home.css"
+  "player_home_core.js"
+  "player_home_scene.js"
+  "player_home.js"
   "assets/comic-ui/ink-paper-v359.webp"
   "assets/comic-ui/battlefield-v359.webp"
   "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"

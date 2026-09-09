@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "kitchen-clean-table-v333-20260827"
-CURRENT_BUILD = "scan-home-v378-20260909"
+CURRENT_BUILD = "player-home-v379-20260909"
 
 
 def run_node(source: str) -> dict:
