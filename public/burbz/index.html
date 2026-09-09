@@ -18549,7 +18549,7 @@ function ensureCompletionNotices() {
   if (!Array.isArray(gameState.completionNotices)) gameState.completionNotices = [];
   return gameState.completionNotices;
 }
-function queueCompletionNotice(notice) {
+function queueCompletionNotice(notice, deferredEffects) {
   if (!notice || !notice.kind) return;
   const list = ensureCompletionNotices();
   // One card per subject — a fresh completion replaces its older card.
@@ -18566,7 +18566,8 @@ function queueCompletionNotice(notice) {
   });
   while (kept.length > COMPLETION_NOTICE_LIMIT) kept.shift();
   gameState.completionNotices = kept;
-  renderCompletionNotices();
+  if (deferredEffects) deferredEffects.push(renderCompletionNotices);
+  else renderCompletionNotices();
 }
 function questNoticeClaimed(notice) {
   const questId = notice && notice.target && notice.target.questId;
@@ -18661,7 +18662,7 @@ function focusQuestFromNotice(target) {
     setTimeout(() => el.classList.remove('quest-target-card'), 3200);
   }));
 }
-function queueQuestCompleteNotice(q) {
+function queueQuestCompleteNotice(q, deferredEffects) {
   if (!q || !q.id) return;
   // A quest whose board section the gate still holds closed completes
   // quietly — its card waits in the section and greets the player there.
@@ -18670,7 +18671,7 @@ function queueQuestCompleteNotice(q) {
         (WEEKLY_QUESTS.includes(q) && !featureGateOpen('quests_weekly')) ||
         (ACHIEVEMENT_QUESTS.includes(q) && !featureGateOpen('quests_achievements'))) return;
   } catch (e) {}
-  queueCompletionNotice({ kind: 'quest', icon: q.icon || '\u{1F3C5}', title: q.name || 'Quest complete', sub: 'Quest complete — tap to claim', target: { questId: q.id } });
+  queueCompletionNotice({ kind: 'quest', icon: q.icon || '\u{1F3C5}', title: q.name || 'Quest complete', sub: 'Quest complete — tap to claim', target: { questId: q.id } }, deferredEffects);
 }
 
 // ============================================================================
@@ -20691,12 +20692,13 @@ function clearSideQuestFromMap() {
 // is saved and pinned on the live map for good, even after the quest ends.
 const SIDE_QUEST_NPC_LANDMARK_CAP = 30;
 let sideQuestNpcMarkers = [];
-function rememberSideQuestNpc(active, d) {
+function rememberSideQuestNpc(active, d, deferredEffects) {
   const sq = ensureSideQuestState();
   if (sq.npcLandmarks.some(n => n.id === d.id)) return;
   sq.npcLandmarks.push({ id: d.id, species: d.species, rarity: d.rarity || 'common', lat: d.lat, lon: d.lon, foundAt: d.foundAt || new Date().toISOString(), questId: active ? active.id : null });
   if (sq.npcLandmarks.length > SIDE_QUEST_NPC_LANDMARK_CAP) sq.npcLandmarks.splice(0, sq.npcLandmarks.length - SIDE_QUEST_NPC_LANDMARK_CAP);
-  drawSideQuestNpcLandmarks();
+  if (deferredEffects) deferredEffects.push(drawSideQuestNpcLandmarks);
+  else drawSideQuestNpcLandmarks();
 }
 function drawSideQuestNpcLandmarks() {
   sideQuestNpcMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
@@ -20771,30 +20773,41 @@ async function sideQuestClaimDiscovery(id, opts) {
     showToast('🎁 TREASURE FOUND! +' + loot.coins + ' coins · +' + loot.xp + ' XP · ' + foodText);
     return true;
   }
-  if (d.kind === 'lore') {
-    // A wayside tale: hedge-lore found only off the roads. It joins the
-    // Feathered Folio next to the Twenty Roads scrolls.
+  const snapshot = snapshotGameState(), effects = [];
+  const previousLevel = Number(gameState.player.level) || 1;
+  let lines = [], added = false;
+  try {
     d.claimed = true;
-    const sq = ensureSideQuestState();
-    if (d.tale && !sq.waysideTales.some(t => t.id === d.tale.id)) {
-      sq.waysideTales.push({ id: d.tale.id, title: d.tale.title, text: d.tale.text, foundAt: d.foundAt || new Date().toISOString() });
+    if (d.kind === 'lore') {
+      const sq = ensureSideQuestState();
+      if (d.tale && !sq.waysideTales.some(t => t.id === d.tale.id)) {
+        sq.waysideTales.push({ id: d.tale.id, title: d.tale.title, text: d.tale.text, foundAt: d.foundAt || new Date().toISOString() });
+      }
+      applyPlayerXpState(10);
+    } else if (d.kind === 'weapon') {
+      lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true }), effects);
+      applyPlayerXpState(15);
+    } else {
+      rememberSideQuestNpc(active, d, effects);
+      added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
+      applyPlayerXpState(15);
     }
-    addPlayerXp(10);
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    showToast('Your discovery could not be saved. Please try again — it is still here.');
+    return false;
+  }
+  effects.forEach(effect => { try { effect(); } catch (error) { console.warn('Discovery presentation failed', error); } });
+  announcePlayerLevelUps(previousLevel);
+  if (d.kind === 'lore') {
     SFX.questComplete();
     if (d.tale && !quiet) showQuestNpcDialog('📜 ' + d.tale.title, d.tale.text + ' (+10 XP — kept in your Feathered Folio)');
     else if (d.tale) showToast('📜 Wayside tale found: ' + d.tale.title + ' (+10 XP)');
   } else if (d.kind === 'weapon') {
-    d.claimed = true;
-    let lines = [];
-    try { lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true })); } catch (e) {}
-    addPlayerXp(15);
     SFX.capture();
     showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
   } else {
-    d.claimed = true;
-    rememberSideQuestNpc(active, d); // the quest giver keeps this perch on the map
-    const added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
-    addPlayerXp(15);
     SFX.levelUp();
     if (quiet) showToast('🐦 The wandering quest giver sends the ' + d.species + (added ? ' to the Academy Barracks!' : ' with regards. (+15 XP)'));
     else showQuestNpcDialog('Wandering quest giver', added
@@ -20802,7 +20815,6 @@ async function sideQuestClaimDiscovery(id, opts) {
       : 'You found me off the beaten path, explorer! My friend the ' + d.species + ' already flies with you — take this instead. (+15 XP)');
   }
   vibrate(QUEST_BUZZ.chest);
-  saveState();
   updateHeader();
   renderInventory();
   drawSideQuestOnMap();
@@ -22035,7 +22047,7 @@ function consumeEquippedPotion(bird) {
 }
 
 // Apply a rolled loot bundle to the save and return display strings.
-function grantLootDrops(drops) {
+function grantLootDrops(drops, deferredEffects) {
   const L = lootCore();
   const lines = [];
   (drops || []).forEach(d => {
@@ -22050,7 +22062,7 @@ function grantLootDrops(drops) {
       const g = L.gearById(d.id);
       gameState.inventory.gear[d.id] = (gameState.inventory.gear[d.id] || 0) + d.qty;
       lines.push({ icon:(g && g.icon) || '🗡️', gearId:d.id, text:((g && g.label) || d.id) + '!', rarity:(g && g.rarity) || null });
-      updateQuestProgress('gear_found', d.qty);
+      updateQuestProgress('gear_found', d.qty, deferredEffects);
     }
   });
   return lines;
@@ -22099,7 +22111,7 @@ const MAP_PICKUP_TYPES = [
   { id:'gritbank', glyph:'⚪', label:'Gravel bank',   weight:7,  biomes:{ water:12, coast:12, hills:10 }, grant() { addLarderIngredient('gizzard_grit', 1); return '+1 Gizzard Grit (Stores larder)'; } },
   { id:'midges',   glyph:'🦟', label:'Midge cloud',   weight:6,  biomes:{ wetland:11, water:10, urban:3 }, grant() { addLarderIngredient('aerial_midges', 1); return '+1 Cloud of Midges (Stores larder)'; } },
   { id:'chest',    glyph:CHEST_SVG, toastGlyph:'🧰', label:'Treasure chest', weight:5,  biomes:{ coast:8, water:6 }, grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
-  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  biomes:{ urban:13, water:2 }, grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
+  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  biomes:{ urban:13, water:2 }, grant(r) { const n = 8 + Math.floor(r() * 9); applyPlayerXpState(n); return '+' + n + ' Trainer XP'; } },
   { id:'birdscroll', glyph:'🪶', label:'Study scroll', weight:5,  biomes:{ urban:8, water:2 }, grant(r) { const key = randomXpScrollKey(r); addBirdXpItemToBag(key, 1); const it = birdXpItem(key); return '+1 ' + it.label + ' (' + birdXpItemDetail(key) + ') — use it from your Stores'; } },
   // --- Fletcher's Forge materials, lying where the kingdom left them ---
   { id:'twig',     glyph:'🪵', label:'Oak twig',      weight:12, biomes:{ woodland:30, park:16, urban:5, water:2, coast:3 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'oak_twig', qty:1 }])); } },
@@ -22109,8 +22121,8 @@ const MAP_PICKUP_TYPES = [
   { id:'moondust', glyph:'🌙', label:'Moon dust',     weight:4,  grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'moon_dust', qty:1 }])); } },
   { id:'stormglass', glyph:'🌩️', label:'Storm glass', weight:3,  biomes:{ coast:7, hills:6 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'storm_glass', qty:1 }])); } },
   // --- Gear on the ground: caches shimmer, relics glow ---
-  { id:'gearcache', glyph:'🎒', label:'Feathered cache', weight:6, cls:'gear', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_cache', { rng:r, pity:gameState.lootPity, guaranteeGear:true }))); } },
-  { id:'relic',    glyph:'✨', label:'Relic chest',   weight:2,  cls:'relic', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_relic', { rng:r, pity:gameState.lootPity }))); } },
+  { id:'gearcache', glyph:'🎒', label:'Feathered cache', weight:6, cls:'gear', grant(r, effects) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_cache', { rng:r, pity:gameState.lootPity, guaranteeGear:true }), effects)); } },
+  { id:'relic',    glyph:'✨', label:'Relic chest',   weight:2,  cls:'relic', grant(r, effects) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_relic', { rng:r, pity:gameState.lootPity }), effects)); } },
   // --- Habitat finds: this loot only lies where it belongs ---
   { id:'minnow',   glyph:'🐟', label:'Minnow shallows', weight:0, biomes:{ water:26, wetland:10 }, grant() { addLarderIngredient('live_minnow', 1); return '+1 Live Minnow (Stores larder)'; } },
   { id:'trout',    glyph:'🎣', label:'Rising trout',  weight:0, biomes:{ water:10 }, grant() { addLarderIngredient('river_trout', 1); return '+1 River Trout (Stores larder)'; } },
@@ -22181,9 +22193,6 @@ function collectStarterTimber(pickup) {
   if (state.taken[pickup.starterIndex]) return null;
   state.taken[pickup.starterIndex] = true;
   addBranches(STARTER_TIMBER_PER_BUNDLE);
-  if (starterTimberDone()) {
-    setTimeout(() => showToast('🏠 Enough timber for the Barracks! Raise it at the Academy.'), 1300);
-  }
   return '+' + STARTER_TIMBER_PER_BUNDLE + ' branches';
 }
 
@@ -22347,20 +22356,31 @@ function collectMapPickup(pickup, el) {
   const toastGlyph = pickup.type.toastGlyph || pickup.type.glyph;
   const gate=mapGatheringGate(pickup);
   if(!gate.ready){SFX.tap();showToast(gate.reason);return;}
-  const pickupSnapshot=pickup.woodland?snapshotGameState():null;
+  const pickupSnapshot = snapshotGameState(), effects = [];
+  const previousLevel = Number(gameState.player.level) || 1;
   let rewardText;
-  if (pickup.starterIndex != null) {
-    rewardText = collectStarterTimber(pickup);
-    if (!rewardText) return;
-  } else {
-    const state = ensureMapPickupState();
-    if (state.collected[pickup.key]) return;
-    state.collected[pickup.key] = true;
-    const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
-    rewardText = pickup.type.grant(r);
+  try {
+    if (pickup.starterIndex != null) {
+      rewardText = collectStarterTimber(pickup);
+      if (!rewardText) return;
+    } else {
+      const state = ensureMapPickupState();
+      if (state.collected[pickup.key]) return;
+      state.collected[pickup.key] = true;
+      const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
+      rewardText = pickup.type.grant(r, effects);
+    }
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(pickupSnapshot);
+    showToast('Could not save. Your find is still here; try again.');
+    return;
   }
-  if(pickup.woodland){try{durableSaveState({throwOnFailure:true});}catch(error){restoreGameStateSnapshot(pickupSnapshot);showToast('Could not save. Your timber is still here; try again.');return;}}
-  else saveState();
+  effects.forEach(effect => { try { effect(); } catch (error) { console.warn('Gathering presentation failed', error); } });
+  announcePlayerLevelUps(previousLevel);
+  if (pickup.starterIndex != null && starterTimberDone()) {
+    setTimeout(() => showToast('🏠 Enough timber for the Barracks! Raise it at the Academy.'), 1300);
+  }
   updateHeader();
   SFX.questComplete(); vibrate(25);
   // Pop a little reward flourish where the item stood, then fade the marker.
@@ -42529,14 +42549,14 @@ function initQuests() {
   saveState();
 }
 
-function updateQuestProgress(type, amount) {
+function updateQuestProgress(type, amount, deferredEffects) {
   const allQuests = [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS];
   allQuests.forEach(q => {
     if (q.type === type && gameState.quests[q.id] && !gameState.quests[q.id].claimed) {
       const state = gameState.quests[q.id];
       const before = state.progress || 0;
       state.progress = Math.min(q.target, before + amount);
-      if (before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
+      if (before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q, deferredEffects);
     }
   });
   // Also update total_species achievements
@@ -42547,7 +42567,7 @@ function updateQuestProgress(type, amount) {
       if (state) {
         const before = state.progress || 0;
         state.progress = Math.min(q.target, uniqueSpecies);
-        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
+        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q, deferredEffects);
       }
     });
   }
@@ -42559,7 +42579,7 @@ function updateQuestProgress(type, amount) {
       if (state) {
         const before = state.progress || 0;
         state.progress = Math.min(q.target, knownDiets);
-        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
+        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q, deferredEffects);
       }
     });
   }
@@ -42572,13 +42592,17 @@ function updateQuestProgress(type, amount) {
     if (activePq.type === type) pqState.progress = Math.min(activePq.target, before + amount);
     syncActivePlayerQuest();
     if (before < activePq.target && (pqState.progress || 0) >= activePq.target) {
-      showToast('\u{1F3C5} Player quest complete: ' + activePq.name + ' — claim it in Quests!');
-      queueQuestCompleteNotice(activePq);
-      if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} }
+      const announce = () => showToast('\u{1F3C5} Player quest complete: ' + activePq.name + ' — claim it in Quests!');
+      if (deferredEffects) deferredEffects.push(announce); else announce();
+      queueQuestCompleteNotice(activePq, deferredEffects);
+      const redraw = () => { if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} } };
+      if (deferredEffects) deferredEffects.push(redraw); else redraw();
     }
   }
-  if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
-  saveState();
+  if (!deferredEffects) {
+    if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
+    saveState();
+  }
 }
 
 function countDiscoveredDiets() {
