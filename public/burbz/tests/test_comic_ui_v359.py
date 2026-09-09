@@ -7,7 +7,7 @@ HTML = (ROOT / "index.html").read_text()
 CSS = (ROOT / "woodland_ui.css").read_text()
 SW = (ROOT / "sw.js").read_text()
 RELEASE = "woodland-finish-v360-20260907"
-CURRENT_BUILD = "player-home-v380-20260909"
+CURRENT_BUILD = "map-trails-v381-20260909"
 ASSETS = [
     f"woodland_ui.css?v={RELEASE}",
     "assets/comic-ui/battlefield-v359.webp",

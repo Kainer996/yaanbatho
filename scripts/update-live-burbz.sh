@@ -58,6 +58,7 @@ FILES=(
   "geographic_map_3d.css"
   "geographic_surfaces.js"
   "geographic_places_core.js"
+  "map_trail_core.js"
   "geographic_details_scene.js"
   "scan_home.css"
   "scan_home_core.js"

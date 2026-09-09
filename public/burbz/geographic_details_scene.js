@@ -22,6 +22,22 @@
     b.add(new T.ConeGeometry(.24,.8,3),k%2?0x6f894c:0x8d9b59,[x,.38,z]);
     if(k<2){b.cylinder(.035,.035,.6,x,.3,z,0x68784b,[0,0,0],4);b.add(new T.OctahedronGeometry(.13,0),k?0xe4c769:0xdbcbb0,[x,.64,z]);}}
    b.add(new T.IcosahedronGeometry(.35,0),0xaaa38b,[1.6,.14,-1.2],[0,0,0],[1,.5,.8]);model=b.finish();
+  }else if(type==='lantern-post'){
+   b.box(1.2,.24,1.2,0,.12,0,0x8a8770);
+   b.box(.28,3.5,.28,0,1.95,0,0x68462d);b.box(1.6,.22,.24,.55,3.52,0,0x68462d);
+   b.cylinder(.055,.055,.5,1.12,3.2,0,0xb89b52,[0,0,0],6);
+   b.box(.6,.8,.5,1.12,2.69,0,0xf1c768);
+   for(const x of [.79,1.45])for(const z of [-.29,.29])b.box(.075,.95,.075,x,2.69,z,0x53482d);
+   b.add(new T.ConeGeometry(.55,.38,4),0x596f61,[1.12,3.3,0],[0,Math.PI/4,0]);
+   b.box(.85,.6,.5,0,1.1,.36,0x9a7048);b.box(.55,.075,.025,0,1.22,.63,0x38291d);model=b.finish();
+  }else if(type==='trail-shelter'){
+   b.box(4.7,.25,3.7,0,.125,0,0x8a8770);
+   for(const x of [-2,2])for(const z of [-1.5,1.5])b.box(.22,2.7,.22,x,1.6,z,0x68462d);
+   for(const sign of [-1,1]){b.box(2.8,.18,4.2,sign*1.12,3.3,0,0x61795b,[0,0,-sign*.37]);b.box(.14,.35,4.25,sign*2.4,2.88,0,0x493b29);}
+   b.box(.18,.24,4.25,0,3.81,0,0x493b29);
+   b.box(3.7,.16,.62,0,.9,-1.05,0x9a7048);for(const x of [-1.5,1.5])b.box(.16,.65,.5,x,.55,-1.05,0x68462d);
+   b.box(1.5,.12,.85,0,1.25,.25,0x9a7048);for(const x of [-.55,.55])b.box(.14,1,.5,x,.72,.25,0x68462d);
+   b.box(.45,.06,.42,.1,1.35,.25,0xe1cf9c);model=b.finish();
   }else if(type==='waterfall'){
    // An illustrated cascade at the mapped fall, not an invented terrain height.
    for(let i=0;i<3;i++){const y=(2-i)*1.35,z=i*1.15;
@@ -64,7 +80,7 @@
     }
     const data=new Float32Array(size);let offset=0;for(const chunk of chunks){data.set(chunk,offset);offset+=chunk.length;}
     const priorBuffer=this.gl.getParameter(this.gl.ARRAY_BUFFER_BINDING);this.gl.bindBuffer(this.gl.ARRAY_BUFFER,this.buffer);this.gl.bufferData(this.gl.ARRAY_BUFFER,data,this.gl.STATIC_DRAW);this.gl.bindBuffer(this.gl.ARRAY_BUFFER,priorBuffer);
-    state.objects=count;state.vertices=size/9;state.builds++;while(heights.size>600)heights.delete(heights.keys().next().value);dirty=false;
+    state.objects=count;state.anchors=this.anchors;state.vertices=size/9;state.builds++;while(heights.size>600)heights.delete(heights.keys().next().value);dirty=false;
    },
    render(gl,args){if(!this.program||!state.vertices||map.getZoom()<13||!options.visible())return;const matrix=args?.defaultProjectionData?.mainMatrix;if(!matrix)return;
     const light=root.BurbzGeographicDayNight?.lighting(map,this.origin,this.scale);

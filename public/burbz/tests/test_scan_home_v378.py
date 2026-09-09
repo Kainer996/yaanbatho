@@ -12,8 +12,8 @@ def test_home_state_is_honest_and_gated():
 def test_home_runtime_and_art_install_together():
     html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text()
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
-    assert "const BURBZ_BUILD = 'player-home-v380-20260909';" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('player-home-v380-20260909')
+    assert "const BURBZ_BUILD = 'map-trails-v381-20260909';" in html
+    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('map-trails-v381-20260909')
     for file in ['scan_home.css','scan_home_core.js','scan_home.js','assets/home-v378/woodland-lookout.webp']:
         url=file if file.startswith('assets/') else file+'?v='+RELEASE
         assert url in html

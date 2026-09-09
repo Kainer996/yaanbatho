@@ -19,7 +19,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "roost-retired-v302-20260820"
 PREVIOUS_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
-CURRENT_BUILD = "player-home-v380-20260909"
+CURRENT_BUILD = "map-trails-v381-20260909"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 ACADEMY_CORE_PIN = "barracks-tutorial-callout-v354-20260906"
 LADDER = [15, 30, 60, 120, 240, 480, 1440]
