@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-RELEASE_PIN = "player-home-v379-20260909"
+RELEASE_PIN = "player-home-v380-20260909"
 PREVIOUS_RELEASE_PIN = "merlin-bond-meter-v197-20260802"
 
 

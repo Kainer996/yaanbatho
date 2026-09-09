@@ -14,3 +14,5 @@ body.player-at-desk #screen-scan{box-shadow:inset 0 0 0 3px #a99054}.ph-stand-tr
 .scan-home-command-bar button{order:-1;flex-shrink:0}.scan-home-command-bar span{padding-right:82px;font-size:10px}.ph-merlin:not([hidden])~.ph-hint{display:none}
 
 @media(max-width:420px){.ph-top .ph-title{position:absolute;top:62px;left:0;right:0;text-align:center}.ph-title small{font-size:8px}.ph-title strong{font-size:20px}.ph-top>[data-ph="back"]{margin-right:auto}.ph-notice{top:130px}.ph-panel{top:118px}.ph-error{top:135px}}
+
+.scan-home-command-bar{min-width:0}.scan-home-command-bar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}@media(max-width:420px){.scan-home-command-bar span{display:none}.scan-home-command-bar{justify-content:flex-start}}

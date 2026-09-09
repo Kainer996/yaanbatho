@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = (ROOT / "index.html").read_text(encoding="utf-8")
 SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 OWN = "empire-three-pages-v343-20260901"
-CURRENT_BUILD = "player-home-v379-20260909"
+CURRENT_BUILD = "player-home-v380-20260909"
 
 
 def function_source(name: str) -> str:
