@@ -6,9 +6,11 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 
-def test_photo_result_hides_redundant_camera_button_without_disabling_photo_chooser():
+def test_home_photo_result_keeps_camera_start_visible_without_overlap():
     html = HTML.read_text(encoding="utf-8")
-    assert "#screen-scan.camera-mode:has(#scanResult.show) #captureBtn" in html
+    css = (ROOT / "scan_home.css").read_text()
+    assert "#screen-scan.camera-mode:has(#scanResult.show) .scan-home-start-buttons #captureBtn{display:block}" in css
+    assert "#screen-scan.camera-mode #scanResult{position:static" in css
     assert "$('uploadArea').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });" in html
 
 

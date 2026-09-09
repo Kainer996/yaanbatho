@@ -1,0 +1,51 @@
+/* The existing Scan destination is also home. Controls use the real scanner. */
+#screen-scan,#screen-scan.camera-mode{padding:0;background:var(--bg);overflow-y:auto}
+.scan-home-hero{position:relative;isolation:isolate;height:270px;overflow:hidden;background:#19352e}
+.scan-home-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 50%;z-index:-2}
+.scan-home-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#102b2877,transparent 85%),linear-gradient(0deg,#0c201df5,transparent 45%);z-index:-1}
+.scan-home-welcome{position:absolute;left:22px;top:23px;max-width:calc(100% - 125px);color:#fff5d9;text-shadow:0 2px 13px #12251d}
+.scan-home-eyebrow{font:800 10px/1.3 'Inter',sans-serif;letter-spacing:.15em;display:block;margin-bottom:12px}
+.scan-home-welcome h1{font:700 clamp(28px,6vw,42px)/1.05 'Russo One',sans-serif;margin:0;letter-spacing:-.03em}
+.scan-home-summary{position:absolute;left:22px;right:20px;bottom:15px;margin:0;color:#fff1ca;font-size:12px;line-height:1.5}
+.scan-home-main{max-width:1020px;margin:auto;padding:18px 18px 32px;color:var(--text)}
+.scan-home-start-heading,.scan-home-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+.scan-home-main h2{font:800 17px/1.2 'Rajdhani',sans-serif;margin:0;color:var(--text)}
+.scan-home-start-heading>span,.scan-home-section-head>span{font-size:11px;color:var(--text2)}
+.scan-home-start-buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#screen-scan .scan-home-start-buttons .scan-btn{position:relative;margin:0;max-width:none;width:100%;min-height:66px;padding:12px 10px 12px 48px;text-align:left;border-radius:15px;font:900 14px/1.2 'Rajdhani',sans-serif;letter-spacing:.02em;border:1px solid #e3c679;box-shadow:inset 0 1px #fff5,0 5px 14px #0003;background:#e8c570;color:#182d25;text-shadow:none}
+#screen-scan .scan-home-start-buttons #captureBtn{background:#203e33;color:#fff2d1;border-color:#8ba087}
+.scan-home-start-buttons .scan-btn::before{content:'';position:absolute;left:10px;top:50%;transform:translateY(-50%);width:32px;height:36px;background:url('assets/ui/burbz-icon-set/sound.webp') center/contain no-repeat}
+.scan-home-start-buttons #captureBtn::before{background-image:url('assets/ui/burbz-icon-set/camera.webp')}
+#screen-scan .scan-home-start-buttons .scan-btn.recording{background:#23563b;color:#e7ffe6;border-color:#88dfa0}
+#screen-scan .scan-home-start-buttons .scan-btn:disabled{background:#655d41;color:#eee0b7;cursor:wait}
+.scan-home-today,.scan-home-villages{margin-top:23px}.scan-home-villages[hidden]{display:none}
+.scan-home-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.home-action{display:flex;align-items:center;position:relative;gap:9px;padding:10px 12px 10px 8px;min-height:74px;text-align:left;background:var(--bg2);color:var(--text);border:1px solid #9da57855;border-radius:13px;cursor:pointer}
+.home-action>img{width:36px;height:42px;object-fit:contain;flex-shrink:0}.home-action>span:not(.home-action-chevron){min-width:0;flex:1}.home-action strong{display:block;font:800 14px/1.2 'Rajdhani',sans-serif}.home-action small{display:block;font-size:11px;line-height:1.4;color:var(--text2);margin-top:4px}.home-action-chevron{font-size:20px;color:var(--accent2)}
+.home-action-ready{border-color:#c9ad6288;background:linear-gradient(140deg,#d0b05e13,transparent),var(--bg2)}.home-action-care{border-color:#c7a87288}
+.scan-home-section-head button{font:700 12px/1.3 'Rajdhani',sans-serif;color:var(--accent2);min-height:36px;background:transparent;border:0;cursor:pointer}
+.scan-home-village-list{display:flex;gap:9px;overflow-x:auto;padding-bottom:5px;scroll-snap-type:x proximity}
+.home-village{flex:1 0 155px;min-width:0;padding:12px;text-align:left;background:var(--bg2);color:var(--text);border:1px solid #9da57855;border-radius:13px;scroll-snap-align:start;cursor:pointer}
+.home-village-name{display:block;font:800 14px/1.3 'Rajdhani',sans-serif;overflow-wrap:anywhere}.home-village-mood{display:block;font:800 19px/1.3 'Rajdhani',sans-serif;margin-top:9px;color:var(--accent2)}.home-village-detail{display:block;font-size:11px;line-height:1.4;color:var(--text2);margin-top:3px}.home-happiness-track{display:block;height:4px;border-radius:4px;background:#77977c35;overflow:hidden;margin-top:10px}.home-happiness-track>span{display:block;height:100%;background:#87b58f}
+.scan-home-tools{margin-top:24px;padding-top:18px;border-top:1px solid #a5aa743b}
+#screen-scan .scan-mode-toggle,#screen-scan.camera-mode .scan-mode-toggle{width:100%;max-width:none;margin:0 0 12px}
+#screen-scan .scan-mode-btn{flex:1}
+#screen-scan .merlin-listener-stage{width:96px;height:96px;aspect-ratio:auto;float:left;margin:0 13px 10px 0;border-radius:16px;box-shadow:none}
+#screen-scan .merlin-wand-tip{width:7px;height:7px}
+#screen-scan .merlin-listener-line{position:static;width:auto;height:auto;margin:0;min-height:96px;padding:17px 0;overflow:visible;clip-path:none;white-space:normal;text-align:left}
+#screen-scan .merlin-listener-status{color:var(--text);font-size:13px}#screen-scan .merlin-listener-activity{color:var(--text2);font-size:12px}
+#screen-scan .sound-session-shelf{clear:both;margin-top:14px}#screen-scan .merlin-data-note{clear:both}
+#screen-scan #imageScanArea{min-height:0}#screen-scan .scan-upload-area{margin:0;min-height:140px}
+#screen-scan.camera-mode #scanResult{position:static;margin-top:16px}
+#screen-scan :is(button,input):focus-visible{outline:3px solid var(--accent2);outline-offset:3px}
+html[data-appearance="comic"] #screen-scan .scan-home-start-buttons .scan-btn{border:2px solid #17342c;box-shadow:3px 3px 0 #17342c}
+html[data-appearance="comic"] .home-action,html[data-appearance="comic"] .home-village{border:1.5px solid #17342c;box-shadow:2px 2px 0 #17342c22}
+@media(min-width:760px){.scan-home-hero{height:330px}.scan-home-backdrop{object-position:center 49%}.scan-home-welcome{left:max(24px,calc((100% - 980px)/2));top:50px;max-width:none}.scan-home-summary{left:max(24px,calc((100% - 980px)/2))}.scan-home-actions{grid-template-columns:repeat(3,minmax(0,1fr))}.scan-home-main{padding-top:22px}.scan-home-start-buttons .scan-btn{min-height:70px}.scan-home-tools{max-width:650px}.home-village{flex-basis:200px}}
+@media(max-width:360px){.scan-home-hero{height:230px}.scan-home-main{padding:14px 12px 28px}.scan-home-welcome{left:16px;max-width:190px}.scan-home-welcome h1{font-size:27px}.home-action{gap:6px;padding:9px 7px}.home-action>img{width:28px}.home-action-chevron{display:none}.scan-home-start-heading>span,.scan-home-section-head>span{font-size:10px}}
+@media(prefers-reduced-motion:reduce){#screen-scan *{scroll-behavior:auto}}
+#screen-scan.camera-mode:has(#scanResult.show) .scan-home-start-buttons #captureBtn{display:block}
+#screen-scan .scan-home-start .merlin-listener-line{min-height:0;margin-top:10px;padding:0 2px}
+#screen-scan .scan-home-start .merlin-listener-status{font:600 11px/1.4 'Inter',sans-serif;color:var(--text2)}
+#screen-scan .scan-home-start .merlin-listener-line:not(.is-error) .merlin-listener-activity{display:none}
+#screen-scan .scan-home-start .merlin-listener-line.is-error{border-left:3px solid #daae61;padding:6px 10px;background:#c9973922;border-radius:5px}
+#screen-scan .scan-home-start .merlin-listener-line.is-error .merlin-listener-status{font-weight:800;color:var(--text)}
