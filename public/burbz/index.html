@@ -4431,6 +4431,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
+<link rel="stylesheet" href="scan_home.css?v=scan-home-v378-20260909">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 </head>
@@ -4532,10 +4533,23 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
     <!-- SCAN SCREEN -->
     <div class="screen" id="screen-scan" data-scan-path="camera-only">
-      <div class="screen-title">SCAN</div>
-      <!-- Sound leads: the screen opens on Merlin's wand. Both mode buttons keep
-           to the left so Merlin's perch, pinned to the right edge, never sits on
-           top of them. -->
+      <div class="scan-home-hero">
+        <img class="scan-home-backdrop" src="assets/home-v378/woodland-lookout.webp" alt="" fetchpriority="high">
+        <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Wonder is<br>just outside.</h1></div>
+        <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
+      </div>
+      <div class="scan-home-main">
+      <div class="scan-home-start"><div class="scan-home-start-heading"><h2>Discover a bird</h2><span>Listen or take a photo</span></div>
+        <div class="scan-home-start-buttons"><button class="scan-btn scan-btn-lead" id="scanBtn" aria-describedby="merlinDataNote">START SOUND SCAN</button><button class="scan-btn" id="captureBtn">OPEN CAMERA</button></div>
+        <div class="merlin-listener-line" id="merlinListenerLine">
+          <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
+          <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
+        </div>
+      </div>
+      <section class="scan-home-today" aria-labelledby="scanHomeTodayTitle"><div class="scan-home-section-head"><h2 id="scanHomeTodayTitle">Around your world</h2><span>Little things you can do</span></div><div id="scanHomeActions" class="scan-home-actions"></div></section>
+      <section id="scanHomeVillageSection" class="scan-home-villages" aria-labelledby="scanHomeVillagesTitle" hidden><div class="scan-home-section-head"><h2 id="scanHomeVillagesTitle">Your villages</h2><button type="button" id="scanHomeAllVillages"><span id="scanHomeVillageCount"></span> ↗</button></div><div id="scanHomeVillages" class="scan-home-village-list"></div></section>
+      <section class="scan-home-tools" aria-label="Scanning session">
+      <!-- Session tools remain below the prominent home scanning controls. -->
       <div class="scan-mode-toggle">
         <button class="scan-mode-btn active" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
         <button class="scan-mode-btn" id="scanImageBtn" data-mode="image"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">Camera</button>
@@ -4547,11 +4561,6 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <img class="merlin-listener-art" src="assets/ui/merlin-listening-wand-v354.webp" alt="Merlin beside his glowing listening wand">
           <div class="merlin-wand-tip" id="merlinWandTip" aria-hidden="true"></div>
           <div class="bird-pickup-pop" id="birdPickupPop" role="status" aria-live="polite">&#128038; Possible birdsong</div>
-        </div>
-        <button class="scan-btn scan-btn-lead" id="scanBtn" aria-describedby="merlinDataNote">START MERLIN’S WAND</button>
-        <div class="merlin-listener-line" id="merlinListenerLine">
-          <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
-          <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
         </div>
         <div class="scan-waveform" id="waveformContainer">
           <canvas id="waveformCanvas"></canvas>
@@ -4592,7 +4601,6 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="scan-upload-text">Choose a bird photo</div>
         </div>
         <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
-        <button class="scan-btn" id="captureBtn">OPEN CAMERA</button>
       </div>
 
       <div class="scan-result" id="scanResult">
@@ -4603,6 +4611,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="scan-result-sci" id="scanResultSci"></div>
           <div class="scan-result-conf" id="scanResultConf"></div>
         </div>
+      </div>
+      </section>
       </div>
     </div>
 
@@ -5031,9 +5041,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
       <div class="nav-label">Empire</div>
     </button>
-    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Scan a bird">
+    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Home — scan a bird">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Scan</div>
+      <div class="nav-label">Home</div>
     </button>
     <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
@@ -5481,6 +5491,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
+<script src="scan_home_core.js?v=scan-home-v378-20260909"></script>
+<script src="scan_home.js?v=scan-home-v378-20260909"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -22683,8 +22695,40 @@ function updateActionBadges() {
   const core = window.BurbzActionBadges;
   if (!core || typeof core.computeActionBadgeCounts !== 'function' || typeof core.applyActionBadges !== 'function') return;
   if (!document || !document.querySelectorAll) return;
-  const counts = core.computeActionBadgeCounts(normalizeActionBadgeState(Date.now()));
+  const snapshot = normalizeActionBadgeState(Date.now());
+  const counts = core.computeActionBadgeCounts(snapshot);
   core.applyActionBadges(document, counts, { formatActionText: actionBadgeText });
+  renderScanHome(snapshot,counts);
+}
+
+let scanHomeBound = false;
+function renderScanHome(snapshot, counts) {
+  if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
+  if (!scanHomeBound) {
+    BurbzScanHome.bind({visible:()=>currentScreen==='scan',icon:key=>key==='kitchen'?'assets/academy-buildings-manga/kitchen.png':key==='training'?'assets/academy-buildings-manga/training-hall.png':'assets/ui/burbz-icon-set/'+(key==='village'?'empire':key)+'.webp',open:openScanHomeTarget});
+    scanHomeBound = true;
+  }
+  snapshot = snapshot || normalizeActionBadgeState(Date.now());
+  counts = counts || BurbzActionBadges.computeActionBadgeCounts(snapshot);
+  const completed = snapshot.questDefinitions.filter(q=>{const state=snapshot.quests?.[q.id];return state&&!state.claimed&&Number.isFinite(state.progress)&&state.progress>=q.target;});
+  const villages = empireVillages().map(v=>{const status=villageEconomySnapshot(v);return {seed:v.seed>>>0,name:v.name,pop:status?.pop,happiness:status?.happiness};});
+  const notice = (gameState.completionNotices||[]).find(n=>n.kind==='empire-building'&&n.target?.seed!=null);
+  BurbzScanHome.render({gates:Object.fromEntries(['kitchen','hospital','training','forge','village'].map(key=>[key,featureGateOpen(key)])),counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),forgeReady:snapshot.forge,walk:activeWalkingQuest()||sideQuestActive()&&{name:'Your Side Quest'},notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+}
+function openScanHomeTarget(target) {
+  if (!target) return;
+  const gate=({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village'})[target.kind];
+  if (gate&&!featureGateOpen(gate)) { showToast(featureUnlockHint(gate));renderScanHome();return; }
+  SFX.tap();
+  if(target.kind==='kitchen')openKitchenHudShortcut();
+  else if(target.kind==='hospital')openHospitalHudShortcut();
+  else if(target.kind==='training')openTrainingHub();
+  else if(target.kind==='forge')openForge('craft');
+  else if(target.kind==='quest')focusQuestFromNotice({questId:target.id});
+  else if(target.kind==='village')openEmpireVillage(target.seed);
+  else if(target.kind==='notice')completionNoticeGo(target.id);
+  else if(target.kind==='villages'){empireLedgerOnlyMode=false;showEmpirePage('villages',{silent:true});switchScreen('village');}
+  else if(target.kind==='walk')switchScreen('map');
 }
 
 let actionBadgeUpdateQueued = false;
@@ -22901,6 +22945,7 @@ function switchScreen(name) {
   // Screen-specific init
   if (name === 'map') renderLiveMap();
   if (name === 'birdex') renderBirdex();
+  if (name === 'scan') renderScanHome();
   if (name === 'area-birds') { renderAreaBirdsScreen(); $('areaBirdsBack')?.focus({preventScroll:true}); }
   if (name === 'battle') renderBattleSelect();
   if (name === 'academy') { wireAcademyZones(); renderAcademy(); applyAcademyView(); }
@@ -39247,7 +39292,7 @@ $('scanSoundBtn').addEventListener('click', () => {
   if (!continuousSoundScanWanted) startContinuousSoundListening();
 });
 
-$('scanImageBtn').addEventListener('click', async () => {
+function showImageScanMode() {
   scanMode = 'image';
   $('scanImageBtn').classList.add('active');
   $('scanSoundBtn').classList.remove('active');
@@ -39257,10 +39302,11 @@ $('scanImageBtn').addEventListener('click', async () => {
   if ($('scanResult')?.classList.contains('sound-session')) $('scanResult').classList.remove('show');
   $('scanResult')?.classList.remove('sound-session');
   updateMerlinListeningUI();
-  SFX.tap();
-});
+}
+$('scanImageBtn').addEventListener('click',()=>{SFX.tap();showImageScanMode();});
 
 $('scanBtn').addEventListener('click', () => {
+  showSoundScanMode();
   if (continuousSoundScanWanted) stopContinuousSoundListening({ userStop:true });
   else startContinuousSoundListening();
 });
@@ -39307,7 +39353,7 @@ function updateMerlinListeningUI() {
   $('merlinListenerLine')?.classList.toggle('is-error', soundListenerState === 'error');
   if (button) {
     button.disabled = soundListenerState === 'requesting';
-    button.textContent = active ? 'STOP LISTENING' : (soundListenerState === 'requesting' ? 'OPENING MICROPHONE…' : 'START MERLIN’S WAND');
+    button.textContent = active ? 'STOP LISTENING' : (soundListenerState === 'requesting' ? 'OPENING MICROPHONE…' : 'START SOUND SCAN');
     button.classList.toggle('recording', active);
   }
   const awayFromSound = currentScreen !== 'scan' || scanMode !== 'sound';
@@ -39990,7 +40036,7 @@ function openNativeCamera() {
 }
 
 $('uploadArea').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });
-$('captureBtn').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });
+$('captureBtn').addEventListener('click', () => { SFX.tap(); showImageScanMode(); openNativeCamera(); });
 
 nativeCameraInput?.addEventListener('change', async () => {
   const file = nativeCameraInput.files && nativeCameraInput.files[0];
@@ -42893,7 +42939,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'area-birds-v377-20260909';
+const BURBZ_BUILD = 'scan-home-v378-20260909';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -74,22 +74,20 @@ def test_merlins_listener_art_carries_no_text():
     assert "Sound windows are sent to the Burbz server for bird-sound analysis" in note
 
 
-def test_the_start_button_stands_where_the_ready_to_listen_line_was():
-    area = HTML.split('id="soundScanArea"', 1)[1].split('id="imageScanArea"', 1)[0]
-    assert area.index('id="merlinListenerStage"') < area.index('id="scanBtn"') < area.index('id="waveformContainer"')
-    assert 'class="scan-btn scan-btn-lead" id="scanBtn"' in area
+def test_home_scan_buttons_precede_session_details():
+    area = scan_screen_markup()
+    assert area.index('id="scanBtn"') < area.index('id="merlinListenerStage"')
+    assert area.index('id="captureBtn"') < area.index('id="imageScanArea"')
+    assert area.count('id="scanBtn"') == 1
+    assert area.count('id="captureBtn"') == 1
 
 
-def test_the_state_line_is_silent_on_screen_until_something_goes_wrong():
-    line = HTML.split(".merlin-listener-line {", 1)[1].split("}", 1)[0]
-    # Off-screen for sighted players, still announced by aria-live.
-    assert "clip-path:inset(50%)" in line
-    assert 'aria-live="polite"' in HTML.split('id="merlinListenStatus"', 1)[0][-120:] \
-        or 'id="merlinListenStatus" aria-live="polite"' in HTML
-    shown = HTML.split(".merlin-listener-line.is-error {", 1)[1].split("}", 1)[0]
-    assert "position:static" in shown and "clip-path:none" in shown
-    # Two of the listener's error paths raise no toast, so the class must be
-    # driven by the real listener state.
+def test_home_keeps_listener_errors_beside_the_start_controls():
+    css = (ROOT / 'scan_home.css').read_text()
+    assert '.scan-home-start .merlin-listener-line.is-error' in css
+    markup = scan_screen_markup()
+    assert markup.index('id="scanBtn"') < markup.index('id="merlinListenStatus"') < markup.index('id="scanHomeActions"')
+    assert 'id="merlinListenStatus" aria-live="polite"' in markup
     ui = HTML.split("function updateMerlinListeningUI() {", 1)[1].split("\nfunction ", 1)[0]
     assert "$('merlinListenerLine')?.classList.toggle('is-error', soundListenerState === 'error')" in ui
 

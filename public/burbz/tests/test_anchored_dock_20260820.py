@@ -28,7 +28,7 @@ def strip() -> str:
 
 def test_the_island_holds_empire_scan_academy_in_that_order():
     labels = re.findall(r'<div class="nav-label">([^<]+)</div>', island())
-    assert labels == ["Empire", "Scan", "Academy"]
+    assert labels == ["Empire", "Home", "Academy"]
     # Real routed tabs, not copies: the strip carries none of the three.
     s = strip()
     for screen in ("village", "scan", "academy"):

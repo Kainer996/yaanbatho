@@ -48,7 +48,7 @@ def test_sound_tab_starts_one_continuous_listener_and_has_an_explicit_stop():
     assert "function stopContinuousSoundListening" in html
     assert "startContinuousSoundListening();" in html
     assert 'id="scanBtn"' in html
-    assert '>START MERLIN’S WAND<' in html
+    assert '>START SOUND SCAN<' in html
     # The stop control lives on the listener screen; the header icon only
     # reports that listening is happening and takes you back to it.
     assert 'id="merlinListenerStage"' in html
