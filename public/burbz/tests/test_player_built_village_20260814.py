@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "home-countryside-v387-20260910"
+CURRENT_BUILD = "landscape-v388-20260910"
 PREVIOUS_RELEASE_PIN = "night-veil-removed-v266-20260813"
 
 

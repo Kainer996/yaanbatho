@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 MIDGAME_RELEASE = "midgame-progression-v227-20260805"
-CURRENT_BUILD = "home-countryside-v387-20260910"
+CURRENT_BUILD = "landscape-v388-20260910"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 ACADEMY_CORE_PIN = "barracks-tutorial-callout-v354-20260906"
 

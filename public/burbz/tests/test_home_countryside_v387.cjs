@@ -1,4 +1,5 @@
 'use strict';
+const CURRENT_BUILD = 'landscape-v388-20260910';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const C=require('../geographic_world_core.js'),walk=require('../village_walk_core.js');
@@ -29,7 +30,7 @@ test('changed module pins and footstep assets agree across all three worker list
  const rev='home-countryside-v387-20260910',sw=fs.readFileSync(path.join(root,'sw.js'),'utf8'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
  const modules=['audio_core.js','first_person_hud.js','first_person_hud.css','geographic_world.js','geographic_world.css','player_home.js','player_home_core.js','village_walk.js','village_walk_core.js','village_walk_scene.js','scan_home.css'];
  const assets=fs.readdirSync(path.join(root,'assets/audio/footsteps')).filter(f=>f.endsWith('.mp3')).map(f=>'assets/audio/footsteps/'+f);assert.equal(assets.length,6);
- assert(html.includes("const BURBZ_BUILD = '"+rev+"'"));assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith(rev));
+ assert(html.includes("const BURBZ_BUILD = '"+CURRENT_BUILD+"'"));assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith(CURRENT_BUILD));
  for(const list of ['BURBZ_ASSETS','BURBZ_CORE','BURBZ_INSTALL_REQUIRED']){const entries=[...sw.match(new RegExp('const '+list+' = \\[([\\s\\S]*?)\\];'))[1].matchAll(/^\s*['"](\.\/[^'"]+)['"]/gm)].map(m=>m[1]);for(const name of [...modules.map(f=>f+'?v='+rev),...assets])assert.equal(entries.filter(e=>e==='./'+name).length,1,list+': '+name);}
  for(const f of [...modules,...assets]){assert(fs.existsSync(path.join(root,f)));assert(updater.includes('"'+f+'"'));}
 });

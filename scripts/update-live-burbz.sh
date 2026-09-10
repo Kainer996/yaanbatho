@@ -56,6 +56,8 @@ FILES=(
   "field_map_ui.js"
   "field_map_ui.css"
   "illustrated_world.css"
+  "landscape_ui.css"
+  "landscape_ui.js"
   "geographic_forest_core.js"
   "geographic_forest_worker.js"
   "geographic_camera_core.js"

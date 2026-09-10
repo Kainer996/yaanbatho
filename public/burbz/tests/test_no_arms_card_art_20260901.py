@@ -25,7 +25,7 @@ WARRIOR_JS = BURBZ / "bird_art_release_20260803.js"
 CUTOUTS = BURBZ / "bird-art-cache" / "cutouts"
 DEPLOY = BURBZ.parents[1] / "scripts" / "update-live-burbz.sh"
 
-CURRENT_BUILD = "home-countryside-v387-20260910"
+CURRENT_BUILD = "landscape-v388-20260910"
 
 ARMED_FILES = [
     "australian_pelican_burbz_manga_20260701.png",

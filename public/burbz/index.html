@@ -4436,6 +4436,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
+<link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="scan_home.css?v=home-countryside-v387-20260910">
@@ -4750,6 +4751,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
          (royal map, counties and above), the towns, the villages. The tab
          strip switches pages; a sideways drag does too (empire-three-pages-v343). -->
     <div class="screen" id="screen-village">
+      <div class="settlement-layout-controls" id="villageLayoutControls">
       <div class="empire-title-row">
         <div class="screen-title">YOUR EMPIRE</div>
         <button type="button" class="empire-ledger-btn" id="empireLedgerBtn" aria-expanded="false" aria-controls="empireLedgerPop">👑 LEDGER</button>
@@ -4826,6 +4828,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       </div>
       </section>
       </div>
+      </div>
     </div>
     <div id="empireTravelOverlay" aria-hidden="true"><div class="empire-travel-card"><div class="empire-travel-crest" id="empireTravelCrest">🕊️</div><div class="empire-travel-name" id="empireTravelName"></div><div class="empire-travel-sub">Travelling to your village…</div></div></div>
 
@@ -4842,6 +4845,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
          destination. The 3D town stands at the top: tap a working yard to run
          it, tap a quarter for its ledger. The Hall desk sits below. -->
     <div class="screen" id="screen-town">
+      <div class="settlement-layout-controls" id="townLayoutControls">
       <div class="screen-title" id="townScreenTitle">TOWN HALL</div>
       <div class="village-stage settlement-stage" id="townStage" role="application" tabindex="0" aria-label="Living 3D town. Hold then drag to look around, pinch to zoom, use arrow keys to orbit, and tap a working yard or the town to manage it.">
         <div class="settlement-stage-hud" id="townStageHud">
@@ -4868,6 +4872,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div id="townHallPanel"></div>
       <div class="town-sheet-backdrop" id="townSheetBackdrop" aria-hidden="true"></div>
       <div class="town-sheet" id="townSheet" role="dialog" aria-modal="true" aria-hidden="true"></div>
+      </div>
     </div>
 
     <!-- COUNTY MAP — a painted, Crusader-Kings-style chart of one county:
@@ -5518,6 +5523,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
 <script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
+<script src="landscape_ui.js?v=landscape-v388-20260910"></script>
 <script src="quest_core.js?v=map-trails-v381-20260909"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
 <script src="side_trail_core.js?v=pocket-detours-v382-20260910"></script>
@@ -30664,7 +30670,8 @@ function fitEmpireAtlasHeight() {
   const card = $('empireMapCard'), screen = $('screen-village'), dock = $('bottomDock');
   if (!card || !screen || !dock || !card.getClientRects().length) return;
   const top = card.getBoundingClientRect().top + screen.scrollTop;
-  const height = Math.round(Math.max(260, Math.min(880, dock.getBoundingClientRect().top - top - 10)));
+  const bottom = $('app')?.classList.contains('landscape-ui') ? screen.getBoundingClientRect().bottom : dock.getBoundingClientRect().top;
+  const height = Math.round(Math.max(260, Math.min(880, bottom - top - 10)));
   if (card.style.getPropertyValue('--atlas-height') === height + 'px') return;
   card.style.setProperty('--atlas-height', height + 'px');
   if (empireMap && empireMapReady) empireMap.resize();
@@ -43289,7 +43296,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-countryside-v387-20260910';
+const BURBZ_BUILD = 'landscape-v388-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44729,6 +44736,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 
 // Run
 window.BurbzFieldMapUI?.controls(document);
+window.BurbzLandscapeUI?.bind({ resizeVillage:onVillageResize, resizeTown:onTownResize, resizeAtlas:fitEmpireAtlasHeight });
 init();
 
 })();
