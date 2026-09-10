@@ -53,7 +53,7 @@ def test_side_quest_completion_counts_for_go_for_a_walk_player_goal():
     assert "gameState.sideQuest" in measure
     end_start = HTML.index("async function endSideQuest()")
     end_body = HTML[end_start:HTML.index("\nfunction shareSideQuestDraft", end_start)]
-    assert "updateQuestProgress('walk_completed', 1)" in end_body
+    assert "updateQuestProgress('walk_completed', 1, deferredEffects)" in end_body
 
 
 def test_intro_promises_pocket_mode_discoveries_and_future_sharing():
@@ -61,7 +61,7 @@ def test_intro_promises_pocket_mode_discoveries_and_future_sharing():
     intro = HTML[start:HTML.index("\nfunction startSideQuest", start)]
     assert "No markers, no route" in intro
     assert "Pocket the phone" in intro and "screen off" in intro
-    assert "buzzes and chirps" in intro
+    assert "browser may pause GPS" in intro
     assert "treasure chest" in intro and "weapon" in intro and "quest-giver bird" in intro
     # The promise is made AT THE START, as requested.
     assert "At the end" in intro and "turn your wander into a real quest for other players" in intro
@@ -111,4 +111,5 @@ def test_side_quest_is_wired_into_state_map_and_hud():
     assert "sideQuestActive()) { openSideQuestLogSheet(); return; }" in HTML
     # One outdoor quest at a time, in both directions.
     assert "End your Side Quest first" in HTML
-    assert "Finish or abandon your current quest first'); return; }\n  if (sideQuestActive())" in HTML
+    assert "if (activeWalkingQuest() || savedOriginalQuest())" in HTML
+    assert "if (ensureSideQuestState().suspendedDetour) { resumeSavedDetour(); return; }" in HTML

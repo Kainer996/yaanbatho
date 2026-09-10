@@ -22,7 +22,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "map-trails-v381-20260909"
+RELEASE_PIN = "pocket-detours-v382-20260910"
 
 
 def function_source(name: str) -> str:

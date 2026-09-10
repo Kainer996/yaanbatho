@@ -4146,6 +4146,9 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 .map-quest-hud .mqh-name { font-size:12px; font-weight:800; color:#f0c767; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .map-quest-hud .mqh-stats { font-size:11px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mqh-photo-btn { flex:none; width:34px; height:34px; border-radius:12px; border:1px solid rgba(214,168,79,.45); background:rgba(214,168,79,.14); color:#f0c767; font-size:17px; display:grid; place-items:center; }
+.map-quest-hud:has(#mapDetourResume:not([hidden])) { flex-wrap:wrap; }
+#mapDetourResume { flex:1 0 100%; width:auto; height:44px; font-size:12px; line-height:1.2; }
+#mapDetourResume[hidden] { display:none; }
 .quest-photo-actions { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0; }
 .quest-photo-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; }
 .quest-photo-card { border-radius:13px; overflow:hidden; background:rgba(214,168,79,.08); border:1px solid rgba(214,168,79,.20); }
@@ -5510,8 +5513,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
 <script src="quest_core.js?v=map-trails-v381-20260909"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
-<script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
+<script src="side_trail_core.js?v=pocket-detours-v382-20260910"></script>
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
+<script src="quest_pocket_core.js?v=pocket-detours-v382-20260910"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
@@ -18549,7 +18553,7 @@ function ensureCompletionNotices() {
   if (!Array.isArray(gameState.completionNotices)) gameState.completionNotices = [];
   return gameState.completionNotices;
 }
-function queueCompletionNotice(notice) {
+function queueCompletionNotice(notice, deferredEffects) {
   if (!notice || !notice.kind) return;
   const list = ensureCompletionNotices();
   // One card per subject — a fresh completion replaces its older card.
@@ -18566,7 +18570,8 @@ function queueCompletionNotice(notice) {
   });
   while (kept.length > COMPLETION_NOTICE_LIMIT) kept.shift();
   gameState.completionNotices = kept;
-  renderCompletionNotices();
+  if (deferredEffects) deferredEffects.push(renderCompletionNotices);
+  else renderCompletionNotices();
 }
 function questNoticeClaimed(notice) {
   const questId = notice && notice.target && notice.target.questId;
@@ -18661,7 +18666,7 @@ function focusQuestFromNotice(target) {
     setTimeout(() => el.classList.remove('quest-target-card'), 3200);
   }));
 }
-function queueQuestCompleteNotice(q) {
+function queueQuestCompleteNotice(q, deferredEffects) {
   if (!q || !q.id) return;
   // A quest whose board section the gate still holds closed completes
   // quietly — its card waits in the section and greets the player there.
@@ -18670,7 +18675,7 @@ function queueQuestCompleteNotice(q) {
         (WEEKLY_QUESTS.includes(q) && !featureGateOpen('quests_weekly')) ||
         (ACHIEVEMENT_QUESTS.includes(q) && !featureGateOpen('quests_achievements'))) return;
   } catch (e) {}
-  queueCompletionNotice({ kind: 'quest', icon: q.icon || '\u{1F3C5}', title: q.name || 'Quest complete', sub: 'Quest complete — tap to claim', target: { questId: q.id } });
+  queueCompletionNotice({ kind: 'quest', icon: q.icon || '\u{1F3C5}', title: q.name || 'Quest complete', sub: 'Quest complete — tap to claim', target: { questId: q.id } }, deferredEffects);
 }
 
 // ============================================================================
@@ -19152,7 +19157,12 @@ function ensureWalkingQuestState() {
   if (!Array.isArray(gameState.walkingQuests.history)) gameState.walkingQuests.history = [];
   return gameState.walkingQuests;
 }
-function activeWalkingQuest() { return gameState ? ensureWalkingQuestState().active : null; }
+function activeWalkingQuest() {
+  if (!gameState) return null;
+  const quest = ensureWalkingQuestState().active, side = gameState.sideQuest?.active;
+  // Legacy saves ran both at once. Freeze the original until an explicit resume.
+  return side?.auto && side.parentQuestId === quest?.id ? null : quest;
+}
 
 // ---- The Twenty Roads: the shared walking-story campaign ----
 // The tales, their NPCs and their scrolls live in walking_story_core.js and
@@ -19186,14 +19196,13 @@ function collectWalkingStoryScroll(quest, opts = {}) {
   if (!st.scrolls.some(s => s && s.id === story.scroll.id)) {
     st.scrolls.push({ id: story.scroll.id, title: story.scroll.title, text: story.scroll.text, storyId: story.id, storyTitle: story.title, foundAt: Date.now() });
   }
-  addPlayerXp(25);
-  SFX.capture();
-  vibrate(QUEST_BUZZ.chest);
+  if (opts.deferSave) applyPlayerXpState(25); else addPlayerXp(25);
+  if (!opts.deferSave) { SFX.capture(); vibrate(QUEST_BUZZ.chest); }
   if (!opts.quiet) {
     showToast('📜 Scroll found: ' + story.scroll.title + ' (+25 XP)');
     showQuestNpcDialog('📜 ' + story.scroll.title, story.scroll.text);
   }
-  saveState();
+  if (!opts.deferSave) saveState();
   return true;
 }
 // Story beats ride the ordered waymarkers: the milestone speaks mid-route,
@@ -19266,7 +19275,7 @@ function applyWalkingStoryCompletion(quest) {
   const st = ensureWalkingStoryState();
   const firstTelling = !st.completed.includes(story.id);
   if (firstTelling) st.completed.push(story.id);
-  if (!story.scrollCollected) collectWalkingStoryScroll(quest, { quiet: true });
+  if (!story.scrollCollected) collectWalkingStoryScroll(quest, { quiet: true, deferSave: true });
   const reward = firstTelling ? story.reward : null;
   if (reward) {
     if (reward.coins) addCoins(reward.coins);
@@ -19369,6 +19378,7 @@ function openQuestBoard() {
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
     '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="wq-eyebrow">THE ALDERWING FIELD GUIDE</div><div class="quest-board-title">Find your next walk</div><div class="quest-board-intro" id="walkQuestSheetStatus" role="status">Finding connected footpaths and worthwhile walks near you…</div></div></div>' +
 
+    questDetourActionsHTML() +
     '<div id="walkQuestOfferList"><div class="quest-all-done">Reading the enchanted trail map…</div></div>' +
     '<div class="quest-section-title">🎒 Side Quest</div><div id="walkQuestSideQuestSlot"></div>' +
     '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
@@ -19465,14 +19475,14 @@ async function activateWalkingQuestFromOffer(offer, retry, requestId = walkQuest
   if (!requestedAt) { showToast('Allow location before beginning this walk.'); return; }
   const staleRequest = () => requestId !== walkQuestActivationRequest || !liveMapHasPrecisePosition || !liveMapLastPosition || mapDistanceMeters(requestedAt, liveMapLastPosition) > 250;
   let wq = ensureWalkingQuestState();
-  if (wq.active) { showToast('Finish or abandon your current quest first'); return; }
+  if (wq.active || wq.suspended) { showToast('Resume your saved quest before starting another.'); return; }
   if (sideQuestActive()) { showToast('End your Side Quest first — it is still charting your trail'); return; }
   if (offer.kind !== 'adventure' && offer._loop === undefined && window.BurbzQuestCore.offerLoopStyle(offer.points) === 'out-and-back') {
     if (!retry) showToast('🧭 The cartographers are charting a loop home along different paths...');
     try { await ensureOfferLoopBack(offer); } catch (e) { offer._loop = null; }
     if (staleRequest()) return;
     wq = ensureWalkingQuestState();
-    if (wq.active) return; // another quest started while the loop was charting
+    if (wq.active || wq.suspended || sideQuestActive()) return; // another quest started while the loop was charting
   }
   const questOffer = (offer._loop && offer._loop.loopedBack)
     ? {
@@ -19509,7 +19519,7 @@ async function activateWalkingQuestFromOffer(offer, retry, requestId = walkQuest
     clearTimeout(checking);
     if (staleRequest()) return;
     wq = ensureWalkingQuestState();
-    if (wq.active) return; // another quest started while the archive answered
+    if (wq.active || wq.suspended || sideQuestActive()) return; // another quest started while the archive answered
     if (verdict === 'certified') repair = { status:'certified', changed:true };
     else if (verdict === 'blocked') blocked = true;
   }
@@ -19526,7 +19536,9 @@ async function activateWalkingQuestFromOffer(offer, retry, requestId = walkQuest
   uninstallWalkQuestAlignmentReadinessRetry();
   if (staleRequest()) return;
   window.BurbzWalkingEncounterCore.ensureQuestEncounters(quest);
+  quest.detourOriginalRoute = quest.route.map(p => p.slice());
   wq.active = quest;
+  questPocketResume(quest);
   walkQuestLastSave = Date.now();
   saveState();
   if (!quest.likelyBirds.length) {
@@ -20067,6 +20079,7 @@ function updateWalkQuestHud() {
   const quest = activeWalkingQuest();
   const side = sideQuestActive();
   updateMapSideQuestButton();
+  updateDetourResumeButton();
   if (quest || side) acquireQuestWakeLock(); else releaseQuestWakeLock();
   if (!hud) return;
   if (side && !quest) {
@@ -20077,7 +20090,14 @@ function updateWalkQuestHud() {
     if (st) st.textContent = (side.distanceM / 1000).toFixed(2) + ' km charted · ' + found + ' ✨ found' + (waiting ? ' · ' + waiting + ' waiting on the map!' : '');
     return;
   }
-  if (!quest) { hud.classList.remove('active'); return; }
+  if (!quest) {
+    if (savedOriginalQuest() || ensureSideQuestState().suspendedDetour) {
+      hud.classList.add('active');
+      if ($('mapQuestHudName')) $('mapQuestHudName').textContent = savedOriginalQuest()?.name || 'Saved detour';
+      if ($('mapQuestHudStats')) $('mapQuestHudStats').textContent = 'Progress saved — resume whenever you choose';
+    } else hud.classList.remove('active');
+    return;
+  }
   hud.classList.add('active');
   const total = quest.checkpoints.length;
   const hit = quest.checkpoints.filter(c => c.reached).length;
@@ -20216,6 +20236,9 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   const quest = activeWalkingQuest();
   if (!quest) return [];
   if (quest.routeCertification?.status !== 'certified') return [];
+  if (!quest.detourOriginalRoute) quest.detourOriginalRoute = quest.route.map(p => p.slice());
+  if (maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy, tOverride)) return [];
+  if (activeWalkingQuest() !== quest) return []; // rollback may restore a fresh quest object
   maybeChartLoopHome(quest);
   scheduleWalkQuestRealign(); // fresh tiles along the walk keep the line on-path
   const finishWasReady = window.BurbzQuestCore.questFinishIsReady(quest);
@@ -20329,11 +20352,6 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   }
   const finishJustUnlocked = !finishWasReady && window.BurbzQuestCore.questFinishIsReady(quest);
   if (activeWalkingQuest() === quest && (checkpointProgressed || finishJustUnlocked)) drawWalkingQuestOnMap();
-  // Straying 300 m off the golden route opens an off-road side quest; walking
-  // back banks it. The main quest never notices either way.
-  if (activeWalkingQuest() === quest) {
-    try { maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy); } catch (err) { console.warn('BURBZ side trail check failed', err); }
-  }
   updateWalkQuestHud();
   applyQuestZoomLock();
   // Every checkpoint reached on a real walk can uncover one of the local
@@ -20350,31 +20368,48 @@ function completeWalkingQuest() {
   const wq = ensureWalkingQuestState();
   const quest = wq.active;
   if (!quest) return;
-  // An off-road side quest still running banks itself with the main quest.
-  const side = sideQuestActive();
-  if (side && side.auto) endOffRoadSideQuest('Main quest complete.');
-  const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
-  // A finished tale of The Twenty Roads pays its reward before the headline
-  // sums, so the celebration and the history entry both tell the whole story.
-  window.BurbzWalkingEncounterCore.onProgress(quest, {now:Date.now()});
-  summary.encounters = window.BurbzWalkingEncounterCore.encounterJournal(quest);
-  summary.story = applyWalkingStoryCompletion(quest);
-  addPlayerXp(summary.xp);
-  // Merlin is the permanent walking companion; adventures deepen his bond.
-  summary.merlinBondXp = Math.max(10, Math.round(summary.xp * 0.25));
-  gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), summary.merlinBondXp, Date.now());
-  const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
-  if (bonusCoins) addCoins(bonusCoins);
-  if (typeof logDiary === 'function') logDiary('walk_quest', { name: summary.name, km: summary.distanceKm, markers: summary.checkpointsHit, markersTotal: summary.checkpointsTotal, xp: summary.xp });
-  wq.history.unshift(summary);
-  if (wq.history.length > 60) wq.history.length = 60;
-  wq.active = null;
-  updateQuestProgress('walk_completed', 1);
-  queueCompletionNotice({ kind: 'quest', icon: '\u{1F97E}', title: summary.name || 'Walking adventure', sub: 'Adventure complete — tap for the tale', target: { anchor: 'walkingQuestsList' } });
-  saveState();
+  const previousLevel = gameState.player.level, deferredEffects = [];
+  const tx = commitQuestFinish('walking', quest, () => {
+    const summary = window.BurbzQuestCore.questSummary(quest); // xp already includes the trail-bird bonus
+    // A finished tale of The Twenty Roads pays its reward before the headline
+    // sums, so the celebration and the history entry both tell the whole story.
+    window.BurbzWalkingEncounterCore.onProgress(quest, {now:Date.now()});
+    summary.encounters = window.BurbzWalkingEncounterCore.encounterJournal(quest);
+    summary.story = applyWalkingStoryCompletion(quest);
+    summary.pocketReward = applyQuestPocketReward(quest, summary.xp);
+    summary.xp += summary.pocketReward.extraXp;
+    applyPlayerXpState(summary.xp);
+    // Merlin is the permanent walking companion; adventures deepen his bond.
+    summary.merlinBondXp = Math.max(10, Math.round(summary.xp * 0.25));
+    gameState.merlinCare = MERLIN_CORE.grantMerlinBondXp(getMerlinCare(), summary.merlinBondXp, Date.now());
+    const bonusCoins = (summary.trailBirds && summary.trailBirds.coins) || 0;
+    if (bonusCoins) addCoins(bonusCoins);
+    if (typeof logDiary === 'function') logDiary('walk_quest', { name: summary.name, km: summary.distanceKm, markers: summary.checkpointsHit, markersTotal: summary.checkpointsTotal, xp: summary.xp });
+    wq.history.unshift(summary);
+    if (wq.history.length > 60) wq.history.length = 60;
+    wq.active = null;
+    updateQuestProgress('walk_completed', 1, deferredEffects);
+    queueCompletionNotice({ kind: 'quest', icon: '\u{1F97E}', title: summary.name || 'Walking adventure', sub: 'Adventure complete — tap for the tale', target: { anchor: 'walkingQuestsList' } }, deferredEffects);
+    return summary;
+  });
+  if (tx.status !== 'committed') {
+    if (tx.status === 'failed') {
+      const restored = ensureWalkingQuestState().active;
+      const finish = restored?.id === quest.id ? restored.checkpoints?.find(cp => cp.kind === 'finish') : null;
+      if (finish) { finish.reached = false; delete finish.reachedAt; }
+      showToast('Quest rewards could not be saved. Your quest is kept — approach the finish again to retry.');
+    }
+    return;
+  }
+  const summary = tx.value, bonusCoins = summary.trailBirds?.coins || 0;
+  queueQuestClaimCloudSync();
+  deferredEffects.forEach(effect => { try { effect(); } catch (error) { console.warn('Quest completion notice failed', error); } });
+  announcePlayerLevelUps(previousLevel);
+  announceQuestPocketReward(summary.pocketReward);
+  updateHeader();
   clearWalkingQuestFromMap();
   vibrate(QUEST_BUZZ.complete);
-  playQuestClaimCelebration({ badge: summary.story ? 'TALE ' + summary.story.order + ' OF ' + summary.story.total + ' COMPLETE!' : 'QUEST COMPLETE!', coins: bonusCoins, xp: summary.xp, items: {} });
+  playQuestClaimCelebration({ badge: summary.story ? 'TALE ' + summary.story.order + ' OF ' + summary.story.total + ' COMPLETE!' : 'QUEST COMPLETE!', coins: bonusCoins, xp: summary.xp, items: summary.pocketReward.items });
   if (summary.story) {
     updateHeader();
     renderInventory();
@@ -20387,10 +20422,16 @@ function abandonWalkingQuest() {
   const wq = ensureWalkingQuestState();
   if (!wq.active) return;
   if (!confirm('Abandon "' + wq.active.name + '"? Progress on this quest will be lost (chest loot is yours to keep).')) return;
-  const side = sideQuestActive();
-  if (side && side.auto) endOffRoadSideQuest('Quest abandoned.');
-  wq.active = null;
-  saveState();
+  const snapshot = snapshotGameState();
+  try {
+    questPocketSuspend(wq.active);
+    wq.active = null;
+    durableSaveState({throwOnFailure:true});
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    showToast('Could not save abandonment. Your quest and progress are still safe.');
+    return;
+  }
   clearWalkingQuestFromMap();
   closeWalkQuestSheet();
   showToast('Quest abandoned. The trail will wait for you.');
@@ -20485,36 +20526,57 @@ function sideQuestPocketAlert() {
 function trailModeCore() { return window.BurbzTrailModeCore || null; }
 
 // --- Pocket time -------------------------------------------------------------
-// The bonus is paid for the phone being AWAY, so it only counts while the page
-// is hidden — screen off, or Burbz in the background — and only while a wander
-// is actually running.
-let trailPocketSince = null;
-function trailPocketAccrue() {
-  const active = sideQuestActive();
-  if (!active || trailPocketSince === null) { trailPocketSince = null; return; }
-  const spent = Date.now() - trailPocketSince;
-  trailPocketSince = null;
-  if (spent <= 0) return;
-  active.pocketMs = Math.max(0, Number(active.pocketMs) || 0) + spent;
-  saveState();
+// Hidden-page timestamps survive screen locking, page freezing and reloads.
+// Browsers cannot tell a physical pocket from switching to another app.
+function questPocketChange(quest, event, now = Date.now()) {
+  if (quest) Object.assign(quest, window.BurbzQuestPocketCore.transition(quest, event, now));
 }
-function trailPocketVisibilityChanged() {
-  if (document.hidden) {
-    if (sideQuestActive()) trailPocketSince = Date.now();
-    return;
-  }
-  trailPocketAccrue();
+function questPocketSuspend(quest, now = Date.now()) { questPocketChange(quest, 'suspend', now); }
+function questPocketResume(quest, now = Date.now()) {
+  questPocketChange(quest, 'resume', now);
+  questPocketChange(quest, document.hidden ? 'hide' : 'show', now);
+}
+function trailPocketAccrue() {
+  [activeWalkingQuest(), sideQuestActive()].filter(Boolean).forEach(q => questPocketChange(q, 'show'));
+  saveState(); // Keep observed visibility in memory even if storage is temporarily full.
+}
+function trailPocketVisibilityChanged(event) {
+  if (!gameState) return;
+  const hidden = event && event.type === 'pagehide' || document.hidden;
+  [activeWalkingQuest(), sideQuestActive()].filter(Boolean).forEach(q => questPocketChange(q, hidden ? 'hide' : 'show'));
+  saveState(); // Keep observed visibility in memory even if storage is temporarily full.
 }
 document.addEventListener('visibilitychange', trailPocketVisibilityChanged);
-
-function sideQuestPocketReading(active) {
-  const core = trailModeCore();
-  if (!core || !active) return { share: 0, multiplier: 1, pocketMinutes: 0, earned: false };
-  let pocketMs = Math.max(0, Number(active.pocketMs) || 0);
-  // Count the stretch still in progress, so the log reads true mid-walk.
-  if (trailPocketSince !== null) pocketMs += Math.max(0, Date.now() - trailPocketSince);
-  const startedAt = Date.parse(active.startedAt || '') || Date.now();
-  return core.pocketBonus(pocketMs, Math.max(1, Date.now() - startedAt));
+window.addEventListener('pagehide', trailPocketVisibilityChanged);
+window.addEventListener('pageshow', trailPocketVisibilityChanged);
+function sideQuestPocketReading(active) { return window.BurbzQuestPocketCore.reading(active || {}, Date.now()); }
+function questPocketNote(quest, reward) {
+  const r = reward || sideQuestPocketReading(quest);
+  return '<div class="trail-pocket-note">' + (r.earned
+    ? '🏅 TRAIL BONUS ×' + r.multiplier.toFixed(2) + ' · ' + r.pocketMinutes + ' min screen away' + (reward ? ' · +' + r.extraXp + ' XP · ' + Object.entries(r.items).map(([id,n]) => '+' + n + ' ' + (lootCore().materialById(id)?.label || id)).join(' · ') : ' · extra loot at the finish')
+    : '📱 Put the phone away while you walk. After one minute with Burbz hidden, earn up to 50% extra XP, extra materials and the Pocket Pathfinder achievement at the finish.') + '</div>';
+}
+function applyQuestPocketReward(quest, baseXp) {
+  questPocketChange(quest, 'finish');
+  const reward = window.BurbzQuestPocketCore.reward(quest, baseXp, Date.now());
+  gameState.inventory = gameState.inventory || {};
+  gameState.inventory.items = gameState.inventory.items || {};
+  Object.entries(reward.items).forEach(([id,n]) => { gameState.inventory.items[id] = (Number(gameState.inventory.items[id]) || 0) + n; });
+  if (reward.achievement) {
+    if (!gameState.badges) gameState.badges = {};
+    reward.achievementNew = !gameState.badges[reward.achievement];
+    gameState.badges[reward.achievement] = true;
+    if (reward.achievementNew) logDiary('badge', {name:'Pocket Pathfinder'});
+  }
+  return reward;
+}
+function commitQuestFinish(kind, quest, apply) {
+  return window.BurbzQuestPocketCore.commit({key:window.BurbzQuestPocketCore.receiptKey(kind, quest),now:Date.now(),
+    snapshot:snapshotGameState,restore:restoreGameStateSnapshot,getReceipt:questClaimReceipt,setReceipt:setQuestClaimReceipt,
+    apply,persist:()=>durableSaveState({throwOnFailure:true,queueCloud:false})});
+}
+function announceQuestPocketReward(reward) {
+  if (reward?.achievementNew) showToast('🏅 Achievement earned: Pocket Pathfinder!');
 }
 
 // --- Intro sheet -------------------------------------------------------------
@@ -20525,9 +20587,9 @@ function openSideQuestIntroSheet() {
     '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🎒</div><div><div class="quest-board-title">Side Quest</div><div class="quest-board-intro">Just explore — Burbz charts wherever you go.</div></div></div>' +
     '<div class="quest-desc" style="line-height:1.55;">' +
     '<p>🗺️ <b>No markers, no route.</b> Start the Side Quest and go wherever you want — every step you take is charted onto your own trail.</p>' +
-    '<p>📱 <b>Pocket the phone.</b> The quest keeps working with the screen off. When you stumble across something out there, the phone buzzes and chirps in your pocket.</p>' +
+    '<p>📱 <b>Pocket the phone.</b> Time with Burbz hidden earns bonus XP, materials and an achievement when you finish. Your browser may pause GPS with the screen off; check your route when needed.</p>' +
     '<p>✨ <b>Take the phone out</b> and your discovery is waiting on the map — a treasure chest, a weapon, a wayside tale, or a quest-giver bird with a companion to offer.</p>' +
-    '<p>🧭 <b>Or just drift.</b> Stray 300 m from a walking quest\'s golden path and a side quest opens by itself. Your main quest keeps every marker; wander back and the side quest banks itself, finds kept.</p>' +
+    '<p>🧭 <b>A longer detour.</b> Stay at least 500 m from your original quest route for 40 minutes and a fresh, accurate GPS fix will start a side quest — even after time in your pocket. Your original route and progress are saved. Tap Resume Original at any time; returning near the route never ends the detour.</p>' +
     '<p>🤝 <b>At the end</b> you will have the option to turn your wander into a real quest for other players to play in the future.</p>' +
     '</div>' +
     '<button class="wq-detail-start" onclick="startSideQuest()">🎒 START SIDE QUEST</button>' +
@@ -20538,7 +20600,8 @@ function openSideQuestIntroSheet() {
 // Started by the player and nobody else — the retired Trail Mode was the
 // one caller that opened a wander on its own.
 function startSideQuest() {
-  if (activeWalkingQuest()) { showToast('Finish or abandon your current quest first'); return; }
+  if (activeWalkingQuest() || savedOriginalQuest()) { showToast('Resume or finish your saved walking quest first'); return; }
+  if (ensureSideQuestState().suspendedDetour) { resumeSavedDetour(); return; }
   if (sideQuestActive()) { openSideQuestLogSheet(); return; }
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) { showToast('Location is needed before a Side Quest can chart your trail'); return; }
   const sq = ensureSideQuestState();
@@ -20553,6 +20616,7 @@ function startSideQuest() {
     nextFindAtM: SIDE_QUEST_FIRST_FIND_M,
     discoveries: []
   };
+  questPocketResume(sq.active);
   saveState();
   startSideQuestPocketMode();
   drawSideQuestOnMap();
@@ -20568,7 +20632,13 @@ function startSideQuest() {
 // --- Position stream ---------------------------------------------------------
 function sideQuestOnPositionFix(lat, lon, accuracy) {
   const active = sideQuestActive();
-  if (!active || (Number.isFinite(accuracy) && accuracy > 80)) return;
+  if (!active || !Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 80) return;
+  if (active.resumeNeedsFix) {
+    active.path.push([lat, lon, Date.now(), 'resume']);
+    active.resumeNeedsFix = false;
+    saveState();
+    return; // preserve the charted trail without counting the suspended journey
+  }
   const last = active.path[active.path.length - 1];
   const step = mapDistanceMeters({ lat: last[0], lon: last[1] }, { lat, lon });
   if (step < SIDE_QUEST_MIN_STEP_M) return;
@@ -20610,9 +20680,10 @@ function spawnSideQuestDiscovery(active, lat, lon) {
   // side_trail_core adds wayside tales to the classic finds; without it the
   // old three-way roll still stands.
   const trailCore = window.BurbzSideTrailCore;
-  const kind = trailCore ? trailCore.sideTrailDiscoveryKind(roll) :
+  const kind = active.theme && !active.discoveries.length ? active.theme.firstKind : trailCore ? trailCore.sideTrailDiscoveryKind(roll) :
     (roll < 0.45 ? 'chest' : roll < 0.72 ? 'weapon' : 'questgiver');
   const d = { id: 'sqd_' + active.discoveries.length + '_' + Date.now().toString(36), kind, lat, lon, foundAt: new Date().toISOString(), claimed: false };
+  if (active.theme) { d.character = active.theme.character; d.context = active.theme.objective; }
   if (kind === 'lore') {
     const tale = trailCore.nextWaysideTale(ensureSideQuestState().waysideTales.map(t => t.id), Math.random);
     d.tale = { id: tale.id, title: tale.title, text: tale.text }; // persisted now; claim never rerolls
@@ -20642,7 +20713,9 @@ function spawnSideQuestDiscovery(active, lat, lon) {
 let sideQuestMapMarkers = [];
 function sideQuestTrailGeoJSON(active) {
   if (!active || active.path.length < 2) return { type: 'FeatureCollection', features: [] };
-  return { type: 'FeatureCollection', features: [{ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: active.path.map(p => [p[1], p[0]]) } }] };
+  const segments = [[]];
+  for (const p of active.path) { if (p[3] === 'resume') segments.push([]); segments[segments.length - 1].push([p[1], p[0]]); }
+  return { type:'FeatureCollection', features:segments.filter(points => points.length > 1).map(coordinates => ({type:'Feature',properties:{},geometry:{type:'LineString',coordinates}})) };
 }
 function drawSideQuestTrail() {
   if (!liveMap) return;
@@ -20691,12 +20764,13 @@ function clearSideQuestFromMap() {
 // is saved and pinned on the live map for good, even after the quest ends.
 const SIDE_QUEST_NPC_LANDMARK_CAP = 30;
 let sideQuestNpcMarkers = [];
-function rememberSideQuestNpc(active, d) {
+function rememberSideQuestNpc(active, d, deferredEffects) {
   const sq = ensureSideQuestState();
   if (sq.npcLandmarks.some(n => n.id === d.id)) return;
   sq.npcLandmarks.push({ id: d.id, species: d.species, rarity: d.rarity || 'common', lat: d.lat, lon: d.lon, foundAt: d.foundAt || new Date().toISOString(), questId: active ? active.id : null });
   if (sq.npcLandmarks.length > SIDE_QUEST_NPC_LANDMARK_CAP) sq.npcLandmarks.splice(0, sq.npcLandmarks.length - SIDE_QUEST_NPC_LANDMARK_CAP);
-  drawSideQuestNpcLandmarks();
+  if (deferredEffects) deferredEffects.push(drawSideQuestNpcLandmarks);
+  else drawSideQuestNpcLandmarks();
 }
 function drawSideQuestNpcLandmarks() {
   sideQuestNpcMarkers.forEach(m => { try { m.remove(); } catch (e) {} });
@@ -20771,30 +20845,41 @@ async function sideQuestClaimDiscovery(id, opts) {
     showToast('🎁 TREASURE FOUND! +' + loot.coins + ' coins · +' + loot.xp + ' XP · ' + foodText);
     return true;
   }
-  if (d.kind === 'lore') {
-    // A wayside tale: hedge-lore found only off the roads. It joins the
-    // Feathered Folio next to the Twenty Roads scrolls.
+  const snapshot = snapshotGameState(), effects = [];
+  const previousLevel = Number(gameState.player.level) || 1;
+  let lines = [], added = false;
+  try {
     d.claimed = true;
-    const sq = ensureSideQuestState();
-    if (d.tale && !sq.waysideTales.some(t => t.id === d.tale.id)) {
-      sq.waysideTales.push({ id: d.tale.id, title: d.tale.title, text: d.tale.text, foundAt: d.foundAt || new Date().toISOString() });
+    if (d.kind === 'lore') {
+      const sq = ensureSideQuestState();
+      if (d.tale && !sq.waysideTales.some(t => t.id === d.tale.id)) {
+        sq.waysideTales.push({ id: d.tale.id, title: d.tale.title, text: d.tale.text, foundAt: d.foundAt || new Date().toISOString() });
+      }
+      applyPlayerXpState(10);
+    } else if (d.kind === 'weapon') {
+      lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true }), effects);
+      applyPlayerXpState(15);
+    } else {
+      rememberSideQuestNpc(active, d, effects);
+      added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
+      applyPlayerXpState(15);
     }
-    addPlayerXp(10);
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    showToast('Your discovery could not be saved. Please try again — it is still here.');
+    return false;
+  }
+  effects.forEach(effect => { try { effect(); } catch (error) { console.warn('Discovery presentation failed', error); } });
+  announcePlayerLevelUps(previousLevel);
+  if (d.kind === 'lore') {
     SFX.questComplete();
     if (d.tale && !quiet) showQuestNpcDialog('📜 ' + d.tale.title, d.tale.text + ' (+10 XP — kept in your Feathered Folio)');
     else if (d.tale) showToast('📜 Wayside tale found: ' + d.tale.title + ' (+10 XP)');
   } else if (d.kind === 'weapon') {
-    d.claimed = true;
-    let lines = [];
-    try { lines = grantLootDrops(lootCore().rollLoot('map_cache', { rng: Math.random, pity: gameState.lootPity, guaranteeGear: true })); } catch (e) {}
-    addPlayerXp(15);
     SFX.capture();
     showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
   } else {
-    d.claimed = true;
-    rememberSideQuestNpc(active, d); // the quest giver keeps this perch on the map
-    const added = addTavernPatron({ species: d.species, rarity: d.rarity || 'common' }, { name: 'Side Quest' });
-    addPlayerXp(15);
     SFX.levelUp();
     if (quiet) showToast('🐦 The wandering quest giver sends the ' + d.species + (added ? ' to the Academy Barracks!' : ' with regards. (+15 XP)'));
     else showQuestNpcDialog('Wandering quest giver', added
@@ -20802,7 +20887,6 @@ async function sideQuestClaimDiscovery(id, opts) {
       : 'You found me off the beaten path, explorer! My friend the ' + d.species + ' already flies with you — take this instead. (+15 XP)');
   }
   vibrate(QUEST_BUZZ.chest);
-  saveState();
   updateHeader();
   renderInventory();
   drawSideQuestOnMap();
@@ -20815,72 +20899,91 @@ function openSideQuestLogSheet() {
   const active = sideQuestActive();
   if (!active) { openQuestBoard(); return; }
   const found = active.discoveries.length, unclaimed = active.discoveries.filter(d => !d.claimed).length;
-  const livePocket = sideQuestPocketReading(active);
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
-    '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🎒</div><div><div class="quest-board-title">Side Quest — exploring</div><div class="quest-board-intro">' +
+    '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🎒</div><div><div class="quest-board-title">' + escapeHtml(active.name || 'Side Quest') + '</div><div class="quest-board-intro">' +
     (active.distanceM / 1000).toFixed(2) + ' km wandered · ' + found + ' discover' + (found === 1 ? 'y' : 'ies') + (unclaimed ? ' · ' + unclaimed + ' waiting on the map!' : '') + '</div></div></div>' +
-    '<div class="quest-desc" style="line-height:1.5;">Keep the phone in your pocket and keep exploring — it will buzz and chirp when you stumble across something. Ending the quest keeps everything you found, and you can turn the wander into a real quest for others.</div>' +
-    (livePocket.earned
-      ? '<div class="trail-pocket-note">🏅 TRAIL BONUS ×' + livePocket.multiplier.toFixed(2) + ' so far — ' + livePocket.pocketMinutes + ' minute' + (livePocket.pocketMinutes === 1 ? '' : 's') + ' pocketed.</div>'
-      : '<div class="trail-pocket-note">📱 Pocket the phone as you walk to start earning a Trail Bonus — up to half as much XP again.</div>') +
+    questDetourActionsHTML() +
+    (active.theme ? '<div class="quest-desc"><b>' + escapeHtml(active.theme.character) + '</b> · ' + escapeHtml(active.theme.objective) + '</div>' : '') +
+    '<div class="quest-desc" style="line-height:1.5;">Put the phone away and enjoy your walk. Check your route when needed; some browsers pause GPS with the screen off. Ending the quest keeps everything you found, and you can turn the wander into a real quest for others.</div>' +
+    questPocketNote(active) +
     '<button class="wq-detail-start" onclick="closeWalkQuestSheet(); switchScreen(\'map\');">🗺️ VIEW MY TRAIL</button>' +
     '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'active\')">📸 TRAIL PHOTOS</button>' +
     '<button class="wq-detail-start" style="background:linear-gradient(135deg,#a78335,#74541d);" onclick="endSideQuest()">🏁 END SIDE QUEST</button></div>';
   showWalkQuestSheet(el);
 }
 
+let sideQuestFinishInFlight = false;
 async function endSideQuest() {
   const sq = ensureSideQuestState();
   const active = sq.active;
-  if (!active) return;
-  const unclaimed = active.discoveries.filter(d => !d.claimed);
-  for (const d of unclaimed) {
-    const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
-    if (!claimed) {
-      showToast('Collect each item inside your yellow circle before ending this Side Quest. Unsaved finds stay on your map.');
+  if (!active || sideQuestFinishInFlight) return;
+  sideQuestFinishInFlight = true;
+  try {
+    const unclaimed = active.discoveries.filter(d => !d.claimed);
+    for (const d of unclaimed) {
+      const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
+      if (sq.active !== active) return;
+      if (!claimed && !d.claimed) {
+        showToast('Collect each item inside your yellow circle before ending this Side Quest. Unsaved finds stay on your map.');
+        return;
+      }
+    } // nothing found is ever lost
+    if (sq.active !== active) return;
+    const previousLevel = gameState.player.level, deferredEffects = [];
+    const tx = commitQuestFinish('side', active, () => {
+      questPocketChange(active, 'finish');
+      const pocket = sideQuestPocketReading(active);
+      const baseXp = Math.min(200, 25 + Math.round(active.distanceM / 40));
+      // The Trail Bonus is paid on top of the cap, not squeezed under it: a walk
+      // done properly, with the phone away, is worth more than the same walk done
+      // staring at the screen.
+      const xp = Math.round(baseXp * pocket.multiplier);
+      const pocketReward = applyQuestPocketReward(active, baseXp);
+      applyPlayerXpState(xp);
+      const summary = {
+        id: active.id, kind: 'side-quest', name: active.name || 'Side Quest', startedAt: active.startedAt, endedAt: new Date(Date.now()).toISOString(),
+        distanceM: active.distanceM, discoveries: active.discoveries.length, xp, pocketReward,
+        pocketMs: Math.max(0, Number(active.pocketMs) || 0), pocketMultiplier: pocket.multiplier,
+        path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
+        sharedDraft: false
+      };
+      if (typeof logDiary === 'function') logDiary('side_quest', { km: +(summary.distanceM / 1000).toFixed(2), discoveries: summary.discoveries, xp });
+      sq.history.unshift(summary);
+      if (sq.history.length > 40) sq.history.length = 40;
+      sq.active = null;
+      updateQuestProgress('walk_completed', 1, deferredEffects);
+      return summary;
+    });
+    if (tx.status !== 'committed') {
+      if (tx.status === 'failed') showToast('Quest rewards could not be saved. Your wander is kept — try again.');
       return;
     }
-  } // nothing found is ever lost
-  trailPocketAccrue();  // bank the stretch still running when the walk ends
-  const pocket = sideQuestPocketReading(active);
-  const baseXp = Math.min(200, 25 + Math.round(active.distanceM / 40));
-  // The Trail Bonus is paid on top of the cap, not squeezed under it: a walk
-  // done properly, with the phone away, is worth more than the same walk done
-  // staring at the screen.
-  const xp = Math.round(baseXp * pocket.multiplier);
-  addPlayerXp(xp);
-  const summary = {
-    id: active.id, kind: 'side-quest', name: active.name || 'Side Quest', startedAt: active.startedAt, endedAt: new Date().toISOString(),
-    distanceM: active.distanceM, discoveries: active.discoveries.length, xp,
-    pocketMs: Math.max(0, Number(active.pocketMs) || 0), pocketMultiplier: pocket.multiplier,
-    path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
-    sharedDraft: false
-  };
-  if (typeof logDiary === 'function') logDiary('side_quest', { km: +(summary.distanceM / 1000).toFixed(2), discoveries: summary.discoveries, xp });
-  lastWalkQuestSummaryView = summary; // lets the finish sheet open the trail photo book
-  sq.history.unshift(summary);
-  if (sq.history.length > 40) sq.history.length = 40;
-  sq.active = null;
-  updateQuestProgress('walk_completed', 1);
-  saveState();
-  stopSideQuestPocketMode();
-  clearSideQuestFromMap();
-  SFX.victory();
-  vibrate(QUEST_BUZZ.complete);
-  const el = walkQuestSheetEl();
-  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
-    '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🏁</div><div><div class="quest-board-title">Side Quest complete!</div><div class="quest-board-intro">' +
-    (summary.distanceM / 1000).toFixed(2) + ' km wandered · ' + summary.discoveries + ' discover' + (summary.discoveries === 1 ? 'y' : 'ies') + ' · +' + xp + ' XP</div></div></div>' +
-    (pocket.earned
-      ? '<div class="trail-pocket-note">🏅 TRAIL BONUS ×' + pocket.multiplier.toFixed(2) + ' — the phone stayed in your pocket for ' + pocket.pocketMinutes + ' minute' + (pocket.pocketMinutes === 1 ? '' : 's') + ' of this walk. ' + baseXp + ' XP became ' + xp + '.</div>'
-      : '<div class="trail-pocket-note">📱 No Trail Bonus this time — pocket the phone while you walk and the next wander pays up to half as much again.</div>') +
-    '<div class="quest-desc" style="line-height:1.5;">Your whole wander is charted and saved. Turn it into a real quest so other players can walk your trail in the future?</div>' +
-    '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'summary\')">📸 TRAIL PHOTOS</button>' +
-    '<button class="wq-detail-start" onclick="shareSideQuestDraft(\'' + summary.id + '\')">🤝 TURN INTO A QUEST FOR OTHERS</button>' +
-    '<button class="wq-detail-start" style="background:rgba(255,255,255,.08);" onclick="closeWalkQuestSheet()">DONE</button></div>';
-  showWalkQuestSheet(el);
-  if (currentScreen === 'quests') renderQuests();
+    const summary = tx.value, xp = summary.xp;
+    lastWalkQuestSummaryView = summary;
+    queueQuestClaimCloudSync();
+    deferredEffects.forEach(effect => { try { effect(); } catch (error) { console.warn('Quest completion notice failed', error); } });
+    announcePlayerLevelUps(previousLevel);
+    announceQuestPocketReward(summary.pocketReward);
+    updateHeader();
+    renderInventory();
+    stopSideQuestPocketMode();
+    clearSideQuestFromMap();
+    SFX.victory();
+    vibrate(QUEST_BUZZ.complete);
+    const el = walkQuestSheetEl();
+    el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close">✕</button>' +
+      '<div class="quest-board-hero"><div class="wqo-icon" style="font-size:40px;">🏁</div><div><div class="quest-board-title">Side Quest complete!</div><div class="quest-board-intro">' +
+      (summary.distanceM / 1000).toFixed(2) + ' km wandered · ' + summary.discoveries + ' discover' + (summary.discoveries === 1 ? 'y' : 'ies') + ' · +' + xp + ' XP</div></div></div>' +
+      questPocketNote(null, summary.pocketReward) +
+      questDetourActionsHTML() +
+      '<div class="quest-desc" style="line-height:1.5;">Your whole wander is charted and saved. Turn it into a real quest so other players can walk your trail in the future?</div>' +
+      '<button class="wq-detail-start" onclick="openQuestPhotoBook(\'summary\')">📸 TRAIL PHOTOS</button>' +
+      '<button class="wq-detail-start" onclick="shareSideQuestDraft(\'' + summary.id + '\')">🤝 TURN INTO A QUEST FOR OTHERS</button>' +
+      '<button class="wq-detail-start" style="background:rgba(255,255,255,.08);" onclick="closeWalkQuestSheet()">DONE</button></div>';
+    showWalkQuestSheet(el);
+    if (currentScreen === 'quests') renderQuests();
+  } finally { sideQuestFinishInFlight = false; }
 }
 
 function shareSideQuestDraft(id) {
@@ -20892,88 +20995,109 @@ function shareSideQuestDraft(id) {
   showToast('🤝 Saved as a quest draft! Community quests are coming soon — your trail is kept safe until then.');
 }
 
-// --- Off-road auto side quests -----------------------------------------------
-// Walk 300 m away from the main quest's golden route and a side quest opens by
-// itself: random loot, random strangers, wayside tales. The main quest keeps
-// every marker and waits. Walk back within 150 m and the side quest banks
-// itself — every find kept. side_trail_core.js decides; this wiring only acts.
-let sideTrailStrikes = 0;
-function maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy) {
-  const core = window.BurbzSideTrailCore;
-  if (!core || !quest || !Array.isArray(quest.route) || quest.route.length < 2) return;
-  const side = sideQuestActive();
-  const distM = core.distanceFromRouteM(quest.route, lat, lon);
-  const step = core.sideTrailStep({ strikes: sideTrailStrikes }, {
-    questActive: true,
-    sideActive: !!side,
-    sideAuto: !!(side && side.auto),
-    distM,
-    accuracy
-  });
-  sideTrailStrikes = step.strikes;
-  if (step.action === 'start') startOffRoadSideQuest(quest, lat, lon);
-  else if (step.action === 'end') endOffRoadSideQuest('Back on "' + quest.name + '"!');
+// --- Saved off-route detours --------------------------------------------------
+let detourLastEvidenceSave = 0;
+function savedOriginalQuest() {
+  const wq = ensureWalkingQuestState(), side = sideQuestActive();
+  return wq.suspended || (side?.auto && side.parentQuestId === wq.active?.id ? wq.active : null);
 }
-
-function startOffRoadSideQuest(quest, lat, lon) {
-  const core = window.BurbzSideTrailCore;
-  const sq = ensureSideQuestState();
-  if (sq.active) return;
-  const name = core.sideTrailQuestName(Math.random);
-  sq.active = {
-    id: 'sq_' + Date.now().toString(36),
-    name,
-    auto: true,
-    parentQuestId: quest.id,
-    parentQuestName: quest.name,
-    startedAt: new Date().toISOString(),
-    path: [[lat, lon, Date.now()]],
-    distanceM: 0,
-    nextFindAtM: SIDE_QUEST_FIRST_FIND_M,
-    discoveries: []
-  };
-  saveState();
-  startSideQuestPocketMode();
-  drawSideQuestOnMap();
-  updateWalkQuestHud();
-  SFX.levelUp();
-  vibrate(QUEST_BUZZ.start);
-  showQuestNpcDialog('A voice from the hedgerow', 'Off the road already, walker? Good — the best finds hide where no quest points. I name this wander "' + name + '". Your quest keeps its markers; drift back within ' + core.SIDE_TRAIL_RETURN_M + ' m of the golden path whenever you please.');
-  showToast('🎒 Side quest: ' + name + ' — "' + quest.name + '" waits, untouched.');
-  if (currentScreen === 'quests') renderQuests();
+function questDetourActionsHTML() {
+  if (savedOriginalQuest()) return '<button class="wq-detail-start" data-detour-resume="original" onclick="resumeOriginalQuest()">↩ RESUME ORIGINAL — ' + escapeHtml(savedOriginalQuest().name) + '</button><div class="quest-desc">Resume anywhere, at any time. Your detour and unclaimed finds stay saved.</div>';
+  const detour = ensureSideQuestState().suspendedDetour;
+  return detour ? '<button class="wq-detail-start" data-detour-resume="side" onclick="resumeSavedDetour()">🎒 CONTINUE SAVED DETOUR — ' + escapeHtml(detour.name) + '</button>' : '';
 }
-
-// Quiet ending for an auto side quest: bank every find, thank the walker,
-// leave the main quest exactly as it was. The big completion sheet stays
-// reserved for wanders the player chose to start.
-async function endOffRoadSideQuest(reason) {
-  const sq = ensureSideQuestState();
-  const active = sq.active;
-  if (!active || !active.auto) return;
-  for (const d of active.discoveries.filter(x => !x.claimed)) {
-    const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
-    if (!claimed) return; // stays active — nothing found is ever lost
+function updateDetourResumeButton() {
+  const hud = $('mapQuestHud'); if (!hud) return;
+  let button = $('mapDetourResume');
+  if (!button) {
+    button = document.createElement('button'); button.id = 'mapDetourResume'; button.type = 'button';
+    button.className = 'mqh-photo-btn';
+    button.onclick = event => { event.stopPropagation(); if (savedOriginalQuest()) resumeOriginalQuest(); else resumeSavedDetour(); };
+    hud.appendChild(button);
   }
-  const xp = Math.min(120, 15 + Math.round(active.distanceM / 50));
-  addPlayerXp(xp);
-  if (typeof logDiary === 'function') logDiary('side_quest', { km: +(active.distanceM / 1000).toFixed(2), discoveries: active.discoveries.length, xp });
-  sq.history.unshift({
-    id: active.id, kind: 'side-quest', auto: true, name: active.name,
-    startedAt: active.startedAt, endedAt: new Date().toISOString(),
-    distanceM: active.distanceM, discoveries: active.discoveries.length, xp,
-    path: active.path.filter((_, i) => i % 3 === 0 || i === active.path.length - 1).map(p => [Number(p[0].toFixed(5)), Number(p[1].toFixed(5))]),
-    sharedDraft: false
-  });
-  if (sq.history.length > 40) sq.history.length = 40;
-  sq.active = null;
-  saveState();
-  stopSideQuestPocketMode();
-  clearSideQuestFromMap();
-  SFX.questComplete();
-  vibrate(QUEST_BUZZ.complete);
-  showToast('🎒 ' + (reason || 'Side quest banked.') + ' "' + active.name + '" is done — +' + xp + ' XP, every find kept.');
-  if (currentScreen === 'quests') renderQuests();
+  const original = savedOriginalQuest(), detour = ensureSideQuestState().suspendedDetour;
+  button.hidden = !original && !detour;
+  button.textContent = original ? '↩ Resume Original' : '🎒 Saved Detour';
+  button.setAttribute('aria-label', original ? 'Resume original quest at any time' : 'Continue saved detour');
 }
+function commitDetourTransition(transition) {
+  if (!transition) return false;
+  const snapshot = snapshotGameState(), now = Date.now();
+  try {
+    if (transition.outgoing && typeof questPocketSuspend === 'function') questPocketSuspend(transition.outgoing, now);
+    if (typeof questPocketResume === 'function') questPocketResume(transition.incoming, now);
+    if (transition.incoming.auto) transition.incoming.resumeNeedsFix = true;
+    else { transition.incoming.lastFix = null; transition.incoming.offRouteEvidence = null; }
+    Object.assign(gameState.walkingQuests, transition.walking); Object.assign(gameState.sideQuest, transition.side);
+    durableSaveState({throwOnFailure:true});
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    showToast('Could not save the switch. Both quests are safe; please retry.');
+    return false;
+  }
+  clearWalkingQuestFromMap(); clearSideQuestFromMap();
+  if (sideQuestActive()) { startSideQuestPocketMode(); drawSideQuestOnMap(); }
+  else { stopSideQuestPocketMode(); drawWalkingQuestOnMap(); }
+  updateWalkQuestHud(); closeWalkQuestSheet();
+  if (currentScreen === 'quests') renderQuests();
+  return true;
+}
+function resumeOriginalQuest() {
+  const ok = commitDetourTransition(window.BurbzSideTrailCore.detourTransition(ensureWalkingQuestState(), ensureSideQuestState(), 'original'));
+  if (ok) showToast('Original quest resumed. Your detour and every unclaimed find remain saved.');
+  return ok;
+}
+function resumeSavedDetour() {
+  const ok = commitDetourTransition(window.BurbzSideTrailCore.detourTransition(ensureWalkingQuestState(), ensureSideQuestState(), 'side'));
+  if (ok) showToast('Saved detour resumed. Your original quest is waiting.');
+  return ok;
+}
+function maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy, fixAt) {
+  const core = window.BurbzSideTrailCore;
+  if (!core || !quest || sideQuestActive() || ensureSideQuestState().suspendedDetour) return false;
+  if (!Array.isArray(quest.route) || quest.route.length < 2) return false;
+  // Legitimate loop/alignment updates belong to the same original quest.
+  // Refresh only while it is active; a suspended original is never rewritten.
+  if (JSON.stringify(quest.detourOriginalRoute) !== JSON.stringify(quest.route)) {
+    quest.detourOriginalRoute = quest.route.map(p => p.slice());
+    quest.offRouteEvidence = null;
+  }
+  const route = quest.detourOriginalRoute || quest.route;
+  if (!Array.isArray(route) || route.length < 2) return false;
+  const previous = quest.offRouteEvidence;
+  const step = core.sideTrailStep(previous, {
+    questActive:true, questId:quest.id, sideActive:false, now:Date.now(), fixAt,
+    distM:core.distanceFromRouteM(route, lat, lon), accuracy
+  });
+  quest.offRouteEvidence = step;
+  if (step.action === 'start') return startOffRoadSideQuest(quest, lat, lon);
+  if (step.startedAt !== previous?.startedAt || Date.now() - detourLastEvidenceSave >= 20000) {
+    const result = saveState();
+    if (result?.ok === false && step.startedAt !== null) quest.offRouteEvidence = previous;
+    else detourLastEvidenceSave = Date.now();
+  }
+  return false;
+}
+function startOffRoadSideQuest(quest, lat, lon) {
+  const core = window.BurbzSideTrailCore, now = Date.now();
+  // This entry point cannot bypass the jointly required distance/time evidence.
+  if (quest !== activeWalkingQuest() || quest.offRouteEvidence?.action !== 'start' || now - quest.offRouteEvidence.lastFixAt > core.SIDE_TRAIL_MAX_FIX_AGE_MS) return false;
+  const theme = core.sideTrailTheme(Math.random);
+  const candidate = {
+    id:'sq_' + now.toString(36), name:theme.name, theme, auto:true,
+    parentQuestId:quest.id, parentQuestName:quest.name,
+    startedAt:new Date(now).toISOString(), path:[[lat,lon,now]],
+    distanceM:0, nextFindAtM:SIDE_QUEST_FIRST_FIND_M, discoveries:[]
+  };
+  const ok = commitDetourTransition(core.detourTransition(ensureWalkingQuestState(), ensureSideQuestState(), 'start', candidate));
+  if (!ok) return false;
+  SFX.levelUp(); vibrate(QUEST_BUZZ.start);
+  showQuestNpcDialog(theme.character, theme.intro + ' Your original quest is saved. Tap Resume Original anywhere, at any time; every unclaimed detour find will wait.');
+  return true;
+}
+// Explicit completion uses the same durable claim/receipt flow as other side quests.
+// It is never called by distance, original completion, abandonment or switching.
+async function endOffRoadSideQuest() { return endSideQuest(); }
 
 // A Side Quest survives app restarts: redraw and keep charting on relaunch.
 let sideQuestResumeArmed = false;
@@ -20994,7 +21118,7 @@ function resumeSideQuestIfAny() {
 
 function openActiveWalkQuestSheet() {
   const quest = activeWalkingQuest();
-  if (!quest) { openQuestOfferSheet(); return; }
+  if (!quest) { if (sideQuestActive()) openSideQuestLogSheet(); else openQuestOfferSheet(); return; }
   const meta = WALK_QUEST_KIND_META[quest.type] || WALK_QUEST_KIND_META.path;
   const total = quest.checkpoints.length;
   const hit = quest.checkpoints.filter(c => c.reached).length;
@@ -21002,6 +21126,8 @@ function openActiveWalkQuestSheet() {
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
     '<div class="quest-overlay-head"><div class="quest-overlay-icon">' + meta.icon + '</div><div><div class="quest-name">' + escapeHtml(quest.name) + '</div><div class="quest-desc">' + meta.label + (quest.loopStyle ? ' · ' + (quest.loopStyle === 'loop' ? (quest.loopedBack ? '↺ loop · new paths home' : '↺ loop') : '↔ out & back') : '') + ' · given by ' + escapeHtml(quest.npcName) + '</div></div></div>' +
     (quest.routeSchemaVersion === 1 ? window.BurbzWalkingQuestUI.routeFacts({...quest, source:'OpenStreetMap', startDistM:liveMapHasPrecisePosition && liveMapLastPosition ? mapDistanceMeters(liveMapLastPosition,{lat:quest.route[0][0],lon:quest.route[0][1]}) : null, points:quest.route.map(p=>({lat:p[0],lon:p[1]}))}, {compact:true}) : '') +
+    questPocketNote(quest) +
+    questDetourActionsHTML() +
     window.BurbzWalkingQuestUI.encounterCards(window.BurbzWalkingEncounterCore.listQuestEncounters(quest)) +
     '<div class="wq-summary-grid">' +
     '<div class="wq-summary-stat"><div class="num">' + (quest.distanceWalkedM / 1000).toFixed(2) + '</div><div class="lbl">km walked</div></div>' +
@@ -21095,6 +21221,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
     '<div class="wq-summary-stat"><div class="num">+' + summary.xp + '</div><div class="lbl">XP earned</div></div>' +
     (summary.merlinBondXp ? '<div class="wq-summary-stat"><div class="num">+' + summary.merlinBondXp + '</div><div class="lbl">Merlin bond XP</div></div>' : '') +
     '</div>' +
+    (summary.pocketReward ? questPocketNote(null, summary.pocketReward) : '') +
     (summary.trailBirds && summary.trailBirds.total ?
       '<div class="quest-desc" style="margin:6px 0">🐦 Trail birds spotted: <b>' + summary.trailBirds.matched + '/' + summary.trailBirds.total + '</b>' +
       (summary.trailBirds.xp ? ' — bonus +' + summary.trailBirds.xp + ' XP, +' + summary.trailBirds.coins + ' 🪙' : ' — no bonus this time') +
@@ -21670,6 +21797,7 @@ Object.assign(window, {
   // Academy Alive ambience: exported for QA harnesses and evidence scripts.
   toggleAcademyView, toggleAcademyTreeLights, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, engine3d: () => ACADEMY_3D, view: () => academyViewMode() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
+  resumeOriginalQuest, resumeSavedDetour,
   __burbzQuestDebug: {
     getState: () => gameState,
     getActive: () => activeWalkingQuest(),
@@ -21741,7 +21869,7 @@ function handleLivePosition(pos, fly) {
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy, at:Number(pos.timestamp) });
   // A cached GPS position may draw the map, but cannot award trail rewards.
   if (mapGatheringGate({lat,lon}).ready) {
-    try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
+    try { questOnPositionFix(lat, lon, accuracy, Number(pos.timestamp)); } catch (err) { console.warn('BURBZ quest fix failed', err); }
     try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
   }
   return true;
@@ -22035,7 +22163,7 @@ function consumeEquippedPotion(bird) {
 }
 
 // Apply a rolled loot bundle to the save and return display strings.
-function grantLootDrops(drops) {
+function grantLootDrops(drops, deferredEffects) {
   const L = lootCore();
   const lines = [];
   (drops || []).forEach(d => {
@@ -22050,7 +22178,7 @@ function grantLootDrops(drops) {
       const g = L.gearById(d.id);
       gameState.inventory.gear[d.id] = (gameState.inventory.gear[d.id] || 0) + d.qty;
       lines.push({ icon:(g && g.icon) || '🗡️', gearId:d.id, text:((g && g.label) || d.id) + '!', rarity:(g && g.rarity) || null });
-      updateQuestProgress('gear_found', d.qty);
+      updateQuestProgress('gear_found', d.qty, deferredEffects);
     }
   });
   return lines;
@@ -22099,7 +22227,7 @@ const MAP_PICKUP_TYPES = [
   { id:'gritbank', glyph:'⚪', label:'Gravel bank',   weight:7,  biomes:{ water:12, coast:12, hills:10 }, grant() { addLarderIngredient('gizzard_grit', 1); return '+1 Gizzard Grit (Stores larder)'; } },
   { id:'midges',   glyph:'🦟', label:'Midge cloud',   weight:6,  biomes:{ wetland:11, water:10, urban:3 }, grant() { addLarderIngredient('aerial_midges', 1); return '+1 Cloud of Midges (Stores larder)'; } },
   { id:'chest',    glyph:CHEST_SVG, toastGlyph:'🧰', label:'Treasure chest', weight:5,  biomes:{ coast:8, water:6 }, grant(r) { const n = 20 + Math.floor(r() * 21); addCoins(n); gameState.inventory.items.shiny_pebble = (gameState.inventory.items.shiny_pebble || 0) + 1; return '+' + n + ' coins & a Shiny Pebble'; } },
-  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  biomes:{ urban:13, water:2 }, grant(r) { const n = 8 + Math.floor(r() * 9); addPlayerXp(n); return '+' + n + ' Trainer XP'; } },
+  { id:'xp',       glyph:'📜', label:'Field notes',   weight:8,  biomes:{ urban:13, water:2 }, grant(r) { const n = 8 + Math.floor(r() * 9); applyPlayerXpState(n); return '+' + n + ' Trainer XP'; } },
   { id:'birdscroll', glyph:'🪶', label:'Study scroll', weight:5,  biomes:{ urban:8, water:2 }, grant(r) { const key = randomXpScrollKey(r); addBirdXpItemToBag(key, 1); const it = birdXpItem(key); return '+1 ' + it.label + ' (' + birdXpItemDetail(key) + ') — use it from your Stores'; } },
   // --- Fletcher's Forge materials, lying where the kingdom left them ---
   { id:'twig',     glyph:'🪵', label:'Oak twig',      weight:12, biomes:{ woodland:30, park:16, urban:5, water:2, coast:3 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'oak_twig', qty:1 }])); } },
@@ -22109,8 +22237,8 @@ const MAP_PICKUP_TYPES = [
   { id:'moondust', glyph:'🌙', label:'Moon dust',     weight:4,  grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'moon_dust', qty:1 }])); } },
   { id:'stormglass', glyph:'🌩️', label:'Storm glass', weight:3,  biomes:{ coast:7, hills:6 }, grant() { return lootLinesToText(grantLootDrops([{ kind:'material', id:'storm_glass', qty:1 }])); } },
   // --- Gear on the ground: caches shimmer, relics glow ---
-  { id:'gearcache', glyph:'🎒', label:'Feathered cache', weight:6, cls:'gear', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_cache', { rng:r, pity:gameState.lootPity, guaranteeGear:true }))); } },
-  { id:'relic',    glyph:'✨', label:'Relic chest',   weight:2,  cls:'relic', grant(r) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_relic', { rng:r, pity:gameState.lootPity }))); } },
+  { id:'gearcache', glyph:'🎒', label:'Feathered cache', weight:6, cls:'gear', grant(r, effects) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_cache', { rng:r, pity:gameState.lootPity, guaranteeGear:true }), effects)); } },
+  { id:'relic',    glyph:'✨', label:'Relic chest',   weight:2,  cls:'relic', grant(r, effects) { return lootLinesToText(grantLootDrops(lootCore().rollLoot('map_relic', { rng:r, pity:gameState.lootPity }), effects)); } },
   // --- Habitat finds: this loot only lies where it belongs ---
   { id:'minnow',   glyph:'🐟', label:'Minnow shallows', weight:0, biomes:{ water:26, wetland:10 }, grant() { addLarderIngredient('live_minnow', 1); return '+1 Live Minnow (Stores larder)'; } },
   { id:'trout',    glyph:'🎣', label:'Rising trout',  weight:0, biomes:{ water:10 }, grant() { addLarderIngredient('river_trout', 1); return '+1 River Trout (Stores larder)'; } },
@@ -22181,9 +22309,6 @@ function collectStarterTimber(pickup) {
   if (state.taken[pickup.starterIndex]) return null;
   state.taken[pickup.starterIndex] = true;
   addBranches(STARTER_TIMBER_PER_BUNDLE);
-  if (starterTimberDone()) {
-    setTimeout(() => showToast('🏠 Enough timber for the Barracks! Raise it at the Academy.'), 1300);
-  }
   return '+' + STARTER_TIMBER_PER_BUNDLE + ' branches';
 }
 
@@ -22347,20 +22472,31 @@ function collectMapPickup(pickup, el) {
   const toastGlyph = pickup.type.toastGlyph || pickup.type.glyph;
   const gate=mapGatheringGate(pickup);
   if(!gate.ready){SFX.tap();showToast(gate.reason);return;}
-  const pickupSnapshot=pickup.woodland?snapshotGameState():null;
+  const pickupSnapshot = snapshotGameState(), effects = [];
+  const previousLevel = Number(gameState.player.level) || 1;
   let rewardText;
-  if (pickup.starterIndex != null) {
-    rewardText = collectStarterTimber(pickup);
-    if (!rewardText) return;
-  } else {
-    const state = ensureMapPickupState();
-    if (state.collected[pickup.key]) return;
-    state.collected[pickup.key] = true;
-    const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
-    rewardText = pickup.type.grant(r);
+  try {
+    if (pickup.starterIndex != null) {
+      rewardText = collectStarterTimber(pickup);
+      if (!rewardText) return;
+    } else {
+      const state = ensureMapPickupState();
+      if (state.collected[pickup.key]) return;
+      state.collected[pickup.key] = true;
+      const r = villageRngFrom(pickup.seed ^ 0x9e3779b9);
+      rewardText = pickup.type.grant(r, effects);
+    }
+    durableSaveState({ throwOnFailure:true });
+  } catch (error) {
+    restoreGameStateSnapshot(pickupSnapshot);
+    showToast('Could not save. Your find is still here; try again.');
+    return;
   }
-  if(pickup.woodland){try{durableSaveState({throwOnFailure:true});}catch(error){restoreGameStateSnapshot(pickupSnapshot);showToast('Could not save. Your timber is still here; try again.');return;}}
-  else saveState();
+  effects.forEach(effect => { try { effect(); } catch (error) { console.warn('Gathering presentation failed', error); } });
+  announcePlayerLevelUps(previousLevel);
+  if (pickup.starterIndex != null && starterTimberDone()) {
+    setTimeout(() => showToast('🏠 Enough timber for the Barracks! Raise it at the Academy.'), 1300);
+  }
   updateHeader();
   SFX.questComplete(); vibrate(25);
   // Pop a little reward flourish where the item stood, then fade the marker.
@@ -42529,14 +42665,14 @@ function initQuests() {
   saveState();
 }
 
-function updateQuestProgress(type, amount) {
+function updateQuestProgress(type, amount, deferredEffects) {
   const allQuests = [...DAILY_QUESTS, ...WEEKLY_QUESTS, ...ACHIEVEMENT_QUESTS];
   allQuests.forEach(q => {
     if (q.type === type && gameState.quests[q.id] && !gameState.quests[q.id].claimed) {
       const state = gameState.quests[q.id];
       const before = state.progress || 0;
       state.progress = Math.min(q.target, before + amount);
-      if (before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
+      if (before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q, deferredEffects);
     }
   });
   // Also update total_species achievements
@@ -42547,7 +42683,7 @@ function updateQuestProgress(type, amount) {
       if (state) {
         const before = state.progress || 0;
         state.progress = Math.min(q.target, uniqueSpecies);
-        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
+        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q, deferredEffects);
       }
     });
   }
@@ -42559,7 +42695,7 @@ function updateQuestProgress(type, amount) {
       if (state) {
         const before = state.progress || 0;
         state.progress = Math.min(q.target, knownDiets);
-        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q);
+        if (!state.claimed && before < q.target && state.progress >= q.target) queueQuestCompleteNotice(q, deferredEffects);
       }
     });
   }
@@ -42572,13 +42708,17 @@ function updateQuestProgress(type, amount) {
     if (activePq.type === type) pqState.progress = Math.min(activePq.target, before + amount);
     syncActivePlayerQuest();
     if (before < activePq.target && (pqState.progress || 0) >= activePq.target) {
-      showToast('\u{1F3C5} Player quest complete: ' + activePq.name + ' — claim it in Quests!');
-      queueQuestCompleteNotice(activePq);
-      if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} }
+      const announce = () => showToast('\u{1F3C5} Player quest complete: ' + activePq.name + ' — claim it in Quests!');
+      if (deferredEffects) deferredEffects.push(announce); else announce();
+      queueQuestCompleteNotice(activePq, deferredEffects);
+      const redraw = () => { if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} } };
+      if (deferredEffects) deferredEffects.push(redraw); else redraw();
     }
   }
-  if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
-  saveState();
+  if (!deferredEffects) {
+    if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
+    saveState();
+  }
 }
 
 function countDiscoveredDiets() {
@@ -42747,6 +42887,7 @@ const BADGES = [
   { id: 'level_20', name: 'Rank 20', icon: '\u{1F320}', condition: () => gameState.player.level >= 20 },
   { id: 'academy_complete', name: 'Master Builder', icon: '\u{1F3D7}\u{FE0F}', condition: () => ACADEMY_BUILDING_ORDER.every(id => isAcademyBuildingBuilt(id)) },
   { id: 'ten_wins', name: 'Champion', icon: '\u{1F396}\u{FE0F}', condition: () => gameState.player.wins >= 10 },
+  { id: 'pocket_pathfinder', name: 'Pocket Pathfinder', icon: '🌿', condition: () => !!gameState.badges?.pocket_pathfinder },
   { id: 'twenty_captures', name: 'Obsessed', icon: '\u{1F525}', condition: () => gameState.player.totalCaptures >= 20 },
   // Shown as ??? until earned — the game never explains how to get this one.
   { id: 'nightwing_secret', name: 'Not A Bird', icon: '\u{1F987}', secret: true, condition: () => batSecretFound() }
@@ -42965,7 +43106,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'map-trails-v381-20260909';
+const BURBZ_BUILD = 'pocket-detours-v382-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44166,6 +44307,7 @@ function landOnSoundScanScreen() {
 
 function init() {
   loadState();
+  trailPocketVisibilityChanged();
   applyFeatureGates(); // mark locked dock destinations to what this save has met, before first paint
   armBurbzBackGuard(); // back never quits the game — see the ANDROID BACK section
   initGlobalMoneyHud();

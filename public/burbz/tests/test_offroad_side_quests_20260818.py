@@ -1,11 +1,4 @@
-"""Off-road side quests: stray 300 m from the main quest and a wander begins.
-
-side_trail_core.js watches the player against the active walking quest's
-golden route. Two straight fixes 300 m or more off-route open a side quest by
-itself — random name, random finds, and Wayside Tales (hedge-lore found only
-off the roads). The main quest keeps every marker and waits. One fix back
-within 150 m banks the side quest quietly, every find kept.
-"""
+"""Saved detours require 500 metres and 40 minutes; return is explicit."""
 import json
 import subprocess
 from pathlib import Path
@@ -15,9 +8,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
-OWN_RELEASE_PIN = "offroad-side-quests-v283-20260818"
+OWN_RELEASE_PIN = "pocket-detours-v382-20260910"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "map-trails-v381-20260909"
+CURRENT_BUILD = "pocket-detours-v382-20260910"
 
 
 def run_node(script: str):
@@ -58,39 +51,21 @@ console.log(JSON.stringify({
     assert out["junk"] is None or out["junk"] > 1e9
 
 
-def test_the_trigger_needs_two_far_fixes_and_the_return_needs_one():
+def test_the_trigger_needs_forty_minutes_of_far_fixes_and_never_auto_returns():
     out = run_node("""
 const S = require('./side_trail_core.js');
-const base = { questActive: true, sideActive: false, sideAuto: false, accuracy: 10 };
-const far = { ...base, distM: 320 }, near = { ...base, distM: 200 };
-const s1 = S.sideTrailStep({ strikes: 0 }, far);
-const s2 = S.sideTrailStep(s1, far);
-const interrupted = S.sideTrailStep(S.sideTrailStep({ strikes: 0 }, far), near);
-const active = { ...base, sideActive: true, sideAuto: true };
-console.log(JSON.stringify({
-  constants: [S.SIDE_TRAIL_TRIGGER_M, S.SIDE_TRAIL_RETURN_M, S.SIDE_TRAIL_MAX_ACCURACY_M, S.SIDE_TRAIL_START_STRIKES],
-  first: s1, second: s2, interrupted,
-  badFix: S.sideTrailStep({ strikes: 1 }, { ...far, accuracy: 200 }),
-  noQuest: S.sideTrailStep({ strikes: 1 }, { ...far, questActive: false }),
-  comeHome: S.sideTrailStep({ strikes: 0 }, { ...active, distM: 120 }),
-  stillOut: S.sideTrailStep({ strikes: 0 }, { ...active, distM: 220 }),
-  manualSide: S.sideTrailStep({ strikes: 0 }, { ...base, sideActive: true, sideAuto: false, distM: 120 })
-}));
+const start = 1800000000000;
+const fix = (n, extra={}) => ({ questActive:true, questId:'q', distM:500, accuracy:10, now:start+n*60000, fixAt:start+n*60000, ...extra });
+let state;
+for(let n=0;n<40;n++)state=S.sideTrailStep(state,fix(n));
+console.log(JSON.stringify({before:state,after:S.sideTrailStep(state,fix(40)),near:S.sideTrailStep(state,fix(40,{distM:499})),bad:S.sideTrailStep(state,fix(40,{accuracy:200})),returned:S.sideTrailStep(state,fix(40,{sideActive:true,sideAuto:true,distM:0}))}));
 """)
-    assert out["constants"] == [300, 150, 80, 2]
-    # One GPS jump never starts a wander; the second far fix does.
-    assert out["first"] == {"action": None, "strikes": 1}
-    assert out["second"] == {"action": "start", "strikes": 0}
-    # A near fix in between resets the count.
-    assert out["interrupted"] == {"action": None, "strikes": 0}
-    # Sloppy GPS and quest-less walks decide nothing.
-    assert out["badFix"]["action"] is None and out["badFix"]["strikes"] == 0
-    assert out["noQuest"]["action"] is None
-    # Coming home banks an auto wander at once; 220 m is inside the hysteresis
-    # band, so nothing flaps. A manual Side Quest is never auto-ended.
-    assert out["comeHome"]["action"] == "end"
-    assert out["stillOut"]["action"] is None
-    assert out["manualSide"]["action"] is None
+    assert out["before"]["action"] is None
+    assert out["after"]["action"] == "start"
+    assert out["after"]["elapsedMs"] == 40 * 60000
+    assert out["near"]["elapsedMs"] == 0
+    assert out["bad"]["elapsedMs"] == 39 * 60000
+    assert out["returned"]["action"] is None
 
 
 def test_wayside_tales_are_whole_canon_and_never_repeat_until_read_dry():
@@ -127,32 +102,26 @@ console.log(JSON.stringify({
         assert anchor in out["folio"], anchor
 
 
-def test_html_starts_and_banks_the_wander_around_the_live_main_quest():
+def test_html_suspends_and_explicitly_resumes_the_original_without_claiming_loot():
     html = HTML_PATH.read_text(encoding="utf-8")
     assert f'<script src="side_trail_core.js?v={OWN_RELEASE_PIN}"></script>' in html
-    # The position stream decides through the core, only while a quest is live.
     fix = function_source(html, "questOnPositionFix")
-    assert "maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy)" in fix
+    assert "maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy, tOverride)" in fix
     toggle = function_source(html, "maybeToggleOffRoadSideQuest")
-    assert "distanceFromRouteM(quest.route, lat, lon)" in toggle
+    assert "quest.detourOriginalRoute || quest.route" in toggle
     assert "sideTrailStep" in toggle
-    # The auto wander is a real Side Quest with a parent and a random name.
+    assert "step.action === 'end'" not in toggle
     start = function_source(html, "startOffRoadSideQuest")
-    assert "auto: true" in start
-    assert "parentQuestId: quest.id" in start
-    assert "sideTrailQuestName" in start
-    # Banking is quiet, keeps every find, and never ticks the walk goal —
-    # the main quest counts that on its own completion.
-    end = html[html.index("async function endOffRoadSideQuest("):html.index("\n// A Side Quest survives app restarts")]
-    assert "sideQuestClaimDiscovery(d.id, { quiet: true })" in end
-    assert "auto: true" in end
-    assert "updateQuestProgress" not in end
-    # Finishing or abandoning the main quest banks a live wander too.
-    assert "endOffRoadSideQuest('Main quest complete.')" in function_source(html, "completeWalkingQuest")
-    assert "endOffRoadSideQuest('Quest abandoned.')" in function_source(html, "abandonWalkingQuest")
-    # Both HUD lines can share the map card.
-    hud = function_source(html, "updateWalkQuestHud")
-    assert "side.name + ' live'" in hud
+    assert "auto:true" in start and "parentQuestId:quest.id" in start
+    assert "sideTrailTheme" in start
+    switch = function_source(html, "commitDetourTransition")
+    assert "durableSaveState({throwOnFailure:true})" in switch
+    assert "restoreGameStateSnapshot(snapshot)" in switch
+    assert "questPocketSuspend" in switch and "questPocketResume" in switch
+    assert "sideQuestClaimDiscovery" not in switch and "addPlayerXp" not in switch
+    assert "endOffRoadSideQuest" not in function_source(html, "completeWalkingQuest")
+    assert "endOffRoadSideQuest" not in function_source(html, "abandonWalkingQuest")
+    assert "RESUME ORIGINAL" in function_source(html, "questDetourActionsHTML")
 
 
 def test_lore_finds_are_persisted_claimed_once_and_shelved_in_the_folio():
@@ -171,9 +140,9 @@ def test_lore_finds_are_persisted_claimed_once_and_shelved_in_the_folio():
     # State survives saves; the lore marker draws as a scroll.
     assert "gameState.sideQuest.waysideTales = []" in html
     assert "d.kind === 'lore'" in function_source(html, "drawSideQuestOnMap")
-    # The manual one-quest-at-a-time rule stays: only the auto path coexists.
+    # The original remains protected while a detour is active or suspended.
     assert "End your Side Quest first" in html
-    assert "Finish or abandon your current quest first'); return; }\n  if (sideQuestActive())" in html
+    assert "if (activeWalkingQuest() || savedOriginalQuest())" in html
 
 
 def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
@@ -184,7 +153,7 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    assert sw.count(f"'./side_trail_core.js?v={OWN_RELEASE_PIN}'") == 2
+    assert sw.count(f"'./side_trail_core.js?v={OWN_RELEASE_PIN}'") == 3
     updater = UPDATER_PATH.read_text(encoding="utf-8")
     assert '"side_trail_core.js"' in updater
     story = STORY_PATH.read_text(encoding="utf-8")

@@ -218,18 +218,18 @@ def test_the_dead_settings_toggle_is_gone_too():
 
 
 def test_pocket_time_counts_only_while_the_screen_is_away():
-    accrue = function_source("trailPocketAccrue")
-    assert "trailPocketSince" in accrue
-    assert "active.pocketMs" in accrue
+    # The shared v382 lifecycle replaces the unsaved side-only timestamp.
     changed = function_source("trailPocketVisibilityChanged")
-    assert "if (document.hidden) {" in changed
-    assert "if (sideQuestActive()) trailPocketSince = Date.now();" in changed
+    assert "document.hidden" in changed
+    assert "[activeWalkingQuest(), sideQuestActive()]" in changed
+    assert "hidden ? 'hide' : 'show'" in changed
+    assert "saveState()" in changed
     assert "document.addEventListener('visibilitychange', trailPocketVisibilityChanged);" in HTML
-    # And it is paid at the end of the wander, on top of the distance cap.
+    assert "window.addEventListener('pagehide', trailPocketVisibilityChanged);" in HTML
     end = HTML.split("async function endSideQuest() {", 1)[1].split("\nfunction ", 1)[0]
-    assert "trailPocketAccrue();" in end
+    assert "commitQuestFinish('side', active" in end
     assert "const xp = Math.round(baseXp * pocket.multiplier);" in end
-    assert "TRAIL BONUS ×" in end
+    assert "questPocketNote(null, summary.pocketReward)" in end
 
 
 def test_release_is_pinned_and_the_new_core_is_precached():

@@ -134,17 +134,24 @@ re-read any time; each one ties the roads back to the Academy and the Empire.
 ### Off the road — side quests and the Wayside Tales
 
 The roads carry the campaign. The land between them carries its own stories.
-Walk 300 metres away from your quest's golden route and a **side quest opens by
-itself** — the hedgerows notice a free walker and name the wander ("The Crooked
-Byway", "The Whispering Meadow"). The main quest keeps every marker and simply
-waits. Off the road the wander is charted like any Side Quest: random chests,
-lost weapons, wandering quest givers — and **Wayside Tales**, hedge-lore found
-nowhere else. The tales are the verge's answer to the Folio: the usurper charts
-every road but is blind to the land between them; the gleaner's right says a
-found chest belongs to whoever walked for it; somewhere off an unmarked path
-the mice keep a chapel around one lost feather of Merlin's. Wander back within
-150 metres of the golden path and the side quest banks itself — every find
-kept, every tale shelved in the Feathered Folio.
+Remain at least 500 metres from the original quest route for 40 minutes and a
+**side quest opens by itself**, once a fresh, accurate GPS fix confirms that you
+are still far away. The saved off-route start survives screen-off time and app
+restarts. Missing, poor or stale fixes never start a detour. A fresh accurate
+fix back inside 500 metres resets the wait; a timer alone can never start it.
+
+The main quest keeps its whole route, every marker and all rewards. **Resume
+Original** is available on the map and quest log at any time, from any location.
+It saves the detour and its unclaimed finds for **Continue Saved Detour**. Coming
+close to the original route never ends or banks the side quest. Only an explicit
+completion claims rewards through the existing arrival and save guards.
+
+Four saved themes vary the guide, objective and first discovery: the Hedgerow
+Post needs field provisions; Scribe Inkwing seeks missing margins for the Folio;
+Rowan's Quiet Watch introduces wandering allies; Mallow's Gleaner's Lantern
+recovers equipment for hungry wings. Later finds use the existing food, gear,
+local-bird and twelve **Wayside Tales** catalogues. The usurper counts signposts;
+these stories preserve what the signposts missed.
 
 ### The found trades — the trades hide until you walk to them
 

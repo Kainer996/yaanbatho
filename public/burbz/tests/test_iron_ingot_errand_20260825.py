@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 
 BURBZ = Path(__file__).resolve().parent.parent
-CURRENT_BUILD = "map-trails-v381-20260909"
+CURRENT_BUILD = "pocket-detours-v382-20260910"
 
 
 def node_json(script):
