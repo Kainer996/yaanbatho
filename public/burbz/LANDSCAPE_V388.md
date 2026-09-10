@@ -1,6 +1,6 @@
 # Landscape village and town layout — v388
 
-Local follow-up based on released v387 merge `c99a19ccc8af456bba0262b19b01eabb71e7e5a7`. The earlier complete update is already live; this layout has not been pushed or deployed.
+Local follow-up based on released v387 merge `c99a19ccc8af456bba0262b19b01eabb71e7e5a7`. This layout is now live through PR 321, merge 6af560cf5926ab9255ac04e4f48b84993a5d11de; public runtime files and the actual worker were verified after authorized publication.
 
 ## Layout
 

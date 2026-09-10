@@ -282,6 +282,14 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
 .magpie-btn:active { transform:scale(.96); }
 .magpie-btn[disabled] { opacity:.38; filter:grayscale(.4); cursor:default; }
 .src-sell-btn[disabled] { opacity:.38; filter:grayscale(.4); cursor:default; }
+.magpie-tabs { display:flex; gap:8px; margin:10px 0; }
+.magpie-tabs button { flex:1; min-height:44px; border:1px solid var(--panel-edge); border-radius:9px; background:var(--bg3); color:var(--text); font:700 16px 'Rajdhani',sans-serif; cursor:pointer; }
+.magpie-tabs button[aria-selected="true"] { background:#55401f; color:#ffe0a0; border-color:#bd9350; }
+.magpie-panel .magpie-btn { min-height:44px; font-size:11px; }
+.magpie-panel .magpie-btn.sell { background:#3f301a; color:#ffe0a0; border-color:#ac864f; }
+.magpie-category h3 { font-size:13px; color:var(--legendary); margin:14px 0 8px; }
+.magpie-panel .src-name { overflow-wrap:anywhere; }
+.magpie-panel .src-icon { max-width:32px; }
 /* Bird picker for XP scrolls */
 .xp-picker-list { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 .xp-picker-row { display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:9px 10px; border-radius:14px; border:1px solid rgba(214,168,79,.24); background:linear-gradient(135deg,rgba(214,168,79,.08),rgba(0,0,0,.28)); color:var(--text); cursor:pointer; }
@@ -13864,7 +13872,7 @@ const ACADEMY_ROOMS = {
   nursery: { label:'HATCHERY NURSERY', icon:'🥚', buildingId:'nursery', desc:'Gentle companion bonding and baby-bird progression.', perk:'Future: bonding', perches:[[36,18],[32,22],[40,22]] },
   observatory: { label:'MOON OBSERVATORY', icon:'🔭', buildingId:'observatory', desc:'Star charts and migration maps sharpen the mind. Stationed birds grow INT.', perk:'Passive: +1 INT every 30 min', perches:[[64,14],[60,18],[68,18]] },
   library: { label:'THE LIBRARY', icon:'📚', buildingId:'library', desc:'The Academy reading room. Field guides, story scrolls and quiet candlelight — birds stationed among the stacks grow cleverer by the hour, and the Quiet Study drill teaches MIND battle moves.', perk:'Passive: +1 INT every 30 min', perches:[[75,29],[71,33],[79,33]] },
-  magpie_market: { label:'MAGPIE MARKET', icon:'⚖️', buildingId:'magpie_market', desc:'The Academy trading post. Magpies deal in everything the kingdom digs up — buy the material a recipe is short of, and sell whatever is piling up on the shelves.', perk:'Active: buy and sell every crafting material', perches:[] },
+  magpie_market: { label:'MAGPIE MARKET', icon:'⚖️', buildingId:'magpie_market', desc:'The Academy trading post. Magpies deal in everything the kingdom digs up — buy the material a recipe is short of, and sell whatever is piling up on the shelves.', perk:'Active: buy supplies and sell owned items, including crafted gear', perches:[] },
   manager_office: { label:"PROJECT MANAGER'S OFFICE", icon:'📋', buildingId:'manager_office', desc:'The Academy planning office. Complete every kind of building in one village, then raise this office to unlock Project Manager appointments across your villages.', perk:'Unlocks village Project Manager appointments', perches:[] },
   quest_roost: { label:'QUEST ROOST', icon:'🧭', buildingId:'quest_roost', desc:'Send birds out for real-time expeditions. Longer scouting trips may bring back Merlin Clues.', perk:'Active: 1–3 hour real-time quests', perches:[[50,66],[46,70],[54,70],[50,61]] }
 };
@@ -18362,7 +18370,7 @@ function renderAcademyRoomInterior() {
     const roomSub = room === 'kitchen'
       ? flockCount + ' companion' + (flockCount === 1 ? '' : 's') + ' to feed · ' + escapeHtml(cfg.perk)
       : room === 'magpie_market'
-      ? magpieMarketStock().length + ' materials traded · ' + escapeHtml(cfg.perk)
+      ? magpieMarketStock().length + ' materials stocked · ' + escapeHtml(cfg.perk)
       : room === 'manager_office'
       ? completedVillageCount() + ' complete village' + (completedVillageCount() === 1 ? '' : 's') + ' · ' + escapeHtml(cfg.perk)
       : birds.length + ' bird' + (birds.length === 1 ? '' : 's') + ' inside · ' + escapeHtml(cfg.perk);
@@ -37571,7 +37579,8 @@ function storesSellLabel(kind, id) {
   return inventoryLabel(id);
 }
 function storesSellQuote(kind, id, qty) {
-  const owned = Number(storesSellBag(kind)[id]) || 0;
+  const value = Number(storesSellBag(kind)[id]);
+  const owned = Number.isSafeInteger(value) && value > 0 ? value : 0;
   return lootCore().sellQuote(kind, storesSellRarity(kind, id), owned, qty === 'all' ? owned : qty);
 }
 function magpieMarketTradeReady() {
@@ -37582,20 +37591,41 @@ function requireMagpieMarketTrade() {
   focusMagpieMarketBuild();
   return false;
 }
-function storesSellItem(kind, id, qty) {
+function storesSellAllowed(kind, id) {
+  if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(storesSellBag(kind),id)) return false;
+  if (kind === 'material') return lootCore().materialById(id)?.id === id;
+  if (kind === 'gear') return lootCore().gearById(id)?.id === id;
+  if (kind === 'food') return kitchenIngredientById(id)?.id === id;
+  return kind === 'keepsake' && !lootCore().materialById(id);
+}
+// Commit inventory, purse and optional quest progress together; failed writes
+// restore the same live object tree, without success effects or partial trades.
+function storesCommitTrade(action) {
+  const snapshot = snapshotGameState(), effects = [];
+  try {
+    action(effects);
+    if (!Number.isSafeInteger(gameState.player.coins) || gameState.player.coins < 0) throw Error('Invalid purse');
+    durableSaveState({throwOnFailure:true});
+  }
+  catch (error) { restoreGameStateSnapshot(snapshot); showToast('Could not save the trade. Your coins and items are unchanged — please try again.'); return false; }
+  effects.forEach(effect => { try { effect(); } catch (_) {} });
+  return true;
+}
+function storesSellItem(kind, id, qty, onTrade = null) {
   if (!requireMagpieMarketTrade()) return false;
+  if (!storesSellAllowed(kind,id) || (qty !== 'all' && (!Number.isSafeInteger(qty) || qty < 1))) { showToast('The traders shrug — nothing here to sell.'); return false; }
   const quote = storesSellQuote(kind, id, qty);
-  if (!quote.qty || !quote.each) { showToast('The traders shrug — nothing here to sell.'); return; }
-  const bag = storesSellBag(kind);
-  const left = Math.max(0, (Number(bag[id]) || 0) - quote.qty);
-  if (left > 0) bag[id] = left; else delete bag[id];
-  addCoins(quote.total);
-  saveState();
-  SFX.questComplete();
-  vibrate(25);
+  if (!quote.qty || !quote.each || !Number.isSafeInteger(quote.total) || !Number.isSafeInteger((Number(gameState.player.coins) || 0) + quote.total)) { showToast('The traders shrug — nothing here to sell.'); return false; }
+  const committed = storesCommitTrade(effects => {
+    const bag = storesSellBag(kind), left = Math.max(0, (Number(bag[id]) || 0) - quote.qty);
+    if (left > 0) bag[id] = left; else delete bag[id];
+    addCoins(quote.total);
+    if (onTrade) onTrade(effects);
+  });
+  if (!committed) return false;
+  SFX.questComplete();vibrate(25);
   showToast('💰 Sold ' + quote.qty + ' × ' + storesSellLabel(kind, id) + ' for ' + quote.total + ' 🪙.');
-  updateHeader();
-  renderInventory();
+  updateHeader();renderInventory();
   return true;
 }
 // The two-button row a sellable shelf card carries: one for a single sale,
@@ -37611,128 +37641,124 @@ function storesSellRowHTML(kind, id) {
     '</div>';
 }
 
-// --- The Magpie Market: the Academy's trading post (v314) -------------------
-// The fifth building on the Academy ladder, and the only counter in the game
-// that sells materials back to the player. Selling reuses the Royal Stores'
-// shelf prices; buying pays a rarity-scaled markup on top (loot_crafting_core
-// .js). The spread means a round trip through the market always loses coins,
-// so quests stay the cheap way to get anything precious — the market is the
-// shortcut you pay for.
+// The counter uses the existing Stores bags and rarity prices. Equipped gear
+// has already left the spare-gear bag, and is never offered for sale here.
 const MAGPIE_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+const magpieMarketState = { tab:'buy' };
 
-// Every crafting material, cheapest first. The market deals in materials
-// only: the Royal Stores still handles food, gear and curios.
 function magpieMarketStock() {
-  let materials = {};
-  try { materials = lootCore().MATERIALS || {}; } catch (e) { return []; }
-  return Object.values(materials).slice().sort((a, b) => {
-    const byRarity = MAGPIE_RARITY_ORDER.indexOf(a.rarity) - MAGPIE_RARITY_ORDER.indexOf(b.rarity);
-    return byRarity !== 0 ? byRarity : String(a.label).localeCompare(String(b.label));
-  });
+  return Object.values(lootCore().MATERIALS || {}).slice().sort((a,b) =>
+    MAGPIE_RARITY_ORDER.indexOf(a.rarity)-MAGPIE_RARITY_ORDER.indexOf(b.rarity) || a.label.localeCompare(b.label));
 }
-
-// The posted Market Trader haggles. An ordinary grandmaster takes about a
-// quarter off; The Market Magpie's special 3x multiplier cuts prices in half.
 function magpieMarketDiscount() {
   const mult = academyRoleMultiplier('magpie_market');
   return mult > 1 ? 1 / (1 + (mult - 1) * 0.5) : 1;
 }
-
-function magpieMarketOwned(id) {
-  return Math.max(0, Math.floor(Number(gameState.inventory && gameState.inventory.items && gameState.inventory.items[id]) || 0));
+function magpieMarketOwned(id, kind = 'material') {
+  const n = Number(storesSellBag(kind)[id]);
+  return Number.isSafeInteger(n) && n > 0 ? n : 0;
 }
-
-function magpieMarketBuyQuote(id, qty) {
-  const mat = lootCore().materialById(id);
-  if (!mat) return { each: 0, qty: 0, total: 0, afford: 0 };
-  return lootCore().buyQuote('material', mat.rarity, gameState.player.coins || 0, qty, magpieMarketDiscount());
+function magpieMarketBuyQuote(id, qty, kind = 'material') {
+  const item = kind === 'material' ? lootCore().materialById(id) : kind === 'food' ? kitchenIngredientById(id) : null;
+  if (!item || item.id !== id || !Number.isSafeInteger(qty) || qty < 1) return { each:0, qty:0, total:0, afford:0 };
+  return lootCore().buyQuote(kind, item.rarity, gameState.player.coins || 0, qty, magpieMarketDiscount());
 }
-
-// Selling at the counter is the Royal Stores' own sale — same shelf, same
-// price — plus the two things only a deal with the magpies means: it counts
-// toward the chain, and it redraws the stall. Comparing the stack before and
-// after is what proves a sale happened, so a refused click counts for nothing.
-function magpieMarketSell(id, qty) {
-  if (!requireMagpieMarketTrade()) return;
-  const before = magpieMarketOwned(id);
-  storesSellItem('material', id, qty);
-  if (magpieMarketOwned(id) < before) magpieMarketRecordTrade();
-  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+function magpieMarketSell(id, qty, kind = 'material') {
+  const sold = storesSellItem(kind, id, qty, magpieMarketRecordTrade);
+  if (sold) magpieMarketRefresh();
+  return sold;
 }
-
-function magpieMarketRecordTrade() {
+function magpieMarketRecordTrade(effects) {
   gameState.player.marketTrades = (Number(gameState.player.marketTrades) || 0) + 1;
-  updateQuestProgress('market_traded', 1);
+  updateQuestProgress('market_traded', 1, effects);
 }
-
-function magpieMarketBuy(id, qty) {
-  if (!requireMagpieMarketTrade()) return;
-  const mat = lootCore().materialById(id);
-  if (!mat) return;
-  const quote = magpieMarketBuyQuote(id, qty);
-  if (!quote.each) { showToast('The magpies do not deal in that.'); return; }
-  if (quote.qty < qty) { showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + mat.label); return; }
-  // Make somewhere to put the goods BEFORE taking the coins: a save with no
-  // item bag must never charge the player for a material it then drops.
-  if (!gameState.inventory || typeof gameState.inventory !== 'object') gameState.inventory = {};
-  if (!gameState.inventory.items || typeof gameState.inventory.items !== 'object') gameState.inventory.items = {};
-  addCoins(-quote.total);
-  gameState.inventory.items[id] = magpieMarketOwned(id) + quote.qty;
-  saveState();
-  SFX.questComplete();
-  vibrate(25);
-  magpieMarketRecordTrade();
-  showToast('⚖️ Bought ' + quote.qty + ' × ' + mat.label + ' for ' + quote.total + ' 🪙.');
-  updateHeader();
-  renderInventory();
-  if (currentScreen === 'academy-room') renderAcademyRoomInterior();
+function magpieMarketBuy(id, qty, kind = 'material') {
+  if (!requireMagpieMarketTrade()) return false;
+  const quote = magpieMarketBuyQuote(id, qty, kind);
+  if (!quote.each) { showToast('The magpies do not deal in that.'); return false; }
+  const label = storesSellLabel(kind,id);
+  if (quote.qty < qty) { showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
+  const owned = magpieMarketOwned(id,kind);
+  if (!Number.isSafeInteger(owned + qty) || !Number.isSafeInteger(quote.total)) return false;
+  const committed = storesCommitTrade(effects => {
+    if (!gameState.inventory || typeof gameState.inventory !== 'object' || Array.isArray(gameState.inventory)) gameState.inventory = {};
+    const key = kind === 'food' ? 'larder' : 'items';
+    if (!gameState.inventory[key] || typeof gameState.inventory[key] !== 'object' || Array.isArray(gameState.inventory[key])) gameState.inventory[key] = {};
+    addCoins(-quote.total);
+    gameState.inventory[key][id] = owned + qty;
+    magpieMarketRecordTrade(effects);
+  });
+  if (!committed) return false;
+  SFX.questComplete();vibrate(25);
+  showToast('⚖️ Bought ' + qty + ' × ' + label + ' for ' + quote.total + ' 🪙.');
+  updateHeader();renderInventory();magpieMarketRefresh();
+  return true;
 }
-
-// One counter row per material: what it is, how many you hold, and the four
-// deals available on it. Unaffordable buys remain actionable for the earning
-// choices; the purchase guard rechecks the full quantity before spending.
-function magpieMarketRowHTML(mat) {
-  const owned = magpieMarketOwned(mat.id);
-  const one = magpieMarketBuyQuote(mat.id, 1);
-  const five = magpieMarketBuyQuote(mat.id, 5);
-  const buyFive = one.each * 5;
-  const sellOne = storesSellQuote('material', mat.id, 1);
-  const sellAll = storesSellQuote('material', mat.id, 'all');
-  const deals = [
-    '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',1)">BUY 1 · −' + one.each + ' 🪙</button>',
-    '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',5)">BUY 5 · −' + buyFive + ' 🪙</button>',
-    sellOne.qty
-      ? '<button type="button" class="src-sell-btn" onclick="magpieMarketSell(\'' + mat.id + '\',1)">SELL 1 · +' + sellOne.each + ' 🪙</button>'
-      : '<button type="button" class="src-sell-btn" disabled>SELL 1 · +' + lootCore().sellValue('material', mat.rarity) + ' 🪙</button>',
-    sellAll.qty > 1
-      ? '<button type="button" class="src-sell-btn all" onclick="magpieMarketSell(\'' + mat.id + '\',\'all\')">ALL ' + sellAll.qty + ' · +' + sellAll.total + ' 🪙</button>'
-      : ''
-  ].join('');
-  return '<div class="magpie-row" data-rarity="' + escapeHtml(mat.rarity) + '">' +
-    '<div class="src-icon">' + mat.icon + '</div>' +
-    '<div class="src-main">' +
-      '<div class="src-name">' + escapeHtml(mat.label) + '<span class="magpie-rarity">' + escapeHtml(mat.rarity) + '</span></div>' +
-      '<div class="src-copy">' + escapeHtml(mat.copy) + '</div>' +
-      '<div class="magpie-deals">' + deals + '</div>' +
-    '</div>' +
-    '<div class="src-count">' + owned + '</div>' +
-  '</div>';
+function magpieMarketSetTab(tab) {
+  if (!['buy','sell'].includes(tab)) return;
+  magpieMarketState.tab = tab;
+  magpieMarketRefresh('market-tab-' + tab);
 }
-
+function magpieMarketTabKey(event) {
+  if (!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+  event.preventDefault();
+  magpieMarketSetTab(event.key === 'Home' ? 'buy' : event.key === 'End' ? 'sell' : magpieMarketState.tab === 'buy' ? 'sell' : 'buy');
+}
+function magpieMarketRefresh(focusId) {
+  const panel = $('magpieMarketPanel');
+  if (!panel) return;
+  const active = document.activeElement;
+  const key = panel.contains(active) ? active.dataset.tradeKey : null;
+  const screen = panel.closest('.screen'), scroll = screen?.scrollTop;
+  panel.outerHTML = renderMagpieMarketPanelHTML();
+  const next = $('magpieMarketPanel');
+  const focus = focusId ? $(focusId) : key ? Array.from(next.querySelectorAll('[data-trade-key]')).find(el => el.dataset.tradeKey === key) || $('market-tab-' + magpieMarketState.tab) : null;
+  if (focus) focus.focus({preventScroll:true});
+  if (screen) screen.scrollTop = scroll;
+}
+function magpieMarketSellStock() {
+  const rows = [];
+  for (const kind of ['gear','material','food','keepsake']) {
+    for (const id of Object.keys(storesSellBag(kind))) {
+      if (!storesSellAllowed(kind,id) || !magpieMarketOwned(id,kind)) continue;
+      const item = kind === 'gear' ? lootCore().gearById(id) : kind === 'material' ? lootCore().materialById(id) : kind === 'food' ? kitchenIngredientById(id) : null;
+      rows.push({id,kind,label:storesSellLabel(kind,id),icon:item?.icon || inventoryIcon(id),rarity:item?.rarity || '',copy:kind === 'gear' ? forgeGearStatLine(item) : item?.copy || item?.desc || 'A curio from your shelves.'});
+    }
+  }
+  return rows;
+}
+function magpieMarketDealHTML(action, kind, id, qty, label) {
+  const args = [JSON.stringify(id),JSON.stringify(qty),JSON.stringify(kind)].join(',');
+  return '<button type="button" class="magpie-btn ' + action + '" data-trade-key="' + escapeHtml([action,kind,id,qty].join(':')) + '" onclick="' + escapeHtml('magpieMarket' + (action === 'buy' ? 'Buy' : 'Sell') + '(' + args + ')') + '">' + escapeHtml(label) + '</button>';
+}
+function magpieMarketRowHTML(item, selling = false) {
+  const kind = item.kind || 'material', owned = magpieMarketOwned(item.id,kind);
+  let deals;
+  if (selling) {
+    const one = storesSellQuote(kind,item.id,1), all = storesSellQuote(kind,item.id,'all');
+    deals = magpieMarketDealHTML('sell',kind,item.id,1,'SELL 1 · +' + one.each + ' 🪙') + (all.qty > 1 ? magpieMarketDealHTML('sell',kind,item.id,'all','SELL ALL ' + all.qty + ' · +' + all.total + ' 🪙') : '');
+  } else {
+    const quote = magpieMarketBuyQuote(item.id,1,kind);
+    deals = magpieMarketDealHTML('buy',kind,item.id,1,'BUY 1 · −' + quote.each + ' 🪙') + magpieMarketDealHTML('buy',kind,item.id,5,'BUY 5 · −' + quote.each * 5 + ' 🪙');
+  }
+  return '<div class="magpie-row" data-kind="' + kind + '" data-item="' + escapeHtml(item.id) + '" data-rarity="' + escapeHtml(item.rarity || '') + '"><div class="src-icon">' + item.icon + '</div><div class="src-main"><div class="src-name">' + escapeHtml(item.label) + '</div><div class="src-copy">' + escapeHtml(item.copy || item.desc || '') + '</div><div class="magpie-deals">' + deals + '</div></div><div class="src-count" aria-label="' + owned + ' owned">' + owned + '</div></div>';
+}
 function renderMagpieMarketPanelHTML() {
-  const stock = magpieMarketStock();
-  if (!stock.length) return '<div class="stores-panel"><div class="inventory-empty">The stalls are still being set up — try again in a moment.</div></div>';
-  const discount = magpieMarketDiscount();
-  const savedPct = Math.round((1 - discount) * 100);
-  const haggle = savedPct > 0
-    ? '<span class="magpie-haggle">⚖️ Your Market Trader has talked ' + savedPct + '% off every price.</span>'
-    : '<span class="magpie-haggle vacant">Post a charming bird as Market Trader below and every price drops.</span>';
-  return '<div class="stores-panel magpie-panel">' +
-    '<div class="stores-panel-title">⚖️ The counter</div>' +
-    '<div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse' + haggle + '</div>' +
-    '<div class="magpie-note">Magpies buy anything and sell it dearer. Quests are still the cheapest way to a Phoenix Ember — this is the shortcut you pay for.</div>' +
-    '<div class="stores-res-grid">' + stock.map(magpieMarketRowHTML).join('') + '</div>' +
-  '</div>';
+  const selling = magpieMarketState.tab === 'sell';
+  const groups = selling ? [
+    ['gear','Crafted gear & spare equipment'],['material','Materials'],['food','Food & larder'],['keepsake','Scrolls & curios']
+  ] : [['material','Crafting materials'],['food','Food & larder supplies']];
+  const stock = selling ? magpieMarketSellStock() : [
+    ...magpieMarketStock().map(item => ({...item,kind:'material'})),
+    ...kitchenCore().listIngredients().map(item => ({...item,kind:'food'}))
+  ];
+  const content = groups.map(([kind,label]) => {
+    const rows = stock.filter(item => item.kind === kind);
+    return rows.length ? '<section class="magpie-category"><h3>' + label + '</h3><div class="stores-res-grid">' + rows.map(item => magpieMarketRowHTML(item,selling)).join('') + '</div></section>' : '';
+  }).join('') || '<div class="inventory-empty">Nothing to sell yet. Collect a finished craft at the Forge, or bring back materials, food and curios from your travels.</div>';
+  const savedPct = Math.round((1 - magpieMarketDiscount()) * 100);
+  const note = selling ? 'Sell items from your shelves, including every collected Forge craft. Equipped items stay with their birds; unequip them at the Forge to sell them.' : 'Buy crafting materials and larder supplies. Quests and gathering remain the cheaper route.';
+  return '<div id="magpieMarketPanel" class="stores-panel magpie-panel"><div class="stores-panel-title">⚖️ The counter</div><div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse</div><div class="magpie-tabs" role="tablist" aria-label="Market trading">' + ['buy','sell'].map(tab => '<button type="button" role="tab" id="market-tab-' + tab + '" aria-controls="market-stock" aria-selected="' + (magpieMarketState.tab === tab) + '" tabindex="' + (magpieMarketState.tab === tab ? '0' : '-1') + '" onclick="magpieMarketSetTab(\'' + tab + '\')" onkeydown="magpieMarketTabKey(event)">' + (tab === 'buy' ? 'Buy' : 'Sell') + '</button>').join('') + '</div><div class="magpie-note">' + note + '</div>' + (!selling ? '<div class="magpie-haggle">' + (savedPct ? 'Your Market Trader has talked ' + savedPct + '% off buying prices.' : 'Post a charming Market Trader below to reduce buying prices.') + '</div>' : '') + '<div id="market-stock" role="tabpanel" aria-labelledby="market-tab-' + magpieMarketState.tab + '" tabindex="0">' + content + '</div></div>';
 }
 
 function renderProjectManagerOfficePanelHTML() {
@@ -42141,7 +42167,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, birdEquipCare, birdEquipRecruit, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
+Object.assign(window, { academyBuildBuilding, birdEquipCare, birdEquipRecruit, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, magpieMarketSetTab, magpieMarketTabKey, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -43296,7 +43322,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'landscape-v388-20260910';
+const BURBZ_BUILD = 'market-tabs-v389-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

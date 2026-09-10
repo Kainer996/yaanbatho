@@ -25,7 +25,7 @@ LOOT_CORE = ROOT / "loot_crafting_core.js"
 ROLES_CORE = ROOT / "bird_roles_core.js"
 RELEASE = "stores-market-project-manager-v295-20260820"
 # roost-retired-v302 moved the roles core on; the loot core stays with v295.
-CURRENT_BUILD = "landscape-v388-20260910"
+CURRENT_BUILD = "market-tabs-v389-20260910"
 # magpie-market-v316 edited both cores, so both ship under that tag now.
 MAGPIE_CORE_PIN = "little-folk-residents-v350-20260905"
 # bird_roles_core.js last changed in free-birds-v318, which retired the Head
@@ -109,7 +109,7 @@ def sell_harness(probe: str) -> str:
     html = HTML.read_text(encoding="utf-8")
     functions = "\n".join(
         function_source(html, name)
-        for name in ("storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "magpieMarketTradeReady", "requireMagpieMarketTrade", "storesSellItem")
+        for name in ("storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "magpieMarketTradeReady", "requireMagpieMarketTrade", "storesSellAllowed", "storesCommitTrade", "storesSellItem")
     )
     stubs = f"""
 global.window = global;
@@ -125,6 +125,9 @@ const gameState = {{ player: {{ coins: 100 }}, inventory: {{
 }} }};
 const addCoins = n => {{ gameState.player.coins += n; }};
 const saveState = () => {{}};
+const snapshotGameState = () => JSON.parse(JSON.stringify(gameState));
+const restoreGameStateSnapshot = s => Object.assign(gameState,s);
+const durableSaveState = () => ({{ok:true}});
 const updateHeader = () => {{}};
 const renderInventory = () => {{}};
 const showToast = t => toasts.push(t);

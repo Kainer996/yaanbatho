@@ -1,5 +1,5 @@
 'use strict';
-const CURRENT_BUILD = 'landscape-v388-20260910';
+const CURRENT_BUILD = 'market-tabs-v389-20260910';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const C=require('../geographic_world_core.js'),walk=require('../village_walk_core.js');

@@ -33,7 +33,7 @@ ALIVE_CORE = ROOT / "academy_alive_core.js"
 OWN_RELEASE_PIN = "magpie-market-v316-20260824"
 # The head of the line, which later releases move. This release changed the
 # cores below, so OWN_RELEASE_PIN stays their `?v=` tag for good.
-CURRENT_BUILD = "landscape-v388-20260910"
+CURRENT_BUILD = "market-tabs-v389-20260910"
 PREVIOUS_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 ROOM_ID = "magpie_market"
 
@@ -187,7 +187,7 @@ def test_the_traders_discount_is_applied_before_the_sums_not_after():
 def market_harness(probe: str) -> str:
     html = html_text()
     functions = "\n".join(function_source(html, name) for name in (
-        "storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "magpieMarketTradeReady", "requireMagpieMarketTrade", "storesSellItem",
+        "storesSellRarity", "storesSellBag", "storesSellLabel", "storesSellQuote", "magpieMarketTradeReady", "requireMagpieMarketTrade", "storesSellAllowed", "storesCommitTrade", "storesSellItem",
         "magpieMarketOwned", "magpieMarketDiscount", "magpieMarketBuyQuote",
         "magpieMarketSell", "magpieMarketRecordTrade", "magpieMarketBuy",
     ))
@@ -208,6 +208,10 @@ const gameState = { player: { coins: 300 }, inventory: {
 } };
 const addCoins = n => { gameState.player.coins += n; };
 const saveState = () => {};
+const snapshotGameState = () => JSON.parse(JSON.stringify(gameState));
+const restoreGameStateSnapshot = s => Object.assign(gameState,s);
+const durableSaveState = () => ({ok:true});
+const magpieMarketRefresh = () => {};
 const updateHeader = () => {};
 const renderInventory = () => {};
 const renderAcademyRoomInterior = () => {};
@@ -364,7 +368,7 @@ def test_the_stores_sell_path_stays_free_of_the_academy():
 def test_the_counter_offers_both_halves_of_the_trade_for_every_material():
     html = html_text()
     row = function_source(html, "magpieMarketRowHTML")
-    assert "magpieMarketBuy(" in row and "magpieMarketSell(" in row
+    assert "magpieMarketDealHTML('buy'" in row and "magpieMarketDealHTML('sell'" in row
     assert "BUY 1" in row and "BUY 5" in row and "SELL 1" in row
     # Every crafting material is on the counter, cheapest first.
     stock = function_source(html, "magpieMarketStock")
