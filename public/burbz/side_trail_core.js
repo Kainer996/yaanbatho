@@ -1,9 +1,7 @@
 // Burbz Side Trail Core — off-road side quests.
-// Walk 300 m away from your main quest's golden route and a side quest opens
-// by itself. The main quest keeps every marker and simply waits. Off the road
-// the wander is charted like any Side Quest — random chests, weapons, quest
-// givers, and wayside tales: small lore finds that never appear on the roads.
-// Walk back within 150 m of the route and the side quest banks itself.
+// A fresh far GPS fix confirms a detour only after 40 minutes at least 500 m
+// from the original route; pocket/reload gaps retain the saved start. The original and its detour switch explicitly; neither
+// proximity nor switching claims rewards or finishes a quest.
 // Pure logic module: no DOM, deterministic, UMD export for Node tests.
 (function(root, factory) {
   const api = factory();
@@ -13,10 +11,10 @@
   'use strict';
 
   const EARTH_R = 6371000;
-  const SIDE_TRAIL_TRIGGER_M = 300;   // this far off the route starts a side quest
-  const SIDE_TRAIL_RETURN_M = 150;    // back within this banks it (hysteresis)
-  const SIDE_TRAIL_MAX_ACCURACY_M = 80; // same GPS bar as Side Quest charting
-  const SIDE_TRAIL_START_STRIKES = 2; // consecutive off-route fixes before starting
+  const SIDE_TRAIL_TRIGGER_M = 500;
+  const SIDE_TRAIL_DURATION_MS = 40 * 60 * 1000;
+  const SIDE_TRAIL_MAX_ACCURACY_M = 80;
+  const SIDE_TRAIL_MAX_FIX_AGE_MS = 120000;
 
   function toRad(d) { return d * Math.PI / 180; }
 
@@ -30,58 +28,87 @@
   }
 
   function routePoints(route) {
-    return (Array.isArray(route) ? route : []).map(p => {
-      if (Array.isArray(p)) return { lat: Number(p[0]), lon: Number(p[1]) };
-      return { lat: Number(p && p.lat), lon: Number(p && p.lon) };
-    }).filter(p => isFinite(p.lat) && isFinite(p.lon));
+    const points = (Array.isArray(route) ? route : []).map(p => {
+      const lat = Array.isArray(p) ? p[0] : p && p.lat, lon = Array.isArray(p) ? p[1] : p && p.lon;
+      if (lat == null || lon == null || lat === '' || lon === '') return {lat:NaN,lon:NaN};
+      return { lat:Number(lat), lon:Number(lon) };
+    });
+    return points.every(p => Number.isFinite(p.lat) && Math.abs(p.lat) <= 85 && Number.isFinite(p.lon) && Math.abs(p.lon) <= 180) ? points : [];
   }
 
   // Shortest distance in metres from a point to the route polyline. The quest
   // route arrives exactly as quest_core persists it: [[lat, lon], ...].
   function distanceFromRouteM(route, lat, lon) {
     const pts = routePoints(route);
-    if (!pts.length || !isFinite(lat) || !isFinite(lon)) return Infinity;
+    if (!pts.length || !Number.isFinite(lat) || Math.abs(lat) > 85 || !Number.isFinite(lon) || Math.abs(lon) > 180) return Infinity;
     if (pts.length === 1) return haversineM(lat, lon, pts[0].lat, pts[0].lon);
     let best = Infinity;
     const cosLat = Math.max(0.2, Math.cos(toRad(lat)));
     for (let i = 1; i < pts.length; i++) {
       const a = pts[i - 1], b = pts[i];
-      const ax = (a.lon - lon) * cosLat, ay = a.lat - lat;
-      const bx = (b.lon - lon) * cosLat, by = b.lat - lat;
+      const wrap = degrees => ((degrees + 540) % 360) - 180;
+      const aLon = lon + wrap(a.lon - lon), bLon = aLon + wrap(b.lon - a.lon);
+      const ax = (aLon - lon) * cosLat, ay = a.lat - lat;
+      const bx = (bLon - lon) * cosLat, by = b.lat - lat;
       const vx = bx - ax, vy = by - ay;
       const denom = vx * vx + vy * vy;
       const t = denom > 0 ? Math.max(0, Math.min(1, -(ax * vx + ay * vy) / denom)) : 0;
-      const d = haversineM(lat, lon, a.lat + (b.lat - a.lat) * t, a.lon + (b.lon - a.lon) * t);
+      const d = haversineM(lat, lon, a.lat + (b.lat - a.lat) * t, aLon + (bLon - aLon) * t);
       if (d < best) best = d;
     }
     return best;
   }
 
-  // One decision per GPS fix. Two consecutive far fixes are needed to start,
-  // so a single GPS jump never opens a side quest; one near fix is enough to
-  // bank an auto side quest, because coming home should feel instant.
-  // state: { strikes } — carried between fixes by the caller.
-  // input: { questActive, sideActive, sideAuto, distM, accuracy }
-  // Returns { action: 'start' | 'end' | null, strikes }.
+  // Keep the off-route start through pocket/background gaps. Only a NEW fresh
+  // accurate far fix can confirm elapsed wall time; no timer or stale fix starts
+  // a quest. An observed accurate near fix resets the wait. Unknown GPS does not
+  // pretend that the player returned to the route while the phone was away.
   function sideTrailStep(state, input) {
-    const strikes = Math.max(0, Number(state && state.strikes) || 0);
-    input = input || {};
-    const acc = Number(input.accuracy);
-    const distM = Number(input.distM);
-    if (!input.questActive || !isFinite(distM) ||
-        (isFinite(acc) && acc > SIDE_TRAIL_MAX_ACCURACY_M)) {
-      return { action: null, strikes: 0 };
+    state = state || {}; input = input || {};
+    const empty = { version: 2, questId: input.questId || null, startedAt: null, lastFixAt: null, elapsedMs: 0, action: null };
+    const { now, fixAt, accuracy, distM } = input;
+    if (!input.questActive || input.sideActive || !input.questId) return empty;
+    const continuous = state.version === 2 && state.questId === input.questId &&
+      Number.isFinite(state.startedAt) && Number.isFinite(state.lastFixAt) &&
+      state.startedAt <= state.lastFixAt && state.lastFixAt <= now;
+    const pending = continuous ? { ...empty, startedAt:state.startedAt, lastFixAt:state.lastFixAt, elapsedMs:Math.max(0,state.lastFixAt-state.startedAt) } : empty;
+    if (!Number.isFinite(now) || !Number.isFinite(fixAt) || fixAt > now || now - fixAt > SIDE_TRAIL_MAX_FIX_AGE_MS ||
+        !Number.isFinite(accuracy) || accuracy < 0 || accuracy > SIDE_TRAIL_MAX_ACCURACY_M ||
+        !Number.isFinite(distM) || (continuous && fixAt <= state.lastFixAt)) return pending;
+    if (distM < SIDE_TRAIL_TRIGGER_M) return empty;
+    const startedAt = continuous ? state.startedAt : fixAt;
+    const elapsedMs = Math.max(0, fixAt - startedAt);
+    return { ...empty, startedAt, lastFixAt:fixAt, elapsedMs,
+      action: elapsedMs >= SIDE_TRAIL_DURATION_MS ? 'start' : null };
+  }
+
+  // Pure reference-preserving transfer: complete quest objects, including future
+  // fields, survive. The adapter commits this and pocket-clock changes together.
+  function detourTransition(walking, side, action, candidate) {
+    walking = walking || {}; side = side || {};
+    const original = walking.suspended || (side.active && side.active.auto && walking.active && side.active.parentQuestId === walking.active.id ? walking.active : null);
+    if (action === 'original') {
+      if (!original || (walking.active && walking.active !== original) || (side.active && side.suspendedDetour)) return null;
+      return { walking: { ...walking, active: original, suspended: null },
+        side: { ...side, active: null, suspendedDetour: side.active || side.suspendedDetour || null },
+        outgoing: side.active || null, incoming: original };
     }
-    if (input.sideActive) {
-      if (input.sideAuto && distM <= SIDE_TRAIL_RETURN_M) return { action: 'end', strikes: 0 };
-      return { action: null, strikes: 0 };
-    }
-    if (distM >= SIDE_TRAIL_TRIGGER_M) {
-      const next = strikes + 1;
-      if (next >= SIDE_TRAIL_START_STRIKES) return { action: 'start', strikes: 0 };
-      return { action: null, strikes: next };
-    }
-    return { action: null, strikes: 0 };
+    const next = action === 'start' ? candidate : side.suspendedDetour;
+    if (!next || side.active || walking.suspended || (action === 'start' && side.suspendedDetour) ||
+        (walking.active && next.parentQuestId !== walking.active.id) || (action === 'start' && !walking.active)) return null;
+    return { walking: { ...walking, active: null, suspended: walking.active || null },
+      side: { ...side, active: next, suspendedDetour: null }, outgoing: walking.active || null, incoming: next };
+  }
+
+  const DETOUR_THEMES = [
+    { id:'hedge-post', name:'The Hedgerow Post', character:'Wren the wayside courier', objective:'Follow your own trail and recover the free realm’s scattered field provisions.', intro:'The usurper counts every signpost. Our couriers trade news between them. Help me keep the quiet post supplied.', firstKind:'chest' },
+    { id:'inkwing-notes', name:'Inkwing’s Missing Margins', character:'Scribe Inkwing', objective:'Explore for lost wayside tales and keep them in your Feathered Folio.', intro:'Someone has shelved the countryside in the wrong drawer. Read the little stories the roads forgot; the Academy needs every one.', firstKind:'lore' },
+    { id:'watchers', name:'The Quiet Watch', character:'Rowan the hedgerow warden', objective:'Meet wandering allies and recover equipment from caches along your own walk.', intro:'We watch for the usurper’s shadows where the map runs out. Every friendly voice and recovered tool helps the free villages.', firstKind:'questgiver' },
+    { id:'gleaners', name:'The Gleaner’s Lantern', character:'Mallow the field quartermaster', objective:'Gather provisions and equipment for the birds waiting at the Academy.', intro:'What the harvest drops belongs to the walker who finds it. Keep your eyes open: a small parcel can feed a hungry wing.', firstKind:'weapon' }
+  ];
+  function sideTrailTheme(rand) {
+    const r = typeof rand === 'function' ? rand() : Math.random();
+    return { ...DETOUR_THEMES[Math.min(DETOUR_THEMES.length - 1, Math.max(0, Math.floor((Number(r) || 0) * DETOUR_THEMES.length)))] };
   }
 
   // What the wander stumbles across. Lore joins the classic three: the
@@ -206,9 +233,10 @@
 
   return {
     SIDE_TRAIL_TRIGGER_M: SIDE_TRAIL_TRIGGER_M,
-    SIDE_TRAIL_RETURN_M: SIDE_TRAIL_RETURN_M,
+    SIDE_TRAIL_DURATION_MS: SIDE_TRAIL_DURATION_MS,
+    SIDE_TRAIL_MAX_FIX_AGE_MS: SIDE_TRAIL_MAX_FIX_AGE_MS,
     SIDE_TRAIL_MAX_ACCURACY_M: SIDE_TRAIL_MAX_ACCURACY_M,
-    SIDE_TRAIL_START_STRIKES: SIDE_TRAIL_START_STRIKES,
+    detourTransition, sideTrailTheme, DETOUR_THEMES,
     WAYSIDE_TALES: WAYSIDE_TALES,
     SIDE_TRAIL_NAME_PARTS: SIDE_TRAIL_NAME_PARTS,
     distanceFromRouteM: distanceFromRouteM,
