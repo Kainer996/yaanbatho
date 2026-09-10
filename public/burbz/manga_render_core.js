@@ -61,6 +61,7 @@
       depthTest: false, depthWrite: false,
       uniforms: {
         colour: { value: pass.target.texture }, depth: { value: pass.target.depthTexture },
+        horizonX:{value:new T.Vector2()},horizonY:{value:new T.Vector2()},horizonZ:{value:new T.Vector2()},horizonFog:{value:new T.Vector2(0,0)},
         texel: { value: new T.Vector2(1, 1) }, nearClip: { value: 0.1 }, farClip: { value: 140 }
       },
       vertexShader: 'varying vec2 inkUv; void main() { inkUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
@@ -68,7 +69,7 @@
         // Samplers default to lowp independently of float precision. Mobile GPUs
         // can quantize depth into broad steps which the ink pass draws as stripes.
         'uniform sampler2D colour; uniform highp sampler2D depth;',
-        'uniform vec2 texel; uniform float nearClip; uniform float farClip; varying vec2 inkUv;',
+        'uniform vec2 texel; uniform vec2 horizonX; uniform vec2 horizonY; uniform vec2 horizonZ; uniform vec2 horizonFog; uniform float nearClip; uniform float farClip; varying vec2 inkUv;',
         '#include <common>', '#include <packing>',
         'float distanceAt(vec2 uv) { return -perspectiveDepthToViewZ(texture2D(depth, uv).x, nearClip, farClip); }',
         'float luminanceAt(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }',
@@ -87,6 +88,9 @@
         '  float detail = smoothstep(0.18, 0.48, crease) * 0.38;',
         // Leave the sky and transparent glows alone; coloured ink retains readable night detail.
         '  float ink = max(silhouette, detail) * step(z, farClip * 0.98);',
+        // Continuous terrain uses horizontal fog; its depth outline must vanish
+        // with the surface, or hidden trees become ghost outlines at the horizon.
+        '  if(horizonFog.y>0.0) { float groundDistance=length((horizonX*(inkUv.x*2.0-1.0)+horizonY*(inkUv.y*2.0-1.0)+horizonZ)*z); ink*=1.0-smoothstep(horizonFog.x,horizonFog.y,groundDistance); }',
         '  vec3 paper = mix(c.rgb, (l+r+u+d+c.rgb*4.0)/8.0, silhouette*0.20);',
         '  gl_FragColor = vec4(mix(paper, paper*0.16 + vec3(0.007, 0.006, 0.014), ink*0.88), c.a);',
         '  #include <tonemapping_fragment>',
@@ -119,6 +123,13 @@
     pass.material.uniforms.texel.value.set(renderer.getPixelRatio()/width, renderer.getPixelRatio()/height);
     pass.material.uniforms.nearClip.value = camera.near;
     pass.material.uniforms.farClip.value = camera.far;
+    var horizontal=scene.userData.continuousFog&&scene.fog;
+    pass.material.uniforms.horizonFog.value.set(horizontal?scene.fog.near:0,horizontal?scene.fog.far:0);
+    if(horizontal){var m=camera.matrixWorld.elements,p=camera.projectionMatrix.elements;
+      pass.material.uniforms.horizonX.value.set(m[0]/p[0],m[2]/p[0]);
+      pass.material.uniforms.horizonY.value.set(m[4]/p[5],m[6]/p[5]);
+      pass.material.uniforms.horizonZ.value.set(-m[8],-m[10]);
+    }
     var autoReset = renderer.info.autoReset;
     if (autoReset) renderer.info.reset();
     renderer.info.autoReset = false;

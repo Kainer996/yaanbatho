@@ -29845,6 +29845,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     await ensureVillageWalkModule();
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
+      continuousWorld:continuousWalkingAdapter(currentVillage()),
       name: currentVillage().name, seed, opener:button, exitLabel:geographicWorldVisit?'← World':'← Village', interiors: buildingRoomsAdapter(),
       discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
       exploreWorld:pose=>exploreFromSettlement(currentVillage(),pose),
@@ -29873,7 +29874,7 @@ $('townWalkBtn')?.addEventListener('click',async()=>{
     await ensureVillageWalkModule();
     if(currentScreen!=='town'||currentTownSettlement()?.id!==id)return;
     if(!Number.isFinite(seed)||!townScene?.userData.walkTerrain||townFallbackMode)throw Error('The 3D town is not ready. Please try again.');
-    window.BurbzVillageWalk.open({name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
+    window.BurbzVillageWalk.open({continuousWorld:continuousWalkingAdapter({...settlement.centroid,id:settlement.id,seed,name:townDisplayName(settlement),tier:settlement.tier}),name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
       discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),interiors:buildingRoomsAdapter(),
       exploreWorld:pose=>exploreFromSettlement(settlement.centroid,pose),
       boundaryExit:pose=>exploreFromSettlement(settlement.centroid,pose),
@@ -34166,6 +34167,7 @@ function buildVillageScene(v) {
   }));
   ground.receiveShadow = true;
   villageScene.add(ground);
+  villageScene.userData.walkSurface={ground,radius:groundR,palette:pal,corridors:[]};
   // Worn patches in the turf — snowdrifts in frost, leaf-litter in autumn
   const patchColor = pal.weather === 'snow' ? 0xdfe4ec : pal.weather === 'leaves' ? 0x6a4a20 : new THREE.Color(pal.ground).offsetHSL(0.03, -0.2, 0.13).getHex();
   const patchMat = new THREE.MeshLambertMaterial({ color: patchColor, transparent: true, opacity: 0.85 });
@@ -34177,6 +34179,7 @@ function buildVillageScene(v) {
     villageScene.add(patch);
   }
   const cobbleMat = villageCobbleMaterial(pal);
+  villageScene.userData.walkSurface.roadMaterial=cobbleMat;
   const cobbleTile = 2.6; // world units per cobble tile
   // The cobbled centre matches the plan: a full market square for formal
   // plans, a modest widening of the high street for a lane, and only a small
@@ -34198,6 +34201,8 @@ function buildVillageScene(v) {
       roadGrp.rotation.y = -roadA;
       roadGrp.position.y = 0.014;
       villageScene.add(roadGrp);
+      roadGrp.userData.walkCorridor=true;
+      villageScene.userData.walkSurface.corridors.push({x:0,z:0,ux:Math.cos(roadA),uz:Math.sin(roadA),width:3,start:groundR*.9,end:groundR+110,material:cobbleMat,object:roadGrp,kind:"road"});
       // fence runs beside the roads
       for (let f = 0; f < 2 + tier; f++) {
         const along = (r() < 0.5 ? -1 : 1) * (6 + r() * (groundR * 0.4));
@@ -34250,6 +34255,8 @@ function buildVillageScene(v) {
     riverGrp.rotation.y = -(riverA + Math.PI / 2);
     riverGrp.position.set(riverPx, 0.01, riverPz);
     villageScene.add(riverGrp);
+    riverGrp.userData.walkCorridor=true;
+    villageScene.userData.walkSurface.corridors.push({x:riverPx,z:riverPz,ux:-riverUz,uz:riverUx,width:riverW,start:groundR*1.1,end:groundR+120,material:water.material,bankMaterial:riverGrp.children[1].material,object:riverGrp,kind:"river"});
     // Reeds and a moored rowboat along the banks
     const reedMat = new THREE.MeshLambertMaterial({ color: 0x3c5a22 });
     const tX = -riverUz, tZ = riverUx; // direction the river flows
@@ -35975,6 +35982,7 @@ function buildTownScene(settle) {
   settlementPopulateResidents('town', townMemberRecords(settle), townScene, townEconBuildings, townLifeBudget.people, pal);
   townScene.userData.landRadius=groundR;
   townScene.userData.walkTerrain={radius:groundR-2,heightAt,river:null};
+  townScene.userData.walkSurface={ground,radius:groundR,palette:pal,roadMaterial:cobbleMat};
   // ---- Lanes: a few cobbled streets radiating out from the square -----------
   for (let li = 0; li < 4; li++) {
     const laneA = (li / 4) * Math.PI * 2 + r() * 0.7;
@@ -44609,7 +44617,17 @@ function returnFromGeographicSettlement(reason) {
 }
 // First-person travel belongs to the homestead and settlement walking views.
 // Use the selected Empire coordinates, never the phone/quest-map position.
+function continuousWalkingAdapter(record) {
+  const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
+  return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
+    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,
+    records:geographicSettlementRecords,createSettlement:(T,r)=>BurbzGeographicSettlementScene.create(T,r),
+    getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),
+    enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
+    savePose:pose=>gameState!==sessionSave?false:revision===undefined?true:saveGeographicPose(pose,revision)};
+}
 async function exploreFromSettlement(record,localPose) {
+  if(BurbzVillageWalk.continueWorld?.(localPose?.mode))return true;
   const C=BurbzGeographicWorldCore;
   if(!C.validCoordinate(record))throw Error('This settlement has no valid world location.');
   const save=gameState,screen=currentScreen;

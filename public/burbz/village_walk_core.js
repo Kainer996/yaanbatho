@@ -25,9 +25,9 @@
     }
     segments.forEach(add);polygons.forEach(p=>p.forEach((a,i)=>add([a,p[(i+1)%p.length]])));
     function riverCoords(x,z){const dx=x-river.x,dz=z-river.z;return{across:dx*river.ux+dz*river.uz,along:-dx*river.uz+dz*river.ux};}
-    function allowed(x,z){
-      if(!Number.isFinite(x+z)||Math.hypot(x,z)>radius-RADIUS)return false;
-      if(river){const p=riverCoords(x,z);if(Math.abs(p.across)<river.width/2+RADIUS&&Math.abs(p.along)>.69-RADIUS)return false;}
+    function allowed(x,z,beyond=false){
+      if(!Number.isFinite(x+z)||!beyond&&Math.hypot(x,z)>radius-RADIUS)return false;
+      if(river&&(!beyond||Math.hypot(x,z)<radius)){const p=riverCoords(x,z);if(Math.abs(p.across)<river.width/2+RADIUS&&Math.abs(p.along)>.69-RADIUS)return false;}
       for(const p of polygons)if(inside(x,z,p))return false;
       for(const [a,b] of cells.get(Math.floor(x/cellSize)+','+Math.floor(z/cellSize))||[])
         if(distance2(x,z,a,b)<RADIUS*RADIUS)return false;
@@ -51,7 +51,7 @@
       }throw Error('No safe village footpath is available.');
     }
     function surface(x,z){if(river){const p=riverCoords(x,z);if(Math.abs(p.along)<.8&&Math.abs(p.across)<(river.width+2.2)/2)return 'wood';}return surfaceAt(x,z);}
-    return {allowed,height,spawn,surface,radius,polygons,segments,cellCount:cells.size};
+    return {allowed,allowedBeyond:(x,z)=>allowed(x,z,true),height,spawn,surface,radius,polygons,segments,cellCount:cells.size};
   }
   function move(player,input,dt,world){
     dt=clamp(Number(dt)||0,0,.05);

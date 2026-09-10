@@ -11,7 +11,7 @@ function attach(s){
 let safe=null;for(const forward of [0,.3,.6,.9,1.2,1.5]){for(const side of [0,.3,-.3,.6,-.6,.9,-.9]){const x=p.x+direction.x*forward-direction.z*side,z=p.z+direction.z*forward+direction.x*side;if(s.world.allowed(x,z)){safe={x,z};break;}}if(safe)break;}
 if(safe)doors.push({...target,label:info.name,...safe});});}}
  function enter(t){
-  if(room||s.uiBusy||s.failed)return false;const info=valid(t);if(!info)return false;
+  if(room||s.player.mode==='fly'||s.uiBusy||s.failed)return false;const info=valid(t);if(!info)return false;
   const next=root.BurbzBuildingRoomsScene.create(T,core.plan(t));
   s.reset();s.discoveries?.closePanel();outside={world:s.world,player:{...s.player},exposure:s.source.renderer.toneMappingExposure};s.source.renderer.toneMappingExposure=1;room=next;room.target={...t};s.room=room;s.world=room.world;s.player=room.world.spawn();life=api?.people?root.BurbzInteriorLife.attach(s,room,api):null;
   s.root.classList.add('vr-inside');s.root.querySelector('.vw-hint').textContent='Left thumb: walk · Drag to look · E interact';s.root.querySelector('.vw-title small').textContent=s.options.flight?'PERCHED INSIDE':'INDOORS';s.root.querySelector('.vw-title strong').textContent=room.plan.name;
@@ -24,10 +24,10 @@ if(safe)doors.push({...target,label:info.name,...safe});});}}
  function use(){if(s.uiBusy||s.failed)return;if(room){if(Math.hypot(s.player.x-room.plan.exit.x,s.player.z-room.plan.exit.z)<2)exit();}else if(nearest)enter(nearest);}
  doorButton.addEventListener('click',use,{signal:s.abort.signal});service.addEventListener('click',()=>{if(!room||s.failed)return;const t=room.target,action=room.plan.action.kind;root.BurbzVillageWalk.close('building-action');api?.open(t,action);},{signal:s.abort.signal});
  function update(time){life?.update(time);if(time-last<.1)return;last=time;if(room){const p=room.plan;doorButton.hidden=s.uiBusy||Math.hypot(s.player.x-p.exit.x,s.player.z-p.exit.z)>=2;service.hidden=!p.action||Math.hypot(s.player.x-p.action.x,s.player.z-p.action.z)>2.3;service.textContent=p.action?.label||'';return;}
-  let distance=2.4;nearest=null;for(const d of doors){if(s.flight&&s.player.landed!==d.roomId)continue;const dx=d.x-s.player.x,dz=d.z-s.player.z,n=Math.hypot(dx,dz);if(n<distance){let clear=true;for(let k=1;k<=6;k++)if(!s.world.allowed(s.player.x+dx*k/6,s.player.z+dz*k/6)){clear=false;break;}if(clear){nearest=d;distance=n;}}}
+  let distance=2.4;nearest=null;if(s.player.mode==='fly'){doorButton.hidden=true;return;}for(const d of doors){if(s.flight&&s.player.landed!==d.roomId)continue;const dx=d.x-s.player.x,dz=d.z-s.player.z,n=Math.hypot(dx,dz);if(n<distance){let clear=true;for(let k=1;k<=6;k++)if(!s.world.allowed(s.player.x+dx*k/6,s.player.z+dz*k/6)){clear=false;break;}if(clear){nearest=d;distance=n;}}}
   doorButton.hidden=!nearest||s.uiBusy;doorButton.textContent=nearest?'Enter '+nearest.label+' · F':'';
  }
- return{enter,leave,update,closePanel:()=>life?.closePanel(),key(code){if(life?.key(code))return true;if(code==='KeyF'&&!s.uiBusy){use();return true;}return false;},diagnostics:()=>({inside:!!room,life:life?.diagnostics(),plan:room?.plan,doors,nearest}),dispose(){if(outside)s.source.renderer.toneMappingExposure=outside.exposure;life?.dispose();life=null;room?.dispose();room=null;s.room=null;doorButton.remove();service.remove();}};
+ return{enter,leave,update,closePanel:()=>life?.closePanel(),key(code){if(life?.key(code))return true;if(code==='KeyF'&&!s.uiBusy&&(room||nearest)){use();return true;}return false;},diagnostics:()=>({inside:!!room,life:life?.diagnostics(),plan:room?.plan,doors,nearest}),dispose(){if(outside)s.source.renderer.toneMappingExposure=outside.exposure;life?.dispose();life=null;room?.dispose();room=null;s.room=null;doorButton.remove();service.remove();}};
 }
 root.BurbzBuildingRooms={attach};
 })(typeof globalThis!=='undefined'?globalThis:this);

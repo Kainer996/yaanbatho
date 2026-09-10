@@ -32,6 +32,7 @@
       script('academy_flight_core.js','BurbzAcademyFlightCore').then(()=>script('academy_flight.js','BurbzAcademyFlight')),
       script('building_rooms_core.js','BurbzBuildingRoomsCore').then(()=>script('building_rooms_scene.js','BurbzBuildingRoomsScene')).then(()=>script('building_rooms.js','BurbzBuildingRooms')),
       script('village_walk_core.js','BurbzVillageWalkCore'),script('village_walk_scene.js','BurbzVillageWalkScene'),
+      script('village_world_core.js','BurbzVillageWorldCore').then(()=>script('village_world.js','BurbzVillageWorld')),
       script('village_discovery_content.js','BurbzVillageDiscoveryContent').then(()=>script('village_discovery_core.js','BurbzVillageDiscoveryCore')).then(()=>script('village_discoveries.js','BurbzVillageDiscoveries')),
       style('village_walk.css','villageWalkStyle'),
       style('first_person_hud.css','firstPersonHudStyle'),
@@ -92,7 +93,7 @@
     on(document,'fullscreenchange',fullChange);on(document,'webkitfullscreenchange',fullChange);
     full.hidden=!(el.requestFullscreen||el.webkitRequestFullscreen);fullscreen();exit.focus({preventScroll:true});
     const keys=new Set(),pointers=new Map(),input={side:0,forward:0};
-    s.reset=()=>{s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();};
+    s.reset=()=>{s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();s.continuity?.reset();};
     function fail(error){
       if(s.closed)return;s.failed=true;cancelAnimationFrame(s.raf);s.raf=0;s.reset();
       const box=el.querySelector('.vw-error');box.hidden=false;box.querySelector('p').textContent='Walking is unavailable here. '+(error.message||'Please return to the village and try again.');
@@ -115,10 +116,10 @@
       if(s.flight&&e.target.tagName==='INPUT')return;
       if(!e.repeat&&s.hud?.key(e.code)){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
-      if(e.code==='KeyF'&&!e.repeat&&!s.room&&options.exploreWorld){e.preventDefault();e.stopImmediatePropagation();leaveForWorld('fly');return;}
+      if(e.code==='KeyF'&&!e.repeat&&!s.room&&options.exploreWorld){e.preventDefault();e.stopImmediatePropagation();if(s.continuity){if(s.player.mode==='fly'||!s.rooms?.key(e.code))s.continuity.toggleFlight();}else leaveForWorld('fly');return;}
       if(!e.repeat&&(s.flight?.key(e.code)||s.rooms?.key(e.code)||(!s.room&&s.harvest?.key(e.code))||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
-      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
+      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight||options.continuousWorld?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
     },{capture:true});
     on(document,'keyup',e=>{keys.delete(e.code);},{capture:true});
     // Body-level gesture isolation prevents the dock/page/village swipe stack
@@ -166,17 +167,17 @@
         const core=root.BurbzVillageWalkCore,dt=s.last?(ts-s.last)/1000:0;
         if(s.last&&dt>0){s.intervals.push(dt*1000);s.samples.push(dt*1000);if(s.samples.length>600)s.samples.shift();}
         s.last=ts;s.frames++;
-        const before={x:s.player.x,z:s.player.z},movement={side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)};
-        if(!s.room&&!s.flight&&!s.uiBusy&&options.boundaryExit&&core.outwardBoundary(s.player,movement,s.world))leaveForWorld();
+        const before={x:s.player.x,z:s.player.z},movement={side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),lift:(keys.has('Space')?1:0)-(keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0)};
+        if(!s.continuity&&!s.room&&!s.flight&&!s.uiBusy&&options.boundaryExit&&core.outwardBoundary(s.player,movement,s.world))leaveForWorld();
         if(s.flight&&!s.room)s.flight.update(dt);
-        else if(!s.uiBusy)core.move(s.player,movement,dt,s.world);
-        if(!s.uiBusy&&(!s.flight||s.room))s.footsteps?.update(before,s.player,dt,s.room?'wood':s.world.surface?.(s.player.x,s.player.z));else s.footsteps?.reset();
+        else if(!s.uiBusy){if(s.continuity&&!s.room)s.continuity.move(movement,dt);else core.move(s.player,movement,dt,s.world);}
+        if(!s.uiBusy&&s.player.mode!=='fly'&&(!s.flight||s.room))s.footsteps?.update(before,s.player,dt,s.room?'wood':s.world.surface?.(s.player.x,s.player.z));else s.footsteps?.reset();
         const turn=Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
         s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))*turn));
         const {camera,renderer,scene}=s.source;
         if(!s.room){s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}else s.flight?.update(0);
-        s.rooms?.update(ts/1000);s.harvest?.update(ts/1000);s.hud?.update(ts/1000);
-        const motion=s.flight?.camera(dt)||{bob:0,pitch:0,roll:0};
+        s.rooms?.update(ts/1000);s.harvest?.update(ts/1000);s.hud?.update(ts/1000);s.continuity?.update(ts/1000);
+        const motion=s.flight?.camera(dt)||s.continuity?.camera(dt)||{bob:0,pitch:0,roll:0};
         camera.position.set(s.player.x,s.player.y+(options.flight ? .45 : core.EYE)+motion.bob,s.player.z);camera.rotation.set(s.player.pitch+motion.pitch,s.player.yaw,motion.roll,'YXZ');camera.updateMatrixWorld();
         if(root.BurbzManga)root.BurbzManga.render(root.THREE,renderer,s.room?.scene||scene,camera);else renderer.render(s.room?.scene||scene,camera);
         if(s.intervals.length>=60||(s.intervals.length>=12&&s.intervals.reduce((a,b)=>a+b,0)>1600)){
@@ -186,23 +187,25 @@
         s.raf=requestAnimationFrame(frame);
       }catch(error){fail(error);}
     }
-    load().then(()=>{
+    load().then(async()=>{
       if(s.closed)return;const source=options.source();
       if(!root.THREE||!source?.scene||!source.renderer||source.renderer.getContext().isContextLost())throw Error('This browser cannot render the 3D village.');
       s.source=source;const {renderer,camera,scene}=source,canvas=renderer.domElement,size=renderer.getSize(new root.THREE.Vector2());
       s.snapshot={position:camera.position.clone(),quaternion:camera.quaternion.clone(),lens:{fov:camera.fov,near:camera.near,far:camera.far,aspect:camera.aspect},dpr:renderer.getPixelRatio(),width:size.x,height:size.y};
+      options.suspend?.();
       s.flight=options.flight?root.BurbzAcademyFlight.attach(s,input,keys):null;
       if(options.harvest)root.BurbzVillageHarvestScene.prepare(root.THREE,scene,options.harvest);
       s.world=s.flight?s.flight.world:options.room?root.BurbzBuildingRoomsCore.world(root.BurbzBuildingRoomsCore.plan(options.room)):root.BurbzVillageWalkScene.create(root.THREE,scene,source.buildings,source.movers,scene.userData.walkTerrain);
       s.unbatch=options.room||options.flight?null:root.BurbzVillageWalkScene.batch(root.THREE,scene,source.movers);
       const spawn=s.world.spawn();s.player={...spawn,yaw:spawn.yaw??Math.atan2(spawn.x,spawn.z),pitch:spawn.pitch??-.04};
       s.discoveries=root.BurbzVillageDiscoveries.attach(s);
+      if(options.continuousWorld){hint.textContent="Loading the surrounding terrain…";await root.BurbzVillageWorld.attach(s,options.continuousWorld);if(s.closed)return;}
       s.rooms=root.BurbzBuildingRooms.attach(s);
       s.harvest=root.BurbzVillageHarvest.attach(s);
       s.hud=root.BurbzFirstPersonHud.attach(s);
       if(options.room&&!s.rooms.enter(options.room))throw Error("This building is not ready to enter.");
       s.canvas=canvas;s.parent=canvas.parentNode;s.next=canvas.nextSibling;s.canvasStyle=canvas.style.cssText;el.prepend(canvas);
-      options.suspend?.();Object.assign(camera,{fov:68,near:.08,far:110});
+      Object.assign(camera,{fov:68,near:.08,far:s.continuity?650:110});
       on(canvas,'webglcontextlost',e=>{e.preventDefault();fail(Error('The graphics connection was interrupted.'));});
       resize();s.resizeObserver=new ResizeObserver(resize);s.resizeObserver.observe(el);
       if(options.flight&&!s.room){el.querySelector('.vw-title small').textContent='BIRD FLIGHT';el.querySelector('.vw-exit').textContent='← Academy';stick.setAttribute('aria-label','Fly: forward, backward and strafe');}
@@ -213,8 +216,8 @@
   function diagnostics(){
     const s=session;if(!s)return {open:false};
     const sorted=s.samples.slice().sort((a,b)=>a-b),mean=sorted.reduce((a,b)=>a+b,0)/(sorted.length||1);
-    return {open:true,hud:s.hud?.diagnostics(),harvest:s.harvest?.diagnostics(),flight:s.flight?.diagnostics(),interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
+    return {open:true,continuity:s.continuity?.diagnostics(),hud:s.hud?.diagnostics(),harvest:s.harvest?.diagnostics(),flight:s.flight?.diagnostics(),interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player&&!!s.canvas,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
   }
-  root.BurbzVillageWalk={open,close,isOpen};
+  root.BurbzVillageWalk={open,close,isOpen,continueWorld(mode){const s=session;if(!s?.continuity||s.room)return false;s.hud?.closePanel?.();return mode==='fly'?s.continuity.toggleFlight('fly'):true;}};
   if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,world:()=>session?.world,place:(p)=>{if(session?.world.allowed(p.x,p.z)){Object.assign(session.player,p,{y:session.flight&&!session.room?p.y??session.player.y:session.world.height(p.x,p.z)});return true;}return false;},resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
 })(typeof globalThis!=='undefined'?globalThis:this);

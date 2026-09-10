@@ -172,6 +172,13 @@
     const d=diagnostics(1),point=[wrap(p[0]),p[1]],polygons=compileGeometry(geometry,point[0],d,LIMITS.maxVertices);
     return !!polygons&&polygons.some(poly=>inPolygon(point,poly,d)===true);
   }
+  // Streaming walkers test many nearby cells against the same decoded polygon.
+  // Validate topology once; retain the original hole and work-budget rules.
+  function compileMask(geometry, nearLongitude) {
+    const polygons=compileGeometry(geometry,nearLongitude,diagnostics(1),LIMITS.maxVertices);
+    if(!polygons)return()=>false;
+    return p=>validPoint(p)&&polygons.some(poly=>inPolygon([unwrap(p[0],nearLongitude),p[1]],poly,diagnostics(1))===true);
+  }
   function viewOf(value) {
     const b=value&&value.bounds;
     if (!Array.isArray(b)||b.length!==4||!b.every(finite)||!finite(value.zoom)||b[1]>=b[3]||b[1]<-90||b[3]>90) return null;
@@ -358,5 +365,5 @@
       .filter(t=>{const [,x,y]=t.id.split(':').map(Number);return (Math.floor(x/8)+Math.floor(y/8))%3===0;})
       .map(t=>({key:'woodland:'+t.id,lat:t.latitude,lon:t.longitude,quantity:1}));
   }
-  return { placeTrees, timber, isWoodlandFeature, pointInWoodland, DEFAULTS, LIMITS };
+  return { placeTrees, timber, isWoodlandFeature, pointInWoodland, compileMask, DEFAULTS, LIMITS };
 });

@@ -66,6 +66,18 @@ const replacement=new T.Scene(),replacementMaterial=new T.MeshLambertMaterial();
 replacement.add(new T.Mesh(new T.BoxGeometry(),replacementMaterial));
 ink.render(T,mock,replacement,perspective);assert.equal(replacementMaterial.userData.burbzManga,true);
 
+// Fogged terrain must not retain dark depth outlines, including from a banked
+// flying camera. Reconstruct horizontal distances from real projected points.
+replacement.userData.continuousFog=true;replacement.fog=new T.Fog(0xa7c3ba,40,104);
+for(const pitch of [-.8,0,.6]){perspective.position.set(14,60,-20);perspective.rotation.set(pitch,.7,.2,'YXZ');perspective.updateProjectionMatrix();perspective.updateMatrixWorld(true);ink.render(T,mock,replacement,perspective);
+ assert.equal(uniforms.horizonFog.value.y,104);
+ for(const local of [new T.Vector3(5,4,-30),new T.Vector3(-20,-8,-90)]){const point=local.clone().applyMatrix4(perspective.matrixWorld),ndc=point.clone().project(perspective),z=-local.z;
+ const x=(uniforms.horizonX.value.x*ndc.x+uniforms.horizonY.value.x*ndc.y+uniforms.horizonZ.value.x)*z,depth=(uniforms.horizonX.value.y*ndc.x+uniforms.horizonY.value.y*ndc.y+uniforms.horizonZ.value.y)*z;
+ assert(Math.abs(Math.hypot(x,depth)-Math.hypot(point.x-perspective.position.x,point.z-perspective.position.z))<1e-7);
+ }
+}
+delete replacement.userData.continuousFog;ink.render(T,mock,replacement,perspective);assert.equal(uniforms.horizonFog.value.y,0,'ordinary overview and indoor ink stays unchanged');
+
 // Nested render targets and non-perspective cameras bypass the screen-space pass.
 const external=new T.WebGLRenderTarget(4,4);active=external;frames=[];
 ink.render(T,mock,replacement,perspective);assert.equal(frames.length,1);assert.equal(active,external);
