@@ -18,12 +18,12 @@ The local server's only missing requests are `api/auth/config` in the old/new fi
 
 ## Broad regression
 
-Exact hydrated v383 baseline: 41 failed, 2,127 passed, 5 skipped. Final v384 after scroll/HUD and Comic contrast corrections: 41 failed, 2,128 passed, 5 skipped. All 41 failure IDs are identical; zero added failures. The new dashboard core wrapper adds one passing test. Focused Home, scan dashboard, money-HUD and asset registration checks also pass.
+Exact hydrated v383 baseline: 41 failed, 2,127 passed, 5 skipped. Final v384 after scroll/HUD and Comic contrast corrections: 41 failed, 2,128 passed, 5 skipped. All 41 failure IDs are identical; zero added failures. The new dashboard core wrapper adds one passing test. The last scoped privacy-text color rule was checked with the focused Home, scan dashboard, money-HUD and asset registration checks plus the full browser/installed journeys.
 
 ## Findings fixed during verification
 
 - Six-digit coin totals wrapped on 320px phones. The final stats retain exact accessible amounts without wrapping.
-- The final visual release review caught pale section headings and counts on Comic's pale page. Scoped ink colors now cover those headings, metadata, village controls, empty states and the village control's focus ring while preserving the dark cards and Normal appearance.
+- The final visual release review caught pale section headings and counts on Comic's pale page. Scoped ink colors now cover those headings, metadata, village controls, empty states, microphone/privacy details and the village control's focus ring while preserving the dark cards and Normal appearance.
 - Chromium reset nested scroll positions when the app moved into the monitor. The controller now captures/restores scrolled descendants in both directions, and hidden monitor views preserve layout.
 - The money HUD mistook the overlaid room canvas for an overlay covering the app header. It now understands projected Home and keeps the normal header balance without adding a duplicate.
 - Some initial runner taps landed beneath the fixed dock or during the existing village travel overlay. Runners now center the actual target and verify its unobscured native hit point. Initial failed evidence is retained; no runtime failure is concealed.
