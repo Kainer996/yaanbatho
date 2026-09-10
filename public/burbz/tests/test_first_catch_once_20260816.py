@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "map-trails-v381-20260909"
+CURRENT_BUILD = "pocket-detours-v382-20260910"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

@@ -261,6 +261,7 @@ ALIGNMENT_FUNCTIONS = [
 # Everything the alignment path touches that is not itself under test.
 ALIGNMENT_SHIM = """
 const BurbzMapTrailCore = require("./map_trail_core.js");
+function questPocketResume(quest) { Object.assign(quest, require("./quest_pocket_core.js").transition(quest, "resume", Date.now())); }
 global.window = global;
 require('./quest_core.js');
 require('./walking_route_core.js');

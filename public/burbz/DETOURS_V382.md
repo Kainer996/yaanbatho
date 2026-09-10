@@ -2,7 +2,8 @@
 
 A walking quest opens a side quest only after the player has been at least
 500 metres from its original route for 40 minutes. The off-route start is saved
-on that quest. Screen-off time and app restarts retain it; a new accurate GPS
+on that quest. Legitimate route changes while it is active refresh the distance
+baseline and restart the wait; suspension preserves that final original route. Screen-off time and app restarts retain it; a new accurate GPS
 fix must confirm the player is still far away before switching. No timer,
 missing fix, replayed timestamp or stale fix can start a detour. A fresh accurate
 fix inside 500 metres resets the wait. Fixes need finite coordinates and accuracy
@@ -25,7 +26,9 @@ quest and its automatic side quest freeze the main quest until manual resume.
 Switches snapshot state, suspend/resume the pocket clock through the agreed
 `questPocketSuspend(quest, now)` and `questPocketResume(quest, now)` hooks, and
 commit both quest records in one checked durable save. A failed save restores
-both records and pocket ownership before changing the map. Switching pays no XP,
+both records and pocket ownership before changing the map; the GPS handler exits
+if rollback replaced its captured quest object. Explicit abandonment is also
+checked and rolled back on save failure. Switching pays no XP,
 items or completion progress. Walking distance restarts its last-fix baseline
 on resume; side trail segments retain their saved points without drawing or
 counting a connector across the suspended journey.
@@ -50,7 +53,9 @@ rollback, resume without GPS/claims, serialized reload and continue. It is a
 focused controls fixture, not a full MapLibre/provider or installed-PWA proof.
 Evidence: `/root/burbz-detours-v382-evidence/controls-results.json` and screenshots.
 
-This scoped branch does not change release/cache pins. On integration, update
-`side_trail_core.js` in index and every worker cache list along with the release
-pin, combine the pocket-clock implementation and claim hardening, and run the
-full-app/offline detour lifecycle proof against that combined build.
+The combined build registers both changed cores at
+`pocket-detours-v382-20260910` in index, all three worker lists and the guarded
+updater. Pocket-clock ownership and claim hardening are integrated. Transfers
+update existing state containers in place, so a completion awaiting a discovery
+claim observes suspension and exits before completing the saved detour.
+The release coordinator owns full-app/offline and post-publication verification.

@@ -1,4 +1,4 @@
-# Pocket quest rewards — pending v382 integration
+# Pocket quest rewards v382
 
 Both walking quests and side quests reward time with Burbz hidden (screen off or another app). After 60 seconds, the existing Trail Bonus gives up to 50% extra completion XP, in proportion to the active quest time spent hidden. It also gives an oak twig, a down tuft at 50% hidden time, and iron grit at 90%. The first qualifying finish earns Pocket Pathfinder in Profile → Achievements and records it in the diary. Live quest sheets explain the bonus; completion sheets and saved records retain minutes, multiplier, extra XP and materials.
 
@@ -8,11 +8,17 @@ The browser cannot prove physical pocket use or continuous outdoor movement. GPS
 
 `questPocketSuspend(quest, now)` and `questPocketResume(quest, now)` mutate only the supplied quest, without saving. Detour switching must call these within its own durable transfer transaction. Suspended time contributes to neither hidden time nor the bonus denominator; resuming while hidden starts a fresh interval. Lifecycle observation reads only currently active quests.
 
-Completion uses `quest-finish:<kind>:<id>:<startedAt>` receipts in the existing receipt dictionary. XP, materials, first badge, history, active removal and the receipt share one durable save; failure restores the snapshot. Walking's fallback story-scroll XP is deferred into that transaction. Existing chest receipts stay intact. Concurrent side finish taps are serialised, and an awaited claim rechecks quest identity before ending anything. Failed walking completion reopens the finish checkpoint for a valid arrival retry. Completion notifications run after commit using the coordinated claim adapter's optional deferred-effects array.
+Completion uses `quest-finish:<kind>:<id>:<startedAt>` receipts in the existing receipt dictionary. XP, materials, first badge, history, active removal and the receipt share one durable save; failure restores the snapshot. Walking's fallback story-scroll XP is deferred into that transaction. Existing chest receipts stay intact. Concurrent side finish taps are serialised, and an awaited claim rechecks quest identity before ending anything. Failed walking completion reopens the restored active quest’s finish checkpoint for a valid GPS arrival retry, rather than mutating the detached pre-rollback object. Completion notifications run after commit using the coordinated claim adapter's optional deferred-effects array.
 
 ## Integration
 
-This isolated feature branch does not publish or bump the release. Register `quest_pocket_core.js` and its chosen pin in the index, all service-worker shell lists and guarded updater before release. Integrate the v382 claim-hardening helpers (commit `ae36a67c`) and detour transfer hooks; retain the detour agent's explicit completion flow instead of the old automatic `endOffRoadSideQuest` body. Preserve both changes where the walking completion preamble or side completion sheet overlap.
+The combined build registers `quest_pocket_core.js` and `side_trail_core.js` with
+`pocket-detours-v382-20260910` in index and all three worker lists; the updater
+includes both. Claim hardening and the explicit detour transfers are integrated.
+The original completion and abandonment paths never automatically bank a detour.
+Side completion includes both the pocket breakdown and original-resume action.
+Quest transfers preserve container identity, so a completion awaiting a claim
+observes suspension and cannot finish the paused side quest afterward.
 
 ## Verification
 

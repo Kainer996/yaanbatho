@@ -111,4 +111,5 @@ def test_side_quest_is_wired_into_state_map_and_hud():
     assert "sideQuestActive()) { openSideQuestLogSheet(); return; }" in HTML
     # One outdoor quest at a time, in both directions.
     assert "End your Side Quest first" in HTML
-    assert "Finish or abandon your current quest first'); return; }\n  if (sideQuestActive())" in HTML
+    assert "if (activeWalkingQuest() || savedOriginalQuest())" in HTML
+    assert "if (ensureSideQuestState().suspendedDetour) { resumeSavedDetour(); return; }" in HTML

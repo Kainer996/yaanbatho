@@ -4,7 +4,7 @@ const core=require('../side_trail_core.js'),html=fs.readFileSync(require.resolve
 const start=1800000000000,minute=60000;
 const input=(now,distM=500)=>({questActive:true,questId:'original',sideActive:false,distM,accuracy:10,fixAt:now,now});
 function elapsed(minutes=40,dist=500){let state;for(let i=0;i<=minutes;i++)state=core.sideTrailStep(state,input(start+i*minute,dist));return state;}
-function functionSource(name){const begin=html.indexOf('function '+name+'(');assert.ok(begin>=0,name);for(let end=html.indexOf('}',begin);end>=0;end=html.indexOf('}',end+1)){const source=html.slice(begin,end+1);try{new vm.Script('('+source+')');return source;}catch{}}throw Error(name+' not parsed');}
+function functionSource(name){let begin=html.indexOf('function '+name+'(');assert.ok(begin>=0,name);if(html.slice(begin-6,begin)==='async ')begin-=6;for(let end=html.indexOf('}',begin);end>=0;end=html.indexOf('}',end+1)){const source=html.slice(begin,end+1);try{new vm.Script('('+source+')');return source;}catch{}}throw Error(name+' not parsed');}
 function freshGame(){return{xp:77,coins:12,inventory:{sword:1},receipts:{chest1:true},walkingQuests:{active:{id:'original',name:'The Original',route:[[51.5,-1.2],[51.51,-1.2]],routeCertification:{status:'certified'},checkpoints:[{id:'c1',reached:true,loot:{coins:20}},{id:'c2',reached:false}],rewards:{xp:130},lastFix:{lat:51.5,lon:-1.2,t:start},distanceWalkedM:450,customFutureData:{held:'unchanged'}},history:[]},sideQuest:{active:null,history:[],waysideTales:[],npcLandmarks:[]}};}
 function fixture(game=freshGame()){
  let now=start,fail=false,stored=null;const calls=[],nodes={};
@@ -106,4 +106,48 @@ test('four saved themes vary character, goal and first find across the existing 
 });
 test('all inline application scripts parse after detour integration',()=>{
  for(const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))if(!/src=|application\/ld\+json/.test(match[1]))new vm.Script(match[2]);
+});
+
+test('combined detour suspension cancels awaited side completion without losing its pending finds',async()=>{
+ const f=fixture();f.far();const active=f.ctx.sideQuestActive();active.discoveries.push({id:'pending',claimed:false});
+ f.ctx.sideQuestFinishInFlight=false;vm.runInContext(functionSource('endSideQuest'),f.ctx);let resolve;
+ f.ctx.sideQuestClaimDiscovery=()=>new Promise(r=>{resolve=r;});const ending=f.ctx.endSideQuest();
+ assert.equal(f.ctx.resumeOriginalQuest(),true);resolve(false);await ending;
+ assert.equal(f.ctx.activeWalkingQuest().id,'original');assert.equal(f.ctx.gameState.sideQuest.suspendedDetour.discoveries[0].claimed,false);assert.equal(f.ctx.gameState.sideQuest.history.length,0);assert.equal(f.ctx.gameState.xp,77);
+});
+test('combined real pocket hooks accrue only their own active hidden intervals across switches',()=>{
+ const f=fixture();f.ctx.window.BurbzQuestPocketCore=require('../quest_pocket_core.js');
+ for(const name of ['questPocketChange','questPocketSuspend','questPocketResume'])vm.runInContext(functionSource(name),f.ctx);
+ const q=f.ctx.activeWalkingQuest();q.startedAt=start;f.ctx.questPocketChange(q,'hide',start);f.far();
+ assert.equal(f.ctx.savedOriginalQuest().pocketMs,40*minute);f.time(start+50*minute);assert.equal(f.ctx.resumeOriginalQuest(),true);
+ assert.equal(f.ctx.activeWalkingQuest().pocketMs,40*minute);assert.equal(f.ctx.gameState.sideQuest.suspendedDetour.pocketMs,10*minute);
+ assert.equal(f.ctx.activeWalkingQuest().pocket.hiddenSince,start+50*minute);assert.equal(f.ctx.gameState.sideQuest.suspendedDetour.pocket.hiddenSince,null);
+});
+test('both changed quest cores use the current release URL in all three worker lists and updater',()=>{
+ const sw=fs.readFileSync(require.resolve('../sw.js'),'utf8'),updater=fs.readFileSync(require('node:path').join(__dirname,'../../../scripts/update-live-burbz.sh'),'utf8');
+ for(const file of ['quest_pocket_core.js','side_trail_core.js']){
+  const url=file+'?v=pocket-detours-v382-20260910';assert.ok(html.includes('src="'+url+'"'));
+  for(const list of ['BURBZ_ASSETS','BURBZ_CORE','BURBZ_INSTALL_REQUIRED']){const section=sw.slice(sw.indexOf('const '+list+' = ['));assert.ok(section.slice(0,section.indexOf('\n];')).includes("'./"+url+"'"),list+': '+file);}
+  assert.ok(updater.includes('"'+file+'"'));
+ }
+ for(const file of ['map_trail_core.js','quest_core.js','geographic_details_scene.js','geographic_places.js'])assert.ok(html.includes(file+'?v=map-trails-v381-20260909'),'preserve v381 '+file);
+});
+
+test('failed detour transfer does not process the detached pre-rollback quest on the same GPS fix',()=>{
+ const f=fixture();f.far(39);const before=f.ctx.activeWalkingQuest();f.fail(true);f.time(start+40*minute);
+ f.ctx.maybeChartLoopHome=()=>{throw Error('detached quest reached progress pipeline');};
+ assert.equal(f.ctx.questOnPositionFix(51.505,-1.21,10,start+40*minute).length,0);
+ assert.notEqual(f.ctx.activeWalkingQuest(),before);assert.equal(f.ctx.activeWalkingQuest().id,'original');assert.equal(f.ctx.sideQuestActive(),null);
+});
+
+test('abandonment saves atomically and leaves saved detour finds and earned rewards untouched',()=>{
+ const f=fixture();f.far();f.ctx.sideQuestActive().discoveries.push({id:'keep',claimed:false});f.ctx.resumeOriginalQuest();
+ f.ctx.confirm=()=>true;vm.runInContext(functionSource('abandonWalkingQuest'),f.ctx);const before=JSON.stringify(f.ctx.gameState);f.fail(true);f.ctx.abandonWalkingQuest();assert.equal(JSON.stringify(f.ctx.gameState),before);
+ f.fail(false);f.ctx.abandonWalkingQuest();assert.equal(f.ctx.activeWalkingQuest(),null);assert.equal(f.ctx.gameState.sideQuest.suspendedDetour.discoveries[0].id,'keep');assert.equal(f.ctx.gameState.xp,77);assert.equal(f.ctx.resumeSavedDetour(),true);
+});
+test('a legitimate active route change refreshes the detour baseline but a suspended route stays fixed',()=>{
+ const f=fixture();f.far(39);const q=f.ctx.activeWalkingQuest();q.route=[[51.5,-1.21],[51.51,-1.21]];f.time(start+40*minute);
+ assert.equal(f.ctx.maybeToggleOffRoadSideQuest(q,51.505,-1.21,10,start+40*minute),false);assert.equal(q.offRouteEvidence.startedAt,null);assert.deepEqual(q.detourOriginalRoute,q.route);
+ const originalRoute=JSON.stringify(q.route);q.offRouteEvidence=elapsed(40);f.ctx.startOffRoadSideQuest(q,51.505,-1.23);assert.ok(f.ctx.savedOriginalQuest());
+ assert.equal(f.ctx.maybeToggleOffRoadSideQuest(q,51.505,-1.21,10,start+41*minute),false);assert.equal(JSON.stringify(f.ctx.savedOriginalQuest().route),originalRoute);
 });

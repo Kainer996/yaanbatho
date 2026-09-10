@@ -124,6 +124,7 @@ FILES=(
   "assets/walking-quests/wayfarer-rest.webp"
   "walking_story_core.js"
   "side_trail_core.js"
+  "quest_pocket_core.js"
   "trail_mode_core.js"
   "building_discovery_core.js"
   "village_variation_core.js"

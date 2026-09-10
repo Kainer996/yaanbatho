@@ -5513,9 +5513,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
 <script src="quest_core.js?v=map-trails-v381-20260909"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
-<script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
+<script src="side_trail_core.js?v=pocket-detours-v382-20260910"></script>
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
-<script src="quest_pocket_core.js"></script>
+<script src="quest_pocket_core.js?v=pocket-detours-v382-20260910"></script>
 <script src="building_discovery_core.js?v=building-discovery-v284-20260819"></script>
 <script src="village_variation_core.js?v=village-variation-v260-20260813"></script>
 <script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
@@ -20238,6 +20238,7 @@ function questOnPositionFix(lat, lon, accuracy, tOverride) {
   if (quest.routeCertification?.status !== 'certified') return [];
   if (!quest.detourOriginalRoute) quest.detourOriginalRoute = quest.route.map(p => p.slice());
   if (maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy, tOverride)) return [];
+  if (activeWalkingQuest() !== quest) return []; // rollback may restore a fresh quest object
   maybeChartLoopHome(quest);
   scheduleWalkQuestRealign(); // fresh tiles along the walk keep the line on-path
   const finishWasReady = window.BurbzQuestCore.questFinishIsReady(quest);
@@ -20393,7 +20394,8 @@ function completeWalkingQuest() {
   });
   if (tx.status !== 'committed') {
     if (tx.status === 'failed') {
-      const finish = quest.checkpoints?.find(cp => cp.kind === 'finish');
+      const restored = ensureWalkingQuestState().active;
+      const finish = restored?.id === quest.id ? restored.checkpoints?.find(cp => cp.kind === 'finish') : null;
       if (finish) { finish.reached = false; delete finish.reachedAt; }
       showToast('Quest rewards could not be saved. Your quest is kept — approach the finish again to retry.');
     }
@@ -20420,8 +20422,16 @@ function abandonWalkingQuest() {
   const wq = ensureWalkingQuestState();
   if (!wq.active) return;
   if (!confirm('Abandon "' + wq.active.name + '"? Progress on this quest will be lost (chest loot is yours to keep).')) return;
-  wq.active = null;
-  saveState();
+  const snapshot = snapshotGameState();
+  try {
+    questPocketSuspend(wq.active);
+    wq.active = null;
+    durableSaveState({throwOnFailure:true});
+  } catch (error) {
+    restoreGameStateSnapshot(snapshot);
+    showToast('Could not save abandonment. Your quest and progress are still safe.');
+    return;
+  }
   clearWalkingQuestFromMap();
   closeWalkQuestSheet();
   showToast('Quest abandoned. The trail will wait for you.');
@@ -21018,7 +21028,7 @@ function commitDetourTransition(transition) {
     if (typeof questPocketResume === 'function') questPocketResume(transition.incoming, now);
     if (transition.incoming.auto) transition.incoming.resumeNeedsFix = true;
     else { transition.incoming.lastFix = null; transition.incoming.offRouteEvidence = null; }
-    gameState.walkingQuests = transition.walking; gameState.sideQuest = transition.side;
+    Object.assign(gameState.walkingQuests, transition.walking); Object.assign(gameState.sideQuest, transition.side);
     durableSaveState({throwOnFailure:true});
   } catch (error) {
     restoreGameStateSnapshot(snapshot);
@@ -21045,6 +21055,13 @@ function resumeSavedDetour() {
 function maybeToggleOffRoadSideQuest(quest, lat, lon, accuracy, fixAt) {
   const core = window.BurbzSideTrailCore;
   if (!core || !quest || sideQuestActive() || ensureSideQuestState().suspendedDetour) return false;
+  if (!Array.isArray(quest.route) || quest.route.length < 2) return false;
+  // Legitimate loop/alignment updates belong to the same original quest.
+  // Refresh only while it is active; a suspended original is never rewritten.
+  if (JSON.stringify(quest.detourOriginalRoute) !== JSON.stringify(quest.route)) {
+    quest.detourOriginalRoute = quest.route.map(p => p.slice());
+    quest.offRouteEvidence = null;
+  }
   const route = quest.detourOriginalRoute || quest.route;
   if (!Array.isArray(route) || route.length < 2) return false;
   const previous = quest.offRouteEvidence;
@@ -43088,7 +43105,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'map-trails-v381-20260909';
+const BURBZ_BUILD = 'pocket-detours-v382-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

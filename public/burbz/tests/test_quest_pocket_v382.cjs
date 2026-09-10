@@ -25,7 +25,7 @@ function harness(kind){
  ensureWalkingQuestState:()=>ctx.gameState.walkingQuests,ensureSideQuestState:()=>ctx.gameState.sideQuests,activeWalkingQuest:()=>ctx.gameState.walkingQuests.active,sideQuestActive:()=>ctx.gameState.sideQuests.active,
  applyPlayerXpState:n=>{ctx.gameState.player.xp+=n;},applyWalkingStoryCompletion:()=>null,addCoins:n=>{ctx.gameState.player.coins+=n;},getMerlinCare:()=>({}),MERLIN_CORE:{grantMerlinBondXp:(c,n)=>({xp:n})},lootCore:()=>({materialById:id=>({label:id})}),currentScreen:'map',QUEST_BUZZ:{},SFX:{victory(){},capture(){}}};
  for(const name of ['queueCloudSave','queueActionBadgeUpdate','queueQuestClaimCloudSync','announcePlayerLevelUps','updateHeader','renderInventory','clearWalkingQuestFromMap','clearSideQuestFromMap','vibrate','playQuestClaimCelebration','showQuestNpcDialog','showWalkQuestSummarySheet','stopSideQuestPocketMode','showWalkQuestSheet','renderQuests','showToast','setTimeout','logDiary','updateQuestProgress','queueCompletionNotice'])ctx[name]=()=>{};
- ctx.walkQuestSheetEl=()=>ui;ctx.sideQuestClaimDiscovery=async id=>{active.discoveries.find(d=>d.id===id).claimed=true;return true;};
+ ctx.questDetourActionsHTML=()=>'';ctx.walkQuestSheetEl=()=>ui;ctx.sideQuestClaimDiscovery=async id=>{active.discoveries.find(d=>d.id===id).claimed=true;return true;};
  vm.createContext(ctx);vm.runInContext(names.map(source).join('\n'),ctx);
  return {ctx,active,get disk(){return JSON.parse(disk);},get writes(){return writes;},fail(value){fail=value;},reload(){ctx.gameState=JSON.parse(disk);}};
 }
@@ -39,3 +39,11 @@ test('visibility adapter persists both timers; failed persistence cannot count f
 test('all inline JavaScript still parses',()=>{for(const m of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)){if(m[1].trim())new vm.Script(m[1]);}});
 
 test('a replayed completed quest object cannot bypass the durable completion receipt',async()=>{const h=harness('side'),old=JSON.parse(JSON.stringify(h.active));await h.ctx.endSideQuest();h.reload();h.ctx.gameState.sideQuests.active=old;await h.ctx.endSideQuest();assert.equal(h.writes,1);assert.equal(h.disk.inventory.items.oak_twig,1);});
+
+test('failed walking completion resets the restored finish so a real GPS arrival can retry',()=>{
+ const h=harness('walking');h.active.checkpoints[0].lat=53;h.active.checkpoints[0].lon=-1;h.fail(true);h.ctx.completeWalkingQuest();
+ const restored=h.ctx.gameState.walkingQuests.active;assert.notEqual(restored,h.active);assert.equal(restored.checkpoints[0].reached,false);
+ const runtime={window:{},BurbzMapTrailCore:require('../map_trail_core.js')};vm.createContext(runtime);vm.runInContext(fs.readFileSync(require.resolve('../quest_core.js'),'utf8'),runtime);
+ const events=runtime.window.BurbzQuestCore.questProcessFix(restored,53,-1,8,T+121000);assert.ok(events.some(e=>e.type==='finish'));
+ h.fail(false);h.ctx.completeWalkingQuest();assert.equal(h.disk.walkingQuests.active,null);assert.equal(h.disk.walkingQuests.history.length,1);assert.equal(h.disk.inventory.items.oak_twig,1);
+});

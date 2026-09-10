@@ -8,9 +8,9 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
-OWN_RELEASE_PIN = "offroad-side-quests-v283-20260818"
+OWN_RELEASE_PIN = "pocket-detours-v382-20260910"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "map-trails-v381-20260909"
+CURRENT_BUILD = "pocket-detours-v382-20260910"
 
 
 def run_node(script: str):
@@ -153,7 +153,7 @@ def test_release_is_versioned_and_the_new_core_is_precached_everywhere():
     assert PREVIOUS_RELEASE_PIN in cache_line  # lineage kept
     assert OWN_RELEASE_PIN in cache_line  # this release's own segment
     assert cache_line.rstrip("';").endswith(CURRENT_BUILD)
-    assert sw.count(f"'./side_trail_core.js?v={OWN_RELEASE_PIN}'") == 2
+    assert sw.count(f"'./side_trail_core.js?v={OWN_RELEASE_PIN}'") == 3
     updater = UPDATER_PATH.read_text(encoding="utf-8")
     assert '"side_trail_core.js"' in updater
     story = STORY_PATH.read_text(encoding="utf-8")
