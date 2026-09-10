@@ -1,6 +1,6 @@
 # Study v384 — verification
 
-Prepared locally on 2026-09-10; publication awaits Yaan's approval. Source branch `codex/burbz-study-v384`, based on main v383 `763f6cbb8fadedfe91d608f28beb24cb6560fb5b`.
+Verified on 2026-09-10 and approved by Yaan for publication. Source branch `codex/burbz-study-v384`, based on main v383 `763f6cbb8fadedfe91d608f28beb24cb6560fb5b`. The deployment record and public verification are kept in the evidence folder's `release/` directory.
 
 ## Actual application
 
@@ -31,4 +31,4 @@ Exact hydrated v383 baseline: 41 failed, 2,127 passed, 5 skipped. Final v384 aft
 
 Folder `/root/burbz-study-v384-evidence/`: `browser/results.json`, `pwa/results.json`, `pytest-baseline-exact-hydrated.txt`, `pytest-final-scroll-hud.txt`, `pytest-comparison-final.json`, `final-runtime-hashes.json` and appearance/room/transition screenshots. `preview/study-home-house-preview.mp4` shows a real native-touch Home → Stand → walk → Sit journey; the raw WebM is retained and the export trims only startup, without changing speed. The image prompt and provenance are in `assets/home-v384/README.md`.
 
-Required pre-change public artwork check: 1,545/1,545 required images served real bytes; the existing optional rook-witch cutout remains absent with the game's painting fallback. This preparation has not changed production.
+Required pre-change public artwork check: 1,545/1,545 required images served real bytes; the existing optional rook-witch cutout remains absent with the game's painting fallback.
