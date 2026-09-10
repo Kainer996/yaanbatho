@@ -1,0 +1,21 @@
+.wc-hud{position:absolute;z-index:3;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom));width:min(240px,calc(100% - 250px));min-width:145px;color:#f4e6c3;font:11px/1.3 Inter,system-ui,sans-serif;text-align:center;pointer-events:none}
+.wc-vitals{background:#142c25ed;border:1px solid #baac79;padding:6px 9px;border-radius:5px;display:flex;flex-wrap:wrap;gap:3px;justify-content:space-between}.wc-zone{color:#d1dbae}.wc-health{font-variant-numeric:tabular-nums}.wc-meter{display:block;flex-basis:100%;height:3px;background:#5c6a58;margin-top:2px}.wc-meter i{display:block;height:100%;background:#eed498}
+.wc-loadout{display:flex;gap:4px;margin-top:5px;pointer-events:auto}.wc-loadout button{flex:1;min-width:44px;min-height:44px!important;padding:6px!important;font:600 11px Inter,system-ui,sans-serif!important;border:1px solid #b9a574!important;border-radius:5px!important;background:#20372ff5!important;color:#f4e6c3!important;touch-action:manipulation}.wc-loadout [aria-pressed=true]{outline:2px solid #e6ca80;outline-offset:-4px}.wc-loadout button:disabled{opacity:.5}.wc-loadout .wc-potion{flex:0 0 44px;font-size:20px!important}.wc-attack-name{display:block;padding-top:5px;text-shadow:0 1px 3px #000;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc-toast{position:absolute;z-index:4;bottom:calc(255px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100% - 40px);padding:8px 12px;background:#20372ff2;border:1px solid #bda779;color:#fff1cd;font:12px/1.3 system-ui;text-align:center;pointer-events:none;border-radius:5px}
+.wc-paused .fp-look-stick,.wc-paused .fp-cast-stick{visibility:hidden}
+#villageWalk.wc-ready .fp-actions{right:130px;width:min(270px,calc(100% - 150px));bottom:calc(145px + env(safe-area-inset-bottom))}
+#villageWalk.wc-ready .vw-touch-hint,#villageWalk.wc-ready .vw-hint{display:none}
+#geographicWorld.wc-ready .gw-flight-controls{right:auto;left:18px;bottom:calc(155px + env(safe-area-inset-bottom));max-width:100px}
+#geographicWorld.wc-ready .gw-hint{display:none}
+#geographicWorld.wc-ready .gw-action{bottom:calc(155px + env(safe-area-inset-bottom));max-width:calc(100% - 255px);min-width:0}
+@media(max-width:600px) and (min-height:521px){.wc-hud{bottom:calc(160px + env(safe-area-inset-bottom));left:12px;transform:none;width:145px}.wc-toast{bottom:calc(265px + env(safe-area-inset-bottom))}#villageWalk.wc-ready .fp-actions{bottom:calc(275px + env(safe-area-inset-bottom))}}
+@media(max-height:520px){.wc-hud{bottom:calc(8px + env(safe-area-inset-bottom));width:225px}.wc-vitals{padding:4px 8px}.wc-toast{bottom:170px;max-width:calc(100% - 245px)}#villageWalk.wc-ready .fp-actions{bottom:135px;right:130px;max-width:260px}#geographicWorld.wc-ready .gw-action{bottom:125px}}
+
+.wc-noncombat .fp-cast-stick{visibility:hidden}.wc-travel{pointer-events:auto;margin-top:6px}.wc-travel .cw-wings{position:static!important;inset:auto!important;transform:none!important;min-height:44px!important;width:100%;margin:0!important;font:600 11px system-ui!important;padding:8px!important}.wc-flying .wc-vitals,.wc-flying .wc-loadout,.wc-flying .wc-attack-name{display:none}
+@media(max-width:600px) and (min-height:521px){#villageWalk.wc-ready:has(.wc-travel) .fp-actions{bottom:calc(340px + env(safe-area-inset-bottom))}}
+@media(max-height:520px){.wc-travel{position:absolute;bottom:calc(100% + 8px);left:0;right:0}#villageWalk.wc-ready:has(.wc-travel) .fp-actions{bottom:210px}}
+
+.wc-ready .wc-climb,.wc-ready .wc-descend{left:auto!important;right:calc(18px + env(safe-area-inset-right))!important;transform:none!important;width:84px;min-height:44px!important;bottom:calc(202px + env(safe-area-inset-bottom))!important}.wc-ready .wc-descend{bottom:calc(150px + env(safe-area-inset-bottom))!important}
+@media(max-height:520px){.wc-ready .wc-climb{bottom:calc(174px + env(safe-area-inset-bottom))!important}.wc-ready .wc-descend{bottom:calc(122px + env(safe-area-inset-bottom))!important}}
+
+@media(max-width:600px) and (min-height:521px){.wc-toast{top:calc(230px + env(safe-area-inset-top));bottom:auto}}

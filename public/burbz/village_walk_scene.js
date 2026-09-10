@@ -55,7 +55,7 @@
           if(points.every(p=>Math.abs(p.y-terrain.heightAt(x,z))<.3))surfaces.push(points);
         }
       }
-      for(let p=mesh;p;p=p.parent)if(skip.has(p)||paid.has(p)||p.userData.sky||p.userData.walkBridge||p.userData.resident||p.userData.npc)return;
+      for(let p=mesh;p;p=p.parent)if(skip.has(p)||paid.has(p)||p.userData.continuousTerrain||p.userData.sky||p.userData.walkBridge||p.userData.resident||p.userData.npc)return;
       const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
       if(materials.every(m=>!m||m.transparent||m.userData.blob||m.isMeshBasicMaterial))return;
       if(mesh.isInstancedMesh){for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,instance);matrix.multiplyMatrices(mesh.matrixWorld,instance);slice(mesh,matrix);}}
@@ -73,7 +73,7 @@
     scene.updateMatrixWorld(true);
     scene.traverseVisible(mesh=>{
       if(!mesh.isMesh||mesh.isInstancedMesh||mesh.userData.harvestBatch||mesh.userData.harvestStumps||Array.isArray(mesh.material))return;
-      for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.resident||p.userData.npc||p.userData.natureTree)return;
+      for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.walkCorridor||p.userData.resident||p.userData.npc||p.userData.natureTree)return;
       const m=mesh.material;
       if(!m||m.transparent||m.map||m.normalMap||m.alphaMap||m.emissiveMap||(!m.isMeshLambertMaterial&&!m.isMeshStandardMaterial))return;
       const pos=mesh.getWorldPosition(new T.Vector3());

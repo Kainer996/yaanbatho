@@ -4,6 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = 'merlin-flight-v390-20260910'
+CURRENT_BUILD = 'continuous-world-v391-20260910'
 
 
 def test_merlin_v2_loader_and_all_offline_lists_agree():
@@ -27,5 +28,5 @@ def test_merlin_v2_loader_and_all_offline_lists_agree():
             assert section.count("'./" + url + "'") == 1
         assert 'merlin_flight.js?v=merlin-flight-v1-' not in section
         assert 'atlas-config.js?v=merlin-flight-v1-' not in section
-    assert f"const BURBZ_BUILD = '{PIN}';" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)'", worker)[1].endswith(PIN)
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
+    assert re.search(r"const BURBZ_CACHE = '([^']+)'", worker)[1].endswith(CURRENT_BUILD)

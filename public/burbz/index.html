@@ -4455,6 +4455,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="scan_home.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
+<link rel="stylesheet" href="player_equipment.css?v=continuous-world-v391-20260910">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5491,7 +5492,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="academy_treehouse_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="academy_alive_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
-<script src="manga_render_core.js?v=ink-precision-v357-20260907"></script>
+<script src="manga_render_core.js?v=continuous-world-v391-20260910"></script>
 <script src="academy_3d_core.js?v=academy-flight-v370-20260908"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5502,9 +5503,17 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_size_core.js?v=every-bird-carries-its-weight-v335-20260827"></script>
 <script src="bird_roles_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="battle_core.js?v=continuous-world-v391-20260910"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="loot_crafting_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="player_equipment_core.js?v=continuous-world-v391-20260910"></script>
+<script src="player_equipment.js?v=continuous-world-v391-20260910"></script>
+<script src="first_person_spell_core.js?v=continuous-world-v391-20260910"></script>
+<script src="first_person_cast_controls.js?v=continuous-world-v391-20260910"></script>
+<script src="wilderness_combat_core.js?v=continuous-world-v391-20260910"></script>
+<script src="wilderness_combat.js?v=continuous-world-v391-20260910"></script>
+<link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
+<link rel="stylesheet" href="wilderness_combat.css?v=continuous-world-v391-20260910">
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -5514,10 +5523,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
-<script src="geographic_forest_core.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_forest_core.js?v=continuous-world-v391-20260910"></script>
 <script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
-<script src="geographic_map_3d.js?v=area-birds-v377-20260909"></script>
+<script src="geographic_map_3d.js?v=continuous-world-v391-20260910"></script>
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
@@ -5573,7 +5582,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_world.js?v=home-countryside-v387-20260910"></script>
+<script src="geographic_world.js?v=continuous-world-v391-20260910"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -29765,7 +29774,31 @@ let villageLastFrameAt = 0;
 let villageAnimationRequest = 0, villagePauseTimer = 0;
 function walkingCharacterState() {
   const p=gameState.player;
-  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone};
+  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone,equipment:playerEquipmentAdapter(),combat:walkingCombatAdapter()};
+}
+// Combat and equipped potion consumption commit with the existing ownership ledger.
+function walkingCombatAdapter() {
+  const identity=gameState;
+  return {
+    profile:{name:gameState.player.name,level:gameState.player.level},
+    settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
+    stored:structuredClone(gameState.wildernessCombat || null),
+    kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel)};},
+    save:(record,extra)=>{
+      if(identity!==gameState)throw Error('Your save changed. Reopen walking.');
+      const snapshot=snapshotGameState();
+      try {
+        if(extra?.potion){const loadout=gameState.inventory.equipment?.['@player'],bag=gameState.inventory.gear,id=extra.potion;
+          if(loadout?.potion!==id||!lootCore().potionEffectFor(id))throw Error('That potion is no longer equipped.');
+          if(!Number.isSafeInteger(bag[id]||0)||(bag[id]||0)<0)throw Error('The potion count is invalid.');
+          delete loadout.potion;
+          if((bag[id]||0)>0){bag[id]--;loadout.potion=id;}
+        }
+        gameState.wildernessCombat=structuredClone(record);
+        durableSaveState({throwOnFailure:true});return true;
+      } catch(error){restoreGameStateSnapshot(snapshot);throw error;}
+    }
+  };
 }
 function villageHarvestAdapter(seed) {
   return {
@@ -29826,7 +29859,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=home-countryside-v387-20260910';
+        script.src = 'village_walk.js?v=continuous-world-v391-20260910';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29845,6 +29878,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     await ensureVillageWalkModule();
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
+      continuousWorld:continuousWalkingAdapter(currentVillage()),
       name: currentVillage().name, seed, opener:button, exitLabel:geographicWorldVisit?'← World':'← Village', interiors: buildingRoomsAdapter(),
       discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
       exploreWorld:pose=>exploreFromSettlement(currentVillage(),pose),
@@ -29873,7 +29907,7 @@ $('townWalkBtn')?.addEventListener('click',async()=>{
     await ensureVillageWalkModule();
     if(currentScreen!=='town'||currentTownSettlement()?.id!==id)return;
     if(!Number.isFinite(seed)||!townScene?.userData.walkTerrain||townFallbackMode)throw Error('The 3D town is not ready. Please try again.');
-    window.BurbzVillageWalk.open({name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
+    window.BurbzVillageWalk.open({continuousWorld:continuousWalkingAdapter({...settlement.centroid,id:settlement.id,seed,name:townDisplayName(settlement),tier:settlement.tier}),name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
       discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),interiors:buildingRoomsAdapter(),
       exploreWorld:pose=>exploreFromSettlement(settlement.centroid,pose),
       boundaryExit:pose=>exploreFromSettlement(settlement.centroid,pose),
@@ -34166,6 +34200,7 @@ function buildVillageScene(v) {
   }));
   ground.receiveShadow = true;
   villageScene.add(ground);
+  villageScene.userData.walkSurface={ground,radius:groundR,palette:pal,corridors:[]};
   // Worn patches in the turf — snowdrifts in frost, leaf-litter in autumn
   const patchColor = pal.weather === 'snow' ? 0xdfe4ec : pal.weather === 'leaves' ? 0x6a4a20 : new THREE.Color(pal.ground).offsetHSL(0.03, -0.2, 0.13).getHex();
   const patchMat = new THREE.MeshLambertMaterial({ color: patchColor, transparent: true, opacity: 0.85 });
@@ -34177,6 +34212,7 @@ function buildVillageScene(v) {
     villageScene.add(patch);
   }
   const cobbleMat = villageCobbleMaterial(pal);
+  villageScene.userData.walkSurface.roadMaterial=cobbleMat;
   const cobbleTile = 2.6; // world units per cobble tile
   // The cobbled centre matches the plan: a full market square for formal
   // plans, a modest widening of the high street for a lane, and only a small
@@ -34198,6 +34234,8 @@ function buildVillageScene(v) {
       roadGrp.rotation.y = -roadA;
       roadGrp.position.y = 0.014;
       villageScene.add(roadGrp);
+      roadGrp.userData.walkCorridor=true;
+      villageScene.userData.walkSurface.corridors.push({x:0,z:0,ux:Math.cos(roadA),uz:Math.sin(roadA),width:3,start:groundR*.9,end:groundR+110,material:cobbleMat,object:roadGrp,kind:"road"});
       // fence runs beside the roads
       for (let f = 0; f < 2 + tier; f++) {
         const along = (r() < 0.5 ? -1 : 1) * (6 + r() * (groundR * 0.4));
@@ -34250,6 +34288,8 @@ function buildVillageScene(v) {
     riverGrp.rotation.y = -(riverA + Math.PI / 2);
     riverGrp.position.set(riverPx, 0.01, riverPz);
     villageScene.add(riverGrp);
+    riverGrp.userData.walkCorridor=true;
+    villageScene.userData.walkSurface.corridors.push({x:riverPx,z:riverPz,ux:-riverUz,uz:riverUx,width:riverW,start:groundR*1.1,end:groundR+120,material:water.material,bankMaterial:riverGrp.children[1].material,object:riverGrp,kind:"river"});
     // Reeds and a moored rowboat along the banks
     const reedMat = new THREE.MeshLambertMaterial({ color: 0x3c5a22 });
     const tX = -riverUz, tZ = riverUx; // direction the river flows
@@ -35975,6 +36015,7 @@ function buildTownScene(settle) {
   settlementPopulateResidents('town', townMemberRecords(settle), townScene, townEconBuildings, townLifeBudget.people, pal);
   townScene.userData.landRadius=groundR;
   townScene.userData.walkTerrain={radius:groundR-2,heightAt,river:null};
+  townScene.userData.walkSurface={ground,radius:groundR,palette:pal,roadMaterial:cobbleMat};
   // ---- Lanes: a few cobbled streets radiating out from the square -----------
   for (let li = 0; li < 4; li++) {
     const laneA = (li / 4) * Math.PI * 2 + r() * 0.7;
@@ -37762,7 +37803,7 @@ function renderMagpieMarketPanelHTML() {
     return rows.length ? '<section class="magpie-category"><h3>' + label + '</h3><div class="stores-res-grid">' + rows.map(item => magpieMarketRowHTML(item,selling)).join('') + '</div></section>' : '';
   }).join('') || '<div class="inventory-empty">Nothing to sell yet. Collect a finished craft at the Forge, or bring back materials, food and curios from your travels.</div>';
   const savedPct = Math.round((1 - magpieMarketDiscount()) * 100);
-  const note = selling ? 'Sell items from your shelves, including every collected Forge craft. Equipped items stay with their birds; unequip them at the Forge to sell them.' : 'Buy crafting materials and larder supplies. Quests and gathering remain the cheaper route.';
+  const note = selling ? 'Sell items from your shelves, including every collected Forge craft. Equipped items stay with you or your companions; unequip them in the Satchel or at the Forge to sell them.' : 'Buy crafting materials and larder supplies. Quests and gathering remain the cheaper route.';
   return '<div id="magpieMarketPanel" class="stores-panel magpie-panel"><div class="stores-panel-title">⚖️ The counter</div><div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse</div><div class="magpie-tabs" role="tablist" aria-label="Market trading">' + ['buy','sell'].map(tab => '<button type="button" role="tab" id="market-tab-' + tab + '" aria-controls="market-stock" aria-selected="' + (magpieMarketState.tab === tab) + '" tabindex="' + (magpieMarketState.tab === tab ? '0' : '-1') + '" onclick="magpieMarketSetTab(\'' + tab + '\')" onkeydown="magpieMarketTabKey(event)">' + (tab === 'buy' ? 'Buy' : 'Sell') + '</button>').join('') + '</div><div class="magpie-note">' + note + '</div>' + (!selling ? '<div class="magpie-haggle">' + (savedPct ? 'Your Market Trader has talked ' + savedPct + '% off buying prices.' : 'Post a charming Market Trader below to reduce buying prices.') + '</div>' : '') + '<div id="market-stock" role="tabpanel" aria-labelledby="market-tab-' + magpieMarketState.tab + '" tabindex="0">' + content + '</div></div>';
 }
 
@@ -38154,31 +38195,34 @@ function forgeOpenSlot(slot) { forgeState.slotPicker = forgeState.slotPicker ===
 
 // Shared equip plumbing — used by both the Forge and the tap-on-bird
 // equipment screen. Swapped-out pieces go back into the bag.
-function equipItemOnBird(birdId, slot, gearId) {
-  const L = lootCore();
-  const item = L.gearById(gearId);
-  if (!item || item.slot !== slot) return false;
-  const gearBag = gameState.inventory.gear;
-  if ((gearBag[gearId] || 0) <= 0) { showToast('None left in the Stores.'); return false; }
-  const loadout = birdLoadout(birdId);
-  if (loadout[slot]) gearBag[loadout[slot]] = (gearBag[loadout[slot]] || 0) + 1; // return old piece
-  gearBag[gearId] -= 1;
-  loadout[slot] = gearId;
-  updateQuestProgress('gear_equipped', 1);
-  saveState();
-  SFX.questComplete();
-  showToast(item.icon + ' ' + item.label + ' equipped!');
-  return true;
+function commitEquipmentChange(owner, slot, gearId) {
+  const snapshot=snapshotGameState(), core=window.BurbzPlayerEquipmentCore, effects=[];
+  // The Forge roster includes Merlin, who is not a recruited state.flock bird.
+  const result=core.change(gameState,lootCore(),owner,slot,gearId,owner===core.PLAYER?[]:getBattleFlock());
+  if(!result.ok)return result;
+  try {
+    if(owner!==core.PLAYER&&gearId)updateQuestProgress('gear_equipped',1,effects);
+    durableSaveState({throwOnFailure:true});
+  } catch(error) {restoreGameStateSnapshot(snapshot);return {ok:false,reason:'Could not save your equipment. Your items are unchanged. Please try again.'};}
+  effects.forEach(effect=>{try{effect();}catch(_){}});
+  return result;
 }
-
+function playerEquipmentAdapter() {
+  const identity=gameState;
+  return {snapshot:()=>window.BurbzPlayerEquipmentCore.snapshot(gameState,lootCore()),change:(slot,id)=>{
+    if(gameState!==identity)return {ok:false,reason:'Your save changed. Reopen the satchel.'};
+    return commitEquipmentChange(window.BurbzPlayerEquipmentCore.PLAYER,slot,id);
+  }};
+}
+function equipItemOnBird(birdId, slot, gearId) {
+  const result=commitEquipmentChange(birdId,slot,gearId);
+  if(!result.ok){showToast(result.reason);return false;}
+  SFX.questComplete();showToast(lootCore().gearById(gearId).label+' equipped!');return true;
+}
 function unequipItemFromBird(birdId, slot) {
-  const loadout = birdLoadout(birdId);
-  if (!loadout[slot]) return false;
-  gameState.inventory.gear[loadout[slot]] = (gameState.inventory.gear[loadout[slot]] || 0) + 1;
-  delete loadout[slot];
-  saveState();
-  SFX.tap();
-  return true;
+  const result=commitEquipmentChange(birdId,slot,null);
+  if(!result.ok){showToast(result.reason);return false;}
+  SFX.tap();return true;
 }
 
 function forgeEquip(slot, gearId) {
@@ -42680,7 +42724,7 @@ const PLAYER_QUESTS = [
   // pays out a pair of Thorn Talons, so there is always something in the
   // Stores to put on — a battle win only drops gear about one time in five.
   { id:'pq_equip_gear',     name:'Equip a bird with an item', desc:'Open the Forge and give a companion a piece of gear', type:'gear_equipped', target:1, reward:45, coins:20, icon:'\u{1F5E1}\u{FE0F}', go:'forge',
-    measure:() => Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)) ? 1 : 0 },
+    measure:() => Object.entries((gameState.inventory && gameState.inventory.equipment) || {}).some(([owner,l]) => owner !== '@player' && l && Object.values(l).some(Boolean)) ? 1 : 0 },
   { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',
@@ -43327,7 +43371,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-flight-v390-20260910';
+const BURBZ_BUILD = 'continuous-world-v391-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44609,7 +44653,17 @@ function returnFromGeographicSettlement(reason) {
 }
 // First-person travel belongs to the homestead and settlement walking views.
 // Use the selected Empire coordinates, never the phone/quest-map position.
+function continuousWalkingAdapter(record) {
+  const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
+  return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
+    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,
+    records:geographicSettlementRecords,createSettlement:(T,r)=>BurbzGeographicSettlementScene.create(T,r),
+    getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),
+    enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
+    savePose:pose=>gameState!==sessionSave?false:revision===undefined?true:saveGeographicPose(pose,revision)};
+}
 async function exploreFromSettlement(record,localPose) {
+  if(BurbzVillageWalk.continueWorld?.(localPose?.mode))return true;
   const C=BurbzGeographicWorldCore;
   if(!C.validCoordinate(record))throw Error('This settlement has no valid world location.');
   const save=gameState,screen=currentScreen;

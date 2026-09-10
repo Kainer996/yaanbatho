@@ -21,7 +21,8 @@
     { trees:650, dpr:1.65, shade:true }, { trees:1000, dpr:2, shade:true }
   ]);
   const controllers = new WeakMap();
-  const workerURL = root.document?.currentScript?.src ? new URL('geographic_forest_worker.js?v='+VERSION,root.document.currentScript.src).href : 'geographic_forest_worker.js?v='+VERSION;
+  const FOREST_PIN = 'continuous-world-v391-20260910';
+  const workerURL = root.document?.currentScript?.src ? new URL('geographic_forest_worker.js?v='+FOREST_PIN,root.document.currentScript.src).href : 'geographic_forest_worker.js?v='+FOREST_PIN;
   const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
   const now = () => root.performance ? root.performance.now() : Date.now();
   function mercator(lon, lat) {

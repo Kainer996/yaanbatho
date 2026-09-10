@@ -48,7 +48,7 @@ function attach(s){
   if(r.step===story.steps.length){show(speaker+' · '+story.title,'Everything is ready. Let the villagers know you have helped.',[['Finish quest',()=>commit('finish')]],0);return;}
   show(speaker+' · '+story.title,story.steps.map((step,i)=>(i<r.step?'✓ ':i===r.step?'Next: ':'Later: ')+step.label).join('\n')+'\n\nFollow the blue marker. Your progress stays here when you leave.',[['Follow the request',()=>{tracked=null;closePanel();update(performance.now()/1000,true);}]],0);
  }
- function use(){if(!nearest||s.uiBusy||s.failed)return;const o=nearest;if(o.kind==='board'||o.kind==='resident')request(o.name);else if(o.kind==='activity')activity(o.id);else commit(o.kind,o.id);}
+ function use(){if(!nearest||s.player.mode==='fly'||s.uiBusy||s.failed)return;const o=nearest;if(o.kind==='board'||o.kind==='resident')request(o.name);else if(o.kind==='activity')activity(o.id);else commit(o.kind,o.id);}
  on(interact,'click',use);
  const r=get(),sites=core.activities(r),points=core.positions(s.world,s.player,r.placementSeed,1+r.loot.length+r.lore.length+q().steps.length+sites.reduce((n,a)=>n+a.story.steps.length,0));let point=0;
  function material(color){const m=new T.MeshLambertMaterial({color});root.BurbzManga?.styleMaterial(m);mats.push(m);return m;}
@@ -87,7 +87,7 @@ function attach(s){
   }
   for(const o of residentObjects){o.actor.getWorldPosition(v);Object.assign(o.pos,{x:v.x,y:v.y,z:v.z});}
   for(const o of [...objects,...residentObjects]){if(o.group&&!o.group.visible)continue;const d=Math.hypot(o.pos.x-s.player.x,o.pos.z-s.player.z);if(d<best&&reachable(o.pos)){best=d;nearest=o;}}
-  interact.hidden=!nearest||s.uiBusy;const label=nearest?((nearest.resolved?'Inspect: ':'')+nearest.label+(s.root.classList.contains('vw-touch')?'':' · E')):'';if(interact.textContent!==label)interact.textContent=label;
+  interact.hidden=!nearest||s.player.mode==='fly'||s.uiBusy;const label=nearest?((nearest.resolved?'Inspect: ':'')+nearest.label+(s.root.classList.contains('vw-touch')?'':' · E')):'';if(interact.textContent!==label)interact.textContent=label;
   let active=activities.find(a=>a.story.id===tracked&&!a.completed);if(tracked&&!active)tracked=null;
   const target=active?objects.find(o=>o.id===active.story.id+':'+active.step):r.accepted&&r.step<story.steps.length?objects.find(o=>o.kind==='step'&&o.id===r.step):objects[0];
   const dx=target.pos.x-s.player.x,dz=target.pos.z-s.player.z,angle=Math.atan2(-dx,-dz)-s.player.yaw,bearing=Math.atan2(Math.sin(angle),Math.cos(angle)),direction=Math.abs(bearing)<.5?'ahead':Math.abs(bearing)>2.4?'behind':bearing>0?'left':'right';
