@@ -46,3 +46,40 @@ for(const kind of ['weapon','lore','npc'])test(kind+' discovery commits claim/re
 });
 test('loot-generation errors also restore claimed flag and partial mutations',async()=>{const f=fixture(),c=f.c;c.gameState.sideQuests.active.discoveries.push({id:'bad',kind:'weapon',claimed:false});const before=JSON.stringify(c.gameState);c.lootCore=()=>({rollLoot(){c.gameState.lootPity.rolls++;throw Error('broken loot');}});assert.equal(await c.sideQuestClaimDiscovery('bad'),false);assert.equal(JSON.stringify(c.gameState),before);assert.equal(f.writes,0);assert.equal(f.effects.length,1);});
 test('normal quest progress callers still save and notify immediately',()=>{const f=fixture();f.allow();f.c.updateQuestProgress('gear_found',1);assert.equal(f.writes,1);assert(f.effects.includes('notice'));assert.equal(JSON.parse(f.disk).quests.gear.progress,1);});
+
+function chestFixture(){
+ const f=fixture(),c=f.c;vm.runInContext(fs.readFileSync(require('node:path').join(__dirname,'../quest_core.js'),'utf8'),c);
+ c.kitchenIngredientById=require('../kitchen_pantry_core.js').ingredientById;
+ vm.runInContext(html.match(/^const XP_PER_LEVEL = .*;$/m)[0],c);
+ c.playQuestClaimCelebration=()=>f.effects.push('celebration');
+ for(const name of ['sideQuestChestLoot','questClaimReceipt','setQuestClaimReceipt','queueQuestClaimCloudSync'])vm.runInContext(source(name),c);
+ return f;
+}
+test('all twelve deterministic side chest bins pass the actual strict validator and kitchen catalogue',()=>{
+ const f=chestFixture(),c=f.c,seen=new Set();
+ for(let i=0;i<200;i++){
+  const key='bin:'+i;let hash=2166136261;for(const ch of key){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619);}seen.add((hash>>>0)%12);
+  const loot=c.sideQuestChestLoot(key,37);
+  assert.doesNotThrow(()=>c.window.BurbzQuestCore.validateChestRewardBundle(loot,c.kitchenIngredientById,()=>false));
+  assert.equal(loot.coins,37);assert.equal(loot.xp,12);assert.deepEqual(loot,c.sideQuestChestLoot(key,37));
+ }
+ assert.equal(seen.size,12);
+});
+for(const larder of [{young_rabbit:1,wood_mouse:1},{pigeon_prey_ration:1,field_vole:1}])test('legacy two-unit side chest '+Object.keys(larder)[0]+' repairs atomically and claims once after reload',async()=>{
+ const f=chestFixture(),c=f.c,loot={coins:31,xp:12,larder},d={id:'legacy-chest',kind:'chest',lat:53,lon:-1,claimed:false,loot};
+ c.gameState.sideQuests.active.discoveries.push(d);const before=JSON.stringify(c.gameState),claimKey='side:s1:discovery:legacy-chest';
+ assert.throws(()=>c.window.BurbzQuestCore.validateChestRewardBundle(loot,c.kitchenIngredientById,()=>false),/Incomplete chest food bundle/);
+ assert.equal(await c.sideQuestClaimDiscovery(d.id),false);assert.equal(JSON.stringify(c.gameState),before);assert.equal(f.disk,null);assert.equal(f.writes,1);assert.equal(f.effects.filter(x=>x==='celebration').length,0);
+ f.allow();f.resetEffects();assert.equal(await c.sideQuestClaimDiscovery(d.id),true);assert.equal(f.writes,2);assert.equal(d.lat,53);assert.equal(d.lon,-1);assert.equal(d.id,'legacy-chest');
+ const expected=JSON.parse(JSON.stringify(c.window.BurbzQuestCore.normaliseChestLoot(loot,claimKey)));assert.deepEqual(JSON.parse(JSON.stringify(d.loot)),expected);
+ for(const [id,qty] of Object.entries(larder))assert.ok(d.loot.larder[id]>=qty,'saved food retained');
+ assert.equal(c.gameState.player.coins,33);assert.equal(c.gameState.player.xp,27);assert.deepEqual(JSON.parse(JSON.stringify(c.gameState.larder)),expected.larder);
+ const saved=f.disk;assert.equal(JSON.stringify(c.gameState),saved);assert.ok(c.gameState.questClaimReceipts[claimKey]);assert.equal(f.effects.filter(x=>x==='celebration').length,1);
+ c.gameState=JSON.parse(saved);f.resetEffects();assert.equal(await c.sideQuestClaimDiscovery(d.id),false);assert.equal(f.writes,2);assert.equal(JSON.stringify(c.gameState),saved);assert.equal(f.effects.length,0);
+ // Even a stale claimed flag cannot bypass the durable receipt.
+ c.gameState.sideQuests.active.discoveries[0].claimed=false;assert.equal(await c.sideQuestClaimDiscovery(d.id),false);assert.equal(f.writes,2);assert.equal(c.gameState.player.coins,33);
+});
+test('normalization never bypasses unknown-ingredient validation or commits an invalid saved chest',async()=>{
+ const f=chestFixture(),c=f.c;c.gameState.sideQuests.active.discoveries.push({id:'invalid-food',kind:'chest',claimed:false,lat:53,lon:-1,loot:{coins:31,xp:12,larder:{unknown_food:1,wood_mouse:1}}});
+ const before=JSON.stringify(c.gameState);f.allow();assert.equal(await c.sideQuestClaimDiscovery('invalid-food'),false);assert.equal(JSON.stringify(c.gameState),before);assert.equal(f.writes,0);assert.equal(f.disk,null);assert.equal(f.effects.filter(x=>x==='celebration').length,0);
+});

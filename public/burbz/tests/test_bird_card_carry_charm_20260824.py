@@ -32,7 +32,7 @@ SIZE_CORE = ROOT / "bird_size_core.js"
 
 OWN_RELEASE_PIN = "bird-card-carry-charm-v313-20260824"
 PREVIOUS_RELEASE_PIN = "nav-action-badges-v312-20260824"
-CURRENT_BUILD = "pocket-detours-v382-20260910"
+CURRENT_BUILD = "side-chest-v383-20260910"
 
 STAT_ROW_CARDS = {
     "createSilhouetteCard": "the undiscovered silhouette",
