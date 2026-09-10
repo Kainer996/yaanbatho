@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "empire-clarity-v205-20260803"
-CURRENT_BUILD = "enchanted-study-v384-20260910"
+CURRENT_BUILD = "homestead-v385-20260910"
 
 
 def html_text() -> str:

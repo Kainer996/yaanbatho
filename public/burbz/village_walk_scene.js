@@ -12,6 +12,8 @@
       });polygons.push(points);
     }
     for(const building of buildings){
+      // Town selection includes the ledger's ground hit target; it is walkable floor.
+      if(building.userData.townGround)continue;
       const fp=building.userData.footprint;
       if(fp)polygon(building,fp);
       else {const b=new T.Box3().setFromObject(building);polygons.push([{x:b.min.x,z:b.min.z},{x:b.max.x,z:b.min.z},{x:b.max.x,z:b.max.z},{x:b.min.x,z:b.max.z}]);}
@@ -62,8 +64,8 @@
     try {
     scene.updateMatrixWorld(true);
     scene.traverseVisible(mesh=>{
-      if(!mesh.isMesh||mesh.isInstancedMesh||Array.isArray(mesh.material))return;
-      for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.resident||p.userData.npc)return;
+      if(!mesh.isMesh||mesh.isInstancedMesh||mesh.userData.harvestBatch||mesh.userData.harvestStumps||Array.isArray(mesh.material))return;
+      for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.resident||p.userData.npc||p.userData.natureTree)return;
       const m=mesh.material;
       if(!m||m.transparent||m.map||m.normalMap||m.alphaMap||m.emissiveMap||(!m.isMeshLambertMaterial&&!m.isMeshStandardMaterial))return;
       const pos=mesh.getWorldPosition(new T.Vector3());

@@ -2,7 +2,7 @@ from pathlib import Path
 import re, subprocess
 ROOT=Path(__file__).resolve().parents[1]
 RELEASE='appearance-v362-20260907'
-CURRENT_BUILD='enchanted-study-v384-20260910'
+CURRENT_BUILD='homestead-v385-20260910'
 
 def test_appearance_behavior():
     subprocess.run(['node',str(ROOT/'tests/test_appearance_v362.cjs')],check=True)

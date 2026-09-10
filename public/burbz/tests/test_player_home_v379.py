@@ -8,7 +8,7 @@ def test_personal_home_transactions_and_walkable_placement():
 def test_personal_home_assets_install_atomically():
     html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text();updater=(ROOT.parent.parent/'scripts/update-live-burbz.sh').read_text()
     for name in ['player_home.css','player_home_core.js','player_home_scene.js','player_home.js']:
-        release='player-home-v380-20260909' if name=='player_home_core.js' else 'enchanted-study-v384-20260910'
+        release='homestead-v385-20260910'
         assert name+'?v='+release in html
         assert sw.count("'./"+name+'?v='+release+"'")==3
         assert '"'+name+'"' in updater

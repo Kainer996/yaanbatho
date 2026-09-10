@@ -12,18 +12,18 @@
         const m=mesh.material;
         if(!mesh.isMesh||!m||Array.isArray(m)||m.map||m.vertexColors||(!m.isMeshLambertMaterial&&!m.userData.blob))continue;
         const p=mesh.getWorldPosition(new T.Vector3()),key=[Math.floor(p.x/16),Math.floor(p.z/16),m.type,m.opacity,m.side].join(':');
-        let bucket=buckets.get(key);if(!bucket){bucket={material:m,parts:[]};buckets.set(key,bucket);}
+        let bucket=buckets.get(key);if(!bucket){bucket={material:m,parts:[],owners:[]};buckets.set(key,bucket);}
         const geo=mesh.geometry.index?mesh.geometry.toNonIndexed():mesh.geometry.clone();geo.applyMatrix4(mesh.matrixWorld);
         const colors=new Float32Array(geo.attributes.position.count*3);
         for(let i=0;i<colors.length;i+=3){colors[i]=m.color.r;colors[i+1]=m.color.g;colors[i+2]=m.color.b;}
-        geo.setAttribute('color',new T.BufferAttribute(colors,3));bucket.parts.push(geo);mesh.visible=false;sources++;
+        geo.setAttribute('color',new T.BufferAttribute(colors,3));bucket.parts.push(geo);bucket.owners.push(tree);mesh.visible=false;sources++;
       }
     });
     for(const bucket of buckets.values()){
       const geo=new T.BufferGeometry();
       for(const field of ['position','normal','color']){const data=new Float32Array(bucket.parts.reduce((n,g)=>n+g.attributes[field].array.length,0));let offset=0;for(const g of bucket.parts){data.set(g.attributes[field].array,offset);offset+=g.attributes[field].array.length;}geo.setAttribute(field,new T.BufferAttribute(data,3));}
       const material=bucket.material.clone();material.color.set(0xffffff);material.vertexColors=true;
-      const mesh=new T.Mesh(geo,material);mesh.castShadow=!material.userData.blob;mesh.receiveShadow=!material.userData.blob;scene.add(mesh);bucket.parts.forEach(g=>g.dispose());
+      const mesh=new T.Mesh(geo,material);mesh.userData.harvestBatch=true;let start=0;bucket.parts.forEach((part,i)=>{const tree=bucket.owners[i];tree._burbzHarvestParts||=[];tree._burbzHarvestParts.push({mesh,start,count:part.attributes.position.count});start+=part.attributes.position.count;});mesh.castShadow=!material.userData.blob;mesh.receiveShadow=!material.userData.blob;scene.add(mesh);bucket.parts.forEach(g=>g.dispose());
     }
     return {sourceMeshes:sources,batches:buckets.size};
   }

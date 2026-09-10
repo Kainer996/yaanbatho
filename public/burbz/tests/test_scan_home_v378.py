@@ -12,8 +12,8 @@ def test_home_state_is_honest_and_gated():
 def test_home_runtime_and_art_install_together():
     html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text()
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
-    assert "const BURBZ_BUILD = 'enchanted-study-v384-20260910';" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('enchanted-study-v384-20260910')
+    assert "const BURBZ_BUILD = 'homestead-v385-20260910';" in html
+    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('homestead-v385-20260910')
     for file in ['scan_home.css','scan_home_core.js','scan_home.js','assets/home-v384/enchanted-study.webp']:
         url=file if file.startswith('assets/') else file+'?v='+RELEASE
         assert url in html
