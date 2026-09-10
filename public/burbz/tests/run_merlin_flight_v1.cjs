@@ -40,8 +40,14 @@ async function serve() {
     try { pathname = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname); }
     catch (_) { res.writeHead(400); return res.end(); }
     if (!pathname.startsWith('/burbz/')) { res.writeHead(404); return res.end(); }
-    const file = path.resolve(gameRoot, pathname.slice('/burbz/'.length) || 'index.html');
+    const relative = pathname.slice('/burbz/'.length) || 'index.html';
+    let file = path.resolve(gameRoot, relative);
     if (!file.startsWith(gameRoot + path.sep)) { res.writeHead(403); return res.end(); }
+    if (!fs.existsSync(file) && /^(assets|icons)\//.test(relative)) {
+      const cached = [process.env.SUPPLEMENTAL_ASSET_CACHE, process.env.ASSET_CACHE].filter(Boolean)
+        .map(base => path.join(base, relative)).find(candidate => fs.existsSync(candidate));
+      if (cached) file = cached;
+    }
     fs.readFile(file, (error, data) => {
       if (error) { res.writeHead(404); return res.end(); }
       res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store' });
@@ -112,6 +118,7 @@ async function openCare(page) {
       // animation-stability wait without bypassing browser hit testing.
       const rect = await page.locator('#petSprite').boundingBox();
       assert(rect, 'Canonical perched Merlin is visible');
+      assert(await page.locator('#petSprite').evaluate(el => { const r=el.getBoundingClientRect();return el.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)); }), 'Merlin perch must receive native taps without navigation occlusion');
       await page.touchscreen.tap(rect.x + rect.width / 2, rect.y + rect.height / 2);
     }
   }
@@ -301,9 +308,15 @@ async function exerciseTheme(base, theme) {
     await fixture(page); await play(page);
     const reducedBefore = await debug(page);
     await tapSky(page);
-    await page.waitForTimeout(1100);
+    // Wait for the actual frame-driven feedback. A fixed wall-clock delay can
+    // expire before enough frames run on the software-rendered full game.
+    await page.waitForFunction(() => {
+      const value = window.__burbzMerlinFlightDebug;
+      const d = typeof value === 'function' ? value() : value;
+      return d && d.active && d.state && d.state.pickups >= 1;
+    }, null, { timeout: 10000 });
     const reducedAfter = await debug(page);
-    check('reduced motion uses a stationary pose while retaining harmless fetch feedback', reducedAfter.state.reducedMotion && reducedAfter.state.pickups >= 1 && reducedAfter.state.position.x === reducedBefore.state.position.x && reducedAfter.state.position.y === reducedBefore.state.position.y);
+    check('reduced motion uses a stationary pose while retaining harmless fetch feedback', reducedAfter.state.reducedMotion && reducedAfter.state.pickups >= 1 && reducedAfter.state.position.x === reducedBefore.state.position.x && reducedAfter.state.position.y === reducedBefore.state.position.y, { before: reducedBefore.state, after: reducedAfter.state });
     await page.screenshot({ path: path.join(evidence, `${theme}-reduced-motion.png`) });
     await page.getByRole('button', { name: 'Finish', exact: true }).tap();
     await stopped(page, 'Finish cleans up the reduced-motion session');

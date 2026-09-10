@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
 RELEASE='enchanted-study-v384-20260910'
-CURRENT_BUILD = 'market-tabs-v389-20260910'
+CURRENT_BUILD = 'merlin-flight-v390-20260910'
 def test_home_state_is_honest_and_gated():
     result=subprocess.run(['node',str(ROOT/'tests/test_scan_home_v378.cjs')],text=True,capture_output=True)
     assert result.returncode==0,result.stdout+result.stderr

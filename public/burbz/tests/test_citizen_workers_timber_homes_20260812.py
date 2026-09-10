@@ -19,7 +19,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "citizen-workers-timber-homes-v253-20260812"
-CURRENT_BUILD = "market-tabs-v389-20260910"
+CURRENT_BUILD = "merlin-flight-v390-20260910"
 PREVIOUS_RELEASE_PIN = "academy-training-dock-v252-20260812"
 
 

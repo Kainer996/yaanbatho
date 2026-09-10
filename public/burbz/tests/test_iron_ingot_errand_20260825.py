@@ -16,7 +16,7 @@ import subprocess
 from pathlib import Path
 
 BURBZ = Path(__file__).resolve().parent.parent
-CURRENT_BUILD = "market-tabs-v389-20260910"
+CURRENT_BUILD = "merlin-flight-v390-20260910"
 
 
 def node_json(script):

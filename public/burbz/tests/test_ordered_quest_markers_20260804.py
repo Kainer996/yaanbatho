@@ -7,7 +7,7 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "market-tabs-v389-20260910"
+CURRENT_BUILD = "merlin-flight-v390-20260910"
 QUEST_CORE_PIN = "map-trails-v381-20260909"
 
 

@@ -10,7 +10,7 @@ STORY_PATH = ROOT / "STORY.md"
 UPDATER_PATH = ROOT.parents[1] / "scripts" / "update-live-burbz.sh"
 OWN_RELEASE_PIN = "pocket-detours-v382-20260910"
 PREVIOUS_RELEASE_PIN = "living-settlements-v281-20260817"
-CURRENT_BUILD = "market-tabs-v389-20260910"
+CURRENT_BUILD = "merlin-flight-v390-20260910"
 
 
 def run_node(script: str):
