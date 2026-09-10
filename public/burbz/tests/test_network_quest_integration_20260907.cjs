@@ -15,9 +15,11 @@ const noop = () => {};
 function source(name) {
   const match = new RegExp('^(?:async )?function ' + name + '\\(', 'm').exec(html);
   assert(match, 'missing production function ' + name);
-  const end = html.indexOf('\n}', match.index);
-  assert(end > match.index);
-  return html.slice(match.index, end + 2);
+  for (let end=html.indexOf('}',match.index);end>=0;end=html.indexOf('}',end+1)) {
+    const body=html.slice(match.index,end+1);
+    try { new vm.Script('('+body+')'); return body; } catch {}
+  }
+  throw Error('Could not extract '+name);
 }
 function osmRoute(loop) {
   const points = [];
@@ -43,11 +45,14 @@ function offer(loop = true) {
   return found;
 }
 function context(names, extra = {}) {
-  const state = { walkingQuests: { active: null, history: [] } }, effects = { xp: 0, coins: 0, saved: 0, rendered: 0 };
+  const state = { player:{level:50,xp:0,coins:0,branches:0},inventory:{items:{},gear:{}},badges:{},questClaimReceipts:{},walkingQuests: { active: null, history: [] } }, effects = { xp: 0, coins: 0, saved: 0, rendered: 0 };
   const ctx = {
-    window: { BurbzQuestCore: { ...Q }, BurbzWalkingRouteCore: R, BurbzWalkingEncounterCore: E },
+    window: { BurbzQuestCore: { ...Q }, BurbzWalkingRouteCore: R, BurbzWalkingEncounterCore: E, BurbzQuestPocketCore:require('../quest_pocket_core.js') },
     console, Date, Math, Number, JSON, Promise, Set, Map, BurbzMapTrailCore:require('../map_trail_core.js'),
-    gameState: state, effects, walkQuestLastSave: 0,
+    gameState: state, effects, walkQuestLastSave: 0, document:{hidden:false},
+    localStorage:{setItem(key,value){effects.saved++;effects.disk=JSON.parse(value);}},
+    queueCloudSave:noop,queueActionBadgeUpdate:noop,queueQuestClaimCloudSync:noop,
+    announcePlayerLevelUps:noop,updateHeader:noop,renderInventory:noop,logDiary:noop,
     activeWalkingQuest: () => state.walkingQuests.active,
     ensureWalkingQuestState: () => state.walkingQuests,
     sideQuestActive: () => null,
@@ -71,7 +76,8 @@ function context(names, extra = {}) {
     ...extra
   };
   vm.createContext(ctx);
-  vm.runInContext(names.concat('mapGatheringGate').map(source).join('\n'), ctx);
+  const transactionFunctions=['durableSaveState','saveState','snapshotGameState','restoreStateTree','restoreGameStateSnapshot','questClaimReceipt','setQuestClaimReceipt','questPocketChange','questPocketResume','applyQuestPocketReward','commitQuestFinish','announceQuestPocketReward','applyPlayerXpState','playerLevelUpGrant','addCoins'];
+  vm.runInContext(html.split('\n').find(line=>line.startsWith('const XP_PER_LEVEL ='))+'\n'+[...new Set(names.concat('mapGatheringGate',transactionFunctions))].map(source).join('\n'), ctx);
   return ctx;
 }
 
@@ -221,12 +227,14 @@ test('completion keeps the last discoveries and saved choices in history and awa
   assert.equal(history.length, 1);
   assert.equal(history[0].encounters.length, 3);
   assert.equal(history[0].encounters[0].choiceId, 'curiosity');
-  const rewards = { xp: ctx.effects.xp, coins: ctx.effects.coins };
+  const rewards = { xp: ctx.gameState.player.xp, coins: ctx.gameState.player.coins };
+  assert.equal(Object.keys(ctx.gameState.questClaimReceipts).length,1,'completion has one durable receipt');
+  assert.deepEqual(copy(ctx.gameState),ctx.effects.disk,'reward and history share the durable write');
   assert(rewards.xp > 0);
   assert.equal(ctx.gameState.walkingQuests.active, null);
   ctx.completeWalkingQuest();
   assert.equal(history.length, 1);
-  assert.deepEqual({ xp: ctx.effects.xp, coins: ctx.effects.coins }, rewards);
+  assert.deepEqual({ xp: ctx.gameState.player.xp, coins: ctx.gameState.player.coins }, rewards);
 });
 
 test('stale fetch cannot replace a newer area and moving during a fetch restarts discovery', async () => {

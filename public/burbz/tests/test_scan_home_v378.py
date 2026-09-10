@@ -13,7 +13,7 @@ def test_home_runtime_and_art_install_together():
     html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text()
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
     assert "const BURBZ_BUILD = 'pocket-detours-v382-20260910';" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('map-trails-v381-20260909')
+    assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith('pocket-detours-v382-20260910')
     for file in ['scan_home.css','scan_home_core.js','scan_home.js','assets/home-v378/woodland-lookout.webp']:
         url=file if file.startswith('assets/') else file+'?v='+RELEASE
         assert url in html

@@ -137,7 +137,7 @@ def test_gameplay_hooks_feed_the_chain():
         "updateQuestProgress('training_claimed', 1)",   # training drill claimed
         "updateQuestProgress('gear_equipped', 1)",      # forge equips a piece
         "updateQuestProgress('station_' + room, 1)",    # bird stationed in a room
-        "updateQuestProgress('walk_completed', 1)",     # walking adventure done
+        "updateQuestProgress('walk_completed', 1, deferredEffects)",     # walking adventure done
         "updateQuestProgress('meal_served', 1)",        # kitchen tray served
         "updateQuestProgress('town_liberated', 1)",     # liberation victory
     ):
