@@ -20672,7 +20672,7 @@ function sideQuestChestLoot(stableKey, coins) {
   const text = String(stableKey || 'legacy-side-chest');
   let hash = 2166136261;
   for (let i = 0; i < text.length; i++) { hash ^= text.charCodeAt(i); hash = Math.imul(hash, 16777619); }
-  return { coins: Math.max(1, Math.floor(Number(coins) || 25)), xp: 12, larder: { ...bundles[(hash >>> 0) % bundles.length] } };
+  return window.BurbzQuestCore.normaliseChestLoot({ coins: Math.max(1, Math.floor(Number(coins) || 25)), xp: 12, larder: { ...bundles[(hash >>> 0) % bundles.length] } }, text);
 }
 
 function spawnSideQuestDiscovery(active, lat, lon) {
@@ -20804,7 +20804,7 @@ async function sideQuestClaimDiscovery(id, opts) {
   if(['chest','weapon'].includes(d.kind)){const gate=mapGatheringGate(d);if(!gate.ready){showToast(gate.reason);return false;}}
   if (d.kind === 'chest') {
     const claimKey = 'side:' + active.id + ':discovery:' + d.id;
-    const rawLoot = d.loot || sideQuestChestLoot(d.id, d.coins); // deterministic old-save fallback
+    const rawLoot = window.BurbzQuestCore.normaliseChestLoot(d.loot || sideQuestChestLoot(d.id, d.coins), claimKey); // preserve saved food; deterministically complete legacy bundles
     const tx = window.BurbzQuestCore.runDurableChestClaim({
       claimKey,
       bundle: rawLoot,
@@ -43106,7 +43106,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'pocket-detours-v382-20260910';
+const BURBZ_BUILD = 'side-chest-v383-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
