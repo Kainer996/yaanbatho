@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "connected-world-v386-20260910"
+CURRENT_BUILD = "home-countryside-v387-20260910"
 
 
 def function_source(source: str, name: str) -> str:
@@ -17,19 +17,19 @@ def function_source(source: str, name: str) -> str:
     return source[start : end if end != -1 else len(source)]
 
 
-def test_the_shortfall_prompt_replaces_the_room_instead_of_hiding_behind_it():
+def test_the_top_layer_prompt_keeps_the_building_underneath_until_navigation():
     source = function_source(HTML.read_text(encoding="utf-8"), "buildingInteriorBuild")
     script = f"""
 const calls = [];
 let promptOpen = true;
 global.empireBuildStructure = () => calls.push('build');
-global.document = {{ getElementById: id => id === 'resourceQuestOverlay' ? {{ classList: {{ contains: name => name === 'open' && promptOpen }} }} : null }};
+global.document = {{ getElementById: id => id === 'resourceQuestOverlay' ? {{ open: promptOpen }} : null }};
 global.closeBuildingInterior = () => calls.push('close');
 global.renderBuildingInterior = () => calls.push('render');
 global.currentScreen = 'village';
 eval({json.dumps(source)});
 buildingInteriorBuild(101, 'well');
-if (calls.join(',') !== 'build,close') throw new Error('prompt stayed behind the room: ' + calls);
+if (calls.join(',') !== 'build') throw new Error('prompt must keep the current room for dismissal: ' + calls);
 calls.length = 0;
 promptOpen = false;
 buildingInteriorBuild(101, 'well');

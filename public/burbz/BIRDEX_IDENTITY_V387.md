@@ -1,0 +1,17 @@
+# Birdex discovery identity — unreleased v387
+
+The base UK catalogue contains Greenfinch (`greenfinch`) and the national import contains Common Greenfinch (`chloris_chloris`). Both explicitly identify Chloris chloris. The previous Birdex created every initial roster row, then deduplicated only records appended from the save. Its name-based discovered count could also count both labels. Consequently two catalogue rows could render the same saved Common Greenfinch card.
+
+`birdexSpeciesRows()` now builds one read-only map across the initial roster, saved discoveries and owned species. `birdexSpeciesKey()` uses the resolved catalogue profile's complete scientific name, falling back to its common name where scientific metadata is absent. This is general catalogue identity handling, not a Greenfinch exception. The displayed Discovered count uses that same identity. Filters inspect the actual displayed bird, including an owned companion where applicable. Companion-only species outside the roster and legacy records identified by scientific name or saved key also appear and count consistently.
+
+This does not use the area's accepted-species/GBIF taxonomy, strip taxonomic qualifiers, or reduce full scientific names to a binomial. Redpoll and Arctic Redpoll keep their recorded distinct taxa, as do full subspecies identities. Owned individuals remain separate in Companions regardless of their species, nickname, ID or XP.
+
+No migration or cleanup runs. No saved alias, discovery record, history, photo reference, inventory item, reward, quest record or owned bird is deleted or rewritten by the projection. A species card uses an existing discovery record for its actions; all original records remain saved. Existing discovery reward and encounter processing is unchanged. This extends the unpublished `home-countryside-v387-20260910` batch; there is no new asset/module pin or live cache release.
+
+## Verification
+
+- `tests/test_discovery_once_20260907.cjs`: 12 passing executable groups. Five new groups exercise actual overlapping catalogue profiles, all Greenfinch labels and serialized reloads, exact save preservation including independent alias photos/history, two owned birds, distinct magpies/redpolls, full trinomial fixtures, sparse legacy records and out-of-roster companions. The actual roster is built once and reused across disposable VM fixtures.
+- `tests/run_birdex_identity_v387.cjs`: five passing full-browser groups in a disposable Chromium profile. Native Birdex/Companions/filter clicks, one visible Greenfinch, matching badge/list counts, actual page reload, no repeat rewards/progress, both named companions with retained XP, separate related species, and All/Undiscovered checks. No page errors. Set PLAYWRIGHT_MODULE, CHROMIUM (optional), EVIDENCE_DIR and ASSET_CACHE (optional) to run locally. Network is blocked except the local fixture; missing bird art may show its ordinary fallback.
+- Related targeted pytest run: 22 passed, one skipped, one pre-existing failure. The July 29 feeding-button test expects old `showCareActions`/`frontFeedButton` source variables. Its failure was reproduced against parent commit `5aeb43d`; `createBirdCardHTML` is byte-for-byte unchanged by this correction. That unrelated test was neither changed nor suppressed.
+
+All earlier v387 world, Home, coins and audio changes are retained. The prior village and town entry/edge checks were already completed. Nothing in this follow-up was pushed or deployed.

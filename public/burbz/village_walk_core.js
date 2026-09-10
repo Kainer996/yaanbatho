@@ -14,7 +14,7 @@
       if((a.z>z)!==(b.z>z)&&x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)yes=!yes;
     }return yes;
   }
-  function createWorld({radius=27,heightAt=()=>0,river=null,polygons=[],segments=[]}={}){
+  function createWorld({radius=27,heightAt=()=>0,river=null,polygons=[],segments=[],surfaceAt=()=> 'ground'}={}){
     const cells=new Map(),cellSize=2;
     function add(segment){
       const [a,b]=segment;
@@ -50,7 +50,8 @@
         if(allowed(x,z))return{x,z,y:height(x,z)};
       }throw Error('No safe village footpath is available.');
     }
-    return {allowed,height,spawn,radius,polygons,segments,cellCount:cells.size};
+    function surface(x,z){if(river){const p=riverCoords(x,z);if(Math.abs(p.along)<.8&&Math.abs(p.across)<(river.width+2.2)/2)return 'wood';}return surfaceAt(x,z);}
+    return {allowed,height,spawn,surface,radius,polygons,segments,cellCount:cells.size};
   }
   function move(player,input,dt,world){
     dt=clamp(Number(dt)||0,0,.05);
@@ -72,6 +73,13 @@
     player.yaw-=clamp(dx,-300,300)*sensitivity;
     player.pitch=clamp(player.pitch-dy*sensitivity,-1.10,1.10);
   }
+  function outwardBoundary(player,input,world){
+    const radius=world?.radius,d=Math.hypot(player.x,player.z);
+    if(!Number.isFinite(radius)||d<radius-RADIUS-.35)return false;
+    const side=Number(input.side)||0,forward=Number(input.forward)||0;
+    const sin=Math.sin(player.yaw),cos=Math.cos(player.yaw);
+    return (side*cos-forward*sin)*player.x+(-side*sin-forward*cos)*player.z>.1;
+  }
   // A fresh window of real RAF intervals; no busy waits or benchmark loop.
   function quality(dpr,maxDpr,intervals,fastStreak=0){
     const mean=intervals.reduce((a,b)=>a+b,0)/Math.max(1,intervals.length);
@@ -79,5 +87,5 @@
     fastStreak=mean<17.2?fastStreak+1:0;
     return {dpr:fastStreak>=4?Math.min(maxDpr,dpr+.1):dpr,fastStreak:fastStreak>=4?0:fastStreak,mean};
   }
-  return {createWorld,move,look,quality,distance2,inside,RADIUS,EYE,SPEED};
+  return {createWorld,move,look,outwardBoundary,quality,distance2,inside,RADIUS,EYE,SPEED};
 });
