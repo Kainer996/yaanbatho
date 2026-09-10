@@ -18722,7 +18722,40 @@ function syncBurbzMusicForMapZoom() {
   return volume;
 }
 window.__burbzMapDebug = { version: BURBZ_MAP_VERSION, engine: 'maplibre', get map() { return liveMap; }, get markers() { return liveMapMarkers; }, get poiMarkers() { return liveMapPoiMarkers; }, get treeMarkers() { return liveMapTreeMarkers; }, get birdChips() { return liveMapBirdChips; }, get areaBirdRows() { return likelyBirdRows(liveMapSpawns); }, get terrainEnabled() { return geographicMap3D?.state.terrainActive || false; }, get geography() { return geographicMap3D; }, get habitatLayers() { return liveMapHabitatLayers; }, get spawns() { return liveMapSpawns; }, get userMoved() { return liveMapUserMoved; }, get questZoomLock() { return questZoomLock; }, questZoomCeiling() { return liveMapZoomCeiling(); }, get villageMarkers() { return liveMapVillageMarkers; }, villagesNear(lat, lon, span) { return villagesNearLatLng(lat, lon, span); }, enterVillage(v) { return enterVillage(v); }, nearestVillage(lat, lon) { return nearestVillageTo(lat, lon); }, get playerHeading() { return playerHeading; }, setHeading(d) { playerHeadingManual = true; applyPlayerHeading(d); }, get userMarker() { return liveMapUserMarker; }, get discovered() { return gameState && gameState.discoveredSpecies; }, get state() { return gameState; }, get musicVolume() { return MUSIC && Number.isFinite(Number(MUSIC.volume)) ? Number(MUSIC.volume) : null; }, startMusic() { return MUSIC && typeof MUSIC.start === 'function' ? MUSIC.start() : Promise.resolve(false); }, syncMapMusic() { return syncBurbzMusicForMapZoom(); }, switchTo(name) { switchScreen(name); return currentScreen; } };
-function loadMapLibreIfNeeded() { if (window.maplibregl) return Promise.resolve(); return new Promise((resolve, reject) => { const existing = document.querySelector('script[data-burbz-maplibre]'); if (existing) { existing.addEventListener('load', resolve, { once:true }); existing.addEventListener('error', reject, { once:true }); return; } const script = document.createElement('script'); script.src = 'lib/maplibre-gl.js?v=5.24.0'; script.dataset.burbzMaplibre = '1'; script.onload = resolve; script.onerror = () => { const cdn = document.createElement('script'); cdn.src = 'https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'; cdn.dataset.burbzMaplibre = '1'; cdn.onload = resolve; cdn.onerror = reject; document.head.appendChild(cdn); }; document.head.appendChild(script); }); }
+let burbzMapLibreLoadPromise = null;
+function loadMapLibreIfNeeded() {
+  if (window.maplibregl) return Promise.resolve();
+  if (burbzMapLibreLoadPromise) return burbzMapLibreLoadPromise;
+  // A completed failure cannot emit another load/error event. Only this shared
+  // promise owns pending scripts; remove orphaned attempts before retrying.
+  document.querySelectorAll('script[data-burbz-maplibre]').forEach(script => {
+    script.onload = script.onerror = null;
+    script.remove();
+  });
+  const attempt = src => new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    let settled = false;
+    const finish = error => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      script.onload = script.onerror = null;
+      if (error) { script.remove(); reject(error); }
+      else resolve();
+    };
+    const unavailable = () => finish(new Error('The map renderer could not load. Connect and try again.'));
+    const timer = setTimeout(unavailable, 20000);
+    script.src = src;
+    script.dataset.burbzMaplibre = '1';
+    script.onload = () => window.maplibregl ? finish() : unavailable();
+    script.onerror = unavailable;
+    try { document.head.appendChild(script); } catch (error) { finish(error); }
+  });
+  burbzMapLibreLoadPromise = attempt('lib/maplibre-gl.js?v=5.24.0')
+    .catch(() => window.maplibregl ? undefined : attempt('https://unpkg.com/maplibre-gl@5.24.0/dist/maplibre-gl.js'))
+    .finally(() => { burbzMapLibreLoadPromise = null; });
+  return burbzMapLibreLoadPromise;
+}
 function getFallbackMapCenter() { return { lat: 54.45, lon: -2.65, source: 'Location needed' }; }
 function renderLiveMap() { if (liveMapReady) { setTimeout(() => { try { liveMap.resize(); } catch(e) {} }, 80); startLiveGeolocation(); return; } liveMapReady = true; initLiveMap(); }
 function burbzMapStyle() { return 'https://tiles.openfreemap.org/styles/liberty'; }

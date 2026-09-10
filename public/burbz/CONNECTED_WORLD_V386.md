@@ -21,7 +21,7 @@ Rendering projects into a floating local metre frame: x east, y up, z south. Lon
 
 ## Offline and resource limits
 
-The existing app shell service worker includes the new modules in all three installation lists. `geographic_cache.js` independently caches visited OpenFreeMap/Mapterhorn data with bounded metadata and tile storage, so shell updates do not delete useful map coverage. Unvisited terrain still needs a connection. Terrain absence is shown and motion waits safely; a cached app shell alone does not establish cached world coverage.
+The existing app shell service worker includes the new modules and the pinned local MapLibre renderer/CSS in all three installation lists. A renderer download must succeed before a new installed worker can take over. Failed map-library loads reject cleanly so retry remains available. `geographic_cache.js` independently caches visited OpenFreeMap/Mapterhorn data with bounded metadata and tile storage, so shell updates do not delete useful map coverage. Unvisited terrain still needs a connection. Terrain absence is shown and motion waits safely; a cached app shell alone does not establish cached world coverage.
 
 The world controller owns one dedicated MapLibre session and its shared THREE custom layer. Native map tiles stream through MapLibre; nearby authored models, terrain samples, mapped collisions and woodland detail are bounded. Forced navigation/save replacement disposes the renderer and inputs; ordinary exit preserves failed-save recovery. Browser-hidden sessions stop interactive updates. Provider/source credits remain visible, with elevation notices in [the terrain credits](data/geographic-terrain-credits.html).
 
