@@ -74,6 +74,7 @@ const expansion = { art: {} };
 let skippedWaiting = false;
 let quotaFailureAttempted = false;
 const self = {
+  BurbzGeographicCache: { respond: () => false },
   BURBZ_UK_BIRD_EXPANSION_50: expansion,
   BURBZ_UK_BIRD_EXPANSION_26: expansion,
   BURBZ_AU_BIRD_EXPANSION: expansion,
@@ -143,6 +144,7 @@ const listeners = {};
 const expansion = { art: {} };
 let claimed = false, navigated = 0;
 const self = {
+  BurbzGeographicCache: { respond: () => false },
   BURBZ_UK_BIRD_EXPANSION_50: expansion,
   BURBZ_UK_BIRD_EXPANSION_26: expansion,
   BURBZ_AU_BIRD_EXPANSION: expansion,
@@ -214,6 +216,7 @@ const fs = require('fs'), vm = require('vm');
 const listeners = {};
 const expansion = { art: {} };
 const self = {
+  BurbzGeographicCache: { respond: () => false },
   BURBZ_UK_BIRD_EXPANSION_50: expansion,
   BURBZ_UK_BIRD_EXPANSION_26: expansion,
   BURBZ_AU_BIRD_EXPANSION: expansion,

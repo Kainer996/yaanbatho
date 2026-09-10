@@ -39,7 +39,7 @@ function upperRooms(T,home){const all=new T.Group();for(const [id,r] of Object.e
  else{b.box(.86,.89,.045,x,y+.85,z+d/2+.05,0x3c5a4d);b.add(new T.BoxGeometry(.68,.72,.05),id==='library'?0xc7d4a1:0xe3bf7b,[x,y+.87,z+d/2+.08],[0,0,0],[1,1,1],true);for(const xx of [-.4,0,.4])b.box(.05,.9,.08,x+xx,y+.85,z+d/2+.12,trim);b.box(1.03,.11,.27,x,y+.35,z+d/2+.11,wood);for(const sign of [-1,1])b.box(.86,.12,d+.24,x+sign*.32,y+1.62,z,r.accent,[0,0,-sign*.42]);if(id==='workshop'){b.box(.3,.9,.36,x+.28,y+1.7,z-.3,0xa79177);b.box(.4,.1,.44,x+.28,y+2.16,z-.3,0xc5b08b);}}
  const wing=b.finish();wing.userData.homeRoom=id;all.add(wing);}return all;}
 
-function create(T,home,area,aspect,grade){const s=C.normalize(home),createdAt=Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
+function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
  if(C.indoor(area)){
  const extra=C.ROOMS[area];
  const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:'Your woodland home',scope:'player-home',width:9,depth:10,height:3.6,accent:0x709486,props:[{type:'bed',x:-3,z:1.4,rot:0,w:1.7,d:2.4,solid:true},{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}],spawn:{x:0,y:0,z:3.8,yaw:0,pitch:0},exit:{x:0,z:4.3},action:null};
@@ -75,17 +75,17 @@ function create(T,home,area,aspect,grade){const s=C.normalize(home),createdAt=Da
 
 
  }else{
- scene=new T.Scene();scene.background=new T.Color(0xa7c3ba);scene.fog=new T.Fog(0xa7c3ba,36,65);const b=root.BurbzSettlementModels.batch(T),front=root.BurbzSettlementModels.batch(T);
- b.cylinder(C.YARD.ground,17*C.YARD_SCALE,1,0,-.55,0,0x698160,[0,0,0],64);b.cylinder(6.3,6.3,.04,0,-.015,1.8,0x7c8764,[0,0,0],48);
+ scene=new T.Scene();if(!options.contentOnly){scene.background=new T.Color(0xa7c3ba);scene.fog=new T.Fog(0xa7c3ba,36,65);}const b=root.BurbzSettlementModels.batch(T),front=root.BurbzSettlementModels.batch(T);
+ if(!options.contentOnly){b.cylinder(C.YARD.ground,17*C.YARD_SCALE,1,0,-.55,0,0x698160,[0,0,0],64);b.cylinder(6.3,6.3,.04,0,-.015,1.8,0x7c8764,[0,0,0],48);}
  for(let z=2;z<C.YARD.walk-.3;z+=.65)for(let x=-.65;x<=.65;x+=.65)b.box(.59,.04,.56,x+(Math.floor(z)%2)*.08,.025,z,0xab9e7c,[0,Math.sin(z)*.04,0]);
  for(const [i,t] of C.TREES.entries()){if(C.treeState(s,t.id,createdAt)>=3){b.cylinder(t.r,t.r*1.1,.28,t.x,.14,t.z,0xa58254);continue;}b.cylinder(t.r*.65,t.r,3.8,t.x,1.9,t.z,0x5b4332);for(let k=0;k<3;k++)(t.z>4?front:b).sphere(1.9,t.x+Math.sin(i+k)*.6,3.6+k*.7,t.z+Math.cos(i+k)*.6,[0x547956,0x678651,0x76915d][(i+k)%3],[1,1.05,.95]);}
  for(let i=0;i<90;i++){const a=i*2.4,r=(4+(i%12)*.7)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1&&z>0)continue;b.sphere(.2,x,.1,z,0x82915e,[1,.5,1]);}
  // Moss, roots and small flowers break up the clearing without claiming resources.
  for(let i=0;i<180;i++){const a=i*2.4,r=(3.8+(i%17)*.51)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1.1&&z>0)continue;const h=.1+(i%3)*.06;b.add(new T.ConeGeometry(.09,h,3),[0x587849,0x688252,0x7e8f59][i%3],[x,h/2,z]);if(i%7===0)b.sphere(.07,x,h,z,[0xe4c773,0xc78ba0,0xe5daca][i%3]);}
  scene.add(b.finish());frontLeaves=front.finish();scene.add(frontLeaves);house=root.BurbzSettlementModels.building(T,'cabin',s.tier+1,()=>.47,{roofs:[0x557e72]});house.userData.homeTarget='house';scene.add(house);targets.push(house);const additions=upperRooms(T,s);additions.userData.homeTarget='house';scene.add(additions);targets.push(additions);
- const hemi=new T.HemisphereLight(0xffe7b5,0x526b70,grade.hemi),key=new T.DirectionalLight(grade.keyColor,grade.keyIntensity);key.position.set(-12,19,10);skyLight=hemi;sunLight=key;key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-25,right:25,top:25,bottom:-25,near:1,far:60});key.shadow.bias=-.001;key.shadow.normalBias=.025;scene.add(hemi,key);scene.background.set(grade.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);
+ if(!options.contentOnly){const hemi=new T.HemisphereLight(0xffe7b5,0x526b70,grade.hemi),key=new T.DirectionalLight(grade.keyColor,grade.keyIntensity);key.position.set(-12,19,10);skyLight=hemi;sunLight=key;key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-25,right:25,top:25,bottom:-25,near:1,far:60});key.shadow.bias=-.001;key.shadow.normalBias=.025;scene.add(hemi,key);scene.background.set(grade.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}
  // Merlin uses the existing game portrait, perched by the door.
- const tex=new T.TextureLoader().load('bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png');tex.colorSpace=T.SRGBColorSpace;const bird=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true}));bird.scale.set(1.8,1.8,1);bird.position.set(2.2,2.1,1.4);scene.add(bird);
+ if(options.portrait!==false){const tex=new T.TextureLoader().load('bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png');tex.colorSpace=T.SRGBColorSpace;const bird=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true}));bird.scale.set(1.8,1.8,1);bird.position.set(2.2,2.1,1.4);scene.add(bird);}
  }
  for(const p of s.placed.filter(p=>p.area===area)){const mesh=ornament(T,C.ITEMS[p.item].type);mesh.position.set(p.x,0,p.z);mesh.rotation.y=p.turn*Math.PI/2;mesh.userData.placementId=p.id;scene.add(mesh);decor.push(mesh);targets.push(mesh);}
  const finds=[];for(const f of C.FINDS.filter(f=>f.area===area&&!f.id.endsWith('-story'))){const b=root.BurbzSettlementModels.batch(T);if(f.id==='tiny-door'){b.cylinder(.58,.72,1.35,f.x,.675,f.z,0x71543b);b.box(.44,.68,.08,f.x,.35,f.z+.6,0x345f50);for(const x of [-.26,.26])b.box(.065,.76,.09,f.x+x,.38,f.z+.62,0xc3ab74);b.sphere(.045,f.x+.13,.36,f.z+.68,0xd9ba65);}
@@ -96,7 +96,18 @@ function create(T,home,area,aspect,grade){const s=C.normalize(home),createdAt=Da
  else if(f.id==='floor-star'){b.add(new T.CylinderGeometry(.12,.12,.02,7),0xe5bf65,[f.x,.02,f.z]);}
  else{b.box(.24,.025,.3,f.x,.08,f.z,0xd6bb83);for(let i=0;i<3;i++)b.box(.14,.008,.015,f.x,.099,f.z+(i-1)*.06,0x7b623a);}const m=b.finish();m.userData.findId=f.id;scene.add(m);finds.push(m);targets.push(m);}
  root.BurbzManga?.styleScene(scene);
- return{scene,house,screen,screenSize,targets,decor,finds,world:C.world(s,area,createdAt),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>disposeScene(scene)};
+ return{scene,house,screen,screenSize,targets,decor,finds,world:C.world(s,area,createdAt,{connected:!!options.contentOnly}),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>disposeScene(scene)};
 }
-root.BurbzPlayerHomeScene={create,ornament,upperRooms,disposeScene};
+// The exact owned yard, expressed in local metres for the continuous world.
+// Its owner supplies geographic placement, terrain, lighting and one renderer.
+function createYardContent(T,home,options={}){const saved=C.normalize(home),now=options.now??Date.now(),view=create(T,saved,'yard',1,{}, {...options,now,contentOnly:true}),group=new T.Group();group.name='player-home-yard';for(const child of [...view.scene.children])group.add(child);group.updateMatrixWorld(true);
+ const targets=[{kind:'home',id:'home-door',x:0,y:1.2,z:3.2,label:'Enter your home',range:2}];
+ for(const f of C.FINDS.filter(f=>f.area==='yard'))targets.push({kind:'find',id:f.id,x:f.x,y:.6,z:f.z,label:saved.finds.includes(f.id)?'Read '+f.name:'Look closer',range:1.65});
+ for(const t of C.TREES){const hits=C.treeState(saved,t.id,now);if(hits<3)targets.push({kind:'tree',id:t.id,x:t.x,y:1,z:t.z,label:'Chop tree · '+hits+'/3 strikes',range:1.65});}
+ const solids=[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',x:0,z:0,w:5.5,d:4.5,minY:0,maxY:houseBounds.max.y});
+ for(const mesh of view.decor){const p=saved.placed.find(p=>p.id===mesh.userData.placementId),item=C.ITEMS[p.item];if(item.flat)continue;const box=new T.Box3().setFromObject(mesh);solids.push({id:'decoration:'+p.id,x:p.x,z:p.z,w:p.turn%2?item.d:item.w,d:p.turn%2?item.w:item.d,minY:0,maxY:box.max.y});}
+ for(const t of C.TREES)if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:0,maxY:3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:1.6,maxY:7});}
+ return{group,world:view.world,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:C.YARD.ground,blendRadius:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
+}
+root.BurbzPlayerHomeScene={create,createYardContent,ornament,upperRooms,disposeScene};
 })(globalThis);

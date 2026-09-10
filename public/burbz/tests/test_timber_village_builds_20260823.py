@@ -31,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
-CURRENT_BUILD = "homestead-v385-20260910"
+CURRENT_BUILD = "connected-world-v386-20260910"
 PREVIOUS_RELEASE_PIN = "two-crews-v308-20260821"
 
 VILLAGE_TIER = {"cabin", "hut", "lumberhut", "minehut", "well", "cottages", "tavern", "storehouse"}

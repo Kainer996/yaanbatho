@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'map-pictures-v374-20260908','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'homestead-v385-20260910','village_walk_core.js':'map-pictures-v374-20260908'};
+  const PIN={'village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'homestead-v385-20260910','village_walk_core.js':'map-pictures-v374-20260908'};
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();

@@ -41,6 +41,12 @@ BIRDNET_INSTALLER_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/mai
 PHOTO_SCRIPTS_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts"
 
 FILES=(
+  "geographic_cache.js"
+  "geographic_home_picker.js"
+  "geographic_settlement_scene.js"
+  "geographic_world_core.js"
+  "geographic_world.js"
+  "geographic_world.css"
   "index.html"
   "sw.js"
   "woodland_ui.css"

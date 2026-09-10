@@ -47,7 +47,7 @@ function fixture(offers = [original]) {
   };
   const ctx = {
     console, Promise, maplibregl:{LngLatBounds:Bounds}, window:{maplibregl:{LngLatBounds:Bounds},BurbzWalkingQuestUI:require('../walking_quest_ui.js')},
-    geographicPlaces:null, geographicMap3D:null, liveMap:map, liveMapHasPrecisePosition:true, liveMapLastPosition:{lat:53.37,lon:-1.512,accuracy:8},
+    geographicPlaces:null, geographicMap3D:null, geographicMapInspect:false, liveMap:map, liveMapHasPrecisePosition:true, liveMapLastPosition:{lat:53.37,lon:-1.512,accuracy:8},
     liveMapUserMoved:false, liveMapUserMarker:{setLngLat:point => state.markerUpdates.push(point)},
     liveMapSpawns:[], liveMapFeatureCount:0,
     questOverview:{on:false,offers:[...offers],selectedIndex:null,prevZoom:null,areaBirdsWasOpen:null},
