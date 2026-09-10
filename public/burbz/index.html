@@ -39045,10 +39045,57 @@ function showSpeciesInBirdex(speciesName) {
   }));
 }
 
+function birdexSpeciesName(bird, savedKey) {
+  const names = typeof bird === 'string' ? [bird] : [bird?.species, bird?.commonName, bird?.scientificName, bird?.name, savedKey];
+  return names.find(name => name && findSpeciesProfile(name)) || names.find(name => typeof name === 'string' && name.trim()) || '';
+}
+
+function birdexSpeciesKey(bird, savedKey) {
+  const name = birdexSpeciesName(bird, savedKey);
+  if (!name) return '';
+  const profile = findSpeciesProfile(name);
+  // Use the catalogue's full taxon, not a common-name prefix or an accepted
+  // taxonomy lump. Arctic Redpoll and Redpoll retain their different taxa;
+  // trinomial/subspecies identities also remain distinct. Nicknames and owned
+  // individual IDs do not turn one species into several discovery cards.
+  const taxon = profile && (profile.scientificName || profile.scientific);
+  return taxon ? 'taxon:' + speciesKey(taxon) : 'name:' + speciesKey(profile?.name || name);
+}
+
 function discoveredSpeciesSet() {
-  const discovered = new Set(Object.values(gameState.discoveredSpecies || {}).map(r => canonicalSpeciesName(r.species || r.commonName)).filter(Boolean));
-  (gameState.flock || []).forEach(b => discovered.add(canonicalSpeciesName(b.species || b.commonName)));
-  return discovered;
+  const keys = Object.entries(gameState.discoveredSpecies || {})
+    .filter(([, record]) => record && typeof record === 'object')
+    .map(([key, record]) => birdexSpeciesKey(record, key));
+  (gameState.flock || []).forEach(bird => keys.push(birdexSpeciesKey(bird)));
+  return new Set(keys.filter(Boolean));
+}
+
+function birdexSpeciesRows() {
+  const rows = new Map();
+  const ensureRow = (bird, savedKey) => {
+    const key = birdexSpeciesKey(bird, savedKey);
+    if (!key) return null;
+    if (!rows.has(key)) rows.set(key, { bird:createRosterBird(birdexSpeciesName(bird, savedKey)), owned:null, discoveredRecord:null, discovered:false });
+    return rows.get(key);
+  };
+  WILD_BIRDS.forEach(name => ensureRow(name));
+  // A read-only projection: legacy alias entries and their photos/history stay
+  // in the save. Deduplicate the initial roster as well as saved discoveries.
+  Object.entries(gameState.discoveredSpecies || {}).forEach(([savedKey, record]) => {
+    if (!record || typeof record !== 'object') return;
+    const row = ensureRow(record, savedKey);
+    if (!row || row.discoveredRecord) return;
+    const name = birdexSpeciesName(record, savedKey);
+    row.discoveredRecord = { ...record, key:record.key || savedKey, species:record.species || name, commonName:record.commonName || name };
+    row.discovered = true;
+  });
+  (gameState.flock || []).forEach(bird => {
+    const row = ensureRow(bird);
+    if (!row) return;
+    if (!row.owned) row.owned = bird;
+    row.discovered = true;
+  });
+  return [...rows.values()].map(row => ({ ...row, bird:row.owned || (row.discoveredRecord && createBirdFromDiscovery(row.discoveredRecord)) || row.bird }));
 }
 
 function renderBirdex() {
@@ -39089,21 +39136,7 @@ function renderBirdex() {
     companions.forEach((bird, idx) => { grid.innerHTML += createBirdCardHTML(bird, idx); });
   } else {
     const rarityOrder = ['common','uncommon','rare','epic','legendary'];
-    const codexBirds = WILD_BIRDS.map(species => createRosterBird(species));
-    const rosterKeys = new Set(codexBirds.map(b => speciesKey(canonicalSpeciesName(b.species || b.commonName))));
-
-    // Real discoveries outside the original roster belong in the codex too.
-    discoveredSpeciesRecords().forEach(record => {
-      const bird = createBirdFromDiscovery(record);
-      const key = speciesKey(canonicalSpeciesName(bird.commonName || bird.species));
-      if (key && !rosterKeys.has(key)) { rosterKeys.add(key); codexBirds.push(bird); }
-    });
-
-    const visibleBirds = codexBirds.map(bird => {
-      const owned = companionForSpecies(bird.species || bird.commonName);
-      const discoveredRecord = getDiscoveredRecordForSpecies(bird.species || bird.commonName);
-      return { bird, owned, discoveredRecord, discovered: !!(owned || discoveredRecord) };
-    }).filter(row => {
+    const visibleBirds = birdexSpeciesRows().filter(row => {
       if (currentFilter !== 'all' && row.bird.rarity !== currentFilter) return false;
       if (!birdMatchesFamilyFilter(row.bird)) return false;
       if (currentBirdexDiscovery === 'discovered') return row.discovered;

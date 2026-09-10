@@ -12,6 +12,7 @@ const fn = name => {
   return html.slice(start, html.slice(start, lineEnd).endsWith('}') ? lineEnd : html.indexOf('\n}', start) + 2);
 };
 const catalogue = html.slice(html.indexOf('const BURBZ_SPECIES_PROFILES = ['), html.indexOf('function getBirdInfo('));
+let wildNames = null;
 function fixture(saved) {
   const storage = new Map(saved ? [['burbz_state', saved]] : []);
   const calls = { toast: [], encounters: [], quest: [], diary: [], flashes: [], xp: 0, birdXp: 0 };
@@ -27,6 +28,7 @@ function fixture(saved) {
       UK_FINAL=BURBZ_UK_BIRD_EXPANSION_FINAL, UK4=BURBZ_UK_BIRD_EXPANSION_4, AU50=BURBZ_AU_BIRD_EXPANSION_50,
       NATIONAL=BURBZ_NATIONAL_BIRD_COMPLETION_20260715, UK_BIRD_ALIASES=BURBZ_UK_BIRD_ALIAS_COMPLETION_20260803;
     ${catalogue}
+    ${wildNames ? 'const WILD_BIRDS = ' + JSON.stringify(wildNames) + ';' : html.slice(html.indexOf('const WILD_BIRDS = ['), html.indexOf('const HABITAT_BIRD_POOLS = {'))}
     let gameState=JSON.parse(localStorage.getItem('burbz_state') || '{"player":{"xp":0,"coins":0},"flock":[],"discoveredSpecies":{}}');
     let continuousSoundScanWanted=true;
     const SOUND_SESSION_MAX_PER_WINDOW=4, BIRD_BIOLOGY_STATS_VERSION='fixture';
@@ -45,11 +47,12 @@ function fixture(saved) {
     let reenter=null;
     function updateQuestProgress() { const cb=reenter; reenter=null; if(cb)cb(); }
     const document={querySelectorAll:()=>[]};
-    ${['speciesKey','canonicalSpeciesName','discoveryKeysForSpecies','getDiscoveredRecordForSpecies','companionForSpecies','nextDiscoverySightingCount','rememberDiscoveredBird','createBirdEntry','normaliseAcceptedBirdCandidates','recordSoundSessionDiscovery','flashSoundSessionBird','durableSaveState','saveState','handleBirdCandidates'].map(fn).join('\n')}
+    ${['speciesKey','canonicalSpeciesName','discoveryKeysForSpecies','getDiscoveredRecordForSpecies','companionForSpecies','nextDiscoverySightingCount','rememberDiscoveredBird','createBirdEntry','normaliseAcceptedBirdCandidates','recordSoundSessionDiscovery','flashSoundSessionBird','durableSaveState','saveState','handleBirdCandidates','createRosterBird','createBirdFromDiscovery','birdexSpeciesName','birdexSpeciesKey','discoveredSpeciesSet','birdexSpeciesRows'].map(fn).join('\n')}
     function detect(name='Goldcrest', rest=[], opts={}) {
       return handleBirdCandidates({species:name,confidence:.96}, rest, {source:'sound',...opts});
     }
   `, ctx);
+  if (!wildNames) wildNames = JSON.parse(vm.runInContext('JSON.stringify(WILD_BIRDS)', ctx));
   return {ctx, calls, storage, run: code=>vm.runInContext(code, ctx)};
 }
 let n=0;
@@ -115,5 +118,65 @@ check('repeat icon feedback is brief, cancels older animation and respects reduc
   assert.equal(f.run('canceled'),2);assert.equal(f.run('played[0].duration'),420);
   f.run("window.matchMedia=()=>({matches:true}); flashSoundSessionBird('goldcrest');");
   assert.equal(f.run('played.length'),2);assert.equal(f.calls.toast.length,0);
+});
+check('Greenfinch catalogue synonyms produce one discovered card and one count', () => {
+  const f=fixture();
+  assert.notEqual(f.run('findSpeciesProfile("Greenfinch").id'), f.run('findSpeciesProfile("Common Greenfinch").id'), 'exercise the actual overlapping imports');
+  f.run("detect('Common Greenfinch');");
+  assert.equal(f.run('birdexSpeciesRows().filter(r=>r.discovered).length'),1);
+  assert.equal(f.run('discoveredSpeciesSet().size'),1);
+  assert.equal(f.run('birdexSpeciesRows().filter(r=>birdexSpeciesKey(r.bird)===birdexSpeciesKey("Greenfinch")).length'),1);
+});
+check('all Greenfinch labels remain one card through repeat detections and JSON reload', () => {
+  let f=fixture();
+  for (const name of ['Greenfinch','Common Greenfinch','European Greenfinch','Chloris chloris']) {
+    f.run(`detect(${JSON.stringify(name)}); saveState();`);
+    assert.equal(f.run('discoveredSpeciesSet().size'),1);
+    assert.equal(f.run('birdexSpeciesRows().filter(r=>r.discovered).length'),1);
+    assert.equal(f.run('gameState.player.coins'),14);
+    assert.equal(f.run('gameState.player.xp'),8);
+    f=fixture(f.storage.get('burbz_state'));
+  }
+});
+check('projection retains every legacy alias, photo, history, possession and flock individual', () => {
+  const f=fixture(); f.run(`
+    detect('Common Greenfinch'); detect('Greenfinch');
+    gameState.discoveredSpecies.greenfinch.photoId='fixture-photo-a';
+    gameState.discoveredSpecies.common_greenfinch.photoId='fixture-photo-b';
+    gameState.discoveredSpecies.greenfinch.history=[{at:'fixture-earlier'}];
+    gameState.discoveredSpecies.common_greenfinch.history=[{at:'fixture-later'}];
+    gameState.inventory={items:{seed:17},gear:{sword:2}};
+    gameState.flock=[{...createBirdEntry('Common Greenfinch'),id:'owned-a',customName:'Fern',xp:77},
+      {...createBirdEntry('Greenfinch'),id:'owned-b',customName:'Moss',xp:99}];
+    saveState();
+  `);
+  const saved=f.storage.get('burbz_state'), again=fixture(saved);
+  assert.equal(again.run('birdexSpeciesRows().filter(r=>r.discovered).length'),1);
+  assert.equal(again.run('discoveredSpeciesSet().size'),1);
+  assert.equal(again.run('gameState.flock.length'),2);
+  assert.equal(again.run('JSON.stringify(gameState)'),saved, 'view projection must not rewrite or discard save data');
+});
+check('distinct species and full subspecies taxa remain separate discovery cards', () => {
+  const f=fixture();
+  f.run("for(const name of ['Magpie','Australian Magpie','Redpoll','Arctic Redpoll'])detect(name);");
+  assert.equal(f.run('birdexSpeciesRows().filter(r=>r.discovered).length'),4);
+  assert.equal(f.run('discoveredSpeciesSet().size'),4);
+  f.run(`for (const [name,taxon] of [['Fixture northern form','Avis exemplum borealis'],['Fixture southern form','Avis exemplum australis']]) {
+    const p={name,scientificName:taxon};BURBZ_SPECIES_PROFILES.push(p);registerBirdInfoKey(name,p);
+    gameState.discoveredSpecies[speciesKey(name)]={species:name,scientificName:taxon};
+  }`);
+  assert.equal(f.run('discoveredSpeciesSet().size'),6);
+  assert.equal(f.run('birdexSpeciesRows().filter(r=>r.discovered).length'),6);
+});
+check('sparse legacy records and companion-only species agree with the displayed count', () => {
+  const f=fixture(); f.run(`
+    gameState.discoveredSpecies={legacy_scientific:{scientificName:'Chloris chloris',photoId:'retained'},
+      house_sparrow:{sightingCount:3},foreign_save:{species:'Fixture outside catalogue'},empty:null};
+    gameState.flock=[{...createBirdEntry('Fixture companion outside catalogue'),id:'owned-custom'}];
+  `);
+  const before=f.run('JSON.stringify(gameState)');
+  assert.equal(f.run('discoveredSpeciesSet().size'),4);
+  assert.equal(f.run('birdexSpeciesRows().filter(r=>r.discovered).length'),4);
+  assert.equal(f.run('JSON.stringify(gameState)'),before);
 });
 console.log(`${n} discovery regression groups passed`);

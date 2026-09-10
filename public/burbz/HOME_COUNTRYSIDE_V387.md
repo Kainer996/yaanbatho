@@ -2,6 +2,8 @@
 
 Local implementation built from v386 (`085e8ae`), stamped `home-countryside-v387-20260910`. Publishing is a separate step.
 
+The same unreleased batch also includes the [Birdex discovery identity correction](BIRDEX_IDENTITY_V387.md): one card and count per catalogue species, with all saved history and owned individuals retained.
+
 ## Player behavior
 
 The real-life quest map keeps its GPS marker, ordinary camera controls, routes and physical quest authority. Its Walk & fly launcher and virtual-camera override are removed. A separate passive ✦ marks the saved first-person avatar; refreshing it only updates a marker position.
