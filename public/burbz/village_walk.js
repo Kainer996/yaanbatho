@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'homestead-v385-20260910','village_walk_core.js':'map-pictures-v374-20260908'};
+  const PIN={'village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'homestead-v385-20260910','village_walk_core.js':'home-countryside-v387-20260910','first_person_hud.js':'home-countryside-v387-20260910','first_person_hud.css':'home-countryside-v387-20260910','village_walk_scene.js':'home-countryside-v387-20260910'};
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -72,7 +72,7 @@
     el.innerHTML='<div class="vw-look" tabindex="0" role="application" aria-label="Village walking view. WASD moves, arrow keys look, or drag to look."></div><div class="vw-top"><button class="vw-exit" type="button">← Village</button><div class="vw-title"><small>ON FOOT</small><strong></strong></div><button class="vw-fullscreen" type="button" aria-label="Fill the screen" title="Fill the screen">⛶</button></div><span class="vw-reticle" aria-hidden="true"></span><button type="button" class="vw-stick" aria-label="Walk: drag the thumbstick"><span class="vw-knob"></span></button><span class="vw-touch-hint">Drag to look</span><div class="vw-hint" role="status">Opening the village paths…</div><div class="vw-error" hidden><p></p><button type="button">Return to village</button></div>';
     el.querySelector('strong').textContent=options.name||'Your village';
     if(options.exitLabel)el.querySelector('.vw-exit').textContent=options.exitLabel;
-    const s=session={root:el,options,abort:new AbortController(),raf:0,closed:false,failed:false,inert:[],opener:options.opener||document.activeElement,overflow:document.body.style.overflow,intervals:[],samples:[],frames:0,fastStreak:0};
+    const s=session={root:el,options,footsteps:root.BurbzWalkingAudio?.create(),abort:new AbortController(),raf:0,closed:false,failed:false,inert:[],opener:options.opener||document.activeElement,overflow:document.body.style.overflow,intervals:[],samples:[],frames:0,fastStreak:0};
     document.body.appendChild(el);document.body.style.overflow='hidden';
     for(const node of document.body.children)if(node!==el&&node.tagName!=='SCRIPT'&&node.tagName!=='STYLE'){s.inert.push([node,node.inert]);node.inert=true;}
     const on=(node,event,fn,opts={})=>node.addEventListener(event,fn,{...opts,signal:s.abort.signal});
@@ -92,7 +92,7 @@
     on(document,'fullscreenchange',fullChange);on(document,'webkitfullscreenchange',fullChange);
     full.hidden=!(el.requestFullscreen||el.webkitRequestFullscreen);fullscreen();exit.focus({preventScroll:true});
     const keys=new Set(),pointers=new Map(),input={side:0,forward:0};
-    s.reset=()=>{keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();};
+    s.reset=()=>{s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();};
     function fail(error){
       if(s.closed)return;s.failed=true;cancelAnimationFrame(s.raf);s.raf=0;s.reset();
       const box=el.querySelector('.vw-error');box.hidden=false;box.querySelector('p').textContent='Walking is unavailable here. '+(error.message||'Please return to the village and try again.');
@@ -101,6 +101,11 @@
       console.warn('Burbz village walk:',error);
     }
     s.fail=fail;
+    function leaveForWorld(mode='walk'){
+      if(s.closed||s.uiBusy||s.room||!s.player||typeof options.exploreWorld!=='function')return;
+      const pose={...s.player,mode};s.uiBusy=true;s.reset();
+      Promise.resolve().then(()=>options.exploreWorld(pose)).then(result=>{if(result===false)throw Error('The countryside could not open. Try again.');}).catch(error=>{if(!s.closed)hint.textContent=error.message||'The countryside could not open. Try again.';}).finally(()=>{if(!s.closed){s.uiBusy=false;s.reset();}});
+    }
     on(document,'keydown',e=>{
       if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();close('escape');return;}
       if(e.code==='Tab'){
@@ -110,6 +115,7 @@
       if(s.flight&&e.target.tagName==='INPUT')return;
       if(!e.repeat&&s.hud?.key(e.code)){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
+      if(e.code==='KeyF'&&!e.repeat&&!s.room&&options.exploreWorld){e.preventDefault();e.stopImmediatePropagation();leaveForWorld('fly');return;}
       if(!e.repeat&&(s.flight?.key(e.code)||s.rooms?.key(e.code)||(!s.room&&s.harvest?.key(e.code))||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
       if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();keys.add(e.code);}
@@ -160,8 +166,11 @@
         const core=root.BurbzVillageWalkCore,dt=s.last?(ts-s.last)/1000:0;
         if(s.last&&dt>0){s.intervals.push(dt*1000);s.samples.push(dt*1000);if(s.samples.length>600)s.samples.shift();}
         s.last=ts;s.frames++;
+        const before={x:s.player.x,z:s.player.z},movement={side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)};
+        if(!s.room&&!s.flight&&!s.uiBusy&&options.boundaryExit&&core.outwardBoundary(s.player,movement,s.world))leaveForWorld();
         if(s.flight&&!s.room)s.flight.update(dt);
-        else core.move(s.player,{side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0)},dt,s.world);
+        else if(!s.uiBusy)core.move(s.player,movement,dt,s.world);
+        if(!s.uiBusy&&(!s.flight||s.room))s.footsteps?.update(before,s.player,dt,s.room?'wood':s.world.surface?.(s.player.x,s.player.z));else s.footsteps?.reset();
         const turn=Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
         s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))*turn));
         const {camera,renderer,scene}=s.source;

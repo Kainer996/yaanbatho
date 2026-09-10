@@ -4,7 +4,7 @@
   function create(T,scene,buildings,movers,terrain){
     if(!terrain?.heightAt)throw Error('The village ground is still loading.');
     scene.updateMatrixWorld(true);
-    const polygons=[],segments=[],skip=new Set(movers||[]),paid=new Set(buildings);
+    const polygons=[],segments=[],surfaces=[],skip=new Set(movers||[]),paid=new Set(buildings);
     const vector=new T.Vector3(),matrix=new T.Matrix4(),instance=new T.Matrix4();
     function polygon(object,fp){
       const points=[[fp.minX,fp.minZ],[fp.maxX,fp.minZ],[fp.maxX,fp.maxZ],[fp.minX,fp.maxZ]].map(([x,z])=>{
@@ -47,6 +47,14 @@
     }
     scene.traverseVisible(mesh=>{
       if(!mesh.isMesh)return;
+      if(mesh.material?.userData?.footstepSurface==='stone'&&!mesh.isInstancedMesh){
+        const pos=mesh.geometry.attributes.position,index=mesh.geometry.index,count=index?index.count:pos?.count||0;
+        for(let i=0;i<count&&surfaces.length<4096;i+=3){
+          const points=[0,1,2].map(j=>{vector.fromBufferAttribute(pos,index?index.getX(i+j):i+j).applyMatrix4(mesh.matrixWorld);return{x:vector.x,z:vector.z,y:vector.y};});
+          const x=points.reduce((n,p)=>n+p.x,0)/3,z=points.reduce((n,p)=>n+p.z,0)/3;
+          if(points.every(p=>Math.abs(p.y-terrain.heightAt(x,z))<.3))surfaces.push(points);
+        }
+      }
       for(let p=mesh;p;p=p.parent)if(skip.has(p)||paid.has(p)||p.userData.sky||p.userData.walkBridge||p.userData.resident||p.userData.npc)return;
       const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
       if(materials.every(m=>!m||m.transparent||m.userData.blob||m.isMeshBasicMaterial))return;
@@ -56,7 +64,7 @@
     if(terrain.river){const r=terrain.river,span=r.width+2.2;
       for(const side of [-.73,.73])segments.push([-span/2,span/2].map(d=>({x:r.x+r.ux*d-r.uz*side,z:r.z+r.uz*d+r.ux*side})));
     }
-    return root.BurbzVillageWalkCore.createWorld({...terrain,polygons,segments});
+    return root.BurbzVillageWalkCore.createWorld({...terrain,polygons,segments,surfaceAt:(x,z)=>surfaces.some(p=>root.BurbzVillageWalkCore.inside(x,z,p))?'stone':'ground'});
   }
   function batch(T,scene,movers){
     const skip=new Set(movers||[]),buckets=new Map(),hidden=[],created=[];

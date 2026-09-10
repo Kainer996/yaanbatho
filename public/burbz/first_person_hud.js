@@ -17,8 +17,19 @@ function attach(s){
  function stats(){return s.options.character?.()||{};}
  function paintPack(){const c=stats(),dl=panel.querySelector('dl'),key=JSON.stringify([c.coins,c.branches,c.stone]);if(key===packKey)return;packKey=key;dl.replaceChildren();for(const [name,value] of [['Coins',c.coins],['Timber',c.branches],['Stone',c.stone]]){if(!Number.isFinite(value))continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=Math.max(0,Math.floor(value)).toLocaleString();dl.append(dt,dd);}text(panel.querySelector('.fp-pack-note'),s.options.flight?'You are exploring the Academy. Room services open when you approach them.':'Face a tree to chop timber, read the illustrated scrolls, and talk to the village folk. Your finds stay saved when you leave.');}
  on(pack,'click',showPack);on(panel.querySelector('button'),'click',closePanel);
+ if(typeof s.options.exploreWorld==='function'){
+  for(const [label,mode] of [['Walk beyond this settlement','walk'],['Fly into the world','fly']]){
+  const travel=document.createElement('button');travel.type='button';travel.className='fp-world';travel.textContent=label;panel.append(travel);
+  on(travel,'click',async()=>{if(travel.disabled||s.room)return;for(const b of panel.querySelectorAll('.fp-world'))b.disabled=true;
+   try{const opened=await s.options.exploreWorld({...s.player,mode});if(opened===false)throw Error('The world could not open. Please try again.');}
+   catch(error){text(panel.querySelector('.fp-pack-note'),error.message||'The world could not open. Please try again.');}
+   finally{for(const b of panel.querySelectorAll('.fp-world'))b.disabled=false;}
+  });
+  }
+ }
  function move(selector,parent){const node=el.querySelector(selector);if(node&&node.parentNode!==parent)parent.append(node);return node;}
  function update(time){if(time-last<.12)return;last=time;
+  for(const b of panel.querySelectorAll('.fp-world'))b.hidden=!!s.room;
   const c=stats();pack.hidden=typeof s.options.character!=='function';if(!s.room&&s.options.exitLabel)text(el.querySelector('.vw-exit'),s.options.exitLabel);text(title,c.name||'Alderwing keeper');text(level,Number.isFinite(c.level)?'Level '+Math.max(1,Math.floor(c.level))+' · '+(s.options.flight?'Academy explorer':'Wayfarer'):'Wayfarer');
   const angle=(((s.player?.yaw||0)*-180/Math.PI)%360+360)%360;const directions=['N','NE','E','SE','S','SW','W','NW'];text(bearing,directions[Math.round(angle/45)%8]+' · '+Math.round(angle)+'°');
   const journal=move('.vd-journal',tools);if(journal)journal.hidden=!!s.room;const guide=move('.vd-guide',tracker);

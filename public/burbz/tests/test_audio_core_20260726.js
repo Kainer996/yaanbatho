@@ -151,7 +151,7 @@ test('bespoke cues play once without legacy composite follow-ups', async () => {
     [
       'assets/audio/sfx-capture.mp3',
       'assets/audio/sfx-victory.mp3',
-      'assets/audio/sfx-level-up.mp3',
+      'assets/audio/reward-level-up.mp3',
       'assets/audio/sfx-quest-complete.mp3'
     ]
   );

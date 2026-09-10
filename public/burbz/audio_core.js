@@ -40,6 +40,9 @@
     coins: 'assets/audio/ui-coins.mp3',
     build: 'assets/audio/sfx-build.mp3',
     error: 'assets/audio/sfx-defeat-error.mp3',
+    footstepGround: Object.freeze(['assets/audio/footsteps/footstep-soft-ground-01.mp3','assets/audio/footsteps/footstep-soft-ground-02.mp3']),
+    footstepWood: Object.freeze(['assets/audio/footsteps/footstep-wood-01.mp3','assets/audio/footsteps/footstep-wood-02.mp3']),
+    footstepStone: Object.freeze(['assets/audio/footsteps/footstep-stone-01.mp3','assets/audio/footsteps/footstep-stone-02.mp3']),
     residentChatter: Object.freeze(Array.from({length:16}, function(_, i) {
       return 'assets/audio/little-folk/mumble-' + String(i + 1).padStart(2, '0') + '.mp3';
     }))
@@ -169,6 +172,9 @@
         removeActive(entry);
       });
     }
+    function stopFootsteps() {
+      active.slice().filter(function(entry){return entry.name.indexOf('footstep')===0;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
+    }
 
     function setEnabled(value) {
       localEnabled = !!value;
@@ -182,7 +188,7 @@
     function chooseSource(name) {
       var candidate = manifest[name];
       if (Array.isArray(candidate)) {
-        if (name === 'residentChatter' && candidate.length > 1) {
+        if ((name === 'residentChatter' || name.indexOf('footstep')===0) && candidate.length > 1) {
           candidate = candidate.filter(function(src) { return src !== lastSource[name]; });
         }
         if (!candidate.length) return null;
@@ -327,6 +333,13 @@
       setEnabled: setEnabled,
       isEnabled: isEnabled,
       stopAll: stopAll,
+      stopFootsteps: stopFootsteps,
+      footstep: function(surface) {
+        if(active.some(function(entry){return entry.name.indexOf('footstep')===0;}))return Promise.resolve(false);
+        var name={wood:'footstepWood',stone:'footstepStone'}[surface]||'footstepGround';
+        return play(name,{volume:0.26,maxPolyphony:1,cooldown:280,playbackRate:1+(random()*2-1)*0.035});
+      },
+      createFootsteps: function(){return createFootstepController({enabled:isEnabled,play:function(surface){return manager.footstep(surface);},stop:stopFootsteps});},
       tap: function(opts) { return play('tap', opts); },
       page: function(opts) { return play('page', opts); },
       capture: function(opts) { return play('capture', opts); },
@@ -351,6 +364,24 @@
       set: setEnabled
     });
     return manager;
+  }
+
+  // Distance measured around a real movement call, never a key or camera pose.
+  // Call reset on menus, scene changes, blur and teardown. No timers or save data.
+  function createFootstepController(options) {
+    var remaining=0.18,idle=0,sinceStep=1;
+    function reset(){remaining=0.18;idle=0;options.stop();}
+    function update(before,after,dt,surface) {
+      if(!before||!after||!Number.isFinite(dt)||dt<=0||dt>0.25||!options.enabled()){reset();return false;}
+      sinceStep+=dt;
+      var distance=Math.hypot(after.x-before.x,after.z-before.z);
+      if(!Number.isFinite(distance)||distance>4*dt+0.03){reset();return false;}
+      if(distance<0.00001){idle+=dt;if(idle>0.12)reset();return false;}
+      idle=0;remaining-=distance;
+      if(remaining>0||sinceStep<0.32)return false;
+      remaining+=1.2;sinceStep=0;options.play(surface);return true;
+    }
+    return {update:update,reset:reset,dispose:reset};
   }
 
   function musicVolumeForZoom(zoom, options) {
@@ -646,6 +677,7 @@
   return {
     DEFAULT_SOUND_MANIFEST: DEFAULT_SOUND_MANIFEST,
     createAudioManager: createAudioManager,
+    createFootstepController: createFootstepController,
     createMusicManager: createMusicManager,
     musicVolumeForZoom: musicVolumeForZoom,
     classifyInteraction: classifyInteraction

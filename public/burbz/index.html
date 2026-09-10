@@ -3669,16 +3669,18 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 @media (prefers-reduced-motion:reduce) { .quest-category.spotlit { animation:none; box-shadow:0 0 0 3px rgba(240,199,103,.8); } }
 
 /* Shortfall prompt: a build the purse can't cover offers a quest instead. */
-.resource-quest-overlay { position:fixed; inset:0; z-index:640; display:none; align-items:center; justify-content:center; padding:24px 18px; background:rgba(4,6,5,.72); backdrop-filter:blur(4px); }
+.resource-quest-overlay { position:fixed; inset:0; z-index:640; display:none; align-items:center; justify-content:center; padding:24px 18px; background:transparent; border:0; width:100%; height:100%; max-width:none; max-height:none; margin:0; overflow-y:auto; color:var(--text); }
+.resource-quest-overlay::backdrop { background:#000b; backdrop-filter:blur(4px); }
+.resource-quest-choices { display:grid; gap:8px; }
 .resource-quest-overlay.open { display:flex; }
-.resource-quest-card { width:100%; max-width:340px; border-radius:18px; padding:18px 16px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); box-shadow:0 14px 44px rgba(0,0,0,.6); text-align:center; animation:qccPop .3s cubic-bezier(.2,1.4,.4,1); }
+.resource-quest-card { width:100%; max-width:340px; border-radius:18px; padding:18px 16px; background:linear-gradient(180deg,#1b1810,#0d0c08); border:1px solid rgba(214,168,79,.32); box-shadow:0 14px 44px rgba(0,0,0,.6); text-align:center; }
 @media (prefers-reduced-motion:reduce) { .resource-quest-card { animation:none; } }
 .resource-quest-icon { font-size:36px; margin-bottom:4px; }
 .resource-quest-title { font-family:'Rajdhani',sans-serif; font-weight:900; font-size:17px; letter-spacing:.05em; text-transform:uppercase; color:#f4ead4; }
 .resource-quest-copy { font-size:12.5px; line-height:1.5; color:var(--text2); margin:8px 0 14px; }
 .resource-quest-go { width:100%; min-height:44px; border-radius:12px; padding:10px 12px; background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; letter-spacing:.06em; text-transform:uppercase; }
 .resource-quest-go:active { transform:scale(.985); }
-.resource-quest-later { width:100%; min-height:36px; margin-top:8px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text3); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
+.resource-quest-later { width:100%; min-height:44px; margin-top:8px; border-radius:12px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:800; font-size:12px; letter-spacing:.05em; text-transform:uppercase; }
 .quest-duration { font-size:10px; font-weight:800; letter-spacing:.06em; color:var(--text3); background:rgba(214,168,79,.14); border:1px solid rgba(214,168,79,.25); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
 .quest-away-card { display:flex; align-items:center; gap:12px; margin:0 0 10px; padding:12px; border-radius:16px; border:1px solid rgba(120,200,140,.28); background:linear-gradient(135deg,rgba(60,120,80,.14),rgba(0,0,0,.3)); box-shadow:0 6px 18px rgba(0,0,0,.22); cursor:pointer; transition:transform .15s ease; }
 .quest-away-card:active { transform:scale(.98); }
@@ -4435,8 +4437,8 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
-<link rel="stylesheet" href="geographic_world.css?v=connected-world-v386-20260910">
-<link rel="stylesheet" href="scan_home.css?v=enchanted-study-v384-20260910">
+<link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
+<link rel="stylesheet" href="scan_home.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 </head>
@@ -4506,7 +4508,6 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div id="mapQuestFocusFacts"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-secondary" id="mapQuestFocusDetails">Walk details</button><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
-        <button type="button" id="mapWorldExploreBtn" class="map-world-explore">Walk &amp; fly</button>
         <button type="button" class="map-area-birds-tab" id="mapAreaBirdsToggle" aria-label="Open Area Birds">Area Birds <span aria-hidden="true">›</span></button>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
@@ -4555,9 +4556,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
         </div>
       </div>
+      <section id="scanHomeVillageSection" class="scan-home-villages" aria-labelledby="scanHomeVillagesTitle" hidden><div class="scan-home-section-head"><h2 id="scanHomeVillagesTitle">Your villages</h2><button type="button" id="scanHomeAllVillages"><span id="scanHomeVillageCount"></span> ↗</button></div><div id="scanHomeVillages" class="scan-home-village-list"></div></section>
       <section class="scan-home-today" aria-labelledby="scanHomeTodayTitle"><div class="scan-home-section-head"><h2 id="scanHomeTodayTitle">Around your world</h2><span>Little things you can do</span></div><div id="scanHomeActions" class="scan-home-actions"></div></section>
       <section id="scanHomeRouteSection" class="scan-home-destinations" aria-labelledby="scanHomeRoutesTitle"><div class="scan-home-section-head"><h2 id="scanHomeRoutesTitle">Explore Alderwing</h2><span>Your world, one tap away</span></div><div id="scanHomeRoutes" class="scan-home-routes"></div></section>
-      <section id="scanHomeVillageSection" class="scan-home-villages" aria-labelledby="scanHomeVillagesTitle" hidden><div class="scan-home-section-head"><h2 id="scanHomeVillagesTitle">Your villages</h2><button type="button" id="scanHomeAllVillages"><span id="scanHomeVillageCount"></span> ↗</button></div><div id="scanHomeVillages" class="scan-home-village-list"></div></section>
       <section class="scan-home-tools" aria-label="Scanning session">
       <!-- Session tools remain below the prominent home scanning controls. -->
       <div class="scan-mode-toggle">
@@ -5545,15 +5546,15 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="player_home_core.js?v=connected-world-v386-20260910"></script>
+<script src="audio_core.js?v=home-countryside-v387-20260910"></script>
+<script src="player_home_core.js?v=home-countryside-v387-20260910"></script>
 <script src="player_home_scene.js?v=connected-world-v386-20260910"></script>
-<script src="player_home.js?v=connected-world-v386-20260910"></script>
+<script src="player_home.js?v=home-countryside-v387-20260910"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_world.js?v=connected-world-v386-20260910"></script>
+<script src="geographic_world.js?v=home-countryside-v387-20260910"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -6512,6 +6513,7 @@ const oscillatorSfxFallback = {
 const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioManager === 'function'
   ? window.BurbzAudioCore.createAudioManager({ getEnabled: () => sfxEnabled })
   : oscillatorSfxFallback;
+window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
@@ -7234,13 +7236,12 @@ function refreshAllScreens() {
   window.BurbzGeographicHomePicker?.close('save-replaced');
   window.BurbzGeographicWorld?.close('save-replaced');
   geographicWorldVisit=null;
-  geographicMapInspect=false;
-  geographicMapPendingPose=null;
+  geographicAvatarMarker?.remove();geographicAvatarMarker=null;
   window.BurbzPlayerHome?.close('save-replaced');
   loadState();
   if(window.BurbzPlayerHomeCore)gameState.playerHome=BurbzPlayerHomeCore.normalize(gameState.playerHome,localStorage.getItem(BURBZ_INTRO_SEEN_KEY)==='1'||gameState.player.level>1||gameState.flock.length>0);
-  refreshGeographicHomeMarkers();
   updateHeader();
+  refreshGeographicAvatarMarker();
   initQuests();
   renderBirdex();
   renderBattleSelect();
@@ -15107,22 +15108,36 @@ function questCategoryIsOpen(id) { return !!questCategoryOpenMap()[id]; }
 function setQuestCategoryOpen(id, open) { questCategoryOpenMap()[id] = !!open; }
 
 // ---- Shortfall prompt -------------------------------------------------------
-// A build the player can't pay for is not a dead end. One tap takes them all
-// the way to the matching send-bird sheet, with the useful drawer left open
-// behind it for the next errand.
+// Coin shortages offer three earning routes; other materials retain their
+// existing matching send-bird sheet. Neither path automatically sends a bird.
 const RESOURCE_QUEST_ROUTES = {
   coins:    { icon:'🪙', noun:'coins',  category:'treasure', drawerLabel:'Coin & Treasure', templateId:'find_coins' },
   branches: { icon:'🪵', noun:'timber', category:'timber',   drawerLabel:'Timber & Building', templateId:'branch_run' },
   stone:    { icon:'🪨', noun:'stone',  category:'materials', drawerLabel:'Materials', templateId:'stone_run' }
 };
 
+// A native modal stays above first-person canvases and existing shop sheets.
 function resourceQuestOverlayEl() {
   let el = document.getElementById('resourceQuestOverlay');
   if (!el) {
-    el = document.createElement('div');
+    el = document.createElement('dialog');
     el.id = 'resourceQuestOverlay';
     el.className = 'resource-quest-overlay';
-    el.addEventListener('click', e => { if (e.target === el) closeResourceQuestPrompt(); });
+    el.setAttribute('aria-labelledby', 'coinShortageTitle');
+    el.setAttribute('aria-describedby', 'coinShortageCopy');
+    el.innerHTML = '<div class="resource-quest-card"><div class="resource-quest-icon" aria-hidden="true">🪙</div><h2 class="resource-quest-title" id="coinShortageTitle">A few more coins</h2><p class="resource-quest-copy" id="coinShortageCopy"></p><div class="resource-quest-choices"><button type="button" class="resource-quest-go" data-coin-route="quest">Send a bird on a quest</button><button type="button" class="resource-quest-go" data-coin-route="errand">Send a bird on an errand</button><button type="button" class="resource-quest-go" data-coin-route="market">Go to the marketplace</button></div><button type="button" class="resource-quest-later" data-coin-route="dismiss">Back · Maybe later</button></div>';
+    el.addEventListener('click', e => {
+      const route=e.target.closest('[data-coin-route]')?.dataset.coinRoute;
+      if (route) openCoinShortageRoute(route);
+      else if (e.target === el) closeResourceQuestPrompt();
+    });
+    el.addEventListener('cancel', e => { e.preventDefault(); closeResourceQuestPrompt(); });
+    // Do not let a modal key also move/close the world behind it.
+    window.addEventListener('keydown', e => {
+      if (!el.open) return;
+      e.stopImmediatePropagation();
+      if (e.key === 'Escape') { e.preventDefault(); closeResourceQuestPrompt(); }
+    }, true);
     document.body.appendChild(el);
   }
   return el;
@@ -15130,7 +15145,38 @@ function resourceQuestOverlayEl() {
 
 function closeResourceQuestPrompt() {
   const el = document.getElementById('resourceQuestOverlay');
-  if (el) el.classList.remove('open');
+  if (!el?.open) return false;
+  el.classList.remove('open');
+  el.close();
+  return true;
+}
+
+function showCoinShortage(need, goal) {
+  const have=Number(gameState?.player?.coins)||0;
+  const short=Math.max(1,Math.ceil(need-have));
+  const el=resourceQuestOverlayEl();
+  el.querySelector('#coinShortageCopy').textContent=goal+' needs '+short.toLocaleString('en-GB')+' more coins. Choose where to earn or trade.';
+  el.classList.add('open');
+  el.inert=false; // A previous first-person session may have made body siblings inert.
+  if (!el.open) el.showModal();
+  el.querySelector('[data-coin-route="quest"]').focus({preventScroll:true});
+}
+
+function openCoinShortageRoute(route) {
+  if (!['quest','errand','market','dismiss'].includes(route)) return;
+  closeResourceQuestPrompt();
+  if (route==='dismiss') return;
+  villageCloseShop();
+  closeBuildingInterior();
+  closeWalkQuestSheet();
+  closeQuestOverlay();
+  if (route==='market') {
+    if (magpieMarketTradeReady()) openAcademyRoom('magpie_market');
+    else focusMagpieMarketBuild();
+  } else {
+    openQuestBoardCategory('treasure');
+    if (route==='errand' && currentScreen==='quests') openQuestSend('find_coins');
+  }
 }
 
 // Room labels sometimes carry their own article ("The Crowbar") — add one only
@@ -15140,6 +15186,7 @@ function goalWithThe(label) { return /^the\s/i.test(label) ? label : 'The ' + la
 // kind: 'coins' | 'branches'. need: the full cost. goal: what the player was
 // trying to raise ("The Alehouse", "A birdhouse in Elmbrook").
 function showResourceQuestPrompt(kind, need, goal, customRoute) {
+  if (kind === 'coins') { showCoinShortage(need, goal); return; }
   const route = customRoute || RESOURCE_QUEST_ROUTES[kind];
   if (!route) return;
   const have = Number.isFinite(Number(route.have)) ? Number(route.have)
@@ -15154,9 +15201,8 @@ function showResourceQuestPrompt(kind, need, goal, customRoute) {
   requestAnimationFrame(() => requestAnimationFrame(() => openQuestSend(route.templateId)));
 }
 
-// Every construction purse uses this same escape hatch. The first missing
-// resource wins, so one tap opens one useful send-bird sheet instead of a
-// dead button or a shopping list of problems.
+// Every construction purse uses the same shortage guard. Coins take priority
+// only when coins are actually missing; other materials keep their own route.
 function showBuildResourceQuest(cost, goal) {
   const need = cost || {};
   if ((gameState.player.coins || 0) < (need.coins || 0)) { showResourceQuestPrompt('coins', need.coins, goal); return true; }
@@ -15732,7 +15778,7 @@ function openBarracksRecruitCard(key) {
     '<div class="barracks-detail-species">' + escapeHtml(bird.scientificName || bird.species || '') + ' · ' + escapeHtml((bird.rarity || 'common').toUpperCase()) + '</div>' +
     '<div class="barracks-detail-stats">' + [['ATK',bird.atk],['DEF',bird.def],['SPD',bird.spd],['MAG',bird.mag],['INT',bird.int],['STAM',bird.stamina]].map(s => '<div class="barracks-detail-stat"><span>' + s[0] + '</span>' + (s[1] || 0) + '</div>').join('') + '</div>' +
     '<div class="barracks-detail-copy">' + escapeHtml(description) + '</div>' +
-    '<button class="barracks-detail-recruit" data-action="barracks-recruit" data-barracks-key="' + escapeHtml(candidate.key) + '" ' + (canAfford ? '' : 'disabled') + '>' + (canAfford ? 'Recruit · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
+    '<button class="barracks-detail-recruit" data-action="barracks-recruit" data-barracks-key="' + escapeHtml(candidate.key) + '" ' + (canAfford ? '' : 'data-coin-shortage="true"') + '>' + (canAfford ? 'Recruit · ' + cost + ' coins' : 'Need ' + cost + ' coins') + '</button></div></div>';
   detail.querySelector('[data-action="barracks-back"]')?.addEventListener('click', renderBarracksRecruitList);
   detail.querySelector('[data-action="barracks-recruit"]')?.addEventListener('click', e => barracksRecruitBird(e.currentTarget.dataset.barracksKey));
 }
@@ -18774,7 +18820,7 @@ function applyBurbzCameraPadding() {
     if (!current || Object.keys(padding).some(key => current[key] !== padding[key])) liveMap.setPadding(padding);
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!geographicMapInspect && !questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); refreshGeographicHomeMarkers(); frameGeographicJourneyOnMap(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); refreshGeographicAvatarMarker(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { window.BurbzFieldMapUI?.apply(liveMap); }
 // Real elevation and woodland are optional. Sustained slow movement pauses
 // the terrain mesh while retaining pitched trees and real-elevation shading.
@@ -19164,7 +19210,7 @@ function openTrailTavernSheet(quest, opts = {}) {
       TRAIL_TAVERN_DRINKS.map(d => {
         const afford = (gameState.player.coins || 0) >= d.cost;
         const forFlock = !!TAVERN_ROUNDS[d.boon.instant];
-        return '<button class="tavern-drink' + (forFlock ? ' for-flock' : '') + '" data-drink="' + d.id + '" ' + (afford ? '' : 'disabled') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙' + (forFlock ? '<span class="tavern-drink-tag">WHOLE FLOCK</span>' : '') + '</div><div class="tavern-drink-desc">' + escapeHtml(d.desc) + '</div></div></button>';
+        return '<button class="tavern-drink' + (forFlock ? ' for-flock' : '') + '" data-drink="' + d.id + '" ' + (afford ? '' : 'data-coin-shortage="true"') + '><div class="tavern-drink-icon">' + d.icon + '</div><div class="tavern-drink-main"><div class="tavern-drink-name">' + escapeHtml(d.name) + ' · ' + d.cost + ' 🪙' + (forFlock ? '<span class="tavern-drink-tag">WHOLE FLOCK</span>' : '') + '</div><div class="tavern-drink-desc">' + escapeHtml(d.desc) + '</div></div></button>';
       }).join('');
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()">✕</button>' +
@@ -19185,7 +19231,7 @@ function buyTrailTavernDrink(drinkId) {
   if (!quest || !quest.trailTavern || quest.trailTavern.drinkBought) return;
   const drink = TRAIL_TAVERN_DRINKS.find(d => d.id === drinkId);
   if (!drink) return;
-  if ((gameState.player.coins || 0) < drink.cost) { showToast('Not enough coins for ' + drink.name); return; }
+  if ((gameState.player.coins || 0) < drink.cost) { showResourceQuestPrompt('coins', drink.cost, drink.name); return; }
   addCoins(-drink.cost);
   quest.trailTavern.drinkBought = drink.id;
   const round = TAVERN_ROUNDS[drink.boon.instant];
@@ -21876,7 +21922,7 @@ Object.assign(window, {
   }
 });
 
-function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); geographicMapInspect = false; geographicMapPendingPose = null; liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
+function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
   function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const from = liveMap.getZoom() || BURBZ_START_ZOOM; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(liveMapZoomCeiling(), from + delta)); if (delta > 0 && z <= from + 0.001) { tellQuestZoomLockOnce(); return; } liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
@@ -21927,7 +21973,7 @@ function handleLivePosition(pos, fly) {
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
-async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, at:opts.at ?? liveMapLastPosition?.at, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (!geographicPlaces?.inside && !geographicMapInspect && !questMapInspectionMode() && opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!geographicPlaces?.inside && !geographicMapInspect && !questMapInspectionMode() && opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = createGeographicMarker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } geographicPlaces?.update(); if (!opts.precise) return;
+async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, at:opts.at ?? liveMapLastPosition?.at, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (!geographicPlaces?.inside && !questMapInspectionMode() && opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!geographicPlaces?.inside && !questMapInspectionMode() && opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = createGeographicMarker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } geographicPlaces?.update(); if (!opts.precise) return;
   if (mapRegionForCoords(lat, lon) === 'unsupported') {
     liveMapSpawns = [];
     liveMapFeatureCount = 0;
@@ -23142,6 +23188,7 @@ document.addEventListener('click', ev => {
 let currentScreen = 'map';
 
 function switchScreen(name) {
+  closeResourceQuestPrompt();
   // Every Stores shortcut uses the same existing progression gate as the dock.
   if (name === 'inventory' && !featureGateOpen('inventory')) { showToast(featureUnlockHint('inventory')); return false; }
   if (name === currentScreen) return;
@@ -29760,7 +29807,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=connected-world-v386-20260910';
+        script.src = 'village_walk.js?v=home-countryside-v387-20260910';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29781,13 +29828,15 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     window.BurbzVillageWalk.open({
       name: currentVillage().name, seed, opener:button, exitLabel:geographicWorldVisit?'← World':'← Village', interiors: buildingRoomsAdapter(),
       discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
+      exploreWorld:pose=>exploreFromSettlement(currentVillage(),pose),
+      boundaryExit:pose=>exploreFromSettlement(currentVillage(),pose),
       source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
       suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
       animate: t => villageAnimateFrame(t, true),
       resume: (reason, failed) => {
         if(returnFromGeographicSettlement(reason))return;
-        if (reason === 'navigation' || reason === 'pagehide') return;
+        if (reason === 'navigation' || reason === 'pagehide' || reason === 'world') return;
         if (failed && villageRenderer?.getContext().isContextLost()) villageFallbackMode = true;
         if (currentScreen === 'village') { onVillageResize(); renderVillage(); }
       }
@@ -29807,11 +29856,13 @@ $('townWalkBtn')?.addEventListener('click',async()=>{
     if(!Number.isFinite(seed)||!townScene?.userData.walkTerrain||townFallbackMode)throw Error('The 3D town is not ready. Please try again.');
     window.BurbzVillageWalk.open({name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
       discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),interiors:buildingRoomsAdapter(),
+      exploreWorld:pose=>exploreFromSettlement(settlement.centroid,pose),
+      boundaryExit:pose=>exploreFromSettlement(settlement.centroid,pose),
       source:()=>({scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,
         movers:[...townNpcs,...townWalkers,...townTraffic,...townLivestock,...townFlocks,...townRoofBirds,...townChickens,...townWindmills,...townCloths,...townSigns]}),
       suspend:()=>{townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);},
       animate:t=>townAnimateFrame(t,true),
-      resume:(reason,failed)=>{if(returnFromGeographicSettlement(reason))return;if(reason==='navigation'||reason==='pagehide')return;if(failed&&townRenderer?.getContext().isContextLost())townFallbackMode=true;if(currentScreen==='town'){onTownResize();renderTownScreen();}}
+      resume:(reason,failed)=>{if(returnFromGeographicSettlement(reason))return;if(reason==='navigation'||reason==='pagehide'||reason==='world')return;if(failed&&townRenderer?.getContext().isContextLost())townFallbackMode=true;if(currentScreen==='town'){onTownResize();renderTownScreen();}}
     });
   }catch(error){showToast(error.message);}finally{button.disabled=false;}
 });
@@ -29833,7 +29884,7 @@ async function flyAcademy(roomId) {
     window.BurbzVillageWalk.open({name:'The Academy',character:walkingCharacterState,flight:true,room:roomId?{scope:'academy',buildingId:roomId}:null,interiors:buildingRoomsAdapter(),
       source:()=>({scene:st.scene,renderer:st.renderer,camera:st.camera,buildings:st.houses,movers:[]}),
       suspend:()=>{st.borrowed=true;engine.pause();clearInterval(academyTreeLightTimer);},
-      resume:(reason,failed)=>{st.borrowed=false;if(reason==='navigation'||reason==='pagehide')return;
+      resume:(reason,failed)=>{st.borrowed=false;if(reason==='navigation'||reason==='pagehide'||reason==='world')return;
         if(failed&&st.renderer?.getContext().isContextLost()){academy3dBroken=true;engine.stop();ACADEMY_3D=null;}
         if(currentScreen==='academy'){applyAcademyView();if(fromRoom&&reason!=='building-action')openAcademyRoom(roomId);}
       }
@@ -29924,7 +29975,7 @@ async function walkBuildingInterior(button) {
     window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,character:walkingCharacterState,seed:view.seed,room:roomTarget,interiors:buildingRoomsAdapter(),source:()=>source,
       suspend:()=>{ if(town){townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);} else {villageRunning=false;cancelAnimationFrame(villageAnimationRequest);clearTimeout(villagePauseTimer);} },
       resume:(reason,failed)=>{
-        if(reason==='navigation'||reason==='pagehide')return;
+        if(reason==='navigation'||reason==='pagehide'||reason==='world')return;
         if(failed&&source.renderer.getContext().isContextLost()){if(town)townFallbackMode=true;else villageFallbackMode=true;}
         if(currentScreen===screen){if(town){onTownResize();renderTownScreen();}else{onVillageResize();renderVillage();}
           if(reason!=='building-action')openBuildingInterior(view.seed,view.buildingId,view.mode);}
@@ -30123,10 +30174,9 @@ function closeBuildingInterior() {
 // off to the quest board, the door closes quietly behind us.
 function buildingInteriorBuild(seed, buildingId) {
   empireBuildStructure(seed, buildingId);
-  // Coin and timber shortfalls now jump straight to the matching send sheet;
-  // leave the building behind when that navigation happens.
+  // Keep the building underneath the coin choices until a route is chosen.
   const resourcePrompt = document.getElementById('resourceQuestOverlay');
-  if (resourcePrompt && resourcePrompt.classList.contains('open')) { closeBuildingInterior(); return; }
+  if (resourcePrompt?.open) return;
   if (currentScreen !== 'village' && currentScreen !== 'town') { closeBuildingInterior(); return; }
   renderBuildingInterior();
 }
@@ -30988,7 +31038,7 @@ function villageCobbleMaterial(pal) {
   return new THREE.MeshStandardMaterial({
     map, normalMap, normalScale: new THREE.Vector2(0.9, 0.9),
     color: new THREE.Color(pal.stone).offsetHSL(0, -0.04, 0.12),
-    roughness: 0.95, metalness: 0
+    roughness: 0.95, metalness: 0, userData:{footstepSurface:'stone'}
   });
 }
 function villageScaleUV(geo, sx, sy) {
@@ -36280,7 +36330,7 @@ function villageBuy(shopKey, itemId) {
 
   if (!requireMagpieMarketTrade()) return;
 
-  if (coins < item.price) { showToast('Not enough coins — win battles and finish quests to earn more!'); return; }
+  if (coins < item.price) { showResourceQuestPrompt('coins', item.price, item.label); return; }
 
   // Pantry food packs
   if (item.food) {
@@ -36586,7 +36636,7 @@ function recruitDiscoveredBird(key) {
   if (companionForSpecies(record.species || record.commonName)) { showToast('Already travelling with ' + (record.commonName || record.species)); return false; }
   const bird = createBirdFromDiscovery(record);
   const cost = recruitCostForBird(bird);
-  if ((gameState.player.coins || 0) < cost) { showToast('Need ' + cost + ' coins to recruit ' + bird.commonName); return false; }
+  if ((gameState.player.coins || 0) < cost) { showResourceQuestPrompt('coins', cost, 'Recruiting ' + bird.commonName); return false; }
   addCoins(-cost);
   bird.recruitedAt = new Date().toISOString();
   ensureBirdAcademy(bird);
@@ -37614,7 +37664,7 @@ function magpieMarketBuy(id, qty) {
   if (!mat) return;
   const quote = magpieMarketBuyQuote(id, qty);
   if (!quote.each) { showToast('The magpies do not deal in that.'); return; }
-  if (!quote.qty) { showResourceQuestPrompt('coins', quote.each, 'a ' + mat.label); return; }
+  if (quote.qty < qty) { showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + mat.label); return; }
   // Make somewhere to put the goods BEFORE taking the coins: a save with no
   // item bag must never charge the player for a material it then drops.
   if (!gameState.inventory || typeof gameState.inventory !== 'object') gameState.inventory = {};
@@ -37632,8 +37682,8 @@ function magpieMarketBuy(id, qty) {
 }
 
 // One counter row per material: what it is, how many you hold, and the four
-// deals available on it. Buttons the purse or the shelf cannot cover render
-// disabled rather than vanishing, so the price stays readable.
+// deals available on it. Unaffordable buys remain actionable for the earning
+// choices; the purchase guard rechecks the full quantity before spending.
 function magpieMarketRowHTML(mat) {
   const owned = magpieMarketOwned(mat.id);
   const one = magpieMarketBuyQuote(mat.id, 1);
@@ -37642,12 +37692,8 @@ function magpieMarketRowHTML(mat) {
   const sellOne = storesSellQuote('material', mat.id, 1);
   const sellAll = storesSellQuote('material', mat.id, 'all');
   const deals = [
-    one.qty
-      ? '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',1)">BUY 1 · −' + one.each + ' 🪙</button>'
-      : '<button type="button" class="magpie-btn buy" disabled>BUY 1 · −' + one.each + ' 🪙</button>',
-    five.qty >= 5
-      ? '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',5)">BUY 5 · −' + buyFive + ' 🪙</button>'
-      : '<button type="button" class="magpie-btn buy" disabled>BUY 5 · −' + buyFive + ' 🪙</button>',
+    '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',1)">BUY 1 · −' + one.each + ' 🪙</button>',
+    '<button type="button" class="magpie-btn buy" onclick="magpieMarketBuy(\'' + mat.id + '\',5)">BUY 5 · −' + buyFive + ' 🪙</button>',
     sellOne.qty
       ? '<button type="button" class="src-sell-btn" onclick="magpieMarketSell(\'' + mat.id + '\',1)">SELL 1 · +' + sellOne.each + ' 🪙</button>'
       : '<button type="button" class="src-sell-btn" disabled>SELL 1 · +' + lootCore().sellValue('material', mat.rarity) + ' 🪙</button>',
@@ -38263,7 +38309,7 @@ function renderForgeUpgradePanel() {
       bits.push((m ? m.icon : '📦') + cost.materials[matId] + ' ' + (m ? m.label : matId));
     });
     costLine = '<div class="forge-upgrade-cost">Next: <b>' + escapeHtml(next.label) + '</b> — opens ' + escapeHtml(next.rarityCap) + ' recipes, hones all gear to Lv ' + (lv + 1) + ' · ' + bits.join(' · ') + '</div>';
-    button = '<button class="forge-upgrade-btn"' + (check.ok ? '' : ' disabled') + ' onclick="upgradeForge()">' + (check.ok ? '⬆️ UPGRADE THE FORGE' : '🔒 Needs ' + escapeHtml(check.missing[0])) + '</button>';
+    button = '<button class="forge-upgrade-btn"' + ' onclick="upgradeForge()">' + (check.ok ? '⬆️ UPGRADE THE FORGE' : '🔒 Needs ' + escapeHtml(check.missing[0])) + '</button>';
   } else {
     costLine = '<div class="forge-upgrade-cost">The forge is at its summit — every recipe in the Kingdom is open.</div>';
   }
@@ -38281,6 +38327,7 @@ function upgradeForge() {
   if (!cost) return;
   const stock = gameState.inventory.items;
   const check = L.canUpgradeForge(lv, stock, gameState.player.coins || 0, gameState.player.branches || 0);
+  if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'Upgrading the forge'); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   addCoins(-cost.coins);
   addBranches(-cost.branches);
@@ -38331,7 +38378,7 @@ function renderForgeCraft(body) {
         '<div class="fr-main"><div class="fr-name" style="color:' + color + ';">' + escapeHtml(item.label) + ' <span class="fr-time">⏳ ' + formatForgeDuration(craftMs) + '</span></div>' +
         '<div class="fr-stats">' + forgeGearStatLine(item) + '</div>' +
         '<div class="fr-cost">' + costBits.join(' · ') + '</div></div>' +
-        '<button class="forge-craft-btn"' + (check.ok && !queueFull && !locked ? '' : ' disabled') + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? '🔒 FORGE LV ' + L.minForgeLevelForRarity(item.rarity) : queueFull ? 'ANVIL FULL' : 'FORGE') + '</button>' +
+        '<button class="forge-craft-btn"' + (!queueFull && !locked ? '' : ' disabled') + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? '🔒 FORGE LV ' + L.minForgeLevelForRarity(item.rarity) : queueFull ? 'ANVIL FULL' : 'FORGE') + '</button>' +
         '</div>';
     }).join('');
   });
@@ -38355,6 +38402,7 @@ function craftGear(gearId) {
   if (!L.canForgeAtLevel(item, burbzForgeLevel())) { showToast('⚒️ ' + item.label + ' needs Forge Lv ' + L.minForgeLevelForRarity(item.rarity) + ' — upgrade the forge first.'); return; }
   const stock = gameState.inventory.items;
   const check = L.canCraft(recipe, stock, gameState.player.coins || 0);
+  if ((gameState.player.coins || 0) < recipe.coins) { showResourceQuestPrompt('coins', recipe.coins, 'Forging ' + item.label); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   if (forgeQueueIsFull()) { showToast('⚒️ Every anvil is busy — collect a finished piece first.'); return; }
   addCoins(-recipe.coins);
@@ -39352,7 +39400,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
     : !tavernBuilt ? '🪶 Unlock the Barracks to recruit'
     : canAfford ? `🪶 Recruit · ${cost} coins`
     : `Need ${cost} coins`;
-  const recruitDisabled = alreadyCompanion || (tavernBuilt && !canAfford);
+  const recruitDisabled = alreadyCompanion;
   const knownDietBadge = (gameState.dietBadges || {})[speciesKey(canonicalSpeciesName(bird.species || bird.commonName))]
     ? '<div class="birdex-diet-badge" title="Diet mastered at the Kitchen & Pantry">🍽️ DIET</div>' : '';
   return `
@@ -43208,7 +43256,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'connected-world-v386-20260910';
+const BURBZ_BUILD = 'home-countryside-v387-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44190,6 +44238,7 @@ function recordScreenTrail(from) {
 // Close the topmost open layer, if any. Returns true when something closed —
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
+  if (closeResourceQuestPrompt()) return true;
   if (window.BurbzGeographicHomePicker?.close()) return true;
   if (window.BurbzGeographicWorld?.back()) return true;
   if(closeMapBirdPreview())return true;
@@ -44378,8 +44427,7 @@ function addDemoBirds() {
 // only shows the controls. Returning players begin at their command desk;
 // saved walks remain available through their existing routes.
 // The personal clearing is separate from claimed villages and their economy.
-let geographicWorldVisit = null, geographicMapInspect = false, geographicMapPendingPose = null;
-let geographicHomeMarker = null, geographicAvatarMarker = null;
+let geographicWorldVisit = null, geographicAvatarMarker = null;
 function commitPlayerHomeAction(action) {
   const proposal=BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
   if(!proposal.ok)return proposal;
@@ -44388,7 +44436,7 @@ function commitPlayerHomeAction(action) {
   if(action.kind==='anchor')gameState.worldJourney=null;
   const saved=durableSaveState();
   if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;gameState.worldJourney=journey;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
-  try{updateHeader();refreshGeographicHomeMarkers();}catch(e){}return{ok:true};
+  try{updateHeader();refreshGeographicAvatarMarker();}catch(e){}return{ok:true};
 }
 function anchorPlayerHomeAt(lat,lon) {
   if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
@@ -44402,7 +44450,8 @@ function saveGeographicPose(pose,revision) {
   if(gameState.playerHome?.anchor?.revision!==revision||!BurbzGeographicWorldCore.validatePose(pose))return false;
   const before=gameState.worldJourney;
   gameState.worldJourney={version:1,anchorRevision:revision,pose:BurbzGeographicWorldCore.normalizePose(pose,gameState.playerHome.anchor)};
-  if(!durableSaveState().ok){gameState.worldJourney=before;return false;}return true;
+  if(!durableSaveState().ok){gameState.worldJourney=before;return false;}
+  refreshGeographicAvatarMarker();return true;
 }
 function geographicSettlementRecords(bounds) {
   const C=BurbzGeographicWorldCore,center=bounds.center||gameState.playerHome?.anchor;if(!C.validCoordinate(center))return[];
@@ -44445,7 +44494,7 @@ async function enterGeographicWorld(handoff={}) {
     createYard:(T,home)=>BurbzPlayerHomeScene.createYardContent(T,home),createSettlement:(T,record)=>BurbzGeographicSettlementScene.create(T,record),
     settlementsInBounds:geographicSettlementRecords,character:walkingCharacterState,savePose:pose=>gameState===sessionSave&&saveGeographicPose(pose,anchor.revision),
     enterHome:()=>BurbzPlayerHome.open('room',{fromDesk:false,pose:{x:0,y:0,z:3.8,yaw:0,pitch:0}}),
-    enterSettlement:enterGeographicSettlement,returnMap:showGeographicJourneyOnMap,moveHome:pose=>chooseGeographicHomeLocation({pose}),
+    enterSettlement:enterGeographicSettlement,returnHome:()=>BurbzPlayerHome.open('room',{fromDesk:false}),moveHome:pose=>chooseGeographicHomeLocation({pose}),
     onYardAction:(target,localPose)=>{
       if(target.kind==='decorate'){BurbzPlayerHome.open('yard',{pose:localPose,decorate:true,returnToWorld:true});return{ok:true};}
       if(target.kind==='chop'||target.kind==='tree')return commitPlayerHomeAction({kind:'chop',id:target.id,area:'yard',x:localPose.x,z:localPose.z});
@@ -44465,10 +44514,10 @@ async function chooseGeographicHomeLocation(handoff={}) {
   const anchor=gameState.playerHome.anchor,expectedRevision=anchor?.revision||0,oldHome=gameState.playerHome;
   const location=BurbzGeographicWorldCore.validCoordinate(gameState.lastKnownHome)?gameState.lastKnownHome:null;
   handoff.release?.();BurbzPlayerHome.close('location');BurbzGeographicWorld.close('location');
-  const restore=()=>{const r=handoff.returnOptions;if(handoff.pose)return enterGeographicWorld({pose:handoff.pose});if(r||handoff.localPose||handoff.area)return BurbzPlayerHome.open(r?.start||'room',r?.options||{fromDesk:false,pose:handoff.localPose,area:handoff.area});return true;};
+  const restore=()=>{if(handoff.restore)return handoff.restore();const r=handoff.returnOptions;if(handoff.pose)return enterGeographicWorld({pose:handoff.pose});if(r||handoff.localPose||handoff.area)return BurbzPlayerHome.open(r?.start||'room',r?.options||{fromDesk:false,pose:handoff.localPose,area:handoff.area});return true;};
   return BurbzGeographicHomePicker.open({anchor,location,style:burbzMapStyle(),loadMapLibre:loadMapLibreIfNeeded,
     commit:point=>gameState!==sessionSave||gameState.playerHome!==oldHome&&gameState.playerHome.anchor?.revision!==expectedRevision?{ok:false,error:'Your home changed while the map was open. Cancel and choose again.'}:commitPlayerHomeAction({kind:'anchor',...point,source:'chosen',expectedRevision}),
-    cancel:()=>Promise.resolve(restore()).catch(error=>showToast(error.message)),placed:()=>enterGeographicWorld({localPose:{x:0,y:0,z:4,yaw:Math.PI,pitch:0}}).catch(error=>showToast(error.message))
+    cancel:()=>Promise.resolve(restore()).catch(error=>showToast(error.message)),placed:()=>enterGeographicWorld(handoff.pose?{pose:handoff.pose}:{localPose:{x:0,y:0,z:4,yaw:Math.PI,pitch:0}}).catch(error=>showToast(error.message))
   });
 }
 async function enterGeographicSettlement(record,pose) {
@@ -44484,29 +44533,32 @@ async function enterGeographicSettlement(record,pose) {
   showToast('The settlement is still opening. Tap Walk to continue.');return true;
 }
 function returnFromGeographicSettlement(reason) {
-  const visit=geographicWorldVisit;if(!visit||['navigation','pagehide'].includes(reason))return false;
+  const visit=geographicWorldVisit;if(!visit||['navigation','pagehide','world'].includes(reason))return false;
   geographicWorldVisit=null;enterGeographicWorld({pose:visit.pose}).catch(error=>showToast(error.message));return true;
 }
-function refreshGeographicHomeMarkers() {
+// First-person travel belongs to the homestead and settlement walking views.
+// Use the selected Empire coordinates, never the phone/quest-map position.
+async function exploreFromSettlement(record,localPose) {
+  const C=BurbzGeographicWorldCore;
+  if(!C.validCoordinate(record))throw Error('This settlement has no valid world location.');
+  const save=gameState,screen=currentScreen;
+  const local=localPose||{x:0,z:5,yaw:0,pitch:0};
+  const pose={...C.unproject(record,{x:local.x,y:0,z:local.z}),yaw:local.yaw||0,pitch:local.pitch||0,mode:local.mode==='fly'?'fly':'walk'};
+  return enterGeographicWorld({pose,
+    restore:()=>$(screen==='town'?'townWalkBtn':'villageWalkBtn')?.click(),
+    isCurrent:()=>gameState===save&&currentScreen===screen&&BurbzVillageWalk.isOpen(),
+    release:()=>BurbzVillageWalk.close('world')});
+}
+// An informational reference only: it has no travel action and never steers
+// the real quest map or changes its phone-location marker.
+function refreshGeographicAvatarMarker() {
   if(!liveMap||!window.maplibregl)return;
-  const anchor=gameState.playerHome?.anchor,pose=savedGeographicPose();
-  for(const [kind,point] of [['home',anchor],['avatar',pose]]){
-    let marker=kind==='home'?geographicHomeMarker:geographicAvatarMarker;
-    if(!point){marker?.remove();if(kind==='home')geographicHomeMarker=null;else geographicAvatarMarker=null;continue;}
-    if(!marker){const el=document.createElement('button');el.type='button';el.textContent=kind==='home'?'⌂ Your home':'✦ Exploring';el.title=kind==='home'?'Your saved homestead':'Your game character; real walking quests use your phone location';el.style.cssText='background:#e4cf96;color:#203b2b;border:2px solid #42694b;border-radius:12px;padding:10px;min-height:44px;font-weight:700';
-      el.addEventListener('click',()=>kind==='home'?BurbzPlayerHome.open('room',{fromDesk:false}):enterGeographicWorld().catch(error=>showToast(error.message)));
-      marker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([point.lon,point.lat]).addTo(liveMap);if(kind==='home')geographicHomeMarker=marker;else geographicAvatarMarker=marker;}
-    marker.setLngLat([point.lon,point.lat]);
-  }
-}
-function frameGeographicJourneyOnMap() {
-  const pose=geographicMapPendingPose;
-  if(!liveMap||!pose||!geographicMapInspect)return;
-  refreshGeographicHomeMarkers();liveMap.stop();liveMap.jumpTo({center:[pose.lon,pose.lat],zoom:16,pitch:45});geographicMapPendingPose=null;
-}
-function showGeographicJourneyOnMap(pose) {
-  geographicMapInspect=true;geographicMapPendingPose=pose;switchScreen('map');
-  if(liveMap?.loaded())frameGeographicJourneyOnMap();else liveMap?.once('load',frameGeographicJourneyOnMap);
+  const pose=savedGeographicPose();
+  if(!pose){geographicAvatarMarker?.remove();geographicAvatarMarker=null;return;}
+  if(!geographicAvatarMarker){const el=document.createElement('span');el.className='map-world-position';
+    el.textContent='✦';el.setAttribute('role','img');el.setAttribute('aria-label','First-person character location');el.title='First-person character — separate from your real location';
+    geographicAvatarMarker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([pose.lon,pose.lat]).addTo(liveMap);}
+  geographicAvatarMarker.setLngLat([pose.lon,pose.lat]);
 }
 function initializePlayerHome() {
   if (!window.BurbzPlayerHome || !window.BurbzPlayerHomeCore) { maybeShowIntroCutscene(); return; }
@@ -44521,7 +44573,6 @@ function initializePlayerHome() {
   });
   const last=gameState.lastKnownHome;
   if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
-  $('mapWorldExploreBtn')?.addEventListener('click',()=>enterGeographicWorld().catch(error=>showToast(error.message)));
   $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutActive)endMerlinTutorial(false);BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
   if(gameState.playerHome.intro!=='done')BurbzPlayerHome.open(gameState.playerHome.intro==='desk'?'room':'overview');

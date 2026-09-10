@@ -24,6 +24,12 @@ state.elevation=()=>null;
 assert.equal(context.ground(state,-14,0),null,'known plot metadata does not turn missing terrain into safe ground');
 console.log('geographic world scene: overlapping slope, rendered height, ordering and missing terrain passed');
 
+// Refining source DEM must move the rendered patch AND its authored buildings.
+let retired=0;context.disposeMesh=()=>{retired++;};state.elevation=(x,z)=>150+x*.3+z*.15;state.terrainRevision=1;const oldBase=a.base,oldPatch=a.patch;
+assert.equal(context.prepareItem(state,a),true);assert.equal(retired,1);assert.notStrictEqual(a.patch,oldPatch);assert(Math.abs(a.base-oldBase-50)<1e-8);assert.equal(a.terrainRevision,1);
+assert.equal(context.prepareItem(state,a),true);assert.equal(retired,1,'unchanged terrain does not rebuild an owned patch');state.terrainRevision=2;state.elevation=()=>null;assert.equal(context.prepareItem(state,a),false);assert.equal(retired,1,'missing replacement terrain must not discard existing content');
+console.log('geographic DEM refinement: authored patch/height rebuild together once; absent replacement retains content');
+
 // MapLibre querySourceFeatures omits sourceLayer and exposes geometry through
 // a getter. Exercise the actual reader, then the real woodland validator.
 const forest=require('../geographic_forest_core.js');
@@ -77,31 +83,14 @@ const racing={isContextLost:()=>false,getParameter:()=>null,isEnabled:()=>false}
 assert.doesNotThrow(()=>layer.render(racing,{defaultProjectionData:{mainMatrix:new Array(16).fill(0)}}),'null state during a context-loss race must not be spread');
 console.log('geographic world GL: context loss and null viewport race passed');
 
-// Retain the provider's original predicate, reuse its extrusion, and replace
-// each mask from that original rather than nesting previous masks on refresh.
-vm.runInContext(extract('filterExpression','refreshFeatures'),context);
-context.C=()=>({unproject:(origin,p)=>({lon:p.x/100000,lat:p.z/100000})});
-const original=['all',['==','extrude',true],['in','class','house','apartments']];
-const providerLayers=[{id:'building-3d',type:'fill-extrusion','source-layer':'building',source:'openmaptiles',filter:original}];
-let additions=0,updates=0,latest;
-const masked={origin:{},items:new Map([['home',{x:0,z:0,content:{blendRadius:30}}]]),errors:[],map:{
- getStyle:()=>({layers:providerLayers}),getLayer:id=>providerLayers.find(l=>l.id===id),getFilter:id=>providerLayers.find(l=>l.id===id)?.filter,
- addLayer(layer){additions++;providerLayers.push(layer);},setLayoutProperty(id,key,value){assert.equal(value,'visible');},
- setFilter(id,value){updates++;latest=value;providerLayers.find(l=>l.id===id).filter=value;}
-}};
-context.installBuildings(masked);
-assert.equal(additions,0,'an existing provider extrusion must not be duplicated');
-context.excludeAuthoredBuildings(masked,[]);
-const json=value=>JSON.parse(JSON.stringify(value));
-assert.deepEqual(json(latest[1]),['all',['==',['get','extrude'],true],['in',['get','class'],['literal',['house','apartments']]]]);
-assert.equal(latest[2][1][0],'within');
-assert.deepEqual(original,['all',['==','extrude',true],['in','class','house','apartments']],'provider filter object must stay untouched');
-context.excludeAuthoredBuildings(masked,[]);assert.equal(updates,1,'unchanged masks do not trigger native style work');
-masked.items.get('home').x=10;context.excludeAuthoredBuildings(masked,[]);
-assert.equal(latest.length,3);assert.equal(latest[1][1][0],'==','refresh starts from the saved provider filter');
-const fallback={map:{...masked.map,getStyle:()=>({layers:[{id:'building',type:'fill','source-layer':'building',source:'openmaptiles'}]}),getFilter:()=>undefined}};
-context.installBuildings(fallback);assert.equal(additions,1);assert.equal(fallback.buildingLayers[0].id,'gw-real-buildings');
-console.log('geographic world buildings: provider reuse, original filters and replacement masks passed');
+// Hide provider city layers only in this first-person map; preserve authored content.
+vm.runInContext(extract('installBuildings','refreshFeatures'),context);
+const providerLayers=[{id:'buildings-flat','source-layer':'building'},{id:'buildings-3d','source-layer':'building'},{id:'water','source-layer':'water'},{id:'woods','source-layer':'landcover'}];
+const changes=[];const authoredHome={ready:true};
+context.installBuildings({items:new Map([['home',authoredHome]]),map:{getStyle:()=>({layers:providerLayers}),setLayoutProperty:(...args)=>changes.push(args)}});
+assert.deepEqual(changes,[['buildings-flat','visibility','none'],['buildings-3d','visibility','none']]);
+assert.equal(authoredHome.ready,true);
+console.log('geographic countryside: only provider buildings hidden; water, woods and authored home preserved');
 
 // Emulate the pinned MapLibre order: onRemove detaches THREE's canvas restore
 // listener, then the map emits loss. Old buffer callbacks must run while lost.
