@@ -175,11 +175,11 @@ test('production atlas rapid retargeting keeps bounded position and turns throug
   assert.ok(model.pickups >= 1);
 });
 
-test('closing grip uses a joined mesh with fixed torso and exact talon mapping', () => {
+test('legacy closing grip uses a joined mesh with fixed torso and exact talon mapping', () => {
   const calls = [], transforms = [];
   const ctx = { save() {}, restore() {}, translate() {}, rotate() {}, scale() {}, beginPath() {}, moveTo() {}, lineTo() {}, closePath() {}, clip() {}, transform(...args) { transforms.push(args); }, drawImage(...args) { calls.push(args); } };
   const view = { row: 7, frame: 0, scale: 1, bank: .12, mirror: true, carrying: true, gripOffset: { x: 23, y: 24 }, position: { x: 200, y: 300 } };
-  const geometry = Flight.drawSprite(ctx, {}, view, { atlas: actualAtlas, size: 136 });
+  const geometry = Flight.drawSprite(ctx, {}, view, { atlas: { cell: 256, pivot: [.5, .625] }, size: 136 });
   assert.equal(calls.length, 9); assert.equal(transforms.length, 8);
   assert.deepEqual(calls[0].slice(1), [0, 7 * 256, 256, 160, -68, -85, 136, 85], 'torso and wing roots use the unshifted upper sprite');
   const goal = { x: -(23 * Math.cos(.12) + 24 * Math.sin(.12)), y: -23 * Math.sin(.12) + 24 * Math.cos(.12) };

@@ -98,6 +98,30 @@
     return { frame: powered ? Math.floor((phase == null ? elapsed * hz % 1 : phase) * 8) : 5, powered };
   }
 
+  function animationPose(model) {
+    if (!model.atlas.clips) return wingPose(model.elapsed, Math.hypot(model.velocity.x, model.velocity.y), model.state, model.reduced, model.wingPhase, model.glideRemaining > 0);
+    const direction = yawRow(model.yaw);
+    let clip = 'flap-' + direction, frame = Math.floor(model.wingPhase * 16), powered = true;
+    if (model.reduced) return { clip: 'glide-1', frame: 0, powered: false };
+    if (model.state === 'reach') {
+      clip = 'pickup-' + model.pickupView;
+      const remaining = Math.max(0, model.curve.duration - model.segmentTime);
+      frame = Math.min(5, Math.floor(clamp(1 - remaining / .6, 0, 1) * 6));
+      powered = false;
+    } else if (model.carrying && model.recoveryTime < .6) {
+      clip = 'pickup-' + model.pickupView;
+      // The exact contact pose survives the pickup boundary, then the toes
+      // close and the authored legs retract, independently of the wing clock.
+      frame = model.recoveryTime === 0 ? 5 : Math.min(11, 6 + Math.floor(model.recoveryTime / .1));
+      powered = false;
+    } else if (model.glideRemaining > 0 && model.state === 'cruise') {
+      clip = 'glide-' + (model.row === 5 ? 5 : direction);
+      frame = Math.min(7, Math.floor((1.25 - model.glideRemaining) / 1.25 * 8));
+      powered = false;
+    }
+    return { clip, frame, powered };
+  }
+
   function openRectangles(area, obstacles) {
     let spaces = [area];
     for (const obstacle of obstacles) {
@@ -119,10 +143,12 @@
   function spriteGeometry(view = {}, size = 136, atlas = {}) {
     const config = { ...DEFAULT_ATLAS, ...atlas };
     const row = clamp(Math.floor(view.row || 0), 0, config.rows - 1);
-    const frame = clamp(Math.floor(view.frame || 0), 0, config.columns - 1);
+    const clip = config.clips && (config.clips[view.clip] || config.clips['flap-' + (row < 5 ? row : 1)]);
+    const frame = clamp(Math.floor(view.frame || 0), 0, clip ? clip.length - 1 : config.columns - 1);
+    const authored = clip && config.frames[clip[frame]];
     const pivot = config.pivot;
     const rowTalons = config.talons && config.talons[row];
-    const anchor = rowTalons && (Array.isArray(rowTalons[0]) ? rowTalons[frame] : rowTalons) || [.5, .82];
+    const anchor = authored ? authored.talon : rowTalons && (Array.isArray(rowTalons[0]) ? rowTalons[frame] : rowTalons) || [.5, .82];
     const drawSize = size * (view.scale == null ? 1 : view.scale);
     const localX = (anchor[0] - pivot[0]) * drawSize, localY = (anchor[1] - pivot[1]) * drawSize;
     const facingX = view.mirror ? -localX : localX;
@@ -131,7 +157,7 @@
     const talon = { x: position.x + facingX * cos - localY * sin, y: position.y + facingX * sin + localY * cos };
     return {
       row, frame, drawSize,
-      source: [frame * config.cell, row * config.cell, config.cell, config.cell],
+      source: authored ? authored.source : [frame * config.cell, row * config.cell, config.cell, config.cell],
       destination: [-drawSize * pivot[0], -drawSize * pivot[1], drawSize, drawSize],
       localTalon: { x: localX, y: localY },
       talon,
@@ -150,7 +176,9 @@
     context.scale(view.mirror ? -1 : 1, 1);
     const deltaX = geometry.grip.x - geometry.talon.x, deltaY = geometry.grip.y - geometry.talon.y;
     if (view.carrying && !view.reducedMotion && Math.hypot(deltaX, deltaY) > .5) {
-      // A continuous small mesh closes the grip while preserving the torso.
+      // Smooth the painted foot anchor between distinct authored leg poses.
+      // The new extension/retraction artwork supplies the actual anatomy;
+      // this small interpolation keeps a held pebble continuous at transitions.
       // Shared vertices prevent the alpha seams caused by independent strips;
       // the outer mesh stays fixed so lower wings do not shear as a whole.
       const angle = view.bank || 0, cosine = Math.cos(angle), sine = Math.sin(angle);
@@ -201,8 +229,8 @@
   class FlightModel {
     constructor(options = {}) {
       this.rng = options.rng || Math.random;
-      this.size = options.size || 136;
       this.atlas = { ...DEFAULT_ATLAS, ...(options.atlas || {}) };
+      this.size = options.size || this.atlas.displaySize || 136;
       this.bounds = options.bounds || flightBounds(390, 844, this.size);
       this.home = options.home || point(this.bounds.right, this.bounds.top, .65);
       this.position = { ...this.home };
@@ -219,6 +247,7 @@
       this.bank = 0; this.scale = .68; this.facingRight = false;
       this.row = 1; this.rowAge = 0; this.turnStep = 0;
       this.wingPhase = .125; this.glideRemaining = 0; this.nextGlideAt = 4.1;
+      this.pickupView = 1; this.recoveryTime = .6;
       this.returnPoint = this.safeContactPoint(options.returnPoint || point(this.bounds.left + 24, this.bounds.bottom - 20, .65), 7);
       if (this.reduced) {
         this.position = inside(point(this.home.x, this.home.y + 34, .55), this.bounds);
@@ -250,8 +279,9 @@
 
     safeContactPoint(target, row) {
       let horizontal = 0, below = 0;
-      for (let frame = 0; frame < this.atlas.columns; frame++) {
-        const offset = spriteGeometry({ row, frame, scale: 1.05 }, this.size, this.atlas).talon;
+      const poses = this.atlas.clips ? Object.entries(this.atlas.clips).flatMap(([clip, frames]) => frames.map((_, frame) => ({clip, frame}))) : Array.from({length:this.atlas.columns}, (_,frame) => ({row,frame}));
+      for (const pose of poses) {
+        const offset = spriteGeometry({ ...pose, scale: 1.05 }, this.size, this.atlas).talon;
         horizontal = Math.max(horizontal, Math.abs(offset.x)); below = Math.max(below, offset.y);
       }
       return inside(target, { ...this.bounds, left: this.bounds.left + horizontal, right: this.bounds.right - horizontal, top: this.bounds.top + below });
@@ -281,13 +311,20 @@
       const arrivalMirror = this.token.x > this.position.x;
       const sign = arrivalMirror ? 1 : -1;
       this.arrivalYaw = sign * 1.1;
+      if (this.atlas.clips) {
+        const gap = Math.abs(this.token.x - this.position.x);
+        this.pickupView = gap < this.size * .38 ? 0 : gap > this.size * .9 ? 2 : 1;
+        this.arrivalYaw = sign * [0.08, Math.PI / 4, Math.PI / 2][this.pickupView];
+        this.glideRemaining = 0;
+      }
       this.contactTarget = point(this.token.x, this.token.floorY, .65);
-      const offset = spriteGeometry({ row: 6, frame: 2, scale: depthScale(.65), mirror: arrivalMirror }, this.size, this.atlas).talon;
+      const offset = spriteGeometry({ row: 6, clip: 'pickup-' + this.pickupView, frame: this.atlas.clips ? 5 : 2, scale: depthScale(.65), mirror: arrivalMirror }, this.size, this.atlas).talon;
       const destination = point(this.token.x - offset.x, this.token.floorY - offset.y, .65);
       this.setCurve(destination, 205, point(sign * 95, 26, .2));
       // Leave enough curved approach for an opposing heading to turn before
       // the last third of the path reaches forward with asymmetric talons.
       this.curve.duration = Math.max(this.curve.duration, Math.abs(angleDelta(this.yaw, this.arrivalYaw)) / (3.4 * .59) + .18);
+      if (this.atlas.clips) this.curve.duration = Math.max(this.curve.duration, 1.4);
     }
 
     pickup() {
@@ -296,6 +333,8 @@
       this.gripOffset = { x: this.token.x - this.position.x, y: this.token.y - this.position.y };
       if (this.reduced) this.gripOffset = spriteGeometry({ row: 7, frame: 2, scale: this.scale, mirror: this.facingRight }, this.size, this.atlas).talon;
       this.token = null; this.pickups++;
+      this.recoveryTime = 0;
+      this.departureYaw = this.yaw;
       this.state = 'carry'; this.segmentTime = 0;
       this.contactTarget = { ...this.returnPoint };
       if (!this.reduced) {
@@ -304,6 +343,7 @@
         const offset = spriteGeometry({ row: 7, frame: 2, scale: depthScale(.7), mirror: arrivalMirror }, this.size, this.atlas).talon;
         this.setCurve(point(this.returnPoint.x - offset.x, this.returnPoint.y - offset.y, .7), 145, point(arrivalMirror ? 70 : -70, 18, .5));
         this.curve.duration = Math.max(this.curve.duration, Math.abs(angleDelta(this.yaw, this.arrivalYaw)) / (3.4 * .59) + .18);
+        if (this.atlas.clips) this.curve.duration += .6;
       }
     }
 
@@ -327,16 +367,18 @@
       if (this.done) return this.snapshot();
       const dt = clamp(delta || 0, 0, .05);
       this.elapsed += dt; this.rowAge += dt;
+      if (this.carrying) this.recoveryTime += dt;
       // Integrate phase, rather than multiplying wall time by a changing
       // cadence: acceleration must never jump backwards halfway through a beat.
       if (this.glideRemaining > 0 && this.state === 'cruise') {
-        this.glideRemaining = Math.max(0, this.glideRemaining - dt); this.wingPhase = .625;
+        this.glideRemaining = Math.max(0, this.glideRemaining - dt); this.wingPhase = this.atlas.clips ? .25 : .625;
       } else {
         this.glideRemaining = 0;
-        const hz = this.state === 'reach' ? 3.6 : clamp(3.6 + Math.hypot(this.velocity.x, this.velocity.y) / 220, 3.8, 4.8);
+        const hz = this.atlas.clips ? clamp(2.8 + Math.hypot(this.velocity.x, this.velocity.y) / 600, 2.9, 3.4) : this.state === 'reach' ? 3.6 : clamp(3.6 + Math.hypot(this.velocity.x, this.velocity.y) / 220, 3.8, 4.8);
         this.wingPhase = (this.wingPhase + dt * hz) % 1;
-        if (this.state === 'cruise' && this.elapsed >= this.nextGlideAt && this.wingPhase >= .625 && this.wingPhase < .75) {
-          this.glideRemaining = .34; this.nextGlideAt = this.elapsed + 4.6; this.wingPhase = .625;
+        const glidePhase = this.atlas.clips ? .25 : .625;
+        if (this.state === 'cruise' && this.elapsed >= this.nextGlideAt && this.wingPhase >= glidePhase && this.wingPhase < glidePhase + .125) {
+          this.glideRemaining = this.atlas.clips ? 1.25 : .34; this.nextGlideAt = this.elapsed + (this.atlas.clips ? 3.8 : 4.6); this.wingPhase = glidePhase;
         }
       }
       if (this.token) {
@@ -370,13 +412,15 @@
       this.position = sample.position;
       // Yaw is continuous. A reversal travels through a front or rear view;
       // it can never mirror a profile, rising pose or reaching talons in place.
-      const targetYaw = this.arrivalYaw == null ? Math.atan2(vx, this.velocity.z * 170) : this.arrivalYaw;
+      // Finish the authored grip recovery in its approach view before banking
+      // home; a quarter-view pickup must never mirror during a front-view turn.
+      const targetYaw = this.atlas.clips && this.carrying && this.recoveryTime < .6 ? this.departureYaw : this.arrivalYaw == null ? Math.atan2(vx, this.velocity.z * 170) : this.arrivalYaw;
       this.yaw += clamp(angleDelta(this.yaw, targetYaw), -3.4 * dt, 3.4 * dt);
       this.turning = Math.abs(angleDelta(this.yaw, targetYaw)) > .12;
       const previousMirror = this.facingRight;
       if (Math.sin(this.yaw) > .1) this.facingRight = true;
       else if (Math.sin(this.yaw) < -.1) this.facingRight = false;
-      if (this.state === 'chase' && progress > .64 && !this.turning) this.state = 'reach';
+      if (this.state === 'chase' && (this.atlas.clips ? this.curve.duration - this.segmentTime < .6 : progress > .64) && !this.turning) this.state = 'reach';
       let desiredRow = yawRow(this.yaw);
       if (!this.turning && this.state === 'reach') desiredRow = 6;
       else if (!this.turning && this.state === 'carry') desiredRow = 7;
@@ -392,9 +436,9 @@
       const atDepth = depthScale(this.position.z);
       const desiredScale = this.state === 'takeoff' ? mix(.68, atDepth, ease(progress)) : this.state === 'landing' ? mix(atDepth, .64, ease(progress)) : atDepth;
       this.scale = mix(this.scale, desiredScale, 1 - Math.exp(-dt * 10));
-      const wing = wingPose(this.elapsed, speed, this.state, false, this.wingPhase, this.glideRemaining > 0);
+      const wing = animationPose(this);
       if (this.carrying && this.gripOffset) {
-        const painted = spriteGeometry({ row: this.row, frame: wing.frame, scale: this.scale, bank: this.bank, mirror: this.facingRight }, this.size, this.atlas).talon;
+        const painted = spriteGeometry({ row: this.row, ...wing, scale: this.scale, bank: this.bank, mirror: this.facingRight }, this.size, this.atlas).talon;
         const dx = painted.x - this.gripOffset.x, dy = painted.y - this.gripOffset.y;
         const length = Math.hypot(dx, dy);
         const amount = length ? Math.min(1, this.size * .72 * dt / length) : 1;
@@ -407,7 +451,7 @@
         // over the approach instead of snapping the sprite on the pickup frame.
         const strength = ease(clamp((progress - .64) / .36, 0, 1));
         this.bank *= 1 - strength;
-        const offset = this.carrying && this.gripOffset || spriteGeometry({ row: this.row, frame: wing.frame, scale: this.scale, bank: this.bank, mirror: this.facingRight }, this.size, this.atlas).talon;
+        const offset = this.carrying && this.gripOffset || spriteGeometry({ row: this.row, ...wing, scale: this.scale, bank: this.bank, mirror: this.facingRight }, this.size, this.atlas).talon;
         const endpoint = this.curve.points[3];
         this.position.x += (this.contactTarget.x - offset.x - endpoint.x) * strength;
         this.position.y += (this.contactTarget.y - offset.y - endpoint.y) * strength;
@@ -425,8 +469,8 @@
     }
 
     snapshot() {
-      const pose = wingPose(this.elapsed, Math.hypot(this.velocity.x, this.velocity.y), this.state, this.reduced, this.wingPhase, this.glideRemaining > 0);
-      return { position: { ...this.position }, velocity: { ...this.velocity }, state: this.state, row: this.row, frame: pose.frame, powered: pose.powered, bank: this.bank, scale: this.scale, mirror: this.facingRight, yaw: this.yaw, turning: this.turning, gripOffset: this.gripOffset && { ...this.gripOffset }, token: this.token && { ...this.token }, carrying: !!this.carrying, deposited: this.deposited && { ...this.deposited }, pickups: this.pickups, elapsed: this.elapsed, done: this.done, reducedMotion: this.reduced };
+      const pose = animationPose(this);
+      return { position: { ...this.position }, velocity: { ...this.velocity }, state: this.state, row: this.row, ...pose, bank: this.bank, scale: this.scale, mirror: this.facingRight, yaw: this.yaw, turning: this.turning, gripOffset: this.gripOffset && { ...this.gripOffset }, token: this.token && { ...this.token }, carrying: !!this.carrying, deposited: this.deposited && { ...this.deposited }, pickups: this.pickups, elapsed: this.elapsed, done: this.done, reducedMotion: this.reduced };
     }
   }
 
@@ -472,7 +516,7 @@
     let lastHolesAt = -Infinity, holesSignature = '', originX = 0, originY = 0;
     let tookOff = false, disposed = false, cleanups = [], previousFocus = null, pickupCount = 0;
     const config = { ...DEFAULT_ATLAS, ...(options.atlas || {}) };
-    const size = options.size || 136;
+    const size = options.size || config.displaySize || 136;
     const media = env.matchMedia ? env.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
     const listen = (target, type, callback, settings) => {
       target.addEventListener(type, callback, settings);
@@ -693,7 +737,9 @@
       active = true; model = null; pickupCount = 0;
       const ticket = ++generation;
       bindLifecycle();
-      loading = (options.loadAtlas ? options.loadAtlas() : loadAtlas(options.atlasUrl || '/burbz/assets/merlin-flight/merlin-flight-v1.webp', env))
+      // Versioned metadata and pixels form one asset. The old shell may still
+      // supply its v1 default URL until the coordinating release updates pins.
+      loading = (options.loadAtlas ? options.loadAtlas() : loadAtlas(config.url || options.atlasUrl || '/burbz/assets/merlin-flight/merlin-flight-v1.webp', env))
         .then(image => {
           if (!active || generation !== ticket || !allowed()) { if (generation === ticket) teardown('unavailable'); return false; }
           atlasImage = image;
