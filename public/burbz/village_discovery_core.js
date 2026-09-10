@@ -1,7 +1,7 @@
 /* Saved, seeded village discoveries. Transactions/presentation live in the adapters. */
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./village_discovery_content.js'):root.BurbzVillageDiscoveryContent);if(typeof module==='object'&&module.exports)module.exports=api;root.BurbzVillageDiscoveryCore=api;})(globalThis,function(content){
 'use strict';
-const QUESTS=content.quests,LORE=content.lore;
+const QUESTS=content.quests,LORE=content.lore,ACTIVITIES=content.activities;
 function hash(text){let n=2166136261;for(const c of String(text)){n^=c.charCodeAt(0);n=Math.imul(n,16777619);}return n>>>0;}
 function rng(seed){let a=hash(seed);return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
 function shuffled(values,random){const a=values.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -27,7 +27,26 @@ function village(state,seed,entropy){
  st.villages[key]=rec;return rec;
 }
 function quest(rec){const q=QUESTS.find(q=>q.id===rec.questId);if(!q)throw Error('This village story is unavailable.');return q;}
+// Derived assignments never mutate a legacy save just by opening its journal.
+// The fixed v1 pool is append-safe: later story packs cannot reroll these sites.
+function activities(rec){
+ const deck=shuffled(ACTIVITIES.filter(a=>/^vf(0[1-9]|1[0-2])$/.test(a.id)),rng(rec.placementSeed+':fieldwork:v1')).slice(0,3);
+ return deck.map(story=>{const raw=rec.fieldwork?.[story.id]?.step;const step=Number.isInteger(raw)?Math.max(0,Math.min(story.steps.length,raw)):0;
+  return {story,step,completed:step===story.steps.length};});
+}
+function activityAct(rec,id,choice){
+ const parts=String(id).split(':');if(parts.length!==2||!/^\d+$/.test(parts[1]))return null;
+ const a=activities(rec).find(a=>a.story.id===parts[0]);if(!a||a.completed||Number(parts[1])!==a.step)return null;
+ const node=a.story.steps[a.step];
+ if(node.choices){if(!node.choices.some(c=>c[0]===choice))return null;
+  if(choice!==node.answer)return {title:a.story.title,text:node.wrong,tryAgain:true};}
+ if(!rec.fieldwork||typeof rec.fieldwork!=='object'||Array.isArray(rec.fieldwork))rec.fieldwork={};
+ rec.fieldwork[a.story.id]={step:a.step+1};
+ const done=a.step+1===a.story.steps.length;
+ return {title:a.story.title,text:done?a.story.outro:node.done,reward:done?JSON.parse(JSON.stringify(a.story.reward)):undefined,activity:a.story.id,completed:done};
+}
 function act(rec,type,id,giver){
+ if(type==='activity')return activityAct(rec,id,giver);
  const q=quest(rec);
  if(type==='accept'&&!rec.accepted){rec.accepted=true;rec.giver=String(giver||'The village folk').slice(0,90);return {text:q.intro};}
  if(type==='step'&&rec.accepted&&!rec.completed&&Number(id)===rec.step&&rec.step<q.steps.length){const step=q.steps[rec.step++];return {text:step.done};}
@@ -56,5 +75,5 @@ function positions(world,spawn,seed,count){
  while(chosen.length<count)chosen.push(nodes[chosen.length%nodes.length]);
  return chosen.map(p=>({...p,y:world.height(p.x,p.z)}));
 }
-return {QUESTS,LORE,LOOT,hash,rng,village,quest,act,positions};
+return {QUESTS,LORE,ACTIVITIES,LOOT,hash,rng,village,quest,activities,act,positions};
 });

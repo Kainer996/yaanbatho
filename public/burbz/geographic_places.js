@@ -26,7 +26,7 @@
     if(!core.arrival(place,options.getPosition()).ready)throw Error('Your position changed. Move close to the door to enter.');
     const target={scope:'geographic',buildingId:place.type,seed:place.seed,homeId:place.id};
     cameraReturn={center:map.getCenter(),zoom:map.getZoom(),pitch:map.getPitch(),bearing:map.getBearing()};
-    ownsWalk=true;root.BurbzVillageWalk.open({name:place.name,room:target,opener:button,
+    ownsWalk=true;root.BurbzVillageWalk.open({name:place.name,character:options.character,room:target,opener:button,
      source:()=>{
       if(disposed||token!==generation||!core.arrival(place,options.getPosition()).ready||!options.isVisible())throw Error('A fresh nearby GPS fix is needed to open this door.');
       const T=root.THREE;roomHost=document.createElement('div');roomHost.hidden=true;document.body.append(roomHost);

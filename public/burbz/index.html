@@ -4434,7 +4434,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
-<link rel="stylesheet" href="player_home.css?v=enchanted-study-v384-20260910">
+<link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="scan_home.css?v=enchanted-study-v384-20260910">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4848,6 +4848,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
             <div class="settlement-stage-meta" id="townStageMeta">Reading the Town ledger</div>
           </div>
           <div class="settlement-camera-controls">
+            <button type="button" class="settlement-camera-btn" id="townWalkBtn" aria-label="Walk through the town">Walk</button>
             <button type="button" class="settlement-camera-btn" data-scene-camera="town-reset" aria-label="Return the camera to the whole town" title="Return to the whole town">⌂</button>
           </div>
           <div class="settlement-scene-labels" id="townSceneLabels" aria-hidden="true"></div>
@@ -5508,7 +5509,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_daynight.js?v=night-quests-v376-20260908"></script>
 <script src="map_trail_core.js?v=map-trails-v381-20260909"></script>
 <script src="geographic_details_scene.js?v=map-trails-v381-20260909"></script>
-<script src="geographic_places.js?v=map-trails-v381-20260909"></script>
+<script src="geographic_places.js?v=homestead-v385-20260910"></script>
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
@@ -5525,7 +5526,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="peep_needs_core.js?v=academy-flight-v370-20260908"></script>
 <script src="settlement_life_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="settlement_models.js?v=little-folk-residents-v350-20260905"></script>
-<script src="settlement_lighting.js?v=little-folk-residents-v350-20260905"></script>
+<script src="settlement_lighting.js?v=homestead-v385-20260910"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -5543,9 +5544,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="player_home_core.js?v=player-home-v380-20260909"></script>
-<script src="player_home_scene.js?v=enchanted-study-v384-20260910"></script>
-<script src="player_home.js?v=enchanted-study-v384-20260910"></script>
+<script src="player_home_core.js?v=homestead-v385-20260910"></script>
+<script src="player_home_scene.js?v=homestead-v385-20260910"></script>
+<script src="player_home.js?v=homestead-v385-20260910"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -18760,7 +18761,7 @@ function enableBurbzTerrain() {
   window.BurbzGeographicSurfaces?.attach(liveMap,{isVisible:()=>currentScreen==='map'&&!geographicPlaces?.inside,getQuality:()=>geographicMap3D?.state});
   if(!geographicPlaces && window.BurbzGeographicPlaces) geographicPlaces=window.BurbzGeographicPlaces.attach(liveMap,{
     isVisible:()=>currentScreen==='map',getPosition:()=>liveMapHasPrecisePosition?liveMapLastPosition:null,
-    marker:opts=>createGeographicMarker(opts),loadWalk:ensureVillageWalkModule,
+    marker:opts=>createGeographicMarker(opts),loadWalk:ensureVillageWalkModule,character:walkingCharacterState,
     getQuestObjects:()=>{const q=activeWalkingQuest();return BurbzMapTrailCore.buildings(q,q?BurbzWalkingEncounterCore.listQuestEncounters(q):[]);},
     fetch:query=>window.BurbzQuestCore.fetchGeographicDetails(query),
     data:()=>gameState.geographicPlaces,
@@ -29647,6 +29648,10 @@ let villageActive = null;
 let villageSceneQuality = { tier:'medium', maxDpr:2, shadowSize:2048, frameInterval:0, maxAmbientActors:18 };
 let villageLastFrameAt = 0;
 let villageAnimationRequest = 0, villagePauseTimer = 0;
+function walkingCharacterState() {
+  const p=gameState.player;
+  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone};
+}
 function villageHarvestAdapter(seed) {
   return {
     available: node => window.BurbzVillageHarvestCore.available(gameState,seed,node,Date.now()),
@@ -29706,7 +29711,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=map-pictures-v374-20260908';
+        script.src = 'village_walk.js?v=homestead-v385-20260910';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29726,7 +29731,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
       name: currentVillage().name, seed, opener:button, interiors: buildingRoomsAdapter(),
-      discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed),
+      discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
       source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
       suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
@@ -29739,6 +29744,26 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     });
   } catch (error) { showToast(error.message); }
   finally { button.disabled = false; }
+});
+
+// The saved founding ward keeps its request and receipts after a town merge.
+$('townWalkBtn')?.addEventListener('click',async()=>{
+  const button=$('townWalkBtn'),settlement=currentTownSettlement();
+  if(button.disabled||!settlement)return;button.disabled=true;
+  const id=settlement.id,seed=Number(settlement.heartSeed??settlement.seed??settlement.villages?.[0]?.seed);
+  try {
+    await ensureVillageWalkModule();
+    if(currentScreen!=='town'||currentTownSettlement()?.id!==id)return;
+    if(!Number.isFinite(seed)||!townScene?.userData.walkTerrain||townFallbackMode)throw Error('The 3D town is not ready. Please try again.');
+    window.BurbzVillageWalk.open({name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:'← Town',opener:button,
+      discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),interiors:buildingRoomsAdapter(),
+      source:()=>({scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,
+        movers:[...townNpcs,...townWalkers,...townTraffic,...townLivestock,...townFlocks,...townRoofBirds,...townChickens,...townWindmills,...townCloths,...townSigns]}),
+      suspend:()=>{townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);},
+      animate:t=>townAnimateFrame(t,true),
+      resume:(reason,failed)=>{if(reason==='navigation'||reason==='pagehide')return;if(failed&&townRenderer?.getContext().isContextLost())townFallbackMode=true;if(currentScreen==='town'){onTownResize();renderTownScreen();}}
+    });
+  }catch(error){showToast(error.message);}finally{button.disabled=false;}
 });
 
 // Academy visits borrow the original renderer; owned rooms retain their services.
@@ -29755,7 +29780,7 @@ async function flyAcademy(roomId) {
     if(currentScreen!==requestedScreen||academyViewMode()!=='3d')return;
     const engine=academy3dEnsure();if(!engine||!engine.start())throw Error('The 3D Academy is unavailable.');
     const st=engine._state;
-    window.BurbzVillageWalk.open({name:'The Academy',flight:true,room:roomId?{scope:'academy',buildingId:roomId}:null,interiors:buildingRoomsAdapter(),
+    window.BurbzVillageWalk.open({name:'The Academy',character:walkingCharacterState,flight:true,room:roomId?{scope:'academy',buildingId:roomId}:null,interiors:buildingRoomsAdapter(),
       source:()=>({scene:st.scene,renderer:st.renderer,camera:st.camera,buildings:st.houses,movers:[]}),
       suspend:()=>{st.borrowed=true;engine.pause();clearInterval(academyTreeLightTimer);},
       resume:(reason,failed)=>{st.borrowed=false;if(reason==='navigation'||reason==='pagehide')return;
@@ -29846,7 +29871,7 @@ async function walkBuildingInterior(button) {
       if(roomTarget.homeId!==undefined)break;
     }
     closeBuildingInterior();
-    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,seed:view.seed,room:roomTarget,interiors:buildingRoomsAdapter(),source:()=>source,
+    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,character:walkingCharacterState,seed:view.seed,room:roomTarget,interiors:buildingRoomsAdapter(),source:()=>source,
       suspend:()=>{ if(town){townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);} else {villageRunning=false;cancelAnimationFrame(villageAnimationRequest);clearTimeout(villagePauseTimer);} },
       resume:(reason,failed)=>{
         if(reason==='navigation'||reason==='pagehide')return;
@@ -33677,6 +33702,9 @@ function villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt) {
     mesh.castShadow = true; mesh.receiveShadow = true; // whole belt in one shadow draw per mesh
     mesh.frustumCulled = false; // instance bounds aren't tracked; the belt is always in view anyway
     g.add(mesh);
+    g._burbzHarvestSets||={pines:[],leafs:[],rocks:[]};
+    const family=items===pines?'pines':items===leafs?'leafs':items===rocks?'rocks':null;
+    if(family)g._burbzHarvestSets[family].push(mesh);
     return mesh;
   }
   const trunkColor = (it, c) => c.copy(timberBase).offsetHSL(0, 0, it.tone * 0.06);
@@ -33690,10 +33718,10 @@ function villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt) {
   const rockGeo = new THREE.DodecahedronGeometry(0.5, 0); rockGeo.translate(0, 0.3, 0);
 
   // Original geometry anchors survive static walking batches.
-  g.userData.harvestNodes=[...pines.map(it=>({...it,kind:'wood',radius:.22*it.s})),
-    ...leafs.map(it=>({...it,kind:'wood',radius:.24*it.s})),
-    ...rocks.map(it=>({...it,kind:'stone',radius:.5*it.s}))]
-    .map(it=>({kind:it.kind,x:it.x,y:heightAt(it.x,it.z)-.06,z:it.z,radius:it.radius}));
+  g.userData.harvestNodes=[...pines.map((it,index)=>({...it,kind:'wood',family:'pines',index,radius:.22*it.s})),
+    ...leafs.map((it,index)=>({...it,kind:'wood',family:'leafs',index,radius:.24*it.s})),
+    ...rocks.map((it,index)=>({...it,kind:'stone',family:'rocks',index,radius:.5*it.s}))]
+    .map(it=>({kind:it.kind,family:it.family,index:it.index,x:it.x,y:heightAt(it.x,it.z)-.06,z:it.z,radius:it.radius}));
   instanced(pineTrunkGeo, pines, null, trunkColor);
   instanced(pineCrownGeo, pines, it => 0.9 + (it.tone + 0.5) * 0.3, leafColor);
   if (snowy) { // snow settles on the pine tips
@@ -35826,6 +35854,7 @@ function buildTownScene(settle) {
   }
   settlementPopulateResidents('town', townMemberRecords(settle), townScene, townEconBuildings, townLifeBudget.people, pal);
   townScene.userData.landRadius=groundR;
+  townScene.userData.walkTerrain={radius:groundR-2,heightAt,river:null};
   // ---- Lanes: a few cobbled streets radiating out from the square -----------
   for (let li = 0; li < 4; li++) {
     const laneA = (li / 4) * Math.PI * 2 + r() * 0.7;
@@ -36010,15 +36039,17 @@ function townAnimate(ts) {
   settlementSceneSampleFrame('town', ts);
   townAnimateFrame((ts || 0) / 1000);
 }
-function townAnimateFrame(t) {
+function townAnimateFrame(t, walking = false) {
   // The view holds still until the player moves it — no idle orbit. Life in
   // the streets (walkers, smoke, birds) supplies the motion instead.
   const motion = settlementSceneMotionScale();
   t *= motion;
   const { azimuth, polar, dist, tx, tz } = townCam;
+  if (!walking) {
   townCamera.position.set(tx + Math.sin(azimuth) * Math.sin(polar) * dist, Math.cos(polar) * dist + 3, tz + Math.cos(azimuth) * Math.sin(polar) * dist);
   townCamera.lookAt(tx, 1.6, tz);
   settlementSceneUpdateContext('town', townCamera, townScene);
+  }
   villageAnimatePhysicalSigns(townSigns, t);
   villageAnimateTrafficActors(townTraffic, t);
   villageAnimateLivestockActors(townLivestock, t);
@@ -36076,12 +36107,13 @@ function townAnimateFrame(t) {
   });
   // Dawn breaks over an open screen too: every ~10s, if the real sky has
   // moved to a new phase, the scene rebuilds itself in the new light.
-  if (townShadowTick++ % 600 === 599 && townBuiltPhase && townBuiltPhase !== burbzDaylightPhaseNow()) {
+  if (!walking && townShadowTick++ % 600 === 599 && townBuiltPhase && townBuiltPhase !== burbzDaylightPhaseNow()) {
     townBuiltKey = null;
     renderTownScreen();
     return;
   }
   townScene.userData.updatePeepContacts?.();
+  if (walking) return;
   if (window.BurbzManga) window.BurbzManga.render(THREE, townRenderer, townScene, townCamera);
   else townRenderer.render(townScene, townCamera);
 }
@@ -43126,7 +43158,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'enchanted-study-v384-20260910';
+const BURBZ_BUILD = 'homestead-v385-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

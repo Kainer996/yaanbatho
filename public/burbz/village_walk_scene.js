@@ -62,8 +62,8 @@
     try {
     scene.updateMatrixWorld(true);
     scene.traverseVisible(mesh=>{
-      if(!mesh.isMesh||mesh.isInstancedMesh||Array.isArray(mesh.material))return;
-      for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.resident||p.userData.npc)return;
+      if(!mesh.isMesh||mesh.isInstancedMesh||mesh.userData.harvestBatch||mesh.userData.harvestStumps||Array.isArray(mesh.material))return;
+      for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.resident||p.userData.npc||p.userData.natureTree)return;
       const m=mesh.material;
       if(!m||m.transparent||m.map||m.normalMap||m.alphaMap||m.emissiveMap||(!m.isMeshLambertMaterial&&!m.isMeshStandardMaterial))return;
       const pos=mesh.getWorldPosition(new T.Vector3());
