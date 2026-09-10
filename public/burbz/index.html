@@ -4455,6 +4455,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="scan_home.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
+<link rel="stylesheet" href="player_equipment.css?v=first-person-kit-v1-20260910">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5505,6 +5506,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="battle_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="loot_crafting_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="player_equipment_core.js?v=first-person-kit-v1-20260910"></script>
+<script src="player_equipment.js?v=first-person-kit-v1-20260910"></script>
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -5573,7 +5576,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_world.js?v=home-countryside-v387-20260910"></script>
+<script src="geographic_world.js?v=first-person-kit-v1-20260910"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -29765,7 +29768,7 @@ let villageLastFrameAt = 0;
 let villageAnimationRequest = 0, villagePauseTimer = 0;
 function walkingCharacterState() {
   const p=gameState.player;
-  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone};
+  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone,equipment:playerEquipmentAdapter()};
 }
 function villageHarvestAdapter(seed) {
   return {
@@ -29826,7 +29829,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=home-countryside-v387-20260910';
+        script.src = 'village_walk.js?v=first-person-kit-v1-20260910';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -37770,7 +37773,7 @@ function renderMagpieMarketPanelHTML() {
     return rows.length ? '<section class="magpie-category"><h3>' + label + '</h3><div class="stores-res-grid">' + rows.map(item => magpieMarketRowHTML(item,selling)).join('') + '</div></section>' : '';
   }).join('') || '<div class="inventory-empty">Nothing to sell yet. Collect a finished craft at the Forge, or bring back materials, food and curios from your travels.</div>';
   const savedPct = Math.round((1 - magpieMarketDiscount()) * 100);
-  const note = selling ? 'Sell items from your shelves, including every collected Forge craft. Equipped items stay with their birds; unequip them at the Forge to sell them.' : 'Buy crafting materials and larder supplies. Quests and gathering remain the cheaper route.';
+  const note = selling ? 'Sell items from your shelves, including every collected Forge craft. Equipped items stay with you or your companions; unequip them in the Satchel or at the Forge to sell them.' : 'Buy crafting materials and larder supplies. Quests and gathering remain the cheaper route.';
   return '<div id="magpieMarketPanel" class="stores-panel magpie-panel"><div class="stores-panel-title">⚖️ The counter</div><div class="magpie-wallet"><b>' + formatHudAmount(gameState.player.coins || 0) + ' 🪙</b> in the purse</div><div class="magpie-tabs" role="tablist" aria-label="Market trading">' + ['buy','sell'].map(tab => '<button type="button" role="tab" id="market-tab-' + tab + '" aria-controls="market-stock" aria-selected="' + (magpieMarketState.tab === tab) + '" tabindex="' + (magpieMarketState.tab === tab ? '0' : '-1') + '" onclick="magpieMarketSetTab(\'' + tab + '\')" onkeydown="magpieMarketTabKey(event)">' + (tab === 'buy' ? 'Buy' : 'Sell') + '</button>').join('') + '</div><div class="magpie-note">' + note + '</div>' + (!selling ? '<div class="magpie-haggle">' + (savedPct ? 'Your Market Trader has talked ' + savedPct + '% off buying prices.' : 'Post a charming Market Trader below to reduce buying prices.') + '</div>' : '') + '<div id="market-stock" role="tabpanel" aria-labelledby="market-tab-' + magpieMarketState.tab + '" tabindex="0">' + content + '</div></div>';
 }
 
@@ -38162,31 +38165,33 @@ function forgeOpenSlot(slot) { forgeState.slotPicker = forgeState.slotPicker ===
 
 // Shared equip plumbing — used by both the Forge and the tap-on-bird
 // equipment screen. Swapped-out pieces go back into the bag.
-function equipItemOnBird(birdId, slot, gearId) {
-  const L = lootCore();
-  const item = L.gearById(gearId);
-  if (!item || item.slot !== slot) return false;
-  const gearBag = gameState.inventory.gear;
-  if ((gearBag[gearId] || 0) <= 0) { showToast('None left in the Stores.'); return false; }
-  const loadout = birdLoadout(birdId);
-  if (loadout[slot]) gearBag[loadout[slot]] = (gearBag[loadout[slot]] || 0) + 1; // return old piece
-  gearBag[gearId] -= 1;
-  loadout[slot] = gearId;
-  updateQuestProgress('gear_equipped', 1);
-  saveState();
-  SFX.questComplete();
-  showToast(item.icon + ' ' + item.label + ' equipped!');
-  return true;
+function commitEquipmentChange(owner, slot, gearId) {
+  const snapshot=snapshotGameState(), core=window.BurbzPlayerEquipmentCore, effects=[];
+  const result=core.change(gameState,lootCore(),owner,slot,gearId);
+  if(!result.ok)return result;
+  try {
+    if(owner!==core.PLAYER&&gearId)updateQuestProgress('gear_equipped',1,effects);
+    durableSaveState({throwOnFailure:true});
+  } catch(error) {restoreGameStateSnapshot(snapshot);return {ok:false,reason:'Could not save your equipment. Your items are unchanged. Please try again.'};}
+  effects.forEach(effect=>{try{effect();}catch(_){}});
+  return result;
 }
-
+function playerEquipmentAdapter() {
+  const identity=gameState;
+  return {snapshot:()=>window.BurbzPlayerEquipmentCore.snapshot(gameState,lootCore()),change:(slot,id)=>{
+    if(gameState!==identity)return {ok:false,reason:'Your save changed. Reopen the satchel.'};
+    return commitEquipmentChange(window.BurbzPlayerEquipmentCore.PLAYER,slot,id);
+  }};
+}
+function equipItemOnBird(birdId, slot, gearId) {
+  const result=commitEquipmentChange(birdId,slot,gearId);
+  if(!result.ok){showToast(result.reason);return false;}
+  SFX.questComplete();showToast(lootCore().gearById(gearId).label+' equipped!');return true;
+}
 function unequipItemFromBird(birdId, slot) {
-  const loadout = birdLoadout(birdId);
-  if (!loadout[slot]) return false;
-  gameState.inventory.gear[loadout[slot]] = (gameState.inventory.gear[loadout[slot]] || 0) + 1;
-  delete loadout[slot];
-  saveState();
-  SFX.tap();
-  return true;
+  const result=commitEquipmentChange(birdId,slot,null);
+  if(!result.ok){showToast(result.reason);return false;}
+  SFX.tap();return true;
 }
 
 function forgeEquip(slot, gearId) {
@@ -42688,7 +42693,7 @@ const PLAYER_QUESTS = [
   // pays out a pair of Thorn Talons, so there is always something in the
   // Stores to put on — a battle win only drops gear about one time in five.
   { id:'pq_equip_gear',     name:'Equip a bird with an item', desc:'Open the Forge and give a companion a piece of gear', type:'gear_equipped', target:1, reward:45, coins:20, icon:'\u{1F5E1}\u{FE0F}', go:'forge',
-    measure:() => Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)) ? 1 : 0 },
+    measure:() => Object.entries((gameState.inventory && gameState.inventory.equipment) || {}).some(([owner,l]) => owner !== '@player' && l && Object.values(l).some(Boolean)) ? 1 : 0 },
   { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
     measure:() => Number(gameState.player.wins) || 0 },
   { id:'pq_meal',           name:'Serve a meal', desc:'Cook and serve a tray at the Kitchen & Pantry', type:'meal_served', target:1, reward:50, coins:20, icon:'\u{1F37D}\u{FE0F}', go:'academy',

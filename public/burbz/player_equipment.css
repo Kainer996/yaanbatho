@@ -1,0 +1,20 @@
+
+.fp-equipment{font:14px/1.4 Inter,system-ui,sans-serif;color:#f6e9cf;text-align:left}
+.fp-equipment h3{font:22px Georgia,serif;margin:22px 0 10px}
+.fp-equipment h4{font:18px Georgia,serif;margin:14px 0 10px}
+.fp-equipment .fp-equipment-note,.fp-equipment .fp-equipment-bonuses{font-size:12px;line-height:1.5;color:#cecaac}
+.fp-equipment-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fp-equipment button{min-width:0;min-height:48px;border:1px solid #d3af6a70;background:#1b231c;color:#f6e9cf;border-radius:10px;padding:10px;text-align:left;cursor:pointer;font:inherit}
+.fp-equipment button[aria-expanded=true]{border-color:#f3d79c;background:#393a2a}
+.fp-equipment button small{display:block;color:#d6c394;font-size:11px;margin-bottom:4px}
+.fp-slot-item{display:flex;align-items:center;gap:8px;min-height:40px}
+.fp-slot-item img{width:40px;height:40px;object-fit:contain;flex:none}
+.fp-slot-item span{overflow-wrap:anywhere}
+.fp-empty-slot{display:grid;place-items:center;width:40px;color:#a89772;font-size:24px}
+.fp-equipment-picker{border-top:1px solid #c6aa6c66;padding-top:8px}
+.fp-equipment-picker button{width:100%;margin-bottom:8px}
+.fp-equipment-picker button small{margin-top:7px;line-height:1.45}
+.fp-equipment button:disabled{opacity:.65;cursor:default}
+.fp-gear-stock{display:block;margin-top:6px;font-size:11px;color:#d7d3b7}
+.fp-equipment-result{min-height:18px;color:#f2d5a2}
+@media(max-width:350px){.fp-equipment-slots{grid-template-columns:1fr}}

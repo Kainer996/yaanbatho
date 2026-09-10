@@ -1,0 +1,22 @@
+/* Shared equipment sheet, mounted inside an existing first-person modal. */
+(function(root){'use strict';
+ function icon(name){const paths={satchel:'<path d="M7 8V6a5 5 0 0 1 10 0v2M5 8h14l1 13H4L5 8Z"/><path d="M4 12c5 4 11 4 16 0M10 14h4v4h-4z"/>',journal:'<path d="M5 3h13a1 1 0 0 1 1 1v17H6a3 3 0 0 1-3-3V5a2 2 0 0 1 2-2ZM6 3v14h13M10 7h5M10 11h5"/>',fullscreen:'<path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/>',cast:'<path d="M13 2c1 5-5 7-5 11 0 2 1 3 2 4-1-4 4-5 4-8 4 4 6 7 4 11-4 5-13 2-13-4 0-5 5-8 8-14Z"/>'};return '<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.satchel)+'</svg>';}
+ const labels={weapon:'Weapon',armour:'Armour',trinket:'Enhancement',spell:'Spell',potion:'Potion'};
+ function mount(host,adapter,signal){
+  const section=document.createElement('section');section.className='fp-equipment';section.setAttribute('aria-label','Player equipment');const supplies=host.querySelector('dl,.gw-supplies');host.insertBefore(section,supplies||null);
+  let selected=null,last='',message='';
+  const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const art=item=>item?'<img src="assets/gear/'+encodeURIComponent(item.id)+'.webp" alt="" width="40" height="40"><span>'+escape(item.label)+'</span>':'<span class="fp-empty-slot" aria-hidden="true">＋</span><span>Empty</span>';
+  function paint(force=false){const state=adapter.snapshot(),key=JSON.stringify([state,selected,message]);if(!force&&key===last)return;last=key;
+   const focus=document.activeElement?.closest('[data-equip-key]')?.dataset.equipKey;
+   section.innerHTML='<h3>Your equipment</h3><p class="fp-equipment-note">Shared with your companions and the Forge. Worn items leave the Stores; unequip before selling.</p><div class="fp-equipment-slots">'+Object.keys(labels).map(slot=>{const item=state.items.find(i=>i.id===state.loadout[slot]);return '<button type="button" class="fp-slot" data-slot="'+slot+'" data-equip-key="slot:'+slot+'" aria-expanded="'+(selected===slot)+'"><small>'+labels[slot]+'</small><span class="fp-slot-item">'+art(item)+'</span></button>';}).join('')+'</div><p class="fp-equipment-bonuses">Forge '+state.gearLevel+' · '+Object.entries(state.bonuses).filter(([,v])=>v).map(([k,v])=>escape(k.toUpperCase())+' +'+(k==='critBonus'?Math.round(v*100)+'%':v)).join(' · ')+'</p><p class="fp-equipment-result" role="status">'+escape(message)+'</p>';
+   if(selected){const picker=document.createElement('div');picker.className='fp-equipment-picker';picker.innerHTML='<h4>'+labels[selected]+'</h4>'+(state.loadout[selected]?'<button type="button" data-unequip="'+selected+'" data-equip-key="unequip">Unequip '+escape(state.items.find(i=>i.id===state.loadout[selected])?.label||labels[selected])+'</button>':'')+state.items.filter(i=>i.slot===selected&&(i.count>0||i.owners.length)).map(item=>'<button type="button" class="fp-gear-choice" data-item="'+item.id+'" data-equip-key="item:'+item.id+'" '+(item.count<1?'disabled':'')+'><span class="fp-slot-item">'+art(item)+'</span><small>'+escape(item.copy)+'</small><span class="fp-gear-stock">'+(item.count>0?item.count+' spare':'No spare copies')+(item.owners.length?' · Equipped: '+escape(item.owners.join(', ')):'')+'</span></button>').join('');if(!state.items.some(i=>i.slot===selected&&(i.count>0||i.owners.length)))picker.innerHTML+='<p>No '+labels[selected].toLowerCase()+' in the Stores yet. Collect your finished crafts at the Forge.</p>';section.append(picker);}
+   if(focus)section.querySelector('[data-equip-key="'+CSS.escape(focus)+'"]:not(:disabled)')?.focus({preventScroll:true});
+  }
+  section.addEventListener('click',e=>{const button=e.target.closest('button');if(!button)return;if(button.dataset.slot){selected=selected===button.dataset.slot?null:button.dataset.slot;message='';paint();return;}
+   const slot=button.dataset.unequip||selected;if(!slot)return;const result=adapter.change(slot,button.dataset.item||null);message=result.ok?(result.id?'Equipped.':'Returned to the Stores.'):result.reason;paint(true);section.querySelector('[data-slot="'+slot+'"]')?.focus({preventScroll:true});
+  },{signal});
+  section.addEventListener('error',e=>{if(e.target.tagName==='IMG')e.target.hidden=true;},{capture:true,signal});paint();return{update:paint,dispose:()=>section.remove()};
+ }
+ root.BurbzPlayerEquipment={mount,icon};
+})(globalThis);
