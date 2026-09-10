@@ -248,6 +248,7 @@ def test_fetch_alignment_ways_falls_over_to_the_next_mirror():
 
 
 ALIGNMENT_FUNCTIONS = [
+    "mapGatheringGate",
     "ensureWalkingQuestState", "activeWalkingQuest", "setWalkQuestAlignmentStatus",
     "walkQuestAlignmentMessage", "walkQuestRoutePoints", "walkQuestAuthorityWays",
     "certifyQuestAgainstAuthority", "requestAuthoritativeQuestAlignment",
@@ -259,6 +260,7 @@ ALIGNMENT_FUNCTIONS = [
 
 # Everything the alignment path touches that is not itself under test.
 ALIGNMENT_SHIM = """
+const BurbzMapTrailCore = require("./map_trail_core.js");
 global.window = global;
 require('./quest_core.js');
 require('./walking_route_core.js');
@@ -318,7 +320,7 @@ const ensureOfferLoopBack = () => Promise.resolve(null);
 const mapDistanceMeters = (a, b) => window.BurbzQuestCore.questHaversine(a.lat, a.lon, b.lat, b.lon);
 const questOnPositionFix = () => [];
 let liveMapHasPrecisePosition = true;
-let liveMapLastPosition = {lat:53,lon:-2,accuracy:10};
+let liveMapLastPosition = {lat:53,lon:-2,accuracy:10,at:Date.now()};
 """
 
 

@@ -46,7 +46,7 @@ function context(names, extra = {}) {
   const state = { walkingQuests: { active: null, history: [] } }, effects = { xp: 0, coins: 0, saved: 0, rendered: 0 };
   const ctx = {
     window: { BurbzQuestCore: { ...Q }, BurbzWalkingRouteCore: R, BurbzWalkingEncounterCore: E },
-    console, Date, Math, Number, JSON, Promise, Set, Map,
+    console, Date, Math, Number, JSON, Promise, Set, Map, BurbzMapTrailCore:require('../map_trail_core.js'),
     gameState: state, effects, walkQuestLastSave: 0,
     activeWalkingQuest: () => state.walkingQuests.active,
     ensureWalkingQuestState: () => state.walkingQuests,
@@ -67,11 +67,11 @@ function context(names, extra = {}) {
     mapDistanceMeters: (a, b) => Q.questHaversine(a.lat, a.lon, b.lat, b.lon),
     questOverview: { on: true, selectedIndex: 0, offers: [], at: null, fetchedAt: 0 },
     questOverviewColor: () => '#bb9c5b', questOfferRequestSeq: 0, walkQuestOffersCache: [],
-    liveMapHasPrecisePosition: true, liveMapLastPosition: { lat: 51.5, lon: -1.2, accuracy: 5 },
+    liveMapHasPrecisePosition: true, liveMapLastPosition: { lat: 51.5, lon: -1.2, accuracy: 5, at:Date.now() },
     ...extra
   };
   vm.createContext(ctx);
-  vm.runInContext(names.map(source).join('\n'), ctx);
+  vm.runInContext(names.concat('mapGatheringGate').map(source).join('\n'), ctx);
   return ctx;
 }
 
