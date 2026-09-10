@@ -278,6 +278,7 @@ FILES=(
   "merlin_flight.js"
   "merlin_flight.css"
   "assets/merlin-flight/merlin-flight-v1.webp"
+  "assets/merlin-flight/merlin-flight-v2.webp"
   "assets/merlin-flight/atlas-config.js"
   "uk_bird_expansion_50.js"
   "uk_bird_expansion_2.js"

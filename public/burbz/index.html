@@ -1737,6 +1737,11 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
   animation: merlinBranchSway 7.6s ease-in-out infinite;
 }
 .merlin-perch-assembly:has(.pet-companion.flying) { animation:none; }
+/* The landscape rail owns the far-right edge. Keep the real perch and care
+   menu beside it so native taps reach Merlin instead of the navigation. */
+body:has(#app.landscape-ui) :is(#merlinPerchAssembly,#merlinCareMenu) {
+  margin-right:calc(clamp(104px,11vw,148px) + env(safe-area-inset-right,0px));
+}
 /* The bough hangs over open country, never over controls. On these screens
    that corner belongs to the game — the Empire's ledger and map keys, the
    arena's record, a room's own Back button, the hall ledgers — so Merlin
@@ -5572,8 +5577,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
-<script src="merlin_flight.js?v=merlin-flight-v1-20260907"></script>
-<script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v1-20260907"></script>
+<script src="merlin_flight.js?v=merlin-flight-v390-20260910"></script>
+<script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v390-20260910"></script>
 <script src="diary_core.js?v=release-polish-v342-20260901"></script>
 <script>
 /* ============================================================================
@@ -42395,7 +42400,7 @@ function petFlyOutAndReturn() {
   if (!merlinFlightSession) {
     merlinFlightSession = window.BurbzMerlinFlight.create({
       host: sprite,
-      atlasUrl: 'assets/merlin-flight/merlin-flight-v1.webp',
+      atlasUrl: 'assets/merlin-flight/merlin-flight-v2.webp',
       atlas: window.MERLIN_FLIGHT_ATLAS,
       durationMs: 25000,
       // This eligibility check is read-only: care completion/save stays in
@@ -43322,7 +43327,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'market-tabs-v389-20260910';
+const BURBZ_BUILD = 'merlin-flight-v390-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
