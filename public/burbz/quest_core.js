@@ -2052,8 +2052,9 @@
   }
 
   function questReachRadiusM(quest, index) {
+    var checkpoints = quest && quest.checkpoints || [], cp = checkpoints[index];
+    if (cp && cp.kind === 'chest') return 45;
     if (!quest || quest.routeSchemaVersion !== 1) return REACH_RADIUS_M;
-    var checkpoints = quest.checkpoints || [], cp = checkpoints[index];
     if (!cp) return 45;
     var radius = 45;
     [checkpoints[index - 1], checkpoints[index + 1]].forEach(function (next) {
@@ -2085,17 +2086,23 @@
     if (nextCheckpointIndex >= 0) {
       var cp = quest.checkpoints[nextCheckpointIndex];
       var idx = nextCheckpointIndex;
-      if (questHaversine(lat, lon, cp.lat, cp.lon) <= questReachRadiusM(quest, idx)) {
-        if (cp.kind === 'chest') {
-          // Chest reach is only an intent. The UI transaction validates rewards,
-          // writes the receipt and reached/count state durably, then shows success.
-          events.push({ type: cp.kind, checkpoint: cp, index: idx, reachedAt: now });
-        } else {
-          cp.reached = true;
-          cp.reachedAt = now;
-          events.push({ type: cp.kind, checkpoint: cp, index: idx });
-          quest._finishNudged = false; // fresh progress re-arms the missed-waymarker nudge
-        }
+      if (cp.kind !== 'chest' && questHaversine(lat, lon, cp.lat, cp.lon) <= questReachRadiusM(quest, idx)) {
+        cp.reached = true;
+        cp.reachedAt = now;
+        events.push({ type: cp.kind, checkpoint: cp, index: idx });
+        quest._finishNudged = false;
+      }
+    }
+
+    // Treasure is a proximity pickup: an earlier missed flag must not lock a
+    // chest at the player's feet. Flags and the finish remain ordered. Emit at
+    // most one intent per fix; only the existing durable transaction pays it.
+    for (var chestIndex = 0; chestIndex < quest.checkpoints.length; chestIndex++) {
+      var chest = quest.checkpoints[chestIndex];
+      if (Number.isFinite(accuracy) && accuracy >= 0 && accuracy <= 60 && chest && chest.kind === 'chest' && !chest.reached &&
+          questHaversine(lat, lon, chest.lat, chest.lon) <= questReachRadiusM(quest, chestIndex)) {
+        events.push({ type:'chest', checkpoint:chest, index:chestIndex, reachedAt:now });
+        break;
       }
     }
 

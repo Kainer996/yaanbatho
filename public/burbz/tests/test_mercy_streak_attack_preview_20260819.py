@@ -24,7 +24,7 @@ HTML_PATH = ROOT / "index.html"
 SW_PATH = ROOT / "sw.js"
 OWN_RELEASE_PIN = "mercy-streak-attack-preview-v287-20260819"
 PREVIOUS_RELEASE_PIN = "battle-progression-fixes-v286-20260819"
-CURRENT_BUILD = "player-home-v380-20260909"
+CURRENT_BUILD = "map-trails-v381-20260909"
 
 
 def _node(script: str):

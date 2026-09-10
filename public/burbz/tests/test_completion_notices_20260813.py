@@ -17,7 +17,7 @@ SW = (ROOT / "sw.js").read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "completion-notices-v265-20260813"
 PREVIOUS_RELEASE_PIN = "real-place-names-v264-20260813"
-CURRENT_BUILD = "player-home-v380-20260909"
+CURRENT_BUILD = "map-trails-v381-20260909"
 
 
 def function_source(name: str) -> str:

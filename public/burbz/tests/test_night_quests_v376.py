@@ -32,11 +32,11 @@ def test_night_release_is_atomic_offline():
  release='night-quests-v376-20260908'
  files=['geographic_daynight_core.js','geographic_daynight.js','geographic_map_3d.js','geographic_map_3d.css','geographic_details_scene.js']
  html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text();updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
- assert "const BURBZ_BUILD = 'player-home-v380-20260909';" in html
- assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw).group(1).endswith('player-home-v380-20260909')
+ assert "const BURBZ_BUILD = 'map-trails-v381-20260909';" in html
+ assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw).group(1).endswith('map-trails-v381-20260909')
  for file in files:
   assert (ROOT/file).is_file()
-  asset_release='area-birds-v377-20260909' if file=='geographic_map_3d.js' else release
+  asset_release='area-birds-v377-20260909' if file=='geographic_map_3d.js' else 'map-trails-v381-20260909' if file=='geographic_details_scene.js' else release
   assert f'{file}?v={asset_release}' in html
   assert f'"{file}"' in updater
   for name in ['BURBZ_ASSETS','BURBZ_CORE','BURBZ_INSTALL_REQUIRED']:

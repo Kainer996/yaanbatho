@@ -5,7 +5,7 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "player-home-v380-20260909"
+CURRENT_BUILD = "map-trails-v381-20260909"
 RUNTIMES = (
     "walking_route_core.js",
     "walking_encounter_core.js",
@@ -13,7 +13,7 @@ RUNTIMES = (
     "quest_core.js",
 )
 def pin(path):
-    return "map-pictures-v374-20260908" if path == "quest_core.js" else RELEASE
+    return "map-trails-v381-20260909" if path == "quest_core.js" else RELEASE
 
 STYLE = "walking_quest_ui.css"
 ART = tuple(

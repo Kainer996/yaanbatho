@@ -5500,14 +5500,15 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
 <script src="geographic_daynight_core.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_daynight.js?v=night-quests-v376-20260908"></script>
-<script src="geographic_details_scene.js?v=night-quests-v376-20260908"></script>
-<script src="geographic_places.js?v=map-pictures-v374-20260908"></script>
+<script src="map_trail_core.js?v=map-trails-v381-20260909"></script>
+<script src="geographic_details_scene.js?v=map-trails-v381-20260909"></script>
+<script src="geographic_places.js?v=map-trails-v381-20260909"></script>
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
 <script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
-<script src="quest_core.js?v=map-pictures-v374-20260908"></script>
+<script src="quest_core.js?v=map-trails-v381-20260909"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
 <script src="side_trail_core.js?v=offroad-side-quests-v283-20260818"></script>
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
@@ -18752,6 +18753,7 @@ function enableBurbzTerrain() {
   if(!geographicPlaces && window.BurbzGeographicPlaces) geographicPlaces=window.BurbzGeographicPlaces.attach(liveMap,{
     isVisible:()=>currentScreen==='map',getPosition:()=>liveMapHasPrecisePosition?liveMapLastPosition:null,
     marker:opts=>createGeographicMarker(opts),loadWalk:ensureVillageWalkModule,
+    getQuestObjects:()=>{const q=activeWalkingQuest();return BurbzMapTrailCore.buildings(q,q?BurbzWalkingEncounterCore.listQuestEncounters(q):[]);},
     fetch:query=>window.BurbzQuestCore.fetchGeographicDetails(query),
     data:()=>gameState.geographicPlaces,
     save:next=>{const old=gameState.geographicPlaces;gameState.geographicPlaces=next;const result=saveState();if(!result?.ok){gameState.geographicPlaces=old;return false;}return true;},
@@ -18767,7 +18769,7 @@ function enableBurbzTerrain() {
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
   if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
-  if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':18, 'line-opacity':.32, 'line-blur':4 } }); liveMap.addLayer({ id:'burbz-quest-route-casing', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':9.5, 'line-opacity':.85, 'line-dasharray':[.135, 1.482] } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':6.4, 'line-opacity':1, 'line-dasharray':[.2, 2.2] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
+  if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addSource('burbz-quest-route-edges', {type:'geojson',data:{type:'FeatureCollection',features:[]}}); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route-edges', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':5, 'line-opacity':.32, 'line-blur':1.5 } }); liveMap.addLayer({ id:'burbz-quest-route-casing', type:'line', source:'burbz-quest-route-edges', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':3.6, 'line-opacity':.85, 'line-dasharray':[.25, 2.5] } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route-edges', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':2.3, 'line-opacity':1, 'line-dasharray':[.4, 4] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = geographicMap3D ? geographicMap3D.getPitch(zoom, questMapInspectionMode()) : questMapInspectionMode() ? 0 : burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: normal play stays pinned to
 // real GPS and a one-finger swipe rotates the view. A selected quest temporarily
@@ -19019,6 +19021,7 @@ function clearTrailExtraMarkers() {
 function drawTrailExtrasOnMap(quest) {
   clearTrailExtraMarkers();
   quest = quest || activeWalkingQuest();
+  geographicPlaces?.refreshQuestObjects();
   if (!quest || !liveMap || !window.maplibregl) return;
   (quest.trailNpcs || []).forEach(npc => {
     const el = document.createElement('div');
@@ -19050,7 +19053,7 @@ function drawTrailExtrasOnMap(quest) {
       const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, tav)) : null;
       showToast('🍻 ' + tav.name + ' has set up on your trail' + (me !== null ? ' — ' + me + ' m away. Walk there for a drink!' : '!'));
     });
-    questExtraMarkers.push(createGeographicMarker({ element: el, anchor: 'center' }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
+    questExtraMarkers.push(createGeographicMarker({ element: el, anchor: 'bottom', offset:[0,-42] }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
   }
 }
 
@@ -19544,7 +19547,7 @@ async function activateWalkingQuestFromOffer(offer, retry, requestId = walkQuest
   vibrate(QUEST_BUZZ.start);
   const current = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
   const start = quest.checkpoints[0];
-  const atStart = current && start && mapDistanceMeters(current, start) <= window.BurbzQuestCore.REACH_RADIUS_M;
+  const atStart = current && start && mapGatheringGate(start).ready && mapDistanceMeters(current, start) <= window.BurbzQuestCore.REACH_RADIUS_M;
   const startEvents = atStart ? questOnPositionFix(liveMapLastPosition.lat, liveMapLastPosition.lon, Number.isFinite(current.accuracy) ? current.accuracy : 10) : [];
   if (!startEvents.some(ev => ev.type === 'npc')) showQuestNpcDialog(quest.npcName, quest.story ?
     '📖 Tale ' + quest.story.order + ' of ' + quest.story.total + ' — "' + quest.story.title + '". ' + quest.story.intro + ' Follow the golden path, and keep your scanner ready — a lore scroll waits on this road.' :
@@ -19558,6 +19561,8 @@ function walkQuestRouteGeoJSON(quest) {
 function drawWalkingQuestRoute() {
   if (!liveMap) return;
   try { const src = liveMap.getSource('burbz-quest-route'); if (src) src.setData(walkQuestRouteGeoJSON(activeWalkingQuest())); } catch (e) {}
+  try { const src=liveMap.getSource('burbz-quest-route-edges'),q=activeWalkingQuest();if(src)src.setData({type:'FeatureCollection',features:q?.routeCertification?.status==='certified'?BurbzMapTrailCore.corridor(q.route):[]}); } catch(e) {}
+  geographicPlaces?.refreshQuestObjects();
   geographicDayNight?.refresh();
 }
 function clearWalkingQuestFromMap() {
@@ -19894,7 +19899,7 @@ function drawWalkingQuestOnMap() {
     el.type = 'button';
     el.setAttribute('aria-label', cp.label + (cp.reached ? ', reached' : ', waymarker ' + idx));
     el.className = 'quest-marker-pin';
-    if (idx !== nextRequiredIdx && cp.kind !== 'finish') el.classList.add('is-future');
+    if (idx !== nextRequiredIdx && cp.kind !== 'finish' && cp.kind !== 'chest') el.classList.add('is-future');
     el.style.zIndex = idx === nextRequiredIdx ? '20' : '1';
     el.dataset.questCp = String(idx);
     const encounter = encounterStops.find(e => e.checkpointIndex === idx);
@@ -19909,11 +19914,21 @@ function drawWalkingQuestOnMap() {
     el.appendChild(face);
     el.addEventListener('click', ev => {
       ev.stopPropagation(); // keep the tap off the map's quest-offers hit layer underneath
+      const fix=liveMapHasPrecisePosition?liveMapLastPosition:null;
+      if(cp.kind==='chest'){
+        const gate=mapGatheringGate(cp);
+        if(!gate.ready&&gate.distance==null){showToast(gate.reason);return;}
+        if(fix&&mapDistanceMeters(fix,cp)<=45){questOnPositionFix(fix.lat,fix.lon,fix.accuracy);return;}
+      }
+      if(cp.kind!=='chest'&&idx!==window.BurbzQuestCore.questNextCheckpointIndex(quest)&&cp.kind!=='finish'){
+        showToast('Reach the highlighted earlier waymarker first.');return;
+      }
       const meta = cp.kind === 'npc' ? (cp.label + ' the quest giver') : cp.kind === 'chest' ? 'A treasure chest' : cp.kind === 'finish' ? 'The quest banner' : cp.label;
       const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, cp)) : null;
       showToast((encounter ? encounter.name + ' · fictional story stop. ' : '') + meta + (me !== null ? ' — ' + me + ' m away. Walk within ' + Math.round(window.BurbzQuestCore.questReachRadiusM(quest, idx)) + ' m to reach it!' : ' — walk close to open it.'));
     });
     const markerOptions = { element: el, anchor: 'center' };
+    if(encounter?.kind==='building')markerOptions.offset=[0,-42];
     if (cp.kind === 'finish') markerOptions.offset = [14, -14]; // visual only; geographic point remains on-route
     const mk = createGeographicMarker(markerOptions).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
     questMapMarkers[idx] = mk;
@@ -20706,13 +20721,13 @@ function showSideQuestNpcLandmark(id) {
   showQuestNpcDialog('Wandering quest giver', 'Good to see you again, explorer! We met right here on your Side Quest (' + when + '). My friend the ' + n.species + ' still sings about that walk. I am staying at this spot — visit any time.');
 }
 
-// Discoveries were physically reached the moment they spawned under the
-// player's feet, so they can be opened from any distance once spotted.
+// Item finds stay at their saved coordinates until gathered inside the circle.
 async function sideQuestClaimDiscovery(id, opts) {
   const quiet = !!(opts && opts.quiet);
   const active = sideQuestActive();
   const d = active && active.discoveries.find(x => x.id === id);
   if (!d || d.claimed) return false;
+  if(['chest','weapon'].includes(d.kind)){const gate=mapGatheringGate(d);if(!gate.ready){showToast(gate.reason);return false;}}
   if (d.kind === 'chest') {
     const claimKey = 'side:' + active.id + ':discovery:' + d.id;
     const rawLoot = d.loot || sideQuestChestLoot(d.id, d.coins); // deterministic old-save fallback
@@ -20823,7 +20838,7 @@ async function endSideQuest() {
   for (const d of unclaimed) {
     const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
     if (!claimed) {
-      showToast('One discovery could not be saved. Side Quest remains active so you can retry.');
+      showToast('Collect each item inside your yellow circle before ending this Side Quest. Unsaved finds stay on your map.');
       return;
     }
   } // nothing found is ever lost
@@ -21724,8 +21739,11 @@ function handleLivePosition(pos, fly) {
   liveMapLastPosition = { lat, lon, accuracy, at:Number(pos.timestamp), source:'Your live position' };
   rememberHomeFix(lat, lon);
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy, at:Number(pos.timestamp) });
-  try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
-  try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
+  // A cached GPS position may draw the map, but cannot award trail rewards.
+  if (mapGatheringGate({lat,lon}).ready) {
+    try { questOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ quest fix failed', err); }
+    try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
+  }
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
@@ -21869,7 +21887,7 @@ function habitatPoiIcon(habitat) { return ({ water:'🌉', wetland:'🌾', woodl
 function habitatPoiName(habitat) { return ({ water:'Ford', wetland:'Reed Gate', woodland:'Grove', park:'Shrine', farmland:'Granary', grassland:'Meadow', coast:'Harbour', hills:'Eyrie', urban:'Rookery' })[habitat] || 'Outpost'; }
 function metersToLonLat(lat, lon, eastMeters, northMeters) { const dLat = northMeters / 111320; const dLon = eastMeters / (111320 * Math.max(.2, Math.cos(lat * Math.PI / 180))); return [lon + dLon, lat + dLat]; }
 function circleFeature(lat, lon, radiusMeters, props = {}, steps = 72) { const coords = []; for (let i=0;i<=steps;i++) { const a = (i / steps) * Math.PI * 2; coords.push(metersToLonLat(lat, lon, Math.sin(a) * radiusMeters, Math.cos(a) * radiusMeters)); } return { type:'Feature', properties:props, geometry:{ type:'Polygon', coordinates:[coords] } }; }
-function drawPlayerRange(lat, lon) { if (!liveMap || !liveMap.getSource('burbz-player-range')) return; liveMap.getSource('burbz-player-range').setData({ type:'FeatureCollection', features:[circleFeature(lat, lon, 185, { kind:'scan-range' })] }); }
+function drawPlayerRange(lat, lon) { if (!liveMap || !liveMap.getSource('burbz-player-range')) return; liveMap.getSource('burbz-player-range').setData({ type:'FeatureCollection', features:[BurbzMapTrailCore.circle({lat,lon})] }); }
 
 // ---- Player avatar: line-of-sight cone that follows the phone's heading ----
 let playerHeading = 0, playerHeadingManual = false, playerCompassWired = false;
@@ -22104,7 +22122,7 @@ const MAP_PICKUP_TYPES = [
   { id:'windfall', glyph:'🍎', label:'Windfall apple', weight:0, biomes:{ farmland:10, park:8 }, grant() { addLarderIngredient('windfall_apple', 1); return '+1 Windfall Apple (Stores larder)'; } }
 ];
 const MAP_PICKUP_CELL_DEG = 0.0024; // ~260 m cells
-const MAP_PICKUP_RANGE_M = 440; // doubled for normal GPS/path alignment error
+const MAP_PICKUP_RANGE_M = BurbzMapTrailCore.PICKUP_RADIUS_M; // same physical boundary as the yellow circle
 let liveMapPickupMarkers = [];
 let liveMapPickupRenderKey = null;
 
@@ -22143,7 +22161,7 @@ function starterTimberPickupsNear(lat, lon) {
   for (let i = 0; i < STARTER_TIMBER_BUNDLES; i++) {
     if (state.taken[i]) continue;
     const angle = (i / STARTER_TIMBER_BUNDLES) * Math.PI * 2 + Math.PI / 5;
-    const meters = 60 + i * 25;
+    const meters = 55 + i * 24;
     const dLat = (meters * Math.cos(angle)) / 111320;
     const dLon = (meters * Math.sin(angle)) / (111320 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
     out.push({
@@ -22272,7 +22290,10 @@ function updateMapPickupReachability(lat, lon) {
     const pickup = marker._burbzPickup;
     const el = marker.getElement && marker.getElement();
     if (!pickup || !el) return;
-    el.classList.toggle('locked', mapDistanceMeters(pickup, { lat, lon }) > MAP_PICKUP_RANGE_M);
+    const ready=mapGatheringGate(pickup).ready;
+    el.classList.toggle('locked', !ready);
+    el.title=pickup.type.label+(ready?' — gather':' — walk inside your yellow circle to gather');
+    el.setAttribute('aria-label',el.title);
   });
 }
 function drawMapPickups(lat, lon) {
@@ -22304,7 +22325,7 @@ function drawMapPickups(lat, lon) {
       // A dense woodland must not refill the old marker cap after thinning.
       .filter(({p})=>!p.woodland||woodlandShown++ < (zoomedOut ? 8 : 4)))
     .forEach(({ p, dist }) => {
-      const inReach = dist <= MAP_PICKUP_RANGE_M;
+      const inReach = mapGatheringGate(p).ready;
       const el = makeHtmlMarker('burbz-pickup-marker', '<div class="burbz-pickup-orb">' + window.BurbzFieldMapUI.pickupIcon(p.type) + '</div>');
       el.setAttribute('role', 'button'); el.tabIndex = 0;
       el.title = p.type.label + (inReach ? ' — gather' : ' — walk closer to gather');
@@ -22319,15 +22340,13 @@ function drawMapPickups(lat, lon) {
     });
   liveMapPickupRenderKey = renderKey;
 }
+function mapGatheringGate(pickup) {
+  return BurbzMapTrailCore.gathering(pickup,liveMapHasPrecisePosition?liveMapLastPosition:null);
+}
 function collectMapPickup(pickup, el) {
-  const me = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
   const toastGlyph = pickup.type.toastGlyph || pickup.type.glyph;
-  if (me && mapDistanceMeters(me, pickup) > MAP_PICKUP_RANGE_M) {
-    SFX.tap();
-    showToast(toastGlyph + ' ' + pickup.type.label + ' — walk closer to gather it!');
-    return;
-  }
-  if(pickup.woodland&&!me){showToast('Allow precise location to gather woodland timber.');return;}
+  const gate=mapGatheringGate(pickup);
+  if(!gate.ready){SFX.tap();showToast(gate.reason);return;}
   const pickupSnapshot=pickup.woodland?snapshotGameState():null;
   let rewardText;
   if (pickup.starterIndex != null) {
@@ -42946,7 +42965,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'player-home-v380-20260909';
+const BURBZ_BUILD = 'map-trails-v381-20260909';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

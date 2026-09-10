@@ -35,7 +35,7 @@ SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "empire-village-declutter-v317-20260824"
 # The head of the line, which later releases move.
-CURRENT_BUILD = "player-home-v380-20260909"
+CURRENT_BUILD = "map-trails-v381-20260909"
 PREVIOUS_RELEASE_PIN = "magpie-market-v316-20260824"
 ACADEMY_CORE_PIN = "barracks-tutorial-callout-v354-20260906"
 
