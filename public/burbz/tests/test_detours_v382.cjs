@@ -20,6 +20,21 @@ function fixture(game=freshGame()){
  vm.createContext(ctx);for(const name of ['snapshotGameState','restoreStateTree','restoreGameStateSnapshot','ensureWalkingQuestState','ensureSideQuestState','activeWalkingQuest','sideQuestActive','savedOriginalQuest','questDetourActionsHTML','updateDetourResumeButton','updateWalkQuestHud','commitDetourTransition','resumeOriginalQuest','resumeSavedDetour','maybeToggleOffRoadSideQuest','startOffRoadSideQuest','questOnPositionFix','sideQuestTrailGeoJSON'])vm.runInContext(functionSource(name),ctx);
  return{ctx,calls,nodes,time:t=>now=t,fail:v=>fail=v,stored:()=>JSON.parse(stored),reload:()=>fixture(JSON.parse(stored)),far(minutes=40){for(let i=0;i<=minutes;i++){now=start+i*minute;ctx.maybeToggleOffRoadSideQuest(ctx.activeWalkingQuest(),51.505,-1.21,10,now);}}};
 }
+test('actual window registration exposes both generated inline resume handlers outside the app IIFE',()=>{
+ const f=fixture();f.far();
+ const begin=html.indexOf('Object.assign(window, {',html.indexOf('// The game runs inside an IIFE'));
+ assert.ok(begin>=0);const block=html.slice(begin,html.indexOf('\n});',begin)+4);
+ const names=['openQuestBoard','openQuestOfferSheet','closeWalkQuestSheet','openActiveWalkQuestSheet','abandonWalkingQuest','switchScreen','openTrailTavernSheet','buyTrailTavernDrink','academyTavernRecruit','openQuestPhotoBook','pickQuestPhoto','toggleAcademyView','toggleAcademyTreeLights','openSideQuestIntroSheet','openSideQuestLogSheet','startSideQuest','endSideQuest','shareSideQuestDraft','sideQuestClaimDiscovery','resumeOriginalQuest','resumeSavedDetour'];
+ const browserWindow={};
+ // Execute the production registration in a private scope, just as the app IIFE does.
+ new Function('window',...names,block)(browserWindow,...names.map(name=>f.ctx[name]||(()=>{})));
+ for(const name of ['resumeOriginalQuest','resumeSavedDetour'])assert.equal(browserWindow[name],f.ctx[name],name+' must be globally exported');
+ const originalHandler=f.ctx.questDetourActionsHTML().match(/onclick="([^"]+)"/)[1];
+ f.fail(true);assert.equal(vm.runInNewContext(originalHandler,browserWindow),false);assert.ok(f.ctx.savedOriginalQuest());
+ f.fail(false);assert.equal(vm.runInNewContext(originalHandler,browserWindow),true);assert.equal(f.ctx.activeWalkingQuest().id,'original');
+ const detourHandler=f.ctx.questDetourActionsHTML().match(/onclick="([^"]+)"/)[1];
+ assert.equal(vm.runInNewContext(detourHandler,browserWindow),true);assert.equal(f.ctx.activeWalkingQuest(),null);assert.ok(f.ctx.sideQuestActive());
+});
 test('distance AND duration are required, with exact 500 m and 40 minute boundaries',()=>{
  assert.equal(elapsed(39).action,null);assert.equal(elapsed(40).action,'start');assert.equal(elapsed(60,499.99).action,null);
  assert.equal(core.sideTrailStep(undefined,input(start,5000)).action,null);
