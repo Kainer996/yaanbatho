@@ -4434,8 +4434,8 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
-<link rel="stylesheet" href="player_home.css?v=player-home-v380-20260909">
-<link rel="stylesheet" href="scan_home.css?v=scan-home-v378-20260909">
+<link rel="stylesheet" href="player_home.css?v=enchanted-study-v384-20260910">
+<link rel="stylesheet" href="scan_home.css?v=enchanted-study-v384-20260910">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 </head>
@@ -4539,11 +4539,13 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
     <div class="screen" id="screen-scan" data-scan-path="camera-only">
       <div class="scan-home-command-bar"><span>ALDERWING · COMMAND CENTRE</span><button type="button" id="playerHomeStand">Stand up · Your house</button></div>
       <div class="scan-home-hero">
-        <img class="scan-home-backdrop" src="assets/home-v378/woodland-lookout.webp" alt="" fetchpriority="high">
-        <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Wonder is<br>just outside.</h1></div>
+        <img class="scan-home-backdrop" src="assets/home-v384/enchanted-study.webp" alt="" fetchpriority="high" width="1536" height="1024">
+        <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Your field desk.</h1></div>
+        <div id="scanHomePlayer" class="scan-home-player"></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
       <div class="scan-home-main">
+      <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
       <div class="scan-home-start"><div class="scan-home-start-heading"><h2>Discover a bird</h2><span>Listen or take a photo</span></div>
         <div class="scan-home-start-buttons"><button class="scan-btn scan-btn-lead" id="scanBtn" aria-describedby="merlinDataNote">START SOUND SCAN</button><button class="scan-btn" id="captureBtn">OPEN CAMERA</button></div>
         <div class="merlin-listener-line" id="merlinListenerLine">
@@ -4552,6 +4554,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         </div>
       </div>
       <section class="scan-home-today" aria-labelledby="scanHomeTodayTitle"><div class="scan-home-section-head"><h2 id="scanHomeTodayTitle">Around your world</h2><span>Little things you can do</span></div><div id="scanHomeActions" class="scan-home-actions"></div></section>
+      <section id="scanHomeRouteSection" class="scan-home-destinations" aria-labelledby="scanHomeRoutesTitle"><div class="scan-home-section-head"><h2 id="scanHomeRoutesTitle">Explore Alderwing</h2><span>Your world, one tap away</span></div><div id="scanHomeRoutes" class="scan-home-routes"></div></section>
       <section id="scanHomeVillageSection" class="scan-home-villages" aria-labelledby="scanHomeVillagesTitle" hidden><div class="scan-home-section-head"><h2 id="scanHomeVillagesTitle">Your villages</h2><button type="button" id="scanHomeAllVillages"><span id="scanHomeVillageCount"></span> ↗</button></div><div id="scanHomeVillages" class="scan-home-village-list"></div></section>
       <section class="scan-home-tools" aria-label="Scanning session">
       <!-- Session tools remain below the prominent home scanning controls. -->
@@ -5496,8 +5499,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=scan-home-v378-20260909"></script>
-<script src="scan_home.js?v=scan-home-v378-20260909"></script>
+<script src="scan_home_core.js?v=enchanted-study-v384-20260910"></script>
+<script src="scan_home.js?v=enchanted-study-v384-20260910"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -5541,8 +5544,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="player_home_core.js?v=player-home-v380-20260909"></script>
-<script src="player_home_scene.js?v=player-home-v380-20260909"></script>
-<script src="player_home.js?v=player-home-v380-20260909"></script>
+<script src="player_home_scene.js?v=enchanted-study-v384-20260910"></script>
+<script src="player_home.js?v=enchanted-study-v384-20260910"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -22875,11 +22878,23 @@ function renderScanHome(snapshot, counts) {
   const completed = snapshot.questDefinitions.filter(q=>{const state=snapshot.quests?.[q.id];return state&&!state.claimed&&Number.isFinite(state.progress)&&state.progress>=q.target;});
   const villages = empireVillages().map(v=>{const status=villageEconomySnapshot(v);return {seed:v.seed>>>0,name:v.name,pop:status?.pop,happiness:status?.happiness};});
   const notice = (gameState.completionNotices||[]).find(n=>n.kind==='empire-building'&&n.target?.seed!=null);
-  BurbzScanHome.render({gates:Object.fromEntries(['kitchen','hospital','training','forge','village'].map(key=>[key,featureGateOpen(key)])),counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),forgeReady:snapshot.forge,walk:activeWalkingQuest()||sideQuestActive()&&{name:'Your Side Quest'},notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  const activeWalk=activeWalkingQuest(),sideWalk=sideQuestActive();
+  const savedWalk=savedOriginalQuest()||gameState.sideQuest?.suspendedDetour;
+  let walk=null;
+  if(activeWalk){
+    const markers=activeWalk.checkpoints||[],reached=markers.filter(c=>c.reached).length;
+    walk={name:activeWalk.name,detail:(Math.max(0,Number(activeWalk.distanceWalkedM)||0)/1000).toFixed(2)+' km walked · '+reached+'/'+markers.length+' markers',progress:markers.length?reached/markers.length:null};
+  }else if(sideWalk){
+    const waiting=(sideWalk.discoveries||[]).filter(d=>!d.claimed).length;
+    walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
+  }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
+  BurbzScanHome.render({gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
 }
 function openScanHomeTarget(target) {
   if (!target) return;
-  const gate=({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village'})[target.kind];
+  const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
+  if(target.kind==='route'&&!routes.includes(target.screen))return;
+  const gate=target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { showToast(featureUnlockHint(gate));renderScanHome();return; }
   SFX.tap();
   if(target.kind==='kitchen')openKitchenHudShortcut();
@@ -22891,6 +22906,8 @@ function openScanHomeTarget(target) {
   else if(target.kind==='notice')completionNoticeGo(target.id);
   else if(target.kind==='villages'){empireLedgerOnlyMode=false;showEmpirePage('villages',{silent:true});switchScreen('village');}
   else if(target.kind==='walk')switchScreen('map');
+  else if(target.kind==='route')switchScreen(target.screen);
+  else if(target.kind==='settings')$('settingsBtn')?.click();
 }
 
 let actionBadgeUpdateQueued = false;
@@ -38795,7 +38812,10 @@ function syncGlobalMoneyHud() {
   hud.setAttribute('aria-label', 'Player money: ' + amount + ' coins');
   const rect = coinChip.getBoundingClientRect();
   let headerOwnsCoinPosition = rect.width > 0 && rect.height > 0;
-  if (headerOwnsCoinPosition && typeof document.elementsFromPoint === 'function') {
+  // The house canvas occludes the whole projected app, not its header alone.
+  // Keep the same screen layout while its inert controls sit on the monitor.
+  const projectedAtHome = !!header.closest('.ph-screen-surface');
+  if (headerOwnsCoinPosition && !projectedAtHome && typeof document.elementsFromPoint === 'function') {
     const stack = document.elementsFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
     const topLayer = stack.find(el => el !== hud && !hud.contains(el));
     headerOwnsCoinPosition = !!topLayer && header.contains(topLayer);
@@ -43106,7 +43126,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'side-chest-v383-20260910';
+const BURBZ_BUILD = 'enchanted-study-v384-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44289,10 +44309,11 @@ function initializePlayerHome() {
       if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
       try{updateHeader();}catch(e){}return{ok:true};
     },
-    command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');$('screen-scan')?.classList.add('ph-stand-transition');setTimeout(()=>$('screen-scan')?.classList.remove('ph-stand-transition'),600);maybeStartMerlinTutorial(650);},
+    prepareScreen:()=>{switchScreen('scan');renderScanHome();},
+    command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
     onClose:()=>{document.body.classList.add('player-at-desk');}
   });
-  $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutActive)endMerlinTutorial(false);BurbzPlayerHome.open('room');});
+  $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutActive)endMerlinTutorial(false);BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
   if(gameState.playerHome.intro!=='done')BurbzPlayerHome.open(gameState.playerHome.intro==='desk'?'room':'overview');
   else maybeShowIntroCutscene();
