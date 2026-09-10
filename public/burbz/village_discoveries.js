@@ -65,7 +65,7 @@ function attach(s){
   else if(kind==='lore'){const scroll=mesh(fallback,new T.CylinderGeometry(.10,.10,.52,8),paper,0,.3,0);scroll.rotation.z=Math.PI/2;}
   else{mesh(fallback,new T.CylinderGeometry(.045,.045,.85,6),wood,0,.43,0);mesh(fallback,new T.BoxGeometry(.5,.36,.06),kind==='board'?gold:blue,0,.87,0);}
   const spriteMat=spriteMats[art].clone();mats.push(spriteMat);
-  const sprite=new T.Sprite(spriteMat),height=kind==='board'?1.7:kind==='loot'?.9:kind==='lore'?.8:1.15,[,,w,h]=CELLS[art];sprite.center.set(.5,0);sprite.position.y=.025;sprite.scale.set(height*w/h,height,1);sprite.visible=artReady;fallback.visible=!artReady;g.add(sprite);
+  const sprite=new T.Sprite(spriteMat),height=kind==='board'?1.2:kind==='loot'?.9:kind==='lore'?.8:1.15,[,,w,h]=CELLS[art];sprite.center.set(.5,0);sprite.position.y=.025;sprite.scale.set(height*w/h,height,1);sprite.visible=artReady;fallback.visible=!artReady;g.add(sprite);
   const seal=new T.Sprite(spriteMats[14]);seal.scale.set(.30,.33,1);seal.position.set(.36,height+.11,0);seal.visible=false;g.add(seal);
   const ringMat=new T.MeshBasicMaterial({color:kind==='board'?0xf8c75a:kind==='activity'?0x94e3ba:0x65d6f0,side:T.DoubleSide});mats.push(ringMat);const ring=mesh(g,new T.RingGeometry(.38,.43,20),ringMat,0,.035,0);ring.rotation.x=-Math.PI/2;
   const obj={kind,id,label,group:g,pos,sprite,fallback,ring,seal,art};objects.push(obj);return obj;
