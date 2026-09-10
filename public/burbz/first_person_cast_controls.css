@@ -1,0 +1,8 @@
+.fp-look-stick,.fp-cast-stick{position:absolute!important;right:calc(18px + env(safe-area-inset-right));left:auto!important;bottom:calc(32px + env(safe-area-inset-bottom));width:94px;height:94px;padding:0!important;border-radius:50%!important;background:radial-gradient(#65765b33,#20291fd9)!important;border:1px solid #d3bb8299!important;touch-action:none!important;user-select:none;pointer-events:auto;color:#eeddb5;z-index:3}
+.fp-cast-stick{bottom:calc(145px + env(safe-area-inset-bottom));width:80px;height:80px;right:calc(25px + env(safe-area-inset-right));background:radial-gradient(#bb773555,#31251de6)!important}
+.fp-aim-knob{position:absolute;left:calc(50% - 18px);top:calc(50% - 18px);width:36px;height:36px;border-radius:50%;background:#d6c39666;border:1px solid #f6d995aa;pointer-events:none}
+.fp-stick-label{position:absolute;left:0;right:0;bottom:7px;text-align:center;font:700 9px system-ui;letter-spacing:.13em;pointer-events:none}
+.fp-aim-active{outline:2px solid #ffe1a0;outline-offset:3px}
+.fp-cast-stick:disabled{opacity:.45;cursor:default}
+.fp-busy .fp-look-stick,.fp-busy .fp-cast-stick{visibility:hidden}
+@media(max-height:520px){.fp-look-stick{width:84px;height:84px;bottom:18px}.fp-cast-stick{width:70px;height:70px;bottom:122px}.fp-stick-label{font-size:8px}}
