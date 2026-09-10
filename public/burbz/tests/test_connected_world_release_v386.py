@@ -21,6 +21,8 @@ def test_connected_world_installation_and_live_copy_are_atomic():
     for name in ['BURBZ_ASSETS', 'BURBZ_CORE', 'BURBZ_INSTALL_REQUIRED']:
         section = re.search(rf'const {name} = \[(.*?)\];', worker, re.S)[1]
         entries = re.findall(r"['\"]([^'\"]+)['\"]", section)
+        for renderer in ['lib/maplibre-gl.js?v=5.24.0', 'lib/maplibre-gl.css?v=5.24.0']:
+            assert entries.count('./' + renderer) == 1, (name, renderer)
         for module in modules:
             assert entries.count(f'./{module}?v={BUILD}') == 1, (name, module)
     for module in modules:
