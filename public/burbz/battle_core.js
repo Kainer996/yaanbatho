@@ -932,7 +932,31 @@
     return { coins, branches, birdXp: Math.round((22 + ti * 7) * levelScale), playerXp: Math.round((30 + ti * 10) * levelScale), firstWinBonus, reduced, swayed, charmCoins };
   }
 
+  // Exploration supplies spatially validated living targets and pays readiness
+  // at release. Share the battle formula, RNG, shields, riders and healing here;
+  // this never advances or replaces a turn-based battle.
+  function resolveExplorationSkill(context, attacker, skill, hits = [], side = 'player') {
+    const events = [], defSide = side === 'player' ? 'opponent' : 'player';
+    if (!attacker || attacker.fainted || !skill) return events;
+    if (skill.kind === 'attack') for (const hit of hits.slice(0, 8)) {
+      const defender = hit.fighter;
+      if (!defender || defender.fainted || defender.hp <= 0) continue;
+      const res = computeDamage(context, attacker, defender, skill, { damageScale: hit.scale ?? 1 });
+      defender.hp = Math.max(0, defender.hp - res.dmg);
+      events.push({ type:'damage', side:defSide, id:defender.id, dmg:res.dmg, hp:defender.hp, maxHp:defender.maxHp, splash:hit.scale < 1, crit:res.crit, absorbed:res.absorbed });
+      handleFaint(context, defender, defSide, side, events);
+      if (!defender.fainted) applyRider(context, skill, attacker, defender, events, side, defSide);
+    }
+    if (skill.kind === 'heal') {
+      const healed = applyHeal(attacker, attacker.maxHp * skill.healPct * (0.75 + effStat(attacker, 'mag') / 220));
+      if (skill.cleanse) attacker.mods = attacker.mods.filter(m => m.pct > 0);
+      events.push({ type:'heal', side, healed, hp:attacker.hp, maxHp:attacker.maxHp });
+    }
+    return events;
+  }
+
   return {
+    resolveExplorationSkill,
     BIRD_TYPES, TYPE_CHART, TYPE_FACTS, effectiveness, classifySpecies, speciesKey,
     MOVE_SCHOOLS, MOVE_LINES, TIER_THRESHOLDS, PECK, SPARK, SIGNATURES, CLASS_SIGNATURES, signatureFor,
     ULTIMATE_CD, ULTIMATE_OPENING_CD,

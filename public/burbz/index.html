@@ -5503,11 +5503,17 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_size_core.js?v=every-bird-carries-its-weight-v335-20260827"></script>
 <script src="bird_roles_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="battle_core.js?v=wilderness-combat-v1-20260910"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="loot_crafting_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="player_equipment_core.js?v=first-person-kit-v1-20260910"></script>
 <script src="player_equipment.js?v=first-person-kit-v1-20260910"></script>
+<script src="first_person_spell_core.js?v=wilderness-combat-v1-20260910"></script>
+<script src="first_person_cast_controls.js?v=wilderness-combat-v1-20260910"></script>
+<script src="wilderness_combat_core.js?v=wilderness-combat-v1-20260910"></script>
+<script src="wilderness_combat.js?v=wilderness-combat-v1-20260910"></script>
+<link rel="stylesheet" href="first_person_cast_controls.css?v=wilderness-combat-v1-20260910">
+<link rel="stylesheet" href="wilderness_combat.css?v=wilderness-combat-v1-20260910">
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -29768,7 +29774,31 @@ let villageLastFrameAt = 0;
 let villageAnimationRequest = 0, villagePauseTimer = 0;
 function walkingCharacterState() {
   const p=gameState.player;
-  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone,equipment:playerEquipmentAdapter()};
+  return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone,equipment:playerEquipmentAdapter(),combat:walkingCombatAdapter()};
+}
+// Combat and equipped potion consumption commit with the existing ownership ledger.
+function walkingCombatAdapter() {
+  const identity=gameState;
+  return {
+    profile:{name:gameState.player.name,level:gameState.player.level},
+    settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
+    stored:structuredClone(gameState.wildernessCombat || null),
+    kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel)};},
+    save:(record,extra)=>{
+      if(identity!==gameState)throw Error('Your save changed. Reopen walking.');
+      const snapshot=snapshotGameState();
+      try {
+        if(extra?.potion){const loadout=gameState.inventory.equipment?.['@player'],bag=gameState.inventory.gear,id=extra.potion;
+          if(loadout?.potion!==id||!lootCore().potionEffectFor(id))throw Error('That potion is no longer equipped.');
+          if(!Number.isSafeInteger(bag[id]||0)||(bag[id]||0)<0)throw Error('The potion count is invalid.');
+          delete loadout.potion;
+          if((bag[id]||0)>0){bag[id]--;loadout.potion=id;}
+        }
+        gameState.wildernessCombat=structuredClone(record);
+        durableSaveState({throwOnFailure:true});return true;
+      } catch(error){restoreGameStateSnapshot(snapshot);throw error;}
+    }
+  };
 }
 function villageHarvestAdapter(seed) {
   return {

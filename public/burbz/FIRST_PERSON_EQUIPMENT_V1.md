@@ -6,11 +6,9 @@ The quest tracker opens as a compact two-line objective with a progress hairline
 
 `inventory.equipment['@player']` is the keeper's loadout. It uses the same five slots, 35 item definitions, Forge tempering, owned/crafted item bag and durable save as companions. Equipped copies leave `inventory.gear`, so existing Stores/Market sales cannot sell them. Swapping returns the prior item exactly once. There is no copied inventory, new item grant or eager save migration. Both bird and player equipment now use strict quantity/slot/owner validation and one durable transaction; failures restore the original object tree and defer quest announcements. The bird-equipment quest excludes the reserved player entry.
 
-## Combat limitation
+## Connected walking combat
 
-The equipment ownership/UI is implemented. **The full requested first-person combat feature is NOT complete.** Gear bonuses are computed by the existing loot core, but there is no live keeper fighter in the walking worlds to receive combat effects. The existing worlds have scenery, residents and interactions, not hostile combat actors. No mana or spell-ammunition costs exist; battle cooldowns count the actor's own turns. A decision was requested: existing-opponent first-person battles, or new zombie encounters while walking. Do not announce player damage/armour/potion/spell combat as complete or publish unconnected cast controls.
-
-Separate, unregistered spell/control groundwork and its limitations are described in `FIRST_PERSON_COMBAT_GAP.md` on the next commit. It must not be enabled by adding script tags alone.
+The user confirmed wilderness-only walking zombie encounters between villages/towns. All equipment effects, weapons, scrolls and potions now connect to that runtime; settlement areas remain safe. See [FIRST_PERSON_COMBAT_V1.md](FIRST_PERSON_COMBAT_V1.md) for rules, shared renderer hooks and complete validation. No combat-location decision is pending.
 
 ## Integration
 
@@ -19,14 +17,14 @@ The release owner owns production merge, build number, cache promotion, offline 
 Shared-file boundaries:
 
 - `first_person_hud.js/css`: compact quest, named icons, actual equipment sheet.
-- `index.html`: three new dependencies, `walkingCharacterState` equipment adapter, transactional bird/player mutations, Market copy and the player-quest owner guard.
-- `village_walk.js`: HUD dependency pins and disabled-button focus filtering only. Preserve the world owner's movement/renderer changes.
-- `geographic_world.js`: Satchel icon, shared equipment mounting, B shortcut, aria-expanded and enabled-button focus filtering only. Preserve the world owner's terrain/continuity/performance edits.
+- `index.html`: shared dependencies, `walkingCharacterState` equipment/combat adapters, transactional bird/player mutations, Market copy and the player-quest owner guard.
+- `village_walk.js`: HUD dependency pins, disabled-button focus filtering and four combat lifecycle hooks. Preserve the world owner's movement/renderer changes.
+- `geographic_world.js`: Satchel icon, shared equipment mounting, B shortcut, accessibility and bounded combat/safety hooks. Preserve the world owner's terrain/continuity/performance edits.
 - `sw.js`, updater, `AGENTS.md`: feature registration; reconcile with Merlin/other release changes.
 
 ## Validation
 
-- `node tests/test_player_equipment_v1.cjs`: 7 groups, exercising all 35 definitions, equipment swap/unequip, shared bird/player counts, invalid/unavailable inputs, rollback with object identity, save reload, Market quotes, stale save adapters and Forge bonuses.
+- `node tests/test_player_equipment_v1.cjs`: 8 groups, exercising all 35 definitions, equipment swap/unequip, shared bird/player counts, invalid/unavailable inputs, rollback with object identity, save reload, Market quotes, stale save adapters and Forge bonuses.
 - `node tests/test_market_tabs_v389.cjs`: 8 existing groups pass, including all 35 collected Forge recipes and failed transaction rollback.
 - `tests/run_player_equipment_v1.cjs`: 11 application-browser groups pass with native input: compact tracker, equipment at 320×740, 390×844, 667×375, 844×390 and 1440×900; owned spell equip, failed localStorage/retry, actual reload/unequip, companion-owned unavailable copies, and real Market Sell protection. No page errors.
 - The same runner with `--sheet`: opening scroll reset and sticky close control verified during a full sheet scroll.
