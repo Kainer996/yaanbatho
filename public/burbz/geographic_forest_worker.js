@@ -3,7 +3,7 @@
  * Only this fixed same-origin core is loaded; messages cannot select a URL.
  */
 'use strict';
-importScripts('geographic_forest_core.js?v=map-pictures-v374-20260908');
+importScripts('geographic_forest_core.js?v=continuous-world-v391-20260910');
 self.onmessage = function(event) {
   const request = event && event.data;
   const id = request && request.id;

@@ -2,7 +2,7 @@
 from pathlib import Path
 import subprocess
 BASE = Path(__file__).resolve().parent.parent
-PIN = 'wilderness-combat-v1-20260910'
+PIN = 'continuous-world-v391-20260910'
 
 def test_walking_combat_behavior():
     for name in ['test_wilderness_combat_v1.cjs', 'test_wilderness_boundaries_v1.cjs']:

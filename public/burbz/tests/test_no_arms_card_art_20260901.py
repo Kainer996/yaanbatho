@@ -25,7 +25,7 @@ WARRIOR_JS = BURBZ / "bird_art_release_20260803.js"
 CUTOUTS = BURBZ / "bird-art-cache" / "cutouts"
 DEPLOY = BURBZ.parents[1] / "scripts" / "update-live-burbz.sh"
 
-CURRENT_BUILD = "merlin-flight-v390-20260910"
+CURRENT_BUILD = "continuous-world-v391-20260910"
 
 ARMED_FILES = [
     "australian_pelican_burbz_manga_20260701.png",

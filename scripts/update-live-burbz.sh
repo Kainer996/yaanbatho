@@ -98,6 +98,8 @@ FILES=(
   "building_rooms_core.js"
   "building_rooms_scene.js"
   "building_rooms.js"
+  "village_world_core.js"
+  "village_world.js"
   "village_walk.js"
   "first_person_hud.js"
   "first_person_hud.css"

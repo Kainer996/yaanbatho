@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'homestead-v385-20260910','village_walk_core.js':'home-countryside-v387-20260910','first_person_hud.js':'first-person-kit-v1-20260910','first_person_hud.css':'first-person-kit-v1-20260910','village_walk_scene.js':'home-countryside-v387-20260910'};
+  const PIN={'village_world_core.js':'continuous-world-v391-20260910','village_world.js':'continuous-world-v391-20260910','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'continuous-world-v391-20260910','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'continuous-world-v391-20260910','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'continuous-world-v391-20260910','first_person_hud.css':'continuous-world-v391-20260910','village_walk_scene.js':'continuous-world-v391-20260910'};
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -108,7 +108,7 @@
       Promise.resolve().then(()=>options.exploreWorld(pose)).then(result=>{if(result===false)throw Error('The countryside could not open. Try again.');}).catch(error=>{if(!s.closed)hint.textContent=error.message||'The countryside could not open. Try again.';}).finally(()=>{if(!s.closed){s.uiBusy=false;s.reset();}});
     }
     on(document,'keydown',e=>{
-      if(['Space','Enter'].includes(e.code)&&e.target.closest?.('button,a,input,select,textarea'))return;
+      if(['Space','Enter'].includes(e.code)&&e.target.closest?.('button,a,input,select,textarea')&&!e.target.closest('.vw-stick,.fp-look-stick'))return;
       if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();close('escape');return;}
       if(e.code==='Tab'){
         const buttons=[...(s.uiBusy?el.querySelector('.fp-panel:not([hidden]),.il-panel:not([hidden]),.vd-panel:not([hidden])')||el:el).querySelectorAll('button,input,[tabindex="0"]')].filter(b=>!b.disabled&&b.getClientRects().length&&!b.closest('[hidden]'));

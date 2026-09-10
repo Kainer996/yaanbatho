@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 
 BASE = Path(__file__).resolve().parent.parent
-PIN = 'first-person-kit-v1-20260910'
+PIN = 'continuous-world-v391-20260910'
 
 def test_equipment_transactions():
     subprocess.run(['node', str(Path(__file__).with_suffix('.cjs'))], check=True)

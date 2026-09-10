@@ -28,7 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 OWN_RELEASE_PIN = "feeding-menu-banked-coins-v337-20260831"
-CURRENT_BUILD = "merlin-flight-v390-20260910"
+CURRENT_BUILD = "continuous-world-v391-20260910"
 PREVIOUS_RELEASE_PIN = "screen-swipe-v336-20260831"
 
 
