@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict');
+const T=require('../lib/three.min.js');require('../player_home_core.js');require('../settlement_models.js');require('../player_home_scene.js');require('../geographic_settlement_scene.js');
+const record={id:'town:7',seed:7,name:'Fieldmere',lat:52.4,lon:-2.1,buildings:[{buildingId:'cabin',level:2,wardSeed:7,homeId:'cabin:0'},{buildingId:'cottages',level:1,wardSeed:9,homeId:'cottages:0'},{buildingId:'well',level:1,wardSeed:9}],residents:[{id:'7:resident:0',name:'Rowan',kind:'humanoid',homeId:'cabin:0',jobId:null}]};
+const before=JSON.stringify(record),view=BurbzGeographicSettlementScene.create(T,record);
+assert.equal(JSON.stringify(record),before,'rendering never writes settlement truth');
+assert.equal(view.buildings.length,3);assert.deepEqual(view.buildings.map(b=>b.userData.wardSeed),[7,9,9]);
+assert.deepEqual(view.buildings.map(b=>b.userData.homeId),['cabin:0','cottages:0',null]);
+assert(view.targets.some(t=>t.kind==='settlement'&&t.id==='town:7'));
+assert(view.world.allowed(view.entrance.x,view.entrance.z),'main approach remains walkable');
+for(const b of view.solids)assert(!view.world.allowed(b.x,b.z),'actual building blocks walking');
+assert(view.world.allowed(2000,-2000),'settlement model never confines the global world');
+const replay=BurbzGeographicSettlementScene.create(T,record);assert.deepEqual(view.solids,replay.solids,'reload preserves geographic local layout');
+let resources=0,disposed=0;view.group.traverse(o=>{for(const r of [o.geometry,...(o.material?(Array.isArray(o.material)?o.material:[o.material]):[])].filter(Boolean)){resources++;r.addEventListener('dispose',()=>disposed++);}});
+view.dispose();assert.equal(disposed,resources,'eviction disposes every actual geometry and material');replay.dispose();
+const empty=BurbzGeographicSettlementScene.create(T,{id:'village:8',seed:8,name:'Unbuilt',buildings:[],residents:[]});assert.equal(empty.buildings.length,0);assert.equal(empty.solids.length,0,'empty ledger has no invented structures');empty.dispose();
+console.log('PASS saved wards, houses, roster, deterministic entry, unbounded collision and disposal');

@@ -4435,6 +4435,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
+<link rel="stylesheet" href="geographic_world.css?v=connected-world-v386-20260910">
 <link rel="stylesheet" href="scan_home.css?v=enchanted-study-v384-20260910">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4505,6 +4506,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div id="mapQuestFocusFacts"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-secondary" id="mapQuestFocusDetails">Walk details</button><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
         <div class="map-bird-overlay" id="mapBirdOverlay" aria-live="polite"></div>
+        <button type="button" id="mapWorldExploreBtn" class="map-world-explore">Walk &amp; fly</button>
         <button type="button" class="map-area-birds-tab" id="mapAreaBirdsToggle" aria-label="Open Area Birds">Area Birds <span aria-hidden="true">›</span></button>
         <div class="map-zoom-controls" id="mapZoomControls" aria-label="Map zoom controls"><button class="map-zoom-btn" id="mapZoomInBtn" aria-label="Zoom closer">+</button><button class="map-zoom-btn" id="mapZoomOutBtn" aria-label="Zoom out">−</button></div>
         <div class="map-player-ring"></div><div class="map-player-avatar" aria-hidden="true"><div class="map-player-body"></div><div class="map-player-shadow"></div></div>
@@ -5544,9 +5546,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="player_home_core.js?v=homestead-v385-20260910"></script>
-<script src="player_home_scene.js?v=homestead-v385-20260910"></script>
-<script src="player_home.js?v=homestead-v385-20260910"></script>
+<script src="player_home_core.js?v=connected-world-v386-20260910"></script>
+<script src="player_home_scene.js?v=connected-world-v386-20260910"></script>
+<script src="player_home.js?v=connected-world-v386-20260910"></script>
+<script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
+<script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
+<script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
+<script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
+<script src="geographic_world.js?v=connected-world-v386-20260910"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -7224,8 +7231,15 @@ function signOutCloud() {
 }
 
 function refreshAllScreens() {
+  window.BurbzGeographicHomePicker?.close('save-replaced');
+  window.BurbzGeographicWorld?.close('save-replaced');
+  geographicWorldVisit=null;
+  geographicMapInspect=false;
+  geographicMapPendingPose=null;
   window.BurbzPlayerHome?.close('save-replaced');
   loadState();
+  if(window.BurbzPlayerHomeCore)gameState.playerHome=BurbzPlayerHomeCore.normalize(gameState.playerHome,localStorage.getItem(BURBZ_INTRO_SEEN_KEY)==='1'||gameState.player.level>1||gameState.flock.length>0);
+  refreshGeographicHomeMarkers();
   updateHeader();
   initQuests();
   renderBirdex();
@@ -18727,7 +18741,7 @@ function applyBurbzCameraPadding() {
     if (!current || Object.keys(padding).some(key => current[key] !== padding[key])) liveMap.setPadding(padding);
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!geographicMapInspect && !questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); refreshGeographicHomeMarkers(); frameGeographicJourneyOnMap(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { window.BurbzFieldMapUI?.apply(liveMap); }
 // Real elevation and woodland are optional. Sustained slow movement pauses
 // the terrain mesh while retaining pitched trees and real-elevation shading.
@@ -21829,7 +21843,7 @@ Object.assign(window, {
   }
 });
 
-function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
+function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); geographicMapInspect = false; geographicMapPendingPose = null; liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
   function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const from = liveMap.getZoom() || BURBZ_START_ZOOM; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(liveMapZoomCeiling(), from + delta)); if (delta > 0 && z <= from + 0.001) { tellQuestZoomLockOnce(); return; } liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
@@ -21870,6 +21884,7 @@ function handleLivePosition(pos, fly) {
   liveMapHasPrecisePosition = true;
   liveMapLastPosition = { lat, lon, accuracy, at:Number(pos.timestamp), source:'Your live position' };
   rememberHomeFix(lat, lon);
+  anchorPlayerHomeAt(lat, lon);
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy, at:Number(pos.timestamp) });
   // A cached GPS position may draw the map, but cannot award trail rewards.
   if (mapGatheringGate({lat,lon}).ready) {
@@ -21879,7 +21894,7 @@ function handleLivePosition(pos, fly) {
   return true;
 }
 let liveMapLastSpawnFetch = null; // {lat, lon, at} — throttles Overpass + marker rebuilds
-async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, at:opts.at ?? liveMapLastPosition?.at, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (!geographicPlaces?.inside && !questMapInspectionMode() && opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!geographicPlaces?.inside && !questMapInspectionMode() && opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = createGeographicMarker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } geographicPlaces?.update(); if (!opts.precise) return;
+async function updateLiveMapPosition(lat, lon, source, opts = {}) { const accuracy = Number.isFinite(opts.accuracy) ? opts.accuracy : (liveMapLastPosition && liveMapLastPosition.accuracy); liveMapLastPosition = { lat, lon, accuracy, at:opts.at ?? liveMapLastPosition?.at, source }; setMapLabels(source, opts.precise ? 'Enchanting nearby roads, paths and habitats...' : 'Location permission needed before local bird spawns are shown.'); if (liveMap) { if (!geographicPlaces?.inside && !geographicMapInspect && !questMapInspectionMode() && opts.fly) { liveMapUserMoved = false; liveMap.flyTo({ center:[lon, lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:800 }); } else if (!geographicPlaces?.inside && !geographicMapInspect && !questMapInspectionMode() && opts.precise) { try { const c = liveMap.getCenter(); const moved = mapDistanceMeters({ lat:c.lat, lon:c.lng }, { lat, lon }); if (moved > 2 && !liveMap.isMoving()) liveMap.easeTo({ center:[lon, lat], duration:Math.min(900, 250 + moved * 8), easing:t => t }); } catch (e) {} } if (opts.precise) { if (!liveMapUserMarker) { const el = makePlayerMarkerEl(); liveMapUserMarker = createGeographicMarker({ element:el, anchor:'center', rotationAlignment:'map', pitchAlignment:'map' }).setLngLat([lon, lat]).addTo(liveMap); applyPlayerHeading(liveMap.getBearing() || 0); } else liveMapUserMarker.setLngLat([lon, lat]); drawPlayerRange(lat, lon); } } geographicPlaces?.update(); if (!opts.precise) return;
   if (mapRegionForCoords(lat, lon) === 'unsupported') {
     liveMapSpawns = [];
     liveMapFeatureCount = 0;
@@ -23116,7 +23131,8 @@ function switchScreen(name) {
   });
 
   if (name !== currentScreen && currentScreen === 'area-birds') window.BurbzAreaBirds?.leave();
-  if (name !== currentScreen) { geographicPlaces?.close(); window.BurbzVillageWalk?.close('navigation'); }
+  if (name !== currentScreen) { geographicPlaces?.close(); window.BurbzVillageWalk?.close('navigation'); window.BurbzGeographicWorld?.close('navigation'); window.BurbzGeographicHomePicker?.close('navigation'); }
+  if(geographicWorldVisit&&name!==(geographicWorldVisit.record.tier==='village'?'village':'town'))geographicWorldVisit=null;
   currentScreen = name;
   document.body.setAttribute('data-active-screen', name);
   syncBurbzMusicForMapZoom();
@@ -29711,7 +29727,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=homestead-v385-20260910';
+        script.src = 'village_walk.js?v=connected-world-v386-20260910';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -29730,13 +29746,14 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     await ensureVillageWalkModule();
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
-      name: currentVillage().name, seed, opener:button, interiors: buildingRoomsAdapter(),
+      name: currentVillage().name, seed, opener:button, exitLabel:geographicWorldVisit?'← World':'← Village', interiors: buildingRoomsAdapter(),
       discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
       source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
       suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
       animate: t => villageAnimateFrame(t, true),
       resume: (reason, failed) => {
+        if(returnFromGeographicSettlement(reason))return;
         if (reason === 'navigation' || reason === 'pagehide') return;
         if (failed && villageRenderer?.getContext().isContextLost()) villageFallbackMode = true;
         if (currentScreen === 'village') { onVillageResize(); renderVillage(); }
@@ -29755,13 +29772,13 @@ $('townWalkBtn')?.addEventListener('click',async()=>{
     await ensureVillageWalkModule();
     if(currentScreen!=='town'||currentTownSettlement()?.id!==id)return;
     if(!Number.isFinite(seed)||!townScene?.userData.walkTerrain||townFallbackMode)throw Error('The 3D town is not ready. Please try again.');
-    window.BurbzVillageWalk.open({name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:'← Town',opener:button,
+    window.BurbzVillageWalk.open({name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
       discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),interiors:buildingRoomsAdapter(),
       source:()=>({scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,
         movers:[...townNpcs,...townWalkers,...townTraffic,...townLivestock,...townFlocks,...townRoofBirds,...townChickens,...townWindmills,...townCloths,...townSigns]}),
       suspend:()=>{townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);},
       animate:t=>townAnimateFrame(t,true),
-      resume:(reason,failed)=>{if(reason==='navigation'||reason==='pagehide')return;if(failed&&townRenderer?.getContext().isContextLost())townFallbackMode=true;if(currentScreen==='town'){onTownResize();renderTownScreen();}}
+      resume:(reason,failed)=>{if(returnFromGeographicSettlement(reason))return;if(reason==='navigation'||reason==='pagehide')return;if(failed&&townRenderer?.getContext().isContextLost())townFallbackMode=true;if(currentScreen==='town'){onTownResize();renderTownScreen();}}
     });
   }catch(error){showToast(error.message);}finally{button.disabled=false;}
 });
@@ -43158,7 +43175,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'homestead-v385-20260910';
+const BURBZ_BUILD = 'connected-world-v386-20260910';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44140,6 +44157,8 @@ function recordScreenTrail(from) {
 // Close the topmost open layer, if any. Returns true when something closed —
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
+  if (window.BurbzGeographicHomePicker?.close()) return true;
+  if (window.BurbzGeographicWorld?.back()) return true;
   if(closeMapBirdPreview())return true;
   if (window.BurbzPlayerHome?.back()) return true;
   if (window.BurbzVillageWalk?.close('back')) return true;
@@ -44326,25 +44345,150 @@ function addDemoBirds() {
 // only shows the controls. Returning players begin at their command desk;
 // saved walks remain available through their existing routes.
 // The personal clearing is separate from claimed villages and their economy.
+let geographicWorldVisit = null, geographicMapInspect = false, geographicMapPendingPose = null;
+let geographicHomeMarker = null, geographicAvatarMarker = null;
+function commitPlayerHomeAction(action) {
+  const proposal=BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
+  if(!proposal.ok)return proposal;
+  const before=gameState.playerHome,branches=gameState.player.branches,journey=gameState.worldJourney;
+  gameState.playerHome=proposal.home;gameState.player.branches=proposal.wallet.branches;
+  if(action.kind==='anchor')gameState.worldJourney=null;
+  const saved=durableSaveState();
+  if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;gameState.worldJourney=journey;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
+  try{updateHeader();refreshGeographicHomeMarkers();}catch(e){}return{ok:true};
+}
+function anchorPlayerHomeAt(lat,lon) {
+  if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
+  return commitPlayerHomeAction({kind:'anchor',lat,lon,source:'initial',expectedRevision:0}).ok;
+}
+function savedGeographicPose() {
+  const journey=gameState.worldJourney,anchor=gameState.playerHome?.anchor;
+  return anchor&&journey?.anchorRevision===anchor.revision&&BurbzGeographicWorldCore.validatePose(journey.pose)?BurbzGeographicWorldCore.normalizePose(journey.pose,anchor):null;
+}
+function saveGeographicPose(pose,revision) {
+  if(gameState.playerHome?.anchor?.revision!==revision||!BurbzGeographicWorldCore.validatePose(pose))return false;
+  const before=gameState.worldJourney;
+  gameState.worldJourney={version:1,anchorRevision:revision,pose:BurbzGeographicWorldCore.normalizePose(pose,gameState.playerHome.anchor)};
+  if(!durableSaveState().ok){gameState.worldJourney=before;return false;}return true;
+}
+function geographicSettlementRecords(bounds) {
+  const C=BurbzGeographicWorldCore,center=bounds.center||gameState.playerHome?.anchor;if(!C.validCoordinate(center))return[];
+  const mapped=new Map(),claims=empireVillages(),near=villagesNearLatLng(center.lat,center.lon,4);
+  if(Math.abs(center.lon)>179.92)near.push(...villagesNearLatLng(center.lat,center.lon>0?-179.999:179.999,4));
+  for(const v of [...near,...claims]){
+    if(!C.validCoordinate(v))continue;
+    const link=empireOwnsVillage(v.seed)?empireSettlementOfSeed(v.seed):null;
+    const settlement=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;
+    const record=settlement?{id:settlement.id,seed:settlement.heartSeed,name:townDisplayName(settlement),tier:settlement.tier,lat:Number(settlement.centroid.lat),lon:Number(settlement.centroid.lon),owned:true,settlement}:
+      {id:'village:'+String(v.seed>>>0),seed:v.seed>>>0,name:v.name,tier:'village',lat:v.lat,lon:v.lon,owned:empireOwnsVillage(v.seed)};
+    if(C.validCoordinate(record))mapped.set(record.id,record);
+  }
+  return [...mapped.values()].map(r=>({...r,distance:C.distance(center,r)})).sort((a,b)=>a.distance-b.distance).slice(0,16).map(record=>{
+    const records=record.settlement?townMemberRecords(record.settlement):record.owned?[empireVillageRecordBySeed(record.seed)]:[];
+    const buildings=[],residents=[];
+    for(const rec of records.filter(Boolean)){
+      for(const b of EMPIRE_BUILDINGS){const level=Math.max(0,Math.min(b.maxLevel,Math.floor(Number(rec.economy?.buildings?.[b.id])||0)));if(!level)continue;const copies=['cottages','market'].includes(b.id)?level:1;
+        for(let part=0;part<copies;part++)buildings.push({wardSeed:rec.seed>>>0,buildingId:b.id,level,homeId:b.need==='shelter'?b.id+':'+part:null});}
+      residents.push(...(rec.economy?.residentLedger?.residents||[]));
+    }
+    return {...record,buildings,residents};
+  });
+}
+async function enterGeographicWorld(handoff={}) {
+  const entrySave=gameState,entryScreen=currentScreen;
+  const C=BurbzGeographicWorldCore;
+  if(!gameState.playerHome?.anchor){
+    const last=gameState.lastKnownHome;if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
+  }
+  if(!gameState.playerHome?.anchor)return chooseGeographicHomeLocation(handoff);
+  await loadMapLibreIfNeeded();
+  if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
+  const anchor={...gameState.playerHome.anchor},sessionSave=gameState;
+  const local=handoff.localPose||(!handoff.pose&&!savedGeographicPose()?{x:0,y:0,z:4,yaw:Math.PI,pitch:0}:null);
+  const pose=handoff.pose||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
+  handoff.release?.();BurbzPlayerHome.close('world');
+  geographicWorldVisit=null;
+  return BurbzGeographicWorld.open({anchor,pose,style:burbzMapStyle(),grade:burbzDaylightGradeNow,getHome:()=>gameState.playerHome,
+    createYard:(T,home)=>BurbzPlayerHomeScene.createYardContent(T,home),createSettlement:(T,record)=>BurbzGeographicSettlementScene.create(T,record),
+    settlementsInBounds:geographicSettlementRecords,character:walkingCharacterState,savePose:pose=>gameState===sessionSave&&saveGeographicPose(pose,anchor.revision),
+    enterHome:()=>BurbzPlayerHome.open('room',{fromDesk:false,pose:{x:0,y:0,z:3.8,yaw:0,pitch:0}}),
+    enterSettlement:enterGeographicSettlement,returnMap:showGeographicJourneyOnMap,moveHome:pose=>chooseGeographicHomeLocation({pose}),
+    onYardAction:(target,localPose)=>{
+      if(target.kind==='decorate'){BurbzPlayerHome.open('yard',{pose:localPose,decorate:true,returnToWorld:true});return{ok:true};}
+      if(target.kind==='chop'||target.kind==='tree')return commitPlayerHomeAction({kind:'chop',id:target.id,area:'yard',x:localPose.x,z:localPose.z});
+      if(target.kind==='find'){
+        const find=BurbzPlayerHomeCore.FINDS.find(f=>f.id===target.id&&f.area==='yard');
+        if(!find||Math.hypot(localPose.x-find.x,localPose.z-find.z)>1.8)return{ok:false,error:'Walk closer to look at this.'};
+        const result=gameState.playerHome.finds.includes(find.id)?{ok:true}:commitPlayerHomeAction({kind:'find',id:find.id});
+        return result.ok?{ok:true,message:find.text}:result;
+      }
+      return{ok:false,error:'This action is unavailable.'};
+    }
+  });
+}
+async function chooseGeographicHomeLocation(handoff={}) {
+  const sessionSave=gameState,entryScreen=currentScreen;
+  await loadMapLibreIfNeeded();if(gameState!==sessionSave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
+  const anchor=gameState.playerHome.anchor,expectedRevision=anchor?.revision||0,oldHome=gameState.playerHome;
+  const location=BurbzGeographicWorldCore.validCoordinate(gameState.lastKnownHome)?gameState.lastKnownHome:null;
+  handoff.release?.();BurbzPlayerHome.close('location');BurbzGeographicWorld.close('location');
+  const restore=()=>{const r=handoff.returnOptions;if(handoff.pose)return enterGeographicWorld({pose:handoff.pose});if(r||handoff.localPose||handoff.area)return BurbzPlayerHome.open(r?.start||'room',r?.options||{fromDesk:false,pose:handoff.localPose,area:handoff.area});return true;};
+  return BurbzGeographicHomePicker.open({anchor,location,style:burbzMapStyle(),loadMapLibre:loadMapLibreIfNeeded,
+    commit:point=>gameState!==sessionSave||gameState.playerHome!==oldHome&&gameState.playerHome.anchor?.revision!==expectedRevision?{ok:false,error:'Your home changed while the map was open. Cancel and choose again.'}:commitPlayerHomeAction({kind:'anchor',...point,source:'chosen',expectedRevision}),
+    cancel:()=>Promise.resolve(restore()).catch(error=>showToast(error.message)),placed:()=>enterGeographicWorld({localPose:{x:0,y:0,z:4,yaw:Math.PI,pitch:0}}).catch(error=>showToast(error.message))
+  });
+}
+async function enterGeographicSettlement(record,pose) {
+  const anchor=gameState.playerHome.anchor;if(!anchor||!saveGeographicPose(pose,anchor.revision))return false;
+  geographicWorldVisit={record,pose,anchorRevision:anchor.revision};
+  if(record.tier==='village')enterVillage(record);else openEmpireTown(record.id);
+  const buttonId=record.tier==='village'?'villageWalkBtn':'townWalkBtn',start=performance.now();
+  while(performance.now()-start<15000){
+    if(!geographicWorldVisit||gameState.playerHome.anchor?.revision!==anchor.revision)return false;
+    if(record.tier==='village'?!!villageRenderer&&villageBuiltSeed===record.seed:!!townRenderer&&currentTownSettlement()?.id===record.id){$(buttonId)?.click();return true;}
+    await new Promise(resolve=>setTimeout(resolve,80));
+  }
+  showToast('The settlement is still opening. Tap Walk to continue.');return true;
+}
+function returnFromGeographicSettlement(reason) {
+  const visit=geographicWorldVisit;if(!visit||['navigation','pagehide'].includes(reason))return false;
+  geographicWorldVisit=null;enterGeographicWorld({pose:visit.pose}).catch(error=>showToast(error.message));return true;
+}
+function refreshGeographicHomeMarkers() {
+  if(!liveMap||!window.maplibregl)return;
+  const anchor=gameState.playerHome?.anchor,pose=savedGeographicPose();
+  for(const [kind,point] of [['home',anchor],['avatar',pose]]){
+    let marker=kind==='home'?geographicHomeMarker:geographicAvatarMarker;
+    if(!point){marker?.remove();if(kind==='home')geographicHomeMarker=null;else geographicAvatarMarker=null;continue;}
+    if(!marker){const el=document.createElement('button');el.type='button';el.textContent=kind==='home'?'⌂ Your home':'✦ Exploring';el.title=kind==='home'?'Your saved homestead':'Your game character; real walking quests use your phone location';el.style.cssText='background:#e4cf96;color:#203b2b;border:2px solid #42694b;border-radius:12px;padding:10px;min-height:44px;font-weight:700';
+      el.addEventListener('click',()=>kind==='home'?BurbzPlayerHome.open('room',{fromDesk:false}):enterGeographicWorld().catch(error=>showToast(error.message)));
+      marker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([point.lon,point.lat]).addTo(liveMap);if(kind==='home')geographicHomeMarker=marker;else geographicAvatarMarker=marker;}
+    marker.setLngLat([point.lon,point.lat]);
+  }
+}
+function frameGeographicJourneyOnMap() {
+  const pose=geographicMapPendingPose;
+  if(!liveMap||!pose||!geographicMapInspect)return;
+  refreshGeographicHomeMarkers();liveMap.stop();liveMap.jumpTo({center:[pose.lon,pose.lat],zoom:16,pitch:45});geographicMapPendingPose=null;
+}
+function showGeographicJourneyOnMap(pose) {
+  geographicMapInspect=true;geographicMapPendingPose=pose;switchScreen('map');
+  if(liveMap?.loaded())frameGeographicJourneyOnMap();else liveMap?.once('load',frameGeographicJourneyOnMap);
+}
 function initializePlayerHome() {
   if (!window.BurbzPlayerHome || !window.BurbzPlayerHomeCore) { maybeShowIntroCutscene(); return; }
   const veteran = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1' || gameState.player.level > 1 || gameState.flock.length > 0;
   gameState.playerHome = BurbzPlayerHomeCore.normalize(gameState.playerHome, veteran);
   saveState();
   BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),grade:burbzDaylightGradeNow,
-    commit:action=>{
-      const proposal=BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
-      if(!proposal.ok)return proposal;
-      const before=gameState.playerHome,branches=gameState.player.branches;
-      gameState.playerHome=proposal.home;gameState.player.branches=proposal.wallet.branches;
-      const saved=durableSaveState();
-      if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
-      try{updateHeader();}catch(e){}return{ok:true};
-    },
+    commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
     command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
     onClose:()=>{document.body.classList.add('player-at-desk');}
   });
+  const last=gameState.lastKnownHome;
+  if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
+  $('mapWorldExploreBtn')?.addEventListener('click',()=>enterGeographicWorld().catch(error=>showToast(error.message)));
   $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutActive)endMerlinTutorial(false);BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
   if(gameState.playerHome.intro!=='done')BurbzPlayerHome.open(gameState.playerHome.intro==='desk'?'room':'overview');

@@ -30,7 +30,7 @@ test('the three building types contain finite volumetric meshes and distinct geo
 });
 test('automatic GPS callback displays but cannot reward stale, future or inaccurate fixes',()=>{
  const fs=require('node:fs'),vm=require('node:vm'),html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8'),start=html.indexOf('function handleLivePosition('),end=html.indexOf('let liveMapLastSpawnFetch',start),source=html.slice(start,end);
- const sandbox={Number,console,liveMapUserMoved:false,validLivePosition:()=>true,rememberHomeFix:()=>{},updateLiveMapPosition:()=>{},quests:0,sides:0,questOnPositionFix:()=>sandbox.quests++,sideQuestOnPositionFix:()=>sandbox.sides++,mapGatheringGate:p=>trail.gathering(p,sandbox.liveMapLastPosition)};vm.createContext(sandbox);vm.runInContext(source,sandbox);
+ const sandbox={Number,console,liveMapUserMoved:false,validLivePosition:()=>true,rememberHomeFix:()=>{},anchorPlayerHomeAt:()=>{},updateLiveMapPosition:()=>{},quests:0,sides:0,questOnPositionFix:()=>sandbox.quests++,sideQuestOnPositionFix:()=>sandbox.sides++,mapGatheringGate:p=>trail.gathering(p,sandbox.liveMapLastPosition)};vm.createContext(sandbox);vm.runInContext(source,sandbox);
  for(const [timestamp,accuracy] of [[1,8],[Date.now()+60000,8],[Date.now(),80],[undefined,8]]){sandbox.handleLivePosition({coords:{latitude:53,longitude:-1,accuracy},timestamp},false);assert.equal(sandbox.quests,0);assert.equal(sandbox.sides,0);}
  sandbox.handleLivePosition({coords:{latitude:53,longitude:-1,accuracy:8},timestamp:Date.now()},false);assert.equal(sandbox.quests,1);assert.equal(sandbox.sides,1);
 });

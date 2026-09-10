@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),crypto=require('node:crypto');
 const C=require('../player_home_core.js');
 const original={version:1,intro:'done',tier:1,owned:{bench:1,flowers:1,rug:3,books:1},placed:[{id:7,item:'bench',area:'yard',x:4,z:4,turn:1},{id:8,item:'books',area:'room',x:3,z:0,turn:0}],finds:['desk-note','lost-pot'],nextId:9};
 const originalBytes=JSON.stringify(original),migrated=C.normalize(original);
-assert.equal(JSON.stringify(original),originalBytes);assert.equal(migrated.version,2);assert.deepEqual(migrated.placed,original.placed);assert.deepEqual([...migrated.finds].sort(),[...original.finds].sort());assert.deepEqual(migrated.rooms,{});assert.deepEqual(migrated.trees,{});assert.equal(migrated.nextId,9);
+assert.equal(JSON.stringify(original),originalBytes);assert.equal(migrated.version,3);assert.deepEqual(migrated.placed,original.placed);assert.deepEqual([...migrated.finds].sort(),[...original.finds].sort());assert.deepEqual(migrated.rooms,{});assert.deepEqual(migrated.trees,{});assert.equal(migrated.nextId,9);
 assert(Object.keys(C.ITEMS).length>=32);assert.equal(new Set(Object.values(C.ITEMS).map(i=>i.type)).size,Object.keys(C.ITEMS).length);
 for(const [old,radius] of [[16,C.YARD.ground],[14.3,C.YARD.walk],[10,C.YARD.decorate]])assert(Math.abs(radius**2/old**2-2)<1e-12);
 assert(C.validPlacement(migrated,{item:'bench',area:'yard',x:12,z:0,turn:0}).ok);assert(!C.validPlacement(migrated,{item:'bench',area:'yard',x:16,z:0,turn:0}).ok);

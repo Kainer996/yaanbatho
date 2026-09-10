@@ -2,12 +2,12 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.BurbzAcademyFlightCore=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number(n)||0));
-function step(p,input,dt,world){
+function step(p,input,dt,world,options={}){
  dt=clamp(dt,0,.08);if(p.landed)return;
  p.yaw+=clamp(input.turn,-1,1)*dt*1.4;p.pitch=clamp(p.pitch+clamp(input.pitch,-1,1)*dt, -1.1,1.1);
- const forward=clamp(input.forward,-1,1),side=clamp(input.side,-1,1),lift=clamp(input.lift,-1,1),speed=5.2,scale=1/Math.max(1,Math.hypot(forward,side));
+ const forward=clamp(input.forward,-1,1),side=clamp(input.side,-1,1),lift=clamp(input.lift,-1,1),speed=Number.isFinite(options.speed)?clamp(options.speed,.1,80):5.2,liftSpeed=Number.isFinite(options.liftSpeed)?clamp(options.liftSpeed,.1,20):3.2,scale=1/Math.max(1,Math.hypot(forward,side));
  // Looking up/down aims the head; only the height control changes altitude.
- const target={x:(-Math.sin(p.yaw)*forward+Math.cos(p.yaw)*side)*speed*scale,y:lift*3.2,z:(-Math.cos(p.yaw)*forward-Math.sin(p.yaw)*side)*speed*scale};
+ const target={x:(-Math.sin(p.yaw)*forward+Math.cos(p.yaw)*side)*speed*scale,y:lift*liftSpeed,z:(-Math.cos(p.yaw)*forward-Math.sin(p.yaw)*side)*speed*scale};
  p.velocity=p.velocity||{x:0,y:0,z:0};const blend=1-Math.exp(-dt*5);
  for(const axis of ['x','y','z'])p.velocity[axis]+=(target[axis]-p.velocity[axis])*blend;
  const n=Math.max(1,Math.ceil(Math.hypot(p.velocity.x,p.velocity.y,p.velocity.z)*dt/.08));
