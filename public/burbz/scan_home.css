@@ -54,6 +54,12 @@ body:has(#merlinTutorialOverlay.show) .home-stat-coins{display:none}
 #screen-scan .scan-home-start .merlin-listener-line.is-error{border-left:3px solid #946724;padding:7px 10px;background:#d4b66b25;border-radius:5px}
 #screen-scan .scan-home-start .merlin-listener-line.is-error .merlin-listener-status{font-weight:800;color:#71461f}
 #screen-scan .scan-home-start .merlin-listener-line.is-error .merlin-listener-activity{color:#73522f}
+/* Comic's pale page needs ink for text outside the dark study cards. */
+html[data-appearance="comic"] #screen-scan .scan-home-section-head h2{color:#223f39}
+html[data-appearance="comic"] #screen-scan .scan-home-section-head>span{color:#455449}
+html[data-appearance="comic"] #screen-scan .scan-home-section-head button{color:#304c3f}
+html[data-appearance="comic"] #screen-scan .scan-home-section-head button:focus-visible{outline-color:#255c4d}
+html[data-appearance="comic"] #screen-scan .home-empty{color:#455449;border-color:#526254}
 html[data-appearance="comic"] #screen-scan .scan-home-start{border:2px solid #0e2b25;box-shadow:3px 4px 0 #0a201a}
 html[data-appearance="comic"] #screen-scan :is(.home-action,.home-village){border:2px solid #173b2d;box-shadow:2px 3px 0 #061f1a}
 html[data-appearance="comic"] #screen-scan :is(.home-route,.home-walk){border:1.5px solid #859d6c8f;box-shadow:2px 3px 0 #061f1a}

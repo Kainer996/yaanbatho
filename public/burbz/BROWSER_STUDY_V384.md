@@ -18,17 +18,18 @@ The local server's only missing requests are `api/auth/config` in the old/new fi
 
 ## Broad regression
 
-Exact hydrated v383 baseline: 41 failed, 2,127 passed, 5 skipped. Final v384 after scroll/HUD corrections: 41 failed, 2,128 passed, 5 skipped. All 41 failure IDs are identical; zero added failures. The new dashboard core wrapper adds one passing test. Focused Home, scan dashboard, money-HUD and asset registration checks also pass.
+Exact hydrated v383 baseline: 41 failed, 2,127 passed, 5 skipped. Final v384 after scroll/HUD and Comic contrast corrections: 41 failed, 2,128 passed, 5 skipped. All 41 failure IDs are identical; zero added failures. The new dashboard core wrapper adds one passing test. Focused Home, scan dashboard, money-HUD and asset registration checks also pass.
 
 ## Findings fixed during verification
 
 - Six-digit coin totals wrapped on 320px phones. The final stats retain exact accessible amounts without wrapping.
+- The final visual release review caught pale section headings and counts on Comic's pale page. Scoped ink colors now cover those headings, metadata, village controls, empty states and the village control's focus ring while preserving the dark cards and Normal appearance.
 - Chromium reset nested scroll positions when the app moved into the monitor. The controller now captures/restores scrolled descendants in both directions, and hidden monitor views preserve layout.
 - The money HUD mistook the overlaid room canvas for an overlay covering the app header. It now understands projected Home and keeps the normal header balance without adding a duplicate.
 - Some initial runner taps landed beneath the fixed dock or during the existing village travel overlay. Runners now center the actual target and verify its unobscured native hit point. Initial failed evidence is retained; no runtime failure is concealed.
 
 ## Evidence
 
-Folder `/root/burbz-study-v384-evidence/`: `browser/results.json`, `pwa/results.json`, `pytest-baseline-exact-hydrated.txt`, `pytest-final-scroll-hud.txt`, `pytest-comparison-final.json`, `final-runtime-hashes.json` and appearance/room/transition screenshots. `preview/study-home-house-preview.mp4` shows a real native-touch Home → Stand → walk → Sit journey; the raw WebM is retained and the export trims only startup, without changing speed. The image prompt and provenance are in `assets/home-v384/README.md`.
+Folder `/root/burbz-study-v384-evidence/`: `browser/results.json`, `pwa/results.json`, `pytest-baseline-exact-hydrated.txt`, `pytest-final-comic-contrast.txt`, `pytest-comparison-final.json`, `final-runtime-hashes.json` and appearance/room/transition screenshots. `preview/study-home-house-preview.mp4` shows a real native-touch Home → Stand → walk → Sit journey; the raw WebM is retained and the export trims only startup, without changing speed. The image prompt and provenance are in `assets/home-v384/README.md`.
 
 Required pre-change public artwork check: 1,545/1,545 required images served real bytes; the existing optional rook-witch cutout remains absent with the game's painting fallback.

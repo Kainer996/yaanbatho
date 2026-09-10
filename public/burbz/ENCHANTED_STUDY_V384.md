@@ -24,6 +24,6 @@ Artwork source, tool mode and full prompt: [assets/home-v384/README.md](assets/h
 
 ## Verification and publication
 
-Focused core checks: `tests/test_scan_home_v384.cjs` (also pytest), the existing home/scan cores and asset registration tests. Browser evidence runner: `tests/run_study_v384.cjs`. Installed-update runner: `tests/run_study_pwa_v384.cjs`. Results and screenshots are stored at `/root/burbz-study-v384-evidence/`; the final verification record records authoritative outcomes and limitations.
+Focused core checks: `tests/test_scan_home_v384.cjs` (also pytest), the existing home/scan cores and asset registration tests. Browser evidence runner: `tests/run_study_v384.cjs`. Installed-update runner: `tests/run_study_pwa_v384.cjs`. Results and screenshots are stored at `/root/burbz-study-v384-evidence/`; [BROWSER_STUDY_V384.md](BROWSER_STUDY_V384.md) records authoritative outcomes and limitations.
 
 Worktree `/root/burbz-study-v384`, branch `codex/burbz-study-v384`, based on v383 main `763f6cbb8fadedfe91d608f28beb24cb6560fb5b`. Yaan approved publication on 2026-09-10 through the existing GitHub review/merge and guarded sync process. The evidence folder's `release/` directory records the deployed commit and public checks. Preserve the unrelated `videos/friend-shaped.mp4` working-tree difference.
