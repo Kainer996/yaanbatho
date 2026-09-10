@@ -3,10 +3,11 @@
  'use strict';
  const PLAYER='@player';
  const quantity=n=>Number.isSafeInteger(n)&&n>=0;
- function ownerExists(state,owner){return owner===PLAYER||!!state.flock?.some(b=>b.id===owner);}
+ // The app supplies its canonical roster, including non-recruited companions.
+ function ownerExists(state,owner,companions=state.flock){return owner===PLAYER||(typeof owner==='string'&&owner.length>0&&Array.isArray(companions)&&companions.some(b=>b&&b.id===owner));}
  function loadout(state,owner=PLAYER){return state.inventory?.equipment?.[owner]||{};}
- function change(state,L,owner,slot,id=null){
-  if(!ownerExists(state,owner)||!L.GEAR_SLOTS.includes(slot))return {ok:false,reason:'Unknown equipment slot or owner.'};
+ function change(state,L,owner,slot,id=null,companions=state.flock){
+  if(!ownerExists(state,owner,companions)||!L.GEAR_SLOTS.includes(slot))return {ok:false,reason:'Unknown equipment slot or owner.'};
   const inv=state.inventory,bag=inv?.gear,previous=loadout(state,owner)[slot];
   if(!bag)return {ok:false,reason:'The Stores are unavailable.'};
   if(id===previous||(!id&&!previous))return {ok:false,reason:'This loadout is already selected.'};

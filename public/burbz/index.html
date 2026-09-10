@@ -38197,7 +38197,8 @@ function forgeOpenSlot(slot) { forgeState.slotPicker = forgeState.slotPicker ===
 // equipment screen. Swapped-out pieces go back into the bag.
 function commitEquipmentChange(owner, slot, gearId) {
   const snapshot=snapshotGameState(), core=window.BurbzPlayerEquipmentCore, effects=[];
-  const result=core.change(gameState,lootCore(),owner,slot,gearId);
+  // The Forge roster includes Merlin, who is not a recruited state.flock bird.
+  const result=core.change(gameState,lootCore(),owner,slot,gearId,owner===core.PLAYER?[]:getBattleFlock());
   if(!result.ok)return result;
   try {
     if(owner!==core.PLAYER&&gearId)updateQuestProgress('gear_equipped',1,effects);
