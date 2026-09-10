@@ -64,6 +64,7 @@ FILES=(
   "scan_home_core.js"
   "scan_home.js"
   "assets/home-v378/woodland-lookout.webp"
+  "assets/home-v384/enchanted-study.webp"
   "area_birds.css"
   "area_birds_taxonomy.js"
   "area_birds_core.js"

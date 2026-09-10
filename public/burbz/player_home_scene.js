@@ -12,7 +12,7 @@ function ornament(T,type,accent=0x6f8c76){const b=root.BurbzSettlementModels.bat
  else if(type==='shelf'){for(const y of [.12,.7,1.3,1.9])b.box(1.6,.09,.6,0,y,0,wood);for(const x of [-.76,.76])b.box(.09,1.9,.6,x,.97,0,trim);for(let k=0;k<3;k++)for(let i=0;i<7;i++)b.box(.12,.35+(i%2)*.09,.32,-.6+i*.19,.34+k*.59,0,[accent,0xab7252,0xc7b581][i%3]);}
  else {b.cylinder(.65,.65,.1,0,.78,0,wood);b.cylinder(.1,.2,.74,0,.37,0,trim);b.cylinder(.14,.12,.17,.2,.92,0,0xd8c69e);}
  return b.finish();}
-function create(T,home,area,aspect,grade){const s=C.normalize(home);let scene,room=null,house=null,screen=null,screenTexture=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
+function create(T,home,area,aspect,grade){const s=C.normalize(home);let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
  if(area==='room'){
  const p={name:'Your woodland home',scope:'player-home',width:9,depth:10,height:3.6,accent:0x709486,props:[{type:'bed',x:-3,z:1.4,rot:0,w:1.7,d:2.4,solid:true},{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}],spawn:{x:0,y:0,z:3.8,yaw:0,pitch:0},exit:{x:0,z:4.3},action:null};
  room=root.BurbzBuildingRoomsScene.create(T,p);scene=room.scene;
@@ -25,8 +25,16 @@ function create(T,home,area,aspect,grade){const s=C.normalize(home);let scene,ro
  desk.box(width+.22,height+.24,.17,0,screenSize.y,-3.53,trim);desk.box(width+.1,height+.12,.19,0,screenSize.y,-3.52,gold);desk.cylinder(.07,.12,.38,0,1.13,-3.55,trim);
  for(const x of [-width/2-.08,width/2+.08])for(const y of [screenSize.y-height/2-.08,screenSize.y+height/2+.08])desk.sphere(.055,x,y,-3.4,gold);
  desk.cylinder(.13,.2,.1,1,.99,-3.3,gold);desk.cylinder(.035,.035,.5,1,1.26,-3.3,0xe4d2ac);desk.sphere(.08,1,1.57,-3.3,0xffcf76,[.5,1,.5]);
- scene.add(desk.finish());const chair=ornament(T,'armchair',0x466b5c);chair.position.set(0,0,-1.85);chair.rotation.y=Math.PI;scene.add(chair);
- const canvas=document.createElement('canvas');canvas.width=Math.round(600*aspect);canvas.height=600;const ctx=canvas.getContext('2d');const grad=ctx.createLinearGradient(0,0,canvas.width,600);grad.addColorStop(0,'#17372c');grad.addColorStop(1,'#091b1a');ctx.fillStyle=grad;ctx.fillRect(0,0,canvas.width,600);ctx.strokeStyle='#b89c58';ctx.lineWidth=4;ctx.strokeRect(20,20,canvas.width-40,560);ctx.textAlign='center';ctx.fillStyle='#ecd9a5';ctx.font='bold '+Math.min(38,canvas.width/10)+'px Georgia';ctx.fillText('ALDERWING',canvas.width/2,240);ctx.font=Math.min(24,canvas.width/14)+'px Georgia';ctx.fillText('Command centre',canvas.width/2,290);ctx.fillStyle='#80b699';ctx.beginPath();ctx.arc(canvas.width/2,390,26,0,Math.PI*2);ctx.fill();ctx.fillStyle='#e8d29b';ctx.font='28px Georgia';ctx.fillText('✦',canvas.width/2,400);screenTexture=new T.CanvasTexture(canvas);screenTexture.colorSpace=T.SRGBColorSpace;screen=new T.Mesh(new T.PlaneGeometry(width,height),new T.MeshBasicMaterial({map:screenTexture}));screen.position.set(0,screenSize.y,screenSize.z);screen.userData.homeTarget='desk';scene.add(screen);targets.push(screen);
+ scene.add(desk.finish());const chair=ornament(T,'armchair',0x466b5c);chair.position.set(0,0,-1.85);chair.rotation.y=Math.PI;chair.userData.homeTarget='desk';scene.add(chair);targets.push(chair);
+ // The real app is projected beneath the WebGL canvas. This depth-tested
+ // aperture exposes it only where the actual monitor is visible, including
+ // furniture occlusion, side views and the exact full-viewport seated view.
+ screen=new T.Mesh(new T.PlaneGeometry(width,height),new T.ShaderMaterial({
+   vertexShader:'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+   fragmentShader:'void main(){gl_FragColor=vec4(0.0);}',
+   blending:T.NoBlending,depthTest:true,depthWrite:true
+ }));screen.position.set(0,screenSize.y,screenSize.z);screen.renderOrder=5;screen.userData.homeTarget='desk';scene.add(screen);targets.push(screen);
+
  }else{
  scene=new T.Scene();scene.background=new T.Color(0xa7c3ba);scene.fog=new T.Fog(0xa7c3ba,36,65);const b=root.BurbzSettlementModels.batch(T),front=root.BurbzSettlementModels.batch(T);
  b.cylinder(16,17,1,0,-.55,0,0x698160,[0,0,0],64);b.cylinder(6.3,6.3,.04,0,-.015,1.8,0x7c8764,[0,0,0],48);
