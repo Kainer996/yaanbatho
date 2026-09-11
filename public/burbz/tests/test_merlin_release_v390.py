@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = 'merlin-flight-v390-20260910'
-CURRENT_BUILD = 'photo-recovery-v392-20260911'
+CURRENT_BUILD = 'photo-accuracy-v393-20260911'
 
 
 def test_merlin_v2_loader_and_all_offline_lists_agree():

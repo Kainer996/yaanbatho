@@ -152,3 +152,13 @@ Geographic elevation is supplied by Mapterhorn under its upstream source licence
 ## v366 imported natural-history accounts
 
 Text and adaptations in `data/bird-education-enrichment-v366.json` are attributed to Wikipedia contributors under CC BY-SA4.0, with exact source/revision links, retrieval metadata and changes recorded in each account. The renderer preserves source and licence attribution for existing imported Wikipedia accounts too. Primary-guide paraphrases remain separately identified. See `BIRD_EDUCATION_ENRICHMENT_V366.md` and `BIRD_FACTS_V366.md` for provenance and source-subject limits.
+
+
+## Local photo recognition (v393, prepared September 2026)
+
+- BioCLIP 2: Imageomics, MIT model licence; https://huggingface.co/imageomics/bioclip-2 (pinned 2957b322090f9cb17ae72c71981c7218a28d81e0). Cite Gu et al., *BioCLIP 2: Emergent Properties from Scaling Hierarchical Contrastive Learning*, NeurIPS 2025.
+- Bird species text vectors and taxonomy: TreeOfLife-200M, dataset card CC0-1.0; https://huggingface.co/datasets/imageomics/TreeOfLife-200M (pinned 5f2dc493b3dc0e544438a04038ab15faa646b749). Only the matching BioCLIP 2 vectors are used. Original training photographs retain their individual licences; they are not redistributed with Burbz.
+- Birder `rope_vit_reg4_b14_capi-intermediate-eu-common`: Ofer Hasson / Birder project, Apache-2.0; https://huggingface.co/birder-project/rope_vit_reg4_b14_capi-intermediate-eu-common (pinned 04624a2fbbb5a50346ef553dc1b65dcfe707692c).
+- TorchVision detector/code: official Faster R-CNN ResNet50 FPN v2 COCO weights, https://docs.pytorch.org/vision/main/models/generated/torchvision.models.detection.fasterrcnn_resnet50_fpn_v2.html ; TorchVision code licence https://github.com/pytorch/vision/blob/main/LICENSE (BSD-3-Clause). Preserve upstream notices with the isolated installation.
+
+All raw model/data URLs and SHA-256 digests are in `scripts/prepare-local-photo.py`. No model weights are served as website assets or shipped through Git LFS.

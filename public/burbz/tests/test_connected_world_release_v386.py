@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD = 'home-countryside-v387-20260910'
-CURRENT_BUILD = 'photo-recovery-v392-20260911'
+CURRENT_BUILD = 'photo-accuracy-v393-20260911'
 WORLD_PIN = 'connected-world-v386-20260910'
 CONTINUOUS_PIN = 'continuous-world-v391-20260910'
 CHANGED = {'player_home_core.js','player_home.js','village_walk.js','geographic_world.js','geographic_world.css'}

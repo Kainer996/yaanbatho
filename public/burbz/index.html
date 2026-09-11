@@ -2981,7 +2981,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .capture-overlay.show { display: flex; }
 /* Merlin-style bird cropper: fill the square with the bird before ID */
 .bird-crop-overlay {
-  position: fixed; inset: 0; z-index: 1200; display: none;
+  position: fixed; inset: 0; z-index: 10080; display: none;
   flex-direction: column; align-items: center; justify-content: center;
   background: rgba(4,10,10,0.94); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   padding: max(14px, env(safe-area-inset-top)) 16px calc(16px + var(--safe-bottom));
@@ -2999,7 +2999,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   background:#0a1414; box-shadow:0 18px 50px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.08);
 }
 .bird-crop-stage:active { cursor:grabbing; }
-.bird-crop-img { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; pointer-events:none; -webkit-user-drag:none; }
+.bird-crop-img { position:absolute; top:0; left:0; max-width:none; transform-origin:0 0; will-change:transform; pointer-events:none; -webkit-user-drag:none; }
 .bird-crop-frame { position:absolute; inset:0; pointer-events:none;
   background:
     linear-gradient(to right, transparent 33.2%, rgba(255,255,255,.16) 33.2%, rgba(255,255,255,.16) 33.5%, transparent 33.5%),
@@ -3025,6 +3025,31 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .photo-id-status[hidden], .photo-id-status button[hidden] { display:none; }
 .photo-id-status p { margin:0; line-height:1.5; }
 .photo-id-status button { margin-top:10px; min-height:44px; padding:10px 18px; border:1px solid var(--accent); border-radius:8px; background:var(--bg4); color:var(--text); font:inherit; cursor:pointer; }
+.bird-crop-analysis { width:min(86vw,420px); margin-top:14px; text-align:center; }
+.bird-crop-analysis[hidden], .bird-crop-analysis progress[hidden] { display:none; }
+.bird-crop-analysis p { margin:0 0 8px; line-height:1.4; color:var(--text); }
+.bird-crop-analysis progress { width:100%; height:12px; accent-color:var(--accent2); }
+.bird-crop-overlay.analysing .bird-crop-frame,
+.bird-crop-overlay.analysing .bird-crop-zoom { visibility:hidden; }
+.bird-crop-overlay.analysing .bird-crop-stage { touch-action:auto; cursor:default; }
+.bird-crop-overlay.analysing .bird-crop-stage,
+.bird-crop-overlay.has-outcome .bird-crop-stage { width:min(72vw, max(48px, calc(100dvh - 330px - var(--safe-bottom))), 340px); }
+.bird-crop-overlay.analysing .bird-crop-zoom { display:none; }
+.bird-crop-overlay { overflow-y:auto; }
+.bird-crop-close { position:absolute; top:max(8px, env(safe-area-inset-top)); right:10px; min-height:44px; min-width:44px; border:0; background:transparent; color:var(--text); font-size:24px; cursor:pointer; }
+.comic-ui .bird-crop-overlay { background:var(--comic-paper); }
+.comic-ui .bird-crop-actions button { border:2px solid var(--comic-ink); }
+.comic-ui .bird-crop-confirm { background:var(--comic-yellow); color:var(--comic-ink); }
+@media (prefers-reduced-motion: reduce) { .bird-crop-analysis progress { animation:none; } }
+@media (min-width:640px) and (orientation:landscape) {
+  .bird-crop-overlay.show { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:repeat(5,auto); gap:0 24px; align-content:center; justify-items:center; }
+  .bird-crop-overlay.show .bird-crop-stage { grid-column:1; grid-row:1/6; width:min(43vw, calc(100dvh - 48px - var(--safe-bottom))); }
+  .bird-crop-title { grid-column:2; grid-row:1; }
+  .bird-crop-sub { grid-column:2; grid-row:2; }
+  .bird-crop-analysis { grid-column:2; grid-row:3; width:100%; margin-top:0; }
+  .bird-crop-zoom { grid-column:2; grid-row:4; width:100%; margin-top:8px; }
+  .bird-crop-actions { grid-column:2; grid-row:5; width:100%; margin-top:10px; }
+}
 .capture-flash {
   position: absolute; inset: 0;
   background: radial-gradient(circle, rgba(255,255,255,0.4), transparent 60%);
@@ -4653,8 +4678,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
     <!-- BIRD PHOTO CROPPER (Merlin-style: fill the square with the bird) -->
     <div class="bird-crop-overlay" id="birdCropOverlay" role="dialog" aria-modal="true" aria-label="Frame the bird">
-      <div class="bird-crop-title">Frame the bird</div>
-      <div class="bird-crop-sub">Zoom and drag until the bird fills the square.</div>
+      <button class="bird-crop-close" id="birdCropClose" type="button" aria-label="Close photo identification">×</button>
+      <div class="bird-crop-title" id="birdCropTitle">Frame the bird</div>
+      <div class="bird-crop-sub" id="birdCropHint">Pinch or slide to zoom, then drag. Keep the whole bird in view.</div>
       <div class="bird-crop-stage" id="birdCropStage">
         <img class="bird-crop-img" id="birdCropImg" alt="">
         <div class="bird-crop-frame">
@@ -4664,9 +4690,13 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       </div>
       <label class="bird-crop-zoom" for="birdCropZoom">
         <span class="zi" aria-hidden="true">&#128064;</span>
-        <input type="range" id="birdCropZoom" min="1" max="8" step="0.01" value="1" aria-label="Zoom to fill the square with the bird">
+        <input type="range" id="birdCropZoom" min="1" max="64" step="0.01" value="1" aria-label="Zoom to frame the bird">
         <span class="zi" aria-hidden="true">&#128007;</span>
       </label>
+      <div class="bird-crop-analysis" id="birdCropAnalysis" hidden>
+        <p id="birdCropMessage" role="status" aria-live="polite"></p>
+        <progress id="birdCropProgress" aria-label="Checking your photo" hidden></progress>
+      </div>
       <div class="bird-crop-actions">
         <button class="bird-crop-retake" id="birdCropRetake" type="button">Retake</button>
         <button class="bird-crop-confirm" id="birdCropConfirm" type="button">Identify &#10003;</button>
@@ -40497,39 +40527,52 @@ nativeCameraInput?.addEventListener('change', async () => {
 // After the phone's camera returns a photo we show it in a fixed square with a
 // zoom + drag interaction. Only the framed square (the bird) is sent to Photo
 // ID, which dramatically cuts background false positives.
-const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, pointers: new Map(), pinch: null };
+const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, pointers: new Map(), pinch: null };
 
 async function openBirdCropper(file) {
+  closeBirdCropper();
+  const generation = birdCrop.generation;
   let bitmap = null;
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
   } catch (e) { bitmap = null; }
+  if (generation !== birdCrop.generation) { bitmap?.close?.(); return; }
   if (!bitmap) {
     // Can't decode to crop (exotic format) — send the original straight through.
     const blob = await prepareNativePhotoForUpload(file);
     await identifyImage(blob || file, 'camera');
     return;
   }
-  // Bounded working canvas: display + crop source at up to the upload cap.
-  const fit = Math.min(1, CAPTURE_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  // Keep original detail until AFTER framing. Bound unusually large photos to
+  // 24 MP; the small display JPEG never becomes the recognition source.
+  const fit = Math.min(1, Math.sqrt(24000000 / (bitmap.width * bitmap.height)), 8192 / Math.max(bitmap.width, bitmap.height));
   const W = Math.max(1, Math.round(bitmap.width * fit));
   const H = Math.max(1, Math.round(bitmap.height * fit));
+  if (fit < 1) {
+    try {
+      const resized = await createImageBitmap(bitmap, { resizeWidth:W, resizeHeight:H, resizeQuality:'high' });
+      bitmap.close?.(); bitmap = resized;
+    } catch (error) { bitmap.close?.(); throw error; }
+  }
+  if (generation !== birdCrop.generation) { bitmap.close?.(); return; }
   const canvas = document.createElement('canvas');
-  canvas.width = W; canvas.height = H;
+  const previewFit = Math.min(1, 1536 / Math.max(W,H));
+  canvas.width = Math.max(1, Math.round(W*previewFit)); canvas.height = Math.max(1, Math.round(H*previewFit));
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(bitmap, 0, 0, W, H);
-  bitmap.close && bitmap.close();
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
-  birdCrop.source = canvas; birdCrop.W = W; birdCrop.H = H;
+  birdCrop.source = bitmap; birdCrop.W = W; birdCrop.H = H;
   birdCrop.size0 = Math.min(W, H);
-  birdCrop.zmax = Math.min(8, Math.max(1.5, birdCrop.size0 / 48));
+  birdCrop.zmax = Math.max(1, birdCrop.size0 / 48);
   birdCrop.size = birdCrop.size0;           // start framed on the centre square
   birdCrop.cx = W / 2; birdCrop.cy = H / 2;
 
   const img = $('birdCropImg');
   if (img.dataset.blobUrl) { URL.revokeObjectURL(img.dataset.blobUrl); img.dataset.blobUrl = ''; }
   const dispBlob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.92));
+  if (generation !== birdCrop.generation) return;
+  if (!dispBlob) throw new Error('Photo preview encoding failed');
   const url = URL.createObjectURL(dispBlob);
   img.dataset.blobUrl = url; img.src = url;
   img.style.width = W + 'px'; img.style.height = H + 'px';
@@ -40538,6 +40581,7 @@ async function openBirdCropper(file) {
   zoom.max = String(birdCrop.zmax); zoom.value = '1';
 
   $('birdCropOverlay').classList.add('show');
+  setBirdPhotoStage('frame');
   setPhotoIdStatus('Frame the bird, then tap Identify.');
   requestAnimationFrame(renderBirdCrop);
 }
@@ -40548,7 +40592,7 @@ function birdCropStageSize() {
 }
 
 function clampBirdCrop() {
-  birdCrop.size = Math.max(48, Math.min(birdCrop.size0, birdCrop.size));
+  birdCrop.size = Math.max(Math.min(48, birdCrop.size0), Math.min(birdCrop.size0, birdCrop.size));
   const half = birdCrop.size / 2;
   birdCrop.cx = Math.max(half, Math.min(birdCrop.W - half, birdCrop.cx));
   birdCrop.cy = Math.max(half, Math.min(birdCrop.H - half, birdCrop.cy));
@@ -40568,6 +40612,7 @@ function birdCropZoomValue() { return birdCrop.size0 / birdCrop.size; }
 
 // Change zoom while keeping the screen anchor (relative to stage top-left) fixed.
 function setBirdCropZoom(newZoom, anchorX, anchorY) {
+  if (photoIdBusy || !birdCrop.source || !Number.isFinite(newZoom)) return;
   const V = birdCropStageSize();
   if (anchorX == null) { anchorX = V / 2; anchorY = V / 2; }
   newZoom = Math.max(1, Math.min(birdCrop.zmax, newZoom));
@@ -40589,6 +40634,7 @@ function initBirdCropperControls() {
   const rect = () => stage.getBoundingClientRect();
 
   stage.addEventListener('pointerdown', (e) => {
+    if (photoIdBusy) return;
     birdCrop.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { stage.setPointerCapture(e.pointerId); } catch (err) {}
     if (birdCrop.pointers.size === 2) {
@@ -40597,6 +40643,7 @@ function initBirdCropperControls() {
     }
   });
   stage.addEventListener('pointermove', (e) => {
+    if (photoIdBusy) return;
     if (!birdCrop.pointers.has(e.pointerId)) return;
     const prev = birdCrop.pointers.get(e.pointerId);
     birdCrop.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -40617,6 +40664,7 @@ function initBirdCropperControls() {
   const end = (e) => { birdCrop.pointers.delete(e.pointerId); if (birdCrop.pointers.size < 2) birdCrop.pinch = null; };
   stage.addEventListener('pointerup', end);
   stage.addEventListener('pointercancel', end);
+  stage.addEventListener('lostpointercapture', end);
   stage.addEventListener('wheel', (e) => {
     e.preventDefault();
     const r = rect();
@@ -40625,19 +40673,25 @@ function initBirdCropperControls() {
   $('birdCropZoom').addEventListener('input', (e) => setBirdCropZoom(parseFloat(e.target.value)));
   $('birdCropRetake').addEventListener('click', () => { SFX.tap(); closeBirdCropper(); openNativeCamera(); });
   $('birdCropConfirm').addEventListener('click', () => { SFX.tap(); confirmBirdCrop(); });
+  $('birdCropClose').addEventListener('click', () => { photoIdCancel?.(); closeBirdCropper(); });
+  $('birdCropOverlay').addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.preventDefault(); photoIdCancel?.(); closeBirdCropper(); }
+  });
   window.addEventListener('resize', () => { if ($('birdCropOverlay').classList.contains('show')) renderBirdCrop(); });
 }
 
 function closeBirdCropper() {
+  birdCrop.generation++;
   $('birdCropOverlay').classList.remove('show');
   birdCrop.pointers.clear(); birdCrop.pinch = null;
   const img = $('birdCropImg');
   if (img && img.dataset.blobUrl) { URL.revokeObjectURL(img.dataset.blobUrl); img.dataset.blobUrl = ''; img.src = ''; }
-  birdCrop.source = null;
+  birdCrop.source?.close?.(); birdCrop.source = null;
 }
 
 async function confirmBirdCrop() {
-  if (!birdCrop.source) return;
+  if (!birdCrop.source || photoIdBusy || $('birdCropConfirm').disabled) return;
+  const generation = birdCrop.generation;
   const btn = $('birdCropConfirm');
   btn.disabled = true; const label = btn.textContent; btn.textContent = 'Identifying…';
   try {
@@ -40651,9 +40705,9 @@ async function confirmBirdCrop() {
     octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = 'high';
     octx.drawImage(birdCrop.source, x, y, s, s, 0, 0, outSide, outSide);
     const blob = await new Promise(res => out.toBlob(res, 'image/jpeg', 0.92));
+    if (generation !== birdCrop.generation) return;
     if (!blob) throw new Error('Photo encoding failed');
     updateNativePreviewFromCanvas(out);
-    closeBirdCropper();
     await identifyImage(blob, 'camera');
   } catch (e) {
     console.log('bird crop failed:', e);
@@ -40804,6 +40858,24 @@ async function getCurrentPositionForPhotoId() {
 
 let photoIdBusy = false;
 let photoIdRetryBlob = null;
+let photoIdCancel = null;
+function setBirdPhotoStage(stage, message = '') {
+  const overlay = $('birdCropOverlay');
+  const busy = stage === 'prepare' || stage === 'analyse';
+  overlay.classList.toggle('analysing', busy);
+  overlay.classList.toggle('has-outcome', stage === 'outcome');
+  $('birdCropTitle').textContent = busy ? 'Checking your bird' : stage === 'outcome' ? 'Photo check finished' : 'Frame the bird';
+  $('birdCropHint').textContent = busy ? 'Your photo stays here while we check the details.' : 'Pinch or slide to zoom, then drag. Keep the whole bird in view.';
+  $('birdCropAnalysis').hidden = stage === 'frame';
+  $('birdCropMessage').textContent = message;
+  // The model does not report a completion percentage. Use a real waiting
+  // indicator with honest stage labels instead of a timer pretending to be %.
+  $('birdCropProgress').hidden = !busy;
+  $('birdCropRetake').disabled = busy;
+  $('birdCropConfirm').disabled = busy;
+  $('birdCropConfirm').textContent = busy ? 'Checking…' : 'Identify ✓';
+  if (typeof renderBirdCrop === 'function') renderBirdCrop();
+}
 function setPhotoIdStatus(message, retry = false) {
   $('photoIdStatus').hidden = false;
   $('photoIdMessage').textContent = message;
@@ -40820,12 +40892,19 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
   if (photoIdBusy) return;
   photoIdBusy = true;
   photoIdRetryBlob = fileOrBlob;
+  setBirdPhotoStage('prepare', 'Preparing your photo…');
   setPhotoIdStatus('Analysing your bird photo… This can take up to 45 seconds.');
   $('captureBtn').textContent = 'ANALYZING...';
   $('captureBtn').disabled = true;
   const controller = new AbortController();
   let timeout;
+  let cancelled = false;
   const deadline = new Promise((_, reject) => {
+    photoIdCancel = () => {
+      cancelled = true;
+      controller.abort();
+      reject(new Error('photo-cancelled'));
+    };
     timeout = setTimeout(() => {
       controller.abort();
       reject(new Error('photo-timeout'));
@@ -40842,6 +40921,8 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
       formData.append('lon', pos.coords.longitude);
     }
 
+    setBirdPhotoStage('analyse', 'Sending and checking the bird’s details… This can take up to 45 seconds.');
+
     const response = await Promise.race([fetch('api/identify/image', {
       method: 'POST',
       body: formData,
@@ -40853,32 +40934,37 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
       message: 'Photo ID upload failed — try a clearer bird photo.'
     })), deadline]);
 
-    const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.policy === 'photo-evidence-v350' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
+    const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.verified === true && result.policy === 'photo-local-v393' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
     const batLabel = photoAccepted ? batLabelInIdentifyResult(result) : '';
     if (batLabel) {
+      closeBirdCropper();
       triggerBatEasterEgg('photo', batLabel);
       setPhotoIdStatus('A bat! You found a secret visitor.');
       photoIdRetryBlob = null;
     }
     const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
     if (photoAccepted && result.species && !mainMatchIsBat) {
+      closeBirdCropper();
       handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
       setPhotoIdStatus('Identified: ' + result.species + '. See the result below.');
       photoIdRetryBlob = null;
     } else if (!batLabel) {
       const message = result && !result.found && result.message ? result.message : 'Bird not found. Try a closer, clearer photo—we couldn’t identify a bird confidently.';
       setPhotoIdStatus(message, true);
+      setBirdPhotoStage('outcome', message);
       showToast(message);
     }
   } catch(e) {
     console.log('Photo ID failed:', e);
-    const message = controller.signal.aborted
+    const message = cancelled ? 'Photo check cancelled. You can try this photo again.' : controller.signal.aborted
       ? 'Photo identification took too long. Try this photo again.'
       : 'Photo ID could not connect or finish analysing. Check your connection and try this photo again.';
     setPhotoIdStatus(message, true);
-    showToast(message);
+    setBirdPhotoStage('outcome', message);
+    if (!cancelled) showToast(message);
   } finally {
     clearTimeout(timeout);
+    photoIdCancel = null;
     photoIdBusy = false;
     $('captureBtn').textContent = 'OPEN CAMERA';
     $('captureBtn').disabled = false;
@@ -43432,7 +43518,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'photo-recovery-v392-20260911';
+const BURBZ_BUILD = 'photo-accuracy-v393-20260911';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
