@@ -9,7 +9,7 @@ async function invoke(result,ok=true){
   vm.createContext(context);vm.runInContext(fn,context);await context.identifyImage({});return {awards,bats,toasts,button};
 }
 test('inconclusive, legacy guesses, bad HTTP and invalid confidences never enter discovery or bat rewards',async()=>{
-  const clear={found:true,accepted:true,verified:true,policy:'photo-evidence-v393',species:'European Robin',scientificName:'Erithacus rubecula',confidence:.98};
+  const clear={found:true,accepted:true,verified:true,policy:'photo-local-v393',species:'European Robin',scientificName:'Erithacus rubecula',confidence:.98};
   const cases=[{found:false,message:'Bird not found. Try a closer, clearer photo.'},{found:true,species:'Kestrel',confidence:.5},{...clear,accepted:false},{...clear,confidence:.89},{...clear,confidence:Infinity},{...clear,policy:'old'},{found:false,species:'bat'}];
   for(const raw of cases){const r=await invoke(raw);assert.equal(r.awards.length,0);assert.equal(r.bats.length,0);assert.match(r.toasts[0],/^Bird not found/);assert.equal(r.button.disabled,false);}
   assert.equal((await invoke(clear,false)).awards.length,0);
@@ -30,7 +30,7 @@ function photoHarness(fetcher, position=async()=>null) {
 }
 test('failure stays visible after the toast, and retry uses the same photo through the discovery gate',async()=>{
   let calls=0;const blob={id:'original-photo'};
-  const h=photoHarness(async()=>({ok:++calls>1,json:async()=>calls===1?{found:false,message:'Photo identification is unavailable right now.'}:{found:true,accepted:true,verified:true,policy:'photo-evidence-v393',species:'European Robin',scientificName:'Erithacus rubecula',confidence:.98}}));
+  const h=photoHarness(async()=>({ok:++calls>1,json:async()=>calls===1?{found:false,message:'Photo identification is unavailable right now.'}:{found:true,accepted:true,verified:true,policy:'photo-local-v393',species:'European Robin',scientificName:'Erithacus rubecula',confidence:.98}}));
   await h.ctx.identifyImage(blob);
   assert.equal(h.elements.photoIdStatus.hidden,false);
   assert.match(h.elements.photoIdMessage.textContent,/unavailable/);
@@ -49,7 +49,7 @@ for(const stage of ['location','upload','body'])test(`${stage} stalls time out a
   h.expire();await pending;
   assert.match(h.elements.photoIdMessage.textContent,/too long/);
   assert.equal(h.elements.photoIdRetry.hidden,false);assert.equal(h.elements.captureBtn.disabled,false);
-  release({ok:true,json:async()=>({found:true,accepted:true,verified:true,policy:'photo-evidence-v393',species:'European Robin',confidence:.98})});
+  release({ok:true,json:async()=>({found:true,accepted:true,verified:true,policy:'photo-local-v393',species:'European Robin',confidence:.98})});
   for(let i=0;i<8;i++)await Promise.resolve();
   assert.equal(h.awards.length,0);assert.equal(h.timers.size,0);
 });
@@ -73,7 +73,7 @@ test('analysis remains beside the full photo, has no invented percentage, and ca
   vm.runInContext('photoIdCancel()',h.ctx);await pending;
   assert.equal(h.elements.birdCropProgress.hidden,true);
   assert.match(h.elements.birdCropMessage.textContent,/cancelled/);
-  release({ok:true,json:async()=>({accepted:true,verified:true,found:true,species:'Raven',confidence:.99,policy:'photo-evidence-v393'})});
+  release({ok:true,json:async()=>({accepted:true,verified:true,found:true,species:'Raven',confidence:.99,policy:'photo-local-v393'})});
   for(let i=0;i<8;i++)await Promise.resolve();
   assert.equal(h.awards.length,0);assert.equal(h.timers.size,0);
 });

@@ -1,5 +1,7 @@
 # Photo framing and verification v393
 
+The Gemini experiment below is historical and superseded by [LOCAL_PHOTO_V393.md](LOCAL_PHOTO_V393.md). The current prepared adapter uses only free local inference; the crop/progress work remains.
+
 Prepared locally on `codex/burbz-photo-accuracy-v393`, based on released `8d18aae7`. Not published. Yaan reports clear raven captures returning “Bird not found”, and a zoom limit preventing framing.
 
 The native cropper used to shrink every photo to 3072 pixels before framing, then stop at 8×. A browser regression reproduces a 6000-pixel original becoming 3072 pixels. Framing now retains original source pixels up to 24 MP (8192-pixel longest-side guard), uses a separate small display preview, and only downsizes the chosen crop for upload. Minimum crop size is 48 source pixels; zoom cannot create missing detail. The source bitmap is closed on exit/replacement. A 6000×4000 camera fixture now gives a real 200×200 upload at 20× zoom. Touch pinch, anchor math, bounds and square layouts are exercised.

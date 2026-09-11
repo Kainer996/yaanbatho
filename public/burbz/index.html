@@ -40934,7 +40934,7 @@ async function identifyImage(fileOrBlob, captureSource = 'camera') {
       message: 'Photo ID upload failed — try a clearer bird photo.'
     })), deadline]);
 
-    const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.verified === true && result.policy === 'photo-evidence-v393' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
+    const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.verified === true && result.policy === 'photo-local-v393' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
     const batLabel = photoAccepted ? batLabelInIdentifyResult(result) : '';
     if (batLabel) {
       closeBirdCropper();

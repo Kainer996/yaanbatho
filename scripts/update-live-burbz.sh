@@ -156,6 +156,7 @@ FILES=(
   "settlement_scene_core.js"
   "peep_needs_core.js"
   "photo_id.py"
+  "photo_local.py"
   "tests/fixtures/photo-v350/robin-clear.jpg"
   "tests/fixtures/photo-v350/great-tit-clear.jpg"
   "tests/fixtures/photo-v350/raven-perched.jpg"
@@ -665,7 +666,7 @@ for f in "${BACKEND_FILES[@]}"; do
   fi
 done
 
-bash "$TMP/install-photo-id.sh" "$ROOT" "$TMP/photo_id.py" "$TMP/tests/fixtures/photo-v350" "$TMP/verify-photo-id.py" "$TMP/verify-sound-runtime.py" \
+bash "$TMP/install-photo-id.sh" "$ROOT" "$TMP/photo_id.py" "$TMP/tests/fixtures/photo-v350" "$TMP/verify-photo-id.py" "$TMP/verify-sound-runtime.py" "$TMP/photo_local.py" \
   || die "Photo HTTP proof failed; prior adapter restored before publishing the app shell"
 
 for f in "${FILES[@]}"; do

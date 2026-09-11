@@ -11,7 +11,7 @@ def main():
     for name,species in expected.items():
         with open(Path(args.fixtures)/(name+'.jpg'),'rb') as stream:
             start=time.monotonic();response=requests.post(args.origin.rstrip('/')+'/api/identify/image',files={'image':('photo.jpg',stream,'image/jpeg')},data={'captureSource':'camera','lat':'51.5','lon':'-.1'},timeout=50)
-        result=response.json();passed=result.get('policy')=='photo-evidence-v393'
+        result=response.json();passed=result.get('policy')=='photo-local-v393'
         if species and not (name=='raven-flight' and result.get('found') is False):passed=passed and response.status_code==200 and result.get('accepted') is True and result.get('verified') is True and result.get('found') is True and result.get('scientificName')==species and result.get('confidence',0)>=.90
         else:passed=passed and response.status_code==422 and result.get('found') is False and result.get('accepted') is False and 'species' not in result and result.get('message','').startswith('Bird not found.')
         row={'fixture':name,'status':response.status_code,'passed':bool(passed),'seconds':round(time.monotonic()-start,2),'result':result};rows.append(row);print(json.dumps(row),flush=True)

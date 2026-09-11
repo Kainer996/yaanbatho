@@ -163,7 +163,7 @@ done
 # app shell. Its installer backs up/rolls back the adapter on proof failure.
 if [[ -f "$SRC/photo_id.py" ]]; then
   bash "$TMP/repo/scripts/install-photo-id.sh" "$ROOT" "$SRC/photo_id.py" \
-    "$SRC/tests/fixtures/photo-v350" "$TMP/repo/scripts/verify-photo-id.py" "$TMP/repo/scripts/verify-sound-runtime.py" \
+    "$SRC/tests/fixtures/photo-v350" "$TMP/repo/scripts/verify-photo-id.py" "$TMP/repo/scripts/verify-sound-runtime.py" "$SRC/photo_local.py" \
     || { logger -t burbz-sync "abort: photo HTTP proof failed; prior adapter restored"; exit 1; }
 fi
 
