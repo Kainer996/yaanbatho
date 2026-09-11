@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
-CURRENT_BUILD = "photo-recovery-v392-20260911"
+CURRENT_BUILD = "photo-accuracy-v393-20260911"
 PREVIOUS_RELEASE_PIN = "steven-the-gull-v270-20260815"
 
 KNOWN_HABITATS = {"water", "wetland", "woodland", "heath", "park", "farmland",
