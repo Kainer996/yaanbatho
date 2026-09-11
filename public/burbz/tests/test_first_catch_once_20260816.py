@@ -17,7 +17,7 @@ HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 
 OWN_RELEASE_PIN = "first-catch-once-v278-20260817"
-CURRENT_BUILD = "continuous-world-v391-20260910"
+CURRENT_BUILD = "photo-recovery-v392-20260911"
 PREVIOUS_RELEASE_PIN = "town-square-city-builder-v276-20260817"
 
 

@@ -4,8 +4,9 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD = 'home-countryside-v387-20260910'
-CURRENT_BUILD = 'continuous-world-v391-20260910'
+CURRENT_BUILD = 'photo-recovery-v392-20260911'
 WORLD_PIN = 'connected-world-v386-20260910'
+CONTINUOUS_PIN = 'continuous-world-v391-20260910'
 CHANGED = {'player_home_core.js','player_home.js','village_walk.js','geographic_world.js','geographic_world.css'}
 
 
@@ -27,12 +28,12 @@ def test_connected_world_installation_and_live_copy_are_atomic():
         for renderer in ['lib/maplibre-gl.js?v=5.24.0', 'lib/maplibre-gl.css?v=5.24.0']:
             assert entries.count('./' + renderer) == 1, (name, renderer)
         for module in modules:
-            assert entries.count(f'./{module}?v={CURRENT_BUILD if module in {'village_walk.js','geographic_world.js'} else BUILD if module in CHANGED else WORLD_PIN}') == 1, (name, module)
+            assert entries.count(f'./{module}?v={CONTINUOUS_PIN if module in {'village_walk.js','geographic_world.js'} else BUILD if module in CHANGED else WORLD_PIN}') == 1, (name, module)
     for module in modules:
         assert (ROOT / module).is_file()
         assert f'"{module}"' in updater, module
         if module != 'geographic_cache.js':
-            assert f'{module}?v={CURRENT_BUILD if module in {'village_walk.js','geographic_world.js'} else BUILD if module in CHANGED else WORLD_PIN}' in html, module
+            assert f'{module}?v={CONTINUOUS_PIN if module in {'village_walk.js','geographic_world.js'} else BUILD if module in CHANGED else WORLD_PIN}' in html, module
     assert f"importScripts('./geographic_cache.js?v={WORLD_PIN}');" in worker
     assert f"'academy_flight_core.js':'{WORLD_PIN}'" in (ROOT / 'village_walk.js').read_text()
     assert 'player_home.css?v=homestead-v385-20260910' in html
