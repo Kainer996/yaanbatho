@@ -4,6 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "continuous-world-v391-20260910"
+CURRENT_BUILD = "photo-recovery-v392-20260911"
 
 
 def test_continuous_runtime_installation_is_complete():
@@ -26,5 +27,5 @@ def test_continuous_runtime_installation_is_complete():
     assert f"geographic_forest_core.js?v={PIN}" in (ROOT / "geographic_forest_worker.js").read_text()
     assert f"const FOREST_PIN = '{PIN}';" in (ROOT / "geographic_map_3d.js").read_text()
     assert "geographic_forest_worker.js?v='+FOREST_PIN" in (ROOT / "geographic_map_3d.js").read_text()
-    assert f"const BURBZ_BUILD = '{PIN}'" in html
-    assert re.search(r"const BURBZ_CACHE = '([^']+)'", worker)[1].endswith(PIN)
+    assert f"const BURBZ_BUILD = '{CURRENT_BUILD}'" in html
+    assert re.search(r"const BURBZ_CACHE = '([^']+)'", worker)[1].endswith(CURRENT_BUILD)

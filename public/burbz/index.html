@@ -2994,6 +2994,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-crop-sub { color:var(--text3); font-size:12px; text-align:center; margin-bottom:14px; max-width:330px; line-height:1.4; }
 .bird-crop-stage {
   position:relative; width:min(86vw, 64vh, 420px); aspect-ratio:1/1;
+  width:min(86vw, max(48px, calc(100dvh - 220px - var(--safe-bottom))), 420px); flex-shrink:0;
   border-radius:20px; overflow:hidden; touch-action:none; cursor:grab; user-select:none;
   background:#0a1414; box-shadow:0 18px 50px rgba(0,0,0,.5), inset 0 0 0 2px rgba(255,255,255,.08);
 }
@@ -3020,6 +3021,10 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-crop-retake { background:rgba(255,255,255,.1); color:var(--text2); }
 .bird-crop-confirm { background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; }
 .bird-crop-confirm:disabled { opacity:.6; cursor:default; }
+.photo-id-status { margin:12px 0; padding:14px; border:1px solid var(--accent3); border-radius:12px; color:var(--text); background:var(--bg3); }
+.photo-id-status[hidden], .photo-id-status button[hidden] { display:none; }
+.photo-id-status p { margin:0; line-height:1.5; }
+.photo-id-status button { margin-top:10px; min-height:44px; padding:10px 18px; border:1px solid var(--accent); border-radius:8px; background:var(--bg4); color:var(--text); font:inherit; cursor:pointer; }
 .capture-flash {
   position: absolute; inset: 0;
   background: radial-gradient(circle, rgba(255,255,255,0.4), transparent 60%);
@@ -4605,6 +4610,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
+        <div class="photo-id-status" id="photoIdStatus" hidden>
+          <p id="photoIdMessage" role="status" aria-live="polite"></p>
+          <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
+        </div>
         <div class="camera-viewfinder" id="cameraViewfinder">
           <video id="cameraVideo" autoplay playsinline></video>
           <div class="vf-corner tl"></div>
@@ -40468,11 +40477,20 @@ $('captureBtn').addEventListener('click', () => { SFX.tap(); showImageScanMode()
 nativeCameraInput?.addEventListener('change', async () => {
   const file = nativeCameraInput.files && nativeCameraInput.files[0];
   if (!file) return;
+  if (photoIdBusy) return;
+  photoIdRetryBlob = null;
+  setPhotoIdStatus('Preparing your photo…');
   showNativePhotoPreview(file);
   // Merlin-style: let the player frame the bird into a square before ID so the
   // recogniser sees the bird, not a frame full of background.
-  initBirdCropperControls();
-  await openBirdCropper(file);
+  try {
+    initBirdCropperControls();
+    await openBirdCropper(file);
+  } catch (e) {
+    closeBirdCropper();
+    photoIdRetryBlob = file;
+    setPhotoIdStatus('Could not prepare that photo. Try it again or take another picture.', true);
+  }
 });
 
 // ----- Merlin-style bird cropper -------------------------------------------
@@ -40520,6 +40538,7 @@ async function openBirdCropper(file) {
   zoom.max = String(birdCrop.zmax); zoom.value = '1';
 
   $('birdCropOverlay').classList.add('show');
+  setPhotoIdStatus('Frame the bird, then tap Identify.');
   requestAnimationFrame(renderBirdCrop);
 }
 
@@ -40632,6 +40651,7 @@ async function confirmBirdCrop() {
     octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = 'high';
     octx.drawImage(birdCrop.source, x, y, s, s, 0, 0, outSide, outSide);
     const blob = await new Promise(res => out.toBlob(res, 'image/jpeg', 0.92));
+    if (!blob) throw new Error('Photo encoding failed');
     updateNativePreviewFromCanvas(out);
     closeBirdCropper();
     await identifyImage(blob, 'camera');
@@ -40782,46 +40802,87 @@ async function getCurrentPositionForPhotoId() {
   return getCurrentPositionForBirdnet();
 }
 
+let photoIdBusy = false;
+let photoIdRetryBlob = null;
+function setPhotoIdStatus(message, retry = false) {
+  $('photoIdStatus').hidden = false;
+  $('photoIdMessage').textContent = message;
+  $('photoIdRetry').hidden = !retry;
+  if (!$('birdCropOverlay').classList.contains('show')) {
+    $('photoIdStatus').scrollIntoView({ block:'center', behavior:'instant' });
+  }
+}
+$('photoIdRetry').addEventListener('click', () => {
+  if (photoIdRetryBlob && !photoIdBusy) identifyImage(photoIdRetryBlob, 'camera');
+});
+
 async function identifyImage(fileOrBlob, captureSource = 'camera') {
+  if (photoIdBusy) return;
+  photoIdBusy = true;
+  photoIdRetryBlob = fileOrBlob;
+  setPhotoIdStatus('Analysing your bird photo… This can take up to 45 seconds.');
   $('captureBtn').textContent = 'ANALYZING...';
   $('captureBtn').disabled = true;
+  const controller = new AbortController();
+  let timeout;
+  const deadline = new Promise((_, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      reject(new Error('photo-timeout'));
+    }, 45000);
+  });
 
   try {
     const formData = new FormData();
     formData.append('image', fileOrBlob, 'photo.jpg');
     formData.append('captureSource', captureSource);
-    const pos = await getCurrentPositionForPhotoId();
+    const pos = await Promise.race([getCurrentPositionForPhotoId(), deadline]);
     if (pos && pos.coords) {
       formData.append('lat', pos.coords.latitude);
       formData.append('lon', pos.coords.longitude);
     }
 
-    const response = await fetch('api/identify/image', {
+    const response = await Promise.race([fetch('api/identify/image', {
       method: 'POST',
-      body: formData
-    });
+      body: formData,
+      signal: controller.signal
+    }), deadline]);
 
-    const result = await response.json().catch(() => ({
+    const result = await Promise.race([response.json().catch(() => ({
       found: false,
       message: 'Photo ID upload failed — try a clearer bird photo.'
-    }));
+    })), deadline]);
 
     const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.policy === 'photo-evidence-v350' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
     const batLabel = photoAccepted ? batLabelInIdentifyResult(result) : '';
-    if (batLabel) triggerBatEasterEgg('photo', batLabel);
+    if (batLabel) {
+      triggerBatEasterEgg('photo', batLabel);
+      setPhotoIdStatus('A bat! You found a secret visitor.');
+      photoIdRetryBlob = null;
+    }
     const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
     if (photoAccepted && result.species && !mainMatchIsBat) {
       handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
+      setPhotoIdStatus('Identified: ' + result.species + '. See the result below.');
+      photoIdRetryBlob = null;
     } else if (!batLabel) {
-      showToast(result && !result.found && result.message ? result.message : 'Bird not found. Try a closer, clearer photo—we couldn’t identify a bird confidently.');
+      const message = result && !result.found && result.message ? result.message : 'Bird not found. Try a closer, clearer photo—we couldn’t identify a bird confidently.';
+      setPhotoIdStatus(message, true);
+      showToast(message);
     }
   } catch(e) {
     console.log('Photo ID failed:', e);
-    showToast('Photo ID could not analyse that image yet');
+    const message = controller.signal.aborted
+      ? 'Photo identification took too long. Try this photo again.'
+      : 'Photo ID could not connect or finish analysing. Check your connection and try this photo again.';
+    setPhotoIdStatus(message, true);
+    showToast(message);
+  } finally {
+    clearTimeout(timeout);
+    photoIdBusy = false;
+    $('captureBtn').textContent = 'OPEN CAMERA';
+    $('captureBtn').disabled = false;
   }
-
-  $('captureBtn').textContent = 'OPEN CAMERA';
-  $('captureBtn').disabled = false;
 }
 
 async function startCamera() {
@@ -43371,7 +43432,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'continuous-world-v391-20260910';
+const BURBZ_BUILD = 'photo-recovery-v392-20260911';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

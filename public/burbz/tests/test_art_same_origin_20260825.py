@@ -52,7 +52,7 @@ SW = SW_PATH.read_text(encoding="utf-8")
 UPDATER = UPDATER_PATH.read_text(encoding="utf-8")
 
 OWN_RELEASE_PIN = "art-same-origin-v325-20260825"
-CURRENT_BUILD = "continuous-world-v391-20260910"
+CURRENT_BUILD = "photo-recovery-v392-20260911"
 PREVIOUS_RELEASE_PIN = "manager-builds-the-village-v324-20260825"
 
 GITHUB_HOSTS = ("github.com/Kainer996", "raw.githubusercontent.com")

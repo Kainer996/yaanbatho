@@ -28,7 +28,7 @@ SW = ROOT / "sw.js"
 STORY = ROOT / "STORY.md"
 
 OWN_RELEASE_PIN = "feudal-hierarchy-v222-20260804"
-CURRENT_BUILD = "continuous-world-v391-20260910"
+CURRENT_BUILD = "photo-recovery-v392-20260911"
 REALM_CORE_PIN = "merge-when-ready-v290-20260820"
 
 
