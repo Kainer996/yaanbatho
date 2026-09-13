@@ -4,7 +4,8 @@
   const core=root.BurbzGeographicPlacesCore,abort=new AbortController(),markers=new Map(),pointers=new Set(),container=map.getContainer();
   const state={inside:false,loading:false,places:[],falls:[],grass:0,error:null};let selected=null,disposed=false,lastQuery=null,retryAt=0,entryError='',generation=0,grass=[],grassDirty=true,grassKey='',pending=false,ownsWalk=false,roomSource=null,roomHost=null,cameraReturn=null;
   const visible=()=>!disposed&&!state.inside&&!document.hidden&&options.isVisible()&&container.getClientRects().length>0;
-  const scene=root.BurbzGeographicDetailsScene.create(map,{visible,interacting:()=>pointers.size>0||map.isMoving()});
+  const scene=root.BurbzGeographicDetailsScene.create(map,{visible,interacting:()=>pointers.size>0||map.isMoving(),onUpdate:syncBuildingTargets});
+  function syncBuildingTargets(){const ready=new Set((scene.state.anchors||[]).map(r=>r.id));for(const el of container.querySelectorAll?.('[data-geo-building-id]')||[])el.classList.toggle('has-model',map.getZoom()>=13&&ready.has(el.dataset.geoBuildingId));}
   const card=document.createElement('section');card.className='geographic-place-card';card.hidden=true;card.setAttribute('role','dialog');card.setAttribute('aria-label','Wayside place');
   card.innerHTML='<button class="gp-close" type="button" aria-label="Close place">×</button><small>ALDERWING · WAYSIDE</small><h3></h3><p class="gp-description"></p><p class="gp-distance" role="status"></p><button class="gp-enter" type="button">Enter building</button>';
   document.body.append(card);const button=card.querySelector('.gp-enter'),status=card.querySelector('.gp-distance');
@@ -51,17 +52,20 @@
    for(const [id,m]of markers)if(!active.has(id)){m.remove();markers.delete(id);}
    for(const place of all)if(!markers.has(place.id)){
     const el=document.createElement('button');el.type='button';el.className='geographic-place-marker';el.setAttribute('aria-label',place.name);el.textContent=place.type==='waterfall'?'≈':'⌂';el.title=place.name;
-    el.addEventListener('click',e=>{e.stopPropagation();select(place);},{signal:abort.signal});
+    if(place.type!=='waterfall'){el.classList.add('geographic-building-target');el.dataset.geoBuildingId=place.id;const label=document.createElement('span');label.className='gb-label';label.textContent=place.name;el.appendChild(label);}
+    el.addEventListener('click',e=>{e.stopPropagation();const current=[...state.places,...state.falls].find(p=>p.id===place.id);if(current)select(current);},{signal:abort.signal});
     markers.set(place.id,options.marker({element:el,anchor:'bottom'}).setLngLat([place.lon,place.lat]).addTo(map));
    }
-   syncQuestObjects();options.refreshMap();
+   for(const place of all){const marker=markers.get(place.id);marker.setLngLat([place.lon,place.lat]);const el=marker.getElement?.();if(el){el.setAttribute('aria-label',place.name);el.title=place.name;const label=el.querySelector('.gb-label');if(label)label.textContent=place.name;}}
+   if(selected){const current=all.find(p=>p.id===selected.id);if(current)selected=current;else close();}
+   syncQuestObjects();syncBuildingTargets();options.refreshMap();
   }
   let questObjectKey='';
   function syncQuestObjects(){
    const next=options.getQuestObjects?.()||[];state.questObjects=next;
    questObjectKey=JSON.stringify(next);scene.set([...next,...state.places,...state.falls,...grass]);
   }
-  function refreshQuestObjects(){if(JSON.stringify(options.getQuestObjects?.()||[])!==questObjectKey)syncQuestObjects();}
+  function refreshQuestObjects(){if(JSON.stringify(options.getQuestObjects?.()||[])!==questObjectKey)syncQuestObjects();syncBuildingTargets();}
   function meadow(){if(!grassDirty||!visible()||pointers.size||map.isMoving()||!map.isStyleLoaded())return;
    const layer=map.getStyle().layers.find(l=>l['source-layer']==='landcover');if(!layer)return;
    try{const features=map.querySourceFeatures(layer.source,{sourceLayer:'landcover',filter:['==','class','grass']}).slice(0,512).map(f=>({sourceLayer:'landcover',properties:{class:'wood'},geometry:f.geometry}));
@@ -71,7 +75,12 @@
     state.grass=grass.length;grassDirty=false;draw();
    }catch(error){state.error=error.message;}
   }
-  async function update(){paint();refreshQuestObjects();if(!visible())return;const p=options.getPosition();if(!core.valid(p)||state.loading||Date.now()<retryAt)return;
+  async function update(){paint();refreshQuestObjects();if(!visible())return;const p=options.getPosition();if(!core.valid(p))return;
+   // GPS often arrives after map construction. Restore saved nearby places
+   // before a provider request, including when that request is unavailable.
+   const saved=(options.data()?.catalogue||[]).filter(r=>core.valid(r)&&core.distance(r,p)<1800&&['cabin','hut','chapel','storehouse','waterfall'].includes(r.type));
+   const known=new Set([...state.places,...state.falls].map(r=>r.id));if(saved.some(r=>!known.has(r.id))){state.places=[...new Map([...state.places,...saved.filter(r=>r.type!=='waterfall')].map(r=>[r.id,r])).values()].filter(r=>core.distance(r,p)<1800).slice(0,12);state.falls=[...new Map([...state.falls,...saved.filter(r=>r.type==='waterfall')].map(r=>[r.id,r])).values()].filter(r=>core.distance(r,p)<1800).slice(0,8);draw();}
+   if(state.loading||Date.now()<retryAt)return;
    if(lastQuery&&core.distance(p,lastQuery)<600&&Date.now()-lastQuery.at<300000)return;
    lastQuery={...p,at:Date.now()};state.loading=true;
    try{const data=await options.fetch(core.query(p,root.BurbzWalkingRouteCore));if(disposed)return;
@@ -82,7 +91,7 @@
     const unique=[...records.values()].slice(0,240);commit({...old,catalogue:unique});draw();
    }catch(error){state.error=error.message;lastQuery=null;retryAt=Date.now()+15000;}finally{state.loading=false;}
   }
-  function movement(){grassDirty=true;meadow();}
+  function movement(){grassDirty=true;meadow();syncBuildingTargets();}
   map.getCanvasContainer?.().addEventListener('pointerdown',e=>pointers.add(e.pointerId),{passive:true,signal:abort.signal});
   const endPointer=e=>{pointers.delete(e.pointerId);if(!pointers.size){meadow();scene.refresh();}};
   for(const event of ['pointerup','pointercancel'])document.addEventListener(event,endPointer,{capture:true,signal:abort.signal});
