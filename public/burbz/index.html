@@ -4484,7 +4484,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=desk-composition-v397-20260913">
+<link rel="stylesheet" href="scan_home.css?v=home-equipment-v398-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
@@ -4606,8 +4606,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         </div>
       </div>
 
-      <section class="scan-home-today" aria-label="Your next quest"><div id="scanHomeActions" class="scan-home-actions"></div></section>
-      <section class="desk-player-kit" aria-label="Your first-person equipment"><button type="button" class="desk-kit-heading" data-home-action="player-equipment">Your gear ↗</button><div id="desk-equipment-list" tabindex="0" role="region" aria-label="Equipped items; scroll horizontally"></div></section>
+      <section class="scan-home-today" aria-label="Your next quest and player equipment"><div id="scanHomeActions" class="scan-home-actions"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><svg viewBox="0 0 64 96" aria-hidden="true" fill="currentColor"><circle cx="32" cy="14" r="11"/><path d="M23 28h18l11 26-8 4-6-15v20l5 29H32l-3-25-3 25H15l5-29V43l-7 15-8-4 12-26z"/></svg><span>Equipment</span></button></section>
       <div id="scanHomeDeskPanels" class="desk-panels">
         <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Stores</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Weapons & armour; scroll independently"></div></section>
         <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; scroll independently"></div></section>
@@ -5583,7 +5582,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=desk-composition-v397-20260913"></script>
-<script src="scan_home.js?v=desk-composition-v397-20260913"></script>
+<script src="scan_home.js?v=home-equipment-v398-20260913"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -23104,7 +23103,10 @@ function scanHomeDeskSnapshot() {
   const villageDesk=empireVillages().map(rec=>{
     const constructions=rec.economy?.constructions||[],waiting=constructions.filter(c=>c.readyToOpenAt),building=constructions.filter(c=>!c.readyToOpenAt);
     const notices=(gameState.completionNotices||[]).filter(n=>n.kind==='empire-building'&&Number(n.target?.wardSeed??n.target?.seed)===Number(rec.seed));
-    return {seed:rec.seed>>>0,name:rec.name,waiting:waiting.length,underway:building.length,finished:notices.length,
+    const link=empireSettlementOfSeed(rec.seed),holding=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;
+    const postSeed=holding?holding.heartSeed:rec.seed,post=rolePostState('village',String(postSeed>>>0));
+    const assignment={assigned:!!post.bird,role:empirePostTitleFor('village',String(postSeed>>>0)),name:post.bird?birdDisplayName(post.bird):'',birdId:post.bird?.id||null,art:post.bird?getBirdArtUrl(post.bird):null};
+    return {seed:rec.seed>>>0,name:rec.name,assignment,waiting:waiting.length,underway:building.length,finished:notices.length,
       pendingNames:waiting.map(c=>EMPIRE_BUILDING_INDEX[c.id]?.name||'Building'),underwayNames:building.map(c=>EMPIRE_BUILDING_INDEX[c.id]?.name||'Building')};
   });
   return {stores,kitchen,training,hospital,completed,equipment,villageDesk};
@@ -23173,7 +23175,7 @@ function openDeskPlayerEquipment(slot) {
   closeDeskPlayerEquipment();
   const focus=document.activeElement,dialog=document.createElement('dialog'),controller=new AbortController();
   dialog.className='desk-equipment-dialog';dialog.setAttribute('aria-label','Your first-person equipment');
-  dialog.innerHTML='<header><strong>Player inventory</strong><button type="button" class="desk-kit-close">Close ×</button></header><div class="desk-kit-body"></div>';
+  dialog.innerHTML='<header><strong>Your equipment</strong><button type="button" class="desk-kit-close">Close ×</button></header><div class="desk-kit-body"></div>';
   document.body.append(dialog);
   const adapter=playerEquipmentAdapter(),sheet=BurbzPlayerEquipment.mount(dialog.querySelector('.desk-kit-body'),{...adapter,change:(...args)=>{const result=adapter.change(...args);renderScanHome();return result;}},controller.signal);
   const timer=setInterval(()=>{if(document.visibilityState!=='hidden')sheet.update();},1000);
@@ -43654,7 +43656,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'desk-composition-v397-20260913';
+const BURBZ_BUILD = 'home-equipment-v398-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

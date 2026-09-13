@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-RELEASE='desk-composition-v397-20260913'
-CURRENT_BUILD = 'desk-composition-v397-20260913'
+HOME_CORE_RELEASE='desk-composition-v397-20260913'
+CURRENT_BUILD = 'home-equipment-v398-20260913'
 def test_home_state_is_honest_and_gated():
     result=subprocess.run(['node',str(ROOT/'tests/test_scan_home_v378.cjs')],text=True,capture_output=True)
     assert result.returncode==0,result.stdout+result.stderr
@@ -16,7 +16,7 @@ def test_home_runtime_and_art_install_together():
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith(CURRENT_BUILD)
     for file in ['scan_home.css','scan_home_core.js','scan_home.js','assets/home-v395/living-field-desk.webp']:
-        url=file if file.startswith('assets/') else file+'?v='+RELEASE
+        url=file if file.startswith('assets/') else file+'?v='+(HOME_CORE_RELEASE if file=='scan_home_core.js' else CURRENT_BUILD)
         assert url in html
         assert f'"{file}"' in updater
         for name in ['BURBZ_ASSETS','BURBZ_CORE','BURBZ_INSTALL_REQUIRED']:

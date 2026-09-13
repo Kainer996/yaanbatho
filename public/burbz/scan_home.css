@@ -318,3 +318,44 @@ body[data-active-screen="scan"] #merlinCareMenu{left:clamp(8px,var(--desk-merlin
 #screen-scan .desk-village-badge.ready{background:#574321;color:#ffe7a7}
 #screen-scan .desk-village .desk-mini-row{padding:3px 0;min-height:44px}
 #screen-scan .desk-village-note{margin:2px 0;color:#c8bba0;font:400 10px/1.3 Inter,sans-serif}
+
+/* Equipment is one clear entry point; ownership and equipment actions remain
+   in the existing transactional sheet. The figure only arranges that sheet. */
+#screen-scan .scan-home-main{grid-template-rows:76px 58px minmax(0,1fr) 24px}
+#screen-scan .scan-home-today{display:grid;grid-template-columns:minmax(0,1fr) 66px;align-items:center;gap:7px;min-height:0}
+#screen-scan .scan-home-actions{min-width:0;max-height:100%;overflow:auto;overscroll-behavior:contain}
+#screen-scan .desk-equipment-control{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:3px;background:#21382d;color:#f2dcad;border:1px solid #bca36c;border-radius:7px;cursor:pointer;font:700 11px/1.1 Inter,sans-serif}
+#screen-scan .desk-equipment-control svg{display:block;width:25px;height:31px}
+#screen-scan .desk-equipment-control span{font:inherit;display:block}
+#screen-scan .desk-panels{grid-row:3}
+#screen-scan .scan-home-tools{grid-row:4}
+#screen-scan .desk-assignment{display:flex;align-items:center;gap:4px;border-left:2px solid;margin-top:4px;padding-left:3px;font:10px/1.2 Inter,sans-serif}
+#screen-scan .desk-assignment.assigned{color:#b4e1b2;border-color:#77ae82}
+#screen-scan .desk-assignment.unassigned{color:#ffb5a5;border-color:#d77567}
+#screen-scan .desk-assignment .desk-mini-art{width:24px;height:29px;flex:none;border-radius:5px;background:#131f19}
+#screen-scan .desk-assignment.unassigned .desk-mini-art{background:#642c26;color:#ffe3de;font:bold 18px Georgia,serif}
+#screen-scan .desk-assignment b,#screen-scan .desk-assignment small{display:block;font:inherit;overflow-wrap:anywhere}
+.desk-equipment-dialog .desk-kit-body{padding:10px 14px}
+.desk-equipment-dialog .fp-equipment h3{display:none}
+.desk-equipment-dialog .fp-equipment-note{margin:0 0 10px;font-size:11px}
+.desk-equipment-dialog .fp-equipment-slots{display:grid;grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);grid-template-rows:repeat(3,minmax(64px,auto));gap:6px;align-items:stretch}
+.desk-equipment-dialog .fp-equipment-slots::before{content:"";grid-column:2;grid-row:1/4;background:radial-gradient(ellipse,#a68d492e,transparent 72%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 96' fill='%23c3ac78'%3E%3Ccircle cx='32' cy='14' r='11'/%3E%3Cpath d='M23 28h18l11 26-8 4-6-15v20l5 29H32l-3-25-3 25H15l5-29V43l-7 15-8-4 12-26z'/%3E%3C/svg%3E") center/contain no-repeat;border-bottom:1px solid #a792594d}
+.desk-equipment-dialog .fp-slot{padding:6px;font-size:11px;min-height:64px}
+.desk-equipment-dialog .fp-slot .fp-slot-item{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.desk-equipment-dialog .fp-slot small{font-size:10px;text-align:center}
+.desk-equipment-dialog .fp-slot[data-slot="weapon"]{grid-column:1;grid-row:1}
+.desk-equipment-dialog .fp-slot[data-slot="armour"]{grid-column:3;grid-row:1}
+.desk-equipment-dialog .fp-slot[data-slot="trinket"]{grid-column:1;grid-row:2}
+.desk-equipment-dialog .fp-slot[data-slot="spell"]{grid-column:3;grid-row:2}
+.desk-equipment-dialog .fp-slot[data-slot="potion"]{grid-column:1;grid-row:3}
+.desk-equipment-dialog .fp-slot-item img{width:30px;height:30px}
+.desk-equipment-dialog .fp-equipment-bonuses{padding:7px;border:1px solid #a7935c55;border-radius:5px;background:#16251d}
+@media(orientation:portrait) and (max-height:730px){#screen-scan .scan-home-main{grid-template-rows:60px 54px minmax(0,1fr) 24px}}
+@media(orientation:landscape) and (min-width:640px){#screen-scan .scan-home-main{grid-template-rows:76px 58px minmax(0,1fr) 24px}}
+@media(orientation:landscape) and (max-height:550px){#screen-scan .scan-home-main{grid-template-rows:56px 54px minmax(0,1fr) 20px}.desk-equipment-dialog{width:min(640px,calc(100vw - 24px))}.desk-equipment-dialog .fp-equipment-slots{grid-template-rows:repeat(3,minmax(58px,auto));grid-template-columns:minmax(0,1fr) 78px minmax(0,1fr)}.desk-equipment-dialog .fp-slot{min-height:58px}.desk-equipment-dialog .fp-slot .fp-slot-item{flex-direction:row}}
+
+#screen-scan .desk-village-badge.underway{background:#243950;color:#b9d9ff;border-color:#7798c0}
+#screen-scan .desk-village-badge.waiting,#screen-scan .desk-village-badge.finished{background:#51421c;color:#ffe5a1;border-color:#ba9b47}
+#screen-scan .desk-village-badge.available{background:#243d2c;color:#c0eac0;border-color:#759c72}
+#screen-scan .desk-village-badge.idle{color:#d8d0be;border-color:#877d67}
+.desk-equipment-dialog{inset:0;margin:auto;max-height:calc(100dvh - max(24px,env(safe-area-inset-top) + env(safe-area-inset-bottom) + 16px))}
