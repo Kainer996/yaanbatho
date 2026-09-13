@@ -1,6 +1,6 @@
 # One connected Alderwing world
 
-Candidate build: `unified-alderwing-v400-20260913`. Publication and public verification are still pending.
+Release build: `unified-alderwing-v400-20260913`. Publication and public verification are still pending.
 
 A traveller uses the retained village renderer across real-metre countryside and into the actual next village/town, generated from its canonical saved settlement and economy. Destination materials use the host sky/light and the same horizontal fog. Prepared settlements, fixed tree chunks and conservative visibility margins keep movement, turning and return travel continuous. Complete decoded terrain remains a prerequisite for the visible horizon; missing data must never become invented flat terrain or a visible map edge.
 
@@ -19,3 +19,7 @@ Ordinary real-world GPS quests, BirdNET sound and the current camera policy rema
 Local disposable-save evidence and videos are under the release owner's `outputs/world-v397` directory. Tests use actual Three/MapLibre decoding and native keyboard/touch controls. Synthetic terrain and real-provider runs must be labelled separately; laptop touch emulation does not establish physical-phone frame rates. Final release evidence must identify the tested source, merged source, exact public bytes, complete worker installation and cold offline/save behavior.
 
 All changed runtime URLs must agree between synchronous/lazy consumers and all three service-worker lists. Existing updater entries already cover these modules; no binary asset hydration is required.
+
+Local results: desktop and portrait touch-emulation trips pass outward, return and revisit with one retained canvas, actual destination doors and management. The full destination interaction check also verifies the canonical journal, durable loot and furnished tavern return. A real-provider landscape journey passes nine checks with zero game errors or loading pauses over three 830-metre legs. Moving frame means range 18.5–25.7 ms; p95 is normally 33.4 ms and reaches 50 ms on return. This is host Chromium evidence, not a physical-phone or universal 60 fps guarantee. Real hill flight uses native climb to clear trees; collision is not disabled. The initial failed constant-altitude harness correctly struck rising canopy and is retained as diagnostic evidence.
+
+Fresh Home-to-shelter-to-world-to-desk tutorial checks pass on portrait; house No/Yes, exact timber payment, reload and injected save-failure rollback pass on desktop. The integrated source passes 15 selected world/home/settlement Python checks and the shelter state suite. Home source and artwork are byte-identical to the reviewed Home v399 release. The sky and additional real-world quest-building revisions are explicitly not included here.
