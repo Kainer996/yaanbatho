@@ -30030,7 +30030,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=unified-alderwing-v400-20260913';
+        script.src = 'village_walk.js?v=distant-sky-v401-20260913';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -34276,6 +34276,7 @@ function* buildVillageSceneSteps(v) {
   const riverPx = riverUx * riverDist, riverPz = riverUz * riverDist;
 
   villageScene = new THREE.Scene();
+  villageScene.userData.nightPalette={...basePal};
   villageScene.background = new THREE.Color(pal.sky);
   const skyCols = villageSkyColors(pal);
   villageScene.fog = new THREE.Fog(skyCols.hor.clone(), 34 + tier * 4, 78 + tier * 8);
@@ -34879,6 +34880,7 @@ function* buildVillageSceneSteps(v) {
     const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xd6dfff, size: tierCfg.size, sizeAttenuation: true, transparent: true, opacity: tierCfg.op * daylight.stars, fog: false }));
     stars.visible = daylight.stars > 0.05;
     if (tierCfg.twinkle) { stars.userData.twinkle = tierCfg.op * daylight.stars; villageTwinkleStars = stars; }
+    stars.userData.sky=true;
     villageScene.add(stars);
   }
   yield;
@@ -34892,10 +34894,12 @@ function* buildVillageSceneSteps(v) {
     const moonHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('205,220,255'), transparent: true, depthWrite: false, fog: false, opacity: 0.62 }));
     moonHalo.scale.set(32, 32, 1);
     moonHalo.position.copy(moonDir).multiplyScalar(64);
+    moonHalo.userData.sky=true;
     villageScene.add(moonHalo);
     const moonSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageMoonTexture(), transparent: true, depthWrite: false, fog: false }));
     moonSprite.scale.set(9.5, 9.5, 1);
     moonSprite.position.copy(moonDir).multiplyScalar(62);
+    moonSprite.userData.sky=true;
     villageScene.add(moonSprite);
   } else {
     // Daytime: the sun stands where the moon would, a broad warm halo around
@@ -34903,10 +34907,12 @@ function* buildVillageSceneSteps(v) {
     const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture('255,238,190'), transparent: true, depthWrite: false, fog: false, opacity: 0.45 + 0.25 * daylight.sun }));
     sunHalo.scale.set(40, 40, 1);
     sunHalo.position.copy(moonDir).multiplyScalar(64);
+    sunHalo.userData.sky=true;
     villageScene.add(sunHalo);
     const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ map: villageGlowTexture(daylight.warm > 0.5 ? '255,214,160' : '255,248,224'), transparent: true, depthWrite: false, fog: false, opacity: 0.95 }));
     sunDisc.scale.set(11, 11, 1);
     sunDisc.position.copy(moonDir).multiplyScalar(62);
+    sunDisc.userData.sky=true;
     villageScene.add(sunDisc);
   }
   yield;
@@ -34926,7 +34932,7 @@ function* buildVillageSceneSteps(v) {
     const cloud = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTex, transparent: true, depthWrite: false, fog: false, opacity: pal.weather === 'rain' ? 0.3 : 0.16 }));
     cloud.scale.set(11 + r() * 8, 3.5 + r() * 2, 1);
     cloud.position.set((r() - 0.5) * 70, 17 + r() * 8, (r() - 0.5) * 60 - 10);
-    cloud.userData = { baseX: cloud.position.x, speed: 0.25 + r() * 0.35 };
+    cloud.userData = { baseX: cloud.position.x, speed: 0.25 + r() * 0.35, sky:true };
     villageClouds.push(cloud);
     villageScene.add(cloud);
   }
@@ -34937,6 +34943,7 @@ function* buildVillageSceneSteps(v) {
     x0: -34 + r() * 24, y0: 24 + r() * 6, z0: -26 + r() * 30,
     vx: 16 + r() * 8, vy: -(3 + r() * 3), vz: (r() - 0.5) * 6
   };
+  villageShootingStar.userData.sky=true;
   villageShootingStar.visible = daylight.stars > 0.4; // no shooting stars at noon
   villageScene.add(villageShootingStar);
 
@@ -35997,6 +36004,7 @@ function* buildTownSceneSteps(settle) {
   const flockMark = villageFlocks.length, constructionMark = villageConstructionSites.length;
 
   townScene = new THREE.Scene();
+  townScene.userData.nightPalette={...basePal};
   townScene.background = new THREE.Color(pal.sky);
   const skyCols = villageSkyColors(pal);
   townScene.fog = new THREE.Fog(skyCols.hor.clone(), 40, 104);
@@ -43741,7 +43749,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'unified-alderwing-v400-20260913';
+const BURBZ_BUILD = 'distant-sky-v401-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45136,6 +45144,7 @@ function continuousWalkingAdapter(record) {
   const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
   return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
     style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
+    sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
     records:geographicSettlementRecords,createSettlement:createTravellingSettlement,
     buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
     getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),

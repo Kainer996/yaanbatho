@@ -102,6 +102,7 @@ FILES=(
   "building_rooms.js"
   "village_world_core.js"
   "village_world.js"
+  "world_sky.js"
   "village_walk.js"
   "first_person_map.js"
   "first_person_hud.js"

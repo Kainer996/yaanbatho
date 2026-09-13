@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'landscape-atlas-v394-20260913','village_world_core.js':'continuous-world-v391-20260910','village_world.js':'unified-alderwing-v400-20260913','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'unified-alderwing-v400-20260913','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'landscape-atlas-v394-20260913','first_person_hud.css':'landscape-atlas-v394b-20260913','village_walk_scene.js':'unified-alderwing-v400-20260913'};
+  const PIN={'world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'landscape-atlas-v394-20260913','village_world_core.js':'continuous-world-v391-20260910','village_world.js':'distant-sky-v401-20260913','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'unified-alderwing-v400-20260913','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'landscape-atlas-v394-20260913','first_person_hud.css':'landscape-atlas-v394b-20260913','village_walk_scene.js':'unified-alderwing-v400-20260913'};
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -32,6 +32,7 @@
       script('academy_flight_core.js','BurbzAcademyFlightCore').then(()=>script('academy_flight.js','BurbzAcademyFlight')),
       script('building_rooms_core.js','BurbzBuildingRoomsCore').then(()=>script('building_rooms_scene.js','BurbzBuildingRoomsScene')).then(()=>script('building_rooms.js','BurbzBuildingRooms')),
       script('village_walk_core.js','BurbzVillageWalkCore'),script('village_walk_scene.js','BurbzVillageWalkScene'),
+      script('world_sky.js','BurbzWorldSky'),
       script('village_world_core.js','BurbzVillageWorldCore').then(()=>script('village_world.js','BurbzVillageWorld')),
       script('village_discovery_content.js','BurbzVillageDiscoveryContent').then(()=>script('village_discovery_core.js','BurbzVillageDiscoveryCore')).then(()=>script('village_discoveries.js','BurbzVillageDiscoveries')),
       style('village_walk.css','villageWalkStyle'),
