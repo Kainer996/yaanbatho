@@ -2291,7 +2291,7 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
   .battle-arena.live .arena-timeline { display: none; }
   .battle-arena.live .arena-unit .au-art { max-height: 56px; }
   .battle-arena.live .arena-unit .au-emoji { height: 56px; line-height: 56px; font-size: 26px; }
-  .battle-arena.live .arena-squad { gap: 5px; margin-bottom: 6px; }
+  .battle-arena.live .arena-squad { --arena-squad-gap:5px; gap:5px; margin-bottom:6px; }
   .battle-arena.live .move-btn { min-height: 46px; padding: 7px 10px; }
   .battle-arena.live .battle-log { margin-top: 6px; }
 }
@@ -2500,6 +2500,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
    squadmates and blow its own picture up with it. `minmax(0, 1fr)` holds the
    four tracks level and the names wrap inside them. */
 .arena-squad { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px; margin-bottom:8px; }
+/* A solo fighter keeps a squad card's size, centred in its own row. */
+.arena-squad > .arena-unit:only-child { grid-column:1/-1; width:calc((100% - 3 * var(--arena-squad-gap, 6px)) / 4); justify-self:center; }
 .arena-unit { position:relative; min-width:0; text-align:center; padding:6px 4px 7px; background:var(--bg2); border-radius:12px; border:1.5px solid rgba(255,255,255,0.08); overflow:visible; transition:transform .15s, border-color .2s, box-shadow .2s; }
 .arena-squad.player .arena-unit { border-color:rgba(214,168,79,0.3); }
 .arena-squad.opponent .arena-unit { border-color:rgba(224,57,43,0.38); background:linear-gradient(180deg,rgba(26,8,10,0.85),rgba(10,4,6,0.92)); }
@@ -4482,7 +4484,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=home-countryside-v387-20260910">
+<link rel="stylesheet" href="scan_home.css?v=living-desk-v395-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=continuous-world-v391-20260910">
@@ -4585,9 +4587,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
     <!-- SCAN SCREEN -->
     <div class="screen" id="screen-scan" data-scan-path="camera-only">
-      <div class="scan-home-command-bar"><span>ALDERWING · COMMAND CENTRE</span><button type="button" id="playerHomeStand">Stand up · Your house</button></div>
+      <div class="scan-home-command-bar"><span>ALDERWING · COMMAND CENTRE</span><button type="button" id="playerHomeStand">Enter Alderwing</button></div>
       <div class="scan-home-hero">
-        <img class="scan-home-backdrop" src="assets/home-v384/enchanted-study.webp" alt="" fetchpriority="high" width="1536" height="1024">
+        <img class="scan-home-backdrop" src="assets/home-v395/living-field-desk.webp" alt="" fetchpriority="high" width="1536" height="1024">
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Your field desk.</h1></div>
         <div id="scanHomePlayer" class="scan-home-player"></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
@@ -4601,8 +4603,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
         </div>
       </div>
+
+      <section class="scan-home-today" aria-labelledby="scanHomeTodayTitle"><div class="scan-home-section-head"><h2 id="scanHomeTodayTitle">Around your world</h2><span>Little things you can do</span></div><div id="scanHomeActions" class="scan-home-actions"></div><div id="scanHomeBuildingSection" class="home-building-section" hidden><h3>Ready to build</h3><div id="scanHomeBuildings" class="home-building-list"></div></div></section>
       <section id="scanHomeVillageSection" class="scan-home-villages" aria-labelledby="scanHomeVillagesTitle" hidden><div class="scan-home-section-head"><h2 id="scanHomeVillagesTitle">Your villages</h2><button type="button" id="scanHomeAllVillages"><span id="scanHomeVillageCount"></span> ↗</button></div><div id="scanHomeVillages" class="scan-home-village-list"></div></section>
-      <section class="scan-home-today" aria-labelledby="scanHomeTodayTitle"><div class="scan-home-section-head"><h2 id="scanHomeTodayTitle">Around your world</h2><span>Little things you can do</span></div><div id="scanHomeActions" class="scan-home-actions"></div></section>
       <section id="scanHomeRouteSection" class="scan-home-destinations" aria-labelledby="scanHomeRoutesTitle"><div class="scan-home-section-head"><h2 id="scanHomeRoutesTitle">Explore Alderwing</h2><span>Your world, one tap away</span></div><div id="scanHomeRoutes" class="scan-home-routes"></div></section>
       <section class="scan-home-tools" aria-label="Scanning session">
       <!-- Session tools remain below the prominent home scanning controls. -->
@@ -5569,8 +5572,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=enchanted-study-v384-20260910"></script>
-<script src="scan_home.js?v=enchanted-study-v384-20260910"></script>
+<script src="scan_home_core.js?v=living-desk-v395-20260913"></script>
+<script src="scan_home.js?v=living-desk-v395-20260913"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -23055,6 +23058,29 @@ function updateActionBadges() {
 }
 
 let scanHomeBound = false;
+function scanHomeBuildOpportunities() {
+  if(!featureGateOpen('village'))return [];
+  const rows=[],seen=new Set(),wallet=gameState.player,trainerLevel=Number(wallet.level)||1;
+  for(const rec of empireVillages()) {
+    const link=empireSettlementOfSeed(rec.seed),town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;
+    const placeId=town?.id||String(rec.seed);if(seen.has(placeId))continue;seen.add(placeId);
+    if(town&&townActiveProjectCount(town)>=townBuilderSlots(town))continue;
+    let shown=0;
+    for(const building of EMPIRE_BUILDINGS) {
+      const target=town?townNetworkUpgradeTarget(town,building.id):rec;if(!target)continue;
+      const level=villageBuildingLevel(target,building.id);
+      if(level>=building.maxLevel||villageConstructionOf(target,building.id)||villageBuildSlotsFree(target)<=0)continue;
+      if(!level&&(!settlementAllowsBuilding(target,building)||trainerLevel<(Number(building.unlockLevel)||1)))continue;
+      const cost=villageBuildingCost(building,level,target.seed);
+      if(wallet.coins<cost.coins||playerBranches()<cost.branches||playerStone()<cost.stone)continue;
+      const tier=villageBuildingTier(building,Math.max(1,level+1));
+      rows.push({id:'build-'+target.seed+'-'+building.id,seed:target.seed>>>0,building:building.id,icon:tier.icon||building.icon,name:(level?'Upgrade ':'')+tier.name,place:town?townDisplayName(town):rec.name,detail:[cost.coins+' coins',cost.branches+' timber',cost.stone?cost.stone+' stone':null].filter(Boolean).join(' · ')});
+      if(++shown>=2||rows.length>=6)break;
+    }
+    if(rows.length>=6)break;
+  }
+  return rows;
+}
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
   if (!scanHomeBound) {
@@ -23076,13 +23102,13 @@ function renderScanHome(snapshot, counts) {
     const waiting=(sideWalk.discoveries||[]).filter(d=>!d.claimed).length;
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
-  BurbzScanHome.render({gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  BurbzScanHome.render({gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
 }
 function openScanHomeTarget(target) {
   if (!target) return;
   const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
   if(target.kind==='route'&&!routes.includes(target.screen))return;
-  const gate=target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village',quest:'quests',walk:'map'})[target.kind];
+  const gate=target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village','build-opportunity':'village',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { showToast(featureUnlockHint(gate));renderScanHome();return; }
   SFX.tap();
   if(target.kind==='kitchen')openKitchenHudShortcut();
@@ -23090,6 +23116,13 @@ function openScanHomeTarget(target) {
   else if(target.kind==='training')openTrainingHub();
   else if(target.kind==='forge')openForge('craft');
   else if(target.kind==='quest')focusQuestFromNotice({questId:target.id});
+  else if(target.kind==='build-opportunity'){
+    const available=scanHomeBuildOpportunities().find(b=>b.seed===target.seed&&b.building===target.building);
+    if(!available){showToast('That building opportunity has changed. Your desk is up to date.');renderScanHome();return;}
+    const link=empireSettlementOfSeed(target.seed);
+    if(link)openEmpireTown(link.id);else openEmpireVillage(target.seed);
+    openBuildingInterior(target.seed,target.building);
+  }
   else if(target.kind==='village')openEmpireVillage(target.seed);
   else if(target.kind==='notice')completionNoticeGo(target.id);
   else if(target.kind==='villages'){empireLedgerOnlyMode=false;showEmpirePage('villages',{silent:true});switchScreen('village');}
@@ -43549,7 +43582,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'landscape-atlas-v394b-20260913';
+const BURBZ_BUILD = 'living-desk-v395-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -72,3 +72,70 @@ html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font-family:'Ru
 @media(max-width:420px){.home-stat>img{display:none}.home-stat-coins{flex:1.2}.home-stat-coins strong{font-size:17px}}
 @media(max-width:360px){.scan-home-hero{height:235px}.scan-home-welcome{left:16px;top:26px}.scan-home-welcome h1{font-size:31px}.scan-home-eyebrow{font-size:8px;max-width:220px}.scan-home-summary{left:16px;font-size:10px;bottom:76px}.scan-home-player{left:10px;right:10px}.home-stat{gap:4px;padding:0 3px}.home-stat>img{width:19px;height:24px}.home-stat strong{font-size:17px}.home-stat small{font-size:7px}.scan-home-main{padding:5px 11px 28px}.scan-home-start{padding:6px 11px}.scan-home-start-heading>span{font-size:9px;max-width:88px}#screen-scan .scan-home-start h2{font-size:20px}#screen-scan .scan-home-start-buttons .scan-btn{padding-left:37px;font-size:12px;min-height:64px}.scan-home-start-buttons .scan-btn::before{left:6px;width:25px}.home-action{gap:6px;padding:10px 7px;min-height:82px}.home-action>img{width:27px}.home-action-chevron{display:none}.home-action strong{font-size:14px}.home-action small{font-size:9px}.home-route{gap:7px;padding:10px 8px}.home-route>img{width:28px;height:35px}.home-route strong{font-size:15px}.home-route small{font-size:9px}.home-route-arrow{display:none}.home-village{padding:10px}.home-village-name{font-size:14px}.home-village-mood{font-size:21px}.scan-home-section-head>span{font-size:9px}.home-walk{padding:11px;gap:9px}.home-walk>img{width:33px}.home-walk-resume{font-size:12px}}
 @media(prefers-reduced-motion:reduce){#screen-scan *{scroll-behavior:auto}}
+
+/* The live desk: large discovery controls, compact notes and places. */
+#screen-scan{background:#1b130d url('assets/home-v395/living-field-desk.webp') center top/auto 620px no-repeat}
+#screen-scan .scan-home-command-bar{min-height:48px;background:#1b1611e8;padding-top:5px;padding-bottom:5px}
+#screen-scan .scan-home-command-bar button{min-height:44px}
+#screen-scan .scan-home-hero{height:170px;background:transparent}
+#screen-scan .scan-home-backdrop{object-position:center 28%;opacity:.9}
+#screen-scan .scan-home-hero::after{background:linear-gradient(90deg,#0e0d0ab8,#0e0d0a18 80%),linear-gradient(0deg,#21170ffc,transparent 85%)}
+#screen-scan .scan-home-welcome{top:14px;left:max(18px,calc((100% - 1100px)/2))}
+#screen-scan .scan-home-eyebrow{font-size:8px;margin-bottom:4px}
+#screen-scan .scan-home-welcome h1{font:500 32px/1.1 Georgia,serif;letter-spacing:-.025em}
+#screen-scan .scan-home-summary{bottom:63px;font-size:10px}
+#screen-scan .scan-home-player{bottom:8px;padding:8px 4px;background:#201a13e8;border-radius:5px}
+#screen-scan .home-stat strong{font-size:18px}
+#screen-scan .home-stat small{font-size:8px}
+#screen-scan .scan-home-main{background:linear-gradient(#21170fc9,#1b1510f5 360px);padding-top:5px}
+#screen-scan .scan-home-start{padding:10px 11px 9px;background:linear-gradient(125deg,#30271df2,#201a13f5);border-color:#c5a56580;border-radius:8px;box-shadow:0 5px 16px #0005,inset 0 1px #ffe4a722}
+#screen-scan .scan-home-start-buttons .scan-btn{min-height:76px;padding-top:15px;padding-bottom:15px;font-size:15px}
+#screen-scan .scan-home-start-buttons #captureBtn{background:linear-gradient(130deg,#365440,#203b32);border-color:#b29b64;color:#fff0c9;box-shadow:inset 0 1px #ffffff30,0 3px 0 #0e2019}
+#screen-scan .scan-home-start-buttons .scan-btn::before{width:30px;height:38px}
+#screen-scan .scan-home-today,#screen-scan .scan-home-villages,#screen-scan .scan-home-destinations{margin-top:17px}
+#screen-scan .scan-home-section-head{margin-bottom:8px}
+#screen-scan .scan-home-main h2{font-size:18px;color:#f0ddaf}
+#screen-scan .scan-home-actions{grid-template-columns:1fr;gap:0;padding:0 9px;background:#211c17e8;border:1px solid #b79a603b;border-radius:7px}
+#screen-scan .home-action{min-height:52px;padding:8px 0;gap:9px;border:0;border-bottom:1px solid #b79a602b;background:none;box-shadow:none;border-radius:0}
+#screen-scan .home-action:last-child{border-bottom:0}
+#screen-scan .home-action>img{width:25px;height:30px}
+#screen-scan .home-action strong{font-size:14px}
+#screen-scan .home-action small{font-size:10px;margin-top:2px;color:#c8bea7}
+#screen-scan .home-action-chevron{font-size:16px;display:block}
+#screen-scan .home-building-section[hidden]{display:none}
+#screen-scan .home-building-section h3{font:700 10px/1.4 'Inter',sans-serif;color:#dec48b;letter-spacing:.08em;text-transform:uppercase;margin:14px 0 5px}
+#screen-scan .home-building-list{display:grid;grid-template-columns:1fr;gap:4px}
+#screen-scan .home-building{display:flex;align-items:center;gap:9px;width:100%;min-height:48px;padding:7px 9px;border:1px solid #bda46e33;border-radius:5px;background:#272117d9;color:#efdfbc;text-align:left;cursor:pointer;touch-action:manipulation}
+#screen-scan .home-building-icon{font-size:25px;flex:none;width:30px;text-align:center}
+#screen-scan .home-building>span:nth-child(2){flex:1;min-width:0}
+#screen-scan .home-building strong{display:block;font:700 13px/1.3 'Rajdhani',sans-serif}
+#screen-scan .home-building small{display:block;font:400 9px/1.4 'Inter',sans-serif;color:#c8bea7;margin-top:2px}
+#screen-scan .scan-home-village-list{display:grid;grid-template-columns:1fr;gap:5px;max-width:none}
+#screen-scan .home-village{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;min-height:50px;padding:7px 9px;border:1px solid #b79a6047;border-radius:5px;background:#201b15e8;box-shadow:none}
+#screen-scan .home-village-header{grid-row:1/3;gap:8px}
+#screen-scan .home-village-header>img{width:24px;height:29px}
+#screen-scan .home-village-name{font-size:14px}
+#screen-scan .home-village-header .home-route-arrow{display:none}
+#screen-scan .home-village-mood{margin:0;font-size:13px;text-align:right}
+#screen-scan .home-village-detail{margin:0;font-size:9px;text-align:right;color:#c8bea7}
+#screen-scan .home-happiness-track{grid-column:1/-1;margin:3px 0 0;height:2px}
+#screen-scan .scan-home-routes{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+#screen-scan .home-route{display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:56px;padding:7px 3px;border:1px solid #b79a6033;border-radius:5px;background:#241e17bd;box-shadow:none;text-align:center}
+#screen-scan .home-route>img{width:24px;height:27px}
+#screen-scan .home-route strong{font-size:11px;line-height:1.2}
+#screen-scan .home-route small,#screen-scan .home-route-arrow{display:none}
+#screen-scan .home-walk{padding:9px 10px;margin-top:7px;background:#252319eb;box-shadow:none}
+#screen-scan .home-walk>img{width:28px;height:34px}
+#screen-scan .home-walk strong{font-size:14px}
+#screen-scan .scan-home-tools{margin-top:18px;background:#211c17ed}
+@media(min-width:760px){#screen-scan .scan-home-hero{height:208px}#screen-scan .scan-home-welcome{top:24px}#screen-scan .scan-home-welcome h1{font-size:39px}#screen-scan .scan-home-main{gap:18px}#screen-scan .home-building-list{grid-template-columns:repeat(2,minmax(0,1fr))}#screen-scan .scan-home-routes{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(min-width:1100px){#screen-scan .scan-home-today{margin-top:0}#screen-scan .scan-home-villages,#screen-scan .scan-home-destinations{margin-top:0}#screen-scan .scan-home-main{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}#screen-scan .scan-home-routes{grid-template-columns:repeat(8,minmax(0,1fr))}}
+@media(max-width:360px){#screen-scan .scan-home-hero{height:156px}#screen-scan .scan-home-start-buttons .scan-btn{font-size:12px;min-height:72px}#screen-scan .scan-home-section-head>span{font-size:8px}}
+@media(prefers-reduced-motion:no-preference){#screen-scan.active .scan-home-backdrop{animation:desk-daylight 14s ease-in-out infinite alternate}@keyframes desk-daylight{from{filter:brightness(.94)}to{filter:brightness(1.035)}}}
+
+/* Both appearances use the same dark timber desk, including outer captions. */
+html[data-appearance="comic"] #screen-scan .scan-home-section-head h2{color:#f0ddaf}
+html[data-appearance="comic"] #screen-scan .scan-home-section-head>span,
+html[data-appearance="comic"] #screen-scan .scan-home-section-head button,
+html[data-appearance="comic"] #screen-scan .home-empty,
+html[data-appearance="comic"] #screen-scan :is(.merlin-data-note,.merlin-location-opt){color:#c8bea7}
