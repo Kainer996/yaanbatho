@@ -74,6 +74,7 @@ FILES=(
   "assets/home-v378/woodland-lookout.webp"
   "assets/home-v384/enchanted-study.webp"
   "assets/home-v395/living-field-desk.webp"
+  "assets/home-v399/warrior-equipment.webp"
   "area_birds.css"
   "area_birds_taxonomy.js"
   "area_birds_core.js"

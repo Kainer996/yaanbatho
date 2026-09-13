@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "continuous-world-v391-20260910"
-CURRENT_BUILD = "unified-alderwing-v399-20260913"
+CURRENT_BUILD = "unified-alderwing-v400-20260913"
 
 
 def test_continuous_runtime_installation_is_complete():

@@ -220,8 +220,7 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan .desk-player-kit .desk-mini-art{display:inline-flex}
 
 
-/* A complete painting, a real companion perch, then a separate working desk.
-   The hero is never hidden or cropped to make room for equipment. */
+/* Base desk composition; responsive Home header refinements follow below. */
 #screen-scan{background:#211a12;overflow:hidden}
 #screen-scan .desk-introduction{display:grid;grid-template-columns:minmax(0,1fr) 126px;gap:8px;flex:none;padding:6px 10px 4px;min-height:156px;box-sizing:border-box;background:linear-gradient(120deg,#332719,#182922);border-bottom:1px solid #c7a96c4d}
 #screen-scan .scan-home-hero{display:grid;grid-template-rows:minmax(0,1fr) 27px;align-items:center;height:auto;min-height:0;overflow:visible;background:none;isolation:auto}
@@ -230,7 +229,6 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan .scan-home-welcome{position:static;text-shadow:none;color:#f4dfae;text-align:left;padding:4px 0 0}
 #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font:500 21px/1.1 Georgia,serif;letter-spacing:0}
 #screen-scan .scan-home-command-bar{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px;padding:0;min-height:148px;min-width:0;background:none;border:0}
-#screen-scan .desk-perch-clearance{width:150px;height:108px;flex:none;align-self:flex-end;pointer-events:none}
 #screen-scan #playerHomeStand{min-height:44px;max-width:none;width:100%;padding:5px 6px;background:#263e32;color:#ffe2a2;border:1px solid #bca06a;border-radius:6px;font:700 13px/1.2 Rajdhani,sans-serif}
 #screen-scan .scan-home-main{grid-template-columns:minmax(0,1fr);grid-template-rows:76px 32px 50px minmax(0,1fr) 24px;gap:6px;padding:6px 8px;background:linear-gradient(#30261c,#201a13)}
 #screen-scan .scan-home-start{grid-column:1;grid-row:1;padding:4px;background:transparent;border:0;box-shadow:none}
@@ -275,7 +273,6 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
  #screen-scan .scan-home-welcome{padding-top:10px;text-align:center}
  #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font-size:clamp(21px,2.5vw,32px)}
  #screen-scan .scan-home-command-bar{flex:none;min-height:0;width:100%;gap:12px}
- #screen-scan .desk-perch-clearance{display:none}
  #screen-scan #playerHomeStand{width:min(100%,190px)}
  #screen-scan .scan-home-main{grid-column:2;grid-row:1;grid-template-rows:76px 38px 54px minmax(0,1fr) 24px;padding:10px;gap:8px}
  #screen-scan .scan-home-actions{display:flex}
@@ -358,9 +355,47 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan .desk-village-badge.idle{color:#d8d0be;border-color:#877d67}
 .desk-equipment-dialog{inset:0;margin:auto;max-height:calc(100dvh - max(24px,env(safe-area-inset-top) + env(safe-area-inset-bottom) + 16px))}
 
-/* The shared Merlin perch stays beside the landscape rail on every page. */
-@media(orientation:landscape) and (min-width:640px){
- #screen-scan .scan-home-start{padding-right:112px}
- #screen-scan .scan-home-start-buttons{gap:5px}
- #screen-scan .scan-home-start-buttons .scan-btn{padding-left:26px;font-size:12px}
+/* Full-width Home painting; Merlin uses the same shared perch as other pages. */
+#screen-scan{display:flex;flex-direction:column}
+#screen-scan .desk-introduction{position:relative;display:block;width:100%;height:clamp(112px,20dvh,172px);min-height:112px;flex:none;padding:0;overflow:hidden}
+#screen-scan .scan-home-hero{display:block;width:100%;height:100%;padding:0;overflow:hidden}
+#screen-scan .scan-home-backdrop{width:100%;height:100%;max-height:none;border-radius:0;object-fit:cover;object-position:center 46%}
+#screen-scan .scan-home-welcome{position:absolute;left:12px;top:10px;padding:0;text-align:left;max-width:calc(100% - 132px)}
+#screen-scan .scan-home-eyebrow{display:inline-block;padding:4px 7px;background:#17281de0;color:#ffe9bd;font-size:10px;letter-spacing:1px;border-radius:4px}
+#screen-scan .scan-home-command-bar{position:absolute;left:12px;bottom:10px;width:150px;min-height:0;display:block}
+#screen-scan #playerHomeStand{width:100%;min-height:44px}
+#screen-scan .scan-home-main{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:70px 72px minmax(0,1fr) 24px;gap:6px;padding:6px 8px}
+#screen-scan .scan-home-start{grid-column:1;grid-row:1;padding:2px 0;min-width:0}
+#screen-scan .scan-home-start-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#screen-scan .scan-home-start-buttons .scan-btn{width:100%;height:56px;min-height:56px;font-size:13px;padding:5px 5px 5px 30px;white-space:normal;line-height:1.2}
+#screen-scan .scan-home-today{grid-column:1;grid-row:2;grid-template-columns:minmax(0,1fr) 72px;align-items:stretch;min-height:64px;overflow:visible}
+#screen-scan .scan-home-actions{display:flex;align-items:stretch;height:100%;max-height:none;overflow-x:auto;overflow-y:auto;padding:0 4px;gap:4px}
+#screen-scan .home-action{flex:0 0 100%;box-sizing:border-box;min-width:0;max-width:100%;width:100%;min-height:64px;height:auto;padding:5px 3px;gap:5px;align-items:center;white-space:normal}
+#screen-scan .home-action>span:not(:last-child){min-width:0;flex:1}
+#screen-scan .home-action strong{display:block;font-size:13px;line-height:16px;white-space:normal;overflow-wrap:anywhere}
+#screen-scan .home-action small{display:block;font-size:10px;line-height:13px;white-space:normal;overflow-wrap:anywhere;margin-top:2px}
+#screen-scan .desk-equipment-control{min-height:64px;padding:2px}
+#screen-scan .desk-equipment-control>img{display:block;width:30px;height:45px;object-fit:contain}
+#screen-scan .desk-panels{grid-column:1;grid-row:3;min-height:0}
+#screen-scan .scan-home-tools{grid-column:1;grid-row:4}
+.desk-equipment-dialog .fp-equipment-slots::before{background:radial-gradient(ellipse,#a68d492e,transparent 72%),url("assets/home-v399/warrior-equipment.webp") center/contain no-repeat}
+@media(orientation:portrait) and (max-height:730px){
+ #screen-scan .scan-home-main{grid-template-rows:60px 64px minmax(0,1fr) 24px;gap:4px;padding:4px 6px}
+ #screen-scan .scan-home-start .merlin-listener-line{display:none}
 }
+@media(orientation:landscape) and (min-width:640px){
+ #screen-scan .scan-home-main{grid-template-columns:minmax(224px,34%) minmax(0,1fr);grid-template-rows:70px minmax(72px,1fr) 24px;gap:6px;padding:6px 8px}
+ #screen-scan .scan-home-today{align-self:stretch;height:auto}
+ #screen-scan .desk-panels{grid-column:2;grid-row:1/4;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+ #screen-scan .scan-home-tools{grid-column:1;grid-row:3}
+}
+@media(orientation:landscape) and (max-height:550px){
+ #screen-scan .desk-introduction{height:112px}
+ #screen-scan .scan-home-main{grid-template-rows:56px minmax(72px,1fr) 20px;gap:4px;padding:4px 6px}
+ #screen-scan .scan-home-start{padding:0}
+ #screen-scan .scan-home-start-buttons .scan-btn{font-size:11px;padding-left:25px}
+ #screen-scan .scan-home-today{height:auto}
+ #screen-scan .scan-home-start .merlin-listener-line{display:none}
+}
+
+#screen-scan .home-action>.home-action-chevron{flex:0 0 8px;font-size:16px}

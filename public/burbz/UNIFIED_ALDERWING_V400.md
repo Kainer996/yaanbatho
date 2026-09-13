@@ -1,6 +1,6 @@
 # One connected Alderwing world
 
-Candidate build: `unified-alderwing-v399-20260913`. Publication and public verification are still pending.
+Candidate build: `unified-alderwing-v400-20260913`. Publication and public verification are still pending.
 
 A traveller uses the retained village renderer across real-metre countryside and into the actual next village/town, generated from its canonical saved settlement and economy. Destination materials use the host sky/light and the same horizontal fog. Prepared settlements, fixed tree chunks and conservative visibility margins keep movement, turning and return travel continuous. Complete decoded terrain remains a prerequisite for the visible horizon; missing data must never become invented flat terrain or a visible map edge.
 
