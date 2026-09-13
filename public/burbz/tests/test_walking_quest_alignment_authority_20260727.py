@@ -563,7 +563,7 @@ def test_the_retry_loop_has_an_end_and_says_so():
 def test_release_is_versioned_for_live_pwa_refresh():
     html = html_source()
     sw = SW.read_text(encoding="utf-8")
-    marker = "quest_core.js?v=map-trails-v381-20260909"
+    marker = "quest_core.js?v=landscape-atlas-v394-20260913"
     assert marker in html
     assert "./" + marker in sw
     assert "const BURBZ_CACHE = 'burbz-" in sw

@@ -2255,24 +2255,37 @@
     var endpoints = opts.endpoints || OVERPASS_ENDPOINTS;
     var fetchFn = opts.fetchFn || (typeof fetch !== 'undefined' ? fetch.bind(window) : null);
     if (!fetchFn) return Promise.resolve(null);
-    function tryEndpoint(i) {
-      if (i >= endpoints.length) return Promise.resolve(null);
+    async function tryEndpoint(i) {
+      if (i >= endpoints.length) return null;
       var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-      var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, opts.timeoutMs || 16000) : null;
-      return fetchFn(endpoints[i], {
-        method: 'POST',
-        body: 'data=' + encodeURIComponent(query),
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: ctrl ? ctrl.signal : undefined
-      }).then(function (r) {
-        if (timer) clearTimeout(timer);
-        if (!r.ok) throw new Error('overpass ' + r.status);
-        return r.json();
-      }).catch(function (err) {
-        if (timer) clearTimeout(timer);
-        console.warn('BURBZ quest overpass endpoint failed:', endpoints[i], err && err.message);
-        return tryEndpoint(i + 1);
+      var timer;
+      // The deadline includes the body: HTTP headers alone are not a complete map.
+      var deadline = new Promise(function (_, reject) {
+        timer = setTimeout(function () {
+          if (ctrl) ctrl.abort();
+          reject(new Error('Trail provider timed out'));
+        }, opts.timeoutMs || 16000);
       });
+      try {
+        return await Promise.race([deadline, Promise.resolve().then(async function () {
+          var response = await fetchFn(endpoints[i], {
+            method: 'POST', body: 'data=' + encodeURIComponent(query),
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            signal: ctrl ? ctrl.signal : undefined
+          });
+          if (!response.ok) throw new Error('overpass ' + response.status);
+          var json = await response.json();
+          // Overpass can return HTTP 200 with an error and a partial path graph.
+          // Reject it here so the next provider can supply complete evidence.
+          if (opts.requireComplete && (!json || !Array.isArray(json.elements) || json.remark)) {
+            throw new Error('Incomplete mapped paths: ' + String(json && json.remark || 'missing elements'));
+          }
+          return json;
+        })]);
+      } catch (err) {
+        console.warn('BURBZ quest overpass endpoint failed:', endpoints[i], err && err.message);
+      } finally { clearTimeout(timer); }
+      return tryEndpoint(i + 1);
     }
     return tryEndpoint(0);
   }
@@ -2281,7 +2294,7 @@
     opts = opts || {};
     var network = window.BurbzWalkingRouteCore;
     if (!network) return Promise.reject(new Error('Walking route module unavailable'));
-    return runOverpassQuery(network.buildOverpassQuery(lat, lon, opts.radiusM || 3000), opts)
+    return runOverpassQuery(network.buildOverpassQuery(lat, lon, opts.radiusM || 3000), Object.assign({}, opts, {requireComplete:true}))
       .then(function (json) {
         if (!json || !Array.isArray(json.elements) || json.remark) throw new Error('Mapped paths could not be loaded completely');
         return network.parseOffers(json, lat, lon, opts);

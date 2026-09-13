@@ -7,8 +7,8 @@ CORE = ROOT / "quest_core.js"
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "walking-quests-v361-20260907"
-CURRENT_BUILD = "photo-accuracy-v393-20260911"
-QUEST_CORE_PIN = "map-trails-v381-20260909"
+CURRENT_BUILD = "landscape-atlas-v394-20260913"
+QUEST_CORE_PIN = "landscape-atlas-v394-20260913"
 
 
 def run_core(expression: str):

@@ -5585,7 +5585,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
 <script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
 <script src="landscape_ui.js?v=landscape-v388-20260910"></script>
-<script src="quest_core.js?v=map-trails-v381-20260909"></script>
+<script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
 <script src="walking_story_core.js?v=release-polish-v342-20260901"></script>
 <script src="side_trail_core.js?v=pocket-detours-v382-20260910"></script>
 <script src="trail_mode_core.js?v=trail-mode-v329-20260825"></script>
@@ -19534,7 +19534,7 @@ function openNetworkQuestOfferDetail(offer) {
 }
 
 
-function openQuestBoard() {
+function openQuestBoard(opts = {}) {
   SFX.tap();
   if (activeWalkingQuest()) { openActiveWalkQuestSheet(); return; }
   if (sideQuestActive()) { openSideQuestLogSheet(); return; }
@@ -19543,7 +19543,7 @@ function openQuestBoard() {
     '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="wq-eyebrow">THE ALDERWING FIELD GUIDE</div><div class="quest-board-title">Find your next walk</div><div class="quest-board-intro" id="walkQuestSheetStatus" role="status">Finding connected footpaths and worthwhile walks near you…</div></div></div>' +
 
     questDetourActionsHTML() +
-    '<div id="walkQuestOfferList"><div class="quest-all-done">Reading the enchanted trail map…</div></div>' +
+    '<div id="walkQuestOfferList" aria-busy="true"><div class="quest-all-done">Loading nearby mapped walks…</div></div><button class="wq-npc-ok" id="walkQuestRetry" type="button" hidden>Retry nearby walks</button>' +
     '<div class="quest-section-title">🎒 Side Quest</div><div id="walkQuestSideQuestSlot"></div>' +
     '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
   showWalkQuestSheet(el);
@@ -19556,21 +19556,40 @@ function openQuestBoard() {
     b.addEventListener('click', () => openSideQuestIntroSheet());
     sideSlot.appendChild(b);
   }
+  const status = $('walkQuestSheetStatus'), list = $('walkQuestOfferList'), retry = $('walkQuestRetry');
+  const current = () => el.classList.contains('open') && el.querySelector('#walkQuestOfferList') === list;
+  const finish = () => { list.setAttribute('aria-busy', 'false'); };
+  retry.onclick = () => openQuestBoard({ ...opts, force:true });
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
-    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'Allow location from the map to discover exactly how far away each real quest begins.';
-    const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. A Side Quest is still ready below.</div>';
+    status.textContent = 'Allow location from the map to find walks near you.';
+    list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. A Side Quest is still ready below.</div>';
+    retry.hidden = false; finish();
     return;
   }
-  discoverNearbyQuestOffers().then(offers => {
-    const sheet = $('walkQuestSheet'); if (!offers || !sheet || !sheet.classList.contains('open')) return;
+  discoverNearbyQuestOffers(!!opts.force).then(offers => {
+    if (!current()) return;
+    finish();
+    if (!offers) {
+      status.textContent = 'Your location changed while loading. Retry to find walks near your current position.';
+      list.textContent = ''; retry.hidden = false; return;
+    }
     walkQuestOffersCache = offers;
-    const st = $('walkQuestSheetStatus');
-    if (st) st.textContent = offers.length ? offers.length + ' mapped walks. ' + (offers.some(o => o.routeMode === 'loop') ? 'Footpath loops come first; distance includes the whole walk.' : 'No suitable loop found in the available data. These walks return along the same paths.') : 'No useful connected walk found in the available map data. Try another area or explore freely below.';
-    renderQuestOfferCards($('walkQuestOfferList'), offers, focusQuestOnMap);
+    status.textContent = offers.length ? offers.length + ' mapped walks. ' + (offers.some(o => o.routeMode === 'loop') ? 'Footpath loops come first; distance includes the whole walk.' : 'No suitable loop found in the available data. These walks return along the same paths.') : 'No useful connected walk found in the available map data. Try another area or explore freely below.';
+    if (navigator.onLine === false && offers.length) status.textContent += ' Offline: showing walks loaded recently in this area.';
+    renderQuestOfferCards(list, offers, focusQuestOnMap);
+    retry.hidden = !!offers.length;
+    if (opts.showOnMap) {
+      questOverview.on = true;
+      drawQuestOverviewLines(); drawQuestOverviewMarkers(); updateShowQuestsButton();
+      fitAllLocalQuestRoutes(offers);
+    }
   }).catch(err => {
     console.warn('BURBZ walking quest discovery failed', err);
-    const st = $('walkQuestSheetStatus'); if (st) st.textContent = 'The trail archive is resting. You can still start a Side Quest from right here.';
-    const list = $('walkQuestOfferList'); if (list) list.innerHTML = '<div class="quest-all-done">Nearby trails could not be loaded just now.</div>';
+    if (!current()) return;
+    finish();
+    status.textContent = navigator.onLine === false ? 'You are offline. Reconnect, then retry nearby walks.' : 'Nearby walks could not be loaded. Check your connection and retry.';
+    list.innerHTML = '<div class="quest-all-done">Your saved quests and progress are unchanged. You can still open Side Quest below.</div>';
+    retry.hidden = false;
   });
 }
 function openQuestOfferSheet() { return openQuestBoard(); }
@@ -21593,8 +21612,9 @@ function discoverNearbyQuestOffers(force = false) {
   const { lat, lon } = liveMapLastPosition;
   const fresh = !force && questOverview.at && mapDistanceMeters(questOverview.at, { lat, lon }) < 250 && (Date.now() - questOverview.fetchedAt) < 300000;
   if (fresh && questOverview.offers.length) return Promise.resolve(questOverview.offers);
+  if (questOverview.pending && mapDistanceMeters(questOverview.pending.at, { lat, lon }) < 120) return questOverview.pending.promise;
   const requestId = ++questOfferRequestSeq;
-  return window.BurbzQuestCore.fetchTrailOffers(lat, lon, { radiusM: 3000 }).then(offers => {
+  const promise = window.BurbzQuestCore.fetchTrailOffers(lat, lon, { radiusM: 3000 }).then(offers => {
     if (requestId !== questOfferRequestSeq || !liveMapHasPrecisePosition || !liveMapLastPosition) return null;
     if (liveMapLastPosition && window.BurbzQuestCore.questHaversine(lat, lon, liveMapLastPosition.lat, liveMapLastPosition.lon) > 120) {
       return discoverNearbyQuestOffers(true);
@@ -21605,7 +21625,9 @@ function discoverNearbyQuestOffers(force = false) {
     questOverview.at = { lat, lon };
     walkQuestOffersCache = questOverview.offers;
     return questOverview.offers;
-  });
+  }).finally(() => { if (questOverview.pending?.requestId === requestId) questOverview.pending = null; });
+  questOverview.pending = { requestId, at:{lat,lon}, promise };
+  return promise;
 }
 
 function questOverviewGeoJSON() {
@@ -21665,10 +21687,14 @@ function syncQuestMapFocusLayout() {
   const nav = document.querySelector('.bottom-dock');
   if (!card || !shell || !nav || !card.classList.contains('show')) return;
   const shellRect = shell.getBoundingClientRect(), navRect = nav.getBoundingClientRect();
-  shell.style.setProperty('--quest-focus-max-height', Math.max(180, Math.floor(navRect.top - shellRect.top - 24)) + 'px');
+  // The landscape dock is beside the map. Only a dock below and overlapping
+  // the map reduces its usable height; a side dock must never lift the brief.
+  const bottomDock = navRect.left < shellRect.right - 1 && navRect.right > shellRect.left + 1 && navRect.top > shellRect.top + shellRect.height / 2;
+  const bottom = Math.min(shellRect.bottom, window.innerHeight, bottomDock ? navRect.top : Infinity);
+  shell.style.setProperty('--quest-focus-max-height', Math.max(180, Math.floor(bottom - shellRect.top - 24)) + 'px');
   const cardHeight = card.offsetHeight, cardTop = shellRect.top + card.offsetTop, cardBottom = cardTop + cardHeight;
   const currentLift = Number.parseFloat(shell.style.getPropertyValue('--quest-focus-lift')) || 0;
-  const lift = Math.max(0, Math.ceil(currentLift + cardBottom - navRect.top + 12));
+  const lift = Math.max(0, Math.ceil(currentLift + cardBottom - bottom + 12));
   const projectedTop = cardTop - (lift - currentLift);
   shell.style.setProperty('--quest-focus-card-height', Math.ceil(cardHeight) + 'px');
   shell.style.setProperty('--quest-focus-lift', lift + 'px');
@@ -21700,7 +21726,7 @@ function updateShowQuestsButton() {
   const active = !!questOverview.on;
   showBtn.classList.toggle('active', active);
   showBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
-  showBtn.setAttribute('aria-label', active && questOverview.offers.length ? 'Show and reframe ' + questOverview.offers.length + ' local quests on the map' : 'Show all local quests on the map');
+  showBtn.setAttribute('aria-label', active && questOverview.offers.length ? 'Open ' + questOverview.offers.length + ' local walking quests' : 'Find local walking quests');
 }
 function fitAllLocalQuestRoutes(offers = questOverview.offers) {
   if (!liveMap || !window.maplibregl || !offers || !offers.length) return;
@@ -21751,7 +21777,7 @@ function setQuestOverview(on, opts = {}) {
     if (!offers.length) showToast('No mapped trail starts here yet — chart your own adventure from the quest board');
   }).catch(err => {
     console.warn('BURBZ quest overview scout failed', err);
-    showToast('The scouts could not reach the trail archives — try again soon');
+    openQuestBoard({ showOnMap:true });
   });
 }
 function showAllLocalQuests() {
@@ -21763,7 +21789,7 @@ function showAllLocalQuests() {
   questOverview.selectedIndex = null;
   questOverview.areaBirdsWasOpen = birdsWereOpen;
   setAreaBirdsOpen(false, false);
-  setQuestOverview(true, { fitAll:true });
+  openQuestBoard({ showOnMap:true });
 }
 function toggleQuestOverview() { SFX.tap(); setQuestOverview(!questOverview.on); }
 
@@ -24829,6 +24855,7 @@ function startVillageLiberationBattle(village) {
   return true;
 }
 function openEmpireFrontier(seed) {
+  leaveWalkingRealmMap();
   const village = empireFrontierVillages.find(v => (v.seed >>> 0) === (Number(seed) >>> 0));
   if (!village) return;
   startVillageLiberationBattle(village);
@@ -25400,6 +25427,7 @@ function frameEmpireSettlement(settlementId) {
 // a heraldic transition scroll covers the journey while the scene builds.
 let empireTravelTimer = null, empireTravelFadeTimer = null;
 function openEmpireVillage(seed) {
+  leaveWalkingRealmMap();
   villageVisitingWard = false;
   const village = empireVillages().find(v => String(v.seed >>> 0) === String(Number(seed) >>> 0));
   if (!village) return;
@@ -28231,6 +28259,7 @@ function renderEmpirePanel() {
 // ============================================================================
 let regionHallActiveId = null;
 function openEmpireRegion(regionId) {
+  leaveWalkingRealmMap();
   const region = empireRegionById(regionId);
   if (!region) { frameEmpireRegion(regionId); return; }
   regionHallActiveId = String(region.id);
@@ -28940,6 +28969,7 @@ function visitEmpireWard(seed) {
 // moves it. Absorbed villages never become destinations again.
 // ============================================================================
 function openEmpireTown(idOrSeed) {
+  leaveWalkingRealmMap();
   villageVisitingWard = false;
   let settlement = empireSettlementById(idOrSeed);
   if (!settlement && Number.isFinite(Number(idOrSeed))) {
@@ -29367,6 +29397,7 @@ function townBuildAtWard(settlementId, seed, buildingId) {
 let countyMapActiveId = null;
 let countyMapHotspotData = [];
 function openEmpireCountyMap(regionId) {
+  leaveWalkingRealmMap();
   const region = empireRegionById(regionId);
   if (!region) { openEmpireRegion(regionId); return; }
   countyMapActiveId = String(region.id);
@@ -29898,7 +29929,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=continuous-world-v391-20260910';
+        script.src = 'village_walk.js?v=landscape-atlas-v394-20260913';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -43518,7 +43549,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'photo-accuracy-v393-20260911';
+const BURBZ_BUILD = 'landscape-atlas-v394-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44800,10 +44831,29 @@ function returnFromGeographicSettlement(reason) {
 }
 // First-person travel belongs to the homestead and settlement walking views.
 // Use the selected Empire coordinates, never the phone/quest-map position.
+// The walking map borrows the existing atlas DOM and its ordinary interactions.
+// Avatar position is a separate marker; no virtual travel is supplied as GPS.
+let walkingRealmLease=null;
+function mountWalkingRealmMap(container,pose) {
+  walkingRealmLease?.dispose();
+  const card=$('empireMapCard'),parent=card.parentNode,next=card.nextSibling;
+  const oldStyle=card.style.cssText,hadMap=!!empireMap,oldCamera=empireMap?{center:empireMap.getCenter(),zoom:empireMap.getZoom(),bearing:empireMap.getBearing(),pitch:empireMap.getPitch()}:null;
+  const framed=empireMapHasFramed,adjusted=empireMapUserAdjusted;
+  const buttons=['empireMapMeBtn','empireMapRealmBtn','empireMapWorldBtn','empireMapKeyBtn'].map(id=>{const node=$(id);return{node,click:node.onclick};});
+  let closed=false,marker=null,map=null;container.append(card);card.classList.add('fp-borrowed-atlas');
+  const resize=new ResizeObserver(()=>{if(!closed)map?.resize();});resize.observe(container);
+  const center=()=>{if(!map)return;hideEmpireMapCard();hideEmpireMapKey();map.easeTo({center:[pose.lon,pose.lat],zoom:14,duration:0});};
+  function realm(){if(!map)return;hideEmpireMapCard();hideEmpireMapKey();const villages=empireMappableVillages(),points=[pose,...villages];const bounds=BurbzEmpireMapCore.claimBounds(points.map((p,i)=>({...p,seed:p.seed??i})));if(bounds&&points.length>1)map.fitBounds(bounds,{padding:Math.min(60,container.clientHeight/5),maxZoom:12,duration:0});else center();}
+  const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
+  walkingRealmLease=lease;buttons[0].node.onclick=center;buttons[1].node.onclick=realm;buttons[2].node.onclick=showEmpireWorld;buttons[3].node.onclick=toggleEmpireMapKey;
+  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';pin.textContent='➤';pin.style.rotate=(-pose.yaw*180/Math.PI-90)+'deg';pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);realm();return map;});
+  return lease;
+}
+function leaveWalkingRealmMap(){if(walkingRealmLease)BurbzVillageWalk.close('map-navigation');}
 function continuousWalkingAdapter(record) {
   const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
   return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
-    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,
+    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
     records:geographicSettlementRecords,createSettlement:(T,r)=>BurbzGeographicSettlementScene.create(T,r),
     getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
