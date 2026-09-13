@@ -5579,7 +5579,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_map_3d.js?v=continuous-world-v391-20260910"></script>
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
-<link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
+<link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=desk-composition-v397-20260913"></script>
 <script src="scan_home.js?v=home-followup-v399-20260913"></script>
@@ -5589,8 +5589,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_daynight_core.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_daynight.js?v=night-quests-v376-20260908"></script>
 <script src="map_trail_core.js?v=map-trails-v381-20260909"></script>
-<script src="geographic_details_scene.js?v=map-trails-v381-20260909"></script>
-<script src="geographic_places.js?v=homestead-v385-20260910"></script>
+<script src="geographic_details_scene.js?v=quest-buildings-v402-20260913"></script>
+<script src="geographic_places.js?v=quest-buildings-v402-20260913"></script>
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
@@ -19224,11 +19224,14 @@ function drawTrailExtrasOnMap(quest) {
   });
   const tav = quest.trailTavern;
   if (tav) {
-    const el = document.createElement('div');
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.setAttribute('aria-label', tav.name + (tav.visited ? ' · Visited' : ''));
     el.className = 'quest-marker-pin';
     const face = document.createElement('div');
     face.className = 'quest-marker qm-tavern' + (tav.visited ? ' visited' : '');
     face.textContent = '🍻';
+    el.classList.add('geographic-building-target');el.classList.toggle('is-visited',!!tav.visited);el.dataset.geoBuildingId='tavern:'+quest.id;const label=document.createElement('span');label.className='gb-label';label.textContent=tav.name+(tav.visited?' · Visited':'');el.appendChild(label);
     el.appendChild(face);
     el.addEventListener('click', ev => {
       ev.stopPropagation();
@@ -19236,7 +19239,8 @@ function drawTrailExtrasOnMap(quest) {
       const me = liveMapHasPrecisePosition && liveMapLastPosition ? Math.round(mapDistanceMeters(liveMapLastPosition, tav)) : null;
       showToast('🍻 ' + tav.name + ' has set up on your trail' + (me !== null ? ' — ' + me + ' m away. Walk there for a drink!' : '!'));
     });
-    questExtraMarkers.push(createGeographicMarker({ element: el, anchor: 'bottom', offset:[0,-42] }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
+    questExtraMarkers.push(createGeographicMarker({ element: el, anchor: 'bottom' }).setLngLat([tav.lon, tav.lat]).addTo(liveMap));
+    geographicPlaces?.refreshQuestObjects();
   }
 }
 
@@ -20119,7 +20123,8 @@ function drawWalkingQuestOnMap() {
     if (cp.kind === 'npc') face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
     else if (cp.kind === 'chest') face.innerHTML = CHEST_SVG;
     else face.innerHTML = window.BurbzWalkingQuestUI.icon(cp.kind === 'finish' ? 'compass' : (cp.reached ? 'check' : 'pin'));
-    if (encounter) face.insertAdjacentHTML('beforeend', '<span class="wq-marker-encounter"><img src="' + window.BurbzWalkingQuestUI.encounterArt(encounter) + '" alt=""></span>');
+    if (encounter && encounter.kind!=='building') face.insertAdjacentHTML('beforeend', '<span class="wq-marker-encounter"><img src="' + window.BurbzWalkingQuestUI.encounterArt(encounter) + '" alt=""></span>');
+    if(encounter?.kind==='building'){el.classList.add('geographic-building-target');el.classList.toggle('is-current',idx===nextRequiredIdx);el.dataset.geoBuildingId='encounter:'+quest.id+':'+encounter.id;const label=document.createElement('span');label.className='gb-label';label.textContent=encounter.name;el.appendChild(label);}
     el.appendChild(face);
     el.addEventListener('click', ev => {
       ev.stopPropagation(); // keep the tap off the map's quest-offers hit layer underneath
@@ -20137,7 +20142,7 @@ function drawWalkingQuestOnMap() {
       showToast((encounter ? encounter.name + ' · fictional story stop. ' : '') + meta + (me !== null ? ' — ' + me + ' m away. Walk within ' + Math.round(window.BurbzQuestCore.questReachRadiusM(quest, idx)) + ' m to reach it!' : ' — walk close to open it.'));
     });
     const markerOptions = { element: el, anchor: 'center' };
-    if(encounter?.kind==='building')markerOptions.offset=[0,-42];
+    if(encounter?.kind==='building')markerOptions.anchor='bottom';
     if (cp.kind === 'finish') markerOptions.offset = [14, -14]; // visual only; geographic point remains on-route
     const mk = createGeographicMarker(markerOptions).setLngLat([cp.lon, cp.lat]).addTo(liveMap);
     questMapMarkers[idx] = mk;
@@ -43749,7 +43754,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'distant-sky-v401-20260913';
+const BURBZ_BUILD = 'quest-buildings-v402-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

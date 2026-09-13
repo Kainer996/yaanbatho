@@ -1,0 +1,26 @@
+# Physical buildings on the GPS quest map
+
+Candidate `quest-buildings-v402-20260913`. Publication proof is recorded separately after the reviewed merge and guarded deployment.
+
+Existing mapped wayside cottages, shelters, sanctuaries and lodges, and certified quest building/tavern stops already had actual shared settlement meshes. Large painted/emoji targets covered them. Loaded models now retain transparent, touch-sized targets with names on hover, keyboard focus or the current quest stop. The visited tavern remains a keyboard-operable button with a small completed cue. Unloaded/distant models retain their existing fallback wayfinding targets. NPC illustrations remain unchanged. No flat replacement building artwork is shipped.
+
+The canonical ID, type, seed, longitude and latitude remain authoritative. Revised mapped records move one existing marker and its action together. Saved nearby places are restored when GPS arrives after map construction, even when the provider request fails. A building's centre and four footprint corners must have verified terrain before a new mesh is placed. Its level foundation spans those sampled elevations, using one shared stone box on slopes. An unknown corner cannot invent flat ground. Previous verified support survives temporary loading; moved coordinates never reuse the previous location's elevation.
+
+The raw MapLibre shader now converts the shared settlement models' linear vertex colours to display RGB, so walls and roofs are no longer incorrectly dark. The geometry remains bounded and batched into two draw calls, with the existing approach margin, pointer/gesture deferral and lifecycle restoration. Terrain heights are reused across turns and invalidated only for intersecting changed DEM tiles; terrain changes without tile metadata conservatively invalidate all. Resource counts, timings and error diagnostics are bounded.
+
+No GPS authority changes: entering a wayside furnished room still requires one fresh, accurate real GPS fix within 45 metres, rechecked after asynchronous loading. Virtual-world movement does not supply that fix. Certified route checkpoints, future/ordered steps, tavern state, visits and saved quest progress remain unchanged. A synthetic route which cannot be certified against real mapped paths correctly remains pending, with no quest-building/reward authority. A visit changes only the existing visited ledger, never coins or inventory.
+
+## Verification
+
+- 34 place behavior groups cover exact mapped positions, access/topology exclusions, bounded counts, fresh/distant/stale GPS, async cancellation/rollback, room teardown, original camera return, terrain support/loading, antimeridian, terrain cache invalidation and moved-record actions.
+- Seven map-trail groups cover unchanged checkpoint/tavern identity, corrected routes, true volumetric geometry and actual GPS/reward gates. Five selected Python suites pass, including geographic markers, MapLibre terrain lifecycle and continuous-world installation pins.
+- Six local actual MapLibre/Three browser checks pass using explicitly synthetic sloped DEM/MVT and disposable canonical quest/place records: 3D rendering, turning, unchanged state, distant disabled entry, nearby furnished-room entry/return, visited tavern accessibility and portrait/landscape/desktop layout.
+- Six real-provider checks pass using unmodified OpenFreeMap/Mapterhorn responses and simulated test GPS: saved wayside meshes on real slopes, turns, state preservation, nearby furnished-room visit/return and layouts. The deliberately synthetic quest route remains uncertified here; certified quest stops are verified in the controlled mapped-path fixture, not falsely claimed as a real route.
+
+Controlled matched 103-object phone-viewport rotation runs: released mean frame times 28.57–30.44 ms, p95 up to 83.2 ms; candidate 26.54–30.42 ms, p95 up to 66.7 ms. Warm ground-query work after turns fell from 38–65 ms before the cache fix to 0.1–1 ms; whole warm building uploads fell from 52–76 ms to 12.6–36.6 ms. Initial geometry preparation remains about 120 ms.
+
+Real-terrain map rotation is substantially slower on this laptop's Intel Iris Xe: released 93.90–129.89 ms mean (p95 166.7–233.3 ms), candidate 90.52–129.44 ms (p95 166.6–216.7 ms), with the same 100 nearby detail objects. The released comparison reproduces the existing map-rendering limitation. This building change is not a fix for that broader GPU/map workload and does not claim 60 fps or physical-phone verification. The first-person world's separately verified measurements are not interchangeable with this GPS-map benchmark.
+
+Evidence is in the September 13 voice-task output directory, `quest-buildings-v402/{known-gps-baseline,cached-ground,final-local,real-terrain,real-baseline}`. Source hashes and explicit fixture conditions are recorded per run. All changed module consumers and all three worker lists use the same release pin; existing runtime files remain in the guarded updater. Public exact bytes, native public interaction, activated cache and cold offline boot/save checks are required before reporting publication.
+
+Photo recognition, wilderness stories/dwellings and construction commissioning/assistance are separate unfinished work. No 3D Merlin changes are included.

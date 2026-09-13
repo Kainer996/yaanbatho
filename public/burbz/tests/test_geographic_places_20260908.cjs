@@ -65,24 +65,24 @@ class Events {
  async emit(name,event={}){for(const fn of [...(this.events.get(name)||[])])await fn({type:name,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){},...event});}
 }
 class Element extends Events {
- constructor(doc){super();this.doc=doc;this.hidden=false;this.disabled=false;this.children=[];this.parts={};this.attributes={};}
+ constructor(doc){super();this.doc=doc;this.hidden=false;this.disabled=false;this.children=[];this.parts={};this.attributes={};this.dataset={};const classes=new Set();this.classList={add:(...names)=>names.forEach(n=>classes.add(n)),contains:n=>classes.has(n),toggle:(n,on)=>{if(on)classes.add(n);else classes.delete(n);}};}
  set innerHTML(v){this.html=v;for(const selector of ['.gp-close','.gp-enter','h3','.gp-description','.gp-distance'])this.parts[selector]=new Element(this.doc);}
  querySelector(s){return this.parts[s];}setAttribute(k,v){this.attributes[k]=v;}
- append(e){this.children.push(e);e.parent=this;}remove(){if(this.parent)this.parent.children=this.parent.children.filter(e=>e!==this);this.removed=true;}
+ append(e){this.children.push(e);e.parent=this;}appendChild(e){this.append(e);return e;}remove(){if(this.parent)this.parent.children=this.parent.children.filter(e=>e!==this);this.removed=true;}
  focus(){this.doc.activeElement=this;}getClientRects(){return this.hidden?[]:[{}];}
 }
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return{promise,resolve,reject};};
 function fixture(config={}){
  const doc=new Events();doc.hidden=false;doc.createElement=()=>new Element(doc);doc.body=new Element(doc);doc.getElementById=()=>null;
  const map=new Events(),container=new Element(doc);Object.assign(map,{getContainer:()=>container,getCanvasContainer:()=>container,getZoom:()=>16,getCenter:()=>({lng:here.lon,lat:here.lat}),getPitch:()=>32,getBearing:()=>-24,isMoving:()=>false,isStyleLoaded:()=>true,getStyle:()=>({layers:[]}),jumpTo:camera=>jumps.push(camera)});
- const pending=deferred(),markers=[],saves=[],opens=[],jumps=[],renderers=[],renders={set:[],disposed:0,refreshes:0};let clock=at,data=config.data||{catalogue:parse().places},position={...here,accuracy:10,at},visible=true,isOpen=false;
+ const pending=deferred(),markers=[],saves=[],opens=[],jumps=[],renderers=[],renders={set:[],disposed:0,refreshes:0};let clock=at,data=config.data||{catalogue:parse().places},position=Object.hasOwn(config,'position')?config.position:{...here,accuracy:10,at},visible=true,isOpen=false;
  const scene={state:{},set:r=>renders.set.push(r),refresh:()=>renders.refreshes++,dispose:()=>renders.disposed++};
  const walk={isOpen:()=>isOpen,open:opts=>{opens.push(opts);isOpen=true;},close:reason=>{isOpen=false;opens.at(-1)?.resume(reason);}};
  class Clock extends Date{static now(){return clock;}}
  class Renderer{constructor(){this.domElement=new Element(doc);this.disposed=0;this.lost=0;renderers.push(this);}setPixelRatio(){}setSize(){}dispose(){this.disposed++;}forceContextLoss(){this.lost++;}}
  const ctx={document:doc,Date:Clock,devicePixelRatio:2,THREE:{WebGLRenderer:Renderer,Scene:class{},PerspectiveCamera:class{}},AbortController,MutationObserver:class{observe(){}disconnect(){this.disconnected=true;}},BurbzGeographicPlacesCore:{...core,arrival:(p,f)=>core.arrival(p,f,clock)},BurbzWalkingRouteCore:network,BurbzVillageWalk:walk,BurbzGeographicDetailsScene:{create:(map,options)=>{renders.options=options;return scene;}},console};
  vm.runInNewContext(fs.readFileSync(require.resolve('../geographic_places.js'),'utf8'),ctx);
- const options={isVisible:()=>visible,getPosition:()=>position,data:()=>data,save:next=>{saves.push(next);if(config.saveFails)return false;data=next;return true;},fetch:config.fetch||(()=>pending.promise),loadWalk:config.loadWalk||(()=>Promise.resolve()),refreshMap:()=>{},marker:({element})=>{const marker={element,setLngLat(p){this.point=p;return this;},addTo(){markers.push(this);return this;},remove(){this.removed=true;}};return marker;}};
+ const options={isVisible:()=>visible,getPosition:()=>position,data:()=>data,save:next=>{saves.push(next);if(config.saveFails)return false;data=next;return true;},fetch:config.fetch||(()=>pending.promise),loadWalk:config.loadWalk||(()=>Promise.resolve()),refreshMap:()=>{},marker:({element})=>{const marker={element,getElement:()=>element,setLngLat(p){this.point=p;return this;},addTo(){markers.push(this);return this;},remove(){this.removed=true;}};return marker;}};
  const api=ctx.BurbzGeographicPlaces.attach(map,options),card=doc.body.children[0];
  return{api,ctx,map,doc,card,options,markers,saves,opens,jumps,renders,renderers,pending,advance:ms=>clock+=ms,select:()=>markers[0].element.emit('click'),enter:()=>card.querySelector('.gp-enter').emit('click'),setPosition:p=>position=p,setVisible:v=>visible=v};
 }
@@ -165,15 +165,15 @@ function sceneFixture(){
  const allocate=kind=>{const r={kind,id:++serial};resources.add(r);return r;},release=r=>{assert.ok(resources.delete(r),'resource released once');};
  const gl={createShader:()=>allocate('shader'),deleteShader:release,createProgram:()=>allocate('program'),deleteProgram:release,createBuffer:()=>allocate('buffer'),deleteBuffer:release,createVertexArray:()=>allocate('vao'),deleteVertexArray:release,getShaderParameter:()=>true,getProgramParameter:()=>true,getUniformLocation:()=>({}),bufferData:(target,data)=>uploads.push(Array.from(data)),drawArrays:(mode,start,count)=>draws.push(count)};
  for(const name of ['shaderSource','compileShader','attachShader','linkProgram','bindVertexArray','bindBuffer','enableVertexAttribArray','vertexAttribPointer','useProgram','uniformMatrix4fv','enable','depthFunc','depthMask','disable','cullFace','uniform1f','getParameter','uniform4fv'])gl[name]=()=>{};
- const layers=new Map(),map=new Events();Object.assign(map,{getCenter:()=>center,getZoom:()=>16,getBounds:()=>({getWest:()=>center.lng-extent,getEast:()=>center.lng+extent,getSouth:()=>center.lat-extent,getNorth:()=>center.lat+extent}),getTerrain:()=>terrain?{}:null,isSourceLoaded:()=>ready,queryTerrainElevation:point=>{queried.push(point);return height;},isMoving:()=>moving,isStyleLoaded:()=>true,getLayer:id=>layers.get(id),addLayer:l=>{assert.ok(!layers.has(l.id));layers.set(l.id,l);l.onAdd(map,gl);},removeLayer:id=>{const l=layers.get(id);layers.delete(id);l.onRemove(map,gl);},triggerRepaint(){}});
+ const layers=new Map(),map=new Events();Object.assign(map,{getCenter:()=>center,getZoom:()=>16,getBounds:()=>({getWest:()=>center.lng-extent,getEast:()=>center.lng+extent,getSouth:()=>center.lat-extent,getNorth:()=>center.lat+extent}),getTerrain:()=>terrain?{}:null,isSourceLoaded:()=>ready,queryTerrainElevation:point=>{queried.push(point);return typeof height==='function'?height(point):height;},isMoving:()=>moving,isStyleLoaded:()=>true,getLayer:id=>layers.get(id),addLayer:l=>{assert.ok(!layers.has(l.id));layers.set(l.id,l);l.onAdd(map,gl);},removeLayer:id=>{const l=layers.get(id);layers.delete(id);l.onRemove(map,gl);},triggerRepaint(){}});
  const api=ctx.BurbzGeographicDetailsScene.create(map,{visible:()=>visible,interacting:()=>interacting});
- return{api,map,gl,resources,uploads,draws,queried,geometry:ctx.BurbzGeographicDetailsScene.geometry,layer:()=>layers.get('burbz-geographic-details'),view:(lng,lat=here.lat)=>center={lng,lat},moving:v=>moving=v,interacting:v=>interacting=v,visible:v=>visible=v,dem:(loaded,elevation=height)=>{ready=loaded;height=elevation;},terrain:v=>terrain=v};
+ return{api,map,gl,resources,uploads,draws,queried,geometry:ctx.BurbzGeographicDetailsScene.geometry,mercator:ctx.BurbzGeographicMap3D.mercator,layer:()=>layers.get('burbz-geographic-details'),view:(lng,lat=here.lat)=>center={lng,lat},moving:v=>moving=v,interacting:v=>interacting=v,visible:v=>visible=v,dem:(loaded,elevation=height)=>{ready=loaded;height=elevation;},terrain:v=>terrain=v};
 }
 const sceneRecord=(id,lon=here.lon,lat=here.lat,type='hut')=>({id,lon,lat,type,seed:1234});
 test('scene excludes distant model vertices and DEM queries while retaining the approach margin',()=>{
  const f=sceneFixture(),inside=sceneRecord('inside'),margin=sceneRecord('margin',here.lon,here.lat+.0014,'waterfall');
  f.api.set([inside,margin,sceneRecord('north',here.lon,here.lat+.0016),sceneRecord('east',here.lon+.003,here.lat,'grass')]);
- assert.equal(f.api.state.objects,2);assert.deepEqual(Array.from(f.layer().anchors,a=>a.id),['inside','margin']);assert.equal(f.queried.length,2);
+ assert.equal(f.api.state.objects,2);assert.deepEqual(Array.from(f.layer().anchors,a=>a.id),['inside','margin']);assert.equal(f.queried.length,6,'five supported building samples and one waterfall anchor');
  assert.equal(f.uploads.at(-1).length/9,f.geometry('hut',1234).length/9+f.geometry('waterfall',1234).length/9);
  assert.ok(f.uploads.at(-1).every(Number.isFinite));f.api.dispose();assert.equal(f.resources.size,0);
 });
@@ -191,7 +191,7 @@ test('actual view movement rebuilds culled models on idle and stationary idle pe
 test('scene waits for verified DEM heights, retains them through reload and updates when elevation is ready',async()=>{
  const f=sceneFixture();f.dem(false,0);f.api.set([sceneRecord('known')]);assert.equal(f.api.state.objects,0);assert.equal(f.queried.length,0,'unloaded DEM zero sentinel is never sampled');
  f.dem(true,123.5);await f.map.emit('sourcedata',{sourceId:'burbz-geographic-dem'});await f.map.emit('idle');assert.equal(f.layer().anchors[0].elevation,123.5);const verified=f.uploads.at(-1);
- f.dem(false,0);f.api.set([sceneRecord('known'),sceneRecord('unknown',here.lon+.0001)]);assert.equal(f.api.state.objects,1);assert.equal(f.layer().anchors[0].elevation,123.5);assert.deepEqual(f.uploads.at(-1),verified);assert.equal(f.queried.length,1);
+ f.dem(false,0);f.api.set([sceneRecord('known'),sceneRecord('unknown',here.lon+.0001)]);assert.equal(f.api.state.objects,1);assert.equal(f.layer().anchors[0].elevation,123.5);assert.deepEqual(f.uploads.at(-1),verified);assert.equal(f.queried.length,5);
  f.dem(true,null);await f.map.emit('sourcedata',{sourceId:'burbz-geographic-dem'});await f.map.emit('idle');assert.equal(f.api.state.objects,1,'null query retains only previously verified records');
  f.dem(true,140);await f.map.emit('sourcedata',{sourceId:'burbz-geographic-dem'});await f.map.emit('idle');assert.equal(f.api.state.objects,2);assert.ok(f.layer().anchors.every(a=>a.elevation===140));
  f.terrain(false);await f.map.emit('terrain');await f.map.emit('idle');assert.ok(f.layer().anchors.every(a=>a.elevation===0),'flat fallback ignores cached terrain heights');f.api.dispose();
@@ -228,4 +228,33 @@ test('scene retains drawable geometry during a held pointer and uploads the fina
  f.layer().render(f.gl,projection);assert.equal(f.draws.length,2,'last geometry remains renderable throughout the hold');
  f.interacting(false);f.api.refresh();assert.equal(f.uploads.length,uploads+1);assert.equal(f.layer().anchors[0].id,'second');
  await f.map.emit('idle');f.api.refresh();assert.equal(f.uploads.length,uploads+1);f.api.dispose();
+});
+test('saved wayside buildings appear when GPS arrives after map creation, even if the provider fails',async()=>{
+ const f=fixture({position:null});assert.equal(f.markers.length,0);assert.equal(f.saves.length,0);
+ f.setPosition({...here,accuracy:10,at});const update=f.api.update();assert.equal(f.markers.length,1);assert.equal(f.markers[0].element.dataset.geoBuildingId,'wayside:node:2');
+ f.pending.reject(Error('Provider unavailable'));await update;assert.equal(f.api.state.places.length,1);assert.equal(f.saves.length,0,'restoring a known visual does not award or rewrite state');
+ f.setPosition({...here,accuracy:90,at});await f.select();assert(f.card.querySelector('.gp-enter').disabled);f.api.dispose();
+});
+test('building foundations support the full sloped footprint at unchanged canonical coordinates',()=>{
+ const f=sceneFixture(),record=sceneRecord('slope');f.dem(true,([lon,lat])=>120+(lon-here.lon)*3000+(lat-here.lat)*1000);f.api.set([record]);
+ const anchor=f.layer().anchors[0],g=anchor.foundation;assert.equal(anchor.lat,record.lat);assert.equal(anchor.lon,record.lon);assert.equal(g.samples.length,5);assert.equal(anchor.elevation,Math.max(...g.samples));assert(g.bottom<Math.min(...g.samples));
+ assert.equal(f.uploads.at(-1).length/9,f.geometry('hut',1234).length/9+36,'one shared box closes the supported footprint to the ground');
+ assert(f.uploads.at(-1).every(Number.isFinite));f.api.dispose();
+});
+test('missing footprint corners cannot invent ground or reuse height after a canonical point moves',()=>{
+ const f=sceneFixture();f.dem(true,([lon])=>lon>here.lon?null:120);f.api.set([sceneRecord('moving')]);assert.equal(f.api.state.objects,0);
+ f.dem(true,120);f.api.refresh();f.api.set([sceneRecord('moving')]);assert.equal(f.api.state.objects,1);
+ f.dem(false,0);f.api.set([sceneRecord('moving',here.lon+.0001)]);assert.equal(f.api.state.objects,0,'an old coordinate height is never reused for a moved quest point');f.api.dispose();
+});
+test('a revised mapped place retains one target and moves its action to the current canonical coordinate',async()=>{
+ const f=fixture(),data=validData();data.elements[1].lat+=.0001;f.pending.resolve(data);await new Promise(resolve=>setImmediate(resolve));
+ const place=f.api.state.places[0];assert.equal(f.markers.length,1);assert.deepEqual(Array.from(f.markers[0].point),[place.lon,place.lat]);
+ await f.select();assert.equal(f.card.querySelector('h3').textContent,place.name);assert.match(f.card.querySelector('.gp-distance').textContent,/11 m away/);f.api.dispose();
+});
+test('turning reuses verified terrain while relevant DEM tile changes refresh the supported footprint',async()=>{
+ const f=sceneFixture();f.dem(true,120);f.api.set([sceneRecord('cached')]);assert.equal(f.queried.length,5);
+ f.view(here.lon+.0001);await f.map.emit('moveend');await f.map.emit('idle');assert.equal(f.queried.length,5,'camera movement does not repeat terrain queries');
+ const m=f.mercator(here.lon,here.lat),z=16,x=Math.floor(m[0]*2**z),y=Math.floor(m[1]*2**z);f.dem(true,145);
+ await f.map.emit('sourcedata',{sourceId:'burbz-geographic-dem',coord:{canonical:{z,x:x+10,y}}});await f.map.emit('idle');assert.equal(f.queried.length,5,'distant terrain does not invalidate this building');assert.equal(f.layer().anchors[0].elevation,120);
+ await f.map.emit('sourcedata',{sourceId:'burbz-geographic-dem',coord:{canonical:{z,x,y}}});await f.map.emit('idle');assert.equal(f.queried.length,10);assert.equal(f.layer().anchors[0].elevation,145);f.api.dispose();
 });
