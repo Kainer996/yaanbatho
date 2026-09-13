@@ -29929,7 +29929,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=landscape-atlas-v394-20260913';
+        script.src = 'village_walk.js?v=landscape-atlas-v394b-20260913';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -43549,7 +43549,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'landscape-atlas-v394-20260913';
+const BURBZ_BUILD = 'landscape-atlas-v394b-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44846,7 +44846,7 @@ function mountWalkingRealmMap(container,pose) {
   function realm(){if(!map)return;hideEmpireMapCard();hideEmpireMapKey();const villages=empireMappableVillages(),points=[pose,...villages];const bounds=BurbzEmpireMapCore.claimBounds(points.map((p,i)=>({...p,seed:p.seed??i})));if(bounds&&points.length>1)map.fitBounds(bounds,{padding:Math.min(60,container.clientHeight/5),maxZoom:12,duration:0});else center();}
   const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
   walkingRealmLease=lease;buttons[0].node.onclick=center;buttons[1].node.onclick=realm;buttons[2].node.onclick=showEmpireWorld;buttons[3].node.onclick=toggleEmpireMapKey;
-  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';pin.textContent='➤';pin.style.rotate=(-pose.yaw*180/Math.PI-90)+'deg';pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);realm();return map;});
+  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';const arrow=document.createElement('span');arrow.textContent='➤';arrow.style.transform='rotate('+(-pose.yaw*180/Math.PI-90)+'deg)';pin.append(arrow);pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);realm();return map;});
   return lease;
 }
 function leaveWalkingRealmMap(){if(walkingRealmLease)BurbzVillageWalk.close('map-navigation');}

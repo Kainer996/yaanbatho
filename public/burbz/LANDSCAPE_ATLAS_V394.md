@@ -1,6 +1,6 @@
 # Landscape controls, walking atlas and quest recovery v394
 
-Build: `landscape-atlas-v394-20260913`. Prepared on top of the released photo v393 commit `d6c4427`; this release does not change photo recognition, game economy, terrain, combat rules or Merlin assets.
+Build: `landscape-atlas-v394b-20260913`. Prepared on top of the released photo v393 commit `d6c4427`; this release does not change photo recognition, game economy, terrain, combat rules or Merlin assets.
 
 ## Player behavior
 
@@ -33,3 +33,7 @@ Evidence lives in `/home/yaan/Documents/Codex/2026-09-13/realtime-voice-chat/out
 - Changed dependencies have v394 URL pins in their consumers and all three worker lists. The new map module is in the legacy updater. Global build and cache advance together. Production HTTP and actual worker cache bytes are verified against the merged source during release.
 
 Phone sizes and touch input are emulated Chromium conditions on this laptop's GPU, not measurements from a physical phone or an outdoor GPS walk. Deterministic terrain/vector fixtures exercise the actual renderers; live-provider evidence is separately labelled. UI placement draws on the peripheral grouping visible in the official [Skyrim manual](https://steamcdn-a.akamaihd.net/steam/apps/72850/manuals/skyrim_gfw_manual-07.pdf), without copying artwork.
+
+## Publication verification follow-up
+
+The first v394 public play-through passed on real terrain and live quest data. A cold offline restart then exposed a pre-existing shell gap: 38 synchronous boot script URLs were not mandatory at install time, including UK/Australia bird catalogues, so stopping downloads after activation could leave a bird catalogue global undefined before `init()`. v394b aligns every actual local script tag with all three worker lists and requires these small startup scripts before activation. Optional art/audio remain optional. It also rotates only the inner arrow, so the map library’s position transform cannot be rotated away from the player; places the walking marker above settlement icons and hides the borrowed atlas’s GPS-based arrival banner while the walking-position status is shown. Real GPS data and the original atlas return state remain untouched.
