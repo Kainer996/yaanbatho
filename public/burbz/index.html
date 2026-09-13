@@ -4484,7 +4484,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=desk-panels-v396-20260913">
+<link rel="stylesheet" href="scan_home.css?v=desk-composition-v397-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
@@ -4587,11 +4587,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
     <!-- SCAN SCREEN -->
     <div class="screen" id="screen-scan" data-scan-path="camera-only">
-      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><section class="desk-player-kit" aria-label="Your first-person equipment"><button type="button" class="desk-kit-heading" data-home-action="player-equipment">Your gear ↗</button><div id="desk-equipment-list" tabindex="0" role="region" aria-label="Equipped items; scroll horizontally"></div></section></div>
+      <div class="desk-introduction">
+
       <div class="scan-home-hero">
         <img class="scan-home-backdrop" src="assets/home-v395/living-field-desk.webp" alt="" fetchpriority="high" width="1536" height="1024">
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Your field desk.</h1></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
+      </div>
+      <div class="scan-home-command-bar"><div class="desk-merlin-anchor" aria-hidden="true"></div><button type="button" id="playerHomeStand">Enter Alderwing</button></div>
       </div>
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
@@ -4604,13 +4607,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       </div>
 
       <section class="scan-home-today" aria-label="Your next quest"><div id="scanHomeActions" class="scan-home-actions"></div></section>
+      <section class="desk-player-kit" aria-label="Your first-person equipment"><button type="button" class="desk-kit-heading" data-home-action="player-equipment">Your gear ↗</button><div id="desk-equipment-list" tabindex="0" role="region" aria-label="Equipped items; scroll horizontally"></div></section>
       <div id="scanHomeDeskPanels" class="desk-panels">
         <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Stores</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Weapons & armour; scroll independently"></div></section>
         <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; scroll independently"></div></section>
         <section class="desk-panel desk-panel-training" aria-labelledby="desk-training-title"><button type="button" class="desk-panel-heading" data-home-action="panel-training"><span id="desk-training-title">Training</span><small id="desk-training-count"></small><span aria-hidden="true">↗</span></button><div id="desk-training-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Drills & rewards; scroll independently"></div></section>
         <section class="desk-panel desk-panel-hospital" aria-labelledby="desk-hospital-title"><button type="button" class="desk-panel-heading" data-home-action="panel-hospital"><span id="desk-hospital-title">Hospital</span><small id="desk-hospital-count"></small><span aria-hidden="true">↗</span></button><div id="desk-hospital-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Birds needing care; scroll independently"></div></section>
         <section class="desk-panel desk-panel-completed" aria-labelledby="desk-completed-title"><button type="button" class="desk-panel-heading" data-home-action="panel-completed"><span id="desk-completed-title">Completed</span><small id="desk-completed-count"></small><span aria-hidden="true">↗</span></button><div id="desk-completed-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Not yet checked; scroll independently"></div></section>
-        <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Can build</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Village & town projects; scroll independently"></div></section>
+        <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Your villages</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Your villages and their building status; scroll independently"></div></section>
       </div>
       <details id="scanHomeSession" class="scan-home-tools"><summary>Scan results & settings</summary><div class="desk-session-body"><button type="button" id="deskSessionStop" hidden>Stop listening</button>
       <!-- Session tools remain below the prominent home scanning controls. -->
@@ -5578,8 +5582,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=desk-panels-v396-20260913"></script>
-<script src="scan_home.js?v=desk-panels-v396-20260913"></script>
+<script src="scan_home_core.js?v=desk-composition-v397-20260913"></script>
+<script src="scan_home.js?v=desk-composition-v397-20260913"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -23083,9 +23087,8 @@ function scanHomeBuildOpportunities() {
       if(wallet.coins<cost.coins||playerBranches()<cost.branches||playerStone()<cost.stone)continue;
       const tier=villageBuildingTier(building,Math.max(1,level+1));
       rows.push({id:'build-'+target.seed+'-'+building.id,seed:target.seed>>>0,building:building.id,icon:tier.icon||building.icon,name:(level?'Upgrade ':'')+tier.name,place:town?townDisplayName(town):rec.name,detail:[cost.coins+' coins',cost.branches+' timber',cost.stone?cost.stone+' stone':null].filter(Boolean).join(' · ')});
-      if(++shown>=2||rows.length>=6)break;
+      if(++shown>=2)break;
     }
-    if(rows.length>=6)break;
   }
   return rows;
 }
@@ -23098,7 +23101,13 @@ function scanHomeDeskSnapshot() {
   const completed=(gameState.completionNotices||[]).filter(n=>n&&n.id&&['empire-building','academy-building'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
   const loadout=gameState.inventory?.equipment?.["@player"]||{};
   const equipment=L.GEAR_SLOTS.map(slot=>{const item=L.gearById(loadout[slot]);return{slot,id:item?.id,name:item?.label,art:item?GEAR_ART_ROOT+encodeURIComponent(item.id)+".webp":null,icon:item?.icon};});
-  return {stores,kitchen,training,hospital,completed,equipment};
+  const villageDesk=empireVillages().map(rec=>{
+    const constructions=rec.economy?.constructions||[],waiting=constructions.filter(c=>c.readyToOpenAt),building=constructions.filter(c=>!c.readyToOpenAt);
+    const notices=(gameState.completionNotices||[]).filter(n=>n.kind==='empire-building'&&Number(n.target?.wardSeed??n.target?.seed)===Number(rec.seed));
+    return {seed:rec.seed>>>0,name:rec.name,waiting:waiting.length,underway:building.length,finished:notices.length,
+      pendingNames:waiting.map(c=>EMPIRE_BUILDING_INDEX[c.id]?.name||'Building'),underwayNames:building.map(c=>EMPIRE_BUILDING_INDEX[c.id]?.name||'Building')};
+  });
+  return {stores,kitchen,training,hospital,completed,equipment,villageDesk};
 }
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
@@ -43645,7 +43654,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'desk-panels-v396-20260913';
+const BURBZ_BUILD = 'desk-composition-v397-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
