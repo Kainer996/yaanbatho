@@ -1,0 +1,13 @@
+# Living field desk
+
+Original generated artwork for Burbz / Alderwing, created with the built-in image generator at the user's request. Production image: `living-field-desk.webp`, 1536 × 1024, 324572 bytes. The UI, stats and actions are live HTML over the painting. Gentle daylight is CSS-only and respects reduced motion. Same-origin delivery; no runtime image generation or external art dependency.
+
+The original PNG is retained with the release evidence as `world-visits-v395/art/alderwing-field-desk-original.png`. WebP conversion changed only the encoding.
+
+## Final generation prompt
+
+Use case: stylized-concept. Asset type: production background artwork for the main Home / field desk of Burbz, a warm magical bird-themed adventure game set in Alderwing. Create a polished wide landscape illustration, approximately 3:2. Show a beautiful well-used dark walnut keeper's desk from the seated player's viewpoint, looking slightly down across the tabletop. The desk is the main subject and occupies the lower two thirds: richly painted wood grain, warm aged brass trim, a partly unrolled hand-drawn woodland map with no legible writing, a closed leather field journal, an inkwell with a small natural feather quill, a little candle lantern with a restrained warm glow. Keep these props grouped mainly to the right and at the back edge; broad calm dark wood across the left and middle must remain uncluttered for readable live game UI laid over it. In the upper third, through a timber-framed opening, a gentle soft-focus view of Alderwing's green hills, a small lake, leafy woodland and warm light. Mood: inviting, alive, intimate, thoughtful, beautiful without visual clutter. Style: premium hand-painted storybook game environment with crisp ink-like contours, tactile materials and atmospheric painterly depth, compatible with charcoal-and-antique-gold game controls and moss green outdoor villages. Restrained saturated greens, deep brown charcoal shadows, soft amber daylight. No characters or birds; the existing animated Merlin will be rendered separately. No typography, words, logos, watermarks, buttons, UI, screenshots, or blank rectangular panels. Deliver one continuous finished illustration.
+
+## Design reference
+
+Reviewed Weather Factory's official [Book of Hours interface discussion](https://weatherfactory.biz/a-peep-into-futurity/) and [early draft interface notes](https://weatherfactory.biz/boh-the-early-draft-edition/). These describe a desk as a meaningful interaction point and objects shared between setting and UI. This release applies that general idea with original Alderwing artwork, readable live controls and compact notes; no game artwork was copied.
