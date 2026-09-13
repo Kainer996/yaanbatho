@@ -94,22 +94,24 @@ def test_craft_time_is_exported_and_the_forge_starts_a_job_instead_of_granting_g
 
     craft = function_source("craftGear")
     # Costs are still paid up front...
-    assert "addCoins(-recipe.coins)" in craft
+    assert "gameState.player.coins-=recipe.coins" in craft
     # ...but the piece itself goes on the anvil with a real clock.
     assert "craftTimeMs" in craft and "endMs" in craft
     # The old instant grant is gone from the craft path.
     assert "gameState.inventory.gear[gearId] = (gameState.inventory.gear[gearId] || 0) + 1" not in craft
 
     collect = function_source("collectForgeJob")
-    assert "gameState.inventory.gear[job.gearId]" in collect
-    assert "updateQuestProgress('gear_crafted', 1)" in collect
+    assert "gameState.inventory.gear:gameState.inventory.items" in collect
+    assert "bag[output.id]=count+output.qty" in collect
+    assert "if(output.kind==='gear')updateQuestProgress('gear_crafted',1,effects)" in collect
     # Nothing is collectable before its clock runs out.
     assert "Date.now() < Number(job.endMs)" in collect
 
     # Pulling a commission refunds everything, since no piece was finished.
     cancel = function_source("cancelForgeJob")
-    assert "addCoins(recipe.coins)" in cancel
-    assert "gameState.inventory.items[matId]" in cancel
+    assert "gameState.player.coins+=recipe.coins" in cancel
+    assert "bag[id]=have+n" in cancel
+    assert all("forgeCommitChange" in code for code in [craft,collect,cancel])
 
 
 def test_forge_jobs_survive_a_reload_and_are_healed_when_malformed():
@@ -253,7 +255,7 @@ def test_every_crafting_material_in_the_game_has_a_quest_that_fetches_it():
         const A = require('./academy_treehouse_core.js');
         const L = require('./loot_crafting_core.js');
         const templates = A.getQuestTemplates();
-        const rows = Object.values(L.MATERIALS).map(m => {
+        const rows = Object.values(L.MATERIALS).filter(m => !m.craftOnly).map(m => {
           const quests = templates.filter(t => (t.items || []).includes(m.id));
           return {
             id: m.id, rarity: m.rarity,

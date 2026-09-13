@@ -8,7 +8,7 @@ function fixture(){
  c.localStorage={setItem:(key,value)=>{if(c.fail)throw Error('Quota');c.saved=JSON.parse(value);}};
  c.updateQuestProgress=(type,n,effects)=>{c.gameState.quests.trade.progress+=n;effects?.push(()=>c.toasts.push('quest'));};c.ensureForgeJobs=()=>c.gameState.forgeJobs;
  vm.createContext(c);
- vm.runInContext(['snapshotGameState','restoreStateTree','restoreGameStateSnapshot','durableSaveState','saveState','addCoins','collectForgeJob'].map(fn).join('\n')+'\n'+html.slice(html.indexOf('function storesSellRarity('),html.indexOf('function renderProjectManagerOfficePanelHTML(')),c);
+ vm.runInContext(['snapshotGameState','restoreStateTree','restoreGameStateSnapshot','durableSaveState','saveState','addCoins','forgeCommitChange','collectForgeJob'].map(fn).join('\n')+'\n'+html.slice(html.indexOf('function storesSellRarity('),html.indexOf('function renderProjectManagerOfficePanelHTML(')),c);
  return c;
 }
 let groups=0;const check=(name,f)=>{f();groups++;console.log('PASS',name);};
@@ -46,5 +46,13 @@ check('Failed writes restore purse, items, quest progress and existing object id
 });
 check('Market building gate, protected equipped pieces and item-category validation stay enforced',()=>{
  const c=fixture(),before=JSON.stringify(c.gameState);c.allowed=false;assert(!c.magpieMarketBuy('oak_twig',1));assert(!c.magpieMarketSell('oak_twig',1));assert.deepEqual(JSON.parse(JSON.stringify(c.gameState)),JSON.parse(before));c.allowed=true;assert(!c.magpieMarketSell('equipped-only',1,'gear'));assert(!c.magpieMarketSell('oak_twig',1,'keepsake'));assert.deepEqual(JSON.parse(JSON.stringify(c.gameState)),JSON.parse(before));
+});
+check('Crafted arrows are sold from the real Stores bag, never bought or duplicated by failed trades',()=>{
+ const c=fixture();c.gameState.inventory.items.reed_arrow=6;
+ assert(!c.magpieMarketStock().some(m=>m.id==='reed_arrow'));
+ assert(!c.magpieMarketBuy('reed_arrow',1));
+ assert(c.magpieMarketSellStock().some(m=>m.id==='reed_arrow'&&m.kind==='material'));
+ assert(c.magpieMarketSell('reed_arrow',3));assert.equal(c.saved.inventory.items.reed_arrow,3);assert.equal(c.saved.player.coins,1006);
+ const before=JSON.stringify(c.gameState);c.fail=true;assert(!c.magpieMarketSell('reed_arrow','all'));assert.equal(JSON.stringify(c.gameState),before);
 });
 console.log(groups+' marketplace regression groups passed');

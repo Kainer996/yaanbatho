@@ -4487,7 +4487,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="scan_home.css?v=living-desk-v395-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
-<link rel="stylesheet" href="player_equipment.css?v=continuous-world-v391-20260910">
+<link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
 </head>
 <body class="woodland-ui">
 <script>
@@ -5552,15 +5552,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=continuous-world-v391-20260910"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="loot_crafting_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="loot_crafting_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="player_equipment_core.js?v=continuous-world-v391-20260910"></script>
-<script src="player_equipment.js?v=continuous-world-v391-20260910"></script>
-<script src="first_person_spell_core.js?v=continuous-world-v391-20260910"></script>
+<script src="player_equipment.js?v=wilderness-birds-v395-20260913"></script>
+<script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="first_person_cast_controls.js?v=continuous-world-v391-20260910"></script>
-<script src="wilderness_combat_core.js?v=continuous-world-v391-20260910"></script>
-<script src="wilderness_combat.js?v=continuous-world-v391-20260910"></script>
+<script src="wilderness_combat_core.js?v=wilderness-birds-v395-20260913"></script>
+<script src="wilderness_birds.js?v=wilderness-birds-v395-20260913"></script>
+<script src="wilderness_combat.js?v=wilderness-birds-v395-20260913"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
-<link rel="stylesheet" href="wilderness_combat.css?v=continuous-world-v391-20260910">
+<link rel="stylesheet" href="wilderness_combat.css?v=wilderness-birds-v395-20260913">
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -6855,7 +6856,7 @@ const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0, stone: 0, tributeCollections: 0 },
   flock: [],
   discoveredSpecies: {},
-  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
+  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 0, tonic_of_vigour: 1 }, equipment: { '@player': { spell: 'ember_wisp' } }, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
   dietBadges: {}, // speciesKey → count of Field-Perfect meals served (Kitchen & Pantry)
   kitchenNotes: {}, // speciesKey → { perfect:[families], refused:[families] } — the player's own field notes
   kitchenStarterLarderVersion: 1, // One-time documented starter stock for the reachable Kitchen/Pantry proof.
@@ -22297,7 +22298,7 @@ function lootCore() { if (!window.BurbzLootCore) throw new Error('BurbzLootCore 
 const GEAR_ART_ROOT = 'assets/gear/';
 function gearIconHTML(item) {
   const fallback = escapeHtml((item && item.icon) || '🛡️');
-  if (!item || !item.id) return fallback;
+  if (!item || !item.id || item.kind==='bow' || item.kind==='ammo') return fallback;
   return '<span class="gear-icon-stack" aria-hidden="true"><span class="gear-icon-fallback">' + fallback + '</span>' +
     '<img class="gear-art" src="' + GEAR_ART_ROOT + encodeURIComponent(item.id) + '.webp" alt="" loading="lazy" draggable="false" ' +
     'onload="this.previousElementSibling.style.opacity=0" onerror="this.remove()"></span>';
@@ -29930,7 +29931,7 @@ function walkingCombatAdapter() {
     profile:{name:gameState.player.name,level:gameState.player.level},
     settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
     stored:structuredClone(gameState.wildernessCombat || null),
-    kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel)};},
+    kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),ammo:{reed_arrow:gameState.inventory.items?.reed_arrow??0}};},
     save:(record,extra)=>{
       if(identity!==gameState)throw Error('Your save changed. Reopen walking.');
       const snapshot=snapshotGameState();
@@ -29940,6 +29941,10 @@ function walkingCombatAdapter() {
           if(!Number.isSafeInteger(bag[id]||0)||(bag[id]||0)<0)throw Error('The potion count is invalid.');
           delete loadout.potion;
           if((bag[id]||0)>0){bag[id]--;loadout.potion=id;}
+        }
+        if(extra?.ammo){const weapon=lootCore().gearById(gameState.inventory.equipment?.['@player']?.weapon),bag=gameState.inventory.items,id=extra.ammo;
+          if(weapon?.id!==extra.weapon||weapon?.attack?.ammo!==id||!Number.isSafeInteger(bag?.[id])||bag[id]<1)throw Error('No arrow available for this bow.');
+          bag[id]--;
         }
         gameState.wildernessCombat=structuredClone(record);
         durableSaveState({throwOnFailure:true});return true;
@@ -37840,7 +37845,7 @@ const MAGPIE_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const magpieMarketState = { tab:'buy' };
 
 function magpieMarketStock() {
-  return Object.values(lootCore().MATERIALS || {}).slice().sort((a,b) =>
+  return Object.values(lootCore().MATERIALS || {}).filter(m=>!m.craftOnly).slice().sort((a,b) =>
     MAGPIE_RARITY_ORDER.indexOf(a.rarity)-MAGPIE_RARITY_ORDER.indexOf(b.rarity) || a.label.localeCompare(b.label));
 }
 function magpieMarketDiscount() {
@@ -37853,7 +37858,7 @@ function magpieMarketOwned(id, kind = 'material') {
 }
 function magpieMarketBuyQuote(id, qty, kind = 'material') {
   const item = kind === 'material' ? lootCore().materialById(id) : kind === 'food' ? kitchenIngredientById(id) : null;
-  if (!item || item.id !== id || !Number.isSafeInteger(qty) || qty < 1) return { each:0, qty:0, total:0, afford:0 };
+  if (!item || item.craftOnly || item.id !== id || !Number.isSafeInteger(qty) || qty < 1) return { each:0, qty:0, total:0, afford:0 };
   return lootCore().buyQuote(kind, item.rarity, gameState.player.coins || 0, qty, magpieMarketDiscount());
 }
 function magpieMarketSell(id, qty, kind = 'material') {
@@ -38042,7 +38047,7 @@ function renderStoresLedger() {
   const now = Date.now();
   if (jobs.length) {
     html += '<div class="stores-panel"><div class="stores-panel-title">⚒️ On the anvil</div>' + jobs.map(job => {
-      const item = lootCore().gearById(job.gearId);
+      const item = lootCore().craftableById(job.gearId);
       const done = now >= Number(job.endMs);
       return '<div class="stores-ledger-row"><span class="slr-icon">' + gearIconHTML(item) + '</span>' +
         '<span class="slr-main"><span class="slr-name">' + escapeHtml(item.label) + '</span>' +
@@ -38355,12 +38360,17 @@ function commitEquipmentChange(owner, slot, gearId) {
   return result;
 }
 function playerEquipmentAdapter() {
-  const identity=gameState;
+  const identity=gameState,valid=()=>identity===gameState;
   return {snapshot:()=>window.BurbzPlayerEquipmentCore.snapshot(gameState,lootCore()),change:(slot,id)=>{
-    if(gameState!==identity)return {ok:false,reason:'Your save changed. Reopen the satchel.'};
+    if(!valid())return {ok:false,reason:'Your save changed. Reopen the satchel.'};
     return commitEquipmentChange(window.BurbzPlayerEquipmentCore.PLAYER,slot,id);
-  }};
+  },field:()=>{
+    const L=lootCore(),now=Date.now(),ids=['ember_wisp','reed_bow','reed_arrow'];
+    return {arrows:gameState.inventory.items?.reed_arrow||0,full:forgeQueueIsFull(),recipes:ids.map(id=>{const item=L.craftableById(id),recipe=L.recipeFor(id);return {id,label:item.label,icon:item.icon,qty:recipe.output?.qty||1,coins:recipe.coins,materials:Object.entries(recipe.materials).map(([key,n])=>({label:L.materialById(key).label,need:n,have:gameState.inventory.items?.[key]||0})),seconds:Math.ceil(L.craftTimeMs(id)/1000),ok:L.canCraft(recipe,gameState.inventory.items,gameState.player.coins).ok};}),jobs:ensureForgeJobs().filter(j=>ids.includes(j.gearId)).map(j=>({id:j.id,label:L.craftableById(j.gearId).label,seconds:Math.max(0,Math.ceil((j.endMs-now)/1000))}))};
+  },craft:id=>valid()&&['ember_wisp','reed_bow','reed_arrow'].includes(id)?craftGear(id):false,
+    collect:id=>valid()?collectForgeJob(id):false,cancel:id=>valid()?cancelForgeJob(id):false};
 }
+
 function equipItemOnBird(birdId, slot, gearId) {
   const result=commitEquipmentChange(birdId,slot,gearId);
   if(!result.ok){showToast(result.reason);return false;}
@@ -38395,7 +38405,7 @@ function ensureForgeJobs() {
   if (!Array.isArray(gameState.forgeJobs)) gameState.forgeJobs = [];
   // Heal jobs written by older builds or half-saved mid-write, so one bad
   // entry can never blank the Craft tab.
-  gameState.forgeJobs = gameState.forgeJobs.filter(j => j && typeof j === 'object' && j.gearId && lootCore().gearById(j.gearId));
+  gameState.forgeJobs.splice(0,gameState.forgeJobs.length,...gameState.forgeJobs.filter(j => j && typeof j === 'object' && j.gearId && lootCore().craftableById(j.gearId)));
   gameState.forgeJobs.forEach((j, i) => {
     if (!j.id) j.id = 'forge_' + j.gearId + '_' + i + '_' + Date.now();
     if (!Number.isFinite(Number(j.startMs))) j.startMs = Date.now();
@@ -38424,25 +38434,33 @@ function forgeQueueIsFull() { return ensureForgeJobs().length >= lootCore().FORG
 
 // Collect one finished commission. Ready jobs are never auto-claimed: the
 // player taps the glowing anvil, exactly like a city builder.
+function forgeCommitChange(action) {
+  const snapshot=snapshotGameState(),effects=[];
+  try { action(effects);if(!Number.isSafeInteger(gameState.player.coins)||gameState.player.coins<0)throw Error('Invalid purse');durableSaveState({throwOnFailure:true}); }
+  catch(error){restoreGameStateSnapshot(snapshot);showToast('Could not save the craft. Your coins, materials and anvil are unchanged.');return false;}
+  effects.forEach(effect=>{try{effect();}catch(_){}});return true;
+}
 function collectForgeJob(jobId) {
   const jobs = ensureForgeJobs();
   const job = jobs.find(j => j.id === jobId);
   if (!job) return;
   if (Date.now() < Number(job.endMs)) { showToast('⚒️ Still on the anvil — ' + formatForgeDuration(Number(job.endMs) - Date.now()) + ' to go.'); return; }
-  const item = lootCore().gearById(job.gearId);
-  gameState.forgeJobs = jobs.filter(j => j.id !== jobId);
-  gameState.inventory.gear[job.gearId] = (gameState.inventory.gear[job.gearId] || 0) + 1;
-  // Timed crafting landed after the diary was written: the piece is real when
-  // it leaves the anvil, not when the commission is placed, so log it here.
-  if (typeof logDiary === 'function') logDiary('craft', { item: item.label });
-  updateQuestProgress('gear_crafted', 1);
-  saveState();
+  const item = lootCore().craftableById(job.gearId);
+  const output=lootCore().recipeFor(job.gearId).output||{kind:'gear',id:job.gearId,qty:1};
+  if(!forgeCommitChange(effects=>{
+    const bag=output.kind==='gear'?gameState.inventory.gear:gameState.inventory.items,count=bag[output.id]??0;
+    if(!Number.isSafeInteger(count)||count<0||!Number.isSafeInteger(count+output.qty))throw Error('Invalid crafted count');
+    jobs.splice(0,jobs.length,...jobs.filter(j=>j.id!==jobId));bag[output.id]=count+output.qty;
+    if(output.kind==='gear')updateQuestProgress('gear_crafted',1,effects);
+    if(typeof logDiary==='function')logDiary('craft',{item:item.label});
+  }))return false;
   updateHeader();
   SFX.victory();
   vibrate(40);
   showToast('⚒️ Forged ' + item.icon + ' ' + item.label + '!');
   renderForge();
   renderInventory();
+  return true;
 }
 // Pull a commission off the anvil. The smith has not finished the piece, so
 // every scrap of material and every coin goes straight back to the player.
@@ -38452,17 +38470,17 @@ function cancelForgeJob(jobId) {
   const job = jobs.find(j => j.id === jobId);
   if (!job) return;
   const recipe = L.recipeFor(job.gearId);
-  const item = L.gearById(job.gearId);
-  gameState.forgeJobs = jobs.filter(j => j.id !== jobId);
-  if (recipe) {
-    addCoins(recipe.coins);
-    Object.entries(recipe.materials).forEach(([matId, qty]) => { gameState.inventory.items[matId] = (gameState.inventory.items[matId] || 0) + qty; });
-  }
-  saveState();
+  const item = L.craftableById(job.gearId);
+  if(!forgeCommitChange(()=>{
+    if(!recipe)throw Error('Unknown recipe');
+    jobs.splice(0,jobs.length,...jobs.filter(j=>j.id!==jobId));gameState.player.coins+=recipe.coins;
+    Object.entries(recipe.materials).forEach(([id,n])=>{const bag=gameState.inventory.items,have=bag[id]??0;if(!Number.isSafeInteger(have)||have<0||!Number.isSafeInteger(have+n))throw Error('Invalid refund');bag[id]=have+n;});
+  }))return false;
   updateHeader();
   SFX.tap();
   showToast('↩️ ' + (item ? item.label : 'Commission') + ' pulled off the anvil — materials and coins refunded.');
   renderForge();
+  return true;
 }
 // 1s ticker that keeps anvil countdowns live while the Craft tab is open, and
 // retires itself the moment nothing is counting down.
@@ -38494,7 +38512,7 @@ function renderForgeQueue() {
   const now = Date.now();
   const slots = [];
   jobs.slice(0, L.FORGE_MAX_JOBS).forEach(job => {
-    const item = L.gearById(job.gearId);
+    const item = L.craftableById(job.gearId);
     const color = L.RARITY_META[item.rarity].color;
     const done = now >= Number(job.endMs);
     const pct = forgeJobProgressPct(job, now);
@@ -38579,7 +38597,8 @@ function renderForgeCraft(body) {
   const queueFull = forgeQueueIsFull();
   const forgeLv = burbzForgeLevel();
   const groups = [
-    { label:'🗡️ Weapons — talons & wands', items:L.gearBySlot('weapon') },
+    { label:'🗡️ Weapons — talons, wands & bows', items:L.gearBySlot('weapon') },
+    { label:'🏹 Ammunition — six arrows per bundle', items:[L.materialById('reed_arrow')] },
     { label:'🛡️ Armour', items:L.gearBySlot('armour') },
     { label:'💍 Enhancements', items:L.gearBySlot('trinket').filter(item => item.kind !== 'satchel') },
     { label:'🎒 Satchels — carry more quest loot', items:L.gearBySlot('trinket').filter(item => item.kind === 'satchel') },
@@ -38626,7 +38645,7 @@ function renderForgeCraft(body) {
 function craftGear(gearId) {
   const L = lootCore();
   const recipe = L.recipeFor(gearId);
-  const item = L.gearById(gearId);
+  const item = L.craftableById(gearId);
   if (!recipe || !item) return;
   if (!L.canForgeAtLevel(item, burbzForgeLevel())) { showToast('⚒️ ' + item.label + ' needs Forge Lv ' + L.minForgeLevelForRarity(item.rarity) + ' — upgrade the forge first.'); return; }
   const stock = gameState.inventory.items;
@@ -38634,19 +38653,18 @@ function craftGear(gearId) {
   if ((gameState.player.coins || 0) < recipe.coins) { showResourceQuestPrompt('coins', recipe.coins, 'Forging ' + item.label); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   if (forgeQueueIsFull()) { showToast('⚒️ Every anvil is busy — collect a finished piece first.'); return; }
-  addCoins(-recipe.coins);
-  Object.keys(recipe.materials).forEach(matId => { stock[matId] -= recipe.materials[matId]; if (stock[matId] <= 0) delete stock[matId]; });
-  // The smith takes the commission; the piece itself takes real time, and the
-  // mightier the item the longer the hammering.
-  const now = Date.now();
-  const craftMs = L.craftTimeMs(item);
-  ensureForgeJobs().push({ id: 'forge_' + gearId + '_' + now + '_' + Math.floor(Math.random() * 1000), gearId: gearId, startMs: now, endMs: now + craftMs });
-  saveState();
+  const now=Date.now(),craftMs=L.craftTimeMs(item);
+  if(!forgeCommitChange(()=>{
+    gameState.player.coins-=recipe.coins;
+    Object.keys(recipe.materials).forEach(id=>{stock[id]-=recipe.materials[id];if(stock[id]===0)delete stock[id];});
+    ensureForgeJobs().push({id:'forge_'+gearId+'_'+now+'_'+Math.floor(Math.random()*1000000),gearId,startMs:now,endMs:now+craftMs});
+  }))return false;
   updateHeader();
   SFX.questComplete();
   vibrate(30);
   showToast('⚒️ ' + item.icon + ' ' + item.label + ' is on the anvil — ready in ' + formatForgeDuration(craftMs) + '.');
   renderForge();
+  return true;
 }
 
 function forgeTransmute(fromId, toId) {

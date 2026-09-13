@@ -16,8 +16,9 @@ def test_offline_dependencies_are_registered_in_every_worker_list_and_updater():
     walk = (BASE / 'village_walk.js').read_text()
     for name in ['player_equipment_core.js', 'player_equipment.js', 'player_equipment.css']:
         assert (BASE / name).is_file()
-        assert f'{name}?v={PIN}' in html
-        assert worker.count(f"'./{name}?v={PIN}'") == 3
+        pin = PIN if name == 'player_equipment_core.js' else 'wilderness-birds-v395-20260913'
+        assert f'{name}?v={pin}' in html
+        assert worker.count(f"'./{name}?v={pin}'") == 3
         assert f'"{name}"' in updater
     for name in ['first_person_map.js', 'first_person_hud.js', 'first_person_hud.css']:
         pin = 'landscape-atlas-v394b-20260913' if name == 'first_person_hud.css' else HUD_PIN
