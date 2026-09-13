@@ -5,7 +5,7 @@ from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
 HOME_CORE_RELEASE='desk-composition-v397-20260913'
-CURRENT_BUILD = 'home-equipment-v398-20260913'
+CURRENT_BUILD = 'home-followup-v399-20260913'
 def test_home_state_is_honest_and_gated():
     result=subprocess.run(['node',str(ROOT/'tests/test_scan_home_v378.cjs')],text=True,capture_output=True)
     assert result.returncode==0,result.stdout+result.stderr
@@ -15,7 +15,7 @@ def test_home_runtime_and_art_install_together():
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
     assert f"const BURBZ_BUILD = '{CURRENT_BUILD}';" in html
     assert re.search(r"const BURBZ_CACHE = '([^']+)';",sw)[1].endswith(CURRENT_BUILD)
-    for file in ['scan_home.css','scan_home_core.js','scan_home.js','assets/home-v395/living-field-desk.webp']:
+    for file in ['scan_home.css','scan_home_core.js','scan_home.js','assets/home-v395/living-field-desk.webp','assets/home-v399/warrior-equipment.webp']:
         url=file if file.startswith('assets/') else file+'?v='+(HOME_CORE_RELEASE if file=='scan_home_core.js' else CURRENT_BUILD)
         assert url in html
         assert f'"{file}"' in updater
@@ -25,3 +25,10 @@ def test_home_runtime_and_art_install_together():
     image=Image.open(ROOT/'assets/home-v395/living-field-desk.webp')
     assert image.size==(1536,1024)
     assert (ROOT/'assets/home-v395/living-field-desk.webp').stat().st_size<400000
+
+
+def test_equipment_warrior_keeps_real_transparency_and_bounded_size():
+    image=Image.open(ROOT/'assets/home-v399/warrior-equipment.webp')
+    assert image.mode=='RGBA' and image.size==(256,384)
+    assert image.getextrema()[3][0]==0
+    assert (ROOT/'assets/home-v399/warrior-equipment.webp').stat().st_size<100000
