@@ -4484,7 +4484,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=living-desk-v395-20260913">
+<link rel="stylesheet" href="scan_home.css?v=desk-panels-v396-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
@@ -5578,8 +5578,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=living-desk-v395-20260913"></script>
-<script src="scan_home.js?v=living-desk-v395-20260913"></script>
+<script src="scan_home_core.js?v=desk-panels-v396-20260913"></script>
+<script src="scan_home.js?v=desk-panels-v396-20260913"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -23092,8 +23092,8 @@ function scanHomeBuildOpportunities() {
 function scanHomeDeskSnapshot() {
   const L=lootCore(),now=Date.now(),flock=gameState.flock||[];
   const stores=Object.entries(gameState.inventory?.gear||{}).map(([id,qty])=>({item:L.gearById(id),qty})).filter(({item,qty})=>item&&['weapon','armour'].includes(item.slot)&&Number.isSafeInteger(qty)&&qty>0).map(({item,qty})=>({id:item.id,name:item.label,slot:item.slot,count:qty,art:GEAR_ART_ROOT+encodeURIComponent(item.id)+'.webp',icon:item.icon}));
-  const kitchen=kitchenRosterEntries().map(entry=>{const care=entry.merlin?gameState.merlinCare:entry.bird?.care,status=dietHungerCore()?.hungerStatusForCare(care,now);return status?{id:entry.key,name:entry.name,art:getBirdArtUrl(entry.artBird),hunger:status.hunger,level:status.level,label:status.label,away:!!entry.bird&&birdHasActiveExpedition(entry.bird.id)}:null;}).filter(row=>row&&row.level!=='fed').sort((a,b)=>b.hunger-a.hunger);
-  const training=(gameState.birdTrainingSessions||[]).filter(s=>s&&s.id).map(s=>window.BurbzAcademyCore?.advanceTrainingSession?BurbzAcademyCore.advanceTrainingSession(s,now):s).filter(s=>!['claimed','cancelled','failed'].includes(s.status)).map(s=>({id:s.id,name:s.birdName||'Bird',detail:s.label||'Training',ready:s.status==='complete',progress:s.progressPct??0,remaining:Math.max(0,s.endMs-now)}));
+  const kitchen=kitchenRosterEntries().map(entry=>{const care=entry.merlin?gameState.merlinCare:entry.bird?.care,status=dietHungerCore()?.hungerStatusForCare(care,now);return status?{id:entry.key,name:entry.name,art:getBirdArtUrl(entry.artBird),hunger:Math.round(status.hunger),level:status.level,label:status.label,away:!!entry.bird&&birdHasActiveExpedition(entry.bird.id)}:null;}).filter(row=>row&&row.level!=='fed').sort((a,b)=>b.hunger-a.hunger);
+  const training=(gameState.birdTrainingSessions||[]).filter(s=>s&&s.id).map(s=>window.BurbzAcademyCore?.advanceTrainingSession?BurbzAcademyCore.advanceTrainingSession(s,now):s).filter(s=>!['claimed','cancelled','failed'].includes(s.status)).map(s=>({id:s.id,name:s.birdName||'Bird',detail:s.label||'Training',ready:s.status==='complete',progress:Math.round(s.progressPct??0),remaining:Math.ceil(Math.max(0,s.endMs-now)/60000)*60000}));
   const hospital=flock.filter(b=>b&&b.id&&Number.isFinite(b.hp)&&Number.isFinite(b.maxHp)&&b.hp<b.maxHp).map(b=>({id:b.id,name:birdDisplayName(b),art:getBirdArtUrl(b),hp:Math.max(0,b.hp),maxHp:b.maxHp,admitted:b.academy?.room==='hospital'})).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp);
   const completed=(gameState.completionNotices||[]).filter(n=>n&&n.id&&['empire-building','academy-building'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
   const loadout=gameState.inventory?.equipment?.["@player"]||{};
@@ -23156,7 +23156,7 @@ function openScanHomeTarget(target) {
 let deskEquipmentSession=null;
 function closeDeskPlayerEquipment() {
   if(!deskEquipmentSession)return false;
-  const {dialog,controller,sheet,focus}=deskEquipmentSession;deskEquipmentSession=null;
+  const {dialog,controller,sheet,focus,timer}=deskEquipmentSession;deskEquipmentSession=null;clearInterval(timer);
   controller.abort();sheet?.dispose();if(dialog.open)dialog.close();dialog.remove();
   renderScanHome();if(focus?.isConnected)focus.focus({preventScroll:true});return true;
 }
@@ -23167,7 +23167,8 @@ function openDeskPlayerEquipment(slot) {
   dialog.innerHTML='<header><strong>Player inventory</strong><button type="button" class="desk-kit-close">Close ×</button></header><div class="desk-kit-body"></div>';
   document.body.append(dialog);
   const adapter=playerEquipmentAdapter(),sheet=BurbzPlayerEquipment.mount(dialog.querySelector('.desk-kit-body'),{...adapter,change:(...args)=>{const result=adapter.change(...args);renderScanHome();return result;}},controller.signal);
-  deskEquipmentSession={dialog,controller,sheet,focus};
+  const timer=setInterval(()=>{if(document.visibilityState!=='hidden')sheet.update();},1000);
+  deskEquipmentSession={dialog,controller,sheet,focus,timer};
   dialog.querySelector('.desk-kit-close').addEventListener('click',closeDeskPlayerEquipment,{signal:controller.signal});
   dialog.addEventListener('cancel',e=>{e.preventDefault();closeDeskPlayerEquipment();},{signal:controller.signal});
   dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDeskPlayerEquipment();}},{signal:controller.signal});
@@ -43644,7 +43645,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-desk-v395-20260913';
+const BURBZ_BUILD = 'desk-panels-v396-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44627,6 +44628,7 @@ function recordScreenTrail(from) {
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
   if(closeDeskPlayerEquipment())return true;
+  if(currentScreen==='scan'&&$('birdCropOverlay')?.classList.contains('show')){photoIdCancel?.();closeBirdCropper();return true;}
   const scanSession=$('scanHomeSession');if(currentScreen==='scan'&&scanSession?.open){scanSession.open=false;return true;}
   if (closeResourceQuestPrompt()) return true;
   if (window.BurbzGeographicHomePicker?.close()) return true;

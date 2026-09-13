@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-RELEASE='living-desk-v395-20260913'
-CURRENT_BUILD = 'living-desk-v395-20260913'
+RELEASE='desk-panels-v396-20260913'
+CURRENT_BUILD = 'desk-panels-v396-20260913'
 def test_home_state_is_honest_and_gated():
     result=subprocess.run(['node',str(ROOT/'tests/test_scan_home_v378.cjs')],text=True,capture_output=True)
     assert result.returncode==0,result.stdout+result.stderr

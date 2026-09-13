@@ -32,7 +32,7 @@
    section.addEventListener('click',e=>{if(e.target.closest('#captureBtn,#scanImageBtn'))session.open=true;});
    session?.addEventListener('toggle',()=>{if(!session.open&&section.classList.contains('camera-mode'))options.closeSession?.();});
    const stop=document.getElementById('deskSessionStop'),syncStop=()=>{if(stop)stop.hidden=!options.listening?.();};stop?.addEventListener('click',()=>{options.stopListening?.();syncStop();});new MutationObserver(syncStop).observe(document.getElementById('scanBtn'),{childList:true,subtree:true});syncStop();
-   section.addEventListener('keydown',e=>{if(e.key==='Escape'&&session?.open){session.open=false;session.querySelector('summary')?.focus();e.stopPropagation();}});
+   section.addEventListener('keydown',e=>{if(e.key==='Escape'&&session?.open&&!document.getElementById('birdCropOverlay')?.classList.contains('show')){session.open=false;session.querySelector('summary')?.focus();e.stopPropagation();}});
 }}
  root.BurbzScanHome={bind,render};
 })(globalThis);
