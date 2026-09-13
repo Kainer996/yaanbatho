@@ -1,6 +1,7 @@
 """Real households, authoritative work allocation, navigation and planted paws."""
 import json
 import subprocess
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -111,7 +112,9 @@ def test_changed_runtime_is_required_before_the_updated_shell_can_activate():
     sw = (ROOT / 'sw.js').read_text(encoding='utf-8')
     required = sw.split('const BURBZ_INSTALL_REQUIRED = [', 1)[1].split('];', 1)[0]
     for name in ('audio_core', 'settlement_life_core', 'settlement_models'):
-        assert f'./{name}.js?v=little-folk-residents-v350-20260905' in required
+        html = (ROOT / 'index.html').read_text()
+        url = re.search(re.escape(name) + r'\.js\?v=[A-Za-z0-9_.-]+', html)[0]
+        assert f'./{url}' in required
 
 
 def test_dog_stance_is_planted_and_joint_solution_reaches_the_paw():

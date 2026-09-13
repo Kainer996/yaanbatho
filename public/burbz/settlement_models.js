@@ -2,18 +2,20 @@
 (function(root){
   'use strict';
   const COLOURS={wood:0x68462f,trim:0x49352a,stone:0xaca58e,plaster:0xe6d5ac,roof:0x627f77,glass:0xffd28a,soil:0x77533b};
+  const primitiveCaches=new WeakMap();
+  function primitive(T,key,make){let cache=primitiveCaches.get(T);if(!cache){cache=new Map();primitiveCaches.set(T,cache);}if(cache.has(key))return cache.get(key);const source=make(),geo=source.index?source.toNonIndexed():source;if(geo!==source)source.dispose();geo.deleteAttribute('uv');if(cache.size>=64){const oldest=cache.keys().next().value;cache.get(oldest).dispose();cache.delete(oldest);}cache.set(key,geo);return geo;}
   function batch(T){
     const parts=[],lit=[];
-    function add(geo,color,pos=[0,0,0],rot=[0,0,0],scale=[1,1,1],glow=false){
+    function add(geo,color,pos=[0,0,0],rot=[0,0,0],scale=[1,1,1],glow=false,shared=false){
       const matrix=new T.Matrix4().compose(new T.Vector3(...pos),new T.Quaternion().setFromEuler(new T.Euler(...rot)),new T.Vector3(...scale));
-      let g=geo.index?geo.toNonIndexed():geo;g.applyMatrix4(matrix);
+      let g=geo.index?geo.toNonIndexed():shared?geo.clone():geo;g.applyMatrix4(matrix);
       const c=new T.Color(color),colors=new Float32Array(g.attributes.position.count*3);
       for(let i=0;i<colors.length;i+=3){colors[i]=c.r;colors[i+1]=c.g;colors[i+2]=c.b;}g.setAttribute('color',new T.BufferAttribute(colors,3));
-      (glow?lit:parts).push(g);if(g!==geo)geo.dispose();return g;
+      (glow?lit:parts).push(g);if(g!==geo&&!shared)geo.dispose();return g;
     }
-    function box(w,h,d,x,y,z,c,rot=[0,0,0]){add(new T.BoxGeometry(w,h,d),c,[x,y,z],rot);}
-    function cylinder(r1,r2,h,x,y,z,c,rot=[0,0,0],segments=10){add(new T.CylinderGeometry(r1,r2,h,segments),c,[x,y,z],rot);}
-    function sphere(r,x,y,z,c,scale=[1,1,1]){add(new T.SphereGeometry(r,8,6),c,[x,y,z],[0,0,0],scale);}
+    function box(w,h,d,x,y,z,c,rot=[0,0,0]){add(primitive(T,"box",()=>new T.BoxGeometry(1,1,1)),c,[x,y,z],rot,[w,h,d],false,true);}
+    function cylinder(r1,r2,h,x,y,z,c,rot=[0,0,0],segments=10){const base=Math.max(r1,r2)||1,ratio1=r1/base,ratio2=r2/base;add(primitive(T,"cylinder:"+ratio1+":"+ratio2+":"+segments,()=>new T.CylinderGeometry(ratio1,ratio2,1,segments)),c,[x,y,z],rot,[base,h,base],false,true);}
+    function sphere(r,x,y,z,c,scale=[1,1,1]){add(primitive(T,"sphere",()=>new T.SphereGeometry(1,8,6)),c,[x,y,z],[0,0,0],scale.map(n=>n*r),false,true);}
     function finish(){const group=new T.Group();for(const [list,glow] of [[parts,false],[lit,true]]){if(!list.length)continue;
       const g=new T.BufferGeometry();for(const field of ['position','normal','color']){const total=list.reduce((n,p)=>n+p.attributes[field].array.length,0),data=new Float32Array(total);let offset=0;for(const p of list){data.set(p.attributes[field].array,offset);offset+=p.attributes[field].array.length;}g.setAttribute(field,new T.BufferAttribute(data,3));}
       const material=glow?new T.MeshBasicMaterial({vertexColors:true}):new T.MeshStandardMaterial({vertexColors:true,roughness:.88,metalness:0});

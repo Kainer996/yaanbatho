@@ -1,14 +1,16 @@
 /* Painted daylight, cached shadows and bounded contact lighting; no ray tracing. */
 (function(root){
   'use strict';
-  function batchNature(T,scene){
+  function* batchNatureSteps(T,scene){
     const buckets=new Map();let sources=0;
     scene.updateMatrixWorld(true);
     // Only direct, stationary tree parts participate. Perched birds stay in
     // their own animated groups; buildings and every selectable actor stay intact.
-    scene.traverse(tree=>{
-      if(!tree.userData.natureTree)return;
+    const trees=[];scene.traverse(tree=>{if(tree.userData.natureTree)trees.push(tree);});
+    for(const tree of trees){
+      yield;
       for(const mesh of tree.children){
+        yield;
         const m=mesh.material;
         if(!mesh.isMesh||!m||Array.isArray(m)||m.map||m.vertexColors||(!m.isMeshLambertMaterial&&!m.userData.blob))continue;
         const p=mesh.getWorldPosition(new T.Vector3()),key=[Math.floor(p.x/16),Math.floor(p.z/16),m.type,m.opacity,m.side].join(':');
@@ -18,8 +20,9 @@
         for(let i=0;i<colors.length;i+=3){colors[i]=m.color.r;colors[i+1]=m.color.g;colors[i+2]=m.color.b;}
         geo.setAttribute('color',new T.BufferAttribute(colors,3));bucket.parts.push(geo);bucket.owners.push(tree);mesh.visible=false;sources++;
       }
-    });
+    }
     for(const bucket of buckets.values()){
+      yield;
       const geo=new T.BufferGeometry();
       for(const field of ['position','normal','color']){const data=new Float32Array(bucket.parts.reduce((n,g)=>n+g.attributes[field].array.length,0));let offset=0;for(const g of bucket.parts){data.set(g.attributes[field].array,offset);offset+=g.attributes[field].array.length;}geo.setAttribute(field,new T.BufferAttribute(data,3));}
       const material=bucket.material.clone();material.color.set(0xffffff);material.vertexColors=true;
@@ -27,9 +30,10 @@
     }
     return {sourceMeshes:sources,batches:buckets.size};
   }
-  function install(T,options){
+  function install(T,options){for(const _ of installSteps(T,options)){} }
+  function* installSteps(T,options){
     const {scene,renderer,buildings,actors,daylight,keyLight,fillLight,movers=[]}=options;
-    const nature=batchNature(T,scene);
+    const nature=yield* batchNatureSteps(T,scene);
     const sun=Number(daylight.sun)||0,hemi=scene.children.find(o=>o.isHemisphereLight);
     if(hemi){hemi.intensity=Math.max(1.45,daylight.hemi*.64);hemi.groundColor.lerp(new T.Color(0x80604c),.25);}
     keyLight.color.lerp(new T.Color(0xffdca4),sun*.22);keyLight.intensity=daylight.keyIntensity*1.08;
@@ -48,7 +52,7 @@
       const mesh=new T.InstancedMesh(geometry,material,count);mesh.frustumCulled=false;mesh.raycast=()=>{};scene.add(mesh);return mesh;
     }
     function stamp(mesh,index,object,x,z,width,depth,visible=true){
-      position.set(x,.077,z);object.localToWorld(position);object.getWorldQuaternion(rotation);dummy.position.copy(position);dummy.quaternion.copy(rotation).multiply(plane);dummy.scale.set(visible?width:0,visible?depth:0,1);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
+      position.set(x,.077,z);object.localToWorld(position);scene.worldToLocal(position);object.getWorldQuaternion(rotation);dummy.position.copy(position);dummy.quaternion.copy(rotation).multiply(plane);dummy.scale.set(visible?width:0,visible?depth:0,1);dummy.updateMatrix();mesh.setMatrixAt(index,dummy.matrix);
     }
     const paid=[];
     for(const building of buildings){if(building.userData.construction)continue;building.traverse(o=>{if(o.userData.footprint&&paid.length<96)paid.push(o);});}
@@ -64,5 +68,5 @@
     scene.userData.updatePeepContacts=()=>{if(!contacts)return;actors.forEach((actor,i)=>stamp(contacts,i,actor,0,0,.28,.22,actor.visible));contacts.instanceMatrix.needsUpdate=true;};
     scene.userData.updatePeepContacts();renderer.shadowMap.needsUpdate=true;
   }
-  root.BurbzSettlementLighting={install};
+  root.BurbzSettlementLighting={install,installSteps};
 })(typeof window!=='undefined'?window:globalThis);

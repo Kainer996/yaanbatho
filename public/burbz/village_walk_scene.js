@@ -1,9 +1,12 @@
 /* Derive collision from the already built village. Never instantiate a second village. */
 (function(root){
   'use strict';
-  function create(T,scene,buildings,movers,terrain){
+  function finish(steps){let result;do{result=steps.next();}while(!result.done);return result.value;}
+  function create(...args){return finish(createSteps(...args));}
+  function* createSteps(T,scene,buildings,movers,terrain){
     if(!terrain?.heightAt)throw Error('The village ground is still loading.');
-    scene.updateMatrixWorld(true);
+    scene.updateWorldMatrix(true,false);
+    for(const child of scene.children){yield 'scene transforms';child.updateMatrixWorld(true);}
     const polygons=[],segments=[],surfaces=[],skip=new Set(movers||[]),paid=new Set(buildings);
     const vector=new T.Vector3(),matrix=new T.Matrix4(),instance=new T.Matrix4();
     function polygon(object,fp){
@@ -12,6 +15,7 @@
       });polygons.push(points);
     }
     for(const building of buildings){
+      yield;
       // Town selection includes the ledger's ground hit target; it is walkable floor.
       if(building.userData.townGround)continue;
       const fp=building.userData.footprint;
@@ -23,7 +27,7 @@
     // meshes, invisible walls across open streets, or per-frame raycasts.
     const vertices=[new T.Vector3(),new T.Vector3(),new T.Vector3()];
     const a=new T.Vector3(),b=new T.Vector3(),n=new T.Vector3();
-    function slice(mesh,worldMatrix){
+    function* slice(mesh,worldMatrix){
       const geo=mesh.geometry,pos=geo.attributes.position,indices=geo.index;
       if(!pos)return;
       if(!geo.boundingBox)geo.computeBoundingBox();
@@ -31,6 +35,7 @@
       if(box.max.y<.32||box.max.x<-terrain.radius||box.min.x>terrain.radius||box.max.z<-terrain.radius||box.min.z>terrain.radius)return;
       const count=indices?indices.count:pos.count;
       for(let i=0;i<count;i+=3){
+        if(i%300===0)yield;
         for(let j=0;j<3;j++)vertices[j].fromBufferAttribute(pos,indices?indices.getX(i+j):i+j).applyMatrix4(worldMatrix);
         a.subVectors(vertices[1],vertices[0]);b.subVectors(vertices[2],vertices[0]);n.crossVectors(a,b).normalize();
         if(Math.abs(n.y)>.8)continue; // turf, roof slopes, paths and flat decals
@@ -45,8 +50,10 @@
         if(points.length===2&&Math.hypot(points[0].x-points[1].x,points[0].z-points[1].z)>.025)segments.push(points);
       }
     }
-    scene.traverseVisible(mesh=>{
-      if(!mesh.isMesh)return;
+    const collisionMeshes=[];scene.traverseVisible(mesh=>collisionMeshes.push(mesh));
+    for(const mesh of collisionMeshes){
+      yield;
+      if(!mesh.isMesh)continue;
       if(mesh.material?.userData?.footstepSurface==='stone'&&!mesh.isInstancedMesh){
         const pos=mesh.geometry.attributes.position,index=mesh.geometry.index,count=index?index.count:pos?.count||0;
         for(let i=0;i<count&&surfaces.length<4096;i+=3){
@@ -55,22 +62,25 @@
           if(points.every(p=>Math.abs(p.y-terrain.heightAt(x,z))<.3))surfaces.push(points);
         }
       }
-      for(let p=mesh;p;p=p.parent)if(skip.has(p)||paid.has(p)||p.userData.continuousTerrain||p.userData.sky||p.userData.walkBridge||p.userData.resident||p.userData.npc)return;
+      let excluded=false;for(let p=mesh;p;p=p.parent)if(skip.has(p)||paid.has(p)||p.userData.continuousTerrain||p.userData.sky||p.userData.walkBridge||p.userData.resident||p.userData.npc){excluded=true;break;}if(excluded)continue;
       const materials=Array.isArray(mesh.material)?mesh.material:[mesh.material];
-      if(materials.every(m=>!m||m.transparent||m.userData.blob||m.isMeshBasicMaterial))return;
-      if(mesh.isInstancedMesh){for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,instance);matrix.multiplyMatrices(mesh.matrixWorld,instance);slice(mesh,matrix);}}
-      else slice(mesh,mesh.matrixWorld);
-    });
+      if(materials.every(m=>!m||m.transparent||m.userData.blob||m.isMeshBasicMaterial))continue;
+      if(mesh.isInstancedMesh){for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,instance);matrix.multiplyMatrices(mesh.matrixWorld,instance);yield* slice(mesh,matrix);}}
+      else yield* slice(mesh,mesh.matrixWorld);
+    }
     if(terrain.river){const r=terrain.river,span=r.width+2.2;
       for(const side of [-.73,.73])segments.push([-span/2,span/2].map(d=>({x:r.x+r.ux*d-r.uz*side,z:r.z+r.uz*d+r.ux*side})));
     }
     return root.BurbzVillageWalkCore.createWorld({...terrain,polygons,segments,surfaceAt:(x,z)=>surfaces.some(p=>root.BurbzVillageWalkCore.inside(x,z,p))?'stone':'ground'});
   }
-  function batch(T,scene,movers){
+  function batch(...args){return finish(batchSteps(...args));}
+  function* batchSteps(T,scene,movers){
     const skip=new Set(movers||[]),buckets=new Map(),hidden=[],created=[];
+    let completed=false;
     const cleanup=()=>{hidden.forEach(m=>m.visible=true);created.forEach(m=>{scene.remove(m);m.geometry.dispose();m.material.dispose();});};
     try {
-    scene.updateMatrixWorld(true);
+    scene.updateWorldMatrix(true,false);
+    for(const child of scene.children){yield 'scene transforms';child.updateMatrixWorld(true);}
     scene.traverseVisible(mesh=>{
       if(!mesh.isMesh||mesh.isInstancedMesh||mesh.userData.harvestBatch||mesh.userData.harvestStumps||Array.isArray(mesh.material))return;
       for(let p=mesh;p;p=p.parent)if(skip.has(p)||p.userData.sky||p.userData.walkCorridor||p.userData.resident||p.userData.npc||p.userData.natureTree)return;
@@ -82,8 +92,10 @@
       bucket.sources.push(mesh);
     });
     for(const bucket of buckets.values()){
+      yield;
       if(bucket.sources.length<3)continue;
       for(const mesh of bucket.sources){
+        yield;
         const g=mesh.geometry.index?mesh.geometry.toNonIndexed():mesh.geometry.clone();g.applyMatrix4(mesh.matrixWorld);
         const count=g.attributes.position.count,colors=new Float32Array(count*3),old=g.attributes.color,c=mesh.material.color;
         for(let i=0;i<count;i++){colors[i*3]=c.r*(mesh.material.vertexColors&&old?old.getX(i):1);colors[i*3+1]=c.g*(mesh.material.vertexColors&&old?old.getY(i):1);colors[i*3+2]=c.b*(mesh.material.vertexColors&&old?old.getZ(i):1);}
@@ -97,10 +109,26 @@
       }
       geo.computeBoundingSphere();const mat=bucket.material.clone();mat.color.set(0xffffff);mat.vertexColors=true;
       root.BurbzManga?.styleMaterial(mat);
-      const mesh=new T.Mesh(geo,mat);mesh.castShadow=bucket.castShadow;mesh.receiveShadow=bucket.receiveShadow;scene.add(mesh);created.push(mesh);bucket.parts.forEach(g=>g.dispose());
+      const mesh=new T.Mesh(geo,mat);mesh.userData.walkBatch=true;mesh.castShadow=bucket.castShadow;mesh.receiveShadow=bucket.receiveShadow;scene.add(mesh);created.push(mesh);bucket.parts.forEach(g=>g.dispose());
     }
-    return cleanup;
-    } catch(error) { cleanup();for(const bucket of buckets.values())bucket.parts.forEach(g=>g.dispose());throw error; }
+    completed=true;return cleanup;
+    } finally { if(!completed){cleanup();for(const bucket of buckets.values())bucket.parts.forEach(g=>g.dispose());} }
   }
-  root.BurbzVillageWalkScene={create,batch};
+  // Fogged objects still cost draw calls. Cull whole actors and spatial static
+  // batches only after their entire conservative sphere is behind opaque fog.
+  // An outer wrapper preserves the resident routine's own visibility state.
+  function distanceCull(T,scene,movers=[]){
+    const candidates=new Set(movers),rows=[],point=new T.Vector3(),box=new T.Box3(),sphere=new T.Sphere();
+    scene.traverse(o=>{if(o.userData.walkBatch)candidates.add(o);});
+    for(const object of candidates){
+      if(!object?.parent)continue;let nested=false;for(let p=object.parent;p&&p!==scene;p=p.parent)if(candidates.has(p)){nested=true;break;}if(nested)continue;
+      box.setFromObject(object);if(box.isEmpty())continue;box.getBoundingSphere(sphere);
+      const center=object.worldToLocal(sphere.center.clone()),radius=sphere.radius;
+      const parent=object.parent,wrapper=new T.Group();wrapper.name='Walking visibility';parent.add(wrapper);wrapper.add(object);
+      rows.push({object,parent,wrapper,center,radius});
+    }
+    let last=-Infinity;
+    return {update(time,player,far){if(time-last<.2)return;last=time;for(const row of rows){row.object.localToWorld(point.copy(row.center));row.wrapper.visible=Math.hypot(point.x-player.x,point.z-player.z)<far+row.radius+16;}},dispose(){for(const row of rows){row.parent.add(row.object);row.wrapper.removeFromParent();}rows.length=0;}};
+  }
+  root.BurbzVillageWalkScene={create,batch,createSteps,batchSteps,distanceCull};
 })(typeof globalThis!=='undefined'?globalThis:this);
