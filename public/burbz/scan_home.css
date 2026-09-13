@@ -197,7 +197,7 @@ html[data-appearance="comic"] #screen-scan :is(.merlin-data-note,.merlin-locatio
 
 #deskSessionStop{min-height:44px;width:100%;margin-bottom:8px;border:1px solid #d5aa68;border-radius:6px;background:#6e4031;color:#fff0d5;font-weight:700}#deskSessionStop[hidden]{display:none}
 
-/* The keeper's actual loadout shares the command bar and its existing sheet. */
+/* The keeper’s actual loadout opens the existing shared equipment sheet. */
 #screen-scan .scan-home-command-bar{gap:8px;padding:0 8px}
 #screen-scan #playerHomeStand{flex:none;max-width:112px;min-height:44px;padding:5px 7px}
 #screen-scan .desk-player-kit{display:flex;align-items:center;gap:4px;min-width:0;flex:1;overflow:hidden}
@@ -218,5 +218,103 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 
 #screen-scan .desk-player-kit span{display:inline;padding:0;flex:none;letter-spacing:normal;overflow:visible;white-space:normal;font:inherit}
 #screen-scan .desk-player-kit .desk-mini-art{display:inline-flex}
-#screen-scan .desk-player-kit{margin-right:52px}
-body[data-active-screen="scan"] .merlin-perch-assembly{scale:.52;transform-origin:right top;top:calc(var(--safe-top) + 66px)}
+
+
+/* A complete painting, a real companion perch, then a separate working desk.
+   The hero is never hidden or cropped to make room for equipment. */
+#screen-scan{background:#211a12;overflow:hidden}
+#screen-scan .desk-introduction{display:grid;grid-template-columns:minmax(0,1fr) 126px;gap:8px;flex:none;padding:6px 10px 4px;min-height:156px;box-sizing:border-box;background:linear-gradient(120deg,#332719,#182922);border-bottom:1px solid #c7a96c4d}
+#screen-scan .scan-home-hero{display:grid;grid-template-rows:minmax(0,1fr) 27px;align-items:center;height:auto;min-height:0;overflow:visible;background:none;isolation:auto}
+#screen-scan .scan-home-hero::after{display:none}
+#screen-scan .scan-home-backdrop{position:static;display:block;width:100%;height:100%;max-height:166px;min-height:0;object-fit:contain;object-position:center;z-index:auto;opacity:1;border-radius:6px;filter:none;animation:none}
+#screen-scan .scan-home-welcome{position:static;text-shadow:none;color:#f4dfae;text-align:left;padding:4px 0 0}
+#screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font:500 21px/1.1 Georgia,serif;letter-spacing:0}
+#screen-scan .scan-home-command-bar{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px;padding:0;min-height:148px;min-width:0;background:none;border:0}
+#screen-scan .desk-merlin-anchor{width:150px;height:108px;flex:none;align-self:flex-end;pointer-events:none}
+#screen-scan #playerHomeStand{min-height:44px;max-width:none;width:100%;padding:5px 6px;background:#263e32;color:#ffe2a2;border:1px solid #bca06a;border-radius:6px;font:700 13px/1.2 Rajdhani,sans-serif}
+#screen-scan .scan-home-main{grid-template-columns:minmax(0,1fr);grid-template-rows:76px 32px 50px minmax(0,1fr) 24px;gap:6px;padding:6px 8px;background:linear-gradient(#30261c,#201a13)}
+#screen-scan .scan-home-start{grid-column:1;grid-row:1;padding:4px;background:transparent;border:0;box-shadow:none}
+#screen-scan .scan-home-start-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#screen-scan .scan-home-start-buttons .scan-btn{height:56px;min-height:56px;padding:6px 5px 6px 31px;font-size:13px;border-radius:7px}
+#screen-scan .scan-home-start-buttons .scan-btn::before{width:24px;height:30px}
+#screen-scan .scan-home-start .merlin-listener-line{display:flex;margin:3px 0 0;line-height:12px}
+#screen-scan .scan-home-today{grid-column:1;grid-row:2}
+#screen-scan .home-action{min-height:30px}
+#screen-scan .desk-player-kit{grid-column:1;grid-row:3;display:flex;align-items:center;gap:7px;margin:0;padding:3px 7px;min-height:0;background:#172820;border:1px solid #b7a37159;border-radius:7px;box-shadow:inset 0 1px #fff1;overflow:hidden}
+#screen-scan .desk-player-kit .desk-kit-heading{flex:none;width:47px;min-width:47px;min-height:44px;padding:0;background:none;border:0;color:#ebd4a3;font:700 12px/1.15 Rajdhani,sans-serif}
+#screen-scan #desk-equipment-list{flex:1;gap:3px;scrollbar-width:thin;scrollbar-color:#917946 transparent}
+#screen-scan .desk-player-kit .desk-kit-slot{flex:1 0 42px;min-width:42px;width:auto;min-height:44px;color:#f3e6c8;background:#29382d;border:1px solid #ddbf7130;box-shadow:none;cursor:pointer}
+#screen-scan .desk-kit-slot .desk-mini-art{width:26px;height:27px}
+#screen-scan .desk-kit-slot small{font-size:8px;line-height:10px}
+#screen-scan .desk-panels{grid-column:1;grid-row:4;gap:6px}
+#screen-scan .desk-panel{background:#29241bf5;border-color:#beaa7659;border-radius:7px}
+#screen-scan .desk-panel-heading{background:#3c3325;border-color:#c8b27b3d;color:#f4dfae}
+#screen-scan .desk-mini-art>img{background:transparent}
+#screen-scan .scan-home-tools{grid-column:1;grid-row:5}
+body[data-active-screen="scan"] #merlinPerchAssembly{scale:1;left:var(--desk-merlin-left);top:var(--desk-merlin-top);right:auto;margin-right:0;transform-origin:right center}
+body[data-active-screen="scan"] #merlinCareMenu{left:clamp(8px,var(--desk-merlin-left),calc(100vw - 300px));right:auto;top:calc(var(--desk-merlin-top) + 102px);margin-right:0}
+@media(orientation:portrait) and (max-height:730px){
+ #screen-scan .desk-introduction{min-height:152px;grid-template-columns:minmax(0,1fr) 118px;padding:3px 7px}
+ #screen-scan .scan-home-backdrop{max-height:121px}
+ #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font-size:18px}
+ #screen-scan .scan-home-main{grid-template-rows:60px 24px 48px minmax(0,1fr) 24px;gap:3px;padding:3px 6px}
+ #screen-scan .scan-home-start{padding:2px 0}
+ #screen-scan .scan-home-start .merlin-listener-line{display:none}
+ #screen-scan .desk-panels{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:4px}
+ #screen-scan .desk-panel-heading{font-size:12px;height:24px;min-height:24px;padding:3px 4px}
+ #screen-scan #desk-stores-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #screen-scan .desk-mini-art{width:22px;height:26px}
+ #screen-scan .desk-mini-copy strong{font-size:11px}
+ #screen-scan .desk-mini-copy small{font-size:9px}
+ #screen-scan .desk-mini-row{min-height:44px;padding:3px 1px;gap:3px}
+ #screen-scan .home-action{min-height:24px}
+}
+@media(orientation:landscape) and (min-width:640px){
+ #screen-scan{display:grid;grid-template-columns:minmax(150px,27%) minmax(0,1fr);grid-template-rows:minmax(0,1fr);padding-bottom:4px}
+ #screen-scan .desk-introduction{grid-column:1;grid-row:1;display:flex;flex-direction:column;justify-content:center;gap:18px;min-height:0;padding:12px;border-bottom:0;border-right:1px solid #c7a96c4d}
+ #screen-scan .scan-home-hero{flex:none;grid-template-rows:minmax(0,1fr) 36px;width:100%}
+ #screen-scan .scan-home-backdrop{height:auto;max-height:none;aspect-ratio:3/2}
+ #screen-scan .scan-home-welcome{padding-top:10px;text-align:center}
+ #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font-size:clamp(21px,2.5vw,32px)}
+ #screen-scan .scan-home-command-bar{flex:none;min-height:0;width:100%;gap:12px}
+ #screen-scan .desk-merlin-anchor{align-self:center}
+ #screen-scan #playerHomeStand{width:min(100%,190px)}
+ #screen-scan .scan-home-main{grid-column:2;grid-row:1;grid-template-rows:76px 38px 54px minmax(0,1fr) 24px;padding:10px;gap:8px}
+ #screen-scan .scan-home-actions{display:flex}
+ #screen-scan .desk-panels{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr))}
+}
+@media(orientation:landscape) and (max-height:550px){
+ #screen-scan .desk-introduction{gap:2px;padding:4px 8px}
+ #screen-scan .scan-home-hero{grid-template-rows:minmax(0,1fr) 24px}
+ #screen-scan .scan-home-welcome{padding:2px 0 0}
+ #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font-size:17px}
+ #screen-scan .scan-home-command-bar{gap:0}
+ #screen-scan .scan-home-main{grid-template-rows:56px 20px 48px minmax(0,1fr) 20px;gap:3px;padding:4px}
+ #screen-scan .scan-home-start{padding:0}
+ #screen-scan .scan-home-start .merlin-listener-line{display:none}
+ #screen-scan .scan-home-start-buttons .scan-btn{font-size:11px;padding-left:26px}
+ #screen-scan .home-action{min-height:24px}
+ #screen-scan .desk-panel-heading{height:25px;min-height:25px;padding:3px 4px;font-size:13px}
+ #screen-scan .desk-mini-row{min-height:44px;padding:3px 1px}
+ #screen-scan .desk-mini-copy strong{font-size:11px}
+ #screen-scan .desk-mini-copy small{font-size:9px}
+}
+/* On short phones the same 44px destinations use one scrollable row. This
+   makes room for the full-size companion without compressing the desk trays. */
+@media(orientation:portrait) and (max-height:730px){
+ body[data-active-screen="scan"]{--nav-height:50px}
+ body[data-active-screen="scan"] .bottom-nav{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding-left:154px;scroll-padding-left:154px;overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:none}
+ body[data-active-screen="scan"] .dock-row{flex:none;justify-content:flex-start}
+ body[data-active-screen="scan"] .bottom-dock-anchor{left:0;transform:none;border-radius:0 12px 0 0;padding-left:2px;padding-right:2px;width:148px;justify-content:space-around}
+ body[data-active-screen="scan"] .bottom-dock-anchor .nav-item{min-width:44px;flex:0 0 44px}
+}
+
+#screen-scan .desk-village{padding:4px;border-bottom:1px solid #c6aa653b}
+#screen-scan .desk-village-head{width:100%;display:flex;gap:6px;align-items:center;padding:3px 0;min-height:44px;text-align:left;background:none;border:0;color:#f2dfb7;cursor:pointer}
+#screen-scan .desk-village-head>img{width:32px;height:34px;object-fit:contain;flex:none}
+#screen-scan .desk-village-head>span{min-width:0;flex:1}
+#screen-scan .desk-village-head strong{display:block;font:700 14px/1.15 Rajdhani,sans-serif;overflow-wrap:anywhere}
+#screen-scan .desk-village-badge{display:inline-block;margin-top:3px;padding:2px 4px;border:1px solid #ad965168;border-radius:3px;color:#ead295;font:500 9px/1.1 Inter,sans-serif}
+#screen-scan .desk-village-badge.ready{background:#574321;color:#ffe7a7}
+#screen-scan .desk-village .desk-mini-row{padding:3px 0;min-height:44px}
+#screen-scan .desk-village-note{margin:2px 0;color:#c8bba0;font:400 10px/1.3 Inter,sans-serif}
