@@ -1,0 +1,9 @@
+# Home Equipment and assignment follow-up
+
+The user asked to move always-visible Home gear slots behind one clear Equipment control. The silhouette button now opens a compact, centred RPG-style figure and the same five real gear slots. The original shared equipment sheet still owns selection, equip/unequip, Forge bonuses, Fieldcraft, persistence and atomic failure handling; no inventory/combat rules or crafted items are duplicated. Close, Escape and game Back retain their existing lifecycle.
+
+Village cards show actual canonical Project Manager or Lord Mayor assignment, that specific bird’s portrait/name, and a distinct red labelled Unassigned state when vacant. Construction status has text plus colour. Merged wards read their shared heart post. Merely showing a mayor does not introduce new building-opening authority. The forthcoming on-site commissioning rule remains in the separate unfinished world branch.
+
+The full generated painting and original-size Merlin remain unobscured; Camera and Sound are largest, with six independently usable management panels. Native browser checks passed 29 dashboard/layout/action cases across normal/comic phone/desktop layouts; seven supplemental checks include merged-ward mayor identity, actual popup save failure, centred popup bounds and close behavior. Twelve shared-equipment and nine Market Node behavior groups pass. These are disposable laptop Chromium responsive/touch tests, not physical-phone FPS.
+
+Changed Home script/style URLs and all three worker lists advance with the global release/cache. The core, gear module, combat, generated art and Merlin assets are unchanged. Publish only this tested subset through the existing reviewed merge and guarded updater; verify public source, actual cache and cold offline startup. World arrivals, shelter/tutorial, on-site opening/builder assistance, wilderness discoveries and camera recognition remain unfinished.
