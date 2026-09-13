@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "continuous-world-v391-20260910"
-CURRENT_BUILD = "photo-accuracy-v393-20260911"
+CURRENT_BUILD = "landscape-atlas-v394-20260913"
 
 
 def test_continuous_runtime_installation_is_complete():
@@ -17,13 +17,14 @@ def test_continuous_runtime_installation_is_complete():
                "village_harvest.js", "village_discoveries.js", "manga_render_core.js",
                "geographic_forest_core.js", "geographic_forest_worker.js", "geographic_map_3d.js"]
     for module in modules:
+        pin = CURRENT_BUILD if module in {"village_walk.js", "village_world.js"} else PIN
         assert (ROOT / module).is_file()
         assert f'"{module}"' in updater
         for name in ["BURBZ_ASSETS", "BURBZ_CORE", "BURBZ_INSTALL_REQUIRED"]:
             entries = re.search(rf"const {name} = \[(.*?)\];", worker, re.S)[1]
-            assert entries.count(f"'./{module}?v={PIN}'") == 1, (name, module)
+            assert entries.count(f"'./{module}?v={pin}'") == 1, (name, module)
         if module != "geographic_forest_worker.js":
-            assert f"{module}?v={PIN}" in html or f"'{module}':'{PIN}'" in walk, module
+            assert f"{module}?v={pin}" in html or f"'{module}':'{pin}'" in walk, module
     assert f"geographic_forest_core.js?v={PIN}" in (ROOT / "geographic_forest_worker.js").read_text()
     assert f"const FOREST_PIN = '{PIN}';" in (ROOT / "geographic_map_3d.js").read_text()
     assert "geographic_forest_worker.js?v='+FOREST_PIN" in (ROOT / "geographic_map_3d.js").read_text()

@@ -145,7 +145,7 @@ test('both changed quest cores use the current release URL in all three worker l
   for(const list of ['BURBZ_ASSETS','BURBZ_CORE','BURBZ_INSTALL_REQUIRED']){const section=sw.slice(sw.indexOf('const '+list+' = ['));assert.ok(section.slice(0,section.indexOf('\n];')).includes("'./"+url+"'"),list+': '+file);}
   assert.ok(updater.includes('"'+file+'"'));
  }
- for(const file of ['map_trail_core.js','quest_core.js','geographic_details_scene.js'])assert.ok(html.includes(file+'?v=map-trails-v381-20260909'),'preserve v381 '+file);
+ for(const file of ['map_trail_core.js','quest_core.js','geographic_details_scene.js'])assert.ok(html.includes(file+'?v='+(file==='quest_core.js'?'landscape-atlas-v394-20260913':'map-trails-v381-20260909')),'preserve v381 '+file);
  assert.ok(html.includes('geographic_places.js?v=homestead-v385-20260910'),'updated character callback uses the v385 geographic places module');
 });
 

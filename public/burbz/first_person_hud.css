@@ -78,3 +78,76 @@
 @media(max-width:560px){#villageWalk .fp-actions{bottom:calc(144px + env(safe-area-inset-bottom));width:calc(100% - 136px);left:14px;transform:none}#villageWalk .fp-tools{flex-direction:column}#villageWalk .fp-tracker{width:calc(100% - 84px)}#villageWalk .fp-panel h2{font-size:22px}}
 @media(max-height:520px){#villageWalk .fp-character{display:none}#villageWalk .fp-compass{top:12px;right:74px}#villageWalk .fp-tools{top:66px;right:12px;flex-direction:row}#villageWalk .fp-tracker{top:66px;width:min(260px,calc(100% - 160px))}#villageWalk .fp-quest-heading strong{font-size:13px;-webkit-line-clamp:1}#villageWalk .fp-tracker .fp-quest-heading{min-height:48px;padding:7px 10px}#villageWalk .fp-panel{top:10px;bottom:10px}#villageWalk .fp-actions{left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 280px);max-width:310px}#villageWalk .fp-actions .fp-action{min-height:44px}#villageWalk .fp-tracker.fp-expanded .vd-guide{max-height:90px}}
 #villageWalk.fp-nearby .vw-hint{visibility:hidden}
+
+/* Edge groups leave the horizon free. All coordinates include the device's
+   safe area; interactive targets stay at least 44px even in short landscape. */
+#villageWalk.fp-ready{--fp-left:calc(12px + env(safe-area-inset-left));--fp-right:calc(12px + env(safe-area-inset-right));--fp-top:calc(8px + env(safe-area-inset-top));--fp-bottom:calc(18px + env(safe-area-inset-bottom))}
+#villageWalk .fp-minimap{position:absolute;top:calc(282px + env(safe-area-inset-top));right:var(--fp-right);width:76px;height:76px;padding:0;overflow:hidden;border:1px solid #d3af6a99;border-radius:12px;background:#273e32;pointer-events:auto}
+#villageWalk .fp-minimap canvas{position:static;width:100%!important;height:100%!important;pointer-events:none}
+#villageWalk .fp-map-north,#villageWalk .fp-map-scale{position:absolute;left:0;right:0;top:3px;text-align:center;color:#ffe8b4;text-shadow:0 1px 3px #000;font:700 9px system-ui;pointer-events:none}
+#villageWalk .fp-map-scale{top:auto;bottom:3px;font-size:8px}
+#villageWalk .fp-minimap[hidden],#villageWalk .fp-map-button[hidden]{display:none}
+#villageWalk .fp-realm-panel{z-index:9;inset:var(--fp-top) var(--fp-right) calc(8px + env(safe-area-inset-bottom)) var(--fp-left);display:flex;flex-direction:column;overflow:hidden;padding:8px;gap:5px}
+#villageWalk .fp-realm-panel[hidden]{display:none}
+#villageWalk .fp-realm-panel header{display:flex;align-items:center;gap:12px;flex:none}
+#villageWalk .fp-realm-panel h2{margin:0;font-size:18px}
+#villageWalk .fp-realm-panel p{margin:0;font-size:11px;flex:none}
+#villageWalk .fp-realm-host{position:relative;flex:1;min-height:0;touch-action:none}
+#villageWalk .fp-borrowed-atlas{margin:0;width:100%;height:100%;min-height:0;max-height:none;border-radius:8px;box-shadow:none}
+#villageWalk .fp-borrowed-atlas #empireWorldMap{height:100%;min-height:0;touch-action:none}
+#villageWalk .fp-borrowed-atlas canvas{touch-action:none}
+#villageWalk .fp-borrowed-atlas .maplibregl-marker{position:absolute;min-width:0;min-height:0;padding:0}
+#villageWalk .fp-borrowed-atlas .empire-map-tools{top:6px;left:6px;right:6px;gap:4px}
+#villageWalk .fp-borrowed-atlas .empire-map-btn{min-width:44px;min-height:44px;padding:6px 10px;font-size:11px}
+#villageWalk .fp-borrowed-atlas .empire-map-key,#villageWalk .fp-borrowed-atlas .empire-map-tapcard{max-height:calc(100% - 64px);overflow:auto;overscroll-behavior:contain}
+#villageWalk .fp-atlas-player{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ffe5a1;color:#1c3026;border:2px solid #1c3026;box-shadow:0 0 0 3px #fff6;font-size:20px}
+#villageWalk .fp-map-retry{align-self:flex-start}
+@media(orientation:landscape){
+ #villageWalk.fp-ready .vw-top{padding:var(--fp-top) var(--fp-right) 12px var(--fp-left);gap:10px}
+ #villageWalk.fp-ready .vw-title{flex:none;max-width:calc(50% - 120px);padding-top:2px}
+ #villageWalk.fp-ready .vw-title strong{font-size:17px}
+ #villageWalk.fp-ready .vw-title small{font-size:8px}
+ #villageWalk.fp-ready .vw-exit{width:44px;padding:8px;font-size:0}
+ #villageWalk.fp-ready .vw-exit:before{content:'↩';font:26px/1 system-ui}
+ #villageWalk.fp-ready .vw-fullscreen{margin-left:auto;width:44px;padding:8px}
+ #villageWalk .fp-character{display:none}
+ #villageWalk .fp-compass{top:var(--fp-top);left:50%;right:auto;transform:translateX(-50%);min-width:82px;height:32px;padding:4px 8px;font-size:10px}
+ #villageWalk .fp-tools{top:var(--fp-top);left:auto;right:var(--fp-right);flex-direction:row;gap:6px}
+ #villageWalk:has(.vw-fullscreen:not([hidden])) .fp-tools{right:calc(64px + env(safe-area-inset-right))}
+ #villageWalk .fp-tools button{width:44px;height:44px;min-width:44px;padding:9px}
+ #villageWalk .fp-tracker{top:calc(60px + env(safe-area-inset-top));left:var(--fp-left);width:min(200px,30vw);padding:0;background:#252822cc}
+ #villageWalk .fp-tracker .fp-quest-heading{min-height:44px;padding:6px 9px}
+ #villageWalk .fp-quest-heading strong{font-size:12px;-webkit-line-clamp:1}
+ #villageWalk .fp-quest-kicker{font-size:8px;margin-bottom:3px}
+ #villageWalk .fp-tracker.fp-expanded{width:min(310px,48vw);z-index:7}
+ #villageWalk .fp-tracker.fp-expanded .vd-guide{max-height:calc(100dvh - 180px);font-size:12px}
+ #villageWalk .fp-minimap{top:calc(60px + env(safe-area-inset-top));right:var(--fp-right);width:88px;height:88px}
+ #villageWalk .vw-stick{left:var(--fp-left);bottom:var(--fp-bottom);width:96px;height:96px}
+ #villageWalk .vw-knob{left:26px;top:26px}
+ #villageWalk .fp-look-stick{right:var(--fp-right);bottom:var(--fp-bottom);width:84px;height:84px}
+ #villageWalk .fp-cast-stick{right:calc(19px + env(safe-area-inset-right));bottom:calc(112px + env(safe-area-inset-bottom));width:70px;height:70px}
+ #villageWalk.wc-ready .wc-hud{left:auto;right:calc(116px + env(safe-area-inset-right));transform:none;bottom:var(--fp-bottom);width:140px;min-width:140px}
+ #villageWalk .wc-vitals{padding:4px 5px;font-size:9px}
+ #villageWalk .wc-loadout{gap:4px;margin-top:4px}
+ #villageWalk .wc-loadout button{width:44px;flex:0 0 44px;font-size:9px!important}
+ #villageWalk .wc-attack-name{font-size:9px;padding-top:3px}
+ #villageWalk .wc-travel{position:fixed;top:auto;left:var(--fp-left);right:auto;bottom:calc(128px + env(safe-area-inset-bottom));width:44px;margin:0}
+ #villageWalk .wc-travel .cw-wings{width:44px;min-width:44px;font-size:0!important;padding:8px!important}
+ #villageWalk .wc-travel .cw-wings:before{content:'';display:block;width:26px;height:26px;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 14C8 7 4 10 1 3c0 9 4 16 10 15h2C19 19 23 12 23 3c-3 7-7 4-11 11Z'/%3E%3C/svg%3E") center/contain no-repeat}
+ #villageWalk .wc-flying .cw-wings:before{mask:none;background:none;content:'↧';font:26px/1 system-ui}
+ #villageWalk.wc-ready .wc-climb{right:var(--fp-right)!important;bottom:calc(168px + env(safe-area-inset-bottom))!important;min-width:44px;width:70px}
+ #villageWalk.wc-ready .wc-descend{right:var(--fp-right)!important;bottom:calc(112px + env(safe-area-inset-bottom))!important;min-width:44px;width:70px}
+ #villageWalk.fp-ready .fp-actions,#villageWalk.wc-ready .fp-actions,#villageWalk.fp-ready.wc-ready:has(.wc-travel) .fp-actions{left:calc(128px + env(safe-area-inset-left));right:auto;transform:none;bottom:var(--fp-bottom);width:min(230px,calc(100% - 410px - env(safe-area-inset-left) - env(safe-area-inset-right)));max-width:none;flex-direction:row;gap:6px;overflow-x:auto;overscroll-behavior:contain;pointer-events:auto;scroll-snap-type:x proximity;touch-action:pan-x}
+ #villageWalk .fp-actions .fp-action{position:static!important;inset:auto!important;transform:none!important;flex:0 0 100%;min-width:0;width:100%;min-height:44px;max-height:62px;margin:0;padding:7px 9px;font-size:11px;text-align:center;scroll-snap-align:start;touch-action:pan-x}
+ #villageWalk .wc-toast,#villageWalk .vh-status{top:auto;left:50%;right:auto;transform:translateX(-50%);bottom:calc(115px + env(safe-area-inset-bottom));max-width:calc(100% - 250px);font-size:11px}
+ #villageWalk.fp-busy .wc-travel,#villageWalk.fp-busy .fp-minimap{visibility:hidden}
+}
+@media(orientation:landscape) and (max-height:350px){
+ #villageWalk .fp-minimap{width:70px;height:70px}
+ #villageWalk .fp-tracker{width:180px}
+}
+
+#villageWalk .fp-borrowed-atlas button.empire-map-marker{background:transparent;border:0;box-shadow:none;border-radius:0;min-width:44px;min-height:44px;padding:0;color:inherit}
+#villageWalk .fp-borrowed-atlas .empire-map-marker.is-player{display:none}
+#villageWalk .fp-borrowed-atlas .maplibregl-ctrl-group button{width:44px;height:44px;padding:0;min-width:44px;min-height:44px}
+#villageWalk .fp-map-scale:before{content:'';display:block;width:50%;height:3px;border:1px solid #ffe8b4;border-top:0;margin:0 auto 2px}

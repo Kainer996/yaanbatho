@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'village_world_core.js':'continuous-world-v391-20260910','village_world.js':'continuous-world-v391-20260910','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'continuous-world-v391-20260910','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'continuous-world-v391-20260910','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'continuous-world-v391-20260910','first_person_hud.css':'continuous-world-v391-20260910','village_walk_scene.js':'continuous-world-v391-20260910'};
+  const PIN={'first_person_map.js':'landscape-atlas-v394-20260913','village_world_core.js':'continuous-world-v391-20260910','village_world.js':'landscape-atlas-v394-20260913','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'continuous-world-v391-20260910','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'map-pictures-v374-20260908','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'continuous-world-v391-20260910','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'landscape-atlas-v394-20260913','first_person_hud.css':'landscape-atlas-v394-20260913','village_walk_scene.js':'continuous-world-v391-20260910'};
   let session=null,dependencies=null;
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -25,7 +25,7 @@
   }
   function load(){
     if(!dependencies)dependencies=Promise.all([
-      script('first_person_hud.js','BurbzFirstPersonHud'),
+      script('first_person_map.js','BurbzFirstPersonMap').then(()=>script('first_person_hud.js','BurbzFirstPersonHud')),
       script('village_harvest_scene.js','BurbzVillageHarvestScene'),
       script('village_harvest_core.js','BurbzVillageHarvestCore').then(()=>script('village_harvest.js','BurbzVillageHarvest')),
       script('interior_life_core.js','BurbzInteriorLifeCore').then(()=>script('interior_life.js','BurbzInteriorLife')),
