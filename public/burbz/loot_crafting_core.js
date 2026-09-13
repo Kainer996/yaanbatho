@@ -26,6 +26,7 @@
   // Crafting materials — found on walks, won in battles, tithed by provinces
   // ---------------------------------------------------------------------------
   const MATERIALS = {
+    reed_arrow:   { id:'reed_arrow', label:'Reed Arrow', icon:'➶', rarity:'common', kind:'ammo', craftOnly:true, copy:'A fletched arrow. The bow spends one when released; craft six at a time.' },
     oak_twig:     { id:'oak_twig',     label:'Oak Twig',      icon:'🪵', rarity:'common',    copy:'Sturdy forest timber for hafts and frames.' },
     river_reed:   { id:'river_reed',   label:'River Reed',    icon:'🌾', rarity:'common',    copy:'Supple reed for bindings and fletching.' },
     iron_grit:    { id:'iron_grit',    label:'Iron Grit',     icon:'⚙️', rarity:'common',    copy:'Gizzard-stone iron, ground fine for edges.' },
@@ -47,6 +48,7 @@
   // maxHp, critBonus.
   const GEAR = {
     // --- Weapons — talon-craft (physical, for the big birds) ---
+    reed_bow:       { id:'reed_bow', slot:'weapon', kind:'bow', rarity:'common', label:'Wayfarer Bow', icon:'🏹', stats:{atk:8}, craftOnly:true, attack:{ammo:'reed_arrow',projectile:'arrow',projectileSpeed:26,projectileRadius:.06,gravity:2.4}, copy:'A bent-wood bow. Walking shots use one crafted Reed Arrow; aim slightly above distant foes.' },
     thorn_talons:   { id:'thorn_talons',   slot:'weapon', kind:'talon', rarity:'common',    label:'Thorn Talons',     icon:'🗡️', stats:{ atk:7 },  copy:'Hawthorn spurs lashed to the toes.' },
     bronze_spurs:   { id:'bronze_spurs',   slot:'weapon', kind:'talon', rarity:'uncommon',  label:'Bronze Spurs',     icon:'⚔️', stats:{ atk:12, spd:2 }, copy:'Fighting spurs cast in tavern bronze.' },
     stormcut_beak:  { id:'stormcut_beak',  slot:'weapon', kind:'talon', rarity:'rare',      label:'Stormcut Beak-Cap',icon:'🪓', stats:{ atk:18, critBonus:0.04 }, copy:'A beak-cap honed on storm glass.' },
@@ -77,7 +79,7 @@
     gilded_satchel:    { id:'gilded_satchel',     slot:'trinket', kind:'satchel', rarity:'epic',      label:'Gilded Satchel',     icon:'🎒', stats:{}, carryBonus:4, craftOnly:true, copy:'A balanced courier bag that carries four extra finds.' },
     royal_satchel:     { id:'royal_satchel',      slot:'trinket', kind:'satchel', rarity:'legendary', label:'Royal Satchel',      icon:'🎒', stats:{}, carryBonus:5, craftOnly:true, copy:'The finest expedition pack in the Kingdom: five extra finds.' },
     // --- Spells — an equipped scroll grants the bird an extra battle skill ---
-    ember_wisp:     { id:'ember_wisp',     slot:'spell', kind:'spell', rarity:'common',    label:'Ember Wisp',       icon:'🔥', stats:{}, spell:{ power:56, cd:2, kind:'attack', splash:0.35 }, copy:'Aim a flame at one foe; embers strike adjacent cards at 35% strength.' },
+    ember_wisp:     { id:'ember_wisp',     slot:'spell', kind:'spell', rarity:'common',    label:'Fireball (Ember Wisp)',       icon:'🔥', stats:{}, spell:{ power:56, cd:2, kind:'attack', splash:0.35 }, copy:'Your first Fireball: a travelling flame with 35% splash. Durable scroll; costs readiness, never arrows.' },
     mending_light:  { id:'mending_light',  slot:'spell', kind:'spell', rarity:'uncommon',  label:'Mending Light',    icon:'💫', stats:{}, spell:{ power:0, cd:3, kind:'heal', healPct:0.28 }, copy:'Warm dawnlight knits feather and bone.' },
     frost_sigil:    { id:'frost_sigil',    slot:'spell', kind:'spell', rarity:'rare',      label:'Frost Sigil',      icon:'❄️', stats:{}, spell:{ power:68, cd:2, kind:'attack', rider:{ kind:'debuff', stat:'spd', pct:0.2, turns:2 } }, copy:'Rime creeps along the foe\'s wings.' },
     tempest_scroll: { id:'tempest_scroll', slot:'spell', kind:'spell', rarity:'epic',      label:'Tempest Scroll',   icon:'⛈️', stats:{}, spell:{ power:62, cd:3, kind:'attack', splash:0.55 }, copy:'Aim the storm; adjacent cards take a 55% strength splash.' },
@@ -93,6 +95,7 @@
   const GEAR_SLOTS = ['weapon', 'armour', 'trinket', 'spell', 'potion'];
 
   function gearById(id) { return GEAR[id] || null; }
+  function craftableById(id) { const item=gearById(id) || (MATERIALS[id]?.kind === 'ammo' ? MATERIALS[id] : null); return typeof id==='string'&&item?.id===id?item:null; }
   function materialById(id) { return MATERIALS[id] || null; }
   function gearBySlot(slot) { return Object.values(GEAR).filter(g => g.slot === slot); }
 
@@ -217,7 +220,7 @@
     const nDrops = Math.max(1, Math.round(count || 1));
     for (let i = 0; i < nDrops; i++) {
       const rarity = pickRarity(RARITY_WEIGHTS[source] || RARITY_WEIGHTS.forage, rng, null);
-      const pool = Object.values(MATERIALS).filter(m => m.rarity === rarity);
+      const pool = Object.values(MATERIALS).filter(m => m.rarity === rarity && !m.craftOnly);
       const mat = pickFrom(pool, rng) || MATERIALS.oak_twig;
       const existing = drops.find(d => d.id === mat.id);
       if (existing) existing.qty += 1;
@@ -283,7 +286,7 @@
   const FORGE_LEVEL_BY_RARITY = { common:1, uncommon:1, rare:2, epic:3, legendary:4 };
   function minForgeLevelForRarity(rarity) { return FORGE_LEVEL_BY_RARITY[rarity] || 1; }
   function canForgeAtLevel(gearIdOrItem, forgeLevel) {
-    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    const item = typeof gearIdOrItem === 'string' ? craftableById(gearIdOrItem) : gearIdOrItem;
     if (!item) return false;
     return normalizeForgeLevel(forgeLevel) >= minForgeLevelForRarity(item.rarity);
   }
@@ -416,6 +419,7 @@
   // Which materials a gear kind draws on, cheapest first; rarity depth decides
   // how far down the list the recipe reaches.
   const KIND_MATERIALS = {
+    bow:     ['oak_twig', 'river_reed'],
     talon:   ['iron_grit', 'iron_ingot', 'oak_twig', 'storm_glass', 'sun_amber', 'ancient_rune', 'phoenix_ember'],
     wand:    ['river_reed', 'moon_dust', 'storm_glass', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
     armour:  ['down_tuft', 'oak_twig', 'iron_grit', 'iron_ingot', 'gold_thread', 'ancient_rune', 'phoenix_ember'],
@@ -426,8 +430,10 @@
   };
 
   function recipeFor(gearId) {
-    const item = gearById(gearId);
+    const item = craftableById(gearId);
     if (!item) return null;
+    if (gearId === 'reed_arrow') return {id:'craft_reed_arrow',gearId,coins:6,materials:{oak_twig:2,river_reed:1},output:{kind:'material',id:gearId,qty:6}};
+    if (gearId === 'reed_bow') return {id:'craft_reed_bow',gearId,coins:20,materials:{oak_twig:2,river_reed:2}};
     const tier = rarityIndex(item.rarity);
     const cost = CRAFT_COST_BY_RARITY[item.rarity];
     const line = KIND_MATERIALS[item.kind] || KIND_MATERIALS.talon;
@@ -441,7 +447,7 @@
     return { id:'craft_' + item.id, gearId:item.id, coins:cost.coins, materials };
   }
 
-  function allRecipes() { return Object.keys(GEAR).map(recipeFor); }
+  function allRecipes() { return [...Object.keys(GEAR),'reed_arrow'].map(recipeFor); }
 
   // ---------------------------------------------------------------------------
   // Forge timers — nothing worth having is hammered out in a heartbeat
@@ -467,7 +473,8 @@
   const FORGE_MAX_JOBS = 3;
 
   function craftTimeMs(gearIdOrItem) {
-    const item = typeof gearIdOrItem === 'string' ? gearById(gearIdOrItem) : gearIdOrItem;
+    const item = typeof gearIdOrItem === 'string' ? craftableById(gearIdOrItem) : gearIdOrItem;
+    if (item?.kind === 'ammo') return 15000;
     if (!item) return 0;
     const base = CRAFT_TIME_BY_RARITY[item.rarity] || CRAFT_TIME_BY_RARITY.common;
     const multiplier = Math.min(CRAFT_POWER_MAX_MULTIPLIER, 1 + gearPowerScore(item) / CRAFT_POWER_DIVISOR);
@@ -492,11 +499,11 @@
   function canCraft(recipe, stock, coins) {
     if (!recipe) return { ok:false, missing:['unknown recipe'] };
     const missing = [];
-    if ((Number(coins) || 0) < recipe.coins) missing.push(recipe.coins + ' coins');
+    if (!Number.isSafeInteger(coins) || coins < recipe.coins) missing.push(recipe.coins + ' coins');
     Object.keys(recipe.materials).forEach(matId => {
-      const have = Number(stock && stock[matId]) || 0;
+      const have = stock?.[matId] ?? 0;
       const need = recipe.materials[matId];
-      if (have < need) {
+      if (!Number.isSafeInteger(have) || have < need) {
         const m = materialById(matId);
         missing.push((need - have) + '× ' + (m ? m.label : matId));
       }
@@ -506,7 +513,7 @@
 
   return {
     RARITY_ORDER, RARITY_META, rarityIndex,
-    MATERIALS, GEAR, GEAR_SLOTS, gearById, materialById, gearBySlot,
+    MATERIALS, GEAR, GEAR_SLOTS, gearById, craftableById, materialById, gearBySlot,
     equipmentBonuses, gearPowerScore, spellSkillFor, potionEffectFor,
     RARITY_WEIGHTS, PITY_RARE_CAP, pickRarity, rollGear, rollMaterials, rollLoot,
     SELL_PRICES, sellValue, sellQuote,

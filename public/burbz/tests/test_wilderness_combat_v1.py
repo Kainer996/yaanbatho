@@ -12,8 +12,9 @@ def test_offline_combat_dependencies_match_index_and_three_worker_lists():
     html = (BASE / 'index.html').read_text()
     worker = (BASE / 'sw.js').read_text()
     updater = (BASE.parent.parent / 'scripts/update-live-burbz.sh').read_text()
-    for name in ['battle_core.js', 'first_person_spell_core.js', 'first_person_cast_controls.js', 'first_person_cast_controls.css', 'wilderness_combat_core.js', 'wilderness_combat.js', 'wilderness_combat.css']:
+    for name in ['battle_core.js', 'first_person_spell_core.js', 'first_person_cast_controls.js', 'first_person_cast_controls.css', 'wilderness_birds.js', 'wilderness_combat_core.js', 'wilderness_combat.js', 'wilderness_combat.css']:
         assert (BASE / name).is_file()
-        assert f'{name}?v={PIN}' in html
-        assert worker.count(f"'./{name}?v={PIN}'") == 3
+        pin = PIN if name in ['battle_core.js','first_person_cast_controls.js','first_person_cast_controls.css'] else 'wilderness-birds-v395-20260913'
+        assert f'{name}?v={pin}' in html
+        assert worker.count(f"'./{name}?v={pin}'") == 3
         assert f'"{name}"' in updater

@@ -110,6 +110,7 @@ FILES=(
   "first_person_spell_core.js"
   "first_person_cast_controls.js"
   "wilderness_combat_core.js"
+  "wilderness_birds.js"
   "wilderness_combat.js"
   "first_person_cast_controls.css"
   "wilderness_combat.css"

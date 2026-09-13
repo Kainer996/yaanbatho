@@ -4484,10 +4484,10 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=living-desk-v395-20260913">
+<link rel="stylesheet" href="scan_home.css?v=desk-panels-v396-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
-<link rel="stylesheet" href="player_equipment.css?v=continuous-world-v391-20260910">
+<link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
 </head>
 <body class="woodland-ui">
 <script>
@@ -4587,11 +4587,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
     <!-- SCAN SCREEN -->
     <div class="screen" id="screen-scan" data-scan-path="camera-only">
-      <div class="scan-home-command-bar"><span>ALDERWING · COMMAND CENTRE</span><button type="button" id="playerHomeStand">Enter Alderwing</button></div>
+      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><section class="desk-player-kit" aria-label="Your first-person equipment"><button type="button" class="desk-kit-heading" data-home-action="player-equipment">Your gear ↗</button><div id="desk-equipment-list" tabindex="0" role="region" aria-label="Equipped items; scroll horizontally"></div></section></div>
       <div class="scan-home-hero">
         <img class="scan-home-backdrop" src="assets/home-v395/living-field-desk.webp" alt="" fetchpriority="high" width="1536" height="1024">
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Your field desk.</h1></div>
-        <div id="scanHomePlayer" class="scan-home-player"></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
       <div class="scan-home-main">
@@ -4604,10 +4603,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         </div>
       </div>
 
-      <section class="scan-home-today" aria-labelledby="scanHomeTodayTitle"><div class="scan-home-section-head"><h2 id="scanHomeTodayTitle">Around your world</h2><span>Little things you can do</span></div><div id="scanHomeActions" class="scan-home-actions"></div><div id="scanHomeBuildingSection" class="home-building-section" hidden><h3>Ready to build</h3><div id="scanHomeBuildings" class="home-building-list"></div></div></section>
-      <section id="scanHomeVillageSection" class="scan-home-villages" aria-labelledby="scanHomeVillagesTitle" hidden><div class="scan-home-section-head"><h2 id="scanHomeVillagesTitle">Your villages</h2><button type="button" id="scanHomeAllVillages"><span id="scanHomeVillageCount"></span> ↗</button></div><div id="scanHomeVillages" class="scan-home-village-list"></div></section>
-      <section id="scanHomeRouteSection" class="scan-home-destinations" aria-labelledby="scanHomeRoutesTitle"><div class="scan-home-section-head"><h2 id="scanHomeRoutesTitle">Explore Alderwing</h2><span>Your world, one tap away</span></div><div id="scanHomeRoutes" class="scan-home-routes"></div></section>
-      <section class="scan-home-tools" aria-label="Scanning session">
+      <section class="scan-home-today" aria-label="Your next quest"><div id="scanHomeActions" class="scan-home-actions"></div></section>
+      <div id="scanHomeDeskPanels" class="desk-panels">
+        <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Stores</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Weapons & armour; scroll independently"></div></section>
+        <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; scroll independently"></div></section>
+        <section class="desk-panel desk-panel-training" aria-labelledby="desk-training-title"><button type="button" class="desk-panel-heading" data-home-action="panel-training"><span id="desk-training-title">Training</span><small id="desk-training-count"></small><span aria-hidden="true">↗</span></button><div id="desk-training-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Drills & rewards; scroll independently"></div></section>
+        <section class="desk-panel desk-panel-hospital" aria-labelledby="desk-hospital-title"><button type="button" class="desk-panel-heading" data-home-action="panel-hospital"><span id="desk-hospital-title">Hospital</span><small id="desk-hospital-count"></small><span aria-hidden="true">↗</span></button><div id="desk-hospital-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Birds needing care; scroll independently"></div></section>
+        <section class="desk-panel desk-panel-completed" aria-labelledby="desk-completed-title"><button type="button" class="desk-panel-heading" data-home-action="panel-completed"><span id="desk-completed-title">Completed</span><small id="desk-completed-count"></small><span aria-hidden="true">↗</span></button><div id="desk-completed-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Not yet checked; scroll independently"></div></section>
+        <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Can build</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Village & town projects; scroll independently"></div></section>
+      </div>
+      <details id="scanHomeSession" class="scan-home-tools"><summary>Scan results & settings</summary><div class="desk-session-body"><button type="button" id="deskSessionStop" hidden>Stop listening</button>
       <!-- Session tools remain below the prominent home scanning controls. -->
       <div class="scan-mode-toggle">
         <button class="scan-mode-btn active" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
@@ -4675,7 +4680,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="scan-result-conf" id="scanResultConf"></div>
         </div>
       </div>
-      </section>
+      </div></details>
       </div>
     </div>
 
@@ -5547,15 +5552,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
 <script src="battle_core.js?v=continuous-world-v391-20260910"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="loot_crafting_core.js?v=little-folk-residents-v350-20260905"></script>
+<script src="loot_crafting_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="player_equipment_core.js?v=continuous-world-v391-20260910"></script>
-<script src="player_equipment.js?v=continuous-world-v391-20260910"></script>
-<script src="first_person_spell_core.js?v=continuous-world-v391-20260910"></script>
+<script src="player_equipment.js?v=wilderness-birds-v395-20260913"></script>
+<script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="first_person_cast_controls.js?v=continuous-world-v391-20260910"></script>
-<script src="wilderness_combat_core.js?v=continuous-world-v391-20260910"></script>
-<script src="wilderness_combat.js?v=continuous-world-v391-20260910"></script>
+<script src="wilderness_combat_core.js?v=wilderness-birds-v395-20260913"></script>
+<script src="wilderness_birds.js?v=wilderness-birds-v395-20260913"></script>
+<script src="wilderness_combat.js?v=wilderness-birds-v395-20260913"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
-<link rel="stylesheet" href="wilderness_combat.css?v=continuous-world-v391-20260910">
+<link rel="stylesheet" href="wilderness_combat.css?v=wilderness-birds-v395-20260913">
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -5572,8 +5578,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=living-desk-v395-20260913"></script>
-<script src="scan_home.js?v=living-desk-v395-20260913"></script>
+<script src="scan_home_core.js?v=desk-panels-v396-20260913"></script>
+<script src="scan_home.js?v=desk-panels-v396-20260913"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -6850,7 +6856,7 @@ const DEFAULT_STATE = {
   player: { name: 'Bird Trainer', level: 1, xp: 0, totalCaptures: 0, wins: 0, losses: 0, coins: 220, branches: 0, stone: 0, tributeCollections: 0 },
   flock: [],
   discoveredSpecies: {},
-  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 1, tonic_of_vigour: 1 }, equipment: {}, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
+  inventory: { items: { berry_bundle: 1, shiny_pebble: 1 }, gear: { thorn_talons: 1, willow_wand: 1, ember_wisp: 0, tonic_of_vigour: 1 }, equipment: { '@player': { spell: 'ember_wisp' } }, giftsGiven: {}, larder: { small_bird_prey_ration: 2, mealworm_scoop: 2, sunflower_seeds: 2, live_minnow: 1, hedgerow_berries: 1, gizzard_grit: 1, ...STARTER_PREY_LARDER } },
   dietBadges: {}, // speciesKey → count of Field-Perfect meals served (Kitchen & Pantry)
   kitchenNotes: {}, // speciesKey → { perfect:[families], refused:[families] } — the player's own field notes
   kitchenStarterLarderVersion: 1, // One-time documented starter stock for the reachable Kitchen/Pantry proof.
@@ -18702,7 +18708,9 @@ function queueCompletionNotice(notice, deferredEffects) {
     sub: notice.sub || '',
     target: notice.target || null
   });
-  while (kept.length > COMPLETION_NOTICE_LIMIT) kept.shift();
+  while (kept.filter(n => !['empire-building','academy-building'].includes(n.kind)).length > COMPLETION_NOTICE_LIMIT) {
+    kept.splice(kept.findIndex(n => !['empire-building','academy-building'].includes(n.kind)), 1);
+  }
   gameState.completionNotices = kept;
   if (deferredEffects) deferredEffects.push(renderCompletionNotices);
   else renderCompletionNotices();
@@ -18722,7 +18730,7 @@ function renderCompletionNotices() {
   const live = list.filter(n => n && n.id && !(n.kind === 'quest' && questNoticeClaimed(n)));
   if (live.length !== list.length) gameState.completionNotices = live;
   if (!live.length) { host.innerHTML = ''; return; }
-  host.innerHTML = live.slice().reverse().map(n => {
+  host.innerHTML = live.slice(-COMPLETION_NOTICE_LIMIT).reverse().map(n => {
     // Older queued cards may still carry a consumed village's copied name.
     // Project them at render time so no stale save can re-expose a retired UI.
     let title = n.title || '', sub = n.sub || '', icon = n.icon;
@@ -18734,7 +18742,7 @@ function renderCompletionNotices() {
         sub = townDisplayName(settlement) + ' — tap to open Town Hall';
       }
     }
-    return '<div class="completion-notice" role="button" tabindex="0" data-notice-go="' + n.id + '" aria-label="' + escapeHtml((title + '. ' + sub).trim()) + '">' +
+    return '<div class="completion-notice" data-notice-kind="' + escapeHtml(n.kind) + '" role="button" tabindex="0" data-notice-go="' + n.id + '" aria-label="' + escapeHtml((title + '. ' + sub).trim()) + '">' +
       '<span class="completion-notice-icon" aria-hidden="true">' + icon + '</span>' +
       '<span class="completion-notice-text">' +
         '<span class="completion-notice-title">' + escapeHtml(title) + '</span>' +
@@ -22290,7 +22298,7 @@ function lootCore() { if (!window.BurbzLootCore) throw new Error('BurbzLootCore 
 const GEAR_ART_ROOT = 'assets/gear/';
 function gearIconHTML(item) {
   const fallback = escapeHtml((item && item.icon) || '🛡️');
-  if (!item || !item.id) return fallback;
+  if (!item || !item.id || item.kind==='bow' || item.kind==='ammo') return fallback;
   return '<span class="gear-icon-stack" aria-hidden="true"><span class="gear-icon-fallback">' + fallback + '</span>' +
     '<img class="gear-art" src="' + GEAR_ART_ROOT + encodeURIComponent(item.id) + '.webp" alt="" loading="lazy" draggable="false" ' +
     'onload="this.previousElementSibling.style.opacity=0" onerror="this.remove()"></span>';
@@ -23081,10 +23089,21 @@ function scanHomeBuildOpportunities() {
   }
   return rows;
 }
+function scanHomeDeskSnapshot() {
+  const L=lootCore(),now=Date.now(),flock=gameState.flock||[];
+  const stores=Object.entries(gameState.inventory?.gear||{}).map(([id,qty])=>({item:L.gearById(id),qty})).filter(({item,qty})=>item&&['weapon','armour'].includes(item.slot)&&Number.isSafeInteger(qty)&&qty>0).map(({item,qty})=>({id:item.id,name:item.label,slot:item.slot,count:qty,art:GEAR_ART_ROOT+encodeURIComponent(item.id)+'.webp',icon:item.icon}));
+  const kitchen=kitchenRosterEntries().map(entry=>{const care=entry.merlin?gameState.merlinCare:entry.bird?.care,status=dietHungerCore()?.hungerStatusForCare(care,now);return status?{id:entry.key,name:entry.name,art:getBirdArtUrl(entry.artBird),hunger:Math.round(status.hunger),level:status.level,label:status.label,away:!!entry.bird&&birdHasActiveExpedition(entry.bird.id)}:null;}).filter(row=>row&&row.level!=='fed').sort((a,b)=>b.hunger-a.hunger);
+  const training=(gameState.birdTrainingSessions||[]).filter(s=>s&&s.id).map(s=>window.BurbzAcademyCore?.advanceTrainingSession?BurbzAcademyCore.advanceTrainingSession(s,now):s).filter(s=>!['claimed','cancelled','failed'].includes(s.status)).map(s=>({id:s.id,name:s.birdName||'Bird',detail:s.label||'Training',ready:s.status==='complete',progress:Math.round(s.progressPct??0),remaining:Math.ceil(Math.max(0,s.endMs-now)/60000)*60000}));
+  const hospital=flock.filter(b=>b&&b.id&&Number.isFinite(b.hp)&&Number.isFinite(b.maxHp)&&b.hp<b.maxHp).map(b=>({id:b.id,name:birdDisplayName(b),art:getBirdArtUrl(b),hp:Math.max(0,b.hp),maxHp:b.maxHp,admitted:b.academy?.room==='hospital'})).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp);
+  const completed=(gameState.completionNotices||[]).filter(n=>n&&n.id&&['empire-building','academy-building'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
+  const loadout=gameState.inventory?.equipment?.["@player"]||{};
+  const equipment=L.GEAR_SLOTS.map(slot=>{const item=L.gearById(loadout[slot]);return{slot,id:item?.id,name:item?.label,art:item?GEAR_ART_ROOT+encodeURIComponent(item.id)+".webp":null,icon:item?.icon};});
+  return {stores,kitchen,training,hospital,completed,equipment};
+}
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
   if (!scanHomeBound) {
-    BurbzScanHome.bind({visible:()=>currentScreen==='scan',icon:key=>key==='kitchen'?'assets/academy-buildings-manga/kitchen.png':key==='training'?'assets/academy-buildings-manga/training-hall.png':'assets/ui/burbz-icon-set/'+(key==='village'?'empire':key)+'.webp',open:openScanHomeTarget});
+    BurbzScanHome.bind({visible:()=>currentScreen==='scan',icon:key=>key==='kitchen'?'assets/academy-buildings-manga/kitchen.png':key==='training'?'assets/academy-buildings-manga/training-hall.png':'assets/ui/burbz-icon-set/'+(key==='village'?'empire':key)+'.webp',open:openScanHomeTarget,closeSession:showSoundScanMode,listening:()=>continuousSoundScanWanted,stopListening:()=>stopContinuousSoundListening({userStop:true})});
     scanHomeBound = true;
   }
   snapshot = snapshot || normalizeActionBadgeState(Date.now());
@@ -23102,16 +23121,19 @@ function renderScanHome(snapshot, counts) {
     const waiting=(sideWalk.discoveries||[]).filter(d=>!d.claimed).length;
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
-  BurbzScanHome.render({gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  BurbzScanHome.render({...scanHomeDeskSnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
 }
 function openScanHomeTarget(target) {
   if (!target) return;
   const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
   if(target.kind==='route'&&!routes.includes(target.screen))return;
-  const gate=target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village','build-opportunity':'village',quest:'quests',walk:'map'})[target.kind];
+  const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village','build-opportunity':'village','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { showToast(featureUnlockHint(gate));renderScanHome();return; }
   SFX.tap();
-  if(target.kind==='kitchen')openKitchenHudShortcut();
+  if(target.kind==='player-equipment')openDeskPlayerEquipment(target.slot);
+  else if(target.kind==='feed-bird'){const entry=kitchenRosterEntryByKey(target.id);if(entry){if(entry.bird&&birdHasActiveExpedition(entry.bird.id)){showToast('This bird is away on a quest.');return;}openFeedSheet(entry.key);}}
+  else if(target.kind==='stores-gear'){storesState.tab='armoury';switchScreen('inventory');requestAnimationFrame(()=>document.getElementById('stores-gear-'+target.id)?.scrollIntoView({block:'center'}));}
+  else if(target.kind==='kitchen')openKitchenHudShortcut();
   else if(target.kind==='hospital')openHospitalHudShortcut();
   else if(target.kind==='training')openTrainingHub();
   else if(target.kind==='forge')openForge('craft');
@@ -23129,6 +23151,29 @@ function openScanHomeTarget(target) {
   else if(target.kind==='walk')switchScreen('map');
   else if(target.kind==='route')switchScreen(target.screen);
   else if(target.kind==='settings')$('settingsBtn')?.click();
+}
+
+let deskEquipmentSession=null;
+function closeDeskPlayerEquipment() {
+  if(!deskEquipmentSession)return false;
+  const {dialog,controller,sheet,focus,timer}=deskEquipmentSession;deskEquipmentSession=null;clearInterval(timer);
+  controller.abort();sheet?.dispose();if(dialog.open)dialog.close();dialog.remove();
+  renderScanHome();if(focus?.isConnected)focus.focus({preventScroll:true});return true;
+}
+function openDeskPlayerEquipment(slot) {
+  closeDeskPlayerEquipment();
+  const focus=document.activeElement,dialog=document.createElement('dialog'),controller=new AbortController();
+  dialog.className='desk-equipment-dialog';dialog.setAttribute('aria-label','Your first-person equipment');
+  dialog.innerHTML='<header><strong>Player inventory</strong><button type="button" class="desk-kit-close">Close ×</button></header><div class="desk-kit-body"></div>';
+  document.body.append(dialog);
+  const adapter=playerEquipmentAdapter(),sheet=BurbzPlayerEquipment.mount(dialog.querySelector('.desk-kit-body'),{...adapter,change:(...args)=>{const result=adapter.change(...args);renderScanHome();return result;}},controller.signal);
+  const timer=setInterval(()=>{if(document.visibilityState!=='hidden')sheet.update();},1000);
+  deskEquipmentSession={dialog,controller,sheet,focus,timer};
+  dialog.querySelector('.desk-kit-close').addEventListener('click',closeDeskPlayerEquipment,{signal:controller.signal});
+  dialog.addEventListener('cancel',e=>{e.preventDefault();closeDeskPlayerEquipment();},{signal:controller.signal});
+  dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeDeskPlayerEquipment();}},{signal:controller.signal});
+  dialog.showModal();
+  if(lootCore().GEAR_SLOTS.includes(slot))dialog.querySelector('[data-slot="'+slot+'"]').click();
 }
 
 let actionBadgeUpdateQueued = false;
@@ -23314,6 +23359,7 @@ document.addEventListener('click', ev => {
 let currentScreen = 'map';
 
 function switchScreen(name) {
+  if(name!=='scan')closeDeskPlayerEquipment();
   closeResourceQuestPrompt();
   // Every Stores shortcut uses the same existing progression gate as the dock.
   if (name === 'inventory' && !featureGateOpen('inventory')) { showToast(featureUnlockHint('inventory')); return false; }
@@ -29886,7 +29932,7 @@ function walkingCombatAdapter() {
     profile:{name:gameState.player.name,level:gameState.player.level},
     settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
     stored:structuredClone(gameState.wildernessCombat || null),
-    kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel)};},
+    kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),ammo:{reed_arrow:gameState.inventory.items?.reed_arrow??0}};},
     save:(record,extra)=>{
       if(identity!==gameState)throw Error('Your save changed. Reopen walking.');
       const snapshot=snapshotGameState();
@@ -29896,6 +29942,10 @@ function walkingCombatAdapter() {
           if(!Number.isSafeInteger(bag[id]||0)||(bag[id]||0)<0)throw Error('The potion count is invalid.');
           delete loadout.potion;
           if((bag[id]||0)>0){bag[id]--;loadout.potion=id;}
+        }
+        if(extra?.ammo){const weapon=lootCore().gearById(gameState.inventory.equipment?.['@player']?.weapon),bag=gameState.inventory.items,id=extra.ammo;
+          if(weapon?.id!==extra.weapon||weapon?.attack?.ammo!==id||!Number.isSafeInteger(bag?.[id])||bag[id]<1)throw Error('No arrow available for this bow.');
+          bag[id]--;
         }
         gameState.wildernessCombat=structuredClone(record);
         durableSaveState({throwOnFailure:true});return true;
@@ -37796,7 +37846,7 @@ const MAGPIE_RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const magpieMarketState = { tab:'buy' };
 
 function magpieMarketStock() {
-  return Object.values(lootCore().MATERIALS || {}).slice().sort((a,b) =>
+  return Object.values(lootCore().MATERIALS || {}).filter(m=>!m.craftOnly).slice().sort((a,b) =>
     MAGPIE_RARITY_ORDER.indexOf(a.rarity)-MAGPIE_RARITY_ORDER.indexOf(b.rarity) || a.label.localeCompare(b.label));
 }
 function magpieMarketDiscount() {
@@ -37809,7 +37859,7 @@ function magpieMarketOwned(id, kind = 'material') {
 }
 function magpieMarketBuyQuote(id, qty, kind = 'material') {
   const item = kind === 'material' ? lootCore().materialById(id) : kind === 'food' ? kitchenIngredientById(id) : null;
-  if (!item || item.id !== id || !Number.isSafeInteger(qty) || qty < 1) return { each:0, qty:0, total:0, afford:0 };
+  if (!item || item.craftOnly || item.id !== id || !Number.isSafeInteger(qty) || qty < 1) return { each:0, qty:0, total:0, afford:0 };
   return lootCore().buyQuote(kind, item.rarity, gameState.player.coins || 0, qty, magpieMarketDiscount());
 }
 function magpieMarketSell(id, qty, kind = 'material') {
@@ -37998,7 +38048,7 @@ function renderStoresLedger() {
   const now = Date.now();
   if (jobs.length) {
     html += '<div class="stores-panel"><div class="stores-panel-title">⚒️ On the anvil</div>' + jobs.map(job => {
-      const item = lootCore().gearById(job.gearId);
+      const item = lootCore().craftableById(job.gearId);
       const done = now >= Number(job.endMs);
       return '<div class="stores-ledger-row"><span class="slr-icon">' + gearIconHTML(item) + '</span>' +
         '<span class="slr-main"><span class="slr-name">' + escapeHtml(item.label) + '</span>' +
@@ -38079,7 +38129,7 @@ function renderStoresArmoury() {
     return '<div class="stores-panel"><div class="stores-panel-title">' + slots[slot] + '</div>' +
       '<div class="stores-res-grid">' + list.map(({ item, count }) => {
         const color = L.RARITY_META[item.rarity].color;
-        return '<div class="stores-res-card" style="border-color:' + color + '55;">' +
+        return '<div id="stores-gear-' + item.id + '" class="stores-res-card" style="border-color:' + color + '55;">' +
           '<div class="src-icon">' + gearIconHTML(item) + '</div>' +
           '<div class="src-main"><div class="src-name" style="color:' + color + ';">' + escapeHtml(item.label) + '</div>' +
           '<div class="src-copy">' + forgeGearStatLine(item) + '</div>' + storesSellRowHTML('gear', item.id) + '</div>' +
@@ -38311,12 +38361,17 @@ function commitEquipmentChange(owner, slot, gearId) {
   return result;
 }
 function playerEquipmentAdapter() {
-  const identity=gameState;
+  const identity=gameState,valid=()=>identity===gameState;
   return {snapshot:()=>window.BurbzPlayerEquipmentCore.snapshot(gameState,lootCore()),change:(slot,id)=>{
-    if(gameState!==identity)return {ok:false,reason:'Your save changed. Reopen the satchel.'};
+    if(!valid())return {ok:false,reason:'Your save changed. Reopen the satchel.'};
     return commitEquipmentChange(window.BurbzPlayerEquipmentCore.PLAYER,slot,id);
-  }};
+  },field:()=>{
+    const L=lootCore(),now=Date.now(),ids=['ember_wisp','reed_bow','reed_arrow'];
+    return {arrows:gameState.inventory.items?.reed_arrow||0,full:forgeQueueIsFull(),recipes:ids.map(id=>{const item=L.craftableById(id),recipe=L.recipeFor(id);return {id,label:item.label,icon:item.icon,qty:recipe.output?.qty||1,coins:recipe.coins,materials:Object.entries(recipe.materials).map(([key,n])=>({label:L.materialById(key).label,need:n,have:gameState.inventory.items?.[key]||0})),seconds:Math.ceil(L.craftTimeMs(id)/1000),ok:L.canCraft(recipe,gameState.inventory.items,gameState.player.coins).ok};}),jobs:ensureForgeJobs().filter(j=>ids.includes(j.gearId)).map(j=>({id:j.id,label:L.craftableById(j.gearId).label,seconds:Math.max(0,Math.ceil((j.endMs-now)/1000))}))};
+  },craft:id=>valid()&&['ember_wisp','reed_bow','reed_arrow'].includes(id)?craftGear(id):false,
+    collect:id=>valid()?collectForgeJob(id):false,cancel:id=>valid()?cancelForgeJob(id):false};
 }
+
 function equipItemOnBird(birdId, slot, gearId) {
   const result=commitEquipmentChange(birdId,slot,gearId);
   if(!result.ok){showToast(result.reason);return false;}
@@ -38351,7 +38406,7 @@ function ensureForgeJobs() {
   if (!Array.isArray(gameState.forgeJobs)) gameState.forgeJobs = [];
   // Heal jobs written by older builds or half-saved mid-write, so one bad
   // entry can never blank the Craft tab.
-  gameState.forgeJobs = gameState.forgeJobs.filter(j => j && typeof j === 'object' && j.gearId && lootCore().gearById(j.gearId));
+  gameState.forgeJobs.splice(0,gameState.forgeJobs.length,...gameState.forgeJobs.filter(j => j && typeof j === 'object' && j.gearId && lootCore().craftableById(j.gearId)));
   gameState.forgeJobs.forEach((j, i) => {
     if (!j.id) j.id = 'forge_' + j.gearId + '_' + i + '_' + Date.now();
     if (!Number.isFinite(Number(j.startMs))) j.startMs = Date.now();
@@ -38380,25 +38435,33 @@ function forgeQueueIsFull() { return ensureForgeJobs().length >= lootCore().FORG
 
 // Collect one finished commission. Ready jobs are never auto-claimed: the
 // player taps the glowing anvil, exactly like a city builder.
+function forgeCommitChange(action) {
+  const snapshot=snapshotGameState(),effects=[];
+  try { action(effects);if(!Number.isSafeInteger(gameState.player.coins)||gameState.player.coins<0)throw Error('Invalid purse');durableSaveState({throwOnFailure:true}); }
+  catch(error){restoreGameStateSnapshot(snapshot);showToast('Could not save the craft. Your coins, materials and anvil are unchanged.');return false;}
+  effects.forEach(effect=>{try{effect();}catch(_){}});return true;
+}
 function collectForgeJob(jobId) {
   const jobs = ensureForgeJobs();
   const job = jobs.find(j => j.id === jobId);
   if (!job) return;
   if (Date.now() < Number(job.endMs)) { showToast('⚒️ Still on the anvil — ' + formatForgeDuration(Number(job.endMs) - Date.now()) + ' to go.'); return; }
-  const item = lootCore().gearById(job.gearId);
-  gameState.forgeJobs = jobs.filter(j => j.id !== jobId);
-  gameState.inventory.gear[job.gearId] = (gameState.inventory.gear[job.gearId] || 0) + 1;
-  // Timed crafting landed after the diary was written: the piece is real when
-  // it leaves the anvil, not when the commission is placed, so log it here.
-  if (typeof logDiary === 'function') logDiary('craft', { item: item.label });
-  updateQuestProgress('gear_crafted', 1);
-  saveState();
+  const item = lootCore().craftableById(job.gearId);
+  const output=lootCore().recipeFor(job.gearId).output||{kind:'gear',id:job.gearId,qty:1};
+  if(!forgeCommitChange(effects=>{
+    const bag=output.kind==='gear'?gameState.inventory.gear:gameState.inventory.items,count=bag[output.id]??0;
+    if(!Number.isSafeInteger(count)||count<0||!Number.isSafeInteger(count+output.qty))throw Error('Invalid crafted count');
+    jobs.splice(0,jobs.length,...jobs.filter(j=>j.id!==jobId));bag[output.id]=count+output.qty;
+    if(output.kind==='gear')updateQuestProgress('gear_crafted',1,effects);
+    if(typeof logDiary==='function')logDiary('craft',{item:item.label});
+  }))return false;
   updateHeader();
   SFX.victory();
   vibrate(40);
   showToast('⚒️ Forged ' + item.icon + ' ' + item.label + '!');
   renderForge();
   renderInventory();
+  return true;
 }
 // Pull a commission off the anvil. The smith has not finished the piece, so
 // every scrap of material and every coin goes straight back to the player.
@@ -38408,17 +38471,17 @@ function cancelForgeJob(jobId) {
   const job = jobs.find(j => j.id === jobId);
   if (!job) return;
   const recipe = L.recipeFor(job.gearId);
-  const item = L.gearById(job.gearId);
-  gameState.forgeJobs = jobs.filter(j => j.id !== jobId);
-  if (recipe) {
-    addCoins(recipe.coins);
-    Object.entries(recipe.materials).forEach(([matId, qty]) => { gameState.inventory.items[matId] = (gameState.inventory.items[matId] || 0) + qty; });
-  }
-  saveState();
+  const item = L.craftableById(job.gearId);
+  if(!forgeCommitChange(()=>{
+    if(!recipe)throw Error('Unknown recipe');
+    jobs.splice(0,jobs.length,...jobs.filter(j=>j.id!==jobId));gameState.player.coins+=recipe.coins;
+    Object.entries(recipe.materials).forEach(([id,n])=>{const bag=gameState.inventory.items,have=bag[id]??0;if(!Number.isSafeInteger(have)||have<0||!Number.isSafeInteger(have+n))throw Error('Invalid refund');bag[id]=have+n;});
+  }))return false;
   updateHeader();
   SFX.tap();
   showToast('↩️ ' + (item ? item.label : 'Commission') + ' pulled off the anvil — materials and coins refunded.');
   renderForge();
+  return true;
 }
 // 1s ticker that keeps anvil countdowns live while the Craft tab is open, and
 // retires itself the moment nothing is counting down.
@@ -38450,7 +38513,7 @@ function renderForgeQueue() {
   const now = Date.now();
   const slots = [];
   jobs.slice(0, L.FORGE_MAX_JOBS).forEach(job => {
-    const item = L.gearById(job.gearId);
+    const item = L.craftableById(job.gearId);
     const color = L.RARITY_META[item.rarity].color;
     const done = now >= Number(job.endMs);
     const pct = forgeJobProgressPct(job, now);
@@ -38535,7 +38598,8 @@ function renderForgeCraft(body) {
   const queueFull = forgeQueueIsFull();
   const forgeLv = burbzForgeLevel();
   const groups = [
-    { label:'🗡️ Weapons — talons & wands', items:L.gearBySlot('weapon') },
+    { label:'🗡️ Weapons — talons, wands & bows', items:L.gearBySlot('weapon') },
+    { label:'🏹 Ammunition — six arrows per bundle', items:[L.materialById('reed_arrow')] },
     { label:'🛡️ Armour', items:L.gearBySlot('armour') },
     { label:'💍 Enhancements', items:L.gearBySlot('trinket').filter(item => item.kind !== 'satchel') },
     { label:'🎒 Satchels — carry more quest loot', items:L.gearBySlot('trinket').filter(item => item.kind === 'satchel') },
@@ -38582,7 +38646,7 @@ function renderForgeCraft(body) {
 function craftGear(gearId) {
   const L = lootCore();
   const recipe = L.recipeFor(gearId);
-  const item = L.gearById(gearId);
+  const item = L.craftableById(gearId);
   if (!recipe || !item) return;
   if (!L.canForgeAtLevel(item, burbzForgeLevel())) { showToast('⚒️ ' + item.label + ' needs Forge Lv ' + L.minForgeLevelForRarity(item.rarity) + ' — upgrade the forge first.'); return; }
   const stock = gameState.inventory.items;
@@ -38590,19 +38654,18 @@ function craftGear(gearId) {
   if ((gameState.player.coins || 0) < recipe.coins) { showResourceQuestPrompt('coins', recipe.coins, 'Forging ' + item.label); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   if (forgeQueueIsFull()) { showToast('⚒️ Every anvil is busy — collect a finished piece first.'); return; }
-  addCoins(-recipe.coins);
-  Object.keys(recipe.materials).forEach(matId => { stock[matId] -= recipe.materials[matId]; if (stock[matId] <= 0) delete stock[matId]; });
-  // The smith takes the commission; the piece itself takes real time, and the
-  // mightier the item the longer the hammering.
-  const now = Date.now();
-  const craftMs = L.craftTimeMs(item);
-  ensureForgeJobs().push({ id: 'forge_' + gearId + '_' + now + '_' + Math.floor(Math.random() * 1000), gearId: gearId, startMs: now, endMs: now + craftMs });
-  saveState();
+  const now=Date.now(),craftMs=L.craftTimeMs(item);
+  if(!forgeCommitChange(()=>{
+    gameState.player.coins-=recipe.coins;
+    Object.keys(recipe.materials).forEach(id=>{stock[id]-=recipe.materials[id];if(stock[id]===0)delete stock[id];});
+    ensureForgeJobs().push({id:'forge_'+gearId+'_'+now+'_'+Math.floor(Math.random()*1000000),gearId,startMs:now,endMs:now+craftMs});
+  }))return false;
   updateHeader();
   SFX.questComplete();
   vibrate(30);
   showToast('⚒️ ' + item.icon + ' ' + item.label + ' is on the anvil — ready in ' + formatForgeDuration(craftMs) + '.');
   renderForge();
+  return true;
 }
 
 function forgeTransmute(fromId, toId) {
@@ -43582,7 +43645,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'living-desk-v395-20260913';
+const BURBZ_BUILD = 'desk-panels-v396-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44564,6 +44627,9 @@ function recordScreenTrail(from) {
 // Close the topmost open layer, if any. Returns true when something closed —
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
+  if(closeDeskPlayerEquipment())return true;
+  if(currentScreen==='scan'&&$('birdCropOverlay')?.classList.contains('show')){photoIdCancel?.();closeBirdCropper();return true;}
+  const scanSession=$('scanHomeSession');if(currentScreen==='scan'&&scanSession?.open){scanSession.open=false;return true;}
   if (closeResourceQuestPrompt()) return true;
   if (window.BurbzGeographicHomePicker?.close()) return true;
   if (window.BurbzGeographicWorld?.back()) return true;
