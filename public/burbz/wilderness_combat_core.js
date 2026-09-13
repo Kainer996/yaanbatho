@@ -17,7 +17,7 @@
   async function refresh(p,time){if(closed||pending||typeof lookup!=='function'||time<retry)return;const at=geo(p.x,p.z);if(!at||known&&centre&&G.distance(at,centre)<80)return;pending=true;const dy=5000/111320,dx=dy/Math.max(.087,Math.cos(at.lat*Math.PI/180));try{const result=await lookup({west:at.lon-dx,east:at.lon+dx,south:Math.max(-G.MAX_LAT,at.lat-dy),north:Math.min(G.MAX_LAT,at.lat+dy),center:at});if(closed)return;if(!Array.isArray(result))throw Error('Unknown settlements');records=result.filter(r=>G.validCoordinate(r)).slice(0,64);centre=at;known=true;}catch(_){known=false;retry=time+5;}finally{pending=false;}}
   return{safeAt,refugeAt,refresh,key:(x,z)=>{const p=geo(x,z);return p?'walk:'+Math.round(p.lat*1e6)+':'+Math.round(p.lon*1e6):'unknown';},inspect:()=>({known,pending,centre,settlements:records.length}),dispose(){closed=true;records=[];}};
  }
- function create({B,L,C,profile={},kit=()=>({}),stored,save=()=>true,safeAt=()=>true,refugeAt=()=>false,ground=()=>null,allowed=()=>false,clear=()=>false,key=(x,z)=>x+':'+z,notice=()=>{}}){
+ function create({B,L,C,profile={},kit=()=>({}),stored,save=()=>true,safeAt=()=>true,refugeAt=()=>false,ground=()=>null,allowed=()=>false,clear=()=>false,walkClear=clear,key=(x,z)=>x+':'+z,notice=()=>{}}){
   const initial={version:1,hp:80,barrier:0,mods:[],cr:100,beat:0,cooldowns:{},rngState:hash(profile.name||'keeper'),records:[],potionCrCarry:0,potionUsed:false};
   let state={...initial,...clone(stored||{})},hero,signature='',pending=null,mode=kit().loadout?.weapon?'weapon':kit().loadout?.spell?'spell':'weapon',safe=null,closed=false,saveClock=0,spawnClock=0,serial=0,error='',lastPose=null;
   state.hp=clamp(state.hp,0,10000);state.cr=clamp(state.cr,0,100);state.beat=clamp(state.beat,0,99.999);state.barrier=clamp(state.barrier,0,10000);state.mods=(Array.isArray(state.mods)?state.mods:[]).filter(m=>m&&['atk','mag','def','res','spd','int','cha'].includes(m.stat)&&Number.isFinite(m.pct)&&Number.isFinite(m.turns)).slice(-16).map(m=>({stat:m.stat,pct:clamp(m.pct,-.8,1),turns:Math.max(1,clamp(m.turns,1,4))}));state.potionUsed=state.potionUsed===true;
@@ -65,14 +65,14 @@
     if(a.phase==='windup'){
      if(a.attackTime>=.55){a.phase='strike';a.attackTime=0;a.cr=0;
       a.fighter.mods=a.fighter.mods.map(m=>({...m,turns:m.turns-1})).filter(m=>m.turns>0);
-      if(d<=2.15&&hostile(pose)&&clear(a.position,body(pose))){let result=[];if(transaction(()=>{result=B.resolveExplorationSkill(state,a.fighter,B.PECK,[{fighter:hero}], 'opponent');}))events.push(...result);}
+      if(d<=2.15&&hostile(pose)&&walkClear(a.position,body(pose))){let result=[];if(transaction(()=>{result=B.resolveExplorationSkill(state,a.fighter,B.PECK,[{fighter:hero}], 'opponent');}))events.push(...result);}
      }
     }else if(a.phase==='strike'){if(a.attackTime>=.22){a.phase='recover';a.attackTime=0;}}
     else if(a.phase==='recover'){if(a.attackTime>=.35){a.phase='pursuit';a.attackTime=0;}}
-    else if(d<=1.85&&a.cr>=100&&hostile(pose)&&clear(a.position,body(pose))){a.phase='windup';a.attackTime=0;events.push({type:'windup',id:a.id});}
+    else if(d<=1.85&&a.cr>=100&&hostile(pose)&&walkClear(a.position,body(pose))){a.phase='windup';a.attackTime=0;events.push({type:'windup',id:a.id});}
     else if(d<60&&d>1.5){const speed=Math.max(.5,rate/40)*3.1,heading=Math.atan2(pose.z-a.position.z,pose.x-a.position.x),hand=hash(a.id)%2?1:-1;
      for(const angle of [0,hand*.65,-hand*.65,hand*1.25,-hand*1.25]){const travel=Math.min(speed*dt,Math.max(0,d-1.5)),q={x:a.position.x+Math.cos(heading+angle)*travel,z:a.position.z+Math.sin(heading+angle)*travel};
-      if(hostile(q)&&allowed(q.x,q.z)&&clear(a.position,{...q,y:ground(q.x,q.z)+.85})){a.position={...q,y:ground(q.x,q.z)+.85};a.moving=travel>0;break;}
+      if(hostile(q)&&allowed(q.x,q.z)&&walkClear(a.position,{...q,y:ground(q.x,q.z)+.85})){a.position={...q,y:ground(q.x,q.z)+.85};a.moving=travel>0;break;}
      }
     }
    }

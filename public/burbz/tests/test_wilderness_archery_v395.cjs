@@ -24,4 +24,8 @@ test('Overhanging canopy at camera height cannot make a walker immune; body-heig
 test('Craft diary and output persist together; failed saves restore diary and retry records exactly once',()=>{
  const a=app();a.gameState.diary={entries:[{type:'discover',species:'Crow',t:1}]};assert(a.craftGear('reed_arrow'));const job=a.gameState.forgeJobs[0];job.startMs=0;job.endMs=0;const before=JSON.stringify(a.gameState);a.fail=true;assert.equal(a.collectForgeJob(job.id),false);assert.equal(JSON.stringify(a.gameState),before);a.fail=false;assert(a.collectForgeJob(job.id));assert.equal(a.saved.diary.entries.length,2);assert.equal(a.saved.diary.entries[1].type,'craft');assert.equal(a.saved.diary.entries[1].item,'Reed Arrow');a.gameState=JSON.parse(JSON.stringify(a.saved));assert(!a.collectForgeJob(job.id));assert.equal(a.gameState.diary.entries.length,2);assert.equal(a.gameState.inventory.items.reed_arrow,6);
 });
+test('Birds use player walking clearance under foliage while the same foliage still stops projectiles',()=>{
+ const a=app(),c=combat(a,{clear:()=>false,walkClear:()=>true});tick(c,22);assert(c.inspect().hero.hp<80);
+ a.gameState.inventory.gear.willow_wand=1;a.commitEquipmentChange('@player','weapon','willow_wand');c.setMode('weapon');tick(c,3);assert(c.begin(pose));assert(c.release(pose));c.step(.05,pose);assert.equal(c.engine.projectiles.length,0);assert.equal(c.snapshot().records.length,0);
+});
 console.log(n+' archery and encounter groups passed');
