@@ -4484,7 +4484,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=home-equipment-v398-20260913">
+<link rel="stylesheet" href="scan_home.css?v=unified-alderwing-v399-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
@@ -4594,7 +4594,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span><h1>Your field desk.</h1></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
-      <div class="scan-home-command-bar"><div class="desk-merlin-anchor" aria-hidden="true"></div><button type="button" id="playerHomeStand">Enter Alderwing</button></div>
+      <div class="scan-home-command-bar"><div class="desk-perch-clearance" aria-hidden="true"></div><button type="button" id="playerHomeStand">Enter Alderwing</button></div>
       </div>
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
@@ -5582,7 +5582,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="geographic_places.css?v=map-pictures-v374-20260908">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=desk-composition-v397-20260913"></script>
-<script src="scan_home.js?v=home-equipment-v398-20260913"></script>
+<script src="scan_home.js?v=unified-alderwing-v399-20260913"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -5607,8 +5607,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="peep_needs_core.js?v=academy-flight-v370-20260908"></script>
 <script src="settlement_life_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="settlement_models.js?v=little-folk-residents-v350-20260905"></script>
-<script src="settlement_lighting.js?v=homestead-v385-20260910"></script>
+<script src="settlement_models.js?v=unified-alderwing-v399-20260913"></script>
+<script src="settlement_lighting.js?v=unified-alderwing-v399-20260913"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
@@ -5626,9 +5626,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=home-countryside-v387-20260910"></script>
-<script src="player_home_core.js?v=home-countryside-v387-20260910"></script>
-<script src="player_home_scene.js?v=connected-world-v386-20260910"></script>
-<script src="player_home.js?v=home-countryside-v387-20260910"></script>
+<script src="player_home_core.js?v=unified-alderwing-v399-20260913"></script>
+<script src="player_home_scene.js?v=unified-alderwing-v399-20260913"></script>
+<script src="player_home.js?v=unified-alderwing-v399-20260913"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
@@ -29738,7 +29738,8 @@ function settlementBuildingNeighbours(seed,buildingId) {
   if(!neighbours.length)return building.need==='shelter'?' · Waiting for neighbours.':'';
   return ' · ' + (building.need==='shelter'?'Home to ':'Crew: ') + neighbours.slice(0,3).map(p=>p.name).join(', ') + (neighbours.length>3?' and '+(neighbours.length-3)+' more.':'.');
 }
-function settlementPopulateResidents(kind, records, scene, targets, budget, pal) {
+function settlementPopulateResidents(...args) { const steps=settlementPopulateResidentSteps(...args); let next;do{next=steps.next();}while(!next.done);return next.value; }
+function* settlementPopulateResidentSteps(kind, records, scene, targets, budget, pal) {
   const life = window.BurbzSettlementLife;
   settlementResidentActors[kind] = [];settlementResidentBrains[kind]=[];
   if (!life) return;
@@ -29751,9 +29752,11 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
     if(o) { npc.userData.npc.name='A visiting builder'; return true; }
     npc.removeFromParent(); return false;
   });
-  scene.updateMatrixWorld(true);
+  scene.updateWorldMatrix(true,false);
+  for(const child of scene.children){yield 'resident transforms';child.updateMatrixWorld(true);}
   const doors = [], obstacles = [];
   for (const target of targets) {
+    yield 'resident door routes';
     if (!target.userData.buildingId || target.userData.construction) continue;
     target.traverse(model => {
       const data=model.userData;
@@ -29811,9 +29814,13 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
     if(!exit){const door=doors.find(d=>Math.hypot(d.entry.x-memory.x,d.entry.z-memory.z)<.12);exit=door?route(door):life.streetRoute({x:memory.x,z:memory.z},green,obstacles);}
     return exit?exit.concat([...target.path].reverse().slice(1)):null;
   }
+  // Resolve each shared street separately before a resident chooses services.
+  // The same cached routes are reused by every resident of this settlement.
+  for(const door of doors){yield 'resident street route';route(door);}
   const census=records.flatMap(rec=>ensureVillageEconomy(rec).residentLedger?.residents || []);
   const visibleIds=new Set(life.visibleResidents(census,Math.min(budget,census.length)).map(p=>p.id));
   for(const resident of census) {
+    yield 'resident model and routine';
     const seed=Number(resident.id.split(':resident:')[0]);
     const home=resident.homeId?doors.find(d=>d.seed===seed&&d.homeId===resident.homeId):null;
     const job=doors.find(d=>d.seed===seed&&d.id===resident.jobId);
@@ -29836,7 +29843,7 @@ function settlementPopulateResidents(kind, records, scene, targets, budget, pal)
   }
   if(kind==='town') townWalkers.push(...settlementResidentActors[kind]);
   else villageWalkers.push(...settlementResidentActors[kind]);
-  doors.forEach(route);
+  for(const door of doors){yield 'resident streets';route(door);}
   const streets=streetBatch.finish();streets.traverse(o=>{if(o.isMesh){o.castShadow=false;o.userData.street=true;}});scene.add(streets);
   if(kind==='town' && census.length) {
     const dog=villageMakeDog(villageRngFrom(Number(records[0].seed)),pal);
@@ -30023,7 +30030,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=landscape-atlas-v394b-20260913';
+        script.src = 'village_walk.js?v=unified-alderwing-v399-20260913';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -30127,7 +30134,7 @@ function buildingRoomsAdapter() {
       }catch(error){restoreGameStateSnapshot(snapshot);throw error;}
       try{updateHeader();}catch(_){}return text;
     },
-    people:target=>{
+    people:(target,contextKind)=>{
       if(target.scope==='academy'){
         return (gameState.flock||[]).flatMap(bird=>{
           const loc=resolveBirdCardLocation(bird);if(loc.screen!=='academy-room')return [];
@@ -30141,7 +30148,7 @@ function buildingRoomsAdapter() {
           return [{id:bird.id,name:birdDisplayName(bird),species:bird.species,bird:true,activity,home:'the Academy tree',job:loc.kind==='academy-post'?loc.label:null}];
         });
       }
-      const kind=currentScreen==='town'?'town':'village';settlementAnimateResidents(kind,Date.now(),settlementSceneMotionScale());
+      const kind=contextKind||(currentScreen==='town'?'town':'village');settlementAnimateResidents(kind,Date.now(),settlementSceneMotionScale());
       return settlementResidentBrains[kind].flatMap(model=>{const p=model.userData.resident,r=model.userData.routine,t=r?.room;
         if(!r?.inside||!t||Number(t.seed)!==Number(target.seed)||t.buildingId!==target.buildingId||(target.homeId&&target.homeId!==t.homeId))return[];
         return[{id:p.id,name:p.name,activity:r.activity,mood:r.mood,need:r.need,home:p.homeId,job:p.jobId,thirst:r.thirst,energy:r.energy,fun:r.fun}];
@@ -34226,21 +34233,26 @@ const VILLAGE_LANDMARK_MAKERS = [villageMakeChurch, villageMakeWindmill, village
   villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower,
   villageMakeShrine, villageMakeWatchtower];
 
-function buildVillageScene(v) {
+function buildVillageScene(v) { for(const _ of buildVillageSceneSteps(v)){} }
+function* buildVillageSceneSteps(v) {
   disposeVillageScene();
   const r = villageRngFrom(v.seed);
+  yield;
   // The real sky: the scene is lit for the player's local time of day. Each
   // village keeps its seeded night palette; daylight blends it toward the sun.
   const daylight = burbzDaylightGradeNow();
+  yield;
   // The pinned palette roll survives; the village's DNA then re-keys the base
   // palette into this settlement's own coat of paint before daylight grades it.
   const basePal = villageVariedPalette(VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)], v.seed);
   const pal = burbzDaylightPalette(basePal, daylight);
+  yield;
   // Settlement size shapes the clearing and surrounding nature; buildings
   // come exclusively from the saved construction ledger.
   const sizeRoll = r();
   const tier = sizeRoll < 0.34 ? 0 : sizeRoll < 0.74 ? 1 : 2; // 0 hamlet · 1 village · 2 town
   const groundR = 30 + tier * 5;
+  yield;
   // How rebuilt this settlement is. The darkness left every village wrecked, so
   // an unliberated (or freshly liberated) village shows only rubble and a
   // couple of broken shells; it fills back in as the governor raises buildings.
@@ -34249,6 +34261,7 @@ function buildVillageScene(v) {
   const ruinStage = devLevel <= 0 ? 0 : devLevel < 5 ? 1 : 2; // 0 wrecked · 1 rebuilding · 2 flourishing
   const lifeSnapshot = econRec ? villageEconomySnapshot(econRec) : null;
   const lifeBudget = villageAmbientLifeBudget(lifeSnapshot, tier, false, villageSceneQuality);
+  yield;
   // Every settlement is also built to one of five plans — and the plans are no
   // longer all rings around a point: a loose village green, a crossroads
   // settlement, a riverside village with a footbridge, a single high street
@@ -34268,6 +34281,7 @@ function buildVillageScene(v) {
   villageScene.fog = new THREE.Fog(skyCols.hor.clone(), 34 + tier * 4, 78 + tier * 8);
   villageScene.add(villageSkyDome(skyCols));
 
+  yield;
   // ---- placement registry: scatter without piling props into each other -----
   // A hamlet keeps only a small clearing by its well; formal plans keep the
   // whole square clear.
@@ -34296,9 +34310,11 @@ function buildVillageScene(v) {
     }
     return null;
   }
+  yield;
   // Riverside villages keep to the dry bank; everything scatters into this arc.
   const dryArc = layout === 'riverside' ? { c: riverA + Math.PI, s: 3.4 } : { c: undefined, s: undefined };
 
+  yield;
   // ---- Terrain: a flat meadow that swells into rolling moonlit hills at the
   // treeline. The village floor stays perfectly level so every building and
   // prop still sits at y=0; only the outer belt (and the forest on it) climbs.
@@ -34328,6 +34344,7 @@ function buildVillageScene(v) {
   villageScene.userData.walkTerrain = { radius:groundR - 2, heightAt,
     river:layout === 'riverside' ? { x:riverPx, z:riverPz, ux:riverUx, uz:riverUz, width:riverW } : null };
 
+  yield;
   // Ground, plaza and paths
   const grassTile = 4.6; // world units per texture tile
   const groundGeo = (() => {
@@ -34365,6 +34382,7 @@ function buildVillageScene(v) {
   ground.receiveShadow = true;
   villageScene.add(ground);
   villageScene.userData.walkSurface={ground,radius:groundR,palette:pal,corridors:[]};
+  yield;
   // Worn patches in the turf — snowdrifts in frost, leaf-litter in autumn
   const patchColor = pal.weather === 'snow' ? 0xdfe4ec : pal.weather === 'leaves' ? 0x6a4a20 : new THREE.Color(pal.ground).offsetHSL(0.03, -0.2, 0.13).getHex();
   const patchMat = new THREE.MeshLambertMaterial({ color: patchColor, transparent: true, opacity: 0.85 });
@@ -34378,6 +34396,7 @@ function buildVillageScene(v) {
   const cobbleMat = villageCobbleMaterial(pal);
   villageScene.userData.walkSurface.roadMaterial=cobbleMat;
   const cobbleTile = 2.6; // world units per cobble tile
+  yield;
   // The cobbled centre matches the plan: a full market square for formal
   // plans, a modest widening of the high street for a lane, and only a small
   // worn clearing around the hamlet's well.
@@ -34385,6 +34404,7 @@ function buildVillageScene(v) {
   const plaza = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(plazaR, 28), (plazaR * 2) / cobbleTile, (plazaR * 2) / cobbleTile), cobbleMat);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; villageScene.add(plaza);
 
+  yield;
   // ---- layout groundwork ------------------------------------------------------
   if (layout === 'crossroads' || layout === 'lane') {
     // Cobbled roads — two meeting at the square, or one high street running
@@ -34507,11 +34527,13 @@ function buildVillageScene(v) {
     }
   }
 
+  yield;
   // Only the governor's built structures belong in this scene. Found trades
   // remain accessible from their existing shop controls below the square.
   const camAz = Math.PI / 2 - (startAngle + Math.PI / villageShopKeysFor(v.seed).length);
   villageBuildings = [];
 
+  yield;
   // ---- Wrecks & rubble left by the darkness ---------------------------------
   // Each village carries a couple of broken buildings (seeded, matching the
   // governor panel's wreckage list). Cleared wrecks still burn their rng draws
@@ -34536,6 +34558,7 @@ function buildVillageScene(v) {
     villageScene.add(wreck);
     villageBuildings.push(wreck); // tappable — clear the rubble for timber
   });
+  yield;
   // Loose drifts of rubble make an untouched village feel storm-struck; they
   // sweep away as soon as rebuilding starts.
   if (ruinStage === 0) {
@@ -34549,12 +34572,15 @@ function buildVillageScene(v) {
     }
   }
 
+  yield;
   // Homes and landmarks are rendered only from the construction ledger below.
 
+  yield;
   // The square's centre stands bare until the governor builds the Timber Well —
   // the well the player raises becomes the village centrepiece (drawn with the
   // other constructions below). Nothing pre-built ever claims the spot.
 
+  yield;
   // The merged-settlement standard: once this liberated village has grown
   // together with its neighbours into a town (or a city), its charter stone
   // and banners stand by the square — green pennants for a town's districts,
@@ -34570,6 +34596,7 @@ function buildVillageScene(v) {
     }
   }
 
+  yield;
   // Market stalls belong to the built Market Hall, never ambient scenery.
   // A bench or two facing the centrepiece
   for (let i = 0; i < (ruinStage >= 1 ? 1 + (tier > 0 ? 1 : 0) : 0); i++) {
@@ -34581,6 +34608,7 @@ function buildVillageScene(v) {
     villageScene.add(bench);
   }
 
+  yield;
   // Bunting strung across the square — nobody hangs bunting over rubble
   if (ruinStage === 2 && r() < 0.75) {
     const a = r() * Math.PI * 2;
@@ -34589,11 +34617,13 @@ function buildVillageScene(v) {
       new THREE.Vector3(Math.cos(a + Math.PI) * 5.5, 3.1, Math.sin(a + Math.PI) * 5.5)));
   }
 
+  yield;
   // Barrels, crates and sacks near the buildings — one barrel keeps the cat.
   // Amid ruins there's only a little salvage stacked by the wrecks.
   const clutterCount = villageBuildings.length ? (ruinStage >= 1 ? 5 + Math.floor(r() * 5) : 2 + Math.floor(r() * 2)) : 0;
   let catBarrel = null;
   for (let i = 0; i < clutterCount; i++) {
+    yield;
     const near = villageBuildings[Math.floor(r() * villageBuildings.length)];
     const prop = r() < 0.55 ? villageMakeBarrel(r, pal) : villageMakeCrates(r, pal);
     prop.position.set(near.position.x + (r() - 0.5) * 4.5, 0, near.position.z + (r() - 0.5) * 4.5);
@@ -34608,6 +34638,7 @@ function buildVillageScene(v) {
     villageScene.add(puss);
   }
 
+  yield;
   // Countryside set dressing — every piece rolls per village, so one place has
   // a duck pond and a scarecrow with its jury of sparrows, the next a fairy
   // ring, beehives, washing on the line and a snowman.
@@ -34640,6 +34671,7 @@ function buildVillageScene(v) {
     villageScene.add(piece);
   });
 
+  yield;
   // Riverside villages always keep one jetty out over the river itself — the
   // water is why they settled here. Flourishing villages staff it with fishers.
   if (layout === 'riverside' && ruinStage >= 1) {
@@ -34673,6 +34705,7 @@ function buildVillageScene(v) {
     }
   }
 
+  yield;
   // The village dog does its own patrol, tail going the whole way round
   if (ruinStage >= 1 && r() < 0.8) {
     const dog = villageMakeDog(r, pal);
@@ -34680,6 +34713,7 @@ function buildVillageScene(v) {
     villageWalkers.push(dog);
     villageScene.add(dog);
   }
+  yield;
   // Staffed workers move real loads between the yards and square. Route count
   // comes from the workforce ledger and remains capped on mobile.
   if (ruinStage >= 1) for (let i = 0; i < lifeBudget.traffic; i++) {
@@ -34691,18 +34725,21 @@ function buildVillageScene(v) {
     };
     villageScene.add(traffic);
   }
+  yield;
   // Hens peck about between the plaza and the first gardens. Like the
   // villagers they're welcome on the square itself, so no spotFree check.
   const henCount = villageSceneQuality.maxAmbientActors > 0
     ? Math.min(4, ruinStage === 0 ? 1 : 1 + Math.ceil(lifeBudget.livestock * 0.7))
     : 0; // one stubborn hen stays through anything unless reduced motion hides ambient actors
   for (let i = 0; i < henCount; i++) {
+    yield;
     const a = r() * Math.PI * 2, rad = 4.2 + r() * 3.2;
     const hen = villageMakeChicken(r, pal);
     hen.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
     hen.rotation.y = hen.userData.baseRot;
     villageScene.add(hen);
   }
+  yield;
   // A bard serenades the centrepiece on festival-ish nights
   if (ruinStage === 2 && r() < 0.55) {
     const a = r() * Math.PI * 2, rad = 1.7 + r() * 0.8;
@@ -34716,6 +34753,7 @@ function buildVillageScene(v) {
     villageScene.add(flock);
   }
 
+  yield;
   // Lantern posts along a couple of the cobbled paths (dark while in ruins)
   const lampCount = ruinStage === 0 ? 0 : 3 + tier;
   for (let i = 0; i < lampCount && villageBuildings.length; i++) {
@@ -34727,19 +34765,23 @@ function buildVillageScene(v) {
     villageScene.add(lamp);
   }
 
+  yield;
   // Wildflower patches brightening the green
   const flowerCount = 5 + tier * 2 + Math.floor(r() * 4);
   for (let i = 0; i < flowerCount; i++) {
+    yield;
     const a = r() * Math.PI * 2, rad = 5.5 + r() * 8.5;
     const flowers = villageMakeFlowers(r, pal);
     flowers.position.set(Math.cos(a) * rad, 0, Math.sin(a) * rad);
     villageScene.add(flowers);
   }
 
+  yield;
   // Detailed trees ringing the village — birches, pines, blob oaks, the odd
   // dead snag with its crow — thickened into loose copses here and there
   const treeCount = 14 + tier * 5 + Math.floor(r() * 7);
   for (let i = 0; i < treeCount; i++) {
+    yield;
     const a = (i / treeCount) * Math.PI * 2 + r() * 0.5;
     const rad = 13.5 + r() * 7.5;
     const tx = Math.cos(a) * rad, tz = Math.sin(a) * rad;
@@ -34759,11 +34801,13 @@ function buildVillageScene(v) {
     }
   }
 
+  yield;
   // …and beyond them, the deep wood: hundreds of instanced pines and
   // broadleaves closing in around the settlement, with glades, undergrowth
   // and mossy boulders. Costs only a handful of draw calls.
   villageScene.add(villageMakeForestBelt(r, pal, groundR, spotFree, tier, heightAt));
 
+  yield;
   // Meadow dressing: instanced grass tufts and sunlit pebbles dusted across
   // the green between the paths — two draw calls for a few hundred touches.
   if (ruinStage >= 1 && villageSceneQuality.maxAmbientActors > 0) {
@@ -34807,6 +34851,7 @@ function buildVillageScene(v) {
     villageScene.add(fxGroup);
   }
 
+  yield;
   // Butterflies ride the warm air over the flowers (daylight only — the dusk
   // rebuild naturally drops them because they're added below only when sunny)
   if (lifeBudget.birds > 0 && daylight.stars < 0.4) {
@@ -34815,6 +34860,7 @@ function buildVillageScene(v) {
     villageScene.add(flutter);
   }
 
+  yield;
   // Night sky: layered stars (the small field twinkles), a real cratered moon
   // with its halo, slow clouds and the odd shooting star
   for (const tierCfg of [{ n: 260, size: 0.26, op: 0.55 }, { n: 130, size: 0.5, op: 0.95, twinkle: true }]) {
@@ -34835,6 +34881,7 @@ function buildVillageScene(v) {
     if (tierCfg.twinkle) { stars.userData.twinkle = tierCfg.op * daylight.stars; villageTwinkleStars = stars; }
     villageScene.add(stars);
   }
+  yield;
   // The moon hangs low over the treeline dead ahead of the opening camera, so
   // every village greets its governor with a harvest moon over the woods.
   const skyAim = -(camAz + Math.PI / 2); // bearing dead ahead of the opening camera (camera maps azimuth via sin/cos, hence the flip)
@@ -34862,6 +34909,7 @@ function buildVillageScene(v) {
     sunDisc.position.copy(moonDir).multiplyScalar(62);
     villageScene.add(sunDisc);
   }
+  yield;
   // Ground mist: broad soft sheets drifting low through the meadow
   const mistTex = villageSmokeTexture();
   for (let i = 0; i < (pal.weather === 'rain' ? 6 : 4); i++) {
@@ -34892,6 +34940,7 @@ function buildVillageScene(v) {
   villageShootingStar.visible = daylight.stars > 0.4; // no shooting stars at noon
   villageScene.add(villageShootingStar);
 
+  yield;
   // Weather — fireflies on mild nights, else snow, drifting leaves or rain
   if (pal.weather === 'fireflies') {
     const flyCount = 32;
@@ -34927,12 +34976,14 @@ function buildVillageScene(v) {
     villageScene.add(villageWeatherFx);
   }
 
+  yield;
   // Wildflower and tuft drifts across the meadow — one instanced draw each,
   // so even modest phones get a rich, non-blocky ground layer at 60fps.
   const __floraClaims = claimed.slice();
   villageScene.add(villageMakeFlowerField(r, pal, __floraClaims, layout === 'hamlet' ? 4.2 : 6.4));
   villageScene.add(villageMakeTuftField(r, pal, __floraClaims, layout === 'hamlet' ? 4.2 : 6.4));
 
+  yield;
   // ---- Governor's constructions ---------------------------------------------
   // Structures raised from the province management panel appear in the village
   // itself. A separate rng stream (er) keeps their placement stable without
@@ -34970,7 +35021,8 @@ function buildVillageScene(v) {
       if (buildingId) group.userData.buildingId = buildingId;
       villageBuildings.push(group);
     };
-    EMPIRE_BUILDINGS.forEach(b => {
+    for(const b of EMPIRE_BUILDINGS){
+      yield;
       const level = villageBuildingLevel(econRec, b.id), pending = villageConstructionOf(econRec, b.id);
       if (pending) {
         const spot = econScatter(8.5, 14, 3.1);
@@ -34979,9 +35031,10 @@ function buildVillageScene(v) {
         econLabel(site, '🏗️ ' + b.name + (level ? ' upgrade' : ''), 2.9, b.id);
         villageScene.add(site);
       }
-      if (!level) return;
+      if (!level) continue;
       const copies = ['cottages','market'].includes(b.id) ? level : 1;
       for (let part = 0; part < copies; part++) {
+    yield;
         const model = window.BurbzSettlementModels.building(THREE, b.id, level, er, pal);
         const footprint = model.userData.footprint;
         const radius = Math.hypot(footprint.width, footprint.depth) / 2 + .3;
@@ -34992,11 +35045,13 @@ function buildVillageScene(v) {
         econLabel(model, b.icon + ' ' + villageBuildingTier(b, level).name, 2.8, b.id);
         villageScene.add(model);
       }
-    });
+    }
   }
-  settlementPopulateResidents('village', econRec ? [econRec] : [], villageScene, villageBuildings, lifeBudget.people, pal);
+  yield 'resident population';
+  yield* settlementPopulateResidentSteps('village', econRec ? [econRec] : [], villageScene, villageBuildings, lifeBudget.people, pal);
   settlementClearRoofTrees(villageScene, villageBuildings);
 
+  yield;
   // Lighting: soft sky bounce and a shadow-casting key light aligned with the
   // body in the sky — cool moonlight at night, warm sunlight by day, with a
   // faint cool fill so shaded faces never fall to black
@@ -35015,6 +35070,7 @@ function buildVillageScene(v) {
   fill.position.copy(skyDirAt(skyAim + Math.PI - 0.4, 0.45)).multiplyScalar(30); // lifts the faces the moon leaves dark
   villageScene.add(fill);
 
+  yield;
   // Real moonlight shadows: every solid mesh casts, flat ground decals only
   // receive, self-lit glows and the contact-shadow discs stay out of the pass
   villageScene.traverse(o => {
@@ -35037,7 +35093,8 @@ function buildVillageScene(v) {
   villageBuiltShopsKey = discoveredVillageShopKeys(v.seed).join('.');
   villageBuiltBuildingsKey = villageBuildingSceneKey(econRec);
   if (villageRenderer) villageRenderer.toneMappingExposure = daylight.exposure;
-  window.BurbzSettlementLighting.install(THREE,{scene:villageScene,renderer:villageRenderer,buildings:villageBuildings,actors:settlementResidentActors.village,daylight,keyLight:moon,fillLight:fill,movers:villageNpcs.concat(villageChickens,villageRoofBirds,villageTraffic,villageLivestock,villageFlocks)});
+  yield* window.BurbzSettlementLighting.installSteps(THREE,{scene:villageScene,renderer:villageRenderer,buildings:villageBuildings,actors:settlementResidentActors.village,daylight,keyLight:moon,fillLight:fill,movers:villageNpcs.concat(villageChickens,villageRoofBirds,villageTraffic,villageLivestock,villageFlocks)});
+  yield;
   // Open on the gap between the first two buildings so nothing blocks the view
   // (camera uses sin/cos where buildings use cos/sin, hence the PI/2 flip)
   villageCam.azimuth = camAz;
@@ -35049,6 +35106,7 @@ function buildVillageScene(v) {
   villageCam.dist = Math.max(18, Math.min(48, Math.hypot(builtSize.x,builtSize.z)*.8+12));
   villageCam.tx = builtCenter.x; villageCam.tz = builtCenter.z;
 }
+
 
 function onVillageResize() {
   if (window.BurbzVillageWalk?.isOpen()) return;
@@ -35907,7 +35965,8 @@ function townMakeEconBuilding(buildingId, level, dr, pal) {
   return group;
 }
 
-function buildTownScene(settle) {
+function buildTownScene(settle) { for(const _ of buildTownSceneSteps(settle)){} }
+function* buildTownSceneSteps(settle) {
   disposeTownScene();
   const isCity = settle.tier === 'city';
   const r = villageRngFrom((Number(settle.heartSeed) ^ 0x517cc1b7) >>> 0);
@@ -35916,14 +35975,17 @@ function buildTownScene(settle) {
   const primaryHallRow = townPrimarySeatRow(settle);
   const primaryHallState = primaryHallRow && primaryHallRow.state;
   const hallLevel = Math.max(1, Math.min(5, Number(primaryHallState && primaryHallState.hallLevel) || 1));
+  yield;
   // The real sky: lit for the player's local time of day, like the village.
   const daylight = burbzDaylightGradeNow();
   const basePal = VILLAGE_PALETTES[Math.floor(r() * VILLAGE_PALETTES.length)];
   const pal = burbzDaylightPalette(basePal, daylight);
+  yield;
   // One compact town: the ground hugs the streets so the whole place fills
   // the classic city-builder frame.
   let groundR = isCity ? 36 : 32;
   let flatR = groundR - 10;
+  yield;
   // Mark the shared registries so district builders' walkers, birds, cloths,
   // hens, smokes and signs can be moved into the town's own animation lists
   // afterwards.
@@ -35940,6 +36002,7 @@ function buildTownScene(settle) {
   townScene.fog = new THREE.Fog(skyCols.hor.clone(), 40, 104);
   townScene.add(villageSkyDome(skyCols));
 
+  yield;
   // Rolling hills at the rim, level ground for the districts.
   const hillPh1 = r() * Math.PI * 2, hillPh2 = r() * Math.PI * 2, hillAmp = 1.8 + r() * 1.4;
   const heightAt = (x, z) => {
@@ -35988,12 +36051,14 @@ function buildTownScene(settle) {
   townScene.add(ground);
   townEconBuildings.push(ground);
 
+  yield;
   // ---- The shared market square at the settlement's heart -------------------
   const cobbleMat = villageCobbleMaterial(pal);
   const cobbleTile = 2.6;
   const plazaR = isCity ? 8 : 6.6;
   const plaza = new THREE.Mesh(villageScaleUV(new THREE.CircleGeometry(plazaR, 30), (plazaR * 2) / cobbleTile, (plazaR * 2) / cobbleTile), cobbleMat);
   plaza.rotation.x = -Math.PI / 2; plaza.position.y = 0.02; townScene.add(plaza);
+  yield;
   // The charter stone: one pennant per district, gold for a city.
   const standard = villageMakeSettlementStandard(r, pal, { tier: settle.tier, memberCount: settle.villageCount });
   standard.position.set(0, 0, 0);
@@ -36015,6 +36080,7 @@ function buildTownScene(settle) {
     works.position.set(hallWorksPlot.x, 0, hallWorksPlot.z);
     townScene.add(works);
   }
+  yield;
   // No seeded wells, stalls or landmark buildings: the wards below supply
   // every constructed home and yard. The earned civic Hall keeps its place.
   for (const a of [0.3, Math.PI * 0.8, Math.PI * 1.45]) {
@@ -36032,6 +36098,7 @@ function buildTownScene(settle) {
     hen.position.set((r() - 0.5) * plazaR, 0, (r() - 0.5) * plazaR);
     townScene.add(hen);
   }
+  yield;
   // Staffed yards put real traffic on the roads; stocked provisions bring
   // grazing animals, and prosperity draws a visible flock over the rooftops.
   for (let i = 0; i < townLifeBudget.traffic; i++) {
@@ -36051,6 +36118,7 @@ function buildTownScene(settle) {
   }
   if (townLifeBudget.birds > 0) townScene.add(villageMakeOverheadFlock(r, pal, townLifeBudget.birds));
 
+  yield;
   // ---- One town, knit from every ward ---------------------------------------
   // Yaan's rule (2026-08-17): no quarter borders, no separate pads — one
   // cohesive town. A shared plot ring hands out ground around the single
@@ -36090,7 +36158,8 @@ function buildTownScene(settle) {
   const HOME_RING = plazaR + 3.4;   // cottages and shopfronts just off the square
   const YARD_RING = plazaR + 7.6;   // working yards on the street behind them
   const EDGE_RING = plazaR + 11.4;  // wreckage waits at the town's edge
-  settle.villages.forEach((v, i) => {
+  for(const [i,v] of settle.villages.entries()){
+    yield;
     const seed = Number(v.seed) >>> 0;
     const dr = villageRngFrom((seed ^ 0x2545f491) >>> 0);
     const district = new THREE.Group();
@@ -36135,11 +36204,12 @@ function buildTownScene(settle) {
     // Every completed building comes from this ward's authoritative ledger,
     // including its real homes. An active upgrade keeps the existing building
     // and its separate scaffold; a first build has only the scaffold above.
-    if (wardRec) EMPIRE_BUILDINGS.forEach(b => {
+    if(wardRec)for(const b of EMPIRE_BUILDINGS){
+      yield;
       const yardLevel = villageBuildingLevel(wardRec, b.id);
-      if (!yardLevel) return;
+      if (!yardLevel) continue;
       const yard = townMakeEconBuilding(b.id, yardLevel, dr, dpal);
-      if (!yard) return;
+      if (!yard) continue;
       const isHome = b.id === 'cabin' || b.id === 'cottages';
       const bounds = new THREE.Box3().setFromObject(yard);
       const clearance = Math.hypot(Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x)),Math.max(Math.abs(bounds.min.z),Math.abs(bounds.max.z))) + 1.25;
@@ -36150,7 +36220,7 @@ function buildTownScene(settle) {
       yard.userData.buildingId = b.id;
       district.add(yard);
       townEconBuildings.push(yard);
-    });
+    }
     // Lamplight where the ward's street meets the square; a wrecked ward
     // keeps no lamplit yard.
     if (i < 8 && dRuin >= 1) {
@@ -36163,7 +36233,8 @@ function buildTownScene(settle) {
     }
     townScene.add(district);
     townDistrictGroups.push(district);
-  });
+  }
+  yield;
   const requiredGroundR = Math.max(...planted.map(p=>Math.hypot(p.x,p.z)+p.rad)) + 9;
   if(requiredGroundR>groundR) {
     const scale=requiredGroundR/groundR;
@@ -36176,10 +36247,12 @@ function buildTownScene(settle) {
     vertices.needsUpdate=true;uvs.needsUpdate=true;groundGeo.computeVertexNormals();groundGeo.computeBoundingSphere();
     townScene.fog.far=Math.max(104,groundR*2.5);
   }
-  settlementPopulateResidents('town', townMemberRecords(settle), townScene, townEconBuildings, townLifeBudget.people, pal);
+  yield 'resident population';
+  yield* settlementPopulateResidentSteps('town', townMemberRecords(settle), townScene, townEconBuildings, townLifeBudget.people, pal);
   townScene.userData.landRadius=groundR;
   townScene.userData.walkTerrain={radius:groundR-2,heightAt,river:null};
   townScene.userData.walkSurface={ground,radius:groundR,palette:pal,roadMaterial:cobbleMat};
+  yield;
   // ---- Lanes: a few cobbled streets radiating out from the square -----------
   for (let li = 0; li < 4; li++) {
     const laneA = (li / 4) * Math.PI * 2 + r() * 0.7;
@@ -36208,9 +36281,11 @@ function buildTownScene(settle) {
       prev = pt;
     }
   }
+  yield;
   // Wildflower and tuft drifts: two instanced draws dress the whole town.
   townScene.add(villageMakeFlowerField(r, pal, planted, plazaR));
   townScene.add(villageMakeTuftField(r, pal, planted, plazaR));
+  yield;
   // Loose trees between the streets, never on someone's plot. Each tree wears
   // the leaf palette of whichever ward's ground it stands near, so the whole
   // town visibly carries its three founding villages' looks.
@@ -36235,12 +36310,15 @@ function buildTownScene(settle) {
     tree.position.set(tx, heightAt(tx, tz), tz);
     townScene.add(tree);
   }
+  yield;
   // The dark forest belt blends every ward's foliage around the rim.
   const belt = villageMakeForestBelt(r, pal, groundR, () => true, 2, heightAt);
+  yield;
   // Re-tint half the belt trees per ward so the ring reads as one blended realm.
   townScene.add(belt);
   settlementClearRoofTrees(townScene, townEconBuildings);
 
+  yield;
   // ---- Sky: stars, moon and drifting cloud -----------------------------------
   const starGeo = new THREE.BufferGeometry();
   const starPos = [];
@@ -36283,6 +36361,7 @@ function buildTownScene(settle) {
     townClouds.push(cloud);
   }
 
+  yield;
   // ---- The key light: moonlight by night, sunlight by day ---------------------
   townScene.add(new THREE.HemisphereLight(pal.hemiSky, pal.hemiGround, daylight.hemi));
   const moon = new THREE.DirectionalLight(daylight.keyColor, daylight.keyIntensity);
@@ -36298,6 +36377,7 @@ function buildTownScene(settle) {
   fill.position.copy(skyDirAt(skyAim + Math.PI - 0.4, 0.45)).multiplyScalar(36);
   townScene.add(fill);
 
+  yield;
   // Shadow flags: same rules as the village — decals receive only, glow
   // sprites and blob shadows stay out of the pass entirely.
   townScene.traverse(o => {
@@ -36313,6 +36393,7 @@ function buildTownScene(settle) {
     o.receiveShadow = true;
   });
 
+  yield;
   // Adopt the walkers, birds, cloths, hens, smokes and signs the shared
   // builders registered — the two scenes never fight over one list.
   townNpcs = townNpcs.concat(villageNpcs.splice(npcMark));
@@ -36330,7 +36411,8 @@ function buildTownScene(settle) {
   townBuiltKey = townSceneKey(settle);
   townBuiltPhase = daylight.phase;
   if (townRenderer) townRenderer.toneMappingExposure = daylight.exposure;
-  window.BurbzSettlementLighting.install(THREE,{scene:townScene,renderer:townRenderer,buildings:townEconBuildings,actors:settlementResidentActors.town,daylight,keyLight:moon,fillLight:fill,movers:townNpcs.concat(townChickens,townRoofBirds,townTraffic,townLivestock,townFlocks,townWalkers)});
+  yield* window.BurbzSettlementLighting.installSteps(THREE,{scene:townScene,renderer:townRenderer,buildings:townEconBuildings,actors:settlementResidentActors.town,daylight,keyLight:moon,fillLight:fill,movers:townNpcs.concat(townChickens,townRoofBirds,townTraffic,townLivestock,townFlocks,townWalkers)});
+  yield;
   // A classic city-builder opening: a fixed three-quarter view, high enough
   // to read the whole town. It stays put until the player moves it.
   townCam.azimuth = camAz;
@@ -36338,6 +36420,7 @@ function buildTownScene(settle) {
   townCam.dist = isCity ? 30 : 26;
   townCam.tx = 0; townCam.tz = 0;
 }
+
 
 function townAnimate(ts) {
   townAnimationRequest = 0;
@@ -42973,6 +43056,7 @@ const PLAYER_QUESTS = [
     measure:() => empireMapOpenCount() },
   { id:'pq_liberate',       name:'Liberate a village', desc:'Send Merlin to free the village nearest you', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'village',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_build_home', name:'Build your house', desc:'Choose a clear place in Alderwing and build your cottage for 25 timber', type:'home_built', target:1, reward:30, coins:0, icon:'🏡', go:'scan', measure:()=>gameState.playerHome?.tier>0?1:0 },
   { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to discover any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
     measure:() => discoveredSpeciesSet().size },
   // Merlin can lead starter errands, so the expedition loop opens before the
@@ -43083,6 +43167,7 @@ function syncActivePlayerQuest() {
 }
 
 function playerQuestGo(q) {
+  if(q.id==='pq_build_home'){enterGeographicWorld().catch(error=>showToast(error.message));return;}
   if (q.id === 'pq_liberate') { startVillageLiberationBattle(currentVillage()); return; }
   academyQuestGuidanceRoom = q.focusRoom || null;
   if (q.go === 'academy' && q.focusRoom && !isAcademyBuildingBuilt(q.focusRoom)) {
@@ -43656,7 +43741,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-equipment-v398-20260913';
+const BURBZ_BUILD = 'unified-alderwing-v399-20260913';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -43692,10 +43777,12 @@ const MERLIN_TUTORIAL_CHAPTERS = [
 // Stable lesson IDs preserve saved progress when copy and steps change.
 const MERLIN_LEGACY_STEP_CHAPTERS = ["story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "quests", "quests", "quests", "quests", "errand", "errand", "academy", "academy", "academy", "academy_tour", "academy_tour", "academy_tour", "academy_tour", "explore", "explore", "explore", "scan", "scan", "scan", "birdex", "birdex", "birdex", "battle", "battle", "battle", "village", "village", "village", "empire_villages", "empire_villages", "empire_towns", "empire_towns", "town", "town", "diary", "forge", "forge", "inventory", "leaderboards", "profile"];
 const MERLIN_TUTORIAL_STEPS = [
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome to Alderwing', screen:'map', target:null, text:'I am Merlin, your falcon guide. Discover real birds, recruit companions and free villages from the zombie Burbz.', id:'lesson-0' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Meet Merlin', screen:'map', target:'#petSprite', text:'Tap Merlin on his branch in the top-right corner.', action:{ event:'merlin-care-opened', hint:'Tap Merlin' }, id:'lesson-3' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Feed Merlin', screen:'map', target:'#merlinFeedBtn', text:'Tap Feed to give Merlin a small-bird prey ration.', action:{ event:'merlin-fed', hint:'Tap Feed' }, id:'lesson-6' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Start your first quest', screen:'map', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'Tap Quests to send Merlin on his first flight.', action:{ event:'tab:quests', hint:'Tap Quests' }, id:'lesson-12' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome, keeper', screen:'scan', target:null, text:'I’m Merlin, your falcon friend. Welcome to Alderwing! There’s a whole world waiting just beyond this desk.', id:'lesson-0' },
+  { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Tap Enter Alderwing. I’ve made a little shelter for you. Come and take your first look outside.', action:{event:'alderwing-returned',mode:'free',hint:'Enter Alderwing, look outside, then return to the desk'}, id:'alderwing-arrival-v395' },
+  { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin on his branch in the top-right corner.', action:{ event:'merlin-care-opened', hint:'Tap Merlin' }, id:'lesson-3' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Feed Merlin', screen:'scan', target:'#merlinFeedBtn', text:'Tap Feed to give Merlin a small-bird prey ration.', action:{ event:'merlin-fed', hint:'Tap Feed' }, id:'lesson-6' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Start your first quest', screen:'scan', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'Tap Quests to send Merlin on his first flight.', action:{ event:'tab:quests', hint:'Tap Quests' }, id:'lesson-12' },
   { chapterId:'quests', chapter:'First quest', title:'Send Merlin', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'Tap Merlin’s First Flight, then Send. Merlin is already selected.', action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Select First Flight, then Send' }, id:'lesson-15' },
   { chapterId:'quests', chapter:'First quest', title:'Claim the reward', screen:'quests', target:null, text:'Merlin returns in seconds. Tap Claim when he is back.', id:'lesson-16' },
   { chapterId:'errand', chapter:'Academy', title:'Build your Academy', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Tap Academy to build the Barracks. Merlin covers its cost.', action:{ event:'tab:academy', hint:'Tap Academy' }, id:'lesson-18' },
@@ -44216,6 +44303,8 @@ function positionMerlinTutorialStage(selector) {
   if (!stage) return;
   const rect = merlinTutVisibleTarget(selector)?.getBoundingClientRect() || null;
   stage.classList.toggle('is-top', !!(rect && rect.top > window.innerHeight * .48));
+  const task=$('merlinTutorialTask');
+  if(task){const top=selector==='#playerHomeStand'&&rect?Math.ceil(rect.bottom+12)+'px':'';if(task.style.top!==top)task.style.top=top;}
 }
 
 // Keep the spotlight glued to its target for the whole step: screens render
@@ -44251,6 +44340,7 @@ function merlinTutShowStep(i) {
   const step = MERLIN_TUTORIAL_STEPS[merlinTutSequence[i]];
   const text = $('merlinTutorialText');
   if (!step || !text) return;
+  if(step.action?.event==='alderwing-returned'&&gameState.playerHome?.arrival==='done'&&merlinTutMode!=='full'){merlinTutShowStep(i+1);return;}
   merlinTutStep = i;
   merlinTutClearAction();
   saveMerlinTutorialState('in_progress');
@@ -44318,7 +44408,7 @@ function merlinTutBack() {
   merlinTutShowStep(merlinTutStep - 1);
 }
 
-function endMerlinTutorial(completed) {
+function endMerlinTutorial(completed, {pause=false}={}) {
   const overlay = $('merlinTutorialOverlay');
   merlinTutActive = false;
   merlinTutClearAction();
@@ -44329,8 +44419,8 @@ function endMerlinTutorial(completed) {
   merlinTutSpotlightTarget(null);
   positionMerlinTutorialStage(null);
   // A finished OR skipped chapter counts as seen — Merlin never nags twice.
-  markMerlinChaptersSeen(merlinTutMode === 'full' ? MERLIN_TUTORIAL_CHAPTERS.map(c => c.id) : [merlinTutMode]);
-  saveMerlinTutorialState(completed ? 'completed' : 'skipped');
+  if(!pause)markMerlinChaptersSeen(merlinTutMode === 'full' ? MERLIN_TUTORIAL_CHAPTERS.map(c => c.id) : [merlinTutMode]);
+  saveMerlinTutorialState(pause?'in_progress':completed ? 'completed' : 'skipped');
   // Only the Settings replay walks itself back: in chapter mode a screen
   // change at the end is the player obeying "tap Quests", and undoing it
   // would punish them for doing exactly what Merlin asked.
@@ -44366,14 +44456,14 @@ function endMerlinTutorial(completed) {
 // First launch: after the intro video, Merlin tells the Tale of Burbz.
 function maybeStartMerlinTutorial(delay = 600) {
   if (merlinChaptersSeen().includes('story')) return;
-  setTimeout(() => { if (!merlinTutActive && !window.BurbzPlayerHome?.isOpen()) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
+  setTimeout(() => { if (!merlinTutActive && !window.BurbzPlayerHome?.isOpen() && !window.BurbzVillageWalk?.isOpen()) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
 }
 
 // Gradual teaching: each remaining chapter fires the first time its screen
 // opens — plus the guided-flow hand-offs, which fire on progress instead of
 // screens and survive reloads (an interrupted beat re-fires on the next visit).
 function maybeStartMerlinChapterForScreen(screenName) {
-  if (merlinTutActive || window.BurbzPlayerHome?.isOpen()) return;
+  if (merlinTutActive || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
   // The story always comes first; hold screen chapters until Merlin has spoken.
   if (!merlinChaptersSeen().includes('story')) return;
   const seen = merlinChaptersSeen();
@@ -44836,7 +44926,7 @@ function commitPlayerHomeAction(action) {
   if(!proposal.ok)return proposal;
   const before=gameState.playerHome,branches=gameState.player.branches,journey=gameState.worldJourney;
   gameState.playerHome=proposal.home;gameState.player.branches=proposal.wallet.branches;
-  if(action.kind==='anchor')gameState.worldJourney=null;
+  if(action.kind==='anchor'||action.kind==='build-home')gameState.worldJourney=null;
   const saved=durableSaveState();
   if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;gameState.worldJourney=journey;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
   try{updateHeader();refreshGeographicAvatarMarker();}catch(e){}return{ok:true};
@@ -44886,29 +44976,32 @@ async function enterGeographicWorld(handoff={}) {
     const last=gameState.lastKnownHome;if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
   }
   if(!gameState.playerHome?.anchor)return chooseGeographicHomeLocation(handoff);
-  await loadMapLibreIfNeeded();
+  await ensureVillageWalkModule();
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
-  const anchor={...gameState.playerHome.anchor},sessionSave=gameState;
+  const anchor={...gameState.playerHome.anchor};
   const local=handoff.localPose||(!handoff.pose&&!savedGeographicPose()?{x:0,y:0,z:4,yaw:Math.PI,pitch:0}:null);
   const pose=handoff.pose||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
-  handoff.release?.();BurbzPlayerHome.close('world');
-  geographicWorldVisit=null;
-  return BurbzGeographicWorld.open({anchor,pose,style:burbzMapStyle(),grade:burbzDaylightGradeNow,getHome:()=>gameState.playerHome,
-    createYard:(T,home)=>BurbzPlayerHomeScene.createYardContent(T,home),createSettlement:(T,record)=>BurbzGeographicSettlementScene.create(T,record),
-    settlementsInBounds:geographicSettlementRecords,character:walkingCharacterState,savePose:pose=>gameState===sessionSave&&saveGeographicPose(pose,anchor.revision),
-    enterHome:()=>BurbzPlayerHome.open('room',{fromDesk:false,pose:{x:0,y:0,z:3.8,yaw:0,pitch:0}}),
-    enterSettlement:enterGeographicSettlement,returnHome:()=>BurbzPlayerHome.open('room',{fromDesk:false}),moveHome:pose=>chooseGeographicHomeLocation({pose}),
-    onYardAction:(target,localPose)=>{
-      if(target.kind==='decorate'){BurbzPlayerHome.open('yard',{pose:localPose,decorate:true,returnToWorld:true});return{ok:true};}
-      if(target.kind==='chop'||target.kind==='tree')return commitPlayerHomeAction({kind:'chop',id:target.id,area:'yard',x:localPose.x,z:localPose.z});
-      if(target.kind==='find'){
-        const find=BurbzPlayerHomeCore.FINDS.find(f=>f.id===target.id&&f.area==='yard');
-        if(!find||Math.hypot(localPose.x-find.x,localPose.z-find.z)>1.8)return{ok:false,error:'Walk closer to look at this.'};
-        const result=gameState.playerHome.finds.includes(find.id)?{ok:true}:commitPlayerHomeAction({kind:'find',id:find.id});
-        return result.ok?{ok:true,message:find.text}:result;
-      }
-      return{ok:false,error:'This action is unavailable.'};
-    }
+  const record=geographicSettlementRecords({center:pose||anchor})[0];
+  if(!record)throw Error('The nearby world could not be located. Your home is safe; please try again.');
+  handoff.release?.();BurbzPlayerHome.close('world');geographicWorldVisit=null;
+  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;
+  let ownedSource;
+  return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
+    character:walkingCharacterState,interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
+    source:async signal=>{
+      const content=await createTravellingSettlement(THREE,record,{signal,host:true});
+      if(signal.aborted){content.dispose();return null;}
+      const renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});
+      renderer.setSize(1,1,false);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.shadowMap.autoUpdate=false;
+      renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=burbzDaylightGradeNow().exposure;
+      const camera=new THREE.PerspectiveCamera(68,1,.08,650);
+      ownedSource={...content,scene:content.group,renderer,camera,world:content.discovery.world,
+        dispose(){content.dispose();BurbzManga?.dispose(renderer);renderer.dispose();renderer.forceContextLoss();}};
+      return ownedSource;
+    },
+    animate:time=>ownedSource?.update(time),
+    ready:()=>{if(gameState!==entrySave)return;const result=commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);},
+    resume:reason=>{if(['navigation','world','pagehide'].includes(reason))return;switchScreen('scan');renderScanHome();}
   });
 }
 async function chooseGeographicHomeLocation(handoff={}) {
@@ -44924,16 +45017,15 @@ async function chooseGeographicHomeLocation(handoff={}) {
   });
 }
 async function enterGeographicSettlement(record,pose) {
-  const anchor=gameState.playerHome.anchor;if(!anchor||!saveGeographicPose(pose,anchor.revision))return false;
-  geographicWorldVisit={record,pose,anchorRevision:anchor.revision};
+  if(!record||!BurbzGeographicWorldCore.validCoordinate(record))return false;
+  const anchor=gameState.playerHome?.anchor;
+  if(anchor&&!saveGeographicPose(pose,anchor.revision))return false;
+  // A deliberate management visit ends exploration at the existing village
+  // or Town Hall screen. Never auto-launch the legacy geographic walking view.
+  geographicWorldVisit=null;
+  BurbzVillageWalk.close('navigation');
   if(record.tier==='village')enterVillage(record);else openEmpireTown(record.id);
-  const buttonId=record.tier==='village'?'villageWalkBtn':'townWalkBtn',start=performance.now();
-  while(performance.now()-start<15000){
-    if(!geographicWorldVisit||gameState.playerHome.anchor?.revision!==anchor.revision)return false;
-    if(record.tier==='village'?!!villageRenderer&&villageBuiltSeed===record.seed:!!townRenderer&&currentTownSettlement()?.id===record.id){$(buttonId)?.click();return true;}
-    await new Promise(resolve=>setTimeout(resolve,80));
-  }
-  showToast('The settlement is still opening. Tap Walk to continue.');return true;
+  return true;
 }
 function returnFromGeographicSettlement(reason) {
   const visit=geographicWorldVisit;if(!visit||['navigation','pagehide','world'].includes(reason))return false;
@@ -44960,11 +45052,92 @@ function mountWalkingRealmMap(container,pose) {
   return lease;
 }
 function leaveWalkingRealmMap(){if(walkingRealmLease)BurbzVillageWalk.close('map-navigation');}
+// Build another settlement from the same authored generator without replacing
+// the overview scene or borrowing another WebGL context. Only these builder
+// registries are scoped; the canonical economy and building ledger stay shared.
+function captureSettlementBuilder() {
+  return {villageScene,villageRenderer,villageCamera,villageRunning,villageBuildings,villageSigns,villageTorches,villageSmokes,villageFireflies,villageWindmills,villageWalkers,villageRoofBirds,villageCloths,villageDucks,villageClouds,villageWaterMats,villageHomes,villageJobs,villageFishSpots,villageNpcs,villageChickens,villageButterflies,villageGroundFx,villageTraffic,villageLivestock,villageFlocks,villageConstructionSites,villageWeatherFx,villageShootingStar,villageTwinkleStars,villageCam,villageShadowTick,villageFallbackMode,villageBuiltSeed,villageBuiltPhase,villageBuiltLifeKey,villageBuiltShopsKey,villageBuiltBuildingsKey,villageActive,villageSceneQuality,villageLastFrameAt,villageAnimationRequest,villagePauseTimer,townScene,townRenderer,townCamera,townRunning,townAnimationRequest,townPauseTimer,townDistrictGroups,townEconBuildings,townSigns,townTorches,townSmokes,townWindmills,townWalkers,townRoofBirds,townCloths,townNpcs,townChickens,townClouds,townTraffic,townLivestock,townFlocks,townConstructionSites,townHallBuilding,townCam,townShadowTick,townFallbackMode,townBuiltKey,townBuiltPhase,townSceneQuality,townLastFrameAt,__villageLastT,townActiveId,anchors:{...villageJobAnchors},actors:{...settlementResidentActors},brains:{...settlementResidentBrains}};
+}
+function restoreSettlementBuilder(context) {
+  ({villageScene,villageRenderer,villageCamera,villageRunning,villageBuildings,villageSigns,villageTorches,villageSmokes,villageFireflies,villageWindmills,villageWalkers,villageRoofBirds,villageCloths,villageDucks,villageClouds,villageWaterMats,villageHomes,villageJobs,villageFishSpots,villageNpcs,villageChickens,villageButterflies,villageGroundFx,villageTraffic,villageLivestock,villageFlocks,villageConstructionSites,villageWeatherFx,villageShootingStar,villageTwinkleStars,villageCam,villageShadowTick,villageFallbackMode,villageBuiltSeed,villageBuiltPhase,villageBuiltLifeKey,villageBuiltShopsKey,villageBuiltBuildingsKey,villageActive,villageSceneQuality,villageLastFrameAt,villageAnimationRequest,villagePauseTimer,townScene,townRenderer,townCamera,townRunning,townAnimationRequest,townPauseTimer,townDistrictGroups,townEconBuildings,townSigns,townTorches,townSmokes,townWindmills,townWalkers,townRoofBirds,townCloths,townNpcs,townChickens,townClouds,townTraffic,townLivestock,townFlocks,townConstructionSites,townHallBuilding,townCam,townShadowTick,townFallbackMode,townBuiltKey,townBuiltPhase,townSceneQuality,townLastFrameAt,__villageLastT,townActiveId}=context);
+  for(const key of Object.keys(villageJobAnchors))delete villageJobAnchors[key];
+  Object.assign(villageJobAnchors,context.anchors);
+  Object.assign(settlementResidentActors,context.actors);
+  Object.assign(settlementResidentBrains,context.brains);
+}
+function withSettlementBuilder(context,action) {
+  const previous=captureSettlementBuilder();restoreSettlementBuilder(context);
+  try{return action();}finally{Object.assign(context,captureSettlementBuilder());restoreSettlementBuilder(previous);}
+}
+async function prepareSettlementSteps(steps,context,signal,metrics,phase) {
+  let result;metrics.stage='start';
+  try {
+    while(!result?.done) {
+      if(signal?.aborted)throw new DOMException('Settlement preparation cancelled','AbortError');
+      const start=performance.now();
+      withSettlementBuilder(context,()=>{do{const stepStart=performance.now();result=steps.next();const duration=performance.now()-stepStart;if(duration>8){metrics.slow||=[];metrics.slow.push({phase,stage:metrics.stage||'start',ms:duration});if(metrics.slow.length>20)metrics.slow.shift();}if(typeof result.value==='string')metrics.stage=result.value;}while(!result.done&&performance.now()-start<4);});
+      metrics.steps.push(performance.now()-start);
+      if(!result.done)await new Promise(resolve=>{let raf;const done=()=>{cancelAnimationFrame(raf);signal?.removeEventListener('abort',done);resolve();};raf=requestAnimationFrame(done);signal?.addEventListener('abort',done,{once:true});});
+    }
+    return result.value;
+  }finally{if(!result?.done)withSettlementBuilder(context,()=>steps.return?.());}
+}
+async function createTravellingSettlement(T,record,{signal,host=false}={}) {
+  const before=captureSettlementBuilder(),context={...before},started=performance.now(),metrics={steps:[]};
+  for(const [key,value] of Object.entries(context)) {
+    if(Array.isArray(value))context[key]=[];
+    else if(key.endsWith('Scene')||key.endsWith('Camera')||key.endsWith('Building')||key.endsWith('Fx')||key.endsWith('Star')||key.endsWith('Stars')||key.endsWith('Fireflies'))context[key]=null;
+  }
+  context.anchors={};context.actors={village:[],town:[]};context.brains={village:[],town:[]};
+  context.villageRenderer=context.townRenderer={shadowMap:{needsUpdate:false},toneMappingExposure:1};
+  context.villageCam={...before.villageCam};context.townCam={...before.townCam};
+  context.villageActive={...record};context.townActiveId=record.tier==='village'?null:record.id;
+  const town=record.tier!=='village';
+  let unbatch=()=>{},closed=false;
+  function dispose(){
+    if(closed)return;closed=true;unbatch();
+    const scene=town?context.townScene:context.villageScene;if(!scene)return;
+    scene.removeFromParent();const geometries=new Set(),materials=new Set(),textures=new Set();
+    scene.traverse(o=>{o.dispose?.();o.shadow?.dispose?.();if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const value of Object.values(m))if(value?.isTexture&&!value.userData?.shared)textures.add(value);}});
+    geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());scene.clear();
+  }
+  try {
+  await prepareSettlementSteps(town?buildTownSceneSteps(record.settlement):buildVillageSceneSteps(record),context,signal,metrics,'scene');
+  const scene=town?context.townScene:context.villageScene;
+  const buildings=(town?context.townEconBuildings:context.villageBuildings).filter(b=>!b.userData.townGround);
+  for(const b of buildings)if(b.userData.wardSeed===undefined)b.userData.wardSeed=record.seed;
+  const names=town?['townNpcs','townWalkers','townTraffic','townLivestock','townFlocks','townRoofBirds','townChickens','townWindmills','townCloths','townSigns']:
+    ['villageNpcs','villageWalkers','villageTraffic','villageLivestock','villageFlocks','villageRoofBirds','villageChickens','villageWindmills','villageCloths','villageSigns','villageDucks','villageButterflies'];
+  const movers=names.flatMap(key=>context[key]);
+  const surface=scene.userData.walkSurface,terrain=scene.userData.walkTerrain;
+  const world=await prepareSettlementSteps(BurbzVillageWalkScene.createSteps(T,scene,buildings,movers,terrain),context,signal,metrics,'collision');
+  const discoveryApi=villageDiscoveryAdapter(record.seed);discoveryApi.prepare();
+  const discoveryRecord=discoveryApi.record(),discoveryCore=BurbzVillageDiscoveryCore;
+  const discoveryCount=1+discoveryRecord.loot.length+discoveryRecord.lore.length+discoveryCore.quest(discoveryRecord).steps.length+discoveryCore.activities(discoveryRecord).reduce((n,a)=>n+a.story.steps.length,0);
+  const discoveryPoints=await prepareSettlementSteps(discoveryCore.positionSteps(world,world.spawn(),discoveryRecord.placementSeed,discoveryCount),context,signal,metrics,'discoveries');
+  const solids=buildings.map(b=>new T.Box3().setFromObject(b)).map(b=>({x:(b.min.x+b.max.x)/2,z:(b.min.z+b.max.z)/2,w:b.max.x-b.min.x,d:b.max.z-b.min.z,minY:b.min.y,maxY:b.max.y}));
+  // Use the host sky and light. A second local sky dome would enclose the
+  // traveller, while extra sun lights would change every material on arrival.
+  if(!host)scene.traverse(o=>{if(o.userData.sky||o.isLight)o.visible=false;});
+  surface.ground.visible=host;
+  unbatch=await prepareSettlementSteps(BurbzVillageWalkScene.batchSteps(T,scene,movers),context,signal,metrics,'batch');
+  if(signal?.aborted)throw new DOMException('Settlement preparation cancelled','AbortError');
+  let last=-Infinity;
+  return {group:scene,buildings,movers,solids,discovery:{api:discoveryApi,points:discoveryPoints,world},world:{...world,allowed:world.allowedBeyond},terrain,radius:surface.radius,blendRadius:surface.radius+64,surface,
+    people:target=>withSettlementBuilder(context,()=>buildingRoomsAdapter().people(target,town?'town':'village')),
+    slowSteps:metrics.slow||[],buildMs:metrics.steps.reduce((a,b)=>a+b,0),maxStepMs:Math.max(0,...metrics.steps),prepareMs:performance.now()-started,
+    update(time){if(closed||time-last<1/30)return;last=time;withSettlementBuilder(context,()=>town?townAnimateFrame(time,true):villageAnimateFrame(time,true));},
+    dispose
+  };
+  }catch(error){dispose();throw error;}
+}
+
 function continuousWalkingAdapter(record) {
   const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
   return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
     style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
-    records:geographicSettlementRecords,createSettlement:(T,r)=>BurbzGeographicSettlementScene.create(T,r),
+    records:geographicSettlementRecords,createSettlement:createTravellingSettlement,
+    buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
     getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
     savePose:pose=>gameState!==sessionSave?false:revision===undefined?true:saveGeographicPose(pose,revision)};
@@ -45005,10 +45178,10 @@ function initializePlayerHome() {
   });
   const last=gameState.lastKnownHome;
   if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
-  $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutActive)endMerlinTutorial(false);BurbzPlayerHome.open('room',{fromDesk:true});});
+  $('playerHomeStand')?.addEventListener('click',()=>{if(!commitPlayerHomeAction({kind:'arrival',event:'enter'}).ok)return;if(merlinTutActive)endMerlinTutorial(false,{pause:true});BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
-  if(gameState.playerHome.intro!=='done')BurbzPlayerHome.open(gameState.playerHome.intro==='desk'?'room':'overview');
-  else maybeShowIntroCutscene();
+  // Home is the opening screen. Standing begins the tour only after a gesture.
+  if(gameState.playerHome.arrival!=='done')maybeStartMerlinTutorial(450);else maybeShowIntroCutscene();
 }
 
 function landOnSoundScanScreen() {

@@ -1,5 +1,6 @@
 from pathlib import Path
 import subprocess
+import re
 ROOT = Path(__file__).resolve().parents[1]
 
 def test_personal_home_transactions_and_walkable_placement():
@@ -8,8 +9,7 @@ def test_personal_home_transactions_and_walkable_placement():
 def test_personal_home_assets_install_atomically():
     html=(ROOT/'index.html').read_text();sw=(ROOT/'sw.js').read_text();updater=(ROOT.parent.parent/'scripts/update-live-burbz.sh').read_text()
     for name in ['player_home.css','player_home_core.js','player_home_scene.js','player_home.js']:
-        release='homestead-v385-20260910' if name=='player_home.css' else 'connected-world-v386-20260910'
-        assert name+'?v='+release in html
+        release = re.search(re.escape(name) + r'\?v=([A-Za-z0-9_.-]+)', html)[1]
         assert sw.count("'./"+name+'?v='+release+"'")==3
         assert '"'+name+'"' in updater
     assert 'initializePlayerHome();' in html

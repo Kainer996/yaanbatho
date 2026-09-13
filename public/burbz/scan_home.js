@@ -29,9 +29,6 @@
  }
  function onClick(event){const button=event.target.closest('[data-home-action]');if(button&&boundSection.contains(button)){const target=targets.get(button.dataset.homeAction);if(target)options.open(target);}}
  function bind(next){options=next;const section=document.getElementById('screen-scan');if(boundSection!==section){boundSection?.removeEventListener('click',onClick);section.addEventListener('click',onClick);section.addEventListener('error',e=>{if(e.target.matches('.desk-mini-art img'))e.target.remove();},true);boundSection=section;signatures.clear();
-   const anchor=section.querySelector('.desk-merlin-anchor');
-   const placeCompanion=()=>{if(!section.classList.contains('active')||!anchor)return;const r=anchor.getBoundingClientRect();document.body.style.setProperty('--desk-merlin-left',(r.right-108)+'px');document.body.style.setProperty('--desk-merlin-top',(r.top+9)+'px');};
-   if(anchor){new ResizeObserver(placeCompanion).observe(section);new ResizeObserver(placeCompanion).observe(anchor);new MutationObserver(placeCompanion).observe(section,{attributes:true,attributeFilter:['class']});placeCompanion();}
    const session=document.getElementById('scanHomeSession'),photo=document.getElementById('photoIdStatus');
    if(photo)new MutationObserver(()=>{if(!photo.hidden)session.open=true;}).observe(photo,{attributes:true,attributeFilter:['hidden']});
    section.addEventListener('click',e=>{if(e.target.closest('#captureBtn,#scanImageBtn'))session.open=true;});

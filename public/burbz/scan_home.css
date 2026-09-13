@@ -230,7 +230,7 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan .scan-home-welcome{position:static;text-shadow:none;color:#f4dfae;text-align:left;padding:4px 0 0}
 #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font:500 21px/1.1 Georgia,serif;letter-spacing:0}
 #screen-scan .scan-home-command-bar{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:3px;padding:0;min-height:148px;min-width:0;background:none;border:0}
-#screen-scan .desk-merlin-anchor{width:150px;height:108px;flex:none;align-self:flex-end;pointer-events:none}
+#screen-scan .desk-perch-clearance{width:150px;height:108px;flex:none;align-self:flex-end;pointer-events:none}
 #screen-scan #playerHomeStand{min-height:44px;max-width:none;width:100%;padding:5px 6px;background:#263e32;color:#ffe2a2;border:1px solid #bca06a;border-radius:6px;font:700 13px/1.2 Rajdhani,sans-serif}
 #screen-scan .scan-home-main{grid-template-columns:minmax(0,1fr);grid-template-rows:76px 32px 50px minmax(0,1fr) 24px;gap:6px;padding:6px 8px;background:linear-gradient(#30261c,#201a13)}
 #screen-scan .scan-home-start{grid-column:1;grid-row:1;padding:4px;background:transparent;border:0;box-shadow:none}
@@ -251,8 +251,6 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan .desk-panel-heading{background:#3c3325;border-color:#c8b27b3d;color:#f4dfae}
 #screen-scan .desk-mini-art>img{background:transparent}
 #screen-scan .scan-home-tools{grid-column:1;grid-row:5}
-body[data-active-screen="scan"] #merlinPerchAssembly{scale:1;left:var(--desk-merlin-left);top:var(--desk-merlin-top);right:auto;margin-right:0;transform-origin:right center}
-body[data-active-screen="scan"] #merlinCareMenu{left:clamp(8px,var(--desk-merlin-left),calc(100vw - 300px));right:auto;top:calc(var(--desk-merlin-top) + 102px);margin-right:0}
 @media(orientation:portrait) and (max-height:730px){
  #screen-scan .desk-introduction{min-height:152px;grid-template-columns:minmax(0,1fr) 118px;padding:3px 7px}
  #screen-scan .scan-home-backdrop{max-height:121px}
@@ -277,7 +275,7 @@ body[data-active-screen="scan"] #merlinCareMenu{left:clamp(8px,var(--desk-merlin
  #screen-scan .scan-home-welcome{padding-top:10px;text-align:center}
  #screen-scan .scan-home-welcome h1,html[data-appearance="comic"] #screen-scan .scan-home-welcome h1{font-size:clamp(21px,2.5vw,32px)}
  #screen-scan .scan-home-command-bar{flex:none;min-height:0;width:100%;gap:12px}
- #screen-scan .desk-merlin-anchor{align-self:center}
+ #screen-scan .desk-perch-clearance{display:none}
  #screen-scan #playerHomeStand{width:min(100%,190px)}
  #screen-scan .scan-home-main{grid-column:2;grid-row:1;grid-template-rows:76px 38px 54px minmax(0,1fr) 24px;padding:10px;gap:8px}
  #screen-scan .scan-home-actions{display:flex}
@@ -359,3 +357,10 @@ body[data-active-screen="scan"] #merlinCareMenu{left:clamp(8px,var(--desk-merlin
 #screen-scan .desk-village-badge.available{background:#243d2c;color:#c0eac0;border-color:#759c72}
 #screen-scan .desk-village-badge.idle{color:#d8d0be;border-color:#877d67}
 .desk-equipment-dialog{inset:0;margin:auto;max-height:calc(100dvh - max(24px,env(safe-area-inset-top) + env(safe-area-inset-bottom) + 16px))}
+
+/* The shared Merlin perch stays beside the landscape rail on every page. */
+@media(orientation:landscape) and (min-width:640px){
+ #screen-scan .scan-home-start{padding-right:112px}
+ #screen-scan .scan-home-start-buttons{gap:5px}
+ #screen-scan .scan-home-start-buttons .scan-btn{padding-left:26px;font-size:12px}
+}

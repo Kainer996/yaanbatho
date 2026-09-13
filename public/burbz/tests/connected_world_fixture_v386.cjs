@@ -78,7 +78,7 @@ function createServer({root,baseline,port=8901,report,seed=true}){
   try{
    let bytes=fs.readFileSync(file);if(bytes.length<200&&bytes.toString().startsWith('version https://git-lfs.github.com/spec/'))throw Error('Unhydrated LFS fixture: '+name);
    if(/\.(html|js|css)$/.test(name)){const key=version+':'+name,versions=report.served[key]||=[];const digest=sha(bytes);if(!versions.includes(digest))versions.push(digest);}
-   if(name==='index.html'){let html=bytes.toString();if(!html.includes('\ninit();'))throw Error('bootstrap hook not found');bytes=Buffer.from(html.replace('\ninit();',HOOK+(seed?'\n'+SEED:'')+'\ninit();'));}
+   if(name==='index.html'){let html=bytes.toString();if(!html.includes('\ninit();'))throw Error('bootstrap hook not found');bytes=Buffer.from(html.replace('\ninit();',HOOK+(seed?'\n'+(typeof seed==='string'?seed:SEED):'')+'\ninit();'));}
    const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.webp':'image/webp','.png':'image/png','.svg':'image/svg+xml','.mp3':'audio/mpeg','.wav':'audio/wav'};
    res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');res.setHeader('Cache-Control','no-cache');res.end(bytes);
   }catch(error){report.missing.push({version,name,error:error.message});res.writeHead(404);res.end();}

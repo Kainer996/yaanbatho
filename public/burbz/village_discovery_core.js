@@ -57,10 +57,11 @@ function act(rec,type,id,giver){
 }
 // Flood only walkable space connected to the real spawn. Every edge is sampled
 // more finely than a player's radius, so pickups cannot land across walls/water.
-function positions(world,spawn,seed,count){
+function* positionSteps(world,spawn,seed,count){
  const step=.8,nodes=[{x:spawn.x,z:spawn.z}],seen=new Set(['0,0']),queue=[[0,0]],limit=Math.ceil(world.radius*2/step);
  function clear(a,b){for(let i=1;i<=8;i++)if(!world.allowed(a.x+(b.x-a.x)*i/8,a.z+(b.z-a.z)*i/8))return false;return true;}
  for(let head=0;head<queue.length&&nodes.length<15000;head++){
+  if(head%16===0)yield;
   const [ix,iz]=queue[head],a={x:spawn.x+ix*step,z:spawn.z+iz*step};
   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
    const x=ix+dx,z=iz+dz,key=x+','+z;if(seen.has(key)||Math.abs(x)>limit||Math.abs(z)>limit)continue;seen.add(key);
@@ -69,11 +70,13 @@ function positions(world,spawn,seed,count){
  }
  const candidates=shuffled(nodes,rng(seed)),chosen=[];
  // First point is the request post, just ahead of the spawn where possible.
- const near=nodes.filter(n=>Math.hypot(n.x-spawn.x,n.z-spawn.z)>=1.5).sort((a,b)=>Math.hypot(a.x-spawn.x,a.z-spawn.z)-Math.hypot(b.x-spawn.x,b.z-spawn.z));
- chosen.push(near[0]||nodes[0]);
+ let nearest=nodes[0],best=Infinity;
+ for(const node of nodes){const distance=Math.hypot(node.x-spawn.x,node.z-spawn.z);if(distance>=1.5&&distance<best){nearest=node;best=distance;}}
+ chosen.push(nearest);
  for(const gap of [3,1.5,.4])for(const node of candidates){if(chosen.length>=count)break;if(chosen.every(p=>Math.hypot(p.x-node.x,p.z-node.z)>=gap))chosen.push(node);}
  while(chosen.length<count)chosen.push(nodes[chosen.length%nodes.length]);
  return chosen.map(p=>({...p,y:world.height(p.x,p.z)}));
 }
-return {QUESTS,LORE,ACTIVITIES,LOOT,hash,rng,village,quest,activities,act,positions};
+function positions(...args){const steps=positionSteps(...args);let r;do{r=steps.next();}while(!r.done);return r.value;}
+return {QUESTS,LORE,ACTIVITIES,LOOT,hash,rng,village,quest,activities,act,positions,positionSteps};
 });
