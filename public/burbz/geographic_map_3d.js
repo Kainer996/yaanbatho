@@ -217,6 +217,27 @@
     state.forestBudget=PROFILES[state.tier].trees;
     let timer=null,disposed=false,layer=null,sourceId=null,control=null,toggle=null,status=null;
     let lastPlacementKey=null,elevationDirty=false;
+    const cameraClamp=map.getCenterClampedToGround?.();
+    let cameraManaged=false,cameraKey=null,cameraRevision=0;
+    function restoreCameraGround(){
+      if(!cameraManaged)return;cameraManaged=false;cameraKey=null;
+      map.setCenterClampedToGround(cameraClamp);
+      if(map.getCenterElevation()!==0)map.setCenterElevation(0);
+    }
+    function anchorCameraGround(){
+      if(cameraClamp!==true||typeof map.setCenterElevation!=='function'||
+        !state.terrainActive||!state.visible||interacting()||!map.isSourceLoaded(DEM_ID))return;
+      const center=map.getCenter(),key=[center.lng,center.lat,map.getZoom(),cameraRevision].join(':');
+      if(key===cameraKey)return;
+      const height=map.queryTerrainElevation(center);if(!Number.isFinite(height))return;
+      cameraKey=key;
+      // MapLibre's automatic clamp samples the camera tile zoom; above the DEM
+      // maximum that can return zero while its public covering-tile query has
+      // real ground. Own only elevation, retaining GPS/heading/zoom/padding.
+      if(!cameraManaged){cameraManaged=true;map.setCenterClampedToGround(false);}
+      if(Math.abs(map.getCenterElevation()-height)>.05)map.setCenterElevation(height);
+      state.cameraGround=height;
+    }
     let lastRender=0,lastAdapt=0,frames=[],observer=null,intersection=null,contextLost=false,demErrors=0,performanceViewChange=false,performanceQualityPending=false;
     const listeners=[];
     let pendingFit=null, lastFit=null,resizeRefit=false,fitting=false,cardObserver=null;
@@ -296,6 +317,8 @@
       state.zoom=map.getZoom();
       const wanted=state.enabled&&state.visible&&!state.terrainReduced&&state.zoom>=10&&state.elevation!=='unavailable';
       state.terrainActive=map.getTerrain()?.source===DEM_ID;
+      if(!wanted&&cameraManaged&&state.visible&&interacting()){schedule(80);return;}
+      if(!wanted)restoreCameraGround();
       if(wanted===state.terrainActive)return;
       if(wanted&&(!map.getSource(DEM_ID)||!map.isStyleLoaded()))return;
       try{state.terrainActive=wanted;map.setTerrain(wanted?{source:DEM_ID,exaggeration:1}:null);
@@ -342,7 +365,7 @@
     function refresh() {
       if(disposed)return;
       state.visible=visible();state.zoom=map.getZoom();
-      syncTerrain();paintStatus();
+      syncTerrain();anchorCameraGround();paintStatus();
       if(performanceQualityPending){performanceQualityPending=false;applyQuality();}
       if(performanceViewChange){
         if(state.visible&&!interacting()){performanceViewChange=false;options.onViewChange?.(state.enabled);}
@@ -439,6 +462,7 @@
           map.jumpTo({center:initial.center,zoom:initial.zoom,pitch,bearing:0,padding:{top:0,right:0,bottom:0,left:0}});
           for(let attempt=0;attempt<12;attempt++) {
             iterations++;
+            anchorCameraGround();
             result=core.frameCorrection(coords.map(p=>map.project(p)),area,{tolerance:.75,maxZoomOutStep:.8});
             if(result.status==='fit')break;
             if(result.status==='invalid')break;
@@ -488,7 +512,7 @@
     on('move',()=>{if(activePointers.size){lastPointerMove=now();pointerFramePending=true;}});
     on('moveend',()=>{state.zoom=map.getZoom();syncTerrain();schedule(80);});
     on('resize',()=>{state.visible=visible();applyQuality();resizeRefit=true;schedule(120);});
-    on('sourcedata',e=>{if(e.sourceId===DEM_ID)elevationDirty=true;if(e.sourceId===sourceId||e.sourceId===DEM_ID||/^burbz-quest/.test(e.sourceId||''))schedule(180);});
+    on('sourcedata',e=>{if(e.sourceId===DEM_ID){elevationDirty=true;cameraRevision++;}if(e.sourceId===sourceId||e.sourceId===DEM_ID||/^burbz-quest/.test(e.sourceId||''))schedule(180);});
     on('error',e=>{
       if(e.sourceId!==DEM_ID)return;
       if(++demErrors<3)return;
@@ -513,7 +537,7 @@
     on('webglcontextlost',()=>{contextLost=true;state.webgl='lost';activePointers.clear();lastPointerMove=-Infinity;frames=[];lastRender=0;if(timer)root.clearTimeout(timer);timer=null;stopPlacement();});
     on('webglcontextrestored',()=>{contextLost=false;state.webgl='pending';if(map.getLayer(FOREST_ID))map.removeLayer(FOREST_ID);install();});
     function dispose(){if(disposed)return;disposed=true;if(timer)root.clearTimeout(timer);
-      stopPlacement();
+      stopPlacement();restoreCameraGround();
       mapCanvas?.removeEventListener('pointerdown',cancelPendingFit);
       mapCanvas?.removeEventListener('pointerleave',endPointer);
       doc?.removeEventListener('pointerup',endPointer,true);doc?.removeEventListener('pointercancel',endPointer,true);activePointers.clear();

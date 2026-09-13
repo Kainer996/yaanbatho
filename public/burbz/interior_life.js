@@ -10,10 +10,12 @@ function attach(s,room,api){
  on(panel.querySelector('button'),'click',closePanel);
  function disposeObject(o){o.traverse(n=>{n.geometry?.dispose();for(const m of n.material?Array.isArray(n.material)?n.material:[n.material]:[])m.dispose();});o.removeFromParent();}
  const points=nav.spots(core.key(target),14);
- for(const [i,item] of core.finds(target).entries()){const pos=points[i];if(!pos)continue;const b=root.BurbzSettlementModels.batch(T);b.sphere(.19,0,.17,0,0xb59560,[1,.85,.85]);b.cylinder(.065,.12,.12,0,.32,0,0x59412d);b.box(.06,.18,.025,0,.2,.17,0xe6c57d);const mesh=b.finish();mesh.position.set(pos.x,0,pos.z);group.add(mesh);pickups.push({...item,mesh,pos});}
+ // Map-side/NPC-only rooms have no inventory grant authority.
+ const canCollect=typeof api.collected==='function'&&typeof api.collect==='function';
+ for(const [i,item] of (canCollect?core.finds(target):[]).entries()){const pos=points[i];if(!pos)continue;const b=root.BurbzSettlementModels.batch(T);b.sphere(.19,0,.17,0,0xb59560,[1,.85,.85]);b.cylinder(.065,.12,.12,0,.32,0,0x59412d);b.box(.06,.18,.025,0,.2,.17,0xe6c57d);const mesh=b.finish();mesh.position.set(pos.x,0,pos.z);group.add(mesh);pickups.push({...item,mesh,pos});}
  root.BurbzManga?.styleScene(group);
  function use(){if(!nearby||s.uiBusy||s.failed)return;const item=nearby;
-  if(item.person){show(item.person.name,api.talk(target,item.person));return;}
+  if(item.person){if(typeof api.talk!=='function')return;show(item.person.name,api.talk(target,item.person));return;}
   try{const result=api.collect(target,item.id);if(result){item.mesh.visible=false;show('In your bag',result);}else item.mesh.visible=false;}catch(error){show('Could not save','Your item is still here. '+error.message);}
  }
  on(useButton,'click',use);
@@ -33,7 +35,7 @@ function attach(s,room,api){
    if(a.leaving&&!a.route.length){disposeObject(a.mesh);actors.delete(id);continue;}
    a.mesh.position.set(a.pos.x,0,a.pos.z);if(playerDistance<1.7&&!moving)a.mesh.rotation.y=Math.atan2(s.player.x-a.pos.x,s.player.z-a.pos.z);
    const state={moving,stride:time*6,mood:a.person.mood||'Content'};root.BurbzSettlementModels[a.person.bird?'animateBird':'animateResident'](a.mesh,state,time,matchMedia('(prefers-reduced-motion: reduce)').matches?0:1);
-   if(playerDistance<nearestDistance){nearestDistance=playerDistance;nearby=a;}
+   if(typeof api.talk==='function'&&playerDistance<nearestDistance){nearestDistance=playerDistance;nearby=a;}
   }
   useButton.hidden=!nearby||s.uiBusy;useButton.textContent=nearby?.person?'Talk to '+nearby.person.name+' · E':nearby?'Collect '+nearby.label+' · E':'';
  }

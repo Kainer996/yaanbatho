@@ -436,3 +436,29 @@ test('renderer disposal removes capture and canvas pointer handlers',()=>{
   const f=fixture(),c=f.attach();assert.equal(f.canvas.events.get('pointerdown').size,1);assert.equal(f.doc.events.get('pointerup').size,1);f.canvas.emit('pointerdown',{pointerId:3});f.map.emit('move');c.dispose();
   assert.equal(f.canvas.listenerCount(),0);assert.equal(f.doc.listenerCount(),0);f.canvas.emit('pointerdown',{pointerId:5});f.doc.emit('pointerup',{pointerId:5});f.tick();assert.equal(f.timers.size,0);
 });
+
+function cameraFixture(options={}){
+ const f=fixture(options),m=f.map;m.clamp=options.manual!==true;m.cameraHeight=0;m.cameraWrites=[];
+ m.getCenterClampedToGround=()=>m.clamp;m.setCenterClampedToGround=x=>m.clamp=x;
+ m.getCenterElevation=()=>m.cameraHeight;m.setCenterElevation=h=>{assert(!m.moving,'elevation must not cancel an active ease');m.cameraHeight=h;m.cameraWrites.push(h);m.emit('moveend');};return f;
+}
+test('camera uses loaded covering-tile height above DEM max zoom without moving GPS',()=>{
+ const f=cameraFixture(),before=clone(f.map.center),c=f.attach();f.tick();assert.equal(f.map.cameraHeight,320);assert.equal(f.map.clamp,false);assert.deepEqual(f.map.center,before);
+ const writes=f.map.cameraWrites.length;for(let i=0;i<10;i++)c.refresh();f.tick();assert.equal(f.map.cameraWrites.length,writes);
+ f.map.elevation=350;f.map.emit('sourcedata',{sourceId:DEM});f.tick();assert.equal(f.map.cameraHeight,350);c.dispose();assert.equal(f.map.clamp,true);assert.equal(f.map.cameraHeight,0);assert.equal(f.timers.size,0);
+});
+test('camera correction waits for loaded terrain and completed native gestures',()=>{
+ const f=cameraFixture({demLoaded:false}),c=f.attach();f.tick();assert.equal(f.map.cameraWrites.length,0);f.map.demLoaded=true;f.map.moving=true;f.map.emit('sourcedata',{sourceId:DEM});f.tick();assert.equal(f.map.cameraWrites.length,0);
+ f.map.moving=false;f.canvas.emit('pointerdown',{pointerId:4});f.map.emit('moveend');f.tick();assert.equal(f.map.cameraWrites.length,0);f.doc.emit('pointerup',{pointerId:4});f.tick();assert.equal(f.map.cameraHeight,320);
+ f.map.elevation=null;f.shiftView();f.tick();assert.equal(f.map.cameraHeight,320,'unknown terrain keeps the last valid elevation');f.map.elevation=0;f.map.emit('sourcedata',{sourceId:DEM});f.tick();assert.equal(f.map.cameraHeight,0,'sea-level is a valid measured height');c.dispose();
+});
+test('flat, hidden, failed and disposed maps restore camera clamp; external manual cameras stay owned by caller',()=>{
+ const f=cameraFixture(),c=f.attach();f.tick();c.setEnabled(false);assert.equal(f.map.clamp,true);assert.equal(f.map.cameraHeight,0);c.setEnabled(true);f.tick();assert.equal(f.map.cameraHeight,320);
+ f.doc.hidden=true;f.doc.emit('visibilitychange');assert.equal(f.map.clamp,true);f.doc.hidden=false;f.doc.emit('visibilitychange');f.tick();assert.equal(f.map.clamp,false);
+ for(let i=0;i<3;i++)f.map.emit('error',{sourceId:DEM,error:Error('offline')});assert.equal(f.map.clamp,true);assert.equal(f.map.cameraHeight,0);c.dispose();
+ const manual=cameraFixture({manual:true}),d=manual.attach();manual.tick();assert.equal(manual.map.cameraWrites.length,0);d.dispose();assert.equal(manual.map.clamp,false);
+});
+
+test('terrain fallback defers elevation reset until an active camera ease finishes',()=>{
+ const f=cameraFixture(),c=f.attach();f.tick();f.map.moving=true;c.setEnabled(false);f.tick(100);assert.equal(f.map.cameraHeight,320);assert(f.map.getTerrain());f.map.moving=false;f.map.emit('moveend');f.tick();assert.equal(f.map.cameraHeight,0);assert.equal(f.map.getTerrain(),null);c.dispose();
+});
