@@ -4485,7 +4485,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
 <link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
-<link rel="stylesheet" href="player_home.css?v=homestead-v385-20260910">
+<link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="scan_home.css?v=home-followup-v399-20260913">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
@@ -5630,14 +5630,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=home-countryside-v387-20260910"></script>
-<script src="player_home_core.js?v=unified-alderwing-v400-20260913"></script>
-<script src="player_home_scene.js?v=houses-terrain-v408-20260914"></script>
-<script src="player_home.js?v=unified-alderwing-v400-20260913"></script>
+<script src="player_home_core.js?v=home-farming-v409-20260914"></script>
+<script src="player_home_scene.js?v=home-farming-v409-20260914"></script>
+<script src="player_home.js?v=home-farming-v409-20260914"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_world.js?v=continuous-world-v391-20260910"></script>
+<script src="geographic_world.js?v=home-farming-v409-20260914"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=gentle-start-v338-20260831"></script>
 <script src="merlin_companion_core.js?v=alderwing-living-settlements-v348-20260904"></script>
@@ -30183,7 +30183,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=houses-terrain-v408-20260914';
+        script.src = 'village_walk.js?v=home-farming-v409-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -34430,9 +34430,10 @@ function settlementPlayerHome(scene,origin) {
   if(!p||!surface||!terrain||Math.hypot(p.x,p.z)>surface.radius+3)return null;
   const y=terrain.heightAt(p.x,p.z);if(!Number.isFinite(y))return null;
   const house=BurbzPlayerHomeScene.createHouse(THREE,home);
+  const farm=BurbzPlayerHomeScene.createFarm(THREE,home,(x,z)=>terrain.heightAt(p.x+x,p.z+z)-y);house.add(farm);house.userData.updateFarm=farm.userData.update;
   house.position.set(p.x,y,p.z);house.userData.overheadHome=true;scene.add(house);return house;
 }
-function settlementPlayerHomeKey(){const h=gameState.playerHome;return JSON.stringify([h?.tier,h?.anchor,h?.rooms]);}
+function settlementPlayerHomeKey(){const h=gameState.playerHome;return JSON.stringify([h?.tier,h?.anchor,h?.rooms,BurbzPlayerHomeCore.farmKey(h)]);}
 
 function buildVillageScene(v) { for(const _ of buildVillageSceneSteps(v)){} }
 function* buildVillageSceneSteps(v) {
@@ -35496,6 +35497,7 @@ function villageAnimate(ts) {
 
 let __villageLastT = 0;
 function villageAnimateFrame(t, walking = false) {
+  for(const home of villageScene?.children||[])if(home.userData.updateFarm?.())villageRenderer.shadowMap.needsUpdate=true;
   const dtFrame = Math.max(0.016, Math.min(0.12, t - __villageLastT)); // clamp tab-switch jumps
   __villageLastT = t;
   const motion = settlementSceneMotionScale();
@@ -36684,6 +36686,7 @@ function townAnimate(ts) {
   townAnimateFrame((ts || 0) / 1000);
 }
 function townAnimateFrame(t, walking = false) {
+  for(const home of townScene?.children||[])if(home.userData.updateFarm?.())townRenderer.shadowMap.needsUpdate=true;
   // The view holds still until the player moves it — no idle orbit. Life in
   // the streets (walkers, smoke, birds) supplies the motion instead.
   const motion = settlementSceneMotionScale();
@@ -44001,7 +44004,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'houses-terrain-v408-20260914';
+const BURBZ_BUILD = 'home-farming-v409-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45182,14 +45185,16 @@ function addDemoBirds() {
 // The personal clearing is separate from claimed villages and their economy.
 let geographicWorldVisit = null, geographicAvatarMarker = null;
 function commitPlayerHomeAction(action) {
-  const proposal=BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
+  const farming=action?.kind?.startsWith('farm-');
+  const proposal=farming?BurbzPlayerHomeCore.proposeFarm(gameState.playerHome,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
   if(!proposal.ok)return proposal;
-  const before=gameState.playerHome,branches=gameState.player.branches,journey=gameState.worldJourney;
+  const before=gameState.playerHome,branches=gameState.player.branches,journey=gameState.worldJourney,coins=gameState.player.coins,inventory=gameState.inventory;
   gameState.playerHome=proposal.home;gameState.player.branches=proposal.wallet.branches;
+  if(farming){gameState.player.coins=proposal.wallet.coins;gameState.inventory=proposal.inventory;}
   if(action.kind==='anchor'||action.kind==='build-home')gameState.worldJourney=null;
   const saved=durableSaveState();
-  if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;gameState.worldJourney=journey;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
-  try{updateHeader();refreshGeographicAvatarMarker();}catch(e){}return{ok:true};
+  if(!saved.ok){gameState.playerHome=before;gameState.player.branches=branches;gameState.worldJourney=journey;gameState.player.coins=coins;gameState.inventory=inventory;return{ok:false,error:'Your home could not be saved. Please try again; nothing was spent.'};}
+  try{updateHeader();refreshGeographicAvatarMarker();}catch(e){}return{ok:true,message:proposal.message};
 }
 function anchorPlayerHomeAt(lat,lon) {
   if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
@@ -45401,7 +45406,8 @@ function continuousWalkingAdapter(record) {
     sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
     records:geographicSettlementRecords,createSettlement:createTravellingSettlement,waysides:geographicWaysideRecords,createWayside:createTravellingWayside,waysidePalette:palette=>burbzDaylightPalette(palette||VILLAGE_PALETTES[0],burbzDaylightGradeNow()),
     buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
-    getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),
+    getHome:()=>gameState.playerHome,createYard:(T,h,options)=>BurbzPlayerHomeScene.createYardContent(T,h,options),
+    openBuild:localPose=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('yard',{build:true,pose:localPose,returnToWorld:true});},
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
     savePose:pose=>gameState!==sessionSave?false:revision===undefined?true:saveGeographicPose(pose,revision)};
 }
@@ -45433,7 +45439,7 @@ function initializePlayerHome() {
   const veteran = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1' || gameState.player.level > 1 || gameState.flock.length > 0;
   gameState.playerHome = BurbzPlayerHomeCore.normalize(gameState.playerHome, veteran);
   saveState();
-  BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),grade:burbzDaylightGradeNow,
+  BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
     command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},

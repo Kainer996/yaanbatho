@@ -25,6 +25,6 @@ def test_offline_dependencies_are_registered_in_every_worker_list_and_updater():
         assert f"'{name}':'{pin}'" in walk
         assert worker.count(f"'./{name}?v={pin}'") == 3
     for name in ['village_walk.js', 'geographic_world.js']:
-        pin = 'houses-terrain-v408-20260914' if name == 'village_walk.js' else PIN
+        pin = 'home-farming-v409-20260914'
         assert f'{name}?v={pin}' in html
         assert worker.count(f"'./{name}?v={pin}'") == 3
