@@ -44945,6 +44945,7 @@ function maybeStartMerlinChapterForScreen(screenName, options = {}) {
   if (!chapterId) return;
   const startId = chapterId;
   setTimeout(() => {
+    if (typeof merlinNavigationPaused !== 'undefined' && merlinNavigationPaused) return;
     if (merlinTutActive || currentScreen !== screenName || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
     if (document.getElementById('questOverlay')?.classList.contains('open') || document.getElementById('birdEquipOverlay')?.classList.contains('show') || document.getElementById('birdInfoModal')?.classList.contains('show')) return;
     startMerlinTutorial({chapterId:startId,resume:true});
