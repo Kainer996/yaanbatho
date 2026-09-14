@@ -9,16 +9,17 @@
     const abort=new AbortController(),inert=[],previous=document.activeElement,overflow=document.body.style.overflow;
     document.body.appendChild(element);document.body.style.overflow='hidden';
     for(const node of document.body.children)if(node!==element&&!['SCRIPT','STYLE'].includes(node.tagName)){inert.push([node,node.inert]);node.inert=true;}
-    let map,busy=false,done=false,locating=false,locationRequest=0,notice='';
-    const finish=()=>{if(done)return;done=true;current=null;abort.abort();try{map?.remove();}catch(error){}inert.forEach(([node,value])=>node.inert=value);element.remove();document.body.style.overflow=overflow;if(previous?.isConnected&&!previous.closest('[inert]'))previous.focus({preventScroll:true});};
-    const cancel=()=>{if(busy)return;finish();options.cancel?.();};current={cancel,dispose:finish};
+    let map,busy=false,done=false,locating=false,locationRequest=0,notice='',previewSeq=0,previewTimer=null;
+    async function preview(){if(done||busy||!options.preview)return;const seq=++previewSeq,c=center();if(!c)return;place.disabled=true;status.textContent='Checking nearby settlement boundaries…';try{const result=await options.preview(c);if(done||busy||seq!==previewSeq)return;notice=result.ok?'Room for your home outside village and town boundaries.':result.error;place.disabled=!result.ok;status.textContent=notice;}catch(e){if(!done&&seq===previewSeq){place.disabled=true;status.textContent=e.message;}}}
+    const finish=()=>{if(done)return;done=true;current=null;previewSeq++;clearTimeout(previewTimer);abort.abort();try{map?.remove();}catch(error){}inert.forEach(([node,value])=>node.inert=value);element.remove();document.body.style.overflow=overflow;if(previous?.isConnected&&!previous.closest('[inert]'))previous.focus({preventScroll:true});};
+    const cancel=()=>{finish();options.cancel?.();};current={cancel,dispose:finish};
     const status=element.querySelector('.gwp-coordinates'),place=element.querySelector('[data-picker=place]'),locate=element.querySelector('[data-picker=locate]');
     element.querySelector('[data-picker=cancel]').addEventListener('click',cancel,{signal:abort.signal});
     document.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();cancel();}else if(event.key==='Tab'){const buttons=[...element.querySelectorAll('button,[href],input,select,textarea,[tabindex]')].filter(node=>!node.disabled&&node.tabIndex>=0&&node.getClientRects().length);if(!buttons.length)return;event.preventDefault();event.stopImmediatePropagation();const i=buttons.indexOf(document.activeElement);buttons[(i+(event.shiftKey?-1:1)+buttons.length)%buttons.length].focus({preventScroll:true});}},{capture:true,signal:abort.signal});
     root.addEventListener('pagehide',()=>close('pagehide'),{signal:abort.signal});
     function center(){const c=map?.getCenter();return c&&Number.isFinite(c.lat)&&Number.isFinite(c.lng)&&Math.abs(c.lat)<=85.0511287798066?{lat:c.lat,lon:((c.lng+180)%360+360)%360-180}:null;}
     function setNotice(message){notice=message;status.textContent=message;}
-    function update(){if(done||busy)return;const c=center();place.disabled=!c;status.textContent=notice||(c?'Crosshair: '+c.lat.toFixed(5)+', '+c.lon.toFixed(5):'Choose a place on the map.');}
+    function update(){if(done||busy)return;const c=center();place.disabled=!c||!!options.preview;status.textContent=notice||(c?'Crosshair: '+c.lat.toFixed(5)+', '+c.lon.toFixed(5):'Choose a place on the map.');}
     // Native gesture starts clear messages; queued camera/inertia/tile events do not.
     for(const event of ['pointerdown','touchstart','wheel','keydown'])element.querySelector('.gwp-map').addEventListener(event,()=>{if(done||busy)return;notice='';update();},{passive:true,signal:abort.signal});
     locate.addEventListener('click',()=>{
@@ -43,7 +44,7 @@
       const anchor=options.anchor||options.location;
       map=new root.maplibregl.Map({container:element.querySelector('.gwp-map'),style:options.style,center:anchor?[anchor.lon,anchor.lat]:[0,0],zoom:anchor?15:2,maxZoom:19,pitch:0,attributionControl:{compact:true},pixelRatio:Math.min(1.5,root.devicePixelRatio||1),canvasContextAttributes:{antialias:false}});
       locate.disabled=false;
-      map.on('load',update);map.on('move',update);map.on('error',()=>{if(!busy&&!done&&!notice)setNotice('Map data is unavailable here. You can use cached areas or try again when connected.');});
+      map.on('load',()=>{update();preview();});map.on('move',()=>{previewSeq++;update();if(options.preview){place.disabled=true;clearTimeout(previewTimer);previewTimer=setTimeout(preview,350);}});map.on('error',()=>{if(!busy&&!done&&!notice)setNotice('Map data is unavailable here. You can use cached areas or try again when connected.');});
       element.querySelector('[data-picker=cancel]').focus({preventScroll:true});return true;
     }catch(error){status.textContent=error.message||'The map could not open. Cancel and try again.';return false;}
   }

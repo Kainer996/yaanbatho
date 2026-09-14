@@ -955,8 +955,23 @@
     return events;
   }
 
+  // Exploration fire is fixed damage over time, not another hit/crit roll.
+  // Share shield and faint handling so a final burn tick scatters once.
+  function resolveExplorationBurn(context, defender, amount) {
+    if (!defender || defender.fainted || defender.hp <= 0) return [];
+    const absorbed = Math.min(Math.max(0, defender.barrier || 0), amount);
+    defender.barrier = Math.max(0, (defender.barrier || 0) - absorbed);
+    const dmg = Math.min(defender.hp, Math.max(0, amount - absorbed));
+    defender.hp = Math.max(0, defender.hp - dmg);
+    const events = [{type:'damage', side:'opponent', id:defender.id, dmg,
+      hp:defender.hp, maxHp:defender.maxHp, absorbed, status:'burn'}];
+    handleFaint(context, defender, 'opponent', 'player', events);
+    return events;
+  }
+
   return {
     resolveExplorationSkill,
+    resolveExplorationBurn,
     BIRD_TYPES, TYPE_CHART, TYPE_FACTS, effectiveness, classifySpecies, speciesKey,
     MOVE_SCHOOLS, MOVE_LINES, TIER_THRESHOLDS, PECK, SPARK, SIGNATURES, CLASS_SIGNATURES, signatureFor,
     ULTIMATE_CD, ULTIMATE_OPENING_CD,

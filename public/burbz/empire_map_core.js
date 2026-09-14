@@ -101,6 +101,51 @@
     return [[west, south], [east, north]];
   }
 
+  // Permanent daylight only. The atlas's moving scout lantern never enters this
+  // authority. Circles are a derived view of saved ownership, not another save.
+  // A sphere-space tree bounds hot combat queries independently of map zoom and
+  // handles the dateline/poles without duplicating or truncating remote holdings.
+  function createTerritoryLight(sources) {
+    const rad = Math.PI / 180, dot = (a,b) => a.reduce((n,v,i) => n+v*b[i],0);
+    const vector = p => { const lat=Number(p.lat)*rad,lon=Number(p.lon)*rad,c=Math.cos(lat);return [c*Math.cos(lon),c*Math.sin(lon),Math.sin(lat)]; };
+    const circles = Object.freeze((Array.isArray(sources)?sources:[]).filter(p=>validClaim(p)&&Number.isFinite(p.radius)&&p.radius>0).map(p=>Object.freeze({...p,lat:Number(p.lat),lon:Number(p.lon)})));
+    const rows=circles.map(circle=>{const centre=vector(circle),angle=Math.min(Math.PI,circle.radius/EARTH_RADIUS_M),reach=2*Math.sin(angle/2);return {circle,centre,angle,reach,lo:centre.map(v=>v-reach),hi:centre.map(v=>v+reach)};});
+    function tree(items) {
+      if(!items.length)return null;
+      const lo=[Infinity,Infinity,Infinity],hi=[-Infinity,-Infinity,-Infinity];for(const r of items)for(let i=0;i<3;i++){lo[i]=Math.min(lo[i],r.lo[i]);hi[i]=Math.max(hi[i],r.hi[i]);}
+      if(items.length<=8)return {lo,hi,items};
+      const axis=[0,1,2].sort((a,b)=>(hi[b]-lo[b])-(hi[a]-lo[a]))[0];items.sort((a,b)=>a.centre[axis]-b.centre[axis]);const mid=items.length>>1;
+      return {lo,hi,left:tree(items.slice(0,mid)),right:tree(items.slice(mid))};
+    }
+    const index=tree(rows),overlaps=(node,lo,hi)=>node&&lo.every((v,i)=>v<=node.hi[i]&&hi[i]>=node.lo[i]);
+    function search(node,lo,hi,visit) {if(!overlaps(node,lo,hi))return false;if(node.items)return node.items.some(visit);return search(node.left,lo,hi,visit)||search(node.right,lo,hi,visit);}
+    const within=(v,r)=>v.reduce((n,x,i)=>n+(x-r.centre[i])**2,0)<=r.reach*r.reach+1e-20;
+    function contains(point) {if(!validClaim(point))return false;const v=vector(point);return search(index,v,v,r=>within(v,r));}
+    // Earliest contact along a great-circle segment. Altitude never permits a
+    // bird or projectile to cross over safe land; light is a vertical refuge.
+    function firstHit(a,b) {
+      if(!validClaim(a)||!validClaim(b))return 0;
+      const av=vector(a),bv=vector(b),chord=Math.hypot(...av.map((v,i)=>v-bv[i])),angle=2*Math.asin(Math.min(1,chord/2));
+      if(angle<1e-12)return contains(a)?0:null;
+      if(angle>=Math.PI-1e-8)return 0; // No ambiguous antipodal combat path.
+      const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],normal=cross(av,bv),norm=Math.hypot(...normal);for(let i=0;i<3;i++)normal[i]/=norm;
+      const tangent=cross(normal,av),sag=1-Math.cos(angle/2);
+      const lo=av.map((v,i)=>Math.min(v,bv[i])-sag),hi=av.map((v,i)=>Math.max(v,bv[i])+sag);let hit=null;
+      search(index,lo,hi,r=>{
+        if(within(av,r)){hit=0;return true;}
+        const x=dot(r.centre,av),y=dot(r.centre,tangent),length=Math.hypot(x,y),away=dot(r.centre,normal),remaining=Math.sin(r.angle)**2-away*away;
+        if(r.angle<Math.PI/2&&remaining<0)return false;
+        // sin² avoids subtracting cosines near 1, which misses centimetre-wide
+        // tangencies to small camps at Earth scale.
+        const offset=r.angle<Math.PI/2?Math.asin(Math.min(1,Math.sqrt(Math.max(0,remaining))/length)):Math.acos(Math.max(-1,Math.min(1,Math.cos(r.angle)/length))),phase=Math.atan2(y,x);
+        for(const base of [phase-offset,phase+offset])for(const turn of [-2*Math.PI,0,2*Math.PI]){const theta=base+turn;if(theta>=-1e-12&&theta<=angle+1e-12){const t=Math.max(0,Math.min(1,theta/angle));hit=hit===null?t:Math.min(hit,t);}}
+        if(hit===null&&within(bv,r))hit=1;
+        return hit===0;
+      });return hit;
+    }
+    return Object.freeze({circles,contains,firstHit});
+  }
+
   return {
     EARTH_RADIUS_M,
     DEFAULT_TERRITORY_RADIUS_M,
@@ -111,6 +156,7 @@
     territoryCircle,
     territoryFeatureCollection,
     claimFeatureCollection,
-    claimBounds
+    claimBounds,
+    createTerritoryLight
   };
 });

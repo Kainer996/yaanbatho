@@ -16,6 +16,8 @@ Progressive Home integration candidate (2026-09-14) replaces the always-visible 
 
 Empire/direct opening v414 (`empire-opening-v414-20260914`) follows the user's revised rule: tapping the finished overview model/tile or ready notification commissions a due building; first-person travel is optional. This supersedes v405's physical-site-only restriction. Preserve passive waiting, canonical managers, due/project/order/Hall guards, original rewards and durable rollback. Empire retains its three tabs/navigation with the redundant controls removed. See [EMPIRE_OPENING_V414.md](EMPIRE_OPENING_V414.md).
 
+Exploration/camps v413 is an **unpublished shutdown checkpoint**, not release acceptance. Continue from [EXPLORATION_CAMPS_RESUME_V413.md](EXPLORATION_CAMPS_RESUME_V413.md). Preserve free tents/travel, 5-timber fires, actual-movement fog, GPS-only visit receipts and separate additional homes. The fullscreen travel-race fix still needs browser verification. Global build/cache promotion and deployment remain with the release owner after art/Fireball.
+
 Gemini photos v410 (`gemini-photos-v410-20260914`) restores the user-approved Gemini 2.5 Flash path with ONE persistent £5 total Europe/London monthly ledger and a durable browser photo queue. This supersedes prior free-model/no-Google photo requirements. Preserve pre-egress whole-attempt reservations, dated pricing review, fail-closed usage/timeout/replay handling, accepted catalogue gates, atomic game receipts, owner/session isolation and first-photo storage. Never reset the ledger or retain uploaded server photos: route-owned temporary files must clean up on every outcome and service stop. All three worker lists/updater pins agree. See [GEMINI_PHOTOS_V410.md](GEMINI_PHOTOS_V410.md) for behavior, accounting assumptions, retention and verification.
 
 Home farming v409 (`home-farming-v409-20260914`) adds adjoining square crops through the Build menu. Preserve canonical `playerHome.farm`, shared inventory/seed costs, atomic save rollback and one-time harvest, offline timestamps, clear yard footprints and the existing world/editor return. Ground each soil vertex and plant against the host terrain; batch crops and retain the shared renderer lifecycle. Keep exact consuming/three-list pins and native click-through protection. Rules, evidence and limits: [HOME_FARMING_V409.md](HOME_FARMING_V409.md).
@@ -159,6 +161,39 @@ Manga world v356 (`manga-world-v356-20260907`): the 3D Academy, villages and tow
 > file in the *same* commit.
 
 Full-card review draft (unpublished): the existing equipment overlay now leads with the original species portrait, identity, experience and unchanged combat stats. Desktop places bond/loadout beside the portrait; phones stack the same sections. Six generated 256px transparent WebP icons replace only empty equipment slots and the Preen illustration; equipped gear still uses gearIconHTML. Equipment transactions, Preen cooldown, favourite state and roster swipe are unchanged. Slot buttons expose picker expansion state; favourite has an explicit accessible label, and primary controls are at least 44px. Assets and provenance: assets/bird-card/README.md. Rendered markup and existing interaction/core coverage: 29 focused checks pass. Close is on the left so the live coin HUD remains unobstructed at the right; focus enters the dialog, Tab wraps and Escape restores the opener. Potion notes match the existing player-turn bonus action and spare-bottle refill. Build/cache registration is intentionally left to the consolidating release; do not publish these assets without registering them.
+
+Unpublished lit-territory safety (14 September): `empireTerritoryLight()` in
+`index.html` derives one cached immutable union of permanent atlas circles from
+saved village/town districts, counties, liberated enemy outposts and
+`exploration.camps` (`lightRadiusM`, legacy default 80 m). `updateEmpireFogMask`
+and `enemyOutpostDark` consume that same snapshot. The moving scout half-light
+remains visual scouting only. `durableSaveState` and `restoreGameStateSnapshot`
+invalidate the derived cache, as does changed save identity; callers that mutate
+light before their save must call `invalidateEmpireTerritoryLight()` explicitly.
+Unrelated saves reuse the index if geometry is unchanged; dirty snapshots still
+enumerate circles, but share one settlement-tier lookup. There is no new saved
+ownership map. Camp placement, receipts, rewards and collection remain the camp
+owner's responsibility. This patch requires the retained WIP enemy-camp modules;
+live 48ea7df1 lacks them, so it is not an independent live cherry-pick.
+
+`walkingCombatAdapter().territoryLight` exposes geographic `contains(point)` and
+`firstHit(from,to)` (first segment fraction, or null). `empire_map_core.js` indexes
+saved circles in sphere space so every query need not scan every holding; small
+camp tangencies and dateline crossings are covered. The walking adapter reads
+the live geographic origin after rebases, alongside existing unknown-terrain and
+settlement fail-closed guards. Suppression deletes runtime actors, never writes a
+defeat/XP receipt. Lit wilderness does not introduce automatic healing.
+
+`wilderness_combat_core.js` exposes `hostileAt(point)`, `darknessPath(from,to)`,
+`canHostileAttack(from,to)` and the existing ground-hit transactional helper
+`hostileAttack(actor,skill)`. New enemy aerial/projectile/splash implementations
+must recheck the actual geographic attack path at launch, every swept step and
+resolution using these guards; height never bypasses light. Existing player
+projectiles, splash, pursuit and telegraphed melee do so now. Target tests:
+`tests/test_lit_territory_safety_v414.cjs`, the walking/outpost behavior suites and
+save rollback suites. No browser renderer/performance or installed/public release
+claim has been made for this isolated patch. Release owner supplies the combined
+cache/version pin and merged visual/offline verification.
 
 Artwork in v354: Empire/Towns/Villages use generated alpha-preserving painted tab icons (144px WebP, displayed40×36px). The sound listener uses a clean opaque864px square Merlin/walnut-wand panel; keep its full square composition and animated gemstone at82.5%/19.5%. The tiny listener dock uses canonical Merlin tutorial art. Asset provenance is in assets/ui/ART_V354.md. Both service worker and legacy updater include all four new files.
 

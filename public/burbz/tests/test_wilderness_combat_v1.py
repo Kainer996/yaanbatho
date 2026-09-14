@@ -5,7 +5,7 @@ BASE = Path(__file__).resolve().parent.parent
 PIN = 'continuous-world-v391-20260910'
 
 def test_walking_combat_behavior():
-    for name in ['test_wilderness_combat_v1.cjs', 'test_wilderness_boundaries_v1.cjs']:
+    for name in ['test_wilderness_combat_v1.cjs', 'test_wilderness_boundaries_v1.cjs', 'test_lit_territory_safety_v414.cjs']:
         subprocess.run(['node', str(BASE / 'tests' / name)], check=True)
 
 def test_offline_combat_dependencies_match_index_and_three_worker_lists():

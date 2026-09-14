@@ -69,3 +69,12 @@
 #villageWalk .vh-status {position:absolute;z-index:6;top:calc(50% - 80px);left:14px;right:14px;text-align:center;color:#fff2cd;background:#17261de8;border-radius:8px;padding:9px;pointer-events:none;font:600 13px system-ui;}
 #villageWalk .vh-use[hidden],#villageWalk .vh-status[hidden] {display:none;}
 @media(max-height:480px){#villageWalk .vh-use{bottom:98px;}#villageWalk .vh-status{top:140px;}}
+
+/* Cruise uses the existing left movement control; the guide receives no input. */
+#villageWalk .vw-auto-track{display:none;pointer-events:none;position:absolute;left:50%;bottom:100%;height:76px;width:2px;background:#fff0cb28;transform:translateX(-50%)}
+#villageWalk .vw-auto-available .vw-auto-track{display:block}
+#villageWalk .vw-auto-track i{position:absolute;top:10px;left:-3px;width:8px;height:8px;border:1px solid #eadbb3;border-radius:50%;background:#243b30}
+#villageWalk .vw-auto-track span{position:absolute;top:0;right:12px;white-space:nowrap;font:600 11px/24px system-ui;color:#fff0cb;text-shadow:0 1px 3px #12251e}
+#villageWalk .vw-auto-armed .vw-auto-track,#villageWalk .vw-auto-on .vw-auto-track{background:#cde6a0}
+#villageWalk .vw-auto-armed .vw-auto-track i,#villageWalk .vw-auto-on .vw-auto-track i{background:#d9edac;box-shadow:0 0 0 3px #cde6a022}
+#villageWalk .vw-auto-on .vw-knob{transform:translateY(-34px)!important;border-color:#d9edac}

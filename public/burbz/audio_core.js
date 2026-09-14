@@ -31,6 +31,9 @@
     capture: 'assets/audio/sfx-capture.mp3',
     hit: 'assets/audio/sfx-battle-hit.mp3',
     specialHit: 'assets/audio/ui-spell.mp3',
+    fireballCharge: 'assets/audio/fireball-v412/charge.mp3',
+    fireballCast: 'assets/audio/fireball-v412/cast.mp3',
+    fireballImpact: 'assets/audio/fireball-v412/impact.mp3',
     defend: 'assets/audio/sfx-battle-defend.mp3',
     victory: 'assets/audio/sfx-victory.mp3',
     defeat: 'assets/audio/sfx-defeat-error.mp3',
@@ -57,6 +60,9 @@
     capture: 0.8,
     hit: 0.55,
     specialHit: 0.6,
+    fireballCharge: 0.18,
+    fireballCast: 0.48,
+    fireballImpact: 0.38,
     defend: 0.5,
     victory: 0.9,
     defeat: 0.65,
@@ -92,6 +98,9 @@
     capture: 250,
     hit: 55,
     specialHit: 120,
+    fireballCharge: 100,
+    fireballCast: 120,
+    fireballImpact: 100,
     defend: 100,
     victory: 500,
     defeat: 500,
@@ -174,6 +183,9 @@
     }
     function stopFootsteps() {
       active.slice().filter(function(entry){return entry.name.indexOf('footstep')===0;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
+    }
+    function stop(name) {
+      active.slice().filter(function(entry){return entry.name===name;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
     }
 
     function setEnabled(value) {
@@ -264,6 +276,7 @@
       try { audio.volume = Math.max(0, Math.min(1, Number.isFinite(volume) ? volume : 1)); } catch (_) {}
       try { audio.playbackRate = Number.isFinite(rate) && rate > 0 ? rate : 1; } catch (_) {}
       try { audio.preload = 'auto'; } catch (_) {}
+      try { audio.loop = playOptions.loop === true; } catch (_) {}
 
       var entry = { name: name, audio: audio };
       lastSource[name] = src;
@@ -288,6 +301,8 @@
         return Promise.resolve(false);
       }
       return Promise.resolve(result).then(function() {
+        // A cancelled charge or mute must also win over a late play promise.
+        if (active.indexOf(entry) < 0 || !isEnabled()) { safePause(audio); finish(); return false; }
         return true;
       }, function() {
         finish();
@@ -333,6 +348,7 @@
       setEnabled: setEnabled,
       isEnabled: isEnabled,
       stopAll: stopAll,
+      stop: stop,
       stopFootsteps: stopFootsteps,
       footstep: function(surface) {
         if(active.some(function(entry){return entry.name.indexOf('footstep')===0;}))return Promise.resolve(false);
