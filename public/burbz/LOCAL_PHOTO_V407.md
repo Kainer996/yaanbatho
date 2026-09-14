@@ -1,3 +1,3 @@
-# Local photo v407 — unpublished checkpoint
+# Historical photo checkpoint — superseded
 
-This is a work-in-progress cloud-transfer checkpoint, not a release. See [the full handoff](../../handoff/photo-recognition-v407/HANDOFF.md) for candidate design, exact validation, model prerequisites, rollout/rollback steps and the remaining close frontal gull false negative. Current production remains v406b with the original scanner.
+Photo v407/v407b is already live on newer main (currently Home farming v409). This historical WIP branch must not overwrite it. Read the critical correction at the top of [the cloud handoff](../../handoff/photo-recognition-v407/HANDOFF.md), then fetch current main and consult its PHOTO_RECOGNITION_V407.md. No new paid Gemini calls or production switch are authorized by the latest read-only diagnosis request.
