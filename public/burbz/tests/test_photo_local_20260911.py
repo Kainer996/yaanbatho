@@ -21,13 +21,13 @@ worker = module('photo_local')
 
 def accepted(**overrides):
     return dict(found=True, accepted=True, verified=True, policy=photo.PHOTO_POLICY,
-                model='bioclip2-birder-local', species='Common Raven',
+                model='bioclip25-birder-local', species='Common Raven',
                 scientificName='Corvus corax', confidence=.96) | overrides
 
 @pytest.mark.parametrize('overrides', [
     {'confidence': n} for n in [True, '0.99', None, .899, float('nan'), float('inf'), 1.01]
 ] + [{'accepted': False}, {'verified': False}, {'found': False},
-     {'policy': 'photo-evidence-v393'}, {'model': 'gemini-vision'},
+     {'policy': 'photo-evidence-v393'}, {'model': 'gemini-vision'}, {'model': 'bioclip2-birder-local'},
      {'scientificName': 'raven'}, {'species': ''}])
 def test_bad_results_never_carry_species(overrides):
     result = photo._validate_result(accepted(**overrides))
