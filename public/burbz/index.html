@@ -4540,7 +4540,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
-<link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
+<link rel="stylesheet" href="illustrated_world.css?v=species-manga-cards-v411-20260914">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
@@ -13522,6 +13522,16 @@ Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 // icon/sprite route so transparent birds can still move cleanly over the UI.
 const BUILT_IN_BIRD_CARD_ART = Object.freeze({
   ...BUILT_IN_BIRD_ART,
+  // Integrated, armless manga paintings in the current Treecreeper style.
+  // Card-only overrides keep the existing transparent moving sprites intact.
+  'Blue Tit': '/burbz/assets/bird-cards-v411/blue_tit-manga-20260914.webp',
+  'Eurasian Blue Tit': '/burbz/assets/bird-cards-v411/blue_tit-manga-20260914.webp',
+  'Great Tit': '/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp',
+  'Great Titmouse': '/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp',
+  'Long-tailed Tit': '/burbz/assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp',
+  'Long Tailed Tit': '/burbz/assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp',
+  'Goldcrest': '/burbz/assets/bird-cards-v411/goldcrest-manga-20260914.webp',
+  'Gold Crest': '/burbz/assets/bird-cards-v411/goldcrest-manga-20260914.webp',
   // Special-character painting: full Blackfeather Hex scene on cards, while
   // compact moving Rooks keep the existing natural armless cutout.
   'Rook': '/burbz/bird-art-cache/rook_witch_blackfeather_hex_burbz_manga_20260904.png'
@@ -39529,7 +39539,9 @@ function renderBirdEquip(target, previewBird) {
   const loadout = unowned ? {} : birdLoadout(bird.id);
   const bonus = unowned ? {} : birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  const cardArt = window.BurbzSpecialBirdSprites?.keyFor(bird) ? birdCardImgAttrs(bird) : null;
+  // Keep the four restored full paintings in the full-card inspector too.
+  const restoredManga = String(getBirdCardArtUrl(bird) || '').startsWith('/burbz/assets/bird-cards-v411/');
+  const cardArt = (restoredManga || window.BurbzSpecialBirdSprites?.keyFor(bird)) ? birdCardImgAttrs(bird) : null;
   const artUrl = cardArt?.src || getBirdArtUrl(bird);
   const fallback = '<div class="bird-equip-art-fallback" role="img" aria-label="' + escapeHtml(bird.commonName || bird.species) + '">' + (bird.emoji || '🐦') + '</div>';
   const art = fallback + (artUrl
@@ -40158,8 +40170,8 @@ function createBirdCardHTML(bird, idx) {
         </div>
         <div class="card-level">LV.${cardLv}</div>
         <div class="card-info">
-          <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>${cardBondHeartsHTML(bird)}
-          <div class="card-care-gauges">${birdCardLocationButtonHTML(bird)}${hungerBarHTML(hungerStatus, 'companion-card')}
+          <div class="card-heading"><div class="card-identity"><div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>${cardBondHeartsHTML(bird)}</div>${birdCardLocationButtonHTML(bird)}</div>
+          <div class="card-care-gauges">${hungerBarHTML(hungerStatus, 'companion-card')}
             <div class="card-health" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hpPct}"><div class="bird-hunger-head"><span>Health</span><span>${hpPct}%</span></div><div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpPct > 50 ? 'var(--hp-green)' : 'var(--hp-red)'}"></div></div></div>
           </div>
           <div class="card-front-actions">${feed}<button type="button" class="card-pet-btn" data-action="flip-card" aria-pressed="false">Full card ↻</button></div>
