@@ -70,7 +70,7 @@ def test_recognition_backed_discovery_and_recruitment_remain_available():
         "handleBirdCandidates(",
         "uploadRecording(",
         "discoveredSpecies",
-        "Academy Barracks",
+        "Academy Birdhouse",
         "catalogMatched",
         "showCatalogUnmatchedRecognition(",
     ):

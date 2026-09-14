@@ -1,4 +1,4 @@
-"""The Barracks build tutorial must not advertise an unrelated locked market."""
+"""The Birdhouse build tutorial must not advertise an unrelated locked market."""
 import json
 import subprocess
 from pathlib import Path
@@ -18,7 +18,7 @@ def test_barracks_build_panel_keeps_guidance_without_market_banner():
     result = run(function('renderAcademyBuildPanel') + """
 const panel={innerHTML:''}, $=()=>panel, ensureAcademyBuildings=()=>{};
 const ACADEMY_BUILDING_ORDER=['barracks','magpie_market'];
-const ACADEMY_BUILDINGS={barracks:{label:'Barracks',room:'barracks',unlockLevel:1,cost:10,effect:'Train birds'},magpie_market:{label:'Magpie Market',room:'magpie_market',unlockLevel:4,cost:40,effect:'Trade'}};
+const ACADEMY_BUILDINGS={barracks:{label:'Birdhouse',room:'barracks',unlockLevel:1,cost:10,effect:'Train birds'},magpie_market:{label:'Magpie Market',room:'magpie_market',unlockLevel:4,cost:40,effect:'Trade'}};
 const gameState={player:{level:1,coins:100}}, playerBranches=()=>20;
 const academyBuildingProgressLock=()=>null, academyPlacementTarget=null, academyQuestGuidanceRoom='barracks', escapeHtml=s=>s;
 let marketBuilt=false;const isAcademyBuildingBuilt=id=>id==='magpie_market'&&marketBuilt;

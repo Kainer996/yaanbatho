@@ -12,15 +12,15 @@ ART_RELEASE = (ROOT / "bird_art_release_20260803.js").read_text(encoding="utf-8"
 
 
 def test_tavern_room_is_presented_as_barracks_not_a_pub():
-    assert "label:'Barracks'" in CORE
+    assert "label:'Birdhouse'" in CORE
     assert "role:'recruitment'" in CORE
-    assert "label:'BARRACKS'" in HTML
+    assert "label:'BIRDHOUSE'" in HTML
     assert "THE THIRSTY OWL" not in HTML
     assert "The Thirsty Owl" not in HTML
 
 
 def test_barracks_is_not_a_bird_housing_room():
-    assert "tavern: { label:'BARRACKS'" in HTML
+    assert "tavern: { label:'BIRDHOUSE'" in HTML
     assert "perches:[]" in HTML
     assert "if (bird.academy.room === 'tavern') bird.academy.room = 'outdoors';" in HTML
     assert "room !== 'tavern'" in HTML

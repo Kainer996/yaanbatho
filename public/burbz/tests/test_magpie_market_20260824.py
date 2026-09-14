@@ -6,7 +6,7 @@ Yaan's ask (2026-08-24), pinned as `magpie-market-v316-20260824`:
 > in the levels, that is a trade building so that the player can buy and sell
 > materials? Make it the fifth building that the player can build."
 
-So the Market is the FIFTH room on the Academy ladder — Barracks 1, Training
+So the Market is the FIFTH room on the Academy ladder — Birdhouse 1, Training
 Hall 2, Quest Roost 3, Kitchen 4, Magpie Market 4 — and the Bird Hospital and
 The Crowbar each slipped one level to make room. Nothing got dearer: the
 Market costs 135 coins, between the Kitchen's 130 and the Hospital's 140, so
@@ -301,7 +301,7 @@ console.log(JSON.stringify({ vacant, staffed, discount: magpieMarketDiscount() }
 """))
     assert out["vacant"] == 500, "a legendary is five times what a magpie pays for one"
     assert out["staffed"] < out["vacant"], "haggling must show up in the price"
-    # The same shape as the Barracks' recruiting discount: about a quarter off
+    # The same shape as the Birdhouse' recruiting discount: about a quarter off
     # at best, never a giveaway.
     assert 0.70 <= out["discount"] <= 0.76
     assert out["staffed"] > out["vacant"] // 2

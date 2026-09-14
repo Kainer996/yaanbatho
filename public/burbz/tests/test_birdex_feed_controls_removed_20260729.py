@@ -27,7 +27,7 @@ def test_discovered_only_birdex_cards_have_no_feeder_button():
     source = function_source(html, "createKnownSpeciesCardHTML", "createLockedBirdexCardHTML")
     assert 'data-action="feed-bird"' not in source
     assert "Feed at the feeder" not in source
-    # birdex-direct-recruit-v240 (live line): with a Barracks built the card
+    # birdex-direct-recruit-v240 (live line): with a Birdhouse built the card
     # recruits directly; otherwise it still walks the player to the tavern.
     assert "recruitAction = tavernBuilt ? 'recruit-birdex' : 'goto-tavern'" in source
 

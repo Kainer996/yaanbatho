@@ -3121,7 +3121,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .recruit-close { width:100%; min-height:44px; margin-top:12px; border-radius:12px; background:rgba(255,255,255,.08); color:var(--text2); font-family:'Rajdhani',sans-serif; font-weight:900; text-transform:uppercase; }
 
 
-/* Barracks recruitment: condensed Birdex roster -> full-card inspector. */
+/* Birdhouse recruitment: condensed Birdex roster -> full-card inspector. */
 .barracks-recruit-launch { display:flex; align-items:center; justify-content:center; gap:10px; width:calc(100% - 28px); min-height:58px; margin:14px; border-radius:16px; border:1px solid rgba(240,199,103,.48); background:linear-gradient(135deg,#d6a84f,#8b6325); color:#100c06; font-family:'Russo One',sans-serif; font-size:15px; letter-spacing:.05em; text-transform:uppercase; box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 20px rgba(214,168,79,.16); }
 .barracks-recruit-launch:active { transform:scale(.985); }
 .barracks-recruit-overlay { position:fixed; inset:0; z-index:1360; display:none; align-items:flex-end; justify-content:center; background:rgba(0,0,0,.88); backdrop-filter:blur(10px); }
@@ -5168,7 +5168,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
     <div class="recruit-sheet">
       <div class="modal-handle"></div>
       <div class="recruit-title">New birds in the Birdex</div>
-      <div class="recruit-copy" id="recruitCopy">New birds discovered. They are now registered at the 🪶 Barracks in your Academy, where you can inspect their cards and recruit them.</div>
+      <div class="recruit-copy" id="recruitCopy">New birds discovered. They are now registered at the 🪶 Birdhouse in your Academy, where you can inspect their cards and recruit them.</div>
       <div class="recruit-wallet" id="recruitWallet">Coins: 0</div>
       <div class="recruit-list" id="recruitList"></div>
       <button class="recruit-close" id="recruitClose">Keep exploring</button>
@@ -5195,8 +5195,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
     <button class="bat-secret-close" id="batSecretClose">Keep the secret</button>
   </div>
 
-  <!-- Barracks: compact discovered-bird roster and full recruitment card -->
-  <div class="barracks-recruit-overlay" id="barracksRecruitOverlay" role="dialog" aria-modal="true" aria-label="Barracks recruitment">
+  <!-- Birdhouse: compact discovered-bird roster and full recruitment card -->
+  <div class="barracks-recruit-overlay" id="barracksRecruitOverlay" role="dialog" aria-modal="true" aria-label="Birdhouse recruitment">
     <div class="barracks-recruit-sheet">
       <div class="modal-handle"></div>
       <div class="barracks-recruit-head">
@@ -6893,7 +6893,7 @@ const DEFAULT_STATE = {
   birdCare: defaultBirdCare(), // Default per-bird care state
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
-  academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // New players construct the Kitchen after the Barracks.
+  academyBuildings: { outdoors: { built: true, builtAt: 'starter' } }, // New players construct the Kitchen after the Birdhouse.
   academyBuilderVersion: 8,
   battlePreset: { formation: 'balanced', starters: [], lastResult: null }, // legacy Flock League setup (kept for old saves)
   league: { tier: 0, winsInTier: 0, wins: 0, losses: 0, streak: 0, teamIds: [], daily: { date: '', wins: 0 } }, // legacy solo battle ladder state
@@ -6903,9 +6903,9 @@ const DEFAULT_STATE = {
   knowledgeQuiz: { answered: 0, correct: 0, coinsEarned: 0, lastVillageKey: null }, // Bird quiz learning rewards
   mapExploredCells: [], // Fog-of-discovery map cells the player has physically revealed
   tavernPatrons: [], // Trail birds befriended on walking quests, waiting at the Academy tavern to be recruited
-  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for the Barracks
+  starterTimber: { taken: {} }, // Guaranteed timber bundles near new players — enough for the Birdhouse
   sideQuest: { active: null, history: [] }, // Free-exploration side quests: the game charts wherever the player goes
-  tutorialFlow: { errandClaimed: false, barracksGiftGranted: false, barracksCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Barracks gift, the first-build celebration
+  tutorialFlow: { errandClaimed: false, barracksGiftGranted: false, barracksCelebrated: false }, // Guided-flow beats: Merlin's first errand, his Birdhouse gift, the first-build celebration
   diary: { entries: [] }, // Adventurer's Diary — Merlin's chronicle of everything the player has done
   completionNotices: [], // City-builder corner cards: finished buildings and quests waiting to be visited
   birdRoles: { academy: {}, villages: {}, regions: {} }, // Who runs what: Librarian, Head Chef, village Project Managers, region Wardens
@@ -12450,7 +12450,7 @@ function assignBirdRole(scope, key, birdId) {
   gameState.birdRoles = core.assignRole(ensureRolesState(), scope, key, bird.id);
   if (scope === 'academy' && key === 'kitchen') startHeadChefCareer(bird.id);
   // An Academy post means the bird lives in that room — except the Kitchen and
-  // the Barracks, which are a feeding table and a front desk: nobody is ever
+  // the Birdhouse, which are a feeding table and a front desk: nobody is ever
   // stationed in either, so their heads keep their own perch.
   if (scope === 'academy' && key !== 'kitchen' && key !== 'tavern') { ensureBirdAcademy(bird); bird.academy.room = key; }
   const fx = core.roleEffectiveness(bird, role);
@@ -13966,7 +13966,7 @@ const ACADEMY_BUILDINGS = Object.fromEntries(TREEHOUSE_ROOM_CATALOG.map(r => [r.
 const ACADEMY_BUILDING_ORDER = TREEHOUSE_ROOM_CATALOG.map(r => r.id);
 
 const ACADEMY_ROOMS = {
-  tavern: { label:'BARRACKS', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
+  tavern: { label:'BIRDHOUSE', icon:'🪶', buildingId:'tavern', desc:'The Academy recruitment office. Review every discovered or befriended bird, inspect its full card and stats, then invite it into your flock.', perk:'Active: professional Birdex recruitment', perches:[] },
   training: { label:'TRAINING HALL', icon:'🏋️', buildingId:'training', desc:'A side-on training branch. Run drills to permanently raise a stat and earn XP — birds stationed here also grow ATK slowly.', perk:'Passive: +1 ATK every 30 min, slow XP trickle', perches:[[70,65],[66,69],[75,69],[68,61],[73,61]] },
   outdoors: { label:'FREE BIRDS', icon:'🕊️', buildingId:'outdoors', desc:'Birds with no job. They rest and forage in the tree until you send them somewhere — a quest, a drill, or a post.', perk:'Waiting for orders', perches:[] },
   hospital: { label:'BIRD HOSPITAL', icon:'🏥', buildingId:'hospital', desc:'Birds come here for Tweetment after a fight — they heal much faster than out in the tree, and each patient is discharged back to their old room once fully healed.', perk:'Passive: fast HP recovery · healed birds auto-discharge', perches:[[26,53],[22,57],[30,57]] },
@@ -14006,7 +14006,7 @@ function isAcademyRoomBuilt(room) {
 // After that milestone it can be built at the Academy and its licence applies
 // to every standalone village, including new ones.
 function academyBuildingProgressLock(id) {
-  if (id === 'kitchen' && !isAcademyBuildingBuilt(id) && !isAcademyBuildingBuilt('tavern')) return { chip:'BUILD THE BARRACKS FIRST', button:'BUILD BARRACKS', message:'Build the Barracks first, then the Kitchen & Pantry.' };
+  if (id === 'kitchen' && !isAcademyBuildingBuilt(id) && !isAcademyBuildingBuilt('tavern')) return { chip:'BUILD THE BIRDHOUSE FIRST', button:'BUILD BIRDHOUSE', message:'Build the Birdhouse first, then the Kitchen & Pantry.' };
   if (id === 'kitchen' && !isAcademyBuildingBuilt(id) && !openingProgress().kitchenIntroduced) return {chip:'MEET YOUR COMPANIONS',button:'MEET YOUR COMPANIONS',message:'Discover a bird and meet your companion before planning the Kitchen.'};
   if (id !== 'manager_office' || isAcademyBuildingBuilt(id)) return null;
   const complete = typeof completedVillageCount === 'function' ? completedVillageCount() : 0;
@@ -14063,13 +14063,13 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
     gameState.player.branches = Math.max(Number(gameState.player.branches) || 0, 25);
     gameState.academyBuilderVersion = 3;
   }
-  // Barracks is a recruitment office, not housing. Move companions that old
+  // Birdhouse is a recruitment office, not housing. Move companions that old
   // saves left in the former tavern safely back to standing free.
   if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 4) {
     (gameState.flock || []).forEach(b => { if (b && b.academy && b.academy.room === 'tavern') b.academy.room = 'outdoors'; });
     gameState.academyBuilderVersion = 4;
   }
-  // Recruitment moved to the Barracks: retire the old Recruitment
+  // Recruitment moved to the Birdhouse: retire the old Recruitment
   // Roost and refund anyone who built it (it cost 210 coins + 50 branches).
   if (gameState.academyBuildings.market) {
     if (gameState.academyBuildings.market.built) {
@@ -14101,7 +14101,7 @@ function ensureAcademyBuildings(applyStarterGrant = true) {
   // only the missing construction budget plus the guaranteed first-companion
   // reserve. Migrated timber is marked collected so it cannot be claimed a
   // second time from the six map bundles. (The Roost has since retired, so
-  // the budget covers the Barracks alone.)
+  // the budget covers the Birdhouse alone.)
   if (applyStarterGrant && (Number(gameState.academyBuilderVersion) || 0) < 6) {
     const openingBuildingIds = ['tavern'];
     const missingOpeningIds = openingBuildingIds.filter(id => !isAcademyBuildingBuilt(id));
@@ -14192,7 +14192,7 @@ function academyBuildBuilding(id, opts = {}) {
   else if (SFX && typeof SFX.levelUp === 'function') SFX.levelUp();
   showToast('Built ' + cfg.icon + ' ' + cfg.label + '!');
   renderAcademy();
-  // Guided flow: the first Barracks is the tutorial's build lesson —
+  // Guided flow: the first Birdhouse is the tutorial's build lesson —
   // celebrate it properly, then let Merlin tour the rest of the Academy.
   if (id === 'tavern' && typeof onFirstBarracksBuilt === 'function') onFirstBarracksBuilt();
   if (id === 'kitchen' && typeof burbzTutorialAction === 'function') burbzTutorialAction('kitchen-built');
@@ -15893,7 +15893,7 @@ function renderBarracksRecruitList() {
     return '<button class="barracks-recruit-row" data-barracks-key="' + escapeHtml(candidate.key) + '">' + visual +
       '<span class="barracks-recruit-main"><span class="barracks-recruit-name">' + escapeHtml(bird.commonName || bird.species) + '</span><span class="barracks-recruit-meta">' + escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · PWR ' + power + ' · ' + escapeHtml(candidate.source) + '</span></span>' +
       '<span class="barracks-recruit-cost">' + cost + ' 🪙</span></button>';
-  }).join('') : '<div class="academy-empty">No birds are waiting right now. Use the camera or sound scanner to discover a species, then return to the Barracks.</div>';
+  }).join('') : '<div class="academy-empty">No birds are waiting right now. Use the camera or sound scanner to discover a species, then return to the Birdhouse.</div>';
   list.querySelectorAll('[data-barracks-key]').forEach(btn => btn.addEventListener('click', () => openBarracksRecruitCard(btn.dataset.barracksKey)));
 }
 
@@ -15940,14 +15940,14 @@ function openBarracksRecruitCard(key) {
 
 function barracksRecruitBird(key) {
   const candidate = barracksCandidateForKey(key);
-  if (!candidate) { showToast('That bird is no longer waiting in the Barracks.'); renderBarracksRecruitList(); return false; }
+  if (!candidate) { showToast('That bird is no longer waiting in the Birdhouse.'); renderBarracksRecruitList(); return false; }
   const species = canonicalSpeciesName(candidate.bird.commonName || candidate.bird.species);
   let record = getDiscoveredRecordForSpecies(species);
   if (!record) {
     rememberDiscoveredBird({ species, commonName:species, rarity:candidate.bird.rarity }, { silent:true });
     record = getDiscoveredRecordForSpecies(species);
   }
-  if (!record) { showToast('The Barracks record needs refreshing — scan this bird once more.'); return false; }
+  if (!record) { showToast('The Birdhouse record needs refreshing — scan this bird once more.'); return false; }
   const ok = recruitDiscoveredBird(record.key || key);
   if (!ok) return false;
   removeTavernPatronForSpecies(species);
@@ -15973,7 +15973,7 @@ function birdexRecruitBird(key) {
 
 function academyRecruitBird(key) { return barracksRecruitBird(key); }
 
-// Jump from Birdex cards / discovery overlays to the Barracks register.
+// Jump from Birdex cards / discovery overlays to the Birdhouse register.
 function gotoTavernRecruit() {
   $('recruitOverlay')?.classList.remove('show');
   if (isAcademyRoomBuilt('tavern')) {
@@ -15984,14 +15984,14 @@ function gotoTavernRecruit() {
   } else {
     const cfg = ACADEMY_BUILDINGS.tavern;
     showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 1)
-      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 1) + ' — keep playing to open it'
-      : '🪶 Build the Barracks in the Academy to recruit discovered birds');
+      ? '🪶 The Birdhouse unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 1) + ' — keep playing to open it'
+      : '🪶 Build the Birdhouse in the Academy to recruit discovered birds');
     switchScreen('academy');
     renderAcademy();
   }
 }
 
-// ---- Barracks queue: Birdex discoveries plus birds befriended on trails ----
+// ---- Birdhouse queue: Birdex discoveries plus birds befriended on trails ----
 function ensureTavernPatrons() {
   if (!Array.isArray(gameState.tavernPatrons)) gameState.tavernPatrons = [];
   return gameState.tavernPatrons;
@@ -16060,7 +16060,7 @@ function academyMoveBird(birdId, room) {
   if (!bird || !ACADEMY_ROOMS[room]) return;
   const assignedPost = birdAssignedPost(birdId);
   if (assignedPost) { showToast((bird.commonName || bird.species) + ' is working as ' + assignedPost.role.title + ' - stand them down before moving them.'); return; }
-  if (room === 'tavern') { showToast('The Barracks recruits birds; companions live in the Academy rooms.'); return; }
+  if (room === 'tavern') { showToast('The Birdhouse recruits birds; companions live in the Academy rooms.'); return; }
   if (room === 'kitchen') { showToast('The Kitchen is a feeding table — birds visit for meals, they do not lodge there. Open the Kitchen to feed your companions.'); return; }
   if (room === 'magpie_market') { showToast('The Magpie Market is a trading counter — birds visit to deal, they do not lodge there. Open the Market to buy and sell.'); return; }
   if (room === 'manager_office') { showToast("The Project Manager's Office licenses village managers — birds work at their village desks, not here."); return; }
@@ -17684,7 +17684,7 @@ const ACADEMY_ROOM_STAT_CAP = 400; // passive growth stops here; drills go furth
 
 // The Bird Hospital is a ward, not a home: the moment a patient is back to
 // full HP they are discharged — to the room they were admitted from if it
-// still stands (never the Kitchen or Barracks, which take no lodgers),
+// still stands (never the Kitchen or Birdhouse, which take no lodgers),
 // otherwise back to standing free. The Head Healer keeps their post, and a bird
 // away questing or mid-training moves rooms on its own clock, not the ward's.
 function dischargeBirdFromHospital(bird, now = Date.now()) {
@@ -19342,7 +19342,7 @@ function showTrailBirdDialog(npc, quest, metCount) {
   const needed = window.BurbzQuestCore.TRAIL_TAVERN_NPCS_NEEDED;
   if (quest.trailTavern) text += ' See you at ' + quest.trailTavern.name + ' — mine\'s a thimble of mead!';
   else if (metCount >= 1 && metCount < needed) text += ' They say when ' + needed + ' of us gather on one trail, the wandering tavern sets up shop... ' + (needed - metCount) + ' more to go!';
-  text += ' (I\'ll wait for you at the Academy Barracks afterwards — +15 XP)';
+  text += ' (I\'ll wait for you at the Academy Birdhouse afterwards — +15 XP)';
   document.getElementById('wqNpcDialog')?.remove();
   const art = getBirdArtUrl({ commonName: npc.species, species: npc.species });
   const el = document.createElement('div');
@@ -19395,7 +19395,7 @@ function openTrailTavernSheet(quest, opts = {}) {
     '<div class="tavern-fact">🪶 Bird lore: ' + escapeHtml(talk.fact) + '</div>' +
     (patrons ? '<div class="quest-section-title" style="margin:10px 0 4px">At the bar</div><div class="wq-history-birds">' + patrons + '</div>' : '') +
     drinksHtml +
-    '<div class="quest-desc" style="margin-top:8px">Your trail friends will be registered at the 🪶 Barracks in your Academy, ready for you to inspect and recruit.</div>' +
+    '<div class="quest-desc" style="margin-top:8px">Your trail friends will be registered at the 🪶 Birdhouse in your Academy, ready for you to inspect and recruit.</div>' +
     '<button class="wq-npc-ok" onclick="closeWalkQuestSheet()">Back to the trail</button></div>';
   showWalkQuestSheet(el);
   el.querySelectorAll('[data-drink]').forEach(btn => btn.addEventListener('click', () => buyTrailTavernDrink(btn.dataset.drink)));
@@ -21174,9 +21174,9 @@ async function sideQuestClaimDiscovery(id, opts) {
     showToast('🗡️ Weapon recovered' + (lines.length ? ' — ' + lines.map(l => l.text).join(', ') : '') + '!');
   } else {
     SFX.levelUp();
-    if (quiet) showToast('🐦 The wandering quest giver sends the ' + d.species + (added ? ' to the Academy Barracks!' : ' with regards. (+15 XP)'));
+    if (quiet) showToast('🐦 The wandering quest giver sends the ' + d.species + (added ? ' to the Academy Birdhouse!' : ' with regards. (+15 XP)'));
     else showQuestNpcDialog('Wandering quest giver', added
-      ? 'You found me off the beaten path, explorer! Meet my friend the ' + d.species + ' — now waiting at the Academy Barracks to join your flock.'
+      ? 'You found me off the beaten path, explorer! Meet my friend the ' + d.species + ' — now waiting at the Academy Birdhouse to join your flock.'
       : 'You found me off the beaten path, explorer! My friend the ' + d.species + ' already flies with you — take this instead. (+15 XP)');
   }
   vibrate(QUEST_BUZZ.chest);
@@ -21524,7 +21524,7 @@ function showWalkQuestSummarySheet(summary, celebrate) {
       (summary.story.scrollTitle ? '<br>📜 Folio scroll: ' + escapeHtml(summary.story.scrollTitle) : '') +
       (summary.story.rewardLines && summary.story.rewardLines.length ? '<br>🎁 ' + walkingStoryRewardHTML(summary.story) : '') + '</div>' : '') +
     (summary.tavern && summary.tavern.boon ? '<div class="quest-desc" style="margin:6px 0">🍻 Tavern toast: ' + escapeHtml(summary.tavern.boon) + '</div>' : '') +
-    (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — now registered at the 🪶 Barracks in your Academy!</div>' : '') +
+    (summary.tavern && summary.tavern.npcsMet ? '<div class="quest-desc" style="margin:6px 0">🤝 ' + summary.tavern.npcsMet + ' trail bird' + (summary.tavern.npcsMet === 1 ? '' : 's') + ' befriended — now registered at the 🪶 Birdhouse in your Academy!</div>' : '') +
     window.BurbzWalkingQuestUI.journal(summary.encounters || []) +
     '<div class="wq-history-birds">' + birdChips + '</div>' +
     (questPhotoRefFor(summary) ? '<div class="quest-photo-actions"><button class="wq-npc-ok" onclick="openQuestPhotoBook(\'summary\')">📸 View trail photos</button></div>' : '') +
@@ -22556,9 +22556,9 @@ let liveMapPickupMarkers = [];
 let liveMapPickupRenderKey = null;
 
 // ---------------------------------------------------------------------------
-// STARTER TIMBER — every new player finds enough wood to raise the Barracks.
+// STARTER TIMBER — every new player finds enough wood to raise the Birdhouse.
 // Guaranteed 🪵 bundles appear right around the player on the questing map
-// (well inside gathering range) until The Roost and Barracks are built or all
+// (well inside gathering range) until The Roost and Birdhouse are built or all
 // bundles are taken. 6 bundles × 3 branches = 18 timber: exactly enough for
 // both opening Academy buildings.
 // ---------------------------------------------------------------------------
@@ -22796,7 +22796,7 @@ function collectMapPickup(pickup, el) {
   effects.forEach(effect => { try { effect(); } catch (error) { console.warn('Gathering presentation failed', error); } });
   announcePlayerLevelUps(previousLevel);
   if (pickup.starterIndex != null && starterTimberDone()) {
-    setTimeout(() => showToast('🏠 Enough timber for the Barracks! Raise it at the Academy.'), 1300);
+    setTimeout(() => showToast('🏠 Enough timber for the Birdhouse! Raise it at the Academy.'), 1300);
   }
   updateHeader();
   SFX.questComplete(); vibrate(25);
@@ -24162,7 +24162,7 @@ function recruitCostForBird(bird) {
     const record = getDiscoveredRecordForSpecies((bird && (bird.species || bird.commonName)) || '');
     if (record && Number(record.recruitCost) > 0) trusted = Math.min(fullCost, Number(record.recruitCost));
   } catch (e) {}
-  // The Barracks' Recruiting Officer talks the price down. A charming, sharp
+  // The Birdhouse' Recruiting Officer talks the price down. A charming, sharp
   // officer can shave up to a third off — never below a token fee.
   const officer = academyRoleMultiplier('tavern');
   if (officer > 1) trusted = Math.max(10, Math.round(trusted / (1 + (officer - 1) * 0.5)));
@@ -37284,13 +37284,13 @@ function createBirdFromDiscovery(record) {
 }
 
 function recruitDiscoveredBird(key) {
-  // Recruitment uses the Barracks transaction, reached directly from a Birdex card
-  // once the Barracks has been built (the Barracks roster remains available too).
+  // Recruitment uses the Birdhouse transaction, reached directly from a Birdex card
+  // once the Birdhouse has been built (the Birdhouse roster remains available too).
   if (!isAcademyRoomBuilt('tavern')) {
     const cfg = ACADEMY_BUILDINGS.tavern;
     showToast((gameState.player.level || 1) < (cfg ? cfg.unlockLevel : 1)
-      ? '🪶 The Barracks unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 1) + ' — birds are recruited there'
-      : '🪶 Build the Barracks in your Academy to recruit birds');
+      ? '🪶 The Birdhouse unlocks at trainer level ' + (cfg ? cfg.unlockLevel : 1) + ' — birds are recruited there'
+      : '🪶 Build the Birdhouse in your Academy to recruit birds');
     return false;
   }
   const record = (gameState.discoveredSpecies || {})[key];
@@ -37311,7 +37311,7 @@ function recruitDiscoveredBird(key) {
   updateQuestProgress('recruit', 1);
   const walkQ = activeWalkingQuest();
   if (walkQ) { walkQ.birdsCaptured.push({ name: bird.commonName || bird.species, species: bird.species, rarity: bird.rarity, at: Date.now() }); updateWalkQuestHud(); showToast('🐦 ' + (bird.commonName || bird.species) + ' logged on your quest (+20 XP at the banner)'); try { questRegisterBirdEncounter(bird); } catch (err) {} }
-  removeTavernPatronForSpecies(bird.species || bird.commonName); // no longer waits in the Barracks queue
+  removeTavernPatronForSpecies(bird.species || bird.commonName); // no longer waits in the Birdhouse queue
   checkBadges();
   saveState();
   SFX.capture();
@@ -37338,7 +37338,7 @@ function showRecruitChoiceOverlay(birds, message) {
   if (!choices.length) return;
   const overlay = $('recruitOverlay'), list = $('recruitList');
   if (!overlay || !list) return;
-  $('recruitCopy').textContent = message || 'Added to Birdex · recruit at the Academy Barracks.';
+  $('recruitCopy').textContent = message || 'Added to Birdex · recruit at the Academy Birdhouse.';
   $('recruitWallet').textContent = 'Coins: ' + (gameState.player.coins || 0);
   list.innerHTML = choices.map((bird, idx) => createKnownSpeciesCardHTML(bird, idx)).join('');
   overlay.classList.add('show');
@@ -37678,14 +37678,14 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
     saveState(); updateHeader(); renderBirdex(); renderProfile();
-    if (!soundSession) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Barracks.' : 'Added to Birdex · recruit at Barracks.');
+    if (!soundSession) showRecruitChoiceOverlay(newDiscoveries, newDiscoveries.length > 1 ? 'Birds added to Birdex · recruit at Birdhouse.' : 'Added to Birdex · recruit at Birdhouse.');
     showToast('Birdex updated +' + newDiscoveries.length + ' · coins found');
   }
   // Re-sightings update the field record, never player or companion XP.
   // Explicit recruitment and quest rewards remain owned by their own actions.
   surfaced.filter(bird => !newDiscoveries.includes(bird)).forEach(bird => {
     const existing = companionForSpecies(bird.species);
-    if (!existing && !soundSession && opts.source !== 'sound') { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Barracks.'); }
+    if (!existing && !soundSession && opts.source !== 'sound') { showRecruitChoiceOverlay([bird], bird.commonName + ' is already in Birdex · recruit at Birdhouse.'); }
   });
   saveState(); // Persist lastSeenAt / sightingCount for known, unrecruited birds too.
   checkBadges();
@@ -39579,7 +39579,7 @@ function renderBirdEquip(target, previewBird) {
     : '';
 
   const care=unowned ? '' : '<div class="full-card-care">' + hungerBarHTML(hungerStatusForBird(bird),'full-card') + '<span class="full-card-health">Health <b>'+escapeHtml(bird.hp ?? bird.maxHp ?? 0)+' / '+escapeHtml(bird.maxHp || 0)+'</b></span></div>' + '<div class="full-card-actions"><button type="button" onclick="birdEquipCare(\'feed\')">Feed</button><button type="button" onclick="birdEquipCare(\'rename\')">Rename</button><button type="button" onclick="birdEquipCare(\'find\')">Find them</button></div>';
-  const recruitment=unowned ? '<div class="full-card-recruit"><span>Recruit this bird to choose its equipment.</span><button type="button" onclick="birdEquipRecruit()">'+(isAcademyRoomBuilt('tavern') ? 'Recruit · '+recruitCostForBird(bird)+' coins' : 'Open the Barracks')+'</button></div>' : '';
+  const recruitment=unowned ? '<div class="full-card-recruit"><span>Recruit this bird to choose its equipment.</span><button type="button" onclick="birdEquipRecruit()">'+(isAcademyRoomBuilt('tavern') ? 'Recruit · '+recruitCostForBird(bird)+' coins' : 'Open the Birdhouse')+'</button></div>' : '';
   const special='<div class="full-card-special"><span>Special move</span><strong>'+escapeHtml(bird.specialMove || 'Not recorded')+'</strong></div>';
   const facts='<details class="full-card-facts"><summary>Bird facts &amp; companion details</summary><div data-full-card-education>'+birdEquipFactsHTML(bird)+'</div>'+birdPersonalStoryHTML(bird)+specialBirdCharacterPanelHTML(bird)+renderBirdSizePanel(bird)+renderBirdPostLine(bird)+renderBirdDietPanel(bird)+(unowned ? '' : '<details class="card-placement"><summary>Academy placement</summary>'+academyRoomButtonsHTML(bird)+'</details>')+'</details>';
   body.innerHTML = pager + '<div class="bird-equip-layout"><section class="bird-equip-profile" aria-label="Companion portrait and stats">' + hero + stats + care + special + '</section><section class="bird-equip-details" aria-label="Equipment and bond">' + recruitment + slots + picker + bondPanel + '<details class="full-card-battle"><summary>Using equipment in battle</summary>'+notes+forgeLink+'</details>' + facts + '</section></div>';
@@ -39842,7 +39842,7 @@ function renderBirdex() {
     // Favourites lead the flock; power settles the rest.
     companions.sort((a, b) => (birdIsFavourite(b) ? 1 : 0) - (birdIsFavourite(a) ? 1 : 0) || (b.power || 0) - (a.power || 0));
     if (!companions.length) {
-      grid.innerHTML = flock.length ? '<div class="companions-empty"><div class="companions-empty-title">No birds match these filters</div><div class="companions-empty-copy">Try All rarities and All types.</div></div>' : '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Discover a bird, then recruit it at the Academy Barracks.</div></div>';
+      grid.innerHTML = flock.length ? '<div class="companions-empty"><div class="companions-empty-title">No birds match these filters</div><div class="companions-empty-copy">Try All rarities and All types.</div></div>' : '<div class="companions-empty"><div class="companions-empty-title">No companions yet</div><div class="companions-empty-copy">Discover a bird, then recruit it at the Academy Birdhouse.</div></div>';
       return;
     }
     companions.forEach((bird, idx) => { grid.innerHTML += createBirdCardHTML(bird, idx); });
@@ -40142,7 +40142,7 @@ function createKnownSpeciesCardHTML(bird, idx) {
   const canAfford = (gameState.player.coins || 0) >= cost;
   const recruitAction = tavernBuilt ? 'recruit-birdex' : 'goto-tavern';
   const recruitLabel = alreadyCompanion ? 'Companion'
-    : !tavernBuilt ? '🪶 Unlock the Barracks to recruit'
+    : !tavernBuilt ? '🪶 Unlock the Birdhouse to recruit'
     : canAfford ? `🪶 Recruit · ${cost} coins`
     : `Need ${cost} coins`;
   const recruitDisabled = alreadyCompanion;

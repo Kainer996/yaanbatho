@@ -2614,3 +2614,8 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
     the skips are the intentional production-server-only tests).
 
 14 September 2026 Gemini release direction: after the Carrion Crow fixture was misidentified as American Crow and the initial deployment rolled back, the user explicitly instructed installing Gemini anyway. That disclosed accuracy mismatch alone is nonblocking in the release verifier; retain its expected species and failed accuracy evidence. Do not replace it with hardcoded runtime results, paid rerolls, or weaker provider/budget/save/cleanup/sound safeguards. See GEMINI_PHOTOS_V410.md.
+
+
+## 2026-09-14 — Birdhouse player-facing terminology (pending integration)
+
+Yaan explicitly renamed the Academy Barracks to Birdhouse. Runtime headings, recruitment/guide copy, room labels, diary templates and tutorial/player-quest text use Birdhouse. Historical internal tavern/barracks IDs, selectors, function names, saved building records, costs and ownership are unchanged. Existing test expectations follow the new visible name; historical release notes are preserved. This copy-only patch does not introduce tutorial pacing changes, rename the village Alehouse or rewrite already-saved diary text. Release/cache pins and integrated verification belong to the sole release owner.

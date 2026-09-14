@@ -79,7 +79,7 @@
     training: [
       { fx: 0.50, fy: 0.46, type: 'thwack' }
     ],
-    // The Barracks currently shares the training-hall painting, so it shares
+    // The Birdhouse currently shares the training-hall painting, so it shares
     // the training-hall anchor sheet until it gets art of its own.
     tavern: [
       { fx: 0.50, fy: 0.46, type: 'thwack' }

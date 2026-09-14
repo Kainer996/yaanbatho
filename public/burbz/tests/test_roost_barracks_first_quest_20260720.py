@@ -1,6 +1,6 @@
-"""Fresh-player Academy onboarding: the Barracks, recruit, first quest.
+"""Fresh-player Academy onboarding: the Birdhouse, recruit, first quest.
 
-The Roost retired on 2026-08-20 — the tree itself is home — so the Barracks
+The Roost retired on 2026-08-20 — the tree itself is home — so the Birdhouse
 is the single opening building and the tutorial's build lesson."""
 import json
 import re
@@ -77,7 +77,7 @@ def test_tutorial_states_the_errand_then_barracks_then_recruit_sequence():
     start = html.index("const MERLIN_TUTORIAL_STEPS = [")
     end = html.index("\n];", start)
     tutorial = html[start:end].lower()
-    # Hands-on flow: send Merlin on his first errand, build the Barracks,
+    # Hands-on flow: send Merlin on his first errand, build the Birdhouse,
     # and the new recruitment office signs the first companion.
     required = (
         "send me out",
@@ -152,10 +152,10 @@ global.window = {
 };
 global.BurbzScanEconomy = window.BurbzScanEconomy;
 const ACADEMY_BUILDINGS = {
-  tavern:{cost:60,branches:8,unlockLevel:1,room:'tavern',label:'Barracks',icon:'🪶',x:76,y:80}
+  tavern:{cost:60,branches:8,unlockLevel:1,room:'tavern',label:'Birdhouse',icon:'🪶',x:76,y:80}
 };
 let academySelectedRoom = 'outdoors';
-// No Recruiting Officer is posted in the Barracks here, so recruiting runs
+// No Recruiting Officer is posted in the Birdhouse here, so recruiting runs
 // at its unstaffed baseline price.
 function academyRoleMultiplier(){ return 1; }
 // Daytime dispatch: no Night Hunter pack applies in this harness.

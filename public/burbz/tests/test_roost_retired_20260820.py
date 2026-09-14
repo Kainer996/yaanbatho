@@ -6,7 +6,7 @@ was without it.
 
 What replaced each duty:
 
-* the tutorial's build lesson is the Barracks (Merlin's gift now covers its
+* the tutorial's build lesson is the Birdhouse (Merlin's gift now covers its
   60 coins and 8 timber);
 * the gentle HP mend the Roost sold now happens to birds roosting in the
   Aviary Gardens — the tree is home, so home heals;
@@ -58,11 +58,11 @@ def test_the_tree_carries_the_rest_and_the_care_actions():
 def test_the_barracks_is_the_tutorial_build_lesson():
     assert "maybeGrantMerlinBarracksGift" in HTML
     assert "onFirstBarracksBuilt" in HTML
-    assert "THE BARRACKS IS BUILT!" in HTML
+    assert "THE BIRDHOUSE IS BUILT!" in HTML
     assert "barracks-built" in HTML
     assert "roost-built" not in HTML
     assert "maybeGrantMerlinRoostGift" not in HTML
-    # The gift covers exactly the Barracks bill.
+    # The gift covers exactly the Birdhouse bill.
     assert "ACADEMY_BUILDINGS.tavern) || { cost:60, branches:8 }" in HTML
 
 

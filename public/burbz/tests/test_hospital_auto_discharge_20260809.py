@@ -32,7 +32,7 @@ def run_discharge_cases() -> dict:
     html = HTML_PATH.read_text(encoding="utf-8")
     source = function_source(html, "dischargeBirdFromHospital")
     script = """
-const ACADEMY_ROOMS = { outdoors:{label:'AVIARY GARDENS'}, dorm:{label:'THE ROOST'}, hospital:{label:'BIRD HOSPITAL'}, training:{label:'TRAINING HALL'}, tavern:{label:'BARRACKS'}, kitchen:{label:'KITCHEN & PANTRY'} };
+const ACADEMY_ROOMS = { outdoors:{label:'AVIARY GARDENS'}, dorm:{label:'THE ROOST'}, hospital:{label:'BIRD HOSPITAL'}, training:{label:'TRAINING HALL'}, tavern:{label:'BIRDHOUSE'}, kitchen:{label:'KITCHEN & PANTRY'} };
 let builtRooms = new Set(['outdoors','dorm','hospital','training']);
 const isAcademyRoomBuilt = room => builtRooms.has(room);
 let postedIds = new Set();

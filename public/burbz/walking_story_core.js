@@ -76,7 +76,7 @@
       scroll: {
         id: 'folio_03_founding_of_the_academy',
         title: 'On the Founding of the Academy',
-        text: 'The Academy was not built. It was grown. Merlin planted his staff at the meeting of the old roads and asked the tree to hold a school, and the tree — being wiser than most councils — agreed. First came the open boughs themselves, then the Barracks, then rooms as they were needed: a Kitchen, a Hospital, a Library for the patient, a Crowbar for the sociable. The tree still grows. So must we.'
+        text: 'The Academy was not built. It was grown. Merlin planted his staff at the meeting of the old roads and asked the tree to hold a school, and the tree — being wiser than most councils — agreed. First came the open boughs themselves, then the Birdhouse, then rooms as they were needed: a Kitchen, a Hospital, a Library for the patient, a Crowbar for the sociable. The tree still grows. So must we.'
       },
       reward: { coins: 90, xp: 100, gear: { moonlit_charm: 1 }, materials: { iron_grit: 2 }, items: { xp_scroll_minor: 1 } }
     },
