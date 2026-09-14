@@ -17,5 +17,5 @@ vm.runInContext(fn('activatePrerequisiteAction'),c);c.activatePrerequisiteAction
 routes.length=0;current={actions:[]};c.activatePrerequisiteAction('material');assert.deepEqual(routes,['refresh'],'A stale choice must be recomputed rather than routed');
 routes.length=0;current={actions:[{id:'earn',action:{kind:'errand',id:'find_coins'}}]};c.activatePrerequisiteAction('earn');assert.deepEqual(routes,[['screen','quests'],['send-sheet','find_coins']],'Opens the real picker without sending a bird');
 routes.length=0;c.featureGateOpen=()=>false;c.activatePrerequisiteAction('earn');assert.deepEqual(routes,['refresh'],'Stale locked route cannot bypass its gate');
-const sw=fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8'),pin='prerequisite_guidance_core.js?v=cards-guidance-v417-20260914';assert(html.includes(pin));assert.equal(sw.split(pin).length-1,3,'New pure module belongs to all three worker lists');
+const sw=fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8'),pin='prerequisite_guidance_core.js?v=alderwing-followups-v417-20260914';assert(html.includes(pin));assert.equal(sw.split(pin).length-1,3,'New pure module belongs to all three worker lists');
 console.log('PASS: actual blocked-craft guard cannot spend; real commission clears goal; Market/errand adapters only open existing controls; stale/gated choices re-resolve; three worker lists');
