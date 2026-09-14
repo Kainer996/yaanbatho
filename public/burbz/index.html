@@ -45333,7 +45333,7 @@ async function checkPlayerHomePlacement(point){
  const G=BurbzGeographicWorldCore;if(!G.validCoordinate(point)||!window.THREE)return{ok:false,error:'Choose a loaded place outside villages and towns.'};
  const identity=gameState,records=await geographicSettlementRecords({center:point}),signatures=records.map(r=>homeSettlementGeometryKey(r)),home=BurbzPlayerHomeCore.normalize(gameState.playerHome,true),T=THREE;
  // Check the real house, attached rooms and fields, not merely its anchor.
- const model=BurbzPlayerHomeScene.createHouse(T,{...home,tier:Math.max(1,home.tier)});model.add(BurbzPlayerHomeScene.createFarm(T,home));model.rotation.y=Number(point.yaw)||0;model.updateMatrixWorld(true);const footprint=new T.Box3().setFromObject(model);
+ const model=BurbzPlayerHomeScene.createHouse(T,{...home,tier:Math.max(1,home.tier)});model.add(BurbzPlayerHomeScene.createFarm(T,home));model.updateMatrixWorld(true);const footprint=new T.Box3().setFromObject(model);
  BurbzPlayerHomeScene.disposeScene(model);
  const low={x:footprint.min.x-1,z:footprint.min.z-1},high={x:footprint.max.x+1,z:footprint.max.z+1};
  for(const record of records){
