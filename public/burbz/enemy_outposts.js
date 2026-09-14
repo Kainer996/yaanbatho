@@ -6,7 +6,7 @@ function attach(s,{adapter,safeAt,ground,allowed,clear,walkClear,notice}){
  const scene=s.source.scene,host=s.root,visible=new Map(),rejected=new Set(),group=new T.Group();group.name='Enemy outposts';scene.add(group);
  const box=new T.BoxGeometry(1,1,1),pole=new T.CylinderGeometry(.09,.13,3.4,6),cloth=new T.PlaneGeometry(1.15,.8);
  const materials={wood:new T.MeshLambertMaterial({color:0x665044}),crate:new T.MeshLambertMaterial({color:0x998267}),hostile:new T.MeshLambertMaterial({color:0x812c39,side:T.DoubleSide}),friendly:new T.MeshLambertMaterial({color:0x86bd89,side:T.DoubleSide})};
- const status=document.createElement('div');status.className='eo-status';status.hidden=true;status.innerHTML='<strong></strong><span></span><button type="button">Collect outpost income</button>';host.append(status);
+ const status=document.createElement('div');status.className='eo-status';status.hidden=true;status.innerHTML='<strong></strong><span></span><button type="button">Collect outpost income</button>';const combatHUD=host.querySelector?.('.wc-hud');if(combatHUD)combatHUD.prepend(status);else host.append(status);
  const probes=[];let lastReason=null,layoutUnknown=false;
  let elapsed=0,lastScan=-10,lastUI=-1,current=null,disposed=false,scanTask=null,scanCount=0,maxScanMs=0;
  const navigation=()=>s.continuity?.navigation(),data=()=>api.read(),local=c=>{const nav=navigation();return nav&&G.project(nav.origin,c);};
