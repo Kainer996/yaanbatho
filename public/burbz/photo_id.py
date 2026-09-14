@@ -42,7 +42,7 @@ def normalise_image_file(source_path: str, dest_path: str) -> None:
 
 def _abstain(reason, message=None):
     return {"found": False, "accepted": False, "verified": False, "policy": PHOTO_POLICY,
-            "model": "bioclip2-birder-local", "reason": reason,
+            "model": "bioclip25-birder-local", "reason": reason,
             "message": message or INCONCLUSIVE}
 
 
@@ -57,7 +57,7 @@ class _LocalConnection(http.client.HTTPConnection):
 
 
 def _validate_result(result):
-    if not isinstance(result, dict) or result.get("policy") != PHOTO_POLICY or result.get("model") != "bioclip2-birder-local":
+    if not isinstance(result, dict) or result.get("policy") != PHOTO_POLICY or result.get("model") != "bioclip25-birder-local":
         return _abstain("invalid-worker-result")
     if result.get("found") is not True:
         # Never pass a species through on any failure, even from the local worker.

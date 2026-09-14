@@ -3017,12 +3017,13 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-crop-zoom { display:flex; align-items:center; gap:12px; width:min(86vw,420px); margin-top:16px; }
 .bird-crop-zoom input[type=range]{ flex:1; accent-color:var(--accent2); height:26px; }
 .bird-crop-zoom .zi { font-size:18px; width:22px; text-align:center; }
-.bird-crop-actions { display:flex; gap:12px; width:min(86vw,420px); margin-top:16px; }
+.bird-crop-actions { display:grid; grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1.3fr); gap:8px; width:min(86vw,420px); margin-top:16px; }
 .bird-crop-actions button { flex:1; min-height:52px; border-radius:14px; border:0; cursor:pointer;
-  font-family:'Rajdhani',sans-serif; font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:.06em; }
+  padding:8px 6px; min-width:0; line-height:1.2; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:15px; text-transform:uppercase; letter-spacing:.06em; }
 .bird-crop-retake { background:rgba(255,255,255,.1); color:var(--text2); }
 .bird-crop-confirm { background:linear-gradient(135deg,var(--accent),var(--legendary)); color:#11100d; }
-.bird-crop-confirm:disabled { opacity:.6; cursor:default; }
+.bird-crop-actions .bird-crop-full-photo { background:var(--bg3); color:var(--accent2); border:1px solid var(--accent2); }
+.bird-crop-actions button:disabled { opacity:.6; cursor:default; }
 .photo-id-status { margin:12px 0; padding:14px; border:1px solid var(--accent3); border-radius:12px; color:var(--text); background:var(--bg3); }
 .photo-id-status[hidden], .photo-id-status button[hidden] { display:none; }
 .photo-id-status p { margin:0; line-height:1.5; }
@@ -3032,6 +3033,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-crop-analysis p { margin:0 0 8px; line-height:1.4; color:var(--text); }
 .bird-crop-analysis progress { width:100%; height:12px; accent-color:var(--accent2); }
 .bird-crop-overlay.analysing .bird-crop-frame,
+.bird-crop-overlay.full-photo .bird-crop-frame,
 .bird-crop-overlay.analysing .bird-crop-zoom { visibility:hidden; }
 .bird-crop-overlay.analysing .bird-crop-stage { touch-action:auto; cursor:default; }
 .bird-crop-overlay.analysing .bird-crop-stage,
@@ -3042,6 +3044,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .comic-ui .bird-crop-overlay { background:var(--comic-paper); }
 .comic-ui .bird-crop-actions button { border:2px solid var(--comic-ink); }
 .comic-ui .bird-crop-confirm { background:var(--comic-yellow); color:var(--comic-ink); }
+.comic-ui .bird-crop-actions .bird-crop-full-photo { background:var(--comic-paper); color:var(--comic-ink); border:2px solid var(--comic-ink); }
 @media (prefers-reduced-motion: reduce) { .bird-crop-analysis progress { animation:none; } }
 @media (min-width:640px) and (orientation:landscape) {
   .bird-crop-overlay.show { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-rows:repeat(5,auto); gap:0 24px; align-content:center; justify-items:center; }
@@ -4691,7 +4694,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
     <div class="bird-crop-overlay" id="birdCropOverlay" role="dialog" aria-modal="true" aria-label="Frame the bird">
       <button class="bird-crop-close" id="birdCropClose" type="button" aria-label="Close photo identification">×</button>
       <div class="bird-crop-title" id="birdCropTitle">Frame the bird</div>
-      <div class="bird-crop-sub" id="birdCropHint">Pinch or slide to zoom, then drag. Keep the whole bird in view.</div>
+      <div class="bird-crop-sub" id="birdCropHint">Pinch or drag to frame the bird. Use full photo keeps every edge.</div>
       <div class="bird-crop-stage" id="birdCropStage">
         <img class="bird-crop-img" id="birdCropImg" alt="">
         <div class="bird-crop-frame">
@@ -4711,6 +4714,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div class="bird-crop-actions">
         <button class="bird-crop-retake" id="birdCropRetake" type="button">Retake</button>
         <button class="bird-crop-confirm" id="birdCropConfirm" type="button">Identify &#10003;</button>
+        <button class="bird-crop-full-photo" id="birdCropFullPhoto" type="button">Use full photo</button>
       </div>
     </div>
 
@@ -40961,9 +40965,9 @@ nativeCameraInput?.addEventListener('change', async () => {
 
 // ----- Merlin-style bird cropper -------------------------------------------
 // After the phone's camera returns a photo we show it in a fixed square with a
-// zoom + drag interaction. Only the framed square (the bird) is sent to Photo
-// ID, which dramatically cuts background false positives.
-const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, pointers: new Map(), pinch: null };
+// zoom + drag interaction. Identify sends that square; Use full photo preserves
+// the original frame for a bird whose body or wings do not fit in the square.
+const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, preparing: false, fullPhoto: false, pointers: new Map(), pinch: null };
 
 async function openBirdCropper(file) {
   closeBirdCropper();
@@ -41038,9 +41042,10 @@ function renderBirdCrop() {
   if (!birdCrop.source) return;
   clampBirdCrop();
   const V = birdCropStageSize();
-  const scale = V / birdCrop.size;
-  const tx = V / 2 - scale * birdCrop.cx;
-  const ty = V / 2 - scale * birdCrop.cy;
+  const scale = birdCrop.fullPhoto ? V / Math.max(birdCrop.W, birdCrop.H) : V / birdCrop.size;
+  const tx = V / 2 - scale * (birdCrop.fullPhoto ? birdCrop.W / 2 : birdCrop.cx);
+  const ty = V / 2 - scale * (birdCrop.fullPhoto ? birdCrop.H / 2 : birdCrop.cy);
+  $('birdCropOverlay')?.classList.toggle('full-photo', birdCrop.fullPhoto);
   $('birdCropImg').style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
 }
 
@@ -41048,7 +41053,8 @@ function birdCropZoomValue() { return birdCrop.size0 / birdCrop.size; }
 
 // Change zoom while keeping the screen anchor (relative to stage top-left) fixed.
 function setBirdCropZoom(newZoom, anchorX, anchorY) {
-  if (photoIdBusy || !birdCrop.source || !Number.isFinite(newZoom)) return;
+  if (photoIdBusy || birdCrop.preparing || !birdCrop.source || !Number.isFinite(newZoom)) return;
+  birdCrop.fullPhoto = false;
   const V = birdCropStageSize();
   if (anchorX == null) { anchorX = V / 2; anchorY = V / 2; }
   newZoom = Math.max(1, Math.min(birdCrop.zmax, newZoom));
@@ -41070,7 +41076,9 @@ function initBirdCropperControls() {
   const rect = () => stage.getBoundingClientRect();
 
   stage.addEventListener('pointerdown', (e) => {
-    if (photoIdBusy) return;
+    if (photoIdBusy || birdCrop.preparing) return;
+    birdCrop.fullPhoto = false;
+    renderBirdCrop();
     birdCrop.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
     try { stage.setPointerCapture(e.pointerId); } catch (err) {}
     if (birdCrop.pointers.size === 2) {
@@ -41079,7 +41087,7 @@ function initBirdCropperControls() {
     }
   });
   stage.addEventListener('pointermove', (e) => {
-    if (photoIdBusy) return;
+    if (photoIdBusy || birdCrop.preparing) return;
     if (!birdCrop.pointers.has(e.pointerId)) return;
     const prev = birdCrop.pointers.get(e.pointerId);
     birdCrop.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -41107,8 +41115,9 @@ function initBirdCropperControls() {
     setBirdCropZoom(birdCropZoomValue() * (e.deltaY < 0 ? 1.1 : 1 / 1.1), e.clientX - r.left, e.clientY - r.top);
   }, { passive: false });
   $('birdCropZoom').addEventListener('input', (e) => setBirdCropZoom(parseFloat(e.target.value)));
-  $('birdCropRetake').addEventListener('click', () => { SFX.tap(); closeBirdCropper(); openNativeCamera(); });
+  $('birdCropRetake').addEventListener('click', () => { if (photoIdBusy || birdCrop.preparing) return; SFX.tap(); closeBirdCropper(); openNativeCamera(); });
   $('birdCropConfirm').addEventListener('click', () => { SFX.tap(); confirmBirdCrop(); });
+  $('birdCropFullPhoto').addEventListener('click', () => { SFX.tap(); confirmBirdCrop(true); });
   $('birdCropClose').addEventListener('click', () => { photoIdCancel?.(); closeBirdCropper(); });
   $('birdCropOverlay').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); photoIdCancel?.(); closeBirdCropper(); }
@@ -41118,6 +41127,7 @@ function initBirdCropperControls() {
 
 function closeBirdCropper() {
   birdCrop.generation++;
+  birdCrop.preparing = false; birdCrop.fullPhoto = false;
   $('birdCropOverlay').classList.remove('show');
   birdCrop.pointers.clear(); birdCrop.pinch = null;
   const img = $('birdCropImg');
@@ -41125,31 +41135,45 @@ function closeBirdCropper() {
   birdCrop.source?.close?.(); birdCrop.source = null;
 }
 
-async function confirmBirdCrop() {
-  if (!birdCrop.source || photoIdBusy || $('birdCropConfirm').disabled) return;
+async function confirmBirdCrop(fullPhoto = false) {
+  const btn = $(fullPhoto ? 'birdCropFullPhoto' : 'birdCropConfirm');
+  if (!birdCrop.source || photoIdBusy || birdCrop.preparing || btn.disabled) return;
   const generation = birdCrop.generation;
-  const btn = $('birdCropConfirm');
-  btn.disabled = true; const label = btn.textContent; btn.textContent = 'Identifying…';
+  birdCrop.preparing = true; birdCrop.fullPhoto = fullPhoto;
+  setBirdPhotoStage('prepare', fullPhoto ? 'Preparing the full photo…' : 'Preparing your framed photo…');
   try {
-    clampBirdCrop();
-    const s = birdCrop.size;
-    const x = birdCrop.cx - s / 2, y = birdCrop.cy - s / 2;
-    const outSide = Math.max(1, Math.min(CAPTURE_MAX_SIDE, Math.round(s)));
-    const out = document.createElement('canvas');
-    out.width = outSide; out.height = outSide;
-    const octx = out.getContext('2d');
-    octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = 'high';
-    octx.drawImage(birdCrop.source, x, y, s, s, 0, 0, outSide, outSide);
-    const blob = await new Promise(res => out.toBlob(res, 'image/jpeg', 0.92));
+    let blob, out;
+    if (fullPhoto) {
+      blob = await normalizeCapturedPhoto(birdCrop.source, birdCrop.W, birdCrop.H, 1);
+    } else {
+      clampBirdCrop();
+      const s = birdCrop.size;
+      const x = birdCrop.cx - s / 2, y = birdCrop.cy - s / 2;
+      const outSide = Math.max(1, Math.min(CAPTURE_MAX_SIDE, Math.round(s)));
+      out = document.createElement('canvas');
+      out.width = outSide; out.height = outSide;
+      const octx = out.getContext('2d');
+      octx.imageSmoothingEnabled = true; octx.imageSmoothingQuality = 'high';
+      octx.drawImage(birdCrop.source, x, y, s, s, 0, 0, outSide, outSide);
+      blob = await new Promise(res => out.toBlob(res, 'image/jpeg', 0.92));
+    }
     if (generation !== birdCrop.generation) return;
     if (!blob) throw new Error('Photo encoding failed');
-    updateNativePreviewFromCanvas(out);
+    if (fullPhoto) showNativePhotoPreview(blob); else updateNativePreviewFromCanvas(out);
     await identifyImage(blob, 'camera');
   } catch (e) {
+    if (generation !== birdCrop.generation) return;
     console.log('bird crop failed:', e);
-    showToast('Could not crop that photo — try again');
+    setBirdPhotoStage('outcome', 'Could not prepare that photo. Try again.');
+    showToast('Could not prepare that photo — try again');
   } finally {
-    btn.disabled = false; btn.textContent = label || 'Identify ✓';
+    if (generation === birdCrop.generation) {
+      birdCrop.preparing = false;
+      $('birdCropConfirm').disabled = photoIdBusy;
+      $('birdCropFullPhoto').disabled = photoIdBusy;
+      $('birdCropRetake').disabled = photoIdBusy;
+      $('birdCropZoom').disabled = photoIdBusy;
+    }
   }
 }
 
@@ -41301,7 +41325,7 @@ function setBirdPhotoStage(stage, message = '') {
   overlay.classList.toggle('analysing', busy);
   overlay.classList.toggle('has-outcome', stage === 'outcome');
   $('birdCropTitle').textContent = busy ? 'Checking your bird' : stage === 'outcome' ? 'Photo check finished' : 'Frame the bird';
-  $('birdCropHint').textContent = busy ? 'Your photo stays here while we check the details.' : 'Pinch or slide to zoom, then drag. Keep the whole bird in view.';
+  $('birdCropHint').textContent = busy ? 'Your photo stays here while we check the details.' : 'Pinch or drag to frame the bird. Use full photo keeps every edge.';
   $('birdCropAnalysis').hidden = stage === 'frame';
   $('birdCropMessage').textContent = message;
   // The model does not report a completion percentage. Use a real waiting
@@ -41309,6 +41333,8 @@ function setBirdPhotoStage(stage, message = '') {
   $('birdCropProgress').hidden = !busy;
   $('birdCropRetake').disabled = busy;
   $('birdCropConfirm').disabled = busy;
+  $('birdCropFullPhoto').disabled = busy;
+  $('birdCropZoom').disabled = busy;
   $('birdCropConfirm').textContent = busy ? 'Checking…' : 'Identify ✓';
   if (typeof renderBirdCrop === 'function') renderBirdCrop();
 }
@@ -43956,7 +43982,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'wayside-room-title-v406b-20260914';
+const BURBZ_BUILD = 'photo-recognition-v407-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
