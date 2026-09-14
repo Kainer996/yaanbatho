@@ -1018,7 +1018,10 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 .empire-tier-note .empire-grid-key { color:#cfc09a; }
 .empire-tier-note .realm-hint { padding:0; border:0; background:none; }
 .empire-tier-foot { display:flex; align-items:center; gap:4px; font-size:13px; color:#d9c893; }
-#empireCollectBar { margin:0 12px; }
+#empireCollectBar { display:none; }
+body[data-active-screen="village"] .completion-notice-stack{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:35dvh;overflow:auto}
+#screen-village .empire-title-row{justify-content:center;margin:3px 0 6px}
+#screen-village .empire-title-row .screen-title{width:100%;text-align:center;font-size:16px;line-height:1.3;margin:0;padding:0}
 #empireCollectBar .empire-tribute-btn { margin-bottom:10px; }
 #empireRealmPanel, #empireTownsPanel { margin:14px 12px; }
 .village-swipe-pager .bep-dot { display:inline-block; width:7px; height:7px; margin:0 3px; border-radius:50%; background:rgba(240,199,103,.3); vertical-align:middle; }
@@ -4824,7 +4827,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div class="settlement-layout-controls" id="villageLayoutControls">
       <div class="empire-title-row">
         <div class="screen-title">YOUR EMPIRE</div>
-        <button type="button" class="empire-ledger-btn" id="empireLedgerBtn" aria-expanded="false" aria-controls="empireLedgerPop">👑 LEDGER</button>
+
       </div>
       <div class="empire-ledger-pop" id="empireLedgerPop" role="dialog" aria-label="Royal Ledger" hidden></div>
       <div id="empireCollectBar"></div>
@@ -5588,7 +5591,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=desk-composition-v397-20260913"></script>
-<script src="scan_home.js?v=home-followup-v399-20260913"></script>
+<script src="scan_home.js?v=empire-opening-v414-20260914"></script>
 <script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -18797,6 +18800,13 @@ function dismissCompletionNotice(id) {
   if (takeCompletionNotice(id)) SFX.tap();
 }
 function completionNoticeGo(id) {
+  const ready=(gameState.completionNotices||[]).find(n=>n.id===id&&n.target?.readyToOpen);
+  if(ready){const t=ready.target;let opened=false;
+    if(t.orderKey)opened=completeWholesaleWorks(Date.now(),{openingOrder:t.orderKey});
+    else opened=openReadyOverviewBuilding(t.wardSeed??t.seed,t.buildingId,t);
+    if(opened){villageBuiltSeed=null;townBuiltKey=null;try{updateHeader();renderScanHome();renderCompletionNotices();if(currentScreen==='town')renderTownScreen();else if(currentScreen==='village')renderVillage();}catch(_){}}
+    return;
+  }
   const notice = takeCompletionNotice(id);
   if (!notice) return;
   SFX.tap();
@@ -23125,7 +23135,7 @@ function scanHomeDeskSnapshot() {
   const kitchen=kitchenRosterEntries().map(entry=>{const care=entry.merlin?gameState.merlinCare:entry.bird?.care,status=dietHungerCore()?.hungerStatusForCare(care,now);return status?{id:entry.key,name:entry.name,art:getBirdArtUrl(entry.artBird),hunger:Math.round(status.hunger),level:status.level,label:status.label,away:!!entry.bird&&birdHasActiveExpedition(entry.bird.id)}:null;}).filter(row=>row&&row.level!=='fed').sort((a,b)=>b.hunger-a.hunger);
   const training=(gameState.birdTrainingSessions||[]).filter(s=>s&&s.id).map(s=>window.BurbzAcademyCore?.advanceTrainingSession?BurbzAcademyCore.advanceTrainingSession(s,now):s).filter(s=>!['claimed','cancelled','failed'].includes(s.status)).map(s=>({id:s.id,name:s.birdName||'Bird',detail:s.label||'Training',ready:s.status==='complete',progress:Math.round(s.progressPct??0),remaining:Math.ceil(Math.max(0,s.endMs-now)/60000)*60000}));
   const hospital=flock.filter(b=>b&&b.id&&Number.isFinite(b.hp)&&Number.isFinite(b.maxHp)&&b.hp<b.maxHp).map(b=>({id:b.id,name:birdDisplayName(b),art:getBirdArtUrl(b),hp:Math.max(0,b.hp),maxHp:b.maxHp,admitted:b.academy?.room==='hospital'})).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp);
-  const completed=(gameState.completionNotices||[]).filter(n=>n&&!n.target?.readyToOpen&&n.id&&['empire-building','academy-building','wholesale-upgrade'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
+  const completed=(gameState.completionNotices||[]).filter(n=>n&&n.id&&['empire-building','academy-building','wholesale-upgrade'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
   const loadout=gameState.inventory?.equipment?.["@player"]||{};
   const equipment=L.GEAR_SLOTS.map(slot=>{const item=L.gearById(loadout[slot]);return{slot,id:item?.id,name:item?.label,art:item?GEAR_ART_ROOT+encodeURIComponent(item.id)+".webp":null,icon:item?.icon};});
   const villageDesk=empireVillages().map(rec=>{
@@ -26852,8 +26862,8 @@ function empireCompleteConstructions(now, options={}) {
         awaitingVisit=true;
         const link=empireSettlementOfSeed(rec.seed),holding=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;
         const tier=villageBuildingTier(building,con.toLevel),name=holding?townDisplayName(holding):rec.name;
-        queueCompletionNotice({kind:'empire-building',icon:tier.icon,title:tier.name+' ready to open',sub:name+' — visit in Alderwing to open',target:{seed:holding?holding.heartSeed:rec.seed,wardSeed:rec.seed,buildingId:con.id,startMs:con.startMs,readyToOpen:true}});
-        notices.push({seed:holding?holding.heartSeed:rec.seed,text:tier.name+' is ready. Visit the building in Alderwing to open it.'});
+        queueCompletionNotice({kind:'empire-building',icon:tier.icon,title:tier.name+' ready to open',sub:name+' — tap to open',target:{seed:holding?holding.heartSeed:rec.seed,wardSeed:rec.seed,buildingId:con.id,startMs:con.startMs,readyToOpen:true}});
+        notices.push({seed:holding?holding.heartSeed:rec.seed,text:tier.name+' is ready. Tap the finished building or this notice to open it.'});
         return;
       }
       takeSnapshot();
@@ -28011,10 +28021,7 @@ function renderVillageClaimBar() {
     return;
   }
   if (empireOwnsVillage(v.seed)) {
-    const rec = ensureEmpireState().villages[String(v.seed >>> 0)];
-    const when = rec && rec.claimedAt ? new Date(rec.claimedAt).toLocaleDateString() : '';
-    const settle = empireSettlementOfSeed(v.seed);
-    bar.innerHTML = '<div class="village-owned-banner">🕊️ ' + escapeHtml(v.name) + ' is liberated' + (when ? ' · freed ' + escapeHtml(when) : '') + (settle ? ' · ' + settle.icon + ' part of the ' + escapeHtml(settle.label) : '') + '</div>';
+    bar.innerHTML = '';
     const freeVillages = empireVillages().filter(rec => !empireSettlementOfSeed(rec.seed));
     if (freeVillages.length >= 3 && !empireTownMergeCandidates().length) {
       const readyCount = freeVillages.filter(rec => villageMergeReady(rec)?.ready).length;
@@ -28098,7 +28105,7 @@ function renderVillageManagePanel() {
   const constructionHtml = constructions.map(con => {
     const cb = EMPIRE_BUILDING_INDEX[con.id];
     const cbTier = cb ? villageBuildingTier(cb, con.toLevel) : null;
-    if(con.readyToOpenAt)return '<div class="province-construction"><strong>'+escapeHtml(cbTier?.name||'Building')+'</strong><div>Ready to open · Visit in Alderwing</div></div>';
+    if(con.readyToOpenAt)return '<div class="province-construction"><strong>'+escapeHtml(cbTier?.name||'Building')+'</strong><div>Ready to open · Tap the building or its notice</div></div>';
     const pct = Math.round(constructionProgress(con, now) * 100);
     // Two crews can be at work here, so each card says whose it is.
     const crewTag = con.by === 'manager' && managerBird ? ' <span class="province-construction-crew">📋 ' + escapeHtml(birdDisplayName(managerBird)) + '</span>' : '';
@@ -28383,7 +28390,6 @@ function renderEmpirePanel() {
   // empty the chest, then you go somewhere.
   const footerHtml = '';
   panel.innerHTML =
-    (count ? '<button class="empire-tribute-btn" onclick="collectEmpireTribute()"' + (hasTribute ? '' : ' disabled') + '>💰 COLLECT TAXES &amp; PRODUCE: ' + escapeHtml(empireTakingsSoFar(due)) + '</button>' : '') +
     tiersHtml +
     footerHtml;
   const collectBar = $('empireCollectBar');
@@ -28805,7 +28811,7 @@ function townCompleteHallConstructions(nowValue,options={}) {
     for(const {seat,state,construction,open} of due){
       const holding=seat.cityId?empireSettlementById(seat.cityId):seat,name=townDisplayName(holding);
       const target={seed:holding.heartSeed,wardSeed:seat.heartSeed,buildingId:'civic-hall',startMs:construction.startMs};
-      if(!open){state.hallConstruction={...construction,readyToOpenAt:now};queueCompletionNotice({kind:'empire-building',icon:'🏛️',title:'Hall ready to open',sub:name+' — visit in Alderwing to open',target:{...target,readyToOpen:true}});messages.push(name+' Hall is ready. Visit its work site in Alderwing to open it.');continue;}
+      if(!open){state.hallConstruction={...construction,readyToOpenAt:now};queueCompletionNotice({kind:'empire-building',icon:'🏛️',title:'Hall ready to open',sub:name+' — tap to open',target:{...target,readyToOpen:true}});messages.push(name+' Hall is ready. Tap the finished Hall or this notice to open it.');continue;}
       state.hallLevel=Math.max(state.hallLevel||1,Math.min(5,Number(construction.toLevel)||((state.hallLevel||1)+1)));
       state.hallConstruction=null;applyPlayerXpState(24+state.hallLevel*4);opened=true;
       gameState.completionNotices=(gameState.completionNotices||[]).filter(n=>!(n.target?.readyToOpen&&Number(n.target.wardSeed)===Number(seat.heartSeed)&&n.target.buildingId==='civic-hall'&&Number(n.target.startMs)===Number(construction.startMs)));
@@ -28959,7 +28965,7 @@ function townPolicyEffectCopy(policy) {
 }
 function townProjectHTML(icon, label, construction, now) {
   if (!construction) return '';
-  if(construction.readyToOpenAt)return '<div class="town-project"><strong>'+icon+' '+escapeHtml(label)+'</strong><div>Ready to open · Visit in Alderwing</div></div>';
+  if(construction.readyToOpenAt)return '<div class="town-project"><strong>'+icon+' '+escapeHtml(label)+'</strong><div>Ready to open · Tap the building or its notice</div></div>';
   const pct = Math.round(constructionProgress(construction, now) * 100);
   return '<div class="town-project"><div class="town-project-head"><span>' + icon + ' ' + escapeHtml(label) + '</span><span class="town-project-eta" data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></div><div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + construction.startMs + '" data-build-end="' + construction.endMs + '" style="width:' + pct + '%"></div></div></div>';
 }
@@ -29066,6 +29072,7 @@ function completeWholesaleWorks(now,options={}) {
     for(const [key,works]of Object.entries(empire.wholesaleWorks)){
       if(!Array.isArray(works?.plan)||!Number.isFinite(works.endMs)||t<works.endMs)continue;
       if(options.opening&&options.opening.orderKey!==key)continue;
+      if(options.openingOrder&&options.openingOrder!==key)continue;
       for(const step of works.plan){
         if(step.openedAt)continue;
         const rec=empire.villages[String(Number(step.seed)>>>0)],building=EMPIRE_BUILDING_INDEX[step.buildingId];
@@ -29075,7 +29082,7 @@ function completeWholesaleWorks(now,options={}) {
         // Legacy orders may already have paid for a later level over an
         // individual project. Keep both; do not open the later one first.
         if([...villageConstructions(rec),...villageReadyToOpen(rec)].some(c=>c.id===building.id))continue;
-        const target=options.opening,onSite=target&&Number(target.seed)===Number(rec.seed)&&target.id===building.id&&Number(target.startMs)===Number(works.startMs);
+        const target=options.opening,onSite=options.openingOrder===key||(target&&Number(target.seed)===Number(rec.seed)&&target.id===building.id&&Number(target.startMs)===Number(works.startMs));
         if(target&&!onSite)continue;
         if(!onSite&&!villageStewardProject(rec.seed).staffed)continue;
         capture();eco.buildings[building.id]=Math.max(level,Math.min(building.maxLevel,Number(step.toLevel)||1));
@@ -29087,7 +29094,7 @@ function completeWholesaleWorks(now,options={}) {
         gameState.completionNotices=(gameState.completionNotices||[]).filter(n=>!(n.target?.readyToOpen&&n.target.orderKey===key));
         queueCompletionNotice({kind:'wholesale-upgrade',icon:'⬆️',title:(works.name||'Your settlement')+' rises together',sub:works.plan.length+' buildings opened — tap to see.',target:{...works.target,wardSeeds:[...new Set(works.plan.map(step=>Number(step.seed)))]}});
       }else if(!works.readyToOpenAt){
-        capture();works.readyToOpenAt=t;changed=true;queueCompletionNotice({kind:'empire-building',icon:'🏗️',title:(works.name||'Your settlement')+' buildings ready',sub:'Visit each finished site in Alderwing to open it.',target:{...works.target,orderKey:key,readyToOpen:true}});
+        capture();works.readyToOpenAt=t;changed=true;queueCompletionNotice({kind:'empire-building',icon:'🏗️',title:(works.name||'Your settlement')+' buildings ready',sub:'Tap this notice to open the finished order, or tap each building.',target:{...works.target,orderKey:key,readyToOpen:true}});
       }
     }
     if(!changed)return false;
@@ -29514,7 +29521,7 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
   const output = level ? townBuildingOutputText(building, level, villageCrewShare(building, crew)) : '';
   let action;
   if (maxed) action = '<button class="town-action" disabled>★ FULLY BUILT</button>';
-  else if (buildingHere&&construction.readyToOpenAt) action = '<div class="town-advice">Ready to open · Visit this building in Alderwing</div>';
+  else if (buildingHere&&construction.readyToOpenAt) action = '<div class="town-advice">Ready to open · Tap the building or its notice</div>';
   else if (buildingHere) action = '<button class="town-action" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - Date.now()) + '</span></button>';
   else if (locked) action = '<button class="town-action" disabled>🔒 UNLOCKS AT TRAINER LV ' + building.unlockLevel + '</button>';
   else {
@@ -30488,7 +30495,7 @@ function villageBuildingSheetHTML(rec, buildingId) {
   const upgradeLabel = level === 0 ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
   let btn;
   if (maxed) btn = '<button class="province-build-btn maxed" disabled><span class="build-btn-act">★ FULLY BUILT</span></button>';
-  else if (inProgress&&rising.readyToOpenAt) btn = '<div class="province-build-btn busy">Ready to open · Visit this building in Alderwing</div>';
+  else if (inProgress&&rising.readyToOpenAt) btn = '<div class="province-build-btn busy">Ready to open · Tap the building or its notice</div>';
   else if (inProgress) btn = '<button class="province-build-btn busy" disabled><span class="build-btn-act">🏗️ BUILDING</span><span class="build-cost-row"><span class="build-cost-bit" data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></span></button>';
   else if (locked) btn = '<button class="province-build-btn locked" disabled><span class="build-btn-act">🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</span></button>';
   // Short on coins, timber, stone or a specialist material? The button stays live: tapping it opens the
@@ -30523,7 +30530,21 @@ function villageBuildingSheetHTML(rec, buildingId) {
   return out;
 }
 
+function openReadyOverviewBuilding(seed,buildingId,expected={}) {
+  const ward=Number(seed)>>>0;if(!empireOwnsVillage(ward))return false;
+  const hall=buildingId==='civic-hall',rec=empireVillageRecordBySeed(ward);
+  const seat=hall?(empireSettlementsInfo().towns||[]).find(s=>Number(s.heartSeed)===ward):null;
+  const con=hall?seat&&ensureTownSeatState(seat)?.hallConstruction:villageConstructionOf(rec,buildingId);
+  if(!con||Date.now()<con.endMs||(expected.startMs!==undefined&&Number(expected.startMs)!==Number(con.startMs)))return false;
+  const opening={seed:ward,id:buildingId,startMs:con.startMs,orderKey:con.orderKey};
+  const complete=hall?townCompleteHallConstructions:con.orderKey?completeWholesaleWorks:empireCompleteConstructions;
+  if(!complete(Date.now(),{opening}))return false;
+  villageBuiltSeed=null;townBuiltKey=null;try{updateHeader();renderScanHome();renderCompletionNotices();if(currentScreen==='town')renderTownScreen();else if(currentScreen==='village')renderVillage();}catch(_){}
+  return true;
+}
 function openBuildingInterior(seed, buildingId, mode) {
+  if(buildingId==='civic-hall'){openReadyOverviewBuilding(seed,buildingId);settlementSceneScrollTo('townHallSection');return;}
+  openReadyOverviewBuilding(seed,buildingId);
   const rec = empireVillageRecordBySeed(Number(seed) >>> 0);
   const building = EMPIRE_BUILDING_INDEX[buildingId];
   if (!rec || !building) return;
@@ -35973,7 +35994,7 @@ function ensureTownRenderer(stage) {
       while (obj && obj.userData.buildingId === undefined && obj.userData.ruinIndex === undefined && !obj.userData.townHall && !obj.userData.townHallStone && obj.userData.districtSeed === undefined && !obj.userData.npc && !obj.userData.townGround) obj = obj.parent;
       const info = townSceneContextInfo(obj);
       if (info) settlementSceneSetContext('town', obj, info);
-      if (obj && obj.userData.buildingId === 'civic-hall') { SFX.tap(); settlementSceneScrollTo('townHallSection'); }
+      if (obj && obj.userData.buildingId === 'civic-hall') { SFX.tap(); openBuildingInterior(obj.userData.wardSeed,'civic-hall','town'); }
       else if (obj && obj.userData.buildingId !== undefined) openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId);
       else if (obj && obj.userData.ruinIndex !== undefined) info?.action();
       else if (obj && obj.userData.townHall) {
@@ -44055,7 +44076,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'gemini-photos-v410-20260914';
+const BURBZ_BUILD = 'empire-opening-v414-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44116,7 +44137,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'battle', chapter:'The War', title:'Choose an attack', screen:'battle', target:'#battleStartBtn', text:'Select a bird and move, then a target. Attack shows the expected damage before you commit.', id:'lesson-36' },
   { chapterId:'battle', chapter:'The War', title:'Free a village', screen:'battle', target:'#battleSelect', text:'Open a village on the Map and win its Liberation Battle. Then build a sanctuary birdhouse.', id:'lesson-37' },
   { chapterId:'village', chapter:'Realm', title:'Your Empire', screen:'village', pane:'realm', target:'#empirePagesNav', text:'Use the Empire, Towns and Villages tabs, or swipe between them. Free villages to lift the darkness.', id:'lesson-38' },
-  { chapterId:'village', chapter:'Realm', title:'Collect tribute', screen:'village', pane:'villages', target:'#empireCollectBar', text:'Villages and Towns produce resources every eight hours. Keep residents supplied and happy to increase output.', id:'lesson-40' },
+  { chapterId:'village', chapter:'Realm', title:'Your villages', screen:'village', pane:'villages', target:'#empirePanel', text:'Tap a village tile to manage its buildings and residents. Keep everyone supplied and happy to increase production.', id:'lesson-40' },
   { chapterId:'empire_villages', chapter:'Realm', title:'Village status', screen:'village', pane:'villages', target:'#empirePanel', text:'Red villages need attention. Gold villages can merge. Green villages run themselves. Tap one to enter.', id:'lesson-41' },
   { chapterId:'empire_villages', chapter:'Realm', title:'Manage a village', screen:'village', pane:'villages', target:'#villageManagePanel', text:'Tap a building to manage it. A Project Manager bird can build while you are away.', id:'lesson-42' },
   { chapterId:'empire_towns', chapter:'Realm', title:'Form a Town', screen:'village', pane:'towns', target:'#empireTownsPanel', text:'Merge three starred villages. Each needs 16 residents and 75% happiness. Use Merge on the Villages page.', id:'lesson-43' },
