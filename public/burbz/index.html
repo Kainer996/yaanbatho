@@ -30030,12 +30030,30 @@ function villageDiscoveryAdapter(seed) {
     ].filter(Boolean).join(' · ')
   };
 }
+function buildingWorkAdapter() {
+  const save=gameState;
+  function project(target){
+    if(gameState!==save||!target||!empireOwnsVillage(target.seed))return null;
+    const rec=empireVillageRecordBySeed(target.seed),con=villageConstructionOf(rec,target.id);
+    return con&&Number(con.startMs)===Number(target.startMs)?con:null;
+  }
+  return {
+    describe(target){const con=project(target);return con?{...con,key:'village:'+target.seed+':'+target.id,label:EMPIRE_BUILDING_INDEX[target.id]?.name||'Building'}:null;},
+    assist(target){
+      const con=project(target),next=BurbzBuildingWorkCore.assist(con&&{...con,key:'village:'+target.seed+':'+target.id},Date.now());
+      if(!next)return{ok:false,error:'This project cannot be helped again.'};
+      const before=snapshotGameState();
+      try{Object.assign(con,{endMs:next.endMs,assistedAt:next.assistedAt,assistedMs:next.assistedMs});durableSaveState({throwOnFailure:true});return{ok:true,savedMs:next.assistedMs};}
+      catch(error){restoreGameStateSnapshot(before);return{ok:false,error:'The help could not be saved. Please try again.'};}
+    }
+  };
+}
 let villageWalkLoad = null;
 async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=map-camera-v403-20260914';
+        script.src = 'village_walk.js?v=builder-help-v404-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -30055,7 +30073,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
     if (currentScreen !== 'village' || currentVillage()?.seed !== seed) return;
     window.BurbzVillageWalk.open({
       continuousWorld:continuousWalkingAdapter(currentVillage()),
-      name: currentVillage().name, seed, opener:button, exitLabel:geographicWorldVisit?'← World':'← Village', interiors: buildingRoomsAdapter(),
+      name: currentVillage().name, seed, opener:button, exitLabel:geographicWorldVisit?'← World':'← Village', work:buildingWorkAdapter(), interiors: buildingRoomsAdapter(),
       discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
       exploreWorld:pose=>exploreFromSettlement(currentVillage(),pose),
       boundaryExit:pose=>exploreFromSettlement(currentVillage(),pose),
@@ -30084,7 +30102,7 @@ $('townWalkBtn')?.addEventListener('click',async()=>{
     if(currentScreen!=='town'||currentTownSettlement()?.id!==id)return;
     if(!Number.isFinite(seed)||!townScene?.userData.walkTerrain||townFallbackMode)throw Error('The 3D town is not ready. Please try again.');
     window.BurbzVillageWalk.open({continuousWorld:continuousWalkingAdapter({...settlement.centroid,id:settlement.id,seed,name:townDisplayName(settlement),tier:settlement.tier}),name:townDisplayName(settlement),seed,character:walkingCharacterState,exitLabel:geographicWorldVisit?'← World':'← Town',opener:button,
-      discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),interiors:buildingRoomsAdapter(),
+      discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),
       exploreWorld:pose=>exploreFromSettlement(settlement.centroid,pose),
       boundaryExit:pose=>exploreFromSettlement(settlement.centroid,pose),
       source:()=>({scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,
@@ -30110,7 +30128,7 @@ async function flyAcademy(roomId) {
     if(currentScreen!==requestedScreen||academyViewMode()!=='3d')return;
     const engine=academy3dEnsure();if(!engine||!engine.start())throw Error('The 3D Academy is unavailable.');
     const st=engine._state;
-    window.BurbzVillageWalk.open({name:'The Academy',character:walkingCharacterState,flight:true,room:roomId?{scope:'academy',buildingId:roomId}:null,interiors:buildingRoomsAdapter(),
+    window.BurbzVillageWalk.open({name:'The Academy',character:walkingCharacterState,flight:true,room:roomId?{scope:'academy',buildingId:roomId}:null,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),
       source:()=>({scene:st.scene,renderer:st.renderer,camera:st.camera,buildings:st.houses,movers:[]}),
       suspend:()=>{st.borrowed=true;engine.pause();clearInterval(academyTreeLightTimer);},
       resume:(reason,failed)=>{st.borrowed=false;if(reason==='navigation'||reason==='pagehide'||reason==='world')return;
@@ -30201,7 +30219,7 @@ async function walkBuildingInterior(button) {
       if(roomTarget.homeId!==undefined)break;
     }
     closeBuildingInterior();
-    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,character:walkingCharacterState,seed:view.seed,room:roomTarget,interiors:buildingRoomsAdapter(),source:()=>source,
+    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,character:walkingCharacterState,seed:view.seed,room:roomTarget,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),source:()=>source,
       suspend:()=>{ if(town){townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);} else {villageRunning=false;cancelAnimationFrame(villageAnimationRequest);clearTimeout(villagePauseTimer);} },
       resume:(reason,failed)=>{
         if(reason==='navigation'||reason==='pagehide'||reason==='world')return;
@@ -43754,7 +43772,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'map-camera-v403-20260914';
+const BURBZ_BUILD = 'builder-help-v404-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45000,7 +45018,7 @@ async function enterGeographicWorld(handoff={}) {
   const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;
   let ownedSource;
   return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
-    character:walkingCharacterState,interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
+    character:walkingCharacterState,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
     source:async signal=>{
       const content=await createTravellingSettlement(THREE,record,{signal,host:true});
       if(signal.aborted){content.dispose();return null;}
