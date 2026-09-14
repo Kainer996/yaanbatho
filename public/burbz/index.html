@@ -3235,6 +3235,18 @@ body:has(#questClaimCelebration) .merlin-tutorial-overlay :is(.merlin-tutorial-s
  .merlin-tutorial-overlay.has-current-action.free .merlin-tutorial-task { left:12px; transform:none; max-width:min(340px,calc(100vw - 180px)); }
 }
 
+.prerequisite-guide { width:min(560px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; padding:18px; border:2px solid #d8b15b; border-radius:16px; background:#17251e; color:#fff2d2; box-shadow:0 16px 50px #0009; }
+.prerequisite-guide::backdrop { background:#0009; }
+.prerequisite-guide-head { display:flex; gap:12px; align-items:start; }
+.prerequisite-guide h2 { flex:1; margin:0; font-size:20px; }
+.prerequisite-guide button,.prerequisite-goal-banner button { min-height:44px; padding:10px 12px; border:1px solid #d8b15b; border-radius:9px; background:#eaca79; color:#231b0b; font:700 14px/1.25 'Inter',sans-serif; }
+.prerequisite-guide button:focus-visible,.prerequisite-goal-banner button:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+.prerequisite-step { padding:12px 0; border-top:1px solid #bda15a66; }
+.prerequisite-step p,.prerequisite-note { font-size:13px; line-height:1.45; }
+.prerequisite-goal-banner { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:8px 0 14px; padding:10px; border:1px solid #d8b15b; border-radius:12px; background:#203226; color:#fff2d2; }
+.prerequisite-goal-banner strong { flex:1 0 100%; font-size:14px; }
+.prerequisite-target { outline:3px solid #f6d66c !important; outline-offset:3px; scroll-margin:20px; }
+
 /* ========== MERLIN TUTORIAL ========== */
 .merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
 .merlin-tutorial-overlay.show { display:block; }
@@ -5623,6 +5635,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="battle_core.js?v=continuous-world-v391-20260910"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="loot_crafting_core.js?v=wilderness-birds-v395-20260913"></script>
+<script src="prerequisite_guidance_core.js?v=prerequisite-guidance-v1-20260914"></script>
 <script src="player_equipment_core.js?v=continuous-world-v391-20260910"></script>
 <script src="player_equipment.js?v=wilderness-birds-v395-20260913"></script>
 <script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
@@ -14220,6 +14233,7 @@ function academyBuildBuilding(id, opts = {}) {
     renderAcademy();
     return true;
   }
+  if (id === 'magpie_market' && typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal && !isAcademyBuildingBuilt(id) && ((Number(gameState.player.level)||1)<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return false; }
   const level = Number(gameState.player.level) || 1;
   const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
@@ -14265,6 +14279,7 @@ function academyStartPlaceBuilding(id) {
   ensureAcademyBuildings();
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
+    if (id === 'magpie_market' && typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal && (level<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return; }
     if (id === 'tavern' && !tutorialFlowState().barracksGiftGranted && !maybeGrantMerlinBarracksGift()) return;
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
     const progressLock = academyBuildingProgressLock(id);
@@ -23593,6 +23608,7 @@ function switchScreen(name) {
   if (name === 'profile') renderProfile();
   queueActionBadgeUpdate();
 
+  if (typeof refreshPrerequisiteGoalBanner === 'function') refreshPrerequisiteGoalBanner();
   // Gradual tutorial: Merlin teaches each system the first time its screen opens.
   if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
@@ -38401,7 +38417,7 @@ function magpieMarketBuy(id, qty, kind = 'material') {
   const quote = magpieMarketBuyQuote(id, qty, kind);
   if (!quote.each) { showToast('The magpies do not deal in that.'); return false; }
   const label = storesSellLabel(kind,id);
-  if (quote.qty < qty) { showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
+  if (quote.qty < qty) { if (typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal) { showPrerequisiteGuide(); return false; } showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
   const owned = magpieMarketOwned(id,kind);
   if (!Number.isSafeInteger(owned + qty) || !Number.isSafeInteger(quote.total)) return false;
   const committed = storesCommitTrade(effects => {
@@ -38807,6 +38823,137 @@ function forgeGearStatLine(item) {
   return parts.join(' · ');
 }
 
+// Audited prerequisite adapter: Forge recipes, their upgrades, and Magpie Market
+// construction/purchases. The tracked goal is UI state, never an inventory grant.
+let prerequisiteRecipeGoal = null;
+function prerequisiteEarningSource(kind) {
+  const now=Date.now(), jobs=(gameState.birdExpeditions||[]).filter(q=>q&&q.id&&!gameState.questClaimReceipts?.['expedition:'+q.id]&&!['claimed','cancelled','failed'].includes(q.status));
+  const relevant=q=>Number(q.rewards?.[kind])>0;
+  const ready=jobs.find(q=>relevant(q)&&Number.isFinite(Number(q.endMs))&&Number(q.endMs)<=now);
+  if(ready&&featureGateOpen('quests'))return {label:'Review the returning bird’s '+(kind==='xp'?'XP':kind==='branches'?'timber':kind),available:true,action:{kind:'quest-return',id:ready.id}};
+  const q=typeof activePlayerQuest==='function'?activePlayerQuest():null;
+  const reward=kind==='xp'?q?.reward:q?.[kind], qs=q&&gameState.quests?.[q.id];
+  if(q&&!qs?.claimed&&Number(reward)>0&&Number(qs?.progress)>=Number(q.target)&&featureGateOpen('quests'))return {label:'Review ready Player Quest: '+q.name,available:true,action:{kind:'player-quest',id:q.id}};
+  if(!openingErrandsIntroduced()||!featureGateOpen('quests')){
+    const objective=typeof openingObjective==='function'?openingObjective():null;
+    return objective&&!objective.complete&&featureGateOpen(objective.screen)
+      ? {label:'Continue the opening: '+objective.label+' — errands unlock later',available:true,action:{kind:'opening',screen:objective.screen}}
+      : {label:'Errands are not available yet',reason:'Continue the current Player Quest to unlock errands.',available:false};
+  }
+  const template=getExpeditionTemplate(kind==='branches'?'branch_run':'find_coins');
+  const training=gameState.birdTrainingSessions||[];
+  const birds=expeditionDispatchBirds(gameState.flock||[]);
+  const usable=template&&template.starter===true&&Number(template[kind]?.[1]||template[kind])>0&&birds.some(raw=>{
+    const bird=JSON.parse(JSON.stringify(raw.id===MERLIN_GUIDE.id?{...raw,care:gameState.merlinCare||{}}:raw));
+    return Number(bird.level||1)>=Number(template.minLevel||1)&&!birdAssignedPost(bird.id)&&!jobs.some(job=>job.birdId===bird.id)&&!training.some(job=>job.birdId===bird.id&&job.status!=='claimed')&&birdWorkReadiness(bird,'expedition',now).ok;
+  });
+  if(usable)return {label:'Choose a bird for '+template.label+(kind==='xp'?' — earns trainer XP':''),available:true,action:{kind:'errand',id:template.id}};
+  const pending=jobs.find(relevant);
+  if(pending)return {label:'Review '+(pending.birdName||'your bird')+'’s active errand — rewards are still travelling',available:true,action:{kind:'quest-return',id:pending.id}};
+  if(featureGateOpen('academy'))return {label:'Review your birds’ rest and care before an errand',available:true,action:{kind:'care-review'}};
+  return {label:'No bird is ready for this errand',reason:'Review your birds’ current jobs, rest or care before sending another errand.',available:false};
+}
+function prerequisiteRecipeFacts(id) {
+  const L=lootCore(), item=L.craftableById(id), recipe=L.recipeFor(id);
+  if(!item||!recipe)return null;
+  const stock=gameState.inventory?.items||{}, marketIds=new Set(magpieMarketStock().map(m=>m.id));
+  const materialFacts=materials=>Object.entries(materials||{}).map(([id,need])=>{
+    const material=L.materialById(id), quote=magpieMarketBuyQuote(id,1);
+    return {id,label:material?.label||id,need,have:Number(stock[id])||0,buyable:marketIds.has(id),each:quote.each||null};
+  });
+  const level=burbzForgeLevel(), upgrade=L.forgeUpgradeCost(level), market=ACADEMY_BUILDINGS.magpie_market;
+  const jobs=(gameState.forgeJobs||[]).filter(j=>j&&L.craftableById(j.gearId));
+  return {recipe:{id,label:item.label,coins:recipe.coins,materials:materialFacts(recipe.materials)},coins:Number(gameState.player.coins)||0,branches:playerBranches(),level:Number(gameState.player.level)||1,
+    market:{built:magpieMarketTradeReady(),level:market.unlockLevel,coins:market.cost,branches:market.branches,lock:academyBuildingProgressLock('magpie_market')?.message||null},
+    forge:{level,required:L.minForgeLevelForRarity(item.rarity),upgrade:upgrade?{...upgrade,materials:materialFacts(upgrade.materials)}:null,queueFull:jobs.length>=L.FORGE_MAX_JOBS,readyJob:jobs.some(j=>Number(j.endMs)<=Date.now())},
+    routes:{academy:featureGateOpen('academy'),forge:featureGateOpen('forge')},sources:{coins:prerequisiteEarningSource('coins'),branches:prerequisiteEarningSource('branches'),xp:prerequisiteEarningSource('xp')}};
+}
+function prerequisiteCurrentPlan() {
+  if(!prerequisiteRecipeGoal||!window.BurbzPrerequisiteGuidance)return null;
+  const facts=prerequisiteRecipeFacts(prerequisiteRecipeGoal);
+  if(!facts)return null;
+  const graph=BurbzPrerequisiteGuidance.forgePlan(facts);
+  return {...graph,...BurbzPrerequisiteGuidance.resolve(graph,graph.goal),facts};
+}
+function closePrerequisiteGuide() { $('prerequisiteGuide')?.close(); }
+function showPrerequisiteGuide(id) {
+  if(!window.BurbzPrerequisiteGuidance||!lootCore().recipeFor(id||prerequisiteRecipeGoal))return false;
+  prerequisiteRecipeGoal=id||prerequisiteRecipeGoal;
+  if(typeof pauseMerlinNavigation==='function'&&merlinTutActive)pauseMerlinNavigation();
+  let dialog=$('prerequisiteGuide');
+  if(!dialog){
+    dialog=document.createElement('dialog');dialog.id='prerequisiteGuide';dialog.className='prerequisite-guide';dialog.setAttribute('aria-labelledby','prerequisiteGuideTitle');
+    dialog.addEventListener('cancel',event=>{event.preventDefault();closePrerequisiteGuide();});
+    dialog.addEventListener('click',event=>{
+      const button=event.target.closest('button');if(!button)return;
+      if(button.dataset.guideAction)activatePrerequisiteAction(button.dataset.guideAction);
+      else if(button.dataset.guideReturn!==undefined)returnPrerequisiteRecipe();
+      else if(button.dataset.guideClose!==undefined)closePrerequisiteGuide();
+    });document.body.append(dialog);
+  }
+  const plan=prerequisiteCurrentPlan();if(!plan)return false;
+  const shortages=plan.shortages.map(s=>'<li>'+escapeHtml(s.label)+': <strong>'+s.have+' / '+s.need+'</strong>'+(s.id?' ('+s.short+' missing)':'')+'</li>').join('');
+  const paths=plan.actions.map(action=>'<div class="prerequisite-step"><p>'+escapeHtml(action.path.map(n=>n.label).join(' → '))+'</p><button type="button" data-guide-action="'+escapeHtml(action.id)+'">'+escapeHtml(action.label)+'</button></div>').join('');
+  const issues=[...new Set(plan.issues.map(issue=>plan.nodes[issue.id]?.reason||'This prerequisite needs another route.'))];
+  dialog.innerHTML='<div class="prerequisite-guide-head"><h2 id="prerequisiteGuideTitle">Your goal: '+escapeHtml(plan.nodes[plan.goal].label)+'</h2><button type="button" data-guide-close aria-label="Close prerequisite guide">Close</button></div><p>Choose your next step. Purchases, building and crafting stay under your control.</p>'+(shortages?'<details open><summary>What is still needed</summary><ul>'+shortages+'</ul><p class="prerequisite-note">Material budgets include the original recipe or upgrade coins; overlapping budgets are not added together. Amounts refresh after each action.</p></details>':'<p>Your recipe is ready to review at the Forge.</p>')+paths+issues.map(issue=>'<p class="prerequisite-note">'+escapeHtml(issue)+'</p>').join('')+'<button type="button" data-guide-return>Return to '+escapeHtml(plan.facts.recipe.label)+'</button>';
+  dialog.inert=false;if(!dialog.open)dialog.showModal();dialog.querySelector('button')?.focus({preventScroll:true});
+  refreshPrerequisiteGoalBanner();return true;
+}
+function startPrerequisiteRecipe(id) { return showPrerequisiteGuide(id); }
+function refreshPrerequisiteGoalBanner() {
+  const screen=$('screen-'+currentScreen);
+  const existing=document.querySelector('.prerequisite-goal-banner');
+  if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen)return;
+  document.querySelectorAll('.prerequisite-goal-banner').forEach(el=>el.remove());
+  if(!prerequisiteRecipeGoal||!['forge','academy','academy-room','quests'].includes(currentScreen))return;
+  const item=lootCore().craftableById(prerequisiteRecipeGoal);if(!item||!screen)return;
+  const banner=document.createElement('div');banner.className='prerequisite-goal-banner';banner.dataset.recipeId=prerequisiteRecipeGoal;
+  const label=document.createElement('strong');label.textContent='Working towards: '+item.label;banner.append(label);
+  for(const [label,handler] of [['Next step',()=>showPrerequisiteGuide()],['Return to recipe',returnPrerequisiteRecipe],['Stop tracking',()=>{prerequisiteRecipeGoal=null;refreshPrerequisiteGoalBanner();}]]){
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.addEventListener('click',handler);banner.append(button);
+  }screen.prepend(banner);
+}
+function focusPrerequisiteElement(selector) {
+  requestAnimationFrame(()=>{
+    const el=document.querySelector(selector);if(!el)return;
+    el.scrollIntoView({block:'center',behavior:'auto'});el.classList.add('prerequisite-target');
+    const control=el.matches('button')?el:el.querySelector('button:not(:disabled)');control?.focus({preventScroll:true});
+    setTimeout(()=>el.classList.remove('prerequisite-target'),4000);
+  });
+}
+function returnPrerequisiteRecipe() {
+  const id=prerequisiteRecipeGoal;if(!id)return;
+  closePrerequisiteGuide();openForge('craft');
+  focusPrerequisiteElement('[data-forge-recipe="'+CSS.escape(id)+'"]');refreshPrerequisiteGoalBanner();
+}
+function activatePrerequisiteAction(nodeId) {
+  // Re-resolve before routing: purchases, rewards or another tab may have
+  // changed this prerequisite while the dialog was open. Never trust a stale plan.
+  const plan=prerequisiteCurrentPlan(), entry=plan?.actions.find(action=>action.id===nodeId);
+  if(!entry){showPrerequisiteGuide();return;}
+  const action=entry.action;closePrerequisiteGuide();
+  if(action.kind==='recipe'){returnPrerequisiteRecipe();return;}
+  if(action.kind==='market'){
+    if(!magpieMarketTradeReady()){showPrerequisiteGuide();return;}
+    magpieMarketState.tab='buy';openAcademyRoom('magpie_market');
+    focusPrerequisiteElement('.magpie-row[data-item="'+CSS.escape(action.itemId)+'"]');
+  }else if(action.kind==='market-build')focusAcademyBuildCard('magpie_market');
+  else if(action.kind==='forge-upgrade'){
+    openForge('craft');const details=document.querySelector('.forge-upgrade-details');if(details)details.open=true;focusPrerequisiteElement('.forge-upgrade-btn');
+  }else if(action.kind==='forge-queue'){openForge('craft');focusPrerequisiteElement('.forge-job-list');}
+  else if(action.kind==='errand'){
+    if(!openingErrandsIntroduced()||!featureGateOpen('quests')){showPrerequisiteGuide();return;}
+    switchScreen('quests');openQuestSend(action.id);
+  }else if(action.kind==='quest-return'||action.kind==='player-quest'){
+    if(!featureGateOpen('quests')){showPrerequisiteGuide();return;}
+    switchScreen('quests');
+    if(action.kind==='quest-return')openQuestLog(action.id);
+    else focusPrerequisiteElement('[data-player-quest-claim="'+CSS.escape(action.id)+'"]');
+  }else if(action.kind==='care-review'&&featureGateOpen('academy'))openAcademyRoom(FREE_BIRD_ROOM);
+  else if(action.kind==='opening'&&featureGateOpen(action.screen))switchScreen(action.screen);
+  refreshPrerequisiteGoalBanner();
+}
+
 function renderForge() {
   const body = $('forgeBody');
   if (!body) return;
@@ -39100,6 +39247,7 @@ function upgradeForge() {
   if (!cost) return;
   const stock = gameState.inventory.items;
   const check = L.canUpgradeForge(lv, stock, gameState.player.coins || 0, gameState.player.branches || 0);
+  if (!check.ok && typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal) { showPrerequisiteGuide(); return; }
   if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'Upgrading the forge'); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   addCoins(-cost.coins);
@@ -39147,12 +39295,12 @@ function renderForgeCraft(body) {
         costBits.push(have >= need ? bit : '<span class="short">' + bit + '</span>');
       });
       const craftMs = L.craftTimeMs(item);
-      return '<div class="forge-recipe" style="border-color:' + color + '44;">' +
+      return '<div class="forge-recipe" data-forge-recipe="' + escapeHtml(item.id) + '" style="border-color:' + color + '44;">' +
         '<div class="fr-icon">' + gearIconHTML(item) + '</div>' +
         '<div class="fr-main"><div class="fr-name" style="color:' + color + ';">' + escapeHtml(item.label) + ' <span class="fr-time">⏳ ' + formatForgeDuration(craftMs) + '</span></div>' +
         '<div class="fr-stats">' + forgeGearStatLine(item) + '</div>' +
         '<div class="fr-cost">' + costBits.join(' · ') + '</div></div>' +
-        '<button class="forge-craft-btn"' + (!queueFull && !locked ? '' : ' disabled') + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? '🔒 FORGE LV ' + L.minForgeLevelForRarity(item.rarity) : queueFull ? 'ANVIL FULL' : 'FORGE') + '</button>' +
+        '<button class="forge-craft-btn"' + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? 'FORGE LV ' + L.minForgeLevelForRarity(item.rarity) + ' · HELP' : queueFull ? 'ANVIL FULL · HELP' : 'FORGE') + '</button>' +
         '</div>';
     }).join('');
   });
@@ -39173,6 +39321,7 @@ function craftGear(gearId) {
   const recipe = L.recipeFor(gearId);
   const item = L.craftableById(gearId);
   if (!recipe || !item) return;
+  if (typeof startPrerequisiteRecipe === 'function' && (!L.canForgeAtLevel(item, burbzForgeLevel()) || !L.canCraft(recipe, gameState.inventory.items, gameState.player.coins || 0).ok || forgeQueueIsFull()) && startPrerequisiteRecipe(gearId)) return;
   if (!L.canForgeAtLevel(item, burbzForgeLevel())) { showToast('⚒️ ' + item.label + ' needs Forge Lv ' + L.minForgeLevelForRarity(item.rarity) + ' — upgrade the forge first.'); return; }
   const stock = gameState.inventory.items;
   const check = L.canCraft(recipe, stock, gameState.player.coins || 0);
@@ -39189,6 +39338,7 @@ function craftGear(gearId) {
   SFX.questComplete();
   vibrate(30);
   showToast('⚒️ ' + item.icon + ' ' + item.label + ' is on the anvil — ready in ' + formatForgeDuration(craftMs) + '.');
+  if (typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal === gearId) { prerequisiteRecipeGoal = null; refreshPrerequisiteGoalBanner(); }
   renderForge();
   return true;
 }
@@ -39690,6 +39840,7 @@ function setHudChipValue(chipId, valueId, amount) {
 }
 
 function updateHeader() {
+  if (typeof refreshPrerequisiteGoalBanner === 'function') refreshPrerequisiteGoalBanner();
   const lv = gameState.player.level;
   const xp = Math.max(0, Math.floor(gameState.player.xp || 0));
   const xpNeeded = XP_PER_LEVEL(lv);
