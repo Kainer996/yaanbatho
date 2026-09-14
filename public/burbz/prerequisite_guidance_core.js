@@ -12,6 +12,13 @@ function normaliseTrackedRecipe(value, owner, recipeExists) {
   if(!recipeExists(value.recipeId))return null;
   return {version:1,owner,recipeId:value.recipeId};
 }
+function normaliseTrackedGoal(value,owner,known) {
+  if(!value||typeof value!=='object'||Array.isArray(value)||value.version!==2||typeof owner!=='string'||!/^[a-zA-Z0-9_-]{16,96}$/.test(owner)||value.owner!==owner)return null;
+  const g=value.goal;if(!g||typeof g!=='object'||Array.isArray(g)||typeof g.type!=='string'||g.type.length>32||!Array.isArray(g.args)||g.args.length>4)return null;
+  if(!g.args.every(a=>typeof a==='string'?a.length>0&&a.length<=120&&!/[<>\u0000-\u001f]/.test(a):Number.isSafeInteger(a)&&Math.abs(a)<=10000000000))return null;
+  const goal={type:g.type,args:[...g.args]};if(typeof known!=='function'||!known(goal))return null;
+  return {version:2,owner,goal};
+}
 function resolve(graph, goal, options={}) {
   const nodes=graph?.nodes||{}, actions=[], issues=[], seenActions=new Set(), cache=new Map(), maxNodes=Math.max(1,Math.min(200,options.maxNodes||80));
   let visited=0;
@@ -88,5 +95,5 @@ function forgePlan(facts){
   put(goal,{label:'Forge '+recipe.label,requires,available:f.routes?.forge===true,action:{kind:'recipe',recipeId:recipe.id}});
   return {goal,nodes,shortages};
 }
-return {resolve,forgePlan,normaliseTrackedRecipe};
+return {resolve,forgePlan,normaliseTrackedRecipe,normaliseTrackedGoal};
 });

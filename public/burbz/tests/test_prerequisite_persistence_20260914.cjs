@@ -56,7 +56,7 @@ check('An unrelated commission cannot clear the tracked recipe',()=>{
 check('Recovery recomputes authoritative material quantities, gates and budgets rather than a saved plan',()=>{
  const {c,data}=fixture();c.setPrerequisiteRecipeGoal('reed_bow');const reopened=fixture(data.value).c;
  const facts=()=>({recipe:{id:reopened.prerequisiteTrackedRecipe(),label:'Wayfarer Bow',coins:20,materials:Object.entries(L.recipeFor('reed_bow').materials).map(([id,need])=>({id,need,have:reopened.gameState.inventory.items[id]||0,buyable:true,each:6}))},coins:reopened.gameState.player.coins,market:{built:true},forge:{level:1,required:1},routes:{academy:true,forge:true},sources:{coins:{label:'Earn coins',available:true,action:{kind:'errand',id:'find_coins'}}}});
- reopened.prerequisiteRecipeFacts=facts;reopened.BurbzPrerequisiteGuidance=G;vm.runInContext(fn('prerequisiteCurrentPlan'),reopened);
+ reopened.prerequisiteRecipeFacts=facts;reopened.prerequisiteTrackedGoal=()=>({type:'recipe',recipeId:reopened.prerequisiteTrackedRecipe()});reopened.BurbzPrerequisiteGuidance=G;vm.runInContext(fn('prerequisiteCurrentPlan'),reopened);
  delete reopened.gameState.inventory.items.river_reed;let p=reopened.prerequisiteCurrentPlan();assert.equal(p.actions[0].action.quantity,2);
  reopened.gameState.inventory.items.river_reed=1;p=reopened.prerequisiteCurrentPlan();assert.equal(p.actions[0].action.quantity,1);
  reopened.gameState.player.coins=20;p=reopened.prerequisiteCurrentPlan();assert.equal(p.actions[0].action.kind,'errand');
