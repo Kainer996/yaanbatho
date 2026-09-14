@@ -101,7 +101,7 @@ FILES=(
   "building_rooms_scene.js"
   "building_rooms.js"
   "village_world_core.js"
-  "village_world.js"
+  "village_world.js" "wilderness_places_core.js" "wilderness_places.js" "wilderness_places.css"
   "world_sky.js"
   "village_walk.js"
   "building_work_core.js"
