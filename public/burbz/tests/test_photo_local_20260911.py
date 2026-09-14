@@ -1,5 +1,6 @@
 """Contract tests use injected responses; real model results are recorded separately."""
 import importlib.util
+import base64
 import io
 import json
 from pathlib import Path
@@ -18,16 +19,23 @@ def module(name):
 
 photo = module('photo_id')
 worker = module('photo_local')
+IDENTITY = ('owner_01234567890', 'request_01234567890', '203.0.113.5')
+
+@pytest.fixture(autouse=True)
+def trusted_route_identity(monkeypatch):
+    # The real Flask identity/proxy boundary is exercised in adapter_v410.
+    monkeypatch.setattr(photo, '_request_identity', lambda: IDENTITY)
 
 def accepted(**overrides):
     return dict(found=True, accepted=True, verified=True, policy=photo.PHOTO_POLICY,
-                model='bioclip25-birder-local', species='Common Raven',
+                model='gemini-vision', modelName='gemini-2.5-flash', receiptId='a'*64, species='Common Raven',
                 scientificName='Corvus corax', confidence=.96) | overrides
 
 @pytest.mark.parametrize('overrides', [
     {'confidence': n} for n in [True, '0.99', None, .899, float('nan'), float('inf'), 1.01]
 ] + [{'accepted': False}, {'verified': False}, {'found': False},
-     {'policy': 'photo-evidence-v393'}, {'model': 'gemini-vision'}, {'model': 'bioclip2-birder-local'},
+     {'policy': 'photo-evidence-v393'}, {'model': 'bioclip25-birder-local'}, {'model': 'bioclip2-birder-local'},
+     {'modelName': 'gemini-2.5-pro'}, {'receiptId': ''}, {'receiptId': 'not-a-receipt'},
      {'scientificName': 'raven'}, {'species': ''}])
 def test_bad_results_never_carry_species(overrides):
     result = photo._validate_result(accepted(**overrides))
@@ -48,7 +56,10 @@ class Connection:
     closed = False
     def request(self, method, path, body, headers):
         assert method == 'POST' and path == '/identify'
-        assert body == b'camera-fixture'
+        payload = json.loads(body)
+        assert set(payload) == {'image','owner','requestId','caller'}
+        assert base64.b64decode(payload['image']) == b'camera-fixture'
+        assert (payload['owner'],payload['requestId'],payload['caller']) == IDENTITY
     def getresponse(self):
         return self
     def read(self, limit):
@@ -56,12 +67,13 @@ class Connection:
     def close(self):
         self.closed = True
 
-def test_old_google_configuration_cannot_make_network_calls(tmp_path, monkeypatch):
+def test_google_configuration_still_routes_only_through_capped_unix_worker(tmp_path, monkeypatch):
     path = tmp_path/'photo.jpg'; path.write_bytes(b'camera-fixture')
     connection = Connection()
     monkeypatch.setattr(photo, '_LocalConnection', lambda: connection)
     monkeypatch.setenv('GEMINI_API_KEY', 'test-not-a-key')
     monkeypatch.setenv('BURBZ_PHOTO_MODEL', 'gemini')
+    monkeypatch.setattr(photo.http.client, 'HTTPSConnection', lambda *a,**k: pytest.fail('Adapter must never contact Google directly'))
     assert photo.identify_bird_from_image(str(path), -33, 151) == accepted()
     assert connection.closed
 
@@ -128,4 +140,4 @@ def test_installer_accepts_existing_five_argument_sync_protocol(tmp_path):
     env=dict(os.environ,BURBZ_LOCAL_PHOTO_RUNTIME=str(tmp_path/'not-provisioned'))
     result=subprocess.run(['bash',str(ROOT.parents[1]/'scripts/install-photo-id.sh'),str(root),str(stage/'photo_id.py'),str(stage),str(stage/'proof.py'),str(stage/'sound.py')],env=env,capture_output=True,text=True)
     assert result.returncode != 0
-    assert 'Provision the isolated free photo runtime first' in result.stderr
+    assert 'Provision the isolated photo Python runtime first' in result.stderr

@@ -165,6 +165,10 @@ FILES=(
   "peep_needs_core.js"
   "photo_id.py"
   "photo_local.py"
+  "photo_gemini.py"
+  "photo_budget.py"
+  "photo_queue.js"
+  "photo_queue.css"
   "tests/fixtures/photo-v350/robin-clear.jpg"
   "tests/fixtures/photo-v350/great-tit-clear.jpg"
   "tests/fixtures/photo-v350/raven-perched.jpg"
@@ -616,7 +620,7 @@ curl -fsSL "$BIRDNET_INSTALLER_URL" -o "$TMP/install-birdnet-v3.sh" \
   || die "Download failed: scripts/install-birdnet-v3.sh"
 bash -n "$TMP/install-birdnet-v3.sh" \
   || die "Downloaded BirdNET installer failed its shell syntax check"
-for script in install-photo-id.sh verify-photo-id.py verify-sound-runtime.py; do
+for script in install-photo-id.sh verify-photo-id.py verify-sound-runtime.py patch-photo-upload-lifecycle.py; do
   curl -fsSL "$PHOTO_SCRIPTS_URL/$script" -o "$TMP/$script" || die "Photo proof script download failed: $script"
 done
 bash -n "$TMP/install-photo-id.sh" || die "Photo installer syntax check failed"
@@ -680,7 +684,7 @@ for f in "${BACKEND_FILES[@]}"; do
   fi
 done
 
-bash "$TMP/install-photo-id.sh" "$ROOT" "$TMP/photo_id.py" "$TMP/tests/fixtures/photo-v350" "$TMP/verify-photo-id.py" "$TMP/verify-sound-runtime.py" "$TMP/photo_local.py" \
+bash "$TMP/install-photo-id.sh" "$ROOT" "$TMP/photo_id.py" "$TMP/tests/fixtures/photo-v350" "$TMP/verify-photo-id.py" "$TMP/verify-sound-runtime.py" "$TMP/photo_gemini.py" \
   || die "Photo HTTP proof failed; prior adapter restored before publishing the app shell"
 
 for f in "${FILES[@]}"; do

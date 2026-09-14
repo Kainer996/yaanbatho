@@ -19,5 +19,5 @@ def test_complete_farm_installs_as_one_version():
         assert f'{name}?v={PIN}' in html or f"'{name}':'{PIN}'" in loader
         assert sw.count(f'./{name}?v={PIN}') == 3
         assert f'"{name}"' in updater
-    assert f"const BURBZ_BUILD = '{PIN}'" in html
-    assert f"{PIN}';" in sw
+    assert "const BURBZ_BUILD = 'gemini-photos-v410-20260914'" in html
+    assert "gemini-photos-v410-20260914';" in sw

@@ -4,14 +4,21 @@ import argparse
 import hashlib
 import json
 import math
+import re
 from pathlib import Path
 import sys
 import time
 
 import requests
 
-POLICY = 'photo-local-v393'
-MODEL = 'bioclip25-birder-local'
+POLICY = 'photo-gemini-v410'
+MODEL = 'gemini-vision'
+MODEL_NAME = 'gemini-2.5-flash'
+VALIDATION_OWNER = 'deployment_v410_photos'
+# Three attempts fit the shared caller rate limit. Every request has a stable
+# owner/id, so another release proof replays the persistent result, never a new
+# paid attempt. This smoke proof does not claim exhaustive model accuracy.
+SMOKE_CASES = {'robin-clear', 'carrion-crow', 'empty-scene'}
 ORIGINAL_CASES = {
     'robin-clear': 'Erithacus rubecula', 'great-tit-clear': 'Parus major',
     'raven-perched': 'Corvus corax', 'carrion-crow': 'Corvus corone',
@@ -30,6 +37,8 @@ PHOTO_REJECTIONS = {
     'no-clear-bird', 'multiple-birds', 'subject-too-small-or-indistinct',
     'views-disagree', 'unresolved-taxonomy', 'models-disagree',
     'uncertain-species', 'illustrated-bird',
+    'insufficient-evidence', 'low-confidence', 'ambiguous-species',
+    'unclear-subject', 'missing-diagnostic-details', 'verification-disagrees',
 }
 
 
@@ -80,6 +89,18 @@ def passes_case(name, species, status, result):
             and result['message'].startswith(('Bird not found.', 'Species not confirmed.', 'Bird detected, but species not confirmed.')))
 
 
+def passes_gemini_case(name, species, status, result):
+    if not passes_case(name, species, status, result) or result.get('modelName') != MODEL_NAME:
+        return False
+    return (not result.get('accepted') or
+            isinstance(result.get('receiptId'), str) and
+            re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None)
+
+
+def request_identity(path):
+    return 'v410_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--origin', default='http://127.0.0.1:5055')
@@ -89,16 +110,19 @@ def main():
     args = parser.parse_args()
     rows = []
     for name, path, species in fixture_cases(args.fixtures, args.extra_fixtures):
+        if name not in SMOKE_CASES:
+            continue
         start = time.monotonic()
         try:
             with path.open('rb') as stream:
                 response = requests.post(
                     args.origin.rstrip('/') + '/api/identify/image',
                     files={'image': ('photo.jpg', stream, 'image/jpeg')},
-                    data={'captureSource': 'camera', 'lat': '51.5', 'lon': '-.1'}, timeout=50)
+                    data={'captureSource': 'camera', 'photoOwner': VALIDATION_OWNER,
+                          'photoRequestId': request_identity(path)}, timeout=50)
             result = response.json()
             row = {'fixture': name, 'status': response.status_code,
-                   'passed': bool(passes_case(name, species, response.status_code, result)),
+                   'passed': bool(passes_gemini_case(name, species, response.status_code, result)),
                    'result': result}
         except (requests.RequestException, ValueError) as exc:
             row = {'fixture': name, 'status': None, 'passed': False,
@@ -106,6 +130,10 @@ def main():
         row['seconds'] = round(time.monotonic() - start, 2)
         rows.append(row)
         print(json.dumps(row), flush=True)
+        # Do not spend on further fixtures after a service/configuration error
+        # or mismatch. Failed/unknown attempts keep the same stable identifier.
+        if not row['passed']:
+            break
     if args.output:
         Path(args.output).write_text(json.dumps(rows, indent=2))
     return 0 if rows and all(row['passed'] for row in rows) else 1
