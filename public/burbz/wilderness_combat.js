@@ -14,7 +14,7 @@
    fragmentShader:'uniform float time; varying float vHeat; varying float vAlpha; void main(){vec2 q=gl_PointCoord*2.-1.;float angle=atan(q.y,q.x);float r=length(q);float edge=1.+.075*sin(angle*5.+time*7.+vHeat*6.);float glow=pow(max(0.,1.-r/edge),1.5);if(glow<.015)discard;vec3 red=vec3(1.,.05,.005);vec3 gold=vec3(1.,.48,.035);vec3 white=vec3(1.,.97,.72);vec3 color=mix(red,gold,vHeat);color=mix(color,white,pow(max(0.,1.-r*1.4),1.3)*vHeat);gl_FragColor=vec4(color,glow*vAlpha);}' });
   const points=new T.Points(geometry,material);points.name='Fireball flame and embers';points.frustumCulled=false;scene.add(points);let count=0,time=0,held=0,disposed=false;
   function dot(x,y,z,size,heat,alpha){if(count>=MAX_FIRE_PARTICLES)return;const i=count++;positions[i*3]=x;positions[i*3+1]=y;positions[i*3+2]=z;sizes[i]=size;heats[i]=heat;alphas[i]=alpha;}
-  function orb(p,r,t){dot(p.x,p.y,p.z,r*4.2,.5,.5);for(let i=0;i<6;i++){const a=t*3+i*Math.PI/3;dot(p.x+Math.cos(a)*r*.5,p.y+Math.sin(a*1.3)*r*.6,p.z+Math.sin(a)*r*.5,r*.9,.8,.6);}dot(p.x,p.y,p.z,r*1.2,1,1);}
+  function orb(p,r,t,reduced=false){dot(p.x,p.y,p.z,r*4.2,.5,.5);for(let i=0;i<6;i++){const a=(reduced?0:t*3)+i*Math.PI/3;dot(p.x+Math.cos(a)*r*.5,p.y+Math.sin(a*1.3)*r*.6,p.z+Math.sin(a)*r*.5,r*.9,.8,.6);}dot(p.x,p.y,p.z,r*1.2,1,1);}
   function update({projectiles=[],impacts=[],actors=[],charge=null,dt=0,height=800,aspect=1,fov=62,reduced=false}={}){
    if(disposed)return;time+=Math.min(.1,Math.max(0,dt));count=0;material.uniforms.time.value=reduced?0:time;material.uniforms.height.value=height;
    for(const p of projectiles){if(p.skill.id!==FIREBALL)continue;
@@ -22,14 +22,14 @@
     for(let i=1;i<=12;i++){const t=i/12,behind=length*t,wave=Math.sin(i*2.4-time*13)*.1*t,up=Math.cos(i*1.8-time*11)*.08*t;
      dot(p.position.x-d.x*behind+sideX*wave,p.position.y-d.y*behind+up,p.position.z-d.z*behind+sideZ*wave,.48*(1-t*.8),1-t*.85,(1-t*.72)*.9);
     }
-    orb(p.position,.14,p.age);
+    orb(p.position,.14,reduced?0:p.age,reduced);
    }
    for(const p of impacts){if(p.skill.id!==FIREBALL)continue;const fade=Math.max(0,1-p.age/.45),r=.12+p.age*4.5;
     dot(p.position.x,p.position.y,p.position.z,r*2.3,.8,fade*.8);
     for(let i=0;i<9;i++){const a=i*2.39996,y=(i/8-.5)*1.5;dot(p.position.x+Math.cos(a)*r,p.position.y+y*r,p.position.z+Math.sin(a)*r,.28+fade*.35,.7,fade);}
    }
-   for(const a of actors){if(!a.burn||a.side!=='opponent'||a.fighter.hp<=0)continue;for(let i=0;i<8;i++){const phase=(time*1.8+i*.127)%1,angle=i*2.39996;dot(a.position.x+Math.cos(angle)*.3,a.position.y-.35+phase*.85,a.position.z+Math.sin(angle)*.3,.2+phase*.14,1-phase,(1-phase)*.8);}}
-   if(charge){held=Math.min(1,held+Math.max(0,dt));const d=root.BurbzFirstPersonSpellCore.direction(charge),r=.05+Math.min(1,held/.65)*.04,view=.82*Math.tan(fov*Math.PI/360),right=view*Math.min(aspect,1.6)*.52,p={x:charge.x+d.x*.82+Math.cos(charge.yaw)*right,y:charge.y+d.y*.82-view*.42,z:charge.z+d.z*.82-Math.sin(charge.yaw)*right};orb(p,r,time);for(let i=0;i<8;i++){const a=i*Math.PI/4+time*2.8,spiral=.05+((i/8+time*.4)%1)*.065;dot(p.x+Math.cos(a)*spiral,p.y+Math.sin(a)*spiral,p.z+.04*Math.cos(a*2),.07,.9,.7);}}
+   for(const a of actors){if(!a.burn||a.side!=='opponent'||a.fighter.hp<=0)continue;for(let i=0;i<8;i++){const phase=reduced?i/8:(time*1.8+i*.127)%1,angle=i*2.39996;dot(a.position.x+Math.cos(angle)*.3,a.position.y-.35+phase*.85,a.position.z+Math.sin(angle)*.3,.2+phase*.14,1-phase,(1-phase)*.8);}}
+   if(charge){held=reduced?1:Math.min(1,held+Math.max(0,dt));const d=root.BurbzFirstPersonSpellCore.direction(charge),r=.05+Math.min(1,held/.65)*.04,view=.82*Math.tan(fov*Math.PI/360),right=view*Math.min(aspect,1.6)*.52,p={x:charge.x+d.x*.82+Math.cos(charge.yaw)*right,y:charge.y+d.y*.82-view*.42,z:charge.z+d.z*.82-Math.sin(charge.yaw)*right};orb(p,r,time,reduced);for(let i=0;i<8;i++){const a=i*Math.PI/4+(reduced?0:time*2.8),spiral=.05+((i/8+(reduced?0:time*.4))%1)*.065;dot(p.x+Math.cos(a)*spiral,p.y+Math.sin(a)*spiral,p.z+.04*Math.cos(a*2),.07,.9,.7);}}
    else held=0;
    geometry.setDrawRange(0,count);for(const attr of Object.values(geometry.attributes))attr.needsUpdate=true;points.visible=count>0;
   }
@@ -89,7 +89,8 @@
   function reset(){lastUpdate=null;controls.reset();core.reset();fireFX.clear();heardImpacts.clear();for(const name of ['fireballCharge','fireballCast','fireballImpact'])audio?.stop(name);}
   function dispose(){if(disposed)return;disposed=true;reset();fireFX.dispose();controls.dispose();core.dispose();outposts?.dispose();adapter.outposts?.dispose();boundary?.dispose();events.abort();group.removeFromParent();birdArt.dispose();for(const g of Object.values(geometry))g.dispose();for(const m of Object.values(materials))m.dispose();zombie.clear();shots.clear();bursts.clear();climb?.classList.remove('wc-climb');descend?.classList.remove('wc-descend');if(travel?.isConnected&&travelParent?.isConnected)travelParent.insertBefore(travel,travelNext?.parentNode===travelParent?travelNext:null);hud.remove();toast.remove();host.classList.remove('wc-ready','wc-paused','wc-noncombat','wc-hurt');}
   s.abort.signal.addEventListener('abort',dispose,{once:true});updateHUD();
-  return{update,reset,dispose,isDead:core.isDead,blocked:(x,y,z)=>outposts?.blocked(x,y,z)||false,mapPoints:()=>outposts?.mapPoints()||[],rebase:core.rebase,diagnostics:()=>({...core.inspect(),outposts:outposts?.diagnostics(),boundary:boundary?.inspect(),art:birdArt.diagnostics(),updateMs:updateTimes.slice(),input:controls.state(),fire:fireFX.diagnostics(),meshes:{zombies:zombie.size,shots:shots.size,bursts:bursts.size}})};
+  function rebase(dx,dz){controls.cancelCast();stopCharge();fireFX.clear();heardImpacts.clear();core.rebase(dx,dz);}
+  return{update,reset,dispose,isDead:core.isDead,blocked:(x,y,z)=>outposts?.blocked(x,y,z)||false,mapPoints:()=>outposts?.mapPoints()||[],rebase,diagnostics:()=>({...core.inspect(),outposts:outposts?.diagnostics(),boundary:boundary?.inspect(),art:birdArt.diagnostics(),updateMs:updateTimes.slice(),input:controls.state(),fire:fireFX.diagnostics(),meshes:{zombies:zombie.size,shots:shots.size,bursts:bursts.size}})};
  }
  root.BurbzWildernessCombat={attach,createFireEffects,MAX_FIRE_PARTICLES};
 })(globalThis);
