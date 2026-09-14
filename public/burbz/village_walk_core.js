@@ -87,5 +87,11 @@
     fastStreak=mean<17.2?fastStreak+1:0;
     return {dpr:fastStreak>=4?Math.min(maxDpr,dpr+.1):dpr,fastStreak:fastStreak>=4?0:fastStreak,mean};
   }
-  return {createWorld,move,look,outwardBoundary,quality,distance2,inside,RADIUS,EYE,SPEED};
+  // Only the captured movement pointer can arm cruise. Cancellation never latches.
+  function autoFlight(){
+    let enabled=false,latched=false,armed=false,pointer=null;
+    function reset(){latched=armed=false;pointer=null;}
+    return {allow(value){enabled=!!value;if(!enabled)reset();},start(id){reset();if(enabled)pointer=id;},drag(id,dx,dy,travel){if(pointer===id)armed=enabled&&dy<=-travel&&Math.abs(dx)<=30;},release(id,completed){if(pointer!==id)return;latched=enabled&&armed&&completed;armed=false;pointer=null;},reset,forward:()=>enabled&&latched?1:0,state:()=>({enabled,latched,armed,pointer})};
+  }
+  return {createWorld,move,look,outwardBoundary,quality,autoFlight,distance2,inside,RADIUS,EYE,SPEED};
 });

@@ -5649,6 +5649,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home.js?v=home-farming-v409-20260914"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
+<script src="enemy_outposts_core.js?v=enemy-outposts-v414-20260914"></script>
+<script src="enemy_outposts.js?v=enemy-outposts-v414-20260914"></script>
+<link rel="stylesheet" href="enemy_outposts.css?v=enemy-outposts-v414-20260914">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world.js?v=home-farming-v409-20260914"></script>
@@ -25303,6 +25306,12 @@ function updateEmpireFogMask() {
       holes.push({ x: centre.x, y: centre.y, r: radius });
     } catch (e) {}
   });
+  for(const outpost of BurbzEnemyOutpostsCore.receipts(enemyOutpostState())){try{
+    const lon=wrappedLongitudeNear(outpost.lon,referenceLon),centre=empireMap.project([lon,outpost.lat]);
+    const east=core.destination(outpost.lat,outpost.lon,Math.PI/2,outpost.radius),edge=empireMap.project([lon+east[0]-outpost.lon,east[1]]);
+    const radius=clamp(Math.hypot(edge.x-centre.x,edge.y-centre.y),2,1400);
+    if(centre.x+radius>=0&&centre.x-radius<=width&&centre.y+radius>=0&&centre.y-radius<=height)holes.push({x:centre.x,y:centre.y,r:radius});
+  }catch(_){}}
   // Founding a county unlocks that whole region of the map: one great window
   // of daylight covers the county's entire lands — centroid out past its
   // farthest sanctuary — instead of pinpricks around each town. Its rim is
@@ -30032,11 +30041,44 @@ function walkingCharacterState() {
   return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone,equipment:playerEquipmentAdapter(),combat:walkingCombatAdapter()};
 }
 // Combat and equipped potion consumption commit with the existing ownership ledger.
+// Enemy outposts share the canonical save, purse, player XP and atlas darkness.
+function enemyOutpostState(){return gameState.enemyOutposts||(gameState.enemyOutposts=BurbzEnemyOutpostsCore.empty());}
+function enemyOutpostDark(point){
+ const G=BurbzGeographicWorldCore;
+ if(empireMappableVillages().some(v=>G.distance(v,point)<empireVillageTerritoryRadiusM(v.seed)+30))return false;
+ const R=realmCore();if(R?.regionCoverageRadiusKm&&empireRegionsInfo().regions.some(r=>G.distance(r.centroid,point)<Math.max(EMPIRE_TERRITORY_RADIUS_M*2,R.regionCoverageRadiusKm(r,2.2)*1000)))return false;
+ if(BurbzEnemyOutpostsCore.receipts(enemyOutpostState()).some(c=>G.distance(c,point)<c.radius+20))return false;
+ // Additional player homes from the independent exploration checkpoint remain refuges.
+ if((gameState.exploration?.camps||[]).some(c=>G.distance(c,point)<80))return false;
+ return true;
+}
+let enemyOutpostSessionAdapter=null;
+function enemyOutpostAdapter(identity){
+ if(enemyOutpostSessionAdapter?.identity===identity&&!enemyOutpostSessionAdapter.closed())return enemyOutpostSessionAdapter.api;
+ const O=BurbzEnemyOutpostsCore;if(gameState.enemyOutposts)gameState.enemyOutposts=O.normalize(gameState.enemyOutposts);
+ let base=gameState.enemyOutposts?.clock||0,started=performance.now(),closed=false;
+ const now=()=>base+Math.max(0,performance.now()-started),assertCurrent=()=>{if(identity!==gameState)throw Error('Your save changed. Reopen Alderwing.');};
+ // HEAD bypasses the offline worker's GET cache. A cached Date or laptop wall
+ // clock never advances earnings. Offline restarts earn only time actually played.
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),5000);
+ fetch('/burbz/',{method:'HEAD',cache:'no-store',signal:abort.signal}).then(response=>{
+  const trusted=Date.parse(response.headers.get('Date'));if(!response.ok||!Number.isFinite(trusted)||trusted<1700000000000||closed||identity!==gameState)return;
+  const snapshot=snapshotGameState();try{const state=enemyOutpostState(),old=now();if(base<1700000000000){const delta=trusted-old;for(const c of Object.values(state.camps)){c.at+=delta;if(c.liberated)c.liberatedAt+=delta;}state.clock=Math.max(0,state.clock+delta);}O.accrue(state,Math.max(state.clock,trusted));durableSaveState({throwOnFailure:true});base=state.clock;started=performance.now();}catch(e){restoreGameStateSnapshot(snapshot);}
+ }).catch(()=>{}).finally(()=>clearTimeout(timeout));
+ function commit(fn){assertCurrent();const snapshot=snapshotGameState();try{const result=fn(enemyOutpostState());durableSaveState({throwOnFailure:true});return result;}catch(e){restoreGameStateSnapshot(snapshot);throw Error('The outpost could not save. Nothing was spent or claimed. Reload if another tab changed this game.');}}
+ const api={read:()=>{assertCurrent();return enemyOutpostState();},now,dark:enemyOutpostDark,
+  discover:c=>commit(state=>{O.accrue(state,now());return O.discover(state,c,now());}),
+  collect:id=>{const coins=commit(state=>{const n=O.collect(state,id,now());if(!Number.isSafeInteger(gameState.player.coins)||gameState.player.coins<0||!Number.isSafeInteger(gameState.player.coins+n))throw Error('Invalid purse');gameState.player.coins+=n;return n;});try{updateHeader();updateEmpireFogMask();}catch(_){}return coins;},
+  dispose(){closed=true;abort.abort();clearTimeout(timeout);}};
+ enemyOutpostSessionAdapter={identity,closed:()=>closed,api};return api;
+}
+
 function walkingCombatAdapter() {
-  const identity=gameState;
+  const identity=gameState,outposts=enemyOutpostAdapter(identity);
   return {
     profile:{name:gameState.player.name,level:gameState.player.level},
     settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
+    outposts,
     stored:structuredClone(gameState.wildernessCombat || null),
     kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),ammo:{reed_arrow:gameState.inventory.items?.reed_arrow??0}};},
     save:(record,extra)=>{
@@ -30053,8 +30095,11 @@ function walkingCombatAdapter() {
           if(weapon?.id!==extra.weapon||weapon?.attack?.ammo!==id||!Number.isSafeInteger(bag?.[id])||bag[id]<1)throw Error('No arrow available for this bow.');
           bag[id]--;
         }
+        const reward=BurbzEnemyOutpostsCore.damage(enemyOutpostState(),extra?.outpostHits,outposts.now());
+        if(reward.xp)applyPlayerXpState(reward.xp);
         gameState.wildernessCombat=structuredClone(record);
-        durableSaveState({throwOnFailure:true});return true;
+        durableSaveState({throwOnFailure:true});
+        if(reward.xp)setTimeout(()=>{showToast("Outpost liberated · +"+reward.xp+" XP · darkness cleared");try{updateHeader();updateEmpireFogMask();}catch(_){}},0);return true;
       } catch(error){restoreGameStateSnapshot(snapshot);throw error;}
     }
   };
@@ -45295,7 +45340,42 @@ function addDemoBirds() {
 // saved walks remain available through their existing routes.
 // The personal clearing is separate from claimed villages and their economy.
 let geographicWorldVisit = null, geographicAvatarMarker = null;
+// Placement reads the same authored settlement geometry as walking. Existing
+// homes are left intact; only a new anchor/house needs a fresh one-use permit.
+const homePlacementPermits=new WeakSet(),homeSettlementBounds=new Map();
+let initialHomePlacementPending=false;
+function homeSettlementGeometryKey(record){const members=record.settlement?townMemberRecords(record.settlement):[empireVillageRecordBySeed(record.seed)].filter(Boolean);return JSON.stringify([record.id,record.seed,record.tier,record.lat,record.lon,record.settlement,members.map(r=>({seed:r.seed,buildings:r.economy?.buildings,plots:r.economy?.buildingPlots,constructions:r.economy?.constructions,ready:r.economy?.readyToOpen,ruins:r.economy?.ruins}))]);}
+async function checkPlayerHomePlacement(point){
+ const G=BurbzGeographicWorldCore;if(!G.validCoordinate(point)||!window.THREE)return{ok:false,error:'Choose a loaded place outside villages and towns.'};
+ const identity=gameState,records=await geographicSettlementRecords({center:point}),signatures=records.map(r=>homeSettlementGeometryKey(r)),home=BurbzPlayerHomeCore.normalize(gameState.playerHome,true),T=THREE;
+ // Check the real house, attached rooms and fields, not merely its anchor.
+ const model=BurbzPlayerHomeScene.createHouse(T,{...home,tier:Math.max(1,home.tier)});model.add(BurbzPlayerHomeScene.createFarm(T,home));model.rotation.y=Number(point.yaw)||0;model.updateMatrixWorld(true);const footprint=new T.Box3().setFromObject(model);
+ BurbzPlayerHomeScene.disposeScene(model);
+ const low={x:footprint.min.x-1,z:footprint.min.z-1},high={x:footprint.max.x+1,z:footprint.max.z+1};
+ for(const record of records){
+  if(identity!==gameState)return{ok:false,error:'Your save changed. Choose the place again.'};
+  const key=homeSettlementGeometryKey(record);let bounds=homeSettlementBounds.get(record.id);
+  if(bounds?.key!==key){const content=await createTravellingSettlement(T,record,{boundsOnly:true});bounds={key,radius:content.radius,boxes:content.boxes};content.dispose();homeSettlementBounds.set(record.id,bounds);if(homeSettlementBounds.size>32)homeSettlementBounds.delete(homeSettlementBounds.keys().next().value);}
+  if(key!==homeSettlementGeometryKey(record))return{ok:false,error:'This settlement changed while checking the site. Please try again.'};
+  const at=G.project(point,record),nearestX=Math.max(low.x,Math.min(high.x,at.x)),nearestZ=Math.max(low.z,Math.min(high.z,at.z));
+  const overlapsGround=Math.hypot(nearestX-at.x,nearestZ-at.z)<=bounds.radius;
+  const overlapsBuilding=bounds.boxes.some(b=>low.x<=at.x+b.maxX&&high.x>=at.x+b.minX&&low.z<=at.z+b.maxZ&&high.z>=at.z+b.minZ);
+  if(overlapsGround||overlapsBuilding)return{ok:false,error:'Your house needs its own clearing outside '+record.name+'. Move beyond the village or town perimeter, leaving room for the whole house.'};
+ }
+ if(identity!==gameState||records.some((r,i)=>homeSettlementGeometryKey(r)!==signatures[i]))return{ok:false,error:'Your save or a settlement changed. Check the site again.'};
+ return{ok:true};
+}
+async function commitPlayerHomePlacement(action,isCurrent=()=>true){
+ if(!isCurrent())return{ok:false,error:'Home placement cancelled.'};
+ const identity=gameState,revision=gameState.playerHome?.anchor?.revision||0;
+ const valid=await checkPlayerHomePlacement(action);if(!valid.ok)return valid;
+ if(!isCurrent())return{ok:false,error:'Home placement cancelled.'};
+ if(identity!==gameState||revision!==(gameState.playerHome?.anchor?.revision||0))return{ok:false,error:'Your home changed. Choose its place again.'};
+ homePlacementPermits.add(action);return commitPlayerHomeAction(action);
+}
+
 function commitPlayerHomeAction(action) {
+  if(['anchor','build-home'].includes(action?.kind)){if(!homePlacementPermits.has(action))return{ok:false,error:'Check this place outside village and town boundaries before placing your home.'};homePlacementPermits.delete(action);}
   const farming=action?.kind?.startsWith('farm-');
   const proposal=farming?BurbzPlayerHomeCore.proposeFarm(gameState.playerHome,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
   if(!proposal.ok)return proposal;
@@ -45309,7 +45389,8 @@ function commitPlayerHomeAction(action) {
 }
 function anchorPlayerHomeAt(lat,lon) {
   if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
-  return commitPlayerHomeAction({kind:'anchor',lat,lon,source:'initial',expectedRevision:0}).ok;
+  if(initialHomePlacementPending)return false;initialHomePlacementPending=true;
+  commitPlayerHomePlacement({kind:'anchor',lat,lon,source:'initial',expectedRevision:0}).then(r=>{if(!r.ok)showToast(r.error);}).catch(e=>showToast(e.message)).finally(()=>{initialHomePlacementPending=false;});return false;
 }
 function savedGeographicPose() {
   const journey=gameState.worldJourney,anchor=gameState.playerHome?.anchor;
@@ -45388,7 +45469,8 @@ async function chooseGeographicHomeLocation(handoff={}) {
   handoff.release?.();BurbzPlayerHome.close('location');BurbzGeographicWorld.close('location');
   const restore=()=>{if(handoff.restore)return handoff.restore();const r=handoff.returnOptions;if(handoff.pose)return enterGeographicWorld({pose:handoff.pose});if(r||handoff.localPose||handoff.area)return BurbzPlayerHome.open(r?.start||'room',r?.options||{fromDesk:false,pose:handoff.localPose,area:handoff.area});return true;};
   return BurbzGeographicHomePicker.open({anchor,location,style:burbzMapStyle(),loadMapLibre:loadMapLibreIfNeeded,
-    commit:point=>gameState!==sessionSave||gameState.playerHome!==oldHome&&gameState.playerHome.anchor?.revision!==expectedRevision?{ok:false,error:'Your home changed while the map was open. Cancel and choose again.'}:commitPlayerHomeAction({kind:'anchor',...point,source:'chosen',expectedRevision}),
+    preview:checkPlayerHomePlacement,
+    commit:point=>gameState!==sessionSave||gameState.playerHome!==oldHome&&gameState.playerHome.anchor?.revision!==expectedRevision?{ok:false,error:'Your home changed while the map was open. Cancel and choose again.'}:commitPlayerHomePlacement({kind:'anchor',...point,source:'chosen',expectedRevision},()=>gameState===sessionSave&&BurbzGeographicHomePicker.isOpen()),
     cancel:()=>Promise.resolve(restore()).catch(error=>showToast(error.message)),placed:()=>enterGeographicWorld(handoff.pose?{pose:handoff.pose}:{localPose:{x:0,y:0,z:4,yaw:Math.PI,pitch:0}}).catch(error=>showToast(error.message))
   });
 }
@@ -45418,13 +45500,14 @@ function mountWalkingRealmMap(container,pose) {
   const oldStyle=card.style.cssText,hadMap=!!empireMap,oldCamera=empireMap?{center:empireMap.getCenter(),zoom:empireMap.getZoom(),bearing:empireMap.getBearing(),pitch:empireMap.getPitch()}:null;
   const framed=empireMapHasFramed,adjusted=empireMapUserAdjusted;
   const buttons=['empireMapMeBtn','empireMapRealmBtn','empireMapWorldBtn','empireMapKeyBtn'].map(id=>{const node=$(id);return{node,click:node.onclick};});
-  let closed=false,marker=null,map=null;container.append(card);card.classList.add('fp-borrowed-atlas');
+  let closed=false,marker=null,map=null;const outpostMarkers=[];container.append(card);card.classList.add('fp-borrowed-atlas');
   const resize=new ResizeObserver(()=>{if(!closed)map?.resize();});resize.observe(container);
   const center=()=>{if(!map)return;hideEmpireMapCard();hideEmpireMapKey();map.easeTo({center:[pose.lon,pose.lat],zoom:14,duration:0});};
   function realm(){if(!map)return;hideEmpireMapCard();hideEmpireMapKey();const villages=empireMappableVillages(),points=[pose,...villages];const bounds=BurbzEmpireMapCore.claimBounds(points.map((p,i)=>({...p,seed:p.seed??i})));if(bounds&&points.length>1)map.fitBounds(bounds,{padding:Math.min(60,container.clientHeight/5),maxZoom:12,duration:0});else center();}
-  const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
+  const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();outpostMarkers.forEach(m=>m.remove());hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
   walkingRealmLease=lease;buttons[0].node.onclick=center;buttons[1].node.onclick=realm;buttons[2].node.onclick=showEmpireWorld;buttons[3].node.onclick=toggleEmpireMapKey;
-  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';const arrow=document.createElement('span');arrow.textContent='➤';arrow.style.transform='rotate('+(-pose.yaw*180/Math.PI-90)+'deg)';pin.append(arrow);pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);realm();return map;});
+  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';const arrow=document.createElement('span');arrow.textContent='➤';arrow.style.transform='rotate('+(-pose.yaw*180/Math.PI-90)+'deg)';pin.append(arrow);pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);
+    for(const c of Object.values(enemyOutpostState().camps).sort((a,b)=>BurbzGeographicWorldCore.distance(a,pose)-BurbzGeographicWorldCore.distance(b,pose)).slice(0,64)){const el=document.createElement('span');el.className='eo-atlas-marker'+(c.liberated?' friendly':'');el.textContent=c.liberated?'⚑':'⚔';el.title=c.liberated?'Friendly outpost · 5 coins/hour · holds 60':'Hostile camp · '+c.hp.filter(n=>n>0).length+' guards remain';el.setAttribute('aria-label',el.title);outpostMarkers.push(new maplibregl.Marker({element:el}).setLngLat([c.lon,c.lat]).addTo(map));}realm();return map;});
   return lease;
 }
 function leaveWalkingRealmMap(){if(walkingRealmLease)BurbzVillageWalk.close('map-navigation');}
@@ -45458,7 +45541,7 @@ async function prepareSettlementSteps(steps,context,signal,metrics,phase) {
     return result.value;
   }finally{if(!result?.done)withSettlementBuilder(context,()=>steps.return?.());}
 }
-async function createTravellingSettlement(T,record,{signal,host=false}={}) {
+async function createTravellingSettlement(T,record,{signal,host=false,boundsOnly=false}={}) {
   const before=captureSettlementBuilder(),context={...before},started=performance.now(),metrics={steps:[]};
   for(const [key,value] of Object.entries(context)) {
     if(Array.isArray(value))context[key]=[];
@@ -45483,6 +45566,7 @@ async function createTravellingSettlement(T,record,{signal,host=false}={}) {
   scene.traverse(o=>{if(o.userData.overheadHome)o.visible=false;});
   const buildings=(town?context.townEconBuildings:context.villageBuildings).filter(b=>!b.userData.townGround);
   for(const b of buildings)if(b.userData.wardSeed===undefined)b.userData.wardSeed=record.seed;
+  if(boundsOnly){scene.updateMatrixWorld(true);return{radius:scene.userData.walkSurface.radius,boxes:buildings.map(b=>new T.Box3().setFromObject(b)).filter(b=>Number.isFinite(b.min.x+b.min.z+b.max.x+b.max.z)).map(b=>({minX:b.min.x,maxX:b.max.x,minZ:b.min.z,maxZ:b.max.z})),dispose};}
   const names=town?['townNpcs','townWalkers','townTraffic','townLivestock','townFlocks','townRoofBirds','townChickens','townWindmills','townCloths','townSigns']:
     ['villageNpcs','villageWalkers','villageTraffic','villageLivestock','villageFlocks','villageRoofBirds','villageChickens','villageWindmills','villageCloths','villageSigns','villageDucks','villageButterflies'];
   const movers=names.flatMap(key=>context[key]);
@@ -45516,7 +45600,8 @@ function continuousWalkingAdapter(record) {
     style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
     sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
     records:geographicSettlementRecords,createSettlement:createTravellingSettlement,waysides:geographicWaysideRecords,createWayside:createTravellingWayside,waysidePalette:palette=>burbzDaylightPalette(palette||VILLAGE_PALETTES[0],burbzDaylightGradeNow()),
-    buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
+    checkHome:checkPlayerHomePlacement,
+    buildHome:(pose,expectedRevision,isCurrent)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomePlacement({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision},isCurrent),
     getHome:()=>gameState.playerHome,createYard:(T,h,options)=>BurbzPlayerHomeScene.createYardContent(T,h,options),
     openBuild:localPose=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('yard',{build:true,pose:localPose,returnToWorld:true});},
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},

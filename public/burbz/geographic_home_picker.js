@@ -9,8 +9,9 @@
     const abort=new AbortController(),inert=[],previous=document.activeElement,overflow=document.body.style.overflow;
     document.body.appendChild(element);document.body.style.overflow='hidden';
     for(const node of document.body.children)if(node!==element&&!['SCRIPT','STYLE'].includes(node.tagName)){inert.push([node,node.inert]);node.inert=true;}
-    let map,busy=false,done=false,locating=false,locationRequest=0,notice='';
-    const finish=()=>{if(done)return;done=true;current=null;abort.abort();try{map?.remove();}catch(error){}inert.forEach(([node,value])=>node.inert=value);element.remove();document.body.style.overflow=overflow;if(previous?.isConnected&&!previous.closest('[inert]'))previous.focus({preventScroll:true});};
+    let map,busy=false,done=false,locating=false,locationRequest=0,notice='',previewSeq=0,previewTimer=null;
+    async function preview(){if(done||busy||!options.preview)return;const seq=++previewSeq,c=center();if(!c)return;place.disabled=true;status.textContent='Checking nearby settlement boundaries…';try{const result=await options.preview(c);if(done||busy||seq!==previewSeq)return;notice=result.ok?'Room for your home outside village and town boundaries.':result.error;place.disabled=!result.ok;status.textContent=notice;}catch(e){if(!done&&seq===previewSeq){place.disabled=true;status.textContent=e.message;}}}
+    const finish=()=>{if(done)return;done=true;current=null;previewSeq++;clearTimeout(previewTimer);abort.abort();try{map?.remove();}catch(error){}inert.forEach(([node,value])=>node.inert=value);element.remove();document.body.style.overflow=overflow;if(previous?.isConnected&&!previous.closest('[inert]'))previous.focus({preventScroll:true});};
     const cancel=()=>{if(busy)return;finish();options.cancel?.();};current={cancel,dispose:finish};
     const status=element.querySelector('.gwp-coordinates'),place=element.querySelector('[data-picker=place]'),locate=element.querySelector('[data-picker=locate]');
     element.querySelector('[data-picker=cancel]').addEventListener('click',cancel,{signal:abort.signal});
@@ -43,7 +44,7 @@
       const anchor=options.anchor||options.location;
       map=new root.maplibregl.Map({container:element.querySelector('.gwp-map'),style:options.style,center:anchor?[anchor.lon,anchor.lat]:[0,0],zoom:anchor?15:2,maxZoom:19,pitch:0,attributionControl:{compact:true},pixelRatio:Math.min(1.5,root.devicePixelRatio||1),canvasContextAttributes:{antialias:false}});
       locate.disabled=false;
-      map.on('load',update);map.on('move',update);map.on('error',()=>{if(!busy&&!done&&!notice)setNotice('Map data is unavailable here. You can use cached areas or try again when connected.');});
+      map.on('load',()=>{update();preview();});map.on('move',()=>{previewSeq++;update();if(options.preview){place.disabled=true;clearTimeout(previewTimer);previewTimer=setTimeout(preview,350);}});map.on('error',()=>{if(!busy&&!done&&!notice)setNotice('Map data is unavailable here. You can use cached areas or try again when connected.');});
       element.querySelector('[data-picker=cancel]').focus({preventScroll:true});return true;
     }catch(error){status.textContent=error.message||'The map could not open. Cancel and try again.';return false;}
   }
