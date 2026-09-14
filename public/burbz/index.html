@@ -6618,6 +6618,7 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   ? window.BurbzAudioCore.createAudioManager({ getEnabled: () => sfxEnabled })
   : oscillatorSfxFallback;
 window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
+window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({

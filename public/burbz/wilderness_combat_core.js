@@ -6,6 +6,7 @@
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BurbzWildernessCombatCore=api;})(globalThis,function(){
  'use strict';
  const MAX_ZOMBIES=4,MAX_RECORDS=64,CELL=48,SPLASH_RADIUS=3,MELEE_REACH=2.4;
+ const FIREBALL='spell_ember_wisp',BURN_SECONDS=3,BURN_DAMAGE=2;
  const clone=x=>structuredClone(x),clamp=(x,a,b)=>Math.max(a,Math.min(b,Number(x)||0)),distance=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z),hash=s=>{let n=2166136261;for(const c of String(s))n=Math.imul(n^c.charCodeAt(0),16777619);return n>>>0;};
  // Settlement safety for a retained local scene. This reads canonical records;
  // it does not render terrain, change GPS or claim/discover settlements.
@@ -63,7 +64,16 @@
   function targets(){return actors.filter(a=>a.side==='opponent'&&hostile(a.position)&&a.fighter.hp>0);}
   function blockedSegment(a,b){const lightHit=safeSegment(a,b);if(lightHit!==null)return lightHit;const n=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)/.16));for(let i=0;i<=n;i++){const t=i/n,p={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t},h=ground(p.x,p.z);if(!hostile(p)||h===null||p.y<=h+.08||!allowed(p.x,p.z,p.y))return t;}if(!clear(a,b))return 0;return null;}
   function impact({projectile:p,target,position}){if(!hostile(lastPose)||!hostile(position)||!darknessPath(p.token.origin,position))return;const hits=[];for(const a of targets()){const primary=a.id===target?.id;if(!primary&&(!p.skill.splash||Math.hypot(a.position.x-position.x,a.position.y-position.y,a.position.z-position.z)>SPLASH_RADIUS))continue;if(!darknessPath(position,a.position)||!clear(position,a.position))continue;hits.push({fighter:a.fighter,scale:primary?1:p.skill.splash});}
-   if(!hits.length)return;let result=[];if(transaction(()=>{result=B.resolveExplorationSkill(state,p.token.attacker,p.skill,hits);for(const a of actors)if(hits.some(h=>h.fighter===a.fighter))remember(a);}))events.push(...result);}
+   if(!hits.length)return;let result=[];if(transaction(()=>{result=B.resolveExplorationSkill(state,p.token.attacker,p.skill,hits);for(const a of actors)if(hits.some(h=>h.fighter===a.fighter)){if(p.skill.id===FIREBALL&&a.fighter.hp>0&&!a.fighter.fainted)a.burn={age:0,ticks:0};remember(a);}}))events.push(...result);}
+  function extinguish(){for(const a of actors)delete a.burn;}
+  function burnStep(dt){for(const a of targets()){
+   if(!a.burn)continue;
+   const age=Math.min(BURN_SECONDS,a.burn.age+dt),due=Math.floor(age+1e-8),ticks=due-a.burn.ticks;
+   if(ticks<=0){a.burn.age=age;continue;}
+   let result=[];
+   if(transaction(()=>{a.burn.age=age;a.burn.ticks=due;for(let i=0;i<ticks&&a.fighter.hp>0;i++)result.push(...B.resolveExplorationBurn(state,a.fighter,BURN_DAMAGE));remember(a);if(due>=BURN_SECONDS||a.fighter.hp<=0)delete a.burn;}))events.push(...result);
+   else {const restored=actors.find(r=>r.id===a.id);if(restored)delete restored.burn;break;}
+  }}
   const engine=C.create({targets,obstacle:blockedSegment,valid:()=>!closed&&hostile(lastPose),impact});
   function begin(pose){sync();if(pose){safe=!hostile(pose);lastPose={...pose};}if(!readiness()){notice(safe?'Lit territory is safe.':hero.hp<=0?'Wounded — return to a settlement.':!skill()?'Equip a weapon or spell in your Satchel.':!ammoAvailable()?'No arrows. Craft a bundle in your Satchel.':'Attack is recharging.');return false;}pending={mode,id:skill().id};return true;}
   function cancel(){pending=null;}
@@ -85,7 +95,7 @@
    cells.sort((a,b)=>distance(a,pose)-distance(b,pose));
    for(const cell of cells)for(let member=0;member<2;member++){if(actors.length>=Math.min(2,MAX_ZOMBIES))return;const id=cell.base+':'+member,p={x:cell.x+(member?1.1:-1.1),z:cell.z},d=distance(p,pose);if(d<12||d>48||!hostile(p)||!allowed(p.x,p.z)||actors.some(a=>a.id===id))continue;const receipt=state.records.find(r=>r.id===id);if(receipt?.hp<=0)continue;p.y=ground(p.x,p.z)+.85;const fighter=B.buildFighter({id,commonName:'Zombie Burbz',species:'Crow',hp:80,maxHp:80});fighter.hp=receipt?clamp(receipt.hp,0,80):80;actors.push({id,side:'opponent',position:p,radius:.65,fighter,cr:0,home:{...p},age:0,phase:'pursuit',attackTime:0,moving:false});}
   }
-  function step(dt,pose,{paused=false}={}){if(closed)return;sync();dt=clamp(dt,0,.05);lastPose={...pose};const nextSafe=!hostile(pose);if(nextSafe!==safe){safe=nextSafe;cancel();engine.clear();actors.length=0;if(safe&&refugeAt(pose.x,pose.z))transaction(()=>{hero.hp=hero.maxHp;hero.fainted=false;hero.barrier=0;hero.mods=[];});}if(paused){cancel();engine.clear();return;}if(safe)return;
+  function step(dt,pose,{paused=false,elapsed=dt}={}){if(closed)return;sync();const burnDt=clamp(elapsed,0,BURN_SECONDS);dt=clamp(dt,0,.05);lastPose={...pose};const nextSafe=!hostile(pose);if(nextSafe!==safe){safe=nextSafe;cancel();engine.clear();actors.length=0;if(safe&&refugeAt(pose.x,pose.z))transaction(()=>{hero.hp=hero.maxHp;hero.fainted=false;hero.barrier=0;hero.mods=[];});}if(paused){cancel();engine.clear();extinguish();return;}if(safe)return;
    const rate=Math.max(1,B.effStat(hero,'spd'));state.cr=Math.min(100,state.cr+dt*rate);state.beat+=dt*rate;if(state.beat>=100){state.beat-=100;state.potionUsed=false;for(const id of Object.keys(state.cooldowns))state.cooldowns[id]=Math.max(0,state.cooldowns[id]-1);hero.mods=hero.mods.map(m=>({...m,turns:m.turns-1})).filter(m=>m.turns>0);}
    if(hero.hp<=0){engine.clear();actors.length=0;return;}spawnClock+=dt;if(spawnClock>.75){spawnClock=0;spawn(pose);}
    for(let i=actors.length-1;i>=0;i--){const a=actors[i];if(a.side!=='opponent')continue;if(!hostile(a.position)||a.campId&&!allowed(a.position.x,a.position.z)||a.fighter.hp<=0||distance(a.position,pose)>90){actors.splice(i,1);continue;}a.age+=dt;a.moving=false;const d=distance(a.position,pose),rate=Math.max(1,B.effStat(a.fighter,'spd'));
@@ -107,11 +117,13 @@
      }
     }
    }
-   engine.step(dt);saveClock+=dt;if(saveClock>=2){saveClock=0;checkpoint();}if(events.length>32)events.splice(0,events.length-32);
+   // Use elapsed time, not frame count or capped movement time. There are at
+   // most three due ticks, even after a slow frame. New impacts start at zero.
+   burnStep(burnDt);engine.step(dt);saveClock+=dt;if(saveClock>=2){saveClock=0;checkpoint();}if(events.length>32)events.splice(0,events.length-32);
   }
-  function reset(){cancel();engine.clear();if(hero)checkpoint();}
+  function reset(){cancel();engine.clear();extinguish();if(hero)checkpoint();}
   sync();
-  return{hostileAt:hostile,darknessPath,canHostileAttack,hostileAttack,isDead:()=>hero.hp<=0,begin,release,cancel,potion,canPotion,step,reset,checkpoint,engine,actors,events,setMode(value){if(value==='weapon'||value==='spell'){cancel();mode=value;}},snapshot:()=>capture(),inspect(){sync();return{hero:clone(hero),state:capture(),mode,skill:skill(),ready:readiness(),safe,error,actors:clone(actors),projectiles:clone(engine.projectiles),impacts:clone(engine.impacts)};},dispose(){if(closed)return;reset();closed=true;actors.length=0;},rebase(dx,dz){cancel();engine.clear();for(const a of actors){a.position.x-=dx;a.position.z-=dz;if(a.home){a.home.x-=dx;a.home.z-=dz;}}}};
+  return{hostileAt:hostile,darknessPath,canHostileAttack,hostileAttack,isDead:()=>hero.hp<=0,begin,release,cancel,potion,canPotion,step,reset,checkpoint,engine,actors,events,charging(){sync();return pending?.id||null;},setMode(value){if(value==='weapon'||value==='spell'){cancel();mode=value;}},snapshot:()=>capture(),inspect(){sync();return{hero:clone(hero),state:capture(),mode,skill:skill(),ready:readiness(),safe,error,actors:clone(actors),projectiles:clone(engine.projectiles),impacts:clone(engine.impacts)};},dispose(){if(closed)return;reset();closed=true;actors.length=0;},rebase(dx,dz){cancel();engine.clear();extinguish();for(const a of actors){a.position.x-=dx;a.position.z-=dz;if(a.home){a.home.x-=dx;a.home.z-=dz;}}}};
  }
- return{create,boundaries,territoryBoundary,MAX_ZOMBIES,MAX_RECORDS,CELL,SPLASH_RADIUS,MELEE_REACH};
+ return{create,boundaries,territoryBoundary,MAX_ZOMBIES,MAX_RECORDS,CELL,SPLASH_RADIUS,MELEE_REACH,FIREBALL,BURN_SECONDS,BURN_DAMAGE};
 });
