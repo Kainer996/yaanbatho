@@ -3245,6 +3245,8 @@ body:has(#questClaimCelebration) .merlin-tutorial-overlay :is(.merlin-tutorial-s
 .prerequisite-step p,.prerequisite-note { font-size:13px; line-height:1.45; }
 .prerequisite-goal-banner { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:8px 0 14px; padding:10px; border:1px solid #d8b15b; border-radius:12px; background:#203226; color:#fff2d2; }
 .prerequisite-goal-banner strong { flex:1 0 100%; font-size:14px; }
+.prerequisite-home-resume { position:absolute; top:8px; left:8px; z-index:5; max-width:calc(100% - 16px); min-height:44px; padding:7px 12px; border:1px solid #d8b15b; border-radius:9px; background:#17251eed; color:#fff2d2; font:700 13px/1.25 Inter,sans-serif; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.prerequisite-home-resume:focus-visible { outline:3px solid #fff; outline-offset:2px; }
 .prerequisite-target { outline:3px solid #f6d66c !important; outline-offset:3px; scroll-margin:20px; }
 
 /* ========== MERLIN TUTORIAL ========== */
@@ -14372,7 +14374,7 @@ function renderAcademyBuildPanel() {
     const btn = built
       ? '<button class="academy-build-btn secondary" onclick="academyStartPlaceBuilding(\'' + id + '\')">Move</button><button class="academy-build-btn secondary" onclick="academySelectRoom(\'' + b.room + '\')">Open</button>'
       : locked
-        ? '<button class="academy-build-btn" aria-disabled="true" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (progressLock ? progressLock.button : 'LV ' + b.unlockLevel) + ' · HELP</button>'
+        ? '<button class="academy-build-btn" data-requires-help="true" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (progressLock ? progressLock.button : 'LV ' + b.unlockLevel) + ' · HELP</button>'
         : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Build') + '</button>';
     return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + (recommended ? ' recommended' : '') + (guided ? ' quest-guided' : '') + '" data-building="' + id + '">' +
       '<img class="academy-building-art" src="' + b.asset + '" alt="' + escapeHtml(b.label) + ' sprite">' +
@@ -39235,13 +39237,14 @@ function showPrerequisiteGuide(id) {
       if(button.dataset.guideAction)activatePrerequisiteAction(button.dataset.guideAction);
       else if(button.dataset.guideReturn!==undefined)returnPrerequisiteRecipe();
       else if(button.dataset.guideClose!==undefined)closePrerequisiteGuide();
+      else if(button.dataset.guideStop!==undefined&&setPrerequisiteGoal(null)){closePrerequisiteGuide();refreshPrerequisiteGoalBanner();}
     });document.body.append(dialog);
   }
   const plan=prerequisiteCurrentPlan();if(!plan)return false;
   const shortages=plan.shortages.map(s=>'<li>'+escapeHtml(s.label)+': <strong>'+s.have+' / '+s.need+'</strong>'+(s.id?' ('+s.short+' missing)':'')+'</li>').join('');
   const paths=plan.actions.map(action=>'<div class="prerequisite-step"><p>'+escapeHtml(action.path.map(n=>n.label).join(' → '))+'</p><button type="button" data-guide-action="'+escapeHtml(action.id)+'">'+escapeHtml(action.label)+'</button></div>').join('');
   const issues=[...new Set(plan.issues.map(issue=>plan.nodes[issue.id]?.reason||'This prerequisite needs another route.'))];
-  dialog.innerHTML='<div class="prerequisite-guide-head"><h2 id="prerequisiteGuideTitle">Your goal: '+escapeHtml(plan.nodes[plan.goal].label)+'</h2><button type="button" data-guide-close aria-label="Close prerequisite guide">Close</button></div><p>Choose your next step. Purchases, building and crafting stay under your control.</p>'+(shortages?'<details open><summary>What is still needed</summary><ul>'+shortages+'</ul><p class="prerequisite-note">Material budgets include the original recipe or upgrade coins; overlapping budgets are not added together. Amounts refresh after each action.</p></details>':'<p>'+(plan.status==='satisfied'?'This goal is complete.':'Review the next available action below.')+'</p>')+paths+issues.map(issue=>'<p class="prerequisite-note">'+escapeHtml(issue)+'</p>').join('')+'<button type="button" data-guide-return>Return to '+escapeHtml(plan.facts.recipe.label)+'</button>';
+  dialog.innerHTML='<div class="prerequisite-guide-head"><h2 id="prerequisiteGuideTitle">Your goal: '+escapeHtml(plan.nodes[plan.goal].label)+'</h2><button type="button" data-guide-close aria-label="Close prerequisite guide">Close</button></div><p>Choose your next step. Purchases, building and crafting stay under your control.</p>'+(shortages?'<details open><summary>What is still needed</summary><ul>'+shortages+'</ul><p class="prerequisite-note">Material budgets include the original recipe or upgrade coins; overlapping budgets are not added together. Amounts refresh after each action.</p></details>':'<p>'+(plan.status==='satisfied'?'This goal is complete.':'Review the next available action below.')+'</p>')+paths+issues.map(issue=>'<p class="prerequisite-note">'+escapeHtml(issue)+'</p>').join('')+'<button type="button" data-guide-return>Return to '+escapeHtml(plan.facts.recipe.label)+'</button> <button type="button" data-guide-stop>Stop tracking</button>';
   dialog.inert=false;if(!dialog.open)dialog.showModal();dialog.querySelector('button')?.focus({preventScroll:true});
   refreshPrerequisiteGoalBanner();return true;
 }
@@ -39250,8 +39253,10 @@ function refreshPrerequisiteGoalBanner() {
   const tracked=prerequisiteTrackedGoal(),plan=tracked&&prerequisiteCurrentPlan();
   const prerequisiteRecipeGoal=tracked?prerequisiteGoalKey(tracked):null;
   const screen=$('screen-'+currentScreen);
+  let homeResume=$('prerequisiteHomeResume');
+  if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());document.querySelector('#screen-scan .desk-introduction')?.append(homeResume);}homeResume.textContent='Your goal · '+plan.facts.recipe.label;homeResume.title=homeResume.textContent;}else homeResume?.remove();
   const existing=document.querySelector('.prerequisite-goal-banner');
-  if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen)return;
+  if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen){existing.querySelector('strong').textContent='Working towards: '+plan.facts.recipe.label;return;}
   document.querySelectorAll('.prerequisite-goal-banner').forEach(el=>el.remove());
   if(!prerequisiteRecipeGoal||!plan||!screen||currentScreen==='scan')return;
   const item={label:plan.facts.recipe.label};
