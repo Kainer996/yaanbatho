@@ -3,6 +3,15 @@
 (function(root,factory){const api=factory();if(typeof module!=='undefined'&&module.exports)module.exports=api;root.BurbzPrerequisiteGuidance=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const count=v=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0;
+// Saved guidance is a single small intent scoped to the existing per-game
+// profile. Never accept saved labels/actions or carry an intent into a new game.
+function normaliseTrackedRecipe(value, owner, recipeExists) {
+  if(!value||typeof value!=='object'||Array.isArray(value)||value.version!==1)return null;
+  if(typeof owner!=='string'||!/^[a-zA-Z0-9_-]{16,96}$/.test(owner)||value.owner!==owner)return null;
+  if(typeof value.recipeId!=='string'||!/^[a-z0-9_]{1,64}$/.test(value.recipeId)||typeof recipeExists!=='function')return null;
+  if(!recipeExists(value.recipeId))return null;
+  return {version:1,owner,recipeId:value.recipeId};
+}
 function resolve(graph, goal, options={}) {
   const nodes=graph?.nodes||{}, actions=[], issues=[], seenActions=new Set(), cache=new Map(), maxNodes=Math.max(1,Math.min(200,options.maxNodes||80));
   let visited=0;
@@ -79,5 +88,5 @@ function forgePlan(facts){
   put(goal,{label:'Forge '+recipe.label,requires,available:f.routes?.forge===true,action:{kind:'recipe',recipeId:recipe.id}});
   return {goal,nodes,shortages};
 }
-return {resolve,forgePlan};
+return {resolve,forgePlan,normaliseTrackedRecipe};
 });

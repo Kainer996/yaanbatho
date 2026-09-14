@@ -6947,6 +6947,7 @@ const DEFAULT_STATE = {
   kitchenPreyLarderVersion: 1, // One-time prey top-up so existing saves get meat for their birds of prey too.
   stoneEconomyVersion: 1, // Quarries produce persistent Stone used by every settlement construction yard.
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
+  prerequisiteGoal: null, // One saved recipe intent; actual prerequisites always come from current game state.
   forgeJobs: [], // commissions on the Fletcher's anvil: { id, gearId, startMs, endMs }
   quests: {},
   questsLastReset: null,
@@ -7063,6 +7064,7 @@ function loadState() {
   // reference is healed together so old saves never split or lose a place.
   gameState = migrateGamePlaceNames(gameState);
   if (!/^[a-zA-Z0-9_-]{16,96}$/.test(gameState.photoProfileId || '')) gameState.photoProfileId = crypto.randomUUID();
+  gameState.prerequisiteGoal = normalisePrerequisiteRecipeGoal(gameState.prerequisiteGoal);
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
   const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
   const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
@@ -14233,7 +14235,7 @@ function academyBuildBuilding(id, opts = {}) {
     renderAcademy();
     return true;
   }
-  if (id === 'magpie_market' && typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal && !isAcademyBuildingBuilt(id) && ((Number(gameState.player.level)||1)<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return false; }
+  if (id === 'magpie_market' && typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe() && !isAcademyBuildingBuilt(id) && ((Number(gameState.player.level)||1)<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return false; }
   const level = Number(gameState.player.level) || 1;
   const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
@@ -14279,7 +14281,7 @@ function academyStartPlaceBuilding(id) {
   ensureAcademyBuildings();
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
-    if (id === 'magpie_market' && typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal && (level<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return; }
+    if (id === 'magpie_market' && typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe() && (level<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return; }
     if (id === 'tavern' && !tutorialFlowState().barracksGiftGranted && !maybeGrantMerlinBarracksGift()) return;
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
     const progressLock = academyBuildingProgressLock(id);
@@ -38417,7 +38419,7 @@ function magpieMarketBuy(id, qty, kind = 'material') {
   const quote = magpieMarketBuyQuote(id, qty, kind);
   if (!quote.each) { showToast('The magpies do not deal in that.'); return false; }
   const label = storesSellLabel(kind,id);
-  if (quote.qty < qty) { if (typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal) { showPrerequisiteGuide(); return false; } showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
+  if (quote.qty < qty) { if (typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe()) { showPrerequisiteGuide(); return false; } showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
   const owned = magpieMarketOwned(id,kind);
   if (!Number.isSafeInteger(owned + qty) || !Number.isSafeInteger(quote.total)) return false;
   const committed = storesCommitTrade(effects => {
@@ -38824,8 +38826,29 @@ function forgeGearStatLine(item) {
 }
 
 // Audited prerequisite adapter: Forge recipes, their upgrades, and Magpie Market
-// construction/purchases. The tracked goal is UI state, never an inventory grant.
-let prerequisiteRecipeGoal = null;
+// construction/purchases. Persist only intent in this game's canonical save,
+// never a route, quote, inventory value or cached prerequisite result.
+function normalisePrerequisiteRecipeGoal(value) {
+  return window.BurbzPrerequisiteGuidance?.normaliseTrackedRecipe(value, gameState?.photoProfileId, id=>!!lootCore()?.recipeFor(id)) || null;
+}
+function prerequisiteTrackedRecipe() {
+  return normalisePrerequisiteRecipeGoal(gameState?.prerequisiteGoal)?.recipeId || null;
+}
+function setPrerequisiteRecipeGoal(id) {
+  const next=id===null ? null : normalisePrerequisiteRecipeGoal({version:1,owner:gameState?.photoProfileId,recipeId:id});
+  if(id!==null&&!next)return false;
+  const had=Object.prototype.hasOwnProperty.call(gameState,'prerequisiteGoal'),previous=gameState.prerequisiteGoal;
+  if(JSON.stringify(next)===JSON.stringify(previous))return true;
+  try {
+    gameState.prerequisiteGoal=next;
+    durableSaveState({throwOnFailure:true});
+    return true;
+  } catch(error) {
+    if(had)gameState.prerequisiteGoal=previous;else delete gameState.prerequisiteGoal;
+    showToast('Could not save this recipe goal. Your previous goal is unchanged.');
+    return false;
+  }
+}
 function prerequisiteEarningSource(kind) {
   const now=Date.now(), jobs=(gameState.birdExpeditions||[]).filter(q=>q&&q.id&&!gameState.questClaimReceipts?.['expedition:'+q.id]&&!['claimed','cancelled','failed'].includes(q.status));
   const relevant=q=>Number(q.rewards?.[kind])>0;
@@ -38869,16 +38892,17 @@ function prerequisiteRecipeFacts(id) {
     routes:{academy:featureGateOpen('academy'),forge:featureGateOpen('forge')},sources:{coins:prerequisiteEarningSource('coins'),branches:prerequisiteEarningSource('branches'),xp:prerequisiteEarningSource('xp')}};
 }
 function prerequisiteCurrentPlan() {
-  if(!prerequisiteRecipeGoal||!window.BurbzPrerequisiteGuidance)return null;
-  const facts=prerequisiteRecipeFacts(prerequisiteRecipeGoal);
+  const id=prerequisiteTrackedRecipe();
+  if(!id||!window.BurbzPrerequisiteGuidance)return null;
+  const facts=prerequisiteRecipeFacts(id);
   if(!facts)return null;
   const graph=BurbzPrerequisiteGuidance.forgePlan(facts);
   return {...graph,...BurbzPrerequisiteGuidance.resolve(graph,graph.goal),facts};
 }
 function closePrerequisiteGuide() { $('prerequisiteGuide')?.close(); }
 function showPrerequisiteGuide(id) {
-  if(!window.BurbzPrerequisiteGuidance||!lootCore().recipeFor(id||prerequisiteRecipeGoal))return false;
-  prerequisiteRecipeGoal=id||prerequisiteRecipeGoal;
+  const recipeId=id||prerequisiteTrackedRecipe();
+  if(!window.BurbzPrerequisiteGuidance||!recipeId||!setPrerequisiteRecipeGoal(recipeId))return false;
   if(typeof pauseMerlinNavigation==='function'&&merlinTutActive)pauseMerlinNavigation();
   let dialog=$('prerequisiteGuide');
   if(!dialog){
@@ -38901,6 +38925,7 @@ function showPrerequisiteGuide(id) {
 }
 function startPrerequisiteRecipe(id) { return showPrerequisiteGuide(id); }
 function refreshPrerequisiteGoalBanner() {
+  const prerequisiteRecipeGoal=prerequisiteTrackedRecipe();
   const screen=$('screen-'+currentScreen);
   const existing=document.querySelector('.prerequisite-goal-banner');
   if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen)return;
@@ -38909,7 +38934,7 @@ function refreshPrerequisiteGoalBanner() {
   const item=lootCore().craftableById(prerequisiteRecipeGoal);if(!item||!screen)return;
   const banner=document.createElement('div');banner.className='prerequisite-goal-banner';banner.dataset.recipeId=prerequisiteRecipeGoal;
   const label=document.createElement('strong');label.textContent='Working towards: '+item.label;banner.append(label);
-  for(const [label,handler] of [['Next step',()=>showPrerequisiteGuide()],['Return to recipe',returnPrerequisiteRecipe],['Stop tracking',()=>{prerequisiteRecipeGoal=null;refreshPrerequisiteGoalBanner();}]]){
+  for(const [label,handler] of [['Next step',()=>showPrerequisiteGuide()],['Return to recipe',returnPrerequisiteRecipe],['Stop tracking',()=>{if(setPrerequisiteRecipeGoal(null))refreshPrerequisiteGoalBanner();}]]){
     const button=document.createElement('button');button.type='button';button.textContent=label;button.addEventListener('click',handler);banner.append(button);
   }screen.prepend(banner);
 }
@@ -38922,7 +38947,7 @@ function focusPrerequisiteElement(selector) {
   });
 }
 function returnPrerequisiteRecipe() {
-  const id=prerequisiteRecipeGoal;if(!id)return;
+  const id=prerequisiteTrackedRecipe();if(!id)return;
   closePrerequisiteGuide();openForge('craft');
   focusPrerequisiteElement('[data-forge-recipe="'+CSS.escape(id)+'"]');refreshPrerequisiteGoalBanner();
 }
@@ -39247,7 +39272,7 @@ function upgradeForge() {
   if (!cost) return;
   const stock = gameState.inventory.items;
   const check = L.canUpgradeForge(lv, stock, gameState.player.coins || 0, gameState.player.branches || 0);
-  if (!check.ok && typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal) { showPrerequisiteGuide(); return; }
+  if (!check.ok && typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe()) { showPrerequisiteGuide(); return; }
   if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'Upgrading the forge'); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   addCoins(-cost.coins);
@@ -39333,12 +39358,14 @@ function craftGear(gearId) {
     gameState.player.coins-=recipe.coins;
     Object.keys(recipe.materials).forEach(id=>{stock[id]-=recipe.materials[id];if(stock[id]===0)delete stock[id];});
     ensureForgeJobs().push({id:'forge_'+gearId+'_'+now+'_'+Math.floor(Math.random()*1000000),gearId,startMs:now,endMs:now+craftMs});
+    // Goal completion and paid commission share one durable transaction.
+    if(typeof prerequisiteTrackedRecipe==='function'&&prerequisiteTrackedRecipe()===gearId)gameState.prerequisiteGoal=null;
   }))return false;
   updateHeader();
   SFX.questComplete();
   vibrate(30);
   showToast('⚒️ ' + item.icon + ' ' + item.label + ' is on the anvil — ready in ' + formatForgeDuration(craftMs) + '.');
-  if (typeof prerequisiteRecipeGoal !== 'undefined' && prerequisiteRecipeGoal === gearId) { prerequisiteRecipeGoal = null; refreshPrerequisiteGoalBanner(); }
+  if (typeof refreshPrerequisiteGoalBanner === 'function') refreshPrerequisiteGoalBanner();
   renderForge();
   return true;
 }
