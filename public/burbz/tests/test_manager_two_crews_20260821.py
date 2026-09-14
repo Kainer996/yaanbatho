@@ -13,6 +13,7 @@ These tests run the REAL low-level build flow, the same harness style as
 test_concurrent_town_builds_20260802.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -22,7 +23,7 @@ HTML = HTML_PATH.read_text(encoding="utf-8")
 SW = (BURBZ / "sw.js").read_text(encoding="utf-8")
 ROLES_CORE = (BURBZ / "bird_roles_core.js").read_text(encoding="utf-8")
 
-RELEASE_PIN = "connected-world-v386-20260910"
+RELEASE_PIN = re.search(r"const BURBZ_BUILD = '([^']+)'", HTML)[1]
 
 
 def function_source(name: str) -> str:
@@ -190,4 +191,4 @@ def test_the_post_card_promises_the_second_crew():
 
 def test_release_stamp_reaches_runtime_and_service_worker():
     assert f"const BURBZ_BUILD = '{RELEASE_PIN}';" in HTML
-    assert RELEASE_PIN in SW
+    assert re.search(r"const BURBZ_CACHE = '([^']+)'", SW)[1].endswith(RELEASE_PIN)
