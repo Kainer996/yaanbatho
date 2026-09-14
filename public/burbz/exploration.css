@@ -1,2 +1,8 @@
 .exploration-sheet{position:fixed;inset:0;margin:auto;width:min(440px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;background:#20382c;color:#fff0ca;border:1px solid #c9b27b;border-radius:14px;padding:18px;font:15px/1.45 system-ui}
 .exploration-sheet::backdrop{background:#07140ccc}.exploration-sheet header{display:flex;align-items:center;justify-content:space-between;gap:10px}.exploration-sheet h2{font-size:20px;margin:0}.exploration-sheet h3{font-size:17px;margin:0}.exploration-sheet p{margin:8px 0 12px}.exploration-sheet small{display:block;margin-bottom:8px;color:#c5c6b1}.exploration-sheet button{min-height:44px;padding:9px 12px;border:1px solid #c9b27b;border-radius:8px;background:#324c39;color:#fff0ca;font:inherit;cursor:pointer}.exploration-sheet article{border-top:1px solid #72836a;padding:16px 0}.exploration-sheet article div,.camp-actions{display:flex;flex-wrap:wrap;gap:8px}.camp-status{color:#ffe3a0}.camp-marker{width:40px;height:40px;border:2px solid #e9c983;border-radius:50%;background:#20382c;color:#fff0ca;font-size:22px;cursor:pointer}.camp-map-control{min-height:44px;padding:8px 12px;border:1px solid #c9b27b;border-radius:8px;background:#20382c;color:#fff0ca}
+/* Four world tools must remain distinct from the local map on portrait screens. */
+@media(orientation:portrait) and (max-width:560px) and (min-height:521px){
+ #villageWalk:has(.fp-camps-button) .fp-tools{display:grid;grid-template-columns:repeat(2,46px)}
+ #villageWalk:has(.fp-camps-button) .fp-tracker{width:calc(100% - 138px)}
+ #villageWalk:has(.fp-camps-button) .fp-minimap{top:calc(220px + env(safe-area-inset-top))}
+}
