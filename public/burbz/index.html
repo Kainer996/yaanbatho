@@ -26749,8 +26749,12 @@ function villageConstructions(rec) {
 function villageConstructionFor(rec) {
   return villageConstructions(rec)[0] || null;
 }
+function villageReadyToOpen(rec) {
+  const eco=ensureVillageEconomy(rec);
+  return eco ? Object.values(eco.readyToOpen || {}) : [];
+}
 function villageConstructionOf(rec, buildingId) {
-  return villageConstructions(rec).find(con => con && con.id === buildingId) || null;
+  return villageConstructions(rec).find(con => con && con.id === buildingId) || villageReadyToOpen(rec).find(con=>con.id===buildingId) || null;
 }
 function villageBuildSlots(rec) {
   // 2 with a Project Manager, 1 without. Written out rather than kept in a
@@ -26774,7 +26778,7 @@ function villageTotalDevelopment(rec) {
 }
 // Finish any construction whose clock has run out. Never renders — callers
 // decide what to refresh (returns true when something completed).
-function empireCompleteConstructions(now) {
+function empireCompleteConstructions(now, options={}) {
   const t = Number(now) || Date.now();
   let snapshot = null;
   const notices = [];
@@ -26783,6 +26787,7 @@ function empireCompleteConstructions(now) {
   // warm line per village instead of twenty toasts.
   const managerRuns = new Map();
   let completed = false;
+  let awaitingVisit = false;
   let started = false;
   let levelledUp = false;
   const takeSnapshot = () => { if (!snapshot) snapshot = snapshotGameState(); };
@@ -26792,23 +26797,40 @@ function empireCompleteConstructions(now) {
     empireVillages().forEach(rec => {
     const eco = ensureVillageEconomy(rec);
     // Copy first: finished projects are lifted out of the live list as we go.
-    villageConstructions(rec).slice().forEach(con => {
+    [...villageConstructions(rec), ...villageReadyToOpen(rec)].forEach(con => {
       const building = EMPIRE_BUILDING_INDEX[con.id];
       if (!building) { eco.constructions = eco.constructions.filter(x => x !== con); return; }
       if (t < Number(con.endMs)) return;
+      const opening=options.opening;
+      const onSite=opening&&Number(opening.seed)===Number(rec.seed)&&opening.id===con.id&&Number(opening.startMs)===Number(con.startMs);
+      const manager=villageStewardProject(rec.seed);
+      if(!manager.staffed&&!onSite){
+        if(con.readyToOpenAt)return;
+        takeSnapshot();
+        eco.readyToOpen[con.id]={...con,readyToOpenAt:t};
+        eco.constructions=eco.constructions.filter(x=>x!==con);
+        awaitingVisit=true;
+        const link=empireSettlementOfSeed(rec.seed),holding=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;
+        const tier=villageBuildingTier(building,con.toLevel),name=holding?townDisplayName(holding):rec.name;
+        queueCompletionNotice({kind:'empire-building',icon:tier.icon,title:tier.name+' ready to open',sub:name+' — visit in Alderwing to open',target:{seed:holding?holding.heartSeed:rec.seed,wardSeed:rec.seed,buildingId:con.id,startMs:con.startMs,readyToOpen:true}});
+        notices.push({seed:holding?holding.heartSeed:rec.seed,text:tier.name+' is ready. Visit the building in Alderwing to open it.'});
+        return;
+      }
       takeSnapshot();
       const isFirstRealmQuarry = building.id === 'quarry' && (eco.buildings.quarry || 0) === 0 &&
         !empireVillages().some(other => other !== rec && villageBuildingLevel(other, 'quarry') > 0);
       const level = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(con.toLevel) || ((eco.buildings[building.id] || 0) + 1)));
       eco.buildings[building.id] = level;
       eco.constructions = eco.constructions.filter(x => x !== con);
+      delete eco.readyToOpen[con.id];
+      gameState.completionNotices=(gameState.completionNotices||[]).filter(n=>!(n.target?.readyToOpen&&Number(n.target.wardSeed)===Number(rec.seed)&&n.target.buildingId===con.id&&Number(n.target.startMs)===Number(con.startMs)));
       completed = true;
       any = true;
       // The manager's own crew is free again the moment it downs tools, not the
       // moment the player happens to open the game. That one line is what lets
       // a village catch up on a whole night's work in a single pass.
-      const byManager = con.by === 'manager';
-      if (byManager) eco.managerFreeAt = Math.max(Number(eco.managerFreeAt) || 0, Number(con.endMs) || t);
+      const byManager = !onSite && manager.staffed;
+      if (con.by === 'manager') eco.managerFreeAt = Math.max(Number(eco.managerFreeAt) || 0, Number(con.endMs) || t);
       levelledUp = applyPlayerXpState(12) || levelledUp;
       // The first quarry still bootstraps the stone economy: its opening cut is
       // enough for the first Grain Farm and Lumber Camp. After that it digs
@@ -26848,7 +26870,7 @@ function empireCompleteConstructions(now) {
         icon: doneTier.icon,
         title: doneTier.name + (level > 1 && !building.tiers ? ' · Lv ' + level : ''),
         sub: publicName + ' — tap to manage',
-        target: { seed: publicSeed }
+        target: { seed: publicSeed, wardSeed:rec.seed, buildingId:con.id, startMs:con.startMs }
     });
     });
     });
@@ -26879,14 +26901,14 @@ function empireCompleteConstructions(now) {
       target: { seed: run.seed }
     });
   });
-  if (!completed && !started) return false;
+  if (!completed && !started && !awaitingVisit) return false;
   try {
     durableSaveState({ throwOnFailure:true });
   } catch (error) {
     restoreGameStateSnapshot(snapshot);
     renderCompletionNotices();
     console.warn('Settlement construction completion rolled back', error);
-    showToast('Construction finished, but its result could not be saved. Please try again.');
+    showToast('The building update could not be saved. Please try again.');
     return false;
   }
   // Amount 0 on purpose: "Feed and water your folk" is measured, not counted —
@@ -26962,6 +26984,11 @@ function ensureVillageEconomy(rec) {
   if (eco.construction && !Array.isArray(eco.constructions)) eco.constructions = [eco.construction];
   delete eco.construction;
   if (!Array.isArray(eco.constructions)) eco.constructions = [];
+  if(!eco.readyToOpen||typeof eco.readyToOpen!=='object'||Array.isArray(eco.readyToOpen))eco.readyToOpen={};
+  for(const [id,con]of Object.entries(eco.readyToOpen)){
+    const b=EMPIRE_BUILDING_INDEX[id];
+    if(!b||con?.id!==id||!Number.isFinite(con.startMs)||!Number.isFinite(con.endMs)||con.endMs<=con.startMs||!Number.isFinite(con.readyToOpenAt)||!Number.isInteger(con.toLevel)||con.toLevel<1||con.toLevel>b.maxLevel||con.toLevel<=eco.buildings[id])delete eco.readyToOpen[id];
+  }
   const seenBuildIds = new Set();
   eco.constructions = eco.constructions.filter(con => {
     const b = con && EMPIRE_BUILDING_INDEX[con.id];
