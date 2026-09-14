@@ -15,3 +15,8 @@ Runtime: three new building_work modules/CSS, narrow index adapter/options and w
 - Native village and town-ward scaffolds: four layouts, three actual taps, exact saved reduction and reload. Separate ordinary Home-entry/walking/keyboard/flight play-through and production/offline checks are recorded with release evidence.
 
 Local evidence: /home/yaan/Documents/Codex/2026-09-13/realtime-voice-chat/outputs/building-work-v404/. Layout/assistance harness: tests/run_building_work_v404.cjs (optional --town). Ordinary movement and public proof: tests/run_builder_help_native_v404.cjs. These are laptop Chromium checks with emulated touch/viewports and disposable saves. Local fixtures use explicitly synthetic DEM/MVT inputs; public checks use actual provider responses. No physical-phone FPS claim.
+
+
+## Simultaneous-action correction v404b
+
+Independent public image review found builder help covered a nearby quest action. The earlier isolated layout fixture lacked that simultaneous quest. v404 public movement/save/cache checks remain valid, but its visual acceptance was withheld. The correction registers help with the existing nearby-action tray, handles every generic extension action in one HUD update, and gives concurrent quest/help buttons separate touch targets. Narrow phone layouts show both; further nearby actions use the tray's horizontal scrolling. The ordinary native test now requires the actual adjacent quest, checks each target's centre hit and clearance in four layouts, and opens/closes the real quest panel before helping. Original failing screenshots are retained; fresh local and public evidence must pass.
