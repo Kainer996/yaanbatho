@@ -6959,7 +6959,9 @@ function applyFreshStartEpochIfNeeded() {
 function applyResetUrlIfRequested() {
   try {
     const params = new URLSearchParams(window.location.search || '');
-    if (!params.has('reset') && !params.has('freshStart')) return false;
+    let confirmedHere=false;
+    try { confirmedHere=sessionStorage.getItem('burbz_new_game_requested')==='1'; } catch (_) {}
+    if (!params.has('reset') && !params.has('freshStart') && !confirmedHere) return false;
     clearBurbzLocalProgress();
     localStorage.setItem(BURBZ_EPOCH_KEY, BURBZ_FRESH_START_EPOCH);
     // New game resets progress, not the installed app or its offline trailer.
@@ -45046,6 +45048,9 @@ $('toggleVibration').addEventListener('click', () => {
 // video, Merlin's story and the starter timber all play again from the top.
 function startNewGame() {
   if (!confirm('Are you sure? This starts a brand-new game: all progress, birds, coins and buildings will be wiped, and the intro and tutorial will play again.')) return;
+  // Keep this confirmed intent in the same tab until the next document consumes
+  // it, even if an installed/offline navigation normalizes the cached URL.
+  try { sessionStorage.setItem('burbz_new_game_requested','1'); } catch (_) {}
   window.location.href = window.location.pathname + '?reset=1';
 }
 $('startNewGameBtn')?.addEventListener('click', () => { SFX.tap(); startNewGame(); });

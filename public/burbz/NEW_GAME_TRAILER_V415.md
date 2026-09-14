@@ -2,7 +2,7 @@
 
 The shelter/Home-first bootstrap bypassed the existing intro movie, and returning to the desk could mark it seen without playback. New and interrupted openings now use a separate pending receipt and play the original 29.486-second trailer before Merlin. Existing games without a legacy seen flag remain existing games. Skip and native completion lead to the tutorial; a failed request has Retry/Skip. Late playback promises cannot restart a dismissed movie.
 
-Start New Game still requires its native confirmation and clears progress through the established reset path. It preserves the installed worker and cached assets. The worker warms the original 17,742,035-byte movie as an optional asset and serves cached full responses as valid byte ranges for offline playback and seeking. Offline entry navigation now prefers the current cached canonical index over any older cached directory URL. The installed test reproduced the previous behavior silently loading the old document on offline restart despite a valid current index; the narrower app-entry fallback fixes that mixed-build path. Other documents retain their own fallback.
+Start New Game still requires its native confirmation and clears progress through the established reset path. It preserves the installed worker and cached assets. A same-tab, one-use receipt retains the explicit confirmation until the next document consumes it, including an offline navigation whose cached URL is normalized. Cancellation creates no receipt. The worker warms the original 17,742,035-byte movie as an optional asset and serves cached full responses as valid byte ranges for offline playback and seeking. Offline entry navigation now prefers the current cached canonical index over any older cached directory URL. An old directory entry could otherwise win before the current index; a focused mixed-cache regression covers the narrower app-entry fallback. The installed acceptance also checks that the actual offline document retains the current build. Other documents retain their own fallback.
 
 A first installation without a successfully downloaded movie still offers a deliberate Skip; the movie is not an installation gate.
 
@@ -12,7 +12,7 @@ The opening says “Welcome, Earthling!” and keeps Merlin’s falcon-friend in
 
 - 7 native phone-sized/desktop trailer groups: actual advancing original movie, full native EOF, Skip, fresh reset, failed request/Retry, existing reload and save retention.
 - 9 native Settings groups: dialogue, spotlight and free action at 390×844, 844×390 and 1280×800; actual clicks/keyboard, cancelled reset, Close/Escape/browser Back and exact saved lesson/economy.
-- 11 cached-video full/range/suffix/invalid-range cases and 8 current-versus-old offline entry/reset/scope cases.
+- 11 cached-video full/range/suffix/invalid-range cases and 8 current-versus-old offline entry/reset/scope cases, plus cancellation/normalized-URL/one-use reset-intent checks.
 - 20 focused reset, save migration, feeding, first-flight target and offline/cache regression checks pass. Two obsolete source-count assertions were excluded: chapter counters expect pre-shelter order; concise lesson test expects the old fixed 36-step copy. They fail identically on the release base; neither is a new runtime regression.
 - Installed and public release evidence is recorded by the release owner before publication is reported complete.
 
