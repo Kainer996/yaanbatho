@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Species manga cards v411 (`species-manga-cards-v411-20260914`) replaces only the framed Blue Tit, Great Tit, Long-tailed Tit and Goldcrest art with integrated no-arms illustrations. Keep the card aliases, original transparent moving sprites, all other no-arms guards, Treecreeper reference and three offline asset lists intact. See [SPECIES_MANGA_CARDS_V411.md](SPECIES_MANGA_CARDS_V411.md) for recovered sources, generation prompts and verification. The standing artwork direction below applies to future bird artwork; it is not a request to redraw unrelated cards.
+
 Gemini photos v410 (`gemini-photos-v410-20260914`) restores the user-approved Gemini 2.5 Flash path with ONE persistent £5 total Europe/London monthly ledger and a durable browser photo queue. This supersedes prior free-model/no-Google photo requirements. Preserve pre-egress whole-attempt reservations, dated pricing review, fail-closed usage/timeout/replay handling, accepted catalogue gates, atomic game receipts, owner/session isolation and first-photo storage. Never reset the ledger or retain uploaded server photos: route-owned temporary files must clean up on every outcome and service stop. All three worker lists/updater pins agree. See [GEMINI_PHOTOS_V410.md](GEMINI_PHOTOS_V410.md) for behavior, accounting assumptions, retention and verification.
 
 Home farming v409 (`home-farming-v409-20260914`) adds adjoining square crops through the Build menu. Preserve canonical `playerHome.farm`, shared inventory/seed costs, atomic save rollback and one-time harvest, offline timestamps, clear yard footprints and the existing world/editor return. Ground each soil vertex and plant against the host terrain; batch crops and retain the shared renderer lifecycle. Keep exact consuming/three-list pins and native click-through protection. Rules, evidence and limits: [HOME_FARMING_V409.md](HOME_FARMING_V409.md).
@@ -300,6 +302,12 @@ and maintained `sound_id/` integration; verify its deployment proof rather
 than treating the historical “no backend” description as current.
 
 ---
+
+### Standing bird artwork direction — user decision, 2026-09-14
+
+The visual standard is the **current Treecreeper card** (called “Treekeeper” in speech): `bird-art-cache/treecreeper_burbz_manga_20260624_v2.png`. Preserve that reference. Also preserve the current **Great Spotted Woodpecker** (`bird-art-cache/great_spotted_woodpecker_burbz_manga_20260624.png`) as the reference for **vibrancy, brightness and immediate readability at small card sizes**. Combine expressive manga ink and coherent scenes with vivid species colours, clear foreground/background separation and luminous environments; avoid muddy sepia, uniformly dark detail or washed-out frames. Framed cards should read as one integrated illustration, not a realistic bird cutout pasted over a generic habitat background.
+
+Design each outfit around that species' recognizable markings, shape, habitat and behaviour, as Treecreeper's bark-toned woodland outfit does. Do not repeat one generic costume across birds. Clothing and accessories must follow ordinary bird anatomy: feathered wings, two legs and feet, **no human arms, hands, fingers or extra limbs**. Keep identifying plumage and silhouettes legible; wings must not become hands. Prefer suitable recovered original art when it meets these requirements. If an original has arms or materially misses this style, use the inspected Treecreeper reference for a necessary correction/replacement. Compact moving sprites still require transparency and must not carry a square scenic painting around the world. This direction applies to future artwork work; unrelated existing art is not automatically in scope.
 
 ## 2. The shape of the code
 
