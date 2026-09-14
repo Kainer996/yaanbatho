@@ -108,6 +108,7 @@ FILES=(
   "building_work.js"
   "building_work.css"
   "first_person_map.js"
+  "exploration_core.js" "exploration.js" "exploration.css"
   "first_person_hud.js"
   "first_person_hud.css"
   "player_equipment_core.js"
