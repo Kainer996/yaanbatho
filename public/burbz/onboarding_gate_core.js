@@ -26,10 +26,10 @@
   var FEATURE_UNLOCKS = {
     map: null,          // home — the world itself
     quests: null,       // the chain lives here; claims happen here
-    village: null,      // link 1 opens the Empire map
+    village: 'pq_open_empire',
     scan: null,         // the game boots onto Merlin's wand
     academy: 'pq_build_barracks',
-    birdex: 'pq_preen',
+    birdex: 'pq_first_bird',
     forge: 'pq_equip_gear',
     inventory: 'pq_equip_gear',
     battle: 'pq_first_win',
@@ -40,7 +40,7 @@
     hospital: 'pq_build_hospital',
     leaderboards: 'pq_win_3',
     diary: 'pq_preen',
-    quests_daily: 'pq_build_barracks',
+    quests_daily: 'pq_walk_adventure',
     quests_weekly: 'pq_first_win',
     quests_achievements: 'pq_first_win',
     quests_walks: 'pq_walk_adventure'
@@ -74,12 +74,15 @@
     var evidence = input.evidence && typeof input.evidence === 'object' ? input.evidence : {};
     var level = Number(input.playerLevel) || 1;
     var master = input.masterUnlock === true || level >= MASTER_UNLOCK_LEVEL;
-    var activeIndex = chainActiveIndex(chainIds, input.claimedIds);
+    var activeIndex = input.activeQuestId && chainIds.includes(input.activeQuestId)
+      ? chainIds.indexOf(input.activeQuestId) : chainActiveIndex(chainIds, input.claimedIds);
     var open = {};
     Object.keys(FEATURE_UNLOCKS).forEach(function (feature) {
+      if (feature === 'kitchen' && evidence.kitchenBuilt === false) { open[feature] = false; return; }
       if (master || evidence[feature] === true) { open[feature] = true; return; }
       var link = FEATURE_UNLOCKS[feature];
       if (link == null) { open[feature] = true; return; }
+      if (toArray(input.claimedIds).includes(link)) { open[feature] = true; return; }
       var linkIndex = chainIds.indexOf(link);
       // A link the chain no longer carries must never lock its feature
       // forever — an unknown link counts as already passed.
@@ -95,7 +98,42 @@
     return toArray(road).filter(function (screen) { return map[screen] !== false; });
   }
 
+  // A read-only opening projection. Facts come from the real save; reviewing a
+  // species and deferring discovery never manufacture a discovery or reward.
+  function openingStatus(input) {
+    var x = input || {}, flow = x.flow || {};
+    var coins = Math.max(0, Number(x.coins) || 0), branches = Math.max(0, Number(x.branches) || 0);
+    var cost = x.kitchenCost || { coins:130, branches:25 };
+    var shortage = { coins:Math.max(0, cost.coins - coins), branches:Math.max(0, cost.branches - branches) };
+    var supplyClaimed = !!flow.openingSupplyReturnClaimed;
+    var errands = !!flow.kitchenShortageSeen || !!x.hasExpeditions || !!flow.errandClaimed;
+    var stage = !x.birdhouseBuilt ? 'birdhouse'
+      : !(flow.discoveryReviewed || flow.discoveryDeferred || x.legacyComplete) ? 'discovery'
+      : !(flow.companionMet || x.legacyComplete) ? 'companion'
+      : !x.kitchenBuilt ? (flow.kitchenShortageSeen && (shortage.coins || shortage.branches) ? 'errand' : 'kitchen')
+      : !(flow.openingCareDone || x.mealServed || x.legacyComplete) ? 'care' : 'done';
+    return { stage:stage, shortage:shortage, errands:errands,
+      kitchenIntroduced:!!x.kitchenBuilt || !!x.legacyComplete || (!!x.birdhouseBuilt && !!flow.companionMet && !!(flow.discoveryReviewed || flow.discoveryDeferred)),
+      supplyEligible:!!flow.kitchenShortageSeen && !x.kitchenBuilt && !!(shortage.coins || shortage.branches) && !supplyClaimed && !x.pendingFirstFlight,
+      supplyClaimed:supplyClaimed };
+  }
+
+  // The once-only builder delivery belongs to the tutorial contract, outside
+  // ordinary bird carry/stat multipliers. Old in-flight rewards are honoured.
+  function openingSupplyRewards(rewards, alreadyClaimed) {
+    var next = Object.assign({}, rewards || {});
+    next.items = Object.assign({}, next.items || {});
+    if (!alreadyClaimed) {
+      next.coins = Math.max(130, Number(next.coins) || 0);
+      next.branches = Math.max(25, Number(next.branches) || 0);
+      next.items.small_bird_prey_ration = Math.max(1, Number(next.items.small_bird_prey_ration) || 0);
+    }
+    return next;
+  }
+
   return {
+    openingStatus: openingStatus,
+    openingSupplyRewards: openingSupplyRewards,
     MASTER_UNLOCK_LEVEL: MASTER_UNLOCK_LEVEL,
     FEATURE_UNLOCKS: FEATURE_UNLOCKS,
     chainActiveIndex: chainActiveIndex,

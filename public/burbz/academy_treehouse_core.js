@@ -7,7 +7,7 @@
   // with the tree — higher floors need more timber hauled up.
   //
   // unlockLevel is the trainer-level gate, and the curve is a deliberate slow
-  // burn rather than a sprint: the opening trio (Gardens, Roost, Barracks) is
+  // burn rather than a sprint: the opening trio (Gardens, Roost, Birdhouse) is
   // open at level 1 for the tutorial, the teaching rooms then arrive one per
   // level through the early game, and the four specialist rooms (Workshop,
   // Library, Nursery, Observatory) are true mid-game milestones spaced out to
@@ -15,7 +15,7 @@
   // also a savings goal — there should always be a next building on the
   // horizon instead of the whole tree opening at once.
   //
-  // The Magpie Market is the FIFTH room on that ladder (Barracks, Training
+  // The Magpie Market is the FIFTH room on that ladder (Birdhouse, Training
   // Hall, Quest Roost, Kitchen, Market), so a player meets trade early. It
   // costs 135 coins — above the Kitchen, below the Hospital — which keeps the
   // coin ladder strictly rising by gate. The Hospital and The Crowbar each
@@ -25,7 +25,7 @@
   // these, so retuning here only moves fresh or never-moved buildings.
   const TREEHOUSE_ROOMS = [
     { id:'outdoors', label:'Aviary Gardens', icon:'🌱', cost:0, branches:0, unlockLevel:1, floor:0, branch:'trunk', x:50, y:92, role:'roam', effect:'Home itself: the flock lives in the tree. Free roaming, foraging, feeding, grooming and gentle rest.' },
-    { id:'tavern', label:'Barracks', icon:'🪶', cost:60, branches:8, unlockLevel:1, floor:1, branch:'right', x:80, y:71, role:'recruitment', effect:'The Academy recruitment office: review discovered and befriended birds, inspect their full cards, and invite them into the flock.' },
+    { id:'tavern', label:'Birdhouse', icon:'🪶', cost:60, branches:8, unlockLevel:1, floor:1, branch:'right', x:80, y:71, role:'recruitment', effect:'The Academy recruitment office: review discovered and befriended birds, inspect their full cards, and invite them into the flock.' },
     { id:'training', label:'Training Hall', icon:'🏋️', cost:85, branches:20, unlockLevel:2, floor:2, branch:'right', x:75, y:58, role:'training', trainStat:'atk', effect:'Permanent stat drills, passive XP, and slow ATK growth for birds stationed here.' },
     { id:'hospital', label:'Bird Hospital', icon:'🏥', cost:140, branches:30, unlockLevel:6, floor:3, branch:'left', x:25, y:52, role:'healing', effect:'Fast HP recovery for tired or hurt companions stationed here.' },
     { id:'crowbar', label:'The Crowbar', icon:'🍻', cost:190, branches:40, unlockLevel:7, floor:4, branch:'right', x:75, y:41, role:'social', trainStat:'cha', effect:'The bird bar and the home of Kingdom diplomacy: companions perched here grow Charm (CHA) and morale — charm pays out on diplomacy quests.' },
@@ -143,10 +143,10 @@
   const QUEST_TEMPLATES = {
     // Merlin's First Flight: the one-off tutorial errand. It lasts seconds,
     // not minutes, so a brand-new player sees the whole send → return → claim
-    // loop without waiting, and it always brings home a crafting material so
-    // Merlin can tease the Forge. tutorial:true keeps it off the normal board
+    // loop without waiting. Its one-time builder delivery funds the Kitchen;
+    // the caller keeps that delivery outside ordinary carrying multipliers. tutorial:true keeps it off the normal board
     // drawers — the quest screen renders it as its own one-off card.
-    merlin_first_flight: { id:'merlin_first_flight', category:'treasure', label:"Merlin's First Flight", minutes:5/60, icon:'🪄', minLevel:1, starter:true, tutorial:true, coins:[4,8], branches:[1,2], xp:8, items:['oak_twig','river_reed','iron_grit','down_tuft'], beats:['leaps from your shoulder in a shower of sparks','loops the garden once at wizard speed','snatches something useful from a hollow stump','is back before the kettle sings'] },
+    merlin_first_flight: { id:'merlin_first_flight', category:'treasure', label:"Merlin's First Flight", minutes:5/60, icon:'🪄', minLevel:1, starter:true, tutorial:true, coins:[130,130], branches:[25,25], xp:8, items:['small_bird_prey_ration'], beats:['leaps from your shoulder in a shower of sparks','loops the garden once at wizard speed','snatches something useful from a hollow stump','is back before the kettle sings'] },
     find_seed: { id:'find_seed', category:'food', label:'Find Seed', minutes:3, icon:'🌾', minLevel:1, starter:true, coins:[0,7], branches:[1,2], xp:6, items:['seed_satchel','sunflower_seeds'], beats:['hops straight from the garden path','checks the soft grass for fallen seed','tucks a tiny seed satchel under one wing','returns ready for another quick errand'] },
     find_coins: { id:'find_coins', category:'treasure', label:'Find Coins', minutes:4, icon:'🪙', minLevel:1, chaWeight:1, starter:true, coins:[6,16], branches:[0,1], xp:8, items:['shiny_pebble'], beats:['flutters toward a sunny lane','spots a glint beside an old root','trades a bright pebble for pocket coins','returns jingling with tiny treasure'] },
     branch_run: { id:'branch_run', category:'timber', label:'Branch Run', minutes:5, icon:'🪵', minLevel:1, starter:true, coins:[0,5], branches:[4,7], xp:8, items:['soft_moss'], beats:['glides down to the windfall thicket','tugs loose the driest fallen twigs','stacks a neat bundle of branches','hauls the timber home for the builders'] },

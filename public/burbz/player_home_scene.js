@@ -42,7 +42,7 @@ function upperRooms(T,home){const all=new T.Group();for(const [id,r] of Object.e
 function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
  if(C.indoor(area)){
  const extra=C.ROOMS[area];
- const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:s.tier?'Your woodland home':'Your temporary shelter',scope:'player-home',width:9,depth:10,height:3.6,accent:0x709486,props:s.tier?[{type:'bed',x:-3,z:1.4,rot:0,w:1.7,d:2.4,solid:true},{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}]:[],spawn:{x:0,y:0,z:3.8,yaw:0,pitch:0},exit:{x:0,z:4.3},action:null};
+ const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:s.tier?'Your woodland home':'Your temporary shelter',scope:'player-home',width:9,depth:10,height:3.6,accent:0x709486,props:s.tier?[{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}]:[],spawn:{x:0,y:0,z:3.8,yaw:0,pitch:0},exit:{x:0,z:4.3},action:null};
  room=root.BurbzBuildingRoomsScene.create(T,p);scene=room.scene;
  if(area==='room'&&Object.keys(s.rooms).length)for(const child of [...scene.children])if(child.isGroup&&child.position.x>4){scene.remove(child);disposeScene(child);}
  // The shared room shell's ceiling is opened only in the decorating view.

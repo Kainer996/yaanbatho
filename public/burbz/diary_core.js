@@ -135,7 +135,7 @@
       }
       case 'recruit':
         return { icon: '🪶', text: pick([
-          'The ' + species + ' swore the oath at the Barracks and joined the flock' + (e.cost ? ' for ' + e.cost + ' coins' : '') + '.',
+          'The ' + species + ' swore the oath at the Birdhouse and joined the flock' + (e.cost ? ' for ' + e.cost + ' coins' : '') + '.',
           'A new companion: the ' + species + ' now flies at the chosen one’s side' + (e.cost ? ' (' + e.cost + ' coins well spent)' : '') + '.'
         ], seed) };
       case 'level_up':

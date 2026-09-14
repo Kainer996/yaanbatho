@@ -28,7 +28,7 @@ function hash(value){let n=2166136261;for(const c of String(value))n=Math.imul(n
 const SIZES={bookwall:[5.1,.65],tradecounter:[5.2,1.3],registry:[1.85,1.3],medicine:[1.85,1.3],treasure:[1.85,1.3],panrack:[1.85,1.3],weapons:[1.85,1.3],planningboard:[1.95,1.25],questboard:[1.95,.6],nestbench:[1.8,1.2],bed:[1.65,2.35],bunk:[1.7,2.4],fireplace:[2,1],armchair:[1,1],shelf:[1.6,.6],workbench:[2,1],loom:[1.8,1.4],mapdesk:[1.8,1.1],telescope:[1.4,1.4],piano:[1.9,.9],oven:[1.8,1.1],teatable:[1.5,1.5],bar:[7,1.1],altar:[2.8,1.2],organ:[2,1],stage:[5,2],stall:[2.4,1.4],forge:[2.6,1.7],pump:[1.8,1.8],saw:[2.8,1.5],stone:[2.2,1.8],anvil:[1.4,1],pew:[2.5,.7],table:[1.8,1.6],rug:[2,3]};
 const ACADEMY={
  dorm:['The Roost',9,10,'nest','perches','shelf',0x53838b],
- tavern:['The Barracks',11,12,'registry','perches','target',0x637484],
+ tavern:['The Birdhouse',11,12,'registry','perches','target',0x637484],
  training:['Training Hall',12,13,'target','trainingrail','weapons',0x648092],
  hospital:['Bird Hospital',11,12,'medicine','nests','planter',0x739c87],
  crowbar:['The Crowbar',12,13,'bar','tables','piano',0xad6950],

@@ -5,7 +5,7 @@ top of the Quests tab, so a new player never wonders what to do next.
 
 The chain opens on the game's biggest promise (free-your-first-village-v327):
 open the Empire map, take the nearest village back from the darkness with
-Merlin, then go outside and find a real bird. Merlin's errands, the Barracks,
+Merlin, then go outside and find a real bird. Merlin's errands, the Birdhouse,
 recruiting, feeding and battling follow. Player quests are the PLAYER'S goals —
 different from bird expeditions and daily/weekly boards.
 """
@@ -35,7 +35,7 @@ def test_chain_mirrors_the_guided_tutorial_flow():
     ids = [q["id"] for q in quests]
     assert len(ids) == len(set(ids))
     # Straight out of the tutorial: the Empire map, the first liberation, the
-    # first real bird — then Merlin's errands and the Barracks.
+    # first real bird — then Merlin's errands and the Birdhouse.
     assert ids[:6] == [
         "pq_open_empire", "pq_liberate", "pq_first_bird",
         "pq_expedition", "pq_claim_errand", "pq_build_barracks",

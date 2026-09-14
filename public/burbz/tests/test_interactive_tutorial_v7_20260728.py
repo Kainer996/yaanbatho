@@ -167,7 +167,7 @@ def test_free_mode_exists_for_multi_tap_jobs():
     html = HTML.read_text(encoding="utf-8")
     assert 'id="merlinTutorialTask"' in html
     assert ".merlin-tutorial-overlay.free .merlin-tutorial-stage" in html
-    # Raising the Barracks and sending a quest both need the whole screen.
+    # Raising the Birdhouse and sending a quest both need the whole screen.
     modes = {s["action"]["event"]: s["action"].get("mode") for s in tutorial_data()["steps"] if s.get("action")}
     assert modes["barracks-built"] == "free"
     assert modes["expedition-sent:merlin_first_flight"] == "free"

@@ -46,9 +46,9 @@ await page.touchscreen.tap(claimBox.x+claimBox.width/2,claimBox.y+claimBox.heigh
 await page.waitForFunction(()=>window.__testEval('tutorialFlowState().errandClaimed===true'));
 check('claim grants reward and returns Merlin',await run(()=>tutorialFlowState().errandClaimed&&!merlinIsAway()));
 await at('Back with a prize!');await next();await at('To the Academy!');
-await page.locator('.nav-item[data-screen="academy"]').tap();await at('Your Academy');await next();await at('A gift for the Barracks');await next();await at('Build the Barracks');
+await page.locator('.nav-item[data-screen="academy"]').tap();await at('Your Academy');await next();await at('A gift for the Birdhouse');await next();await at('Build the Birdhouse');
 await page.locator('.academy-building-card[data-building="tavern"] .academy-build-btn').tap();
-await page.locator('#academyTreehouse').tap({position:{x:150,y:120}});await at('The Barracks stands!');
+await page.locator('#academyTreehouse').tap({position:{x:150,y:120}});await at('The Birdhouse stands!');
 check('first building is real and paid for by the guided gift',await run(()=>isAcademyRoomBuilt('tavern')));
 await next();await at('Home and the Kitchen');await next();await at('Heal, train and charm');await next();await at('Out to the world');
 await page.locator('.nav-item[data-screen="map"]').tap();await at('Your live map');await next();await at('Real-life quests');await next();await at('Off you go, my friend');

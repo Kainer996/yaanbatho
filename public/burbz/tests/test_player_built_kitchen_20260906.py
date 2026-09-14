@@ -21,6 +21,9 @@ const ACADEMY_ROOMS=Object.fromEntries(rooms.map(r=>[r.id,{buildingId:r.id}]));
 let gameState={player:{level:1,coins:0,branches:0},academyBuildings:{outdoors:{built:true}},academyBuilderVersion:8,flock:[],tutorialFlow:{}};
 let academySelectedRoom='outdoors',events=[],saved=0;
 const FIRST_RECRUIT_MAX_COST=110,SFX={build(){}};
+const snapshotGameState=()=>JSON.parse(JSON.stringify(gameState)),restoreGameStateSnapshot=s=>gameState=s;
+const durableSaveState=()=>({ok:true}),queueQuestClaimCloudSync=()=>{},announcePlayerLevelUps=()=>{},applyPlayerXpState=()=>{};
+const openingProgress=()=>({kitchenIntroduced:true}),introduceKitchenShortage=()=>false;
 const setTimeout=()=>{},showToast=()=>{},saveState=()=>saved++,updateHeader=()=>{},renderAcademy=()=>{},renderAcademyBuildPanel=()=>{},updateQuestProgress=()=>{},queueCompletionNotice=()=>{},showResourceQuestPrompt=()=>{},goalWithThe=x=>x;
 const playerBranches=()=>gameState.player.branches,addCoins=x=>gameState.player.coins+=x,addBranches=x=>gameState.player.branches+=x;
 const burbzTutorialAction=event=>events.push({event,built:!!gameState.academyBuildings.kitchen?.built});
@@ -37,16 +40,17 @@ const snapshot=JSON.stringify(gameState);ensureAcademyBuildings();console.log(JS
 """)
     assert result=={'fresh':True,'legacy':True,'owned':{'built':True,'builtAt':'player-date','x':17,'y':29},'stable':True}
 
-def test_gift_and_real_construction_are_once_only_and_require_barracks():
+def test_retired_gift_grants_nothing_and_real_construction_uses_earned_supplies():
     result=run(harness()+"""
 maybeGrantMerlinKitchenGift();const beforeBarracks={...gameState.player};
 const early=academyBuildBuilding('kitchen');
 gameState.academyBuildings.tavern={built:true};maybeGrantMerlinKitchenGift();maybeGrantMerlinKitchenGift();
-const funded={...gameState.player};const built=academyBuildBuilding('kitchen',{position:{x:40,y:52}});const spent={...gameState.player};
+const gifted={...gameState.player};gameState.player.coins=130;gameState.player.branches=25;const funded={...gameState.player};const built=academyBuildBuilding('kitchen',{position:{x:40,y:52}});const spent={...gameState.player};
 maybeGrantMerlinKitchenGift();academyBuildBuilding('kitchen',{position:{x:60,y:52}});
-console.log(JSON.stringify({beforeBarracks,early,funded,built,spent,after:gameState.player,events,position:gameState.academyBuildings.kitchen.x}));
+console.log(JSON.stringify({beforeBarracks,early,gifted,funded,built,spent,after:gameState.player,events,position:gameState.academyBuildings.kitchen.x}));
 """)
     assert result['early'] is False and result['beforeBarracks']=={'level':1,'coins':0,'branches':0}
+    assert result['gifted']=={'level':1,'coins':0,'branches':0}
     assert result['funded']=={'level':1,'coins':130,'branches':25}
     assert result['built'] is True and result['spent']=={'level':1,'coins':0,'branches':0}
     assert result['after']==result['spent'] and result['position']==60
@@ -59,17 +63,17 @@ const before=JSON.stringify(gameState);const built=academyBuildBuilding('kitchen
 """)
     assert result=={'built':False,'unchanged':True,'events':[]}
 
-def test_kitchen_quest_precedes_recruitment_and_measures_actual_build():
-    assert HTML.index("{ id:'pq_build_barracks'") < HTML.index("{ id:'pq_build_kitchen'") < HTML.index("{ id:'pq_recruit'")
+def test_discovery_and_recruitment_precede_kitchen_with_actual_build_measure():
+    assert HTML.index("{ id:'pq_build_barracks'") < HTML.index("{ id:'pq_recruit'") < HTML.index("{ id:'pq_build_kitchen'")
     pos=HTML.index("{ id:'pq_build_kitchen'")
     assert "measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0" in HTML[pos:pos+400]
     assert "id:'kitchen-build-v354'" in HTML
-    assert "step.action?.event === 'kitchen-built'" in function('merlinTutShowStep')
+    assert "step.action?.event === 'opening-meal-served'" in function('merlinTutShowStep')
 
-def test_construction_lesson_cannot_advance_before_actual_build():
+def test_construction_lesson_can_be_paused_without_fabricating_a_build():
     result=run(function('merlinTutAdvance')+"""
 let merlinTutActive=true,merlinTutAwaitingAction=null,merlinTutStep=0,merlinTutSequence=[0,1],built=false,next=0;
 const merlinTutCurrentStep=()=>({action:{event:'kitchen-built'}}),isAcademyBuildingBuilt=()=>built,SFX={tap(){}},merlinTutClearAction=()=>{},merlinTutShowStep=()=>next++,$=()=>({style:{display:''}});
 merlinTutAdvance();const before=next;built=true;merlinTutAdvance();console.log(JSON.stringify({before,after:next}));
 """)
-    assert result=={'before':0,'after':1}
+    assert result=={'before':1,'after':2}

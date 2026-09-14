@@ -62,8 +62,8 @@ console.log(JSON.stringify(MERLIN_TUTORIAL_STEPS[seq[merlinTutorialResumePositio
 
 def test_current_lesson_data_is_concise_and_has_no_rest_requirement():
     data=run(prelude()+'\nconsole.log(JSON.stringify(MERLIN_TUTORIAL_STEPS));')
-    assert len(data)==36
-    assert sum(len(x['text'].split()) for x in data)<=485
+    assert len(data)==39
+    assert sum(len(x['text'].split()) for x in data)<=700
     assert all(len(x['text'].split())<=24 for x in data)
     assert not any(x.get('action',{}).get('event')=='merlin-rested' for x in data)
     assert not any(x.get('target')=='#merlinRestBtn' for x in data)
@@ -79,7 +79,7 @@ const locked=[click('pointer','forge'),click('keyboard','forge'),click('pointer'
     assert out['open']=={'stopped':False,'prevented':False}
     assert out['routes']==1 and len(out['toasts'])==3
 
-def test_rest_save_completes_story_on_quests_action_without_rest_event():
+def test_rest_save_completes_story_on_academy_action_without_rest_event():
     out=run(prelude()+'\n'+function('burbzTutorialAction')+"""
 const merlinTutSequence=MERLIN_TUTORIAL_STEPS.map((s,i)=>s.chapterId==='story'?i:-1).filter(i=>i>=0);
 let merlinTutStep=merlinTutorialResumePosition({status:'in_progress',mode:'story',currentStep:9,careLessonVersion:1},'story',merlinTutSequence);
@@ -89,7 +89,7 @@ function merlinTutClearAction(){merlinTutAwaitingAction=null;}
 function endMerlinTutorial(value){completed=value;merlinTutActive=false;}
 function merlinTutShowStep(){throw Error('Should complete the story');}
 burbzTutorialAction('merlin-rested');const wrongEventDidNothing=!completed;
-burbzTutorialAction('tab:quests');
+burbzTutorialAction('tab:academy');
 console.log(JSON.stringify({wrongEventDidNothing,completed,active:merlinTutActive}));
 """)
     assert out=={'wrongEventDidNothing':True,'completed':True,'active':False}

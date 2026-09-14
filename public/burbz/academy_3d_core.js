@@ -52,7 +52,7 @@
       extras: ['lantern-left', 'hole-door', 'rope-belt']
     },
     tavern: {
-      label: 'Barracks', roof: 'pagoda', w: 2.0, d: 1.7, h: 1.25,
+      label: 'Birdhouse', roof: 'pagoda', w: 2.0, d: 1.7, h: 1.25,
       body: 'pavilion', signature: 'shielded-open-dojo', details: ['shields', 'pennants'],
       wall: 0xb78048, wallDark: 0x6f5030, roofCol: 0x435261, trim: 0xb08a44,
       windows: [{ x: 0, y: 0.26, z: 0.86, r: 0.34, wide: true }],

@@ -1,7 +1,7 @@
 """New players find guaranteed starter timber on the questing map.
 
 Timber bundles spawn in a ring right around the player (well inside gathering
-range) until The Roost and Barracks are built or every bundle is taken, and
+range) until The Roost and Birdhouse are built or every bundle is taken, and
 they add up to both opening buildings' branch cost.
 """
 import json
@@ -61,7 +61,7 @@ console.log(JSON.stringify({ count: near.length, maxDist: Math.max(...dists), ga
     payload = json.loads(result.stdout)
     assert payload["count"] == 6
     assert payload["maxDist"] < 220
-    assert payload["gained"] >= 18          # plenty of branches for the Barracks
+    assert payload["gained"] >= 18          # plenty of branches for the Birdhouse
     assert payload["respawn"] == 0          # taken bundles never respawn
 
 

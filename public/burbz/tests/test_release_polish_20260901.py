@@ -63,8 +63,8 @@ def test_the_build_button_says_build():
 
 
 def test_tutorial_teaches_the_build_button_by_its_new_name():
-    assert "Tap Build on the Barracks" in HTML
-    assert "Tap Place on the Barracks" not in HTML
+    assert "Tap Build on the Birdhouse" in HTML
+    assert "Tap Place on the Birdhouse" not in HTML
 
 
 # ---- Merlin's perch stays off the controls ----------------------------------
