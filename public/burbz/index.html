@@ -37499,9 +37499,6 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   }
 
   const newDiscoveries = [];
-  // A camera discovery keeps the player's actual shot for the card back:
-  // handleBirdCandidates is the one funnel every accepted bird passes through.
-  if (opts.source === 'photo' && opts.blob && surfaced[0]) rememberPlayerBirdPhoto(surfaced[0], opts.blob);
   surfaced.forEach(bird => {
     const isNew = rememberDiscoveredBird(bird);
     if (isNew) newDiscoveries.push(bird);
@@ -37525,6 +37522,11 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
     try { questRegisterBirdEncounter(bird); }
     catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
   });
+
+  // Create/update the discovery record before the photo helper looks it up.
+  // Otherwise the first shot has no record, and a re-sighting writes photoAt
+  // onto the old record that rememberDiscoveredBird has just replaced.
+  if (opts.source === 'photo' && opts.blob && surfaced[0]) rememberPlayerBirdPhoto(surfaced[0], opts.blob);
 
   if (newDiscoveries.length) {
     addPlayerXp(8 * newDiscoveries.length);
@@ -43982,7 +43984,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'photo-recognition-v407-20260914';
+const BURBZ_BUILD = 'photo-journal-v407b-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
