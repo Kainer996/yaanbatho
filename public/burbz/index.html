@@ -5638,7 +5638,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="loot_crafting_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="prerequisite_guidance_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="player_equipment_core.js?v=continuous-world-v391-20260910"></script>
-<script src="player_equipment.js?v=wilderness-birds-v395-20260913"></script>
+<script src="player_equipment.js?v=alderwing-followups-v417-20260914"></script>
 <script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="first_person_cast_controls.js?v=alderwing-followups-v417-20260914"></script>
 <script src="wilderness_combat_core.js?v=alderwing-followups-v417-20260914"></script>
@@ -46152,7 +46152,7 @@ let geographicWorldVisit = null, geographicAvatarMarker = null;
 // Placement reads the same authored settlement geometry as walking. Existing
 // homes are left intact; only a new anchor/house needs a fresh one-use permit.
 const homePlacementPermits=new WeakSet(),homeSettlementBounds=new Map();
-let initialHomePlacementPending=false;
+let initialHomePlacementPending=null;
 function homeSettlementGeometryKey(record){const members=record.settlement?townMemberRecords(record.settlement):[empireVillageRecordBySeed(record.seed)].filter(Boolean);return JSON.stringify([record.id,record.seed,record.tier,record.lat,record.lon,record.settlement,members.map(r=>({seed:r.seed,buildings:r.economy?.buildings,plots:r.economy?.buildingPlots,constructions:r.economy?.constructions,ready:r.economy?.readyToOpen,ruins:r.economy?.ruins}))]);}
 async function checkPlayerHomePlacement(point){
  const G=BurbzGeographicWorldCore;if(!G.validCoordinate(point)||!window.THREE)return{ok:false,error:'Choose a loaded place outside villages and towns.'};
@@ -46199,8 +46199,13 @@ function commitPlayerHomeAction(action) {
 }
 function anchorPlayerHomeAt(lat,lon) {
   if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
-  if(initialHomePlacementPending)return false;initialHomePlacementPending=true;
-  commitPlayerHomePlacement({kind:'anchor',lat,lon,source:'initial',expectedRevision:0}).then(r=>{if(!r.ok)showToast(r.error);}).catch(e=>showToast(e.message)).finally(()=>{initialHomePlacementPending=false;});return false;
+  if(initialHomePlacementPending?.identity===gameState)return initialHomePlacementPending.promise;
+  const attempt={identity:gameState,promise:null};
+  attempt.promise=commitPlayerHomePlacement({kind:'anchor',lat,lon,source:'initial',expectedRevision:0})
+    .then(r=>{if(!r.ok&&gameState===attempt.identity)showToast(r.error);return r.ok;})
+    .catch(e=>{if(gameState===attempt.identity)showToast(e.message);return false;})
+    .finally(()=>{if(initialHomePlacementPending===attempt)initialHomePlacementPending=null;});
+  initialHomePlacementPending=attempt;return attempt.promise;
 }
 function savedGeographicPose() {
   const journey=gameState.worldJourney,anchor=gameState.playerHome?.anchor;
@@ -46240,8 +46245,10 @@ async function enterGeographicWorld(handoff={}) {
   const entrySave=gameState,entryScreen=currentScreen;
   const C=BurbzGeographicWorldCore;
   if(!gameState.playerHome?.anchor){
-    const last=gameState.lastKnownHome;if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
+    if(initialHomePlacementPending?.identity===entrySave)await initialHomePlacementPending.promise;
+    else {const last=gameState.lastKnownHome;if(last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)await anchorPlayerHomeAt(last.lat,last.lon);}
   }
+  if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
   if(!gameState.playerHome?.anchor)return chooseGeographicHomeLocation(handoff);
   await ensureVillageWalkModule();
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;

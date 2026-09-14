@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Coordinated v417 candidate waits for the profile-scoped initial home-placement promise before deciding whether world entry needs a location picker. Preserve the asynchronous settlement/footprint check, shared in-flight placement, cancelled-handoff/save-identity checks and rejection fallback. Existing owned anchors remain unchanged. Focused race coverage: tests/test_initial_home_wait_v417.cjs; final native opening rerun is required before release.
+
 Unpublished current-action navigation (14 September 2026) reads the real opening objective/active step, places one large native action/reveal control and its hint in reserved dock space, hides only gate-locked guided silhouettes, and pauses/resumes the existing saved lesson. Keep actual dock/Settings handlers, real target events and deferred discovery controls. No UI path grants progression or rewards. See [FOCUSED_TUTORIAL_NAVIGATION_20260914.md](FOCUSED_TUTORIAL_NAVIGATION_20260914.md) for verified checks and the remaining integrated visual run.
 
 Species manga artwork intake retains the approved four bright final paintings and smaller location control below the picture. Preserve original transparent sprites, both Treecreeper and Great Spotted Woodpecker reference files, and current release behavior. The module pin remains `species-manga-cards-v411-20260914`; the release owner must promote one current global build/cache before publication. See [ART_RELEASE_INTAKE_20260914.md](ART_RELEASE_INTAKE_20260914.md) for exact source provenance and current validation limits.
