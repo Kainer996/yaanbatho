@@ -6889,7 +6889,7 @@ const DEFAULT_STATE = {
   questsLastReset: null,
   settings: { sfx: true, music: true, particles: true, vibration: true, appearance: 'normal' },
   badges: {},
-  merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE },
+  merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE, hunger:60 }, // Fresh Merlin is ready for the later Kitchen meal; existing care is never rewritten.
   birdCare: defaultBirdCare(), // Default per-bird care state
   pantry: { ...DEFAULT_PANTRY }, // Real-world foods the player can feed birds
   pantryLastRefill: null, // For pantry restocking
@@ -11977,6 +11977,7 @@ function openBirdInfo(birdId) {
     bird = createRosterBird(species);
   }
   if (!bird) return;
+  noteOpeningDiscoveryReviewed(bird);
 
   if (!$('birdInfoModal').classList.contains('show')) birdInfoOpener = document.activeElement;
   const artChanged = syncBirdArtUrl(bird);
@@ -12033,6 +12034,7 @@ function openBirdInfo(birdId) {
 
 function closeBirdInfo() {
   $('birdInfoModal').classList.remove('show');
+  if (tutorialFlowState().discoveryReviewed) burbzTutorialAction('opening-discovery-reviewed');
   if (birdInfoOpener?.isConnected) birdInfoOpener.focus({preventScroll:true});
 }
 
@@ -14005,6 +14007,7 @@ function isAcademyRoomBuilt(room) {
 // to every standalone village, including new ones.
 function academyBuildingProgressLock(id) {
   if (id === 'kitchen' && !isAcademyBuildingBuilt(id) && !isAcademyBuildingBuilt('tavern')) return { chip:'BUILD THE BARRACKS FIRST', button:'BUILD BARRACKS', message:'Build the Barracks first, then the Kitchen & Pantry.' };
+  if (id === 'kitchen' && !isAcademyBuildingBuilt(id) && !openingProgress().kitchenIntroduced) return {chip:'MEET YOUR COMPANIONS',button:'MEET YOUR COMPANIONS',message:'Discover a bird and meet your companion before planning the Kitchen.'};
   if (id !== 'manager_office' || isAcademyBuildingBuilt(id)) return null;
   const complete = typeof completedVillageCount === 'function' ? completedVillageCount() : 0;
   return complete > 0 ? null : {
@@ -14162,16 +14165,28 @@ function academyBuildBuilding(id, opts = {}) {
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
   const progressLock = academyBuildingProgressLock(id);
   if (progressLock) { showToast(progressLock.message); return false; }
+  if (id === 'kitchen' && introduceKitchenShortage()) return false;
   if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return false; }
   if (playerBranches() < branchCost) { showResourceQuestPrompt('branches', branchCost, goalWithThe(cfg.label)); return false; }
+  const snapshot = snapshotGameState();
+  const previousLevel = Number(gameState.player.level) || 1;
+  const effects = [];
   addCoins(-cfg.cost);
   addBranches(-branchCost);
   gameState.academyBuildings[id] = { built: true, builtAt: new Date().toISOString(), x: opts.position ? opts.position.x : cfg.x, y: opts.position ? opts.position.y : cfg.y };
   if (cfg.room) academySelectedRoom = cfg.room;
-  updateQuestProgress('build_academy', 1);
-  updateQuestProgress('build_' + id, 1);
+  updateQuestProgress('build_academy', 1, effects);
+  updateQuestProgress('build_' + id, 1, effects);
+  if (id === 'tavern' && !tutorialFlowState().barracksCelebrated) {
+    tutorialFlowState().barracksCelebrated = true;
+    applyPlayerXpState(60);
+  }
+  try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+  catch (error) { restoreGameStateSnapshot(snapshot); showToast('The building could not be saved. Your supplies are unchanged; try again.'); renderAcademy(); return false; }
+  queueQuestClaimCloudSync();
+  effects.forEach(effect => effect());
+  announcePlayerLevelUps(previousLevel);
   queueCompletionNotice({ kind: 'academy-building', icon: cfg.icon, title: cfg.label + ' built', sub: 'At the Academy — tap to see it', target: { room: id } });
-  saveState();
   updateHeader();
   if (SFX && typeof SFX.build === 'function') SFX.build();
   else if (SFX && typeof SFX.levelUp === 'function') SFX.levelUp();
@@ -14190,9 +14205,11 @@ function academyStartPlaceBuilding(id) {
   ensureAcademyBuildings();
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
+    if (id === 'tavern' && !tutorialFlowState().barracksGiftGranted && !maybeGrantMerlinBarracksGift()) return;
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
     const progressLock = academyBuildingProgressLock(id);
     if (progressLock) { showToast(progressLock.message); return; }
+    if (id === 'kitchen' && introduceKitchenShortage()) return false;
     if ((gameState.player.coins || 0) < cfg.cost) { showResourceQuestPrompt('coins', cfg.cost, goalWithThe(cfg.label)); return; }
     if (playerBranches() < (Number(cfg.branches) || 0)) { showResourceQuestPrompt('branches', Number(cfg.branches) || 0, goalWithThe(cfg.label)); return; }
   }
@@ -14252,7 +14269,7 @@ function renderAcademyBuildPanel() {
   const builtCount = ACADEMY_BUILDING_ORDER.filter(id => isAcademyBuildingBuilt(id)).length;
   const wallet = gameState.player.coins || 0;
   const branchWallet = playerBranches();
-  const cards = ACADEMY_BUILDING_ORDER.filter(id => id !== 'outdoors').map(id => {
+  const cards = ACADEMY_BUILDING_ORDER.filter(id => id !== 'outdoors' && (id !== 'kitchen' || isAcademyBuildingBuilt(id) || openingProgress().kitchenIntroduced)).map(id => {
     const b = ACADEMY_BUILDINGS[id];
     const built = isAcademyBuildingBuilt(id);
     const levelLocked = (gameState.player.level || 1) < b.unlockLevel;
@@ -14770,6 +14787,7 @@ function expeditionBirdById(id) {
 }
 
 function startBirdExpedition(birdId, templateId, loadout) {
+  if (!openingErrandsIntroduced()) { showToast('Meet your companions first; errands appear when you need supplies.'); return; }
   const bird = expeditionBirdById(birdId);
   if (!bird) return;
   if (birdId === MERLIN_GUIDE.id && getMerlinCare().restEndsAt) { showToast('Merlin is having a little nap. Send him when he wakes.'); return; }
@@ -14780,7 +14798,7 @@ function startBirdExpedition(birdId, templateId, loadout) {
   // Merlin's First Flight is a one-off tutorial errand, flown by Merlin alone.
   if (templateId === 'merlin_first_flight') {
     if (birdId !== MERLIN_GUIDE.id) { showToast("This first flight is Merlin's own — send him!"); return; }
-    if (tutorialFlowState().errandClaimed || ensureBirdExpeditions().some(x => x.templateId === 'merlin_first_flight' && x.status !== 'claimed')) { showToast('Merlin has already flown his first flight.'); return; }
+    if (!openingSupplyErrandAvailable() || questClaimReceipt('opening:kitchen-supplies-v1')) { showToast('Merlin has already flown his first flight.'); return; }
   }
   if (!starterQuest && !isAcademyBuildingBuilt('quest_roost')) { showToast('Build the Quest Roost first.'); return; }
   const active = birdHasActiveExpedition(birdId);
@@ -14800,11 +14818,21 @@ function startBirdExpedition(birdId, templateId, loadout) {
   // how much of it comes home.
   applyQuartermasterPlanning(quest);
   applyExpeditionCarryLimit(quest, bird);
+  if (templateId === 'merlin_first_flight') {
+    quest.openingSupplyDelivery = true;
+    quest.rewards = window.BurbzOnboardingGate.openingSupplyRewards(quest.rewards, false);
+    quest.carry = null; // one-time building delivery; normal errands retain physical carrying rules
+  }
   // Expedition gear is durable and automatic. An equipped Forge satchel was
   // already included in the carry limit above; dispatch never spends supplies.
+  const snapshot = snapshotGameState();
+  const effects = [];
   gameState.birdExpeditions.unshift(quest);
-  updateQuestProgress('expedition_sent', 1);
-  saveState();
+  updateQuestProgress('expedition_sent', 1, effects);
+  try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+  catch (error) { restoreGameStateSnapshot(snapshot); showToast('The errand could not be saved. Merlin has not left; try again.'); return; }
+  queueQuestClaimCloudSync();
+  effects.forEach(effect => effect());
   if (SFX && typeof SFX.page === 'function') SFX.page();
   else if (SFX && typeof SFX.tap === 'function') SFX.tap();
   showToast(quest.nightBonus
@@ -14846,6 +14874,15 @@ function claimBirdExpedition(expeditionId, opts) {
   let birdLevelsGained = 0;
   try {
     q.status = 'claimed';
+    const supplyReceipt = 'opening:kitchen-supplies-v1';
+    const supplyDelivery = q.templateId === 'merlin_first_flight' &&
+      (q.openingSupplyDelivery || tutorialFlowState().kitchenShortageSeen) &&
+      !tutorialFlowState().openingSupplyReturnClaimed && !questClaimReceipt(supplyReceipt);
+    if (supplyDelivery) {
+      advanced.rewards = window.BurbzOnboardingGate.openingSupplyRewards(advanced.rewards, false);
+      tutorialFlowState().openingSupplyReturnClaimed = true;
+      setQuestClaimReceipt(supplyReceipt, {id:supplyReceipt,expeditionId:q.id,committedAt:Date.now()});
+    }
     // Save compatibility: quests already launched by older builds may contain
     // paid provision/charm equipment. Honour that promised one-off bonus.
     const equipment = q.equipment || {};
@@ -14939,10 +14976,12 @@ function claimBirdExpedition(expeditionId, opts) {
   // quiet path exists to avoid.
   if (!auto && q.templateId !== 'merlin_first_flight') maybeOpenQuestKnowledgeQuiz(advanced, coins);
   renderPetCompanion(); renderBirdExpeditions(); renderInventory(); updateHeader();
-  // Guided flow: Merlin lands from his first flight with a crafting tease,
-  // then points the player at the Academy.
-  if (q.templateId === 'merlin_first_flight' && typeof startMerlinTutorial === 'function' && !merlinChaptersSeen().includes('errand')) {
-    setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'errand', resume:false }); }, 1600);
+  if (q.templateId === 'merlin_first_flight' && tutorialFlowState().openingSupplyReturnClaimed) {
+    // Wait until the reward celebration is finished before the build lesson.
+    setTimeout(() => {
+      if (merlinTutActive) burbzTutorialAction('opening-supplies-claimed');
+      else if (currentScreen === 'quests') maybeStartMerlinChapterForScreen('quests', {handoff:true});
+    }, 2150);
   }
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
 }
@@ -15032,7 +15071,7 @@ function renderMerlinClueNotebook() {
 // a send sheet where you pick one bird and duration; tapping a bird that is
 // out opens its procedurally generated adventure log.
 const QUEST_TEMPLATE_INFO = {
-  merlin_first_flight: 'A one-off first flight around the garden. Merlin is back in seconds — with something useful for crafting later.',
+  merlin_first_flight: 'A one-time Kitchen supply delivery: 130 coins, 25 timber and a falcon ration. Merlin returns in seconds.',
   find_seed:    'A quick hop around the gardens for spilt seed. The perfect first errand.',
   find_coins:   'Someone always drops a coin near the market lane. Send a sharp-eyed bird.',
   branch_run:   'Fallen twigs litter the windfall thicket. Haul branches home — buildings need timber.',
@@ -15166,16 +15205,15 @@ function renderBirdExpeditions() {
   // Merlin's First Flight: the guided-flow errand, a few seconds long. It sits
   // above the drawers with a glow until the player sends Merlin and claims it.
   const tutorialTemplate = templates.find(t => t.id === 'merlin_first_flight');
-  const tutorialErrandOpen = tutorialTemplate && !tutorialFlowState().errandClaimed &&
-    !ensureBirdExpeditions().some(q => q.templateId === 'merlin_first_flight' && q.status !== 'claimed');
+  const tutorialErrandOpen = tutorialTemplate && openingSupplyErrandAvailable();
   const tutorialHtml = tutorialErrandOpen
     ? '<div class="quest-section-title">Merlin’s Errand</div>' +
       '<div class="quest-board-card tutorial-errand" data-expedition-template="merlin_first_flight" onclick="openQuestSend(\'merlin_first_flight\')">' +
         '<div class="quest-board-icon">' + tutorialTemplate.icon + '</div>' +
         '<div class="quest-info">' +
           '<div class="quest-name">' + escapeHtml(tutorialTemplate.label) + ' <span class="quest-duration">' + questDurationLabel(tutorialTemplate.minutes) + '</span></div>' +
-          '<div class="quest-desc">A one-off first errand. Send Merlin out — he is back in seconds with something useful.</div>' +
-          '<div class="quest-progress-text">~' + tutorialTemplate.coins[0] + '–' + tutorialTemplate.coins[1] + ' 🪙 · +' + (tutorialTemplate.xp || 0) + ' XP · 🎁 a crafting material</div>' +
+          '<div class="quest-desc">Fetch the supplies for your Kitchen &amp; Pantry. A one-time delivery, ready in seconds.</div>' +
+          '<div class="quest-progress-text">' + tutorialTemplate.coins[0] + ' 🪙 · 25 🪵 · +' + (tutorialTemplate.xp || 0) + ' XP · a falcon ration</div>' +
         '</div>' +
         '<div class="quest-board-go">SEND ›</div>' +
       '</div>'
@@ -15206,7 +15244,7 @@ function renderBirdExpeditions() {
   const boardHtml = '<div class="quest-section-title">Kingdom Errands' + infoDotHTML('infoNoteErrandBoard', 'How Kingdom Errands work') + '</div>' +
     infoNoteHTML('infoNoteErrandBoard', 'Tap a category to open it — every food in the game and every crafting material has its own errand inside. Send birds out and they come home with coins, timber, food and treasure.') + drawers;
 
-  questScreen.innerHTML = activeHtml + tutorialHtml + boardHtml + renderMerlinClueNotebook();
+  questScreen.innerHTML = activeHtml + tutorialHtml + (openingErrandsIntroduced() ? boardHtml : '') + (isAcademyBuildingBuilt('quest_roost') ? renderMerlinClueNotebook() : '');
   scheduleQuestBoardRefresh();
 }
 
@@ -15406,7 +15444,8 @@ function closeQuestOverlay() {
 function openQuestSend(templateId) {
   const t = getExpeditionTemplate(templateId);
   if (!t) return;
-  if (t.tutorial === true && tutorialFlowState().errandClaimed) return;
+  if (!openingErrandsIntroduced()) return;
+  if (t.tutorial === true && !openingSupplyErrandAvailable()) return;
   SFX.tap();
   // Merlin's own tutorial errand arrives with Merlin already picked. Normal
   // errands start on the quick five-minute tier; players can switch before send.
@@ -17128,7 +17167,7 @@ function chefServeFoodToEveryEater(kind, foodId) {
 // food through the same feeding transaction — one ingredient each, stopping
 // when the stores run dry, skipping birds already full. Each bulk-fed bird
 // earns the same rewards it would have earned fed by hand.
-function chefBulkFeedSameSpecies(entry, kind, foodId, option, now) {
+function chefBulkFeedSameSpecies(entry, kind, foodId, option, now, deferredEffects) {
   if (!entry || entry.wild || entry.merlin || !entry.bird) return null;
   const roles = birdRolesCore();
   const core = kitchenDietCore();
@@ -17168,14 +17207,14 @@ function chefBulkFeedSameSpecies(entry, kind, foodId, option, now) {
         bird.hp = bird.maxHp;
         recalcBirdPower(bird);
         bird.academy.dietKnown = true;
-        updateQuestProgress('proper_meal_fed', 1);
+        updateQuestProgress('proper_meal_fed', 1, deferredEffects);
       }
       grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
-      updateQuestProgress('feed_correct', 1);
+      updateQuestProgress('feed_correct', 1, deferredEffects);
     }
     applyPlayerXpState(reward.trainerXp);
     gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
-    updateQuestProgress('meal_served', 1);
+    updateQuestProgress('meal_served', 1, deferredEffects);
     fed += 1;
   });
   if (!fed && !plan.shortBy) return null;
@@ -17196,6 +17235,8 @@ function burbzFeedFood(targetKey, kind, foodId) {
   const spec = kind === 'pantry' ? { pantryKey:foodId, source:'pantry' } : { ingredientId:foodId, prep:option.prep };
   const now = Date.now();
   const txId = 'feed:' + entry.key + ':' + kind + ':' + foodId + ':' + now;
+  const snapshot = snapshotGameState();
+  const effects = [];
   const tx = core.applyFeedingTransaction(gameState, entry.target, spec, { transactionId:txId, now });
   gameState = tx.state;
   if (tx.ok && !tx.duplicate) {
@@ -17224,19 +17265,19 @@ function burbzFeedFood(targetKey, kind, foodId) {
           rewardBits.push('+1 max HP');
           const firstTime = !bird.academy.dietKnown;
           bird.academy.dietKnown = true;
-          updateQuestProgress('proper_meal_fed', 1);
+          updateQuestProgress('proper_meal_fed', 1, effects);
           if (firstTime) setTimeout(() => showToast('📖 Diet discovered! ' + entry.name + '’s field notes are marked in the Birdex.'), 1200);
         }
         grantBirdBondXp(bird, reward.bondXp); // companions bond over meals, same as Merlin
         rewardBits.push('+' + reward.bondXp + ' bond');
-        updateQuestProgress('feed_correct', 1);
+        updateQuestProgress('feed_correct', 1, effects);
       }
     }
     applyPlayerXpState(reward.trainerXp);
     rewardBits.push('+' + reward.trainerXp + ' Trainer XP');
     kitchenRecordFieldNote(entry.merlin ? 'merlin' : speciesKey(canonicalSpeciesName(entry.target.commonName || entry.name)), tx.compatibility && tx.compatibility.family, true);
     gameState.player.mealsServed = (Number(gameState.player.mealsServed) || 0) + 1;
-    updateQuestProgress('meal_served', 1);
+    updateQuestProgress('meal_served', 1, effects);
     const rule = inferBirdDiet(entry.target);
     const fact = verdict === 'primary' && rule && rule.fact ? rule.fact : (verdict === 'insufficient' ? 'A conservative care ration — this species’ exact wild diet is not claimed.' : '');
     const burst = {
@@ -17247,9 +17288,13 @@ function burbzFeedFood(targetKey, kind, foodId) {
       foodIcon: option.emoji
     };
     // 🥣 With a Head Chef appointed, one serving feeds the whole species.
-    const chefService = typeof chefBulkFeedSameSpecies === 'function' ? chefBulkFeedSameSpecies(entry, kind, foodId, option, now) : null;
+    const chefService = typeof chefBulkFeedSameSpecies === 'function' ? chefBulkFeedSameSpecies(entry, kind, foodId, option, now, effects) : null;
     recordFeedReceipt({ ...burst, name:entry.name, foodLabel:option.label, verdict });
-    saveState();
+    if (isAcademyBuildingBuilt('kitchen')) tutorialFlowState().openingCareDone = true;
+    try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+    catch (error) { restoreGameStateSnapshot(snapshot); showToast('The meal could not be saved. No food was used; please try again.'); refreshFeedSurfaces(); return; }
+    queueQuestClaimCloudSync(); effects.forEach(effect => effect());
+    if (isAcademyBuildingBuilt('kitchen')) setTimeout(() => burbzTutorialAction('opening-meal-served'), 1600);
     playFeedDopamineBurst(burst);
     if (sideSnack) showFeedNotePopup('🥄 A side snack, not a main meal', feedSideSnackExplainer(entry, option));
     else showToast('✅ ' + entry.name + ' tucks into ' + option.label.toLowerCase() + '.' + (fact ? ' ' + fact : ''));
@@ -23266,23 +23311,28 @@ function featureGateEvidence() {
   const wins = Number(gameState && gameState.player && gameState.player.wins) || 0;
   // 'outdoors' and the starter kitchen are built on every save, so only a
   // building the player raised themselves is proof they know the Academy.
-  try { ev.academy = !!tutorialFlowState().errandClaimed || flock.length > 0 ||
+  try { ev.academy = merlinChaptersSeen().includes('story') || !!tutorialFlowState().errandClaimed || flock.length > 0 ||
     Object.keys(typeof ACADEMY_ROOMS === 'object' && ACADEMY_ROOMS || {})
       .some(id => id !== 'outdoors' && id !== 'kitchen' && isAcademyBuildingBuilt(id)); } catch (e) { ev.academy = true; }
-  try { ev.birdex = flock.length > 0 || discoveredSpeciesSet().size > 0; } catch (e) { ev.birdex = true; }
+  try { ev.birdex = isAcademyBuildingBuilt('tavern') || flock.length > 0 || discoveredSpeciesSet().size > 0; } catch (e) { ev.birdex = true; }
   // New saves start with gear in the bag, so owning gear proves nothing —
   // gear ON a bird does.
   let armed = false;
-  try { armed = Object.values((gameState.inventory && gameState.inventory.equipment) || {}).some(l => l && Object.values(l).some(Boolean)); } catch (e) { armed = true; }
+  try { armed = Object.entries((gameState.inventory && gameState.inventory.equipment) || {}).some(([owner,l]) => owner !== '@player' && l && Object.values(l).some(Boolean)); } catch (e) { armed = true; }
+  if (!tutorialFlowState().openingStarted && merlinChaptersSeen().includes('story')) {
+    armed = armed || Object.values(gameState.inventory?.equipment || {}).some(l => l && Object.values(l).some(Boolean));
+    ev.quests_daily = !!gameState.quests?.pq_build_barracks?.claimed;
+  }
   ev.forge = armed;
   ev.inventory = armed;
   // The first liberation also counts as a win, so one win is not yet the
   // arena — two are.
+  ev.village = empireMapOpenCount() > 0 || Object.keys(gameState.empire?.liberationVictories || {}).length > 0;
   ev.battle = wins >= 2;
   ev.leaderboards = wins >= 3;
   // The Kitchen building stands from the start (starter-kitchen), so being
   // built proves nothing — a meal served or a diet learned does.
-  try { ev.kitchen = (Number(gameState.player && gameState.player.mealsServed) || 0) > 0 || countDiscoveredDiets() > 0; } catch (e) { ev.kitchen = true; }
+  try { ev.kitchenBuilt = isAcademyBuildingBuilt('kitchen'); ev.kitchen = ev.kitchenBuilt; } catch (e) { ev.kitchen = true; }
   try { ev.training = isAcademyBuildingBuilt('training') || ensureBirdTrainingSessions().length > 0; } catch (e) { ev.training = true; }
   try { ev.hospital = isAcademyBuildingBuilt('hospital'); } catch (e) { ev.hospital = true; }
   try {
@@ -39125,6 +39175,7 @@ function openBirdEquip(birdId) {
     if (!bird && getDiscoveredRecordForSpecies(species)) bird=createRosterBird(species);
   }
   if (!bird) return;
+  noteOpeningDiscoveryReviewed(bird);
   if (!$('birdEquipOverlay').classList.contains('show')) birdEquipReturnFocus = document.activeElement;
   birdEquipState = { birdId: bird.id, slotPicker: null, previewBird:bird.previewOnly ? bird : null };
   $('birdEquipOverlay').querySelector('.bird-equip-title').textContent=bird.previewOnly ? 'Birdex card' : 'Companion card';
@@ -39301,6 +39352,7 @@ function bindBirdEquipSwipe() {
 function closeBirdEquip() {
   birdEquipSwipeReset();
   $('birdEquipOverlay').classList.remove('show');
+  if (tutorialFlowState().discoveryReviewed) burbzTutorialAction('opening-discovery-reviewed');
   birdEquipState.slotPicker = null;
   const returnTarget=birdEquipReturnFocus?.isConnected ? birdEquipReturnFocus : [...document.querySelectorAll('#birdGrid .bird-card')].find(card=>card.dataset.birdId===birdEquipState.birdId);
   returnTarget?.focus({ preventScroll:true });
@@ -43134,6 +43186,7 @@ function openMerlinCareMenu() {
   if (sprite) sprite.setAttribute('aria-expanded', 'true');
   if ($('merlinCareClose')) $('merlinCareClose').focus({ preventScroll:true });
   makePetSparkles(4); SFX.tap();
+  if (isAcademyBuildingBuilt('tavern') && !tutorialFlowState().companionMet) commitOpeningFlow({companionMet:true});
   if (typeof burbzTutorialAction === 'function') burbzTutorialAction('merlin-care-opened');
 }
 
@@ -43394,51 +43447,39 @@ function villagesFedAndWatered() {
 }
 
 const PLAYER_QUESTS = [
-  // Straight out of Merlin's tutorial the player gets the game's biggest
-  // promise, in three moves: see the darkened world, take a village back from
-  // it with Merlin at their side, then go outside and find a real bird. The
-  // first village stands right where they are and its garrison is a token
-  // force, so this opening is a win, not a wall.
+  // Birdhouse → discovery/companions → earned supplies → Kitchen/care.
+  // Stable IDs preserve all prior progress and rewards; deferred bird goals stay pending.
+  { id:'pq_build_barracks', name:'Build the Birdhouse', desc:'Build a place to welcome discovered birds', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy', focusRoom:'tavern',
+    measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
+  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to discover any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a discovered bird at the Birdhouse; Merlin can help while you keep looking', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
+    measure:() => (gameState.flock || []).length },
+  { id:'pq_preen',          name:'Make a friend', desc:'Preen a companion to grow the bond between you', type:'bird_preened', target:1, reward:50, coins:30, icon:'\u{1F49E}', go:'birdex',
+    measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.bond && Number(b.bond.preens)) || 0), 0) },
+  { id:'pq_expedition',     name:'Fetch building supplies', desc:'Send Merlin for the supplies your Kitchen needs', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
+    measure:() => (gameState.birdExpeditions || []).length + claimedExpeditionCount() },
+  { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
+    measure:() => claimedExpeditionCount() },
+  { id:'pq_build_kitchen',  name:'Build the Kitchen & Pantry', desc:'Raise the Kitchen & Pantry at the Academy', type:'build_kitchen', target:1, reward:55, coins:25, icon:'\u{1F963}', go:'academy', focusRoom:'kitchen',
+    measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
+  { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy', focusRoom:'kitchen',
+    measure:() => countDiscoveredDiets() },
   { id:'pq_open_empire',    name:'Open your Empire map', desc:'Tap Empire and look at the world in darkness', type:'empire_opened', target:1, reward:30, coins:20, icon:'\u{1F5FA}\u{FE0F}', go:'village',
     measure:() => empireMapOpenCount() },
   { id:'pq_liberate',       name:'Liberate a village', desc:'Send Merlin to free the village nearest you', type:'town_liberated', target:1, reward:100, coins:60, branches:25, icon:'\u{1F3F0}', go:'village',
     measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
   { id:'pq_build_home', name:'Build your house', desc:'Choose a clear place in Alderwing and build your cottage for 25 timber', type:'home_built', target:1, reward:30, coins:0, icon:'🏡', go:'scan', measure:()=>gameState.playerHome?.tier>0?1:0 },
-  { id:'pq_first_bird',     name:'Find your first bird', desc:'Use Scan to discover any real bird', type:'discover', target:1, reward:40, coins:30, icon:'\u{1F423}', go:'scan',
-    measure:() => discoveredSpeciesSet().size },
-  // Merlin can lead starter errands, so the expedition loop opens before the
-  // Barracks exists.
-  { id:'pq_expedition',     name:'Send a bird on a mission', desc:'Send Merlin out on a Kingdom Errand', type:'expedition_sent', target:1, reward:50, coins:30, icon:'\u{1F9ED}', go:'quests',
-    measure:() => (gameState.birdExpeditions || []).length + claimedExpeditionCount() },
-  { id:'pq_claim_errand',   name:'Welcome a quester home', desc:'Claim the rewards of a finished Kingdom Errand', type:'expedition_claimed', target:1, reward:40, coins:20, icon:'\u{1F381}', go:'quests',
-    measure:() => claimedExpeditionCount() },
-  { id:'pq_build_barracks', name:'Build the Barracks', desc:'Raise the Barracks at the Academy', type:'build_tavern', target:1, reward:40, coins:20, icon:'\u{1F6E1}\u{FE0F}', go:'academy',
-    measure:() => isAcademyBuildingBuilt('tavern') ? 1 : 0 },
-  { id:'pq_build_kitchen',  name:'Build the Kitchen & Pantry', desc:'Raise the Kitchen & Pantry at the Academy', type:'build_kitchen', target:1, reward:55, coins:25, icon:'\u{1F963}', go:'academy',
-    measure:() => isAcademyBuildingBuilt('kitchen') ? 1 : 0 },
-  { id:'pq_recruit',        name:'Recruit a companion', desc:'Recruit a bird you found at the Barracks', type:'recruit', target:1, reward:50, coins:0, icon:'\u{1FAB6}', go:'academy',
-    measure:() => (gameState.flock || []).length },
-  { id:'pq_true_diet',      name:'Serve a true diet', desc:'Feed a companion the food its species really eats', type:'feed_correct', target:1, reward:40, coins:15, icon:'\u{1F41B}', go:'academy', focusRoom:'kitchen',
-    measure:() => countDiscoveredDiets() },
-  // Five wild species is a long walk to ask for right after the first
-  // recruit, so this link stays indoors: meet the bird you just took in.
-  // The Burbz book still grows later, at ten species, once the player has
-  // been out in the world a while.
-  { id:'pq_preen',          name:'Make a friend', desc:'Preen a companion to grow the bond between you', type:'bird_preened', target:1, reward:50, coins:30, icon:'\u{1F49E}', go:'birdex',
-    measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.bond && Number(b.bond.preens)) || 0), 0) },
   { id:'pq_build_training', name:'Build the Training Hall', desc:'Raise the Training Hall at the Academy', type:'build_training', target:1, reward:50, coins:25, icon:'\u{1F3CB}\u{FE0F}', go:'academy',
     measure:() => isAcademyBuildingBuilt('training') ? 1 : 0 },
   { id:'pq_training_drill', name:'Run a training drill', desc:'Complete and claim a Training Hall drill', type:'training_claimed', target:1, reward:50, coins:20, icon:'\u{1F94A}', go:'academy',
     measure:() => (gameState.flock || []).reduce((sum, b) => sum + ((b && b.training && Number(b.training.trainCount)) || 0), 0) },
-  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:75, coins:25, gear:{ thorn_talons:1 }, icon:'\u{1F9ED}', go:'academy',
+  { id:'pq_build_quest_roost', name:'Build the Quest Roost', desc:'Unlock longer expeditions for your companions', type:'build_quest_roost', target:1, reward:75, coins:25, gear:{ thorn_talons:1 }, icon:'🧭', go:'academy',
     measure:() => isAcademyBuildingBuilt('quest_roost') ? 1 : 0 },
   { id:'pq_build_market',   name:'Build the Magpie Market', desc:'Build the Academy trading post to unlock buying and selling', type:'build_magpie_market', target:1, reward:55, coins:25, icon:'\u{2696}\u{FE0F}', go:'academy', focusRoom:'magpie_market',
     measure:() => isAcademyBuildingBuilt('magpie_market') ? 1 : 0 },
   { id:'pq_market_trade',   name:'Strike a deal', desc:'Buy or sell something through the Magpie Market', type:'market_traded', target:1, reward:45, coins:20, icon:'\u{1FA99}', go:'academy', focusRoom:'magpie_market',
     measure:() => Number(gameState.player && gameState.player.marketTrades) || 0 },
-  // Arm the bird before its first fight, not after. The Quest Roost above
-  // pays out a pair of Thorn Talons, so there is always something in the
-  // Stores to put on — a battle win only drops gear about one time in five.
   { id:'pq_equip_gear',     name:'Equip a bird with an item', desc:'Open the Forge and give a companion a piece of gear', type:'gear_equipped', target:1, reward:45, coins:20, icon:'\u{1F5E1}\u{FE0F}', go:'forge',
     measure:() => Object.entries((gameState.inventory && gameState.inventory.equipment) || {}).some(([owner,l]) => owner !== '@player' && l && Object.values(l).some(Boolean)) ? 1 : 0 },
   { id:'pq_first_win',      name:'Win a battle', desc:'Beat a squad of evil Burbz in the arena', type:'win', target:1, reward:60, coins:40, icon:'\u{2694}\u{FE0F}', go:'battle',
@@ -43497,7 +43538,18 @@ function markEmpireMapOpened() {
 }
 
 function activePlayerQuest() {
-  return PLAYER_QUESTS.find(q => !(gameState.quests && gameState.quests[q.id] && gameState.quests[q.id].claimed)) || null;
+  const opening = openingProgress();
+  const flow = tutorialFlowState();
+  const openingQuestIds = {birdhouse:'pq_build_barracks',discovery:'pq_first_bird',companion:'pq_recruit',kitchen:'pq_build_kitchen',errand:gameState.birdExpeditions?.some(q=>q.templateId==='merlin_first_flight'&&q.status!=='claimed')?'pq_claim_errand':'pq_expedition',care:'pq_meal'};
+  const guided = PLAYER_QUESTS.find(q => q.id === openingQuestIds[opening.stage]);
+  if (guided && !gameState.quests?.[guided.id]?.claimed) return guided;
+  return PLAYER_QUESTS.find(q => {
+    if (gameState.quests?.[q.id]?.claimed) return false;
+    // Deferral keeps the actual discovery/recruitment goal and its reward intact.
+    if (opening.stage !== 'done' && flow.discoveryDeferred && ['pq_first_bird','pq_recruit','pq_preen'].includes(q.id)) return false;
+    if (['pq_expedition','pq_claim_errand'].includes(q.id) && !opening.errands && opening.stage !== 'done') return false;
+    return true;
+  }) || null;
 }
 
 // Only the active link in the chain accepts progress, so a later goal can
@@ -43537,15 +43589,21 @@ function claimPlayerQuest(id) {
   const q = PLAYER_QUESTS.find(x => x.id === id);
   const state = q && gameState.quests && gameState.quests[q.id];
   if (!q || !state || state.claimed || (state.progress || 0) < q.target) return;
+  const snapshot = snapshotGameState();
+  const previousLevel = Number(gameState.player.level) || 1;
+  const effects = [];
   state.claimed = true;
-  addPlayerXp(q.reward);
+  applyPlayerXpState(q.reward);
   if (q.coins) addCoins(q.coins);
   if (q.branches) addBranches(q.branches);
   // A link can also hand over a real piece of gear, so the chain can teach a
   // mechanic that needs one without waiting on a loot roll.
-  if (q.gear) grantLootDrops(Object.entries(q.gear).map(([id, qty]) => ({ kind:'gear', id, qty })));
+  if (q.gear) grantLootDrops(Object.entries(q.gear).map(([id, qty]) => ({ kind:'gear', id, qty })), effects);
   syncActivePlayerQuest(); // arm the next link immediately
-  saveState();
+  try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+  catch (error) { restoreGameStateSnapshot(snapshot); showToast('Quest rewards could not be saved. Please claim again.'); return; }
+  queueQuestClaimCloudSync(); effects.forEach(effect => effect());
+  announcePlayerLevelUps(previousLevel);
   updateHeader();
   playQuestClaimCelebration({ coins: q.coins || 0, xp: q.reward, items: {} });
   const next = activePlayerQuest();
@@ -44100,6 +44158,8 @@ const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:' + BURBZ_TUTORIAL_VERSION;
 const MERLIN_TUTORIAL_CHAPTERS = [
   { id:'story',        trigger:'launch' },
   { id:'quests',       trigger:'quests' },
+  { id:'kitchen_need', trigger:'kitchen_need' },
+  { id:'care', trigger:'care' },
   { id:'errand',       trigger:'errand' },
   { id:'academy',      trigger:'academy' },
   { id:'academy_tour', trigger:'academy_tour' },
@@ -44124,24 +44184,25 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome, Earthling!', screen:'scan', target:null, text:'I’m Merlin, your falcon friend. Welcome to Alderwing! There’s a whole world waiting just beyond this desk.', id:'lesson-0' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Tap Enter Alderwing. I’ve made a little shelter for you. Come and take your first look outside.', action:{event:'alderwing-returned',mode:'free',hint:'Enter Alderwing, look outside, then return to the desk'}, id:'alderwing-arrival-v395' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin on his branch in the top-right corner.', action:{ event:'merlin-care-opened', hint:'Tap Merlin' }, id:'lesson-3' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Feed Merlin', screen:'scan', target:'#merlinFeedBtn', text:'Tap Feed to give Merlin a small-bird prey ration.', action:{ event:'merlin-fed', hint:'Tap Feed' }, id:'lesson-6' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Start your first quest', screen:'scan', target:'.nav-item[data-screen="quests"]', alertNav:'quests', text:'Tap Quests to send Merlin on his first flight.', action:{ event:'tab:quests', hint:'Tap Quests' }, id:'lesson-12' },
-  { chapterId:'quests', chapter:'First quest', title:'Send Merlin', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'Tap Merlin’s First Flight, then Send. Merlin is already selected.', action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Select First Flight, then Send' }, id:'lesson-15' },
-  { chapterId:'quests', chapter:'First quest', title:'Claim the reward', screen:'quests', target:null, text:'Merlin returns in seconds. Tap Claim when he is back.', id:'lesson-16' },
-  { chapterId:'errand', chapter:'Academy', title:'Build your Academy', screen:'quests', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'Tap Academy to build the Barracks. Merlin covers its cost.', action:{ event:'tab:academy', hint:'Tap Academy' }, id:'lesson-18' },
-  { chapterId:'academy', chapter:'Academy', title:'Your Academy', screen:'academy', target:'#academyBuildPanel', text:'Buildings unlock recruitment, feeding, healing and training.', id:'lesson-19' },
-  { chapterId:'academy', chapter:'Academy', title:'Build the Barracks', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Tap Build on the Barracks, then tap the tree to place it. Your first Barracks builds instantly.', action:{ event:'barracks-built', mode:'free', hint:'Build the Barracks and place it on the tree' }, id:'lesson-21' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Recruit companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'The Barracks lets you recruit birds you have discovered. The Kitchen supplies their food.', id:'lesson-22' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Build the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Merlin covers the cost. Tap Build on the Kitchen, then place it on the tree to prepare your companions’ food.', action:{ event:'kitchen-built', mode:'free', hint:'Build the Kitchen and place it on the tree' }, id:'kitchen-build-v354' },
-  { chapterId:'academy_tour', chapter:'Academy', title:'Explore the map', screen:'academy', target:'.nav-item[data-screen="map"]', text:'Tap Map. Player Quests will guide you through the other buildings.', action:{ event:'tab:map', hint:'Tap Map' }, id:'lesson-25' },
-  { chapterId:'explore', chapter:'The Real World', title:'Your live map', screen:'map', target:'#burbzLiveMap', text:'The map follows your location. Open Area Birds for the local field guide; its records are estimates, not confirmed sightings.', id:'lesson-26' },
-  { chapterId:'explore', chapter:'The Real World', title:'Walking quests', screen:'map', target:'#mapQuestShowBtn', text:'Tap Show Quests to find walking quests on nearby public paths.', id:'lesson-27' },
-  { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera or Sound. Confirmed discoveries appear in your Birdex.', id:'lesson-29' },
-  { chapterId:'scan', chapter:'Discovery', title:'Sound identification', screen:'scan', target:'#scanSoundBtn', text:'Sound uploads short microphone clips for bird identification. Location help is optional.', id:'lesson-30' },
-  { chapterId:'scan', chapter:'Discovery', title:'Camera identification', screen:'scan', target:'#scanImageBtn', text:'Take a clear, close photo of a bird. Unclear photos will not count as discoveries.', id:'lesson-31' },
-  { chapterId:'birdex', chapter:'Collection', title:'Your birds', screen:'birdex', target:'#burbzModeTabs', text:'Birdex records discoveries and species facts. Companions shows your recruited flock.', id:'lesson-32' },
-  { chapterId:'birdex', chapter:'Collection', title:'Recruit birds', screen:'birdex', target:'#birdGrid', text:'Recruit a discovered bird at the Academy Barracks using coins.', id:'lesson-33' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
+  { chapterId:'academy', chapter:'Academy', title:'Your first building', screen:'academy', target:'#academyBuildPanel', text:'The Birdhouse lets you recruit discovered birds as companions. Merlin’s gift covers this first building.', id:'lesson-19' },
+  { chapterId:'academy', chapter:'Academy', title:'Build the Birdhouse', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Build the Birdhouse, then place it on the tree. It is ready immediately.', action:{ event:'barracks-built', mode:'free', hint:'Build the Birdhouse and place it' }, id:'lesson-21' },
+  { chapterId:'academy_tour', chapter:'Discovery', title:'A home for companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Your Birdhouse is ready. Every real species you discover can become a companion with its own diet and abilities.', id:'lesson-22' },
+  { chapterId:'academy_tour', chapter:'Discovery', title:'Find a bird', screen:'academy', target:'.nav-item[data-screen="scan"]', text:'Return Home to discover a bird. A clear saved bird photo works too; you can keep learning with Merlin if discovery is unavailable.', action:{event:'tab:scan',hint:'Return Home to discover a bird'}, id:'lesson-25' },
+  { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera or Sound, then open your identified bird’s card. Its real diet and abilities explain how it can help.', id:'lesson-29' },
+  { chapterId:'scan', chapter:'Discovery', title:'Try a discovery', screen:'scan', target:'#scanHomeActions', text:'Try a bird photo or birdsong and open the result. No connection or permissions? Continue with Merlin; real discovery stays a goal.', action:{event:'opening-discovery-reviewed',mode:'free',hint:'Discover a bird and open its card',deferLabel:'Continue with Merlin'}, id:'lesson-31' },
+  { chapterId:'birdex', chapter:'Companions', title:'A useful companion', screen:'birdex', target:'#birdGrid', text:'Read a discovered bird’s diet and abilities. Recruit it when you can afford it. Merlin is already your companion and can fetch supplies.', id:'lesson-32' },
+  { chapterId:'birdex', chapter:'Companions', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin to see his food, energy and bond. Care builds friendship; the right meal keeps birds ready to help.', action:{event:'merlin-care-opened',hint:'Tap Merlin'}, id:'lesson-3' },
+  { chapterId:'birdex', chapter:'Companions', title:'Spend time together', screen:'scan', target:'#merlinPlayBtn', text:'Tap Play to spend a moment with Merlin and grow your bond.', action:{event:'merlin-played',mode:'free',hint:'Play with Merlin'}, id:'opening-companion-play' },
+  { chapterId:'kitchen_need', chapter:'Care', title:'Food for your companions', screen:'scan', target:'#merlinCareMenu', text:'Birds need their species’ food as they work. The Kitchen & Pantry brings the flock and its food together. Let’s build it now.', id:'opening-kitchen-need' },
+  { chapterId:'kitchen_need', chapter:'Care', title:'Prepare the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Try Build on the Kitchen & Pantry. Its price uses your real coins and timber; if anything is missing, Merlin can fetch supplies.', action:{event:['kitchen-shortage','kitchen-built'],mode:'free',hint:'Try building the Kitchen'}, id:'opening-kitchen-attempt' },
+  { chapterId:'quests', chapter:'Supplies', title:'Send Merlin', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'Send Merlin for Kitchen supplies: at least 130 coins, 25 timber and a falcon ration. He returns in seconds.', action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Send Merlin for Kitchen supplies' }, id:'lesson-15' },
+  { chapterId:'quests', chapter:'Supplies', title:'Welcome Merlin back', screen:'quests', target:'.quest-away-card', text:'Merlin returns in seconds. Claim his delivery, then put those supplies straight into the Kitchen.', action:{event:'opening-supplies-claimed',mode:'free',hint:'Claim Merlin’s supply delivery'}, id:'lesson-16' },
+  { chapterId:'errand', chapter:'Care', title:'Use the supplies', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Your supplies are home. Build the Kitchen & Pantry and place it on the tree.', action:{ event:'kitchen-built', mode:'free', hint:'Build the Kitchen and place it' }, id:'kitchen-build-v354' },
+  { chapterId:'care', chapter:'Care', title:'The right meal', screen:'academy', target:'[data-kitchen-roster-bird="merlin"]', text:'Open the Kitchen and give hungry Merlin a small-bird prey ration. It suits a little falcon, restores fullness and grows your bond.', action:{event:'opening-meal-served',mode:'free',hint:'Open the Kitchen and feed Merlin'}, id:'lesson-6' },
+  { chapterId:'care', chapter:'Care', title:'Ready to help', screen:'academy', target:'[data-feed-result-sheet]', text:'A proper meal supports your companions; different birds need different foods. Your Birdhouse, Kitchen and earned supplies now work together.', id:'opening-care-payoff' },
+  { chapterId:'explore', chapter:'Your next discovery', title:'Your next bird', screen:'scan', target:'#scanHomeActions', text:'Find a real bird, inspect its abilities and recruit it when you can. Deferred discoveries stay waiting. Explore at your own pace.', id:'lesson-26' },
+  { chapterId:'explore', chapter:'Your next discovery', title:'Your world is open', screen:'scan', target:'#playerHomeStand', text:'Enter Alderwing whenever you like. Player Quests introduce training, equipment and villages when you are ready for them.', id:'lesson-27' },
   { chapterId:'battle', chapter:'The War', title:'Fight the Burbz', screen:'battle', target:'#leagueRival', text:'Burbz are zombie birds. A green Counter tag shows which of your birds has an advantage.', id:'lesson-35' },
   { chapterId:'battle', chapter:'The War', title:'Choose an attack', screen:'battle', target:'#battleStartBtn', text:'Select a bird and move, then a target. Attack shows the expected damage before you commit.', id:'lesson-36' },
   { chapterId:'battle', chapter:'The War', title:'Free a village', screen:'battle', target:'#battleSelect', text:'Open a village on the Map and win its Liberation Battle. Then build a sanctuary birdhouse.', id:'lesson-37' },
@@ -44337,6 +44398,7 @@ function merlinTutClearAction() {
 // shown as ordinary dialogue with a Next button instead of waiting forever.
 function merlinTutActionIsAvailable(action) {
   try {
+    if (Array.isArray(action.event) && action.event.includes('kitchen-built')) return !isAcademyBuildingBuilt('kitchen');
     switch (action.event) {
       case 'merlin-care-opened':
         // His branch is empty while he is away on a quest.
@@ -44357,8 +44419,14 @@ function merlinTutActionIsAvailable(action) {
       case 'merlin-rested':
         return !merlinIsAway() && (!!getMerlinCare().restEndsAt || getMerlinCare().energy < 95);
       case 'expedition-sent':
-        return !tutorialFlowState().errandClaimed &&
-          !ensureBirdExpeditions().some(q => q.templateId === 'merlin_first_flight' && q.status !== 'claimed');
+      case 'expedition-sent:merlin_first_flight':
+        return openingSupplyErrandAvailable() && !merlinIsAway();
+      case 'opening-supplies-claimed':
+        return !tutorialFlowState().openingSupplyReturnClaimed && ensureBirdExpeditions().some(q => q.templateId === 'merlin_first_flight' && q.status !== 'claimed');
+      case 'opening-discovery-reviewed':
+        return !tutorialFlowState().discoveryReviewed;
+      case 'opening-meal-served':
+        return isAcademyBuildingBuilt('kitchen') && !openingCareSatisfied();
       default:
         return true;
     }
@@ -44384,11 +44452,13 @@ function merlinTutArmAction(step) {
   const taskText = $('merlinTutorialTaskText');
   if (taskText) taskText.textContent = action.hint || 'Your turn!';
   $('merlinTutorialNext').style.display = 'none';
+  const taskSkip = $('merlinTutorialTaskSkip');
+  if (taskSkip) { taskSkip.hidden = !action.deferLabel; taskSkip.textContent = action.deferLabel || 'Skip step'; }
+  if (action.deferLabel) { $('merlinTutorialNext').style.display = ''; $('merlinTutorialNext').textContent = action.deferLabel; }
   const armedAt = merlinTutStep;
   clearTimeout(merlinTutActionRescueTimer);
   merlinTutActionRescueTimer = setTimeout(() => {
     if (!merlinTutActive || merlinTutStep !== armedAt || !merlinTutAwaitingAction) return;
-    if (action.event === 'kitchen-built' && !isAcademyBuildingBuilt('kitchen')) return;
     const button = $('merlinTutorialNext');
     if (button) { button.style.display = ''; button.textContent = 'Skip step'; }
     // Free mode hides the whole bubble, so its skip lives on the task chip —
@@ -44470,6 +44540,7 @@ function startMerlinTutorial(options = {}) {
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
   // The Academy lesson opens with Merlin's housewarming gift: the exact cost
   // of The Roost, so the guided build can never be blocked by an empty purse.
+  if (merlinTutMode === 'story' && !tutorialFlowState().openingStarted && !merlinChaptersSeen().includes('explore')) commitOpeningFlow({openingStarted:true});
   if (merlinTutMode === 'academy') maybeGrantMerlinBarracksGift();
   saveMerlinTutorialState('in_progress', resumeStep);
   merlinTutShowStep(resumeStep);
@@ -44482,79 +44553,94 @@ function tutorialFlowState() {
   return gameState.tutorialFlow;
 }
 
-// The feeding lesson hands over a real ration if the larder is bare, so the
-// player always has something to serve when Merlin says "feed me".
-function maybeGrantTutorialFalconRation() {
-  try {
-    const larder = ensureLarder();
-    let changed = false;
-    let grantedRations = false;
-    if ((Number(larder.small_bird_prey_ration) || 0) < 1) {
-      larder.small_bird_prey_ration = 2;
-      changed = true;
-      grantedRations = true;
-    }
-    // Fresh players begin comfortably fed (hunger 20), but the normal feeding
-    // transaction correctly refuses meals below its 60-point threshold. The
-    // tutorial says Merlin is famished, so make that narrative state real
-    // before deciding whether the Feed action can be armed.
-    const core = dietHungerCore();
-    const feedingMinimum = Math.max(1, Number(core && core.FEEDING_HUNGER_MIN) || 60);
-    const care = getMerlinCare();
-    if (!care.lastFedAt && (Number(care.hunger) || 0) < feedingMinimum) {
-      care.hunger = feedingMinimum;
-      care.lastHungerAt = Date.now();
-      changed = true;
-    }
-    if (!changed) return;
-    saveState();
-    renderMerlinCareMenu();
-    if (grantedRations) showToast('\u{1FAB6} Merlin tucks two prey rations into your larder for the lesson.');
-  } catch (e) {}
+// Durable opening milestones never carry rewards. A failed write keeps the
+// previous objective available and does not certify an action or a discovery.
+function commitOpeningFlow(patch) {
+  const snapshot = snapshotGameState();
+  Object.assign(tutorialFlowState(), patch);
+  try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+  catch (error) { restoreGameStateSnapshot(snapshot); showToast('Progress could not be saved. Please try again.'); return false; }
+  queueQuestClaimCloudSync();
+  if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
+  return true;
 }
+
+function openingProgress() {
+  const seen = merlinChaptersSeen();
+  const quests = gameState?.birdExpeditions || [];
+  return window.BurbzOnboardingGate.openingStatus({
+    flow:{...tutorialFlowState(),openingSupplyReturnClaimed:!!tutorialFlowState().openingSupplyReturnClaimed || !!questClaimReceipt('opening:kitchen-supplies-v1')}, birdhouseBuilt:isAcademyBuildingBuilt('tavern'), kitchenBuilt:isAcademyBuildingBuilt('kitchen'),
+    coins:gameState?.player?.coins, branches:gameState?.player?.branches,
+    kitchenCost:{coins:ACADEMY_BUILDINGS.kitchen.cost,branches:ACADEMY_BUILDINGS.kitchen.branches},
+    hasExpeditions:quests.length > 0 || claimedExpeditionCount() > 0,
+    pendingFirstFlight:quests.some(q => q.templateId === 'merlin_first_flight' && !['claimed','cancelled','failed'].includes(q.status)),
+    mealServed:Number(gameState?.player?.mealsServed) > 0,
+    legacyComplete:seen.includes('explore') && !tutorialFlowState().openingStarted
+  });
+}
+
+// Small public projection for the Home/current-action presentation. This does
+// not mutate state or assume that a completed quest reward has been claimed.
+function openingObjective() {
+  const progress = openingProgress();
+  const options = {
+    birdhouse:{screen:'academy',label:'Build the Birdhouse',target:'.academy-building-card[data-building="tavern"]'},
+    discovery:{screen:'scan',label:'Discover a real bird',target:'#scanHomeActions'},
+    companion:{screen:'scan',label:'Meet your companion',target:'#petSprite'},
+    kitchen:{screen:'academy',label:'Build the Kitchen',target:'.academy-building-card[data-building="kitchen"]'},
+    errand:{screen:'quests',label:progress.supplyClaimed?'Find more building supplies':progress.supplyEligible?'Fetch Kitchen supplies':'Welcome Merlin home',target:progress.supplyClaimed?'[data-quest-category="timber"]':progress.supplyEligible?'[data-expedition-template="merlin_first_flight"]':'.quest-away-card'},
+    care:{screen:'academy',label:'Serve a proper meal',target:'[data-kitchen-roster-bird="merlin"]'},
+    done:{screen:'scan',label:'Discover your next bird',target:'#scanHomeActions'}
+  };
+  return {id:progress.stage,...options[progress.stage],shortage:progress.shortage,complete:progress.stage === 'done'};
+}
+
+function openingErrandsIntroduced() { return openingProgress().errands; }
+function openingSupplyErrandAvailable() { return openingProgress().supplyEligible; }
+
+function noteOpeningDiscoveryReviewed(bird) {
+  if (!isAcademyBuildingBuilt('tavern') || !bird || !(getDiscoveredRecordForSpecies(bird.species || bird.commonName))) return;
+  if (!tutorialFlowState().discoveryReviewed && !commitOpeningFlow({discoveryReviewed:true,discoveryDeferred:false})) return;
+}
+
+// Kept as a no-op for older callers: there is no repeating refill or forced
+// hunger adjustment. Fresh stock and earned deliveries are actual inventory.
+function maybeGrantTutorialFalconRation() { return false; }
+function maybeGrantMerlinKitchenGift() { return false; }
 
 function maybeGrantMerlinBarracksGift() {
-  try {
-    const flow = tutorialFlowState();
-    if (flow.barracksGiftGranted || isAcademyBuildingBuilt('tavern')) return;
-    flow.barracksGiftGranted = true;
-    const cfg = (typeof ACADEMY_BUILDINGS !== 'undefined' && ACADEMY_BUILDINGS.tavern) || { cost:60, branches:8 };
-    addCoins(cfg.cost || 60);
-    addBranches(cfg.branches || 8);
-    saveState();
-    updateHeader();
-    showToast('🎁 Merlin’s gift: +' + (cfg.cost || 60) + ' 🪙 and +' + (cfg.branches || 8) + ' 🪵 for the Barracks!');
-  } catch (e) {}
-}
-
-// One construction gift per save; replays and completed Kitchens never pay again.
-function maybeGrantMerlinKitchenGift() {
   const flow = tutorialFlowState();
-  if (flow.kitchenGiftGranted || isAcademyBuildingBuilt('kitchen') || !isAcademyBuildingBuilt('tavern')) return;
-  const cfg = ACADEMY_BUILDINGS.kitchen;
-  flow.kitchenGiftGranted = true;
-  addCoins(cfg.cost);
-  addBranches(cfg.branches);
-  saveState();
-  updateHeader();
-  renderAcademyBuildPanel();
-  showToast('Merlin gives you ' + cfg.cost + ' coins and ' + cfg.branches + ' branches to build the Kitchen.');
+  if (flow.barracksGiftGranted || isAcademyBuildingBuilt('tavern')) return false;
+  const snapshot = snapshotGameState();
+  const cfg = ACADEMY_BUILDINGS.tavern;
+  flow.barracksGiftGranted = true;
+  addCoins(cfg.cost); addBranches(cfg.branches);
+  try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+  catch (error) { restoreGameStateSnapshot(snapshot); showToast('The building gift could not be saved. Please try again.'); return false; }
+  queueQuestClaimCloudSync(); updateHeader();
+  showToast('Merlin’s Birdhouse gift: ' + cfg.cost + ' coins and ' + cfg.branches + ' timber.');
+  return true;
 }
 
-// The first Barracks is the tutorial's build lesson: a proper celebration
-// with XP, then Merlin's tour of the rest of the Academy.
+function introduceKitchenShortage() {
+  const progress = openingProgress();
+  if (!progress.kitchenIntroduced || isAcademyBuildingBuilt('kitchen') || !(progress.shortage.coins || progress.shortage.branches)) return false;
+  if (!tutorialFlowState().kitchenShortageSeen && !commitOpeningFlow({kitchenShortageSeen:true})) return true;
+  burbzTutorialAction('kitchen-shortage');
+  const bits = [];
+  if (progress.shortage.coins) bits.push(progress.shortage.coins + ' coins');
+  if (progress.shortage.branches) bits.push(progress.shortage.branches + ' timber');
+  showToast('The Kitchen needs ' + bits.join(' and ') + '. Send Merlin to fetch supplies.');
+  applyFeatureGates();
+  if (currentScreen !== 'quests') switchScreen('quests'); else renderBirdExpeditions();
+  return true;
+}
+
+// The 60 XP construction payoff is committed together with the building.
 function onFirstBarracksBuilt() {
-  if (typeof burbzTutorialAction === 'function') burbzTutorialAction('barracks-built');
-  const flow = tutorialFlowState();
-  if (!flow.barracksCelebrated) {
-    flow.barracksCelebrated = true;
-    addPlayerXp(60);
-    saveState();
-    playQuestClaimCelebration({ badge:'THE BARRACKS IS BUILT!', coins:0, branches:0, xp:60, items:{} });
-  }
-  const seen = merlinChaptersSeen();
-  if (seen.includes('academy') && !seen.includes('academy_tour')) {
-    setTimeout(() => { if (!merlinTutActive) startMerlinTutorial({ chapterId:'academy_tour', resume:true }); }, 1700);
+  burbzTutorialAction('barracks-built');
+  if (tutorialFlowState().barracksCelebrated) {
+    playQuestClaimCelebration({ badge:'THE BIRDHOUSE IS BUILT!', coins:0, branches:0, xp:60, items:{} });
   }
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
 }
@@ -44562,15 +44648,9 @@ function onFirstBarracksBuilt() {
 // The bouncing arrow + red nav dot that walk a new player through the guided
 // flow: story done → Quests (send Merlin), errand claimed → Academy (build).
 function merlinFlowPointerTarget() {
-  try {
-    if (merlinTutActive || !gameState) return null;
-    const seen = merlinChaptersSeen();
-    if (!seen.includes('story')) return null;
-    const flow = tutorialFlowState();
-    if (!flow.errandClaimed) return currentScreen === 'quests' ? null : 'quests';
-    if (!seen.includes('academy_tour') && !isAcademyBuildingBuilt('tavern')) return currentScreen === 'academy' ? null : 'academy';
-  } catch (e) {}
-  return null;
+  if (merlinTutActive || !gameState || !merlinChaptersSeen().includes('story')) return null;
+  const objective = openingObjective();
+  return objective.complete || objective.screen === currentScreen ? null : objective.screen;
 }
 
 function updateMerlinFlowPointer() {
@@ -44706,11 +44786,11 @@ function merlinTutShowStep(i) {
   // Prepare both the promised ration and a genuinely feedable hunger state
   // before availability is checked; otherwise a fresh player hears a tap but
   // the care transaction quite correctly refuses to overfeed Merlin.
-  if (step.action?.event === 'kitchen-built' && merlinTutMode !== 'full') maybeGrantMerlinKitchenGift();
+  if (step.action?.event === 'opening-meal-served' && isAcademyBuildingBuilt('kitchen')) { academySelectedRoom='kitchen'; renderAcademy(); }
   if (step.action && step.action.event === 'merlin-fed' && merlinTutMode !== 'full') maybeGrantTutorialFalconRation();
   $('merlinTutorialChapter').textContent = step.chapter;
   $('merlinTutorialTitle').textContent = step.title;
-  text.textContent = step.text;
+  text.textContent = step.action?.event === 'opening-meal-served' && openingCareSatisfied() ? 'Your companions have already eaten. The Kitchen is ready whenever they need another meal; no food needs to be wasted now.' : step.text;
   // Steps that talk about "the red mark" light the dot on that nav tab while
   // Merlin is still speaking; updateMerlinFlowPointer takes over afterwards.
   if (step.alertNav) document.querySelector('.nav-item[data-screen="' + step.alertNav + '"]')?.classList.add('tutorial-alert');
@@ -44744,7 +44824,9 @@ function merlinTutShowStep(i) {
 
 function merlinTutAdvance() {
   if (!merlinTutActive) return;
-  if (merlinTutCurrentStep()?.action?.event === 'kitchen-built' && !isAcademyBuildingBuilt('kitchen')) return;
+  if (merlinTutCurrentStep()?.action?.event === 'opening-discovery-reviewed' && !tutorialFlowState().discoveryReviewed) {
+    if (!commitOpeningFlow({discoveryDeferred:true})) return;
+  }
   // While an action is armed, Next is hidden: only the rescue button (or the
   // deed itself) moves the tutorial on.
   if (merlinTutAwaitingAction && $('merlinTutorialNext')?.style.display === 'none') return;
@@ -44772,6 +44854,9 @@ function endMerlinTutorial(completed, {pause=false}={}) {
   setMerlinTutorialBackgroundInert(false);
   merlinTutSpotlightTarget(null);
   positionMerlinTutorialStage(null);
+  if (merlinTutMode === 'scan' && completed && !tutorialFlowState().discoveryReviewed && !tutorialFlowState().discoveryDeferred) {
+    if (!commitOpeningFlow({discoveryDeferred:true})) return;
+  }
   // A finished OR skipped chapter counts as seen — Merlin never nags twice.
   if(!pause)markMerlinChaptersSeen(merlinTutMode === 'full' ? MERLIN_TUTORIAL_CHAPTERS.map(c => c.id) : [merlinTutMode]);
   saveMerlinTutorialState(pause?'in_progress':completed ? 'completed' : 'skipped');
@@ -44781,15 +44866,19 @@ function endMerlinTutorial(completed, {pause=false}={}) {
   if (currentScreen !== merlinTutOriginScreen && merlinTutMode === 'full') switchScreen(merlinTutOriginScreen);
   let gifted = false;
   try { gifted = localStorage.getItem(BURBZ_TUTORIAL_GIFT_KEY) === '1'; } catch(e) {}
-  if (completed && allMerlinChaptersSeen() && !gifted) {
-    try { localStorage.setItem(BURBZ_TUTORIAL_GIFT_KEY, '1'); } catch(e) {}
+  if (completed && allMerlinChaptersSeen() && !gifted && !tutorialFlowState().completionGiftClaimed) {
+    const snapshot = snapshotGameState();
+    tutorialFlowState().completionGiftClaimed = true;
     addCoins(50);
     addBranches(25);
-    saveState();
+    try { durableSaveState({throwOnFailure:true,queueCloud:false}); }
+    catch (error) { restoreGameStateSnapshot(snapshot); showToast('The completion gift could not be saved. Replay the final lesson to retry.'); return; }
+    queueQuestClaimCloudSync();
+    try { localStorage.setItem(BURBZ_TUTORIAL_GIFT_KEY, '1'); } catch(e) {}
     updateHeader();
     showToast("\u{1F381} Merlin's gift for finishing the apprenticeship: +50 \u{1FA99} coins and +25 \u{1FAB5} branches!");
   } else if (completed && merlinTutMode === 'story') {
-    if (currentScreen !== 'quests') showToast('\u{1F9ED} Merlin waits. Tap Quests — a quest is ready for you!');
+    if (currentScreen !== 'academy') showToast('Build the Birdhouse at the Academy to welcome discovered birds.');
   } else if (completed && merlinTutMode === 'explore') {
     showToast('Tutorial complete. Continue with Player Quests.');
   }
@@ -44797,10 +44886,10 @@ function endMerlinTutorial(completed, {pause=false}={}) {
   // tab has already switched screens — but the chapter for that screen was
   // suppressed while this one was running, so ask again now that Merlin is
   // quiet. The Academy tour also walks itself back to the Map for the finale.
-  if (completed && merlinTutMode === 'academy_tour' && !merlinChaptersSeen().includes('explore') && currentScreen !== 'map') switchScreen('map');
+  if (completed && merlinTutMode === 'care' && openingCareSatisfied()) commitOpeningFlow({openingCareDone:true});
   if (completed && typeof maybeStartMerlinChapterForScreen === 'function') {
     const handOffScreen = currentScreen;
-    setTimeout(() => { if (!merlinTutActive && currentScreen === handOffScreen) maybeStartMerlinChapterForScreen(handOffScreen); }, 260);
+    setTimeout(() => { if (!merlinTutActive && currentScreen === handOffScreen) maybeStartMerlinChapterForScreen(handOffScreen, {handoff:true}); }, 1200);
   }
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
   if (merlinTutPreviousFocus && typeof merlinTutPreviousFocus.focus === 'function') merlinTutPreviousFocus.focus({ preventScroll:true });
@@ -44816,29 +44905,49 @@ function maybeStartMerlinTutorial(delay = 600) {
 // Gradual teaching: each remaining chapter fires the first time its screen
 // opens — plus the guided-flow hand-offs, which fire on progress instead of
 // screens and survive reloads (an interrupted beat re-fires on the next visit).
-function maybeStartMerlinChapterForScreen(screenName) {
-  if (merlinTutActive || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
-  // The story always comes first; hold screen chapters until Merlin has spoken.
-  if (!merlinChaptersSeen().includes('story')) return;
-  const seen = merlinChaptersSeen();
-  const chapter = MERLIN_TUTORIAL_CHAPTERS.find(c => c.trigger === screenName);
-  let chapterId = chapter && !seen.includes(chapter.id) ? chapter.id : null;
-  // Merlin's return speech: fires on the quests screen once his errand is claimed.
-  if (screenName === 'quests' && !chapterId && tutorialFlowState().errandClaimed && !seen.includes('errand')) chapterId = 'errand';
-  // A Barracks that already stands (veteran save, or a reload mid-flow) skips
-  // the build lesson and goes straight to the Academy tour.
-  if (screenName === 'academy' && isAcademyBuildingBuilt('tavern')) {
-    if (chapterId === 'academy') { markMerlinChaptersSeen(['academy']); chapterId = null; }
-    if (!seen.includes('academy_tour')) chapterId = 'academy_tour';
+function openingCareSatisfied() {
+  if (tutorialFlowState().openingCareDone || Number(gameState.player?.mealsServed) > 0) return true;
+  // Already-fed saves have nothing to consume. Never manufacture hunger.
+  const care = getMerlinCare();
+  return !!care.lastFedAt && Number(care.hunger) < (Number(dietHungerCore()?.FEEDING_HUNGER_MIN) || 60);
+}
+
+function nextOpeningChapter() {
+  const progress = openingProgress(), seen = merlinChaptersSeen();
+  switch (progress.stage) {
+    case 'birdhouse': return 'academy';
+    case 'discovery': return seen.includes('academy_tour') ? 'scan' : 'academy_tour';
+    case 'companion': return 'birdex';
+    case 'kitchen': return tutorialFlowState().kitchenShortageSeen ? 'errand' : 'kitchen_need';
+    case 'errand': return tutorialFlowState().openingSupplyReturnClaimed ? 'errand' : 'quests';
+    case 'care': return 'care';
+    case 'done': return seen.includes('explore') ? null : 'explore';
   }
-  // The real-world finale fires on the Map once the Academy tour is done.
-  if (screenName === 'map' && seen.includes('academy_tour') && !seen.includes('explore')) chapterId = 'explore';
+  return null;
+}
+
+function maybeStartMerlinChapterForScreen(screenName, options = {}) {
+  if (typeof merlinNavigationPaused !== 'undefined' && merlinNavigationPaused) return;
+  if (merlinTutActive || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
+  const seen = merlinChaptersSeen();
+  if (!seen.includes('story')) return;
+  let chapterId = nextOpeningChapter();
+  // Direct visits retain player control. Automatic cross-screen movement is
+  // only a completed lesson's explicit handoff, never a background return.
+  if (chapterId) {
+    const first = MERLIN_TUTORIAL_STEPS.find(step => step.chapterId === chapterId);
+    if (!options.handoff && first?.screen !== screenName) return;
+    if (seen.includes(chapterId)) return;
+  } else {
+    const chapter = MERLIN_TUTORIAL_CHAPTERS.find(c => c.trigger === screenName);
+    chapterId = chapter && !seen.includes(chapter.id) ? chapter.id : null;
+  }
   if (!chapterId) return;
   const startId = chapterId;
   setTimeout(() => {
-    if (merlinTutActive || currentScreen !== screenName) return;
-    if (screenName === 'quests' && document.getElementById('questOverlay')?.classList.contains('open')) return;
-    startMerlinTutorial({ chapterId: startId, resume:true });
+    if (merlinTutActive || currentScreen !== screenName || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
+    if (document.getElementById('questOverlay')?.classList.contains('open') || document.getElementById('birdEquipOverlay')?.classList.contains('show') || document.getElementById('birdInfoModal')?.classList.contains('show')) return;
+    startMerlinTutorial({chapterId:startId,resume:true});
   }, 480);
 }
 
