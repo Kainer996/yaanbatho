@@ -2,8 +2,8 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'builder-actions-v404b-20260914','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'landscape-atlas-v394-20260913','village_world_core.js':'houses-terrain-v408-20260914','village_world.js':'home-farming-v409-20260914','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'wayside-room-title-v406b-20260914','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'builder-actions-v404b-20260914','first_person_hud.css':'landscape-atlas-v394b-20260913','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
-  let session=null,dependencies=null;
+  const PIN={'wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'builder-actions-v404b-20260914','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'exploration-camps-v413-20260914','village_world_core.js':'houses-terrain-v408-20260914','village_world.js':'exploration-camps-v413-20260914','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'map-pictures-v374-20260908','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'map-pictures-v374-20260908','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'wayside-room-title-v406b-20260914','village_walk_core.js':'continuous-world-v391-20260910','first_person_hud.js':'builder-actions-v404b-20260914','first_person_hud.css':'landscape-atlas-v394b-20260913','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
+  let session=null,dependencies=null,closingFullscreen=Promise.resolve();
   function script(file,global){
     if(root[global])return Promise.resolve();
     return new Promise((resolve,reject)=>{
@@ -47,12 +47,12 @@
   function isOpen(){return !!session;}
   function close(reason='exit'){
     const s=session;if(!s)return false;
-    if(['back','escape'].includes(reason)&&(s.hud?.closePanel?.()||s.rooms?.closePanel?.()||s.discoveries?.closePanel()))return true;
+    if(['back','escape'].includes(reason)&&(s.continuity?.closePanel?.()||s.hud?.closePanel?.()||s.rooms?.closePanel?.()||s.discoveries?.closePanel()))return true;
     if(!s.failed&&['exit','back','escape'].includes(reason)&&s.rooms?.leave())return true;
     session=null;s.closed=true;
     cancelAnimationFrame(s.raf);s.abort.abort();s.resizeObserver?.disconnect();s.reset?.();
     if(document.pointerLockElement&&s.root.contains(document.pointerLockElement))document.exitPointerLock?.();
-    if(document.fullscreenElement===s.root)Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
+    if(document.fullscreenElement===s.root)closingFullscreen=Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
     if(document.webkitFullscreenElement===s.root)document.webkitExitFullscreen?.();
     if(s.canvas&&s.parent){s.parent.insertBefore(s.canvas,s.next?.parentNode===s.parent?s.next:null);s.canvas.style.cssText=s.canvasStyle;}
     s.work?.dispose();s.combat?.dispose();s.harvest?.dispose();s.rooms?.dispose();s.flight?.dispose();s.discoveries?.dispose();s.hud?.dispose();s.unbatch?.();
@@ -137,7 +137,7 @@
     for(const event of ['touchstart','touchmove','touchend','touchcancel','wheel','dblclick','contextmenu'])on(el,event,e=>{
       e.stopPropagation();
       // Exit/fullscreen buttons must keep the browser's synthetic touch click.
-      if(e.cancelable&&!e.target.closest('.fp-panel,.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
+      if(e.cancelable&&!e.target.closest('.exploration-sheet,.fp-panel,.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
     },{passive:false});
     function pointerDown(e){
       if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy)return;
@@ -161,7 +161,7 @@
     const touch=matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0;if(touch)el.classList.add('vw-touch');
     function pause(){cancelAnimationFrame(s.raf);s.raf=0;s.last=0;s.intervals=[];s.reset();}
     function resume(){if(!s.closed&&!s.failed&&s.player&&!document.hidden&&!s.raf)s.raf=requestAnimationFrame(frame);}
-    on(window,'blur',pause);on(window,'focus',resume);on(document,'visibilitychange',()=>document.hidden?pause():resume());on(window,'pagehide',()=>close('pagehide'));
+    on(window,'blur',pause);on(window,'focus',resume);on(document,'visibilitychange',()=>{if(document.hidden)s.continuity?.save();document.hidden?pause():resume();});on(window,'pagehide',()=>close('pagehide'));
     function resize(){
       if(!s.source||s.closed)return;s.reset();
       const w=el.clientWidth,h=el.clientHeight;if(!w||!h)return;
@@ -232,6 +232,6 @@
     const sorted=s.samples.slice().sort((a,b)=>a-b),mean=sorted.reduce((a,b)=>a+b,0)/(sorted.length||1);
     return {open:true,work:s.work?.diagnostics?.(),combat:s.combat?.diagnostics(),continuity:s.continuity?.diagnostics(),hud:s.hud?.diagnostics(),harvest:s.harvest?.diagnostics(),flight:s.flight?.diagnostics(),interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player&&!!s.canvas,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
   }
-  root.BurbzVillageWalk={open,close,isOpen,diagnostics,continueWorld(mode){const s=session;if(!s?.continuity||s.room)return false;s.hud?.closePanel?.();return mode==='fly'?s.continuity.toggleFlight('fly'):true;}};
+  root.BurbzVillageWalk={open,close,isOpen,diagnostics,whenClosed:()=>closingFullscreen,continueWorld(mode){const s=session;if(!s?.continuity||s.room)return false;s.hud?.closePanel?.();return mode==='fly'?s.continuity.toggleFlight('fly'):true;}};
   if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,nature:()=>session?.continuity?.diagnostics(true),world:()=>session?.world,place:(p)=>{if(session&&(p.mode==='fly'?session.world.allowed3?.(p.x,p.y,p.z):session.world.allowed(p.x,p.z))){Object.assign(session.player,p,{y:(session.flight||p.mode==='fly')&&!session.room?p.y??session.player.y:session.world.height(p.x,p.z)});if(p.mode)session.continuity?.toggleFlight(p.mode);return true;}return false;},resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
 })(typeof globalThis!=='undefined'?globalThis:this);

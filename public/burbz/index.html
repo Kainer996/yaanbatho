@@ -4554,6 +4554,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Live conditions</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
+        <button class="camp-map-control" id="campMapButton" type="button">⛺ Camps</button>
         <button class="map-quest-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/burbz-icon-set/quests.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label">Show Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <button class="map-quest-btn map-side-quest-btn" id="mapSideQuestBtn" type="button" aria-label="Start a free-roaming Side Quest" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label" id="mapSideQuestBtnLabel">Side Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
@@ -4598,7 +4599,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
-      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="savedPhotosButton">Saved photos</button></div>
+      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="savedPhotosButton">Saved photos</button><button type="button" id="campHomeButton">Camps & homes</button></div>
       </div>
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
@@ -4840,7 +4841,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="empire-map-vignette"></div>
         <canvas class="empire-fog-overlay" id="empireFogCanvas" aria-hidden="true"></canvas>
         <div class="empire-map-corner tl"></div><div class="empire-map-corner tr"></div><div class="empire-map-corner bl"></div><div class="empire-map-corner br"></div>
-        <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapMeBtn">Me</button><button class="empire-map-btn" id="empireMapRealmBtn">My Realm</button><button class="empire-map-btn" id="empireMapWorldBtn">World</button><button class="empire-map-btn" id="empireMapKeyBtn" aria-expanded="false" aria-controls="empireMapKey">Key</button></div>
+        <div class="empire-map-tools"><button class="empire-map-btn" id="campRealmButton" type="button">⛺ Camps</button><button class="empire-map-btn" id="empireMapMeBtn">Me</button><button class="empire-map-btn" id="empireMapRealmBtn">My Realm</button><button class="empire-map-btn" id="empireMapWorldBtn">World</button><button class="empire-map-btn" id="empireMapKeyBtn" aria-expanded="false" aria-controls="empireMapKey">Key</button></div>
         <div class="empire-map-key" id="empireMapKey" role="dialog" aria-label="Map key">
           <div class="empire-map-key-title">READING THE ROYAL ATLAS</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch zoom">🔍</span>One banner per patch of land — the biggest title that holds it. Zoom in and it opens: kingdoms &amp; duchies → counties → towns → villages</div>
@@ -5638,6 +5639,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home.js?v=home-farming-v409-20260914"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
+<script src="exploration_core.js?v=exploration-camps-v413-20260914"></script>
+<script src="exploration.js?v=exploration-camps-v413-20260914"></script>
+<link rel="stylesheet" href="exploration.css?v=exploration-camps-v413-20260914">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world.js?v=home-farming-v409-20260914"></script>
@@ -7281,6 +7285,7 @@ function mergeCloudState(cloudState) {
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
   if (globalThis.BurbzPlayerHomeCore) merged.playerHome = globalThis.BurbzPlayerHomeCore.normalize(merged.playerHome, true);
+  merged.exploration = BurbzExplorationCore.normalize(merged.exploration);
   merged.flock.forEach(b => { if (b && typeof b === 'object') applySpecialBirdCharacter(b); }); // cloud special characters too
   merged.flock.forEach(migrateBirdPersonality);
   const core = dietHungerCore();
@@ -22099,6 +22104,7 @@ function handleLivePosition(pos, fly) {
   liveMapLastPosition = { lat, lon, accuracy, at:Number(pos.timestamp), source:'Your live position' };
   rememberHomeFix(lat, lon);
   anchorPlayerHomeAt(lat, lon);
+  processCampGPS({lat,lon,accuracy,at:Number(pos.timestamp)});
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy, at:Number(pos.timestamp) });
   // A cached GPS position may draw the map, but cannot award trail rewards.
   if (mapGatheringGate({lat,lon}).ready) {
@@ -25322,6 +25328,7 @@ function updateEmpireFogMask() {
   holes.forEach(hole => { ctx.beginPath(); ctx.arc(hole.x, hole.y, hole.r, 0, Math.PI * 2); ctx.stroke(); });
   ctx.restore();
   ctx.globalCompositeOperation = 'destination-out';
+  BurbzExploration.paint(ctx,explorationState(),p=>empireMap.project([wrappedLongitudeNear(p.lon,referenceLon),p.lat]),width,height);
   regionHoles.concat(holes).forEach(hole => {
     const reveal = ctx.createRadialGradient(hole.x, hole.y, 0, hole.x, hole.y, hole.r);
     reveal.addColorStop(0, 'rgba(0,0,0,1)');
@@ -25580,6 +25587,7 @@ function openEmpireVillage(seed) {
 }
 
 function refreshEmpireMap(options = {}) {
+  refreshCampMarkers(empireMap);
   const settlementsOnMap = empireSettlementsInfo();
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const villages = empireMappableVillages();
@@ -30202,7 +30210,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=home-farming-v409-20260914';
+        script.src = 'village_walk.js?v=exploration-camps-v413-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45237,8 +45245,48 @@ function addDemoBirds() {
 // only shows the controls. Returning players begin at their command desk;
 // saved walks remain available through their existing routes.
 // The personal clearing is separate from claimed villages and their economy.
+let activeCampHomeId=null;
+const campMapMarkers=new WeakMap();
+function explorationState(){return gameState.exploration||(gameState.exploration=BurbzExplorationCore.empty());}
+function revealExploration(pose){return BurbzExplorationCore.reveal(explorationState(),pose);}
+function commitExploration(proposal){
+ if(!proposal.ok)return proposal;
+ const before=gameState.exploration;gameState.exploration=proposal.state;
+ if(!durableSaveState().ok){gameState.exploration=before;return{ok:false,error:'Your camp could not be saved. Nothing was spent. Please retry.'};}
+ try{refreshCampMarkers(liveMap);refreshCampMarkers(empireMap);updateHeader();}catch(e){}return{ok:true,message:proposal.message};
+}
+function placeCamp(point){const result=BurbzExplorationCore.place(explorationState(),point,crypto.randomUUID());if(result.ok)result.message=result.camp.name+' saved. Your tent is ready; add a campfire for 5 timber.';return commitExploration(result);}
+function upgradeCamp(id){const p=BurbzExplorationCore.upgrade(explorationState(),id);p.message='Your additional home is built. Your original home is still yours.';return commitExploration(p);}
+function processCampGPS(fix){
+ // Called only from handleLivePosition, never from avatar movement, saved home,
+ // map-camera updates or fast travel. Eligibility survives an offline reload.
+ for(const camp of [...explorationState().camps]){
+  const proposal=BurbzExplorationCore.visit(explorationState(),camp.id,fix);if(!proposal.ok)continue;
+  const before=snapshotGameState(),level=gameState.player.level;
+  try{gameState.exploration=proposal.state;const r=proposal.reward;
+   gameState.player.coins+=r.coins;gameState.player.branches+=r.branches;applyPlayerXpState(r.xp);
+   if(!Number.isSafeInteger(gameState.player.coins)||!Number.isSafeInteger(gameState.player.branches))throw Error('Your reward could not be counted.');
+   setQuestClaimReceipt('camp-visit:'+camp.id,{at:Date.now(),lat:camp.lat,lon:camp.lon,rewards:r});
+   durableSaveState({throwOnFailure:true});
+  }catch(error){restoreGameStateSnapshot(before);showToast('Your camp visit could not be saved. Keep location on and retry; your reward is still waiting.');return false;}
+  showToast(proposal.reward.coins?camp.name+' visited! +500 coins · +250 XP · +50 timber. Open Camps to build your free house.':camp.name+' visited! Build your free house in Camps. This place’s bonus was already collected.');announcePlayerLevelUps(level);
+ }
+ refreshCampMarkers(liveMap);refreshCampMarkers(empireMap);return true;
+}
+function buildCampFire(id,pose){const camp=explorationState().camps.find(c=>c.id===id);if(!camp||camp.fire)return{ok:false,error:'This campfire is already built.'};if(!BurbzGeographicWorldCore.validCoordinate(pose)||BurbzGeographicWorldCore.distance(camp,pose)>12)return{ok:false,error:'Fast travel to this camp and build the fire beside your tent.'};
+ if(!Number.isSafeInteger(gameState.player.branches)||gameState.player.branches<5)return{ok:false,error:'Campfire needs 5 timber. Chop trees in your home clearing or village, then return here.'};
+ const before=gameState.player.branches;gameState.player.branches-=5;const result=commitExploration({ok:true,state:{...explorationState(),camps:explorationState().camps.map(c=>c===camp?{...c,fire:true}:c)},message:'Campfire built · 5 timber used.'});if(!result.ok)gameState.player.branches=before;else updateHeader();return result;
+}
+async function travelToCamp(id){const camp=explorationState().camps.find(c=>c.id===id);if(!camp)return{ok:false,error:'That camp is no longer in this save.'};const p=BurbzGeographicWorldCore.unproject(camp,{x:0,y:0,z:4.5});try{const opened=await enterGeographicWorld({pose:{...p,yaw:0,pitch:0,mode:'walk'},safeArrival:true,release:()=>BurbzVillageWalk?.close('world')});if(opened!==true)throw Error('The camp could not open. Retry when its terrain is available.');return{ok:true};}catch(e){showToast('Camp is saved. '+e.message);return{ok:false,error:e.message};}}
+async function showCampRealMap(id){const camp=explorationState().camps.find(c=>c.id===id);if(!camp)return;BurbzVillageWalk?.close('navigation');BurbzPlayerHome.close('navigation');switchScreen('map');if(!liveMap)await initLiveMap();if(liveMap){liveMapUserMoved=true;liveMap.jumpTo({center:[camp.lon,camp.lat],zoom:17});refreshCampMarkers(liveMap);}showToast(camp.name+' · Visit within 45 m in real life with location enabled.');}
+function refreshCampMarkers(map){if(!map||!window.maplibregl)return;const old=campMapMarkers.get(map)||[];old.forEach(m=>m.remove());const center=map.getCenter();const camps=[...explorationState().camps].sort((a,b)=>BurbzGeographicWorldCore.distance(a,{lat:center.lat,lon:center.lng})-BurbzGeographicWorldCore.distance(b,{lat:center.lat,lon:center.lng})).slice(0,80);const next=camps.map(c=>{const el=document.createElement('button');el.type='button';el.className='camp-marker';el.textContent=c.home?'⌂':'⛺';el.title=c.name+(c.home?' · Home':'');el.setAttribute('aria-label',el.title);el.onclick=e=>{e.stopPropagation();BurbzExploration.sheet();};return new maplibregl.Marker({element:el}).setLngLat([c.lon,c.lat]).addTo(map);});campMapMarkers.set(map,next);}
+function currentPlayerHome(){return activeCampHomeId?explorationState().camps.find(c=>c.id===activeCampHomeId)?.home||gameState.playerHome:gameState.playerHome;}
+async function enterCampHome(id,area='room'){const camp=id&&explorationState().camps.find(c=>c.id===id);if(id&&!camp?.home)return{ok:false,error:'Visit this camp in real life, then build its house.'};BurbzVillageWalk?.close('world');BurbzPlayerHome.close('world');activeCampHomeId=id||null;return BurbzPlayerHome.open(area,{fromDesk:false,returnToWorld:true});}
+function commitCampHomeAction(action){const camp=explorationState().camps.find(c=>c.id===activeCampHomeId);if(!camp?.home)return{ok:false,error:'Reopen this home from Camps.'};if(['anchor','build-home'].includes(action.kind))return{ok:false,error:'This home stays at your visited camp.'};const farming=action?.kind?.startsWith('farm-'),p=farming?BurbzPlayerHomeCore.proposeFarm(camp.home,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(camp.home,gameState.player,action);if(!p.ok)return p;const before=snapshotGameState();camp.home=p.home;gameState.player.branches=p.wallet.branches;if(farming){gameState.player.coins=p.wallet.coins;gameState.inventory=p.inventory;}if(!durableSaveState().ok){restoreGameStateSnapshot(before);return{ok:false,error:'Your home could not be saved. Nothing was spent.'};}updateHeader();return{ok:true,message:p.message};}
+
 let geographicWorldVisit = null, geographicAvatarMarker = null;
 function commitPlayerHomeAction(action) {
+  if(typeof activeCampHomeId!=='undefined'&&activeCampHomeId)return commitCampHomeAction(action);
   const farming=action?.kind?.startsWith('farm-');
   const proposal=farming?BurbzPlayerHomeCore.proposeFarm(gameState.playerHome,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
   if(!proposal.ok)return proposal;
@@ -45297,13 +45345,16 @@ async function enterGeographicWorld(handoff={}) {
   if(!gameState.playerHome?.anchor)return chooseGeographicHomeLocation(handoff);
   await ensureVillageWalkModule();
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
-  const anchor={...gameState.playerHome.anchor};
+  const anchor={...(handoff.anchor||gameState.playerHome.anchor)};
   const local=handoff.localPose||(!handoff.pose&&!savedGeographicPose()?{x:0,y:0,z:4,yaw:Math.PI,pitch:0}:null);
   const pose=handoff.pose||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
   const record=geographicSettlementRecords({center:pose||anchor})[0];
   if(!record)throw Error('The nearby world could not be located. Your home is safe; please try again.');
   handoff.release?.();BurbzPlayerHome.close('world');geographicWorldVisit=null;
-  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;
+  // Let the old fullscreen exit finish before a new walking root requests it.
+  await BurbzVillageWalk.whenClosed?.();
+  if(gameState!==entrySave||currentScreen!==entryScreen)return false;
+  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=!!handoff.safeArrival;
   let ownedSource;
   return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
     character:walkingCharacterState,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
@@ -45324,6 +45375,7 @@ async function enterGeographicWorld(handoff={}) {
   });
 }
 async function chooseGeographicHomeLocation(handoff={}) {
+  if(activeCampHomeId){showToast('This home stays at your visited camp.');return false;}
   const sessionSave=gameState,entryScreen=currentScreen;
   await loadMapLibreIfNeeded();if(gameState!==sessionSave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
   const anchor=gameState.playerHome.anchor,expectedRevision=anchor?.revision||0,oldHome=gameState.playerHome;
@@ -45460,6 +45512,7 @@ function continuousWalkingAdapter(record) {
     sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
     records:geographicSettlementRecords,createSettlement:createTravellingSettlement,waysides:geographicWaysideRecords,createWayside:createTravellingWayside,waysidePalette:palette=>burbzDaylightPalette(palette||VILLAGE_PALETTES[0],burbzDaylightGradeNow()),
     buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
+    exploration:{read:explorationState,reveal:revealExploration,place:point=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing.'}:placeCamp(point),home:enterCampHome},
     getHome:()=>gameState.playerHome,createYard:(T,h,options)=>BurbzPlayerHomeScene.createYardContent(T,h,options),
     openBuild:localPose=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('yard',{build:true,pose:localPose,returnToWorld:true});},
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
@@ -45480,6 +45533,7 @@ async function exploreFromSettlement(record,localPose) {
 // An informational reference only: it has no travel action and never steers
 // the real quest map or changes its phone-location marker.
 function refreshGeographicAvatarMarker() {
+  refreshCampMarkers(liveMap);
   if(!liveMap||!window.maplibregl)return;
   const pose=savedGeographicPose();
   if(!pose){geographicAvatarMarker?.remove();geographicAvatarMarker=null;return;}
@@ -45489,15 +45543,18 @@ function refreshGeographicAvatarMarker() {
   geographicAvatarMarker.setLngLat([pose.lon,pose.lat]);
 }
 function initializePlayerHome() {
+  gameState.exploration=BurbzExplorationCore.normalize(gameState.exploration);
+  BurbzExploration.bind({read:explorationState,travel:travelToCamp,map:showCampRealMap,home:enterCampHome,primary:()=>enterCampHome(null,'yard'),upgrade:upgradeCamp,fire:buildCampFire,timber:()=>gameState.player.branches});
+  for(const id of ['campHomeButton','campMapButton','campRealmButton'])$(id)?.addEventListener('click',()=>BurbzExploration.sheet());
   if (!window.BurbzPlayerHome || !window.BurbzPlayerHomeCore) { maybeShowIntroCutscene(); return; }
   const veteran = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1' || gameState.player.level > 1 || gameState.flock.length > 0;
   gameState.playerHome = BurbzPlayerHomeCore.normalize(gameState.playerHome, veteran);
   saveState();
-  BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
+  BurbzPlayerHome.bind({read:()=>currentPlayerHome(),timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
     command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
-    onClose:()=>{document.body.classList.add('player-at-desk');}
+    onClose:()=>{activeCampHomeId=null;document.body.classList.add('player-at-desk');}
   });
   const last=gameState.lastKnownHome;
   if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);

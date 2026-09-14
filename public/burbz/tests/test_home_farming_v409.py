@@ -16,8 +16,9 @@ def test_complete_farm_installs_as_one_version():
     updater = (ROOT.parents[1] / 'scripts/update-live-burbz.sh').read_text()
     for name in ['player_home_core.js', 'player_home_scene.js', 'player_home.js',
                  'player_home.css', 'village_walk.js', 'village_world.js', 'geographic_world.js']:
-        assert f'{name}?v={PIN}' in html or f"'{name}':'{PIN}'" in loader
-        assert sw.count(f'./{name}?v={PIN}') == 3
+        pin = 'exploration-camps-v413-20260914' if name in ['village_walk.js', 'village_world.js'] else PIN
+        assert f'{name}?v={pin}' in html or f"'{name}':'{pin}'" in loader
+        assert sw.count(f'./{name}?v={pin}') == 3
         assert f'"{name}"' in updater
     assert "const BURBZ_BUILD = 'gemini-photos-v410-20260914'" in html
     assert "gemini-photos-v410-20260914';" in sw
