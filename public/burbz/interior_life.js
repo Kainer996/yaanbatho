@@ -15,7 +15,7 @@ function attach(s,room,api){
  for(const [i,item] of (canCollect?core.finds(target):[]).entries()){const pos=points[i];if(!pos)continue;const b=root.BurbzSettlementModels.batch(T);b.sphere(.19,0,.17,0,0xb59560,[1,.85,.85]);b.cylinder(.065,.12,.12,0,.32,0,0x59412d);b.box(.06,.18,.025,0,.2,.17,0xe6c57d);const mesh=b.finish();mesh.position.set(pos.x,0,pos.z);group.add(mesh);pickups.push({...item,mesh,pos});}
  root.BurbzManga?.styleScene(group);
  function use(){if(!nearby||s.uiBusy||s.failed)return;const item=nearby;
-  if(item.person){if(typeof api.talk!=='function')return;show(item.person.name,api.talk(target,item.person));return;}
+  if(item.person){if(typeof api.talk!=='function')return;const answer=api.talk(target,item.person);if(!answer?.handled)show(item.person.name,answer);return;}
   try{const result=api.collect(target,item.id);if(result){item.mesh.visible=false;show('In your bag',result);}else item.mesh.visible=false;}catch(error){show('Could not save','Your item is still here. '+error.message);}
  }
  on(useButton,'click',use);

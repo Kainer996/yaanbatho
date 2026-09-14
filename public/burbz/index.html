@@ -30178,7 +30178,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=building-opening-v405-20260914';
+        script.src = 'village_walk.js?v=wilderness-discoveries-v406-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -30268,10 +30268,40 @@ function academyExploreButton(room){return isAcademyRoomBuilt(room)?'<button cla
 
 // Interiors read existing ownership; only explicit finite finds grant saved rewards.
 const interiorGreetingMemory=new Set();
+function waysideRoomInfo(target) {
+  if(target?.scope!=='wayside')return null;
+  const core=window.BurbzWildernessPlacesCore,record=core?.resolve(target.placeId),story=record&&core.story(record);
+  return story?.building&&story.building===target.buildingId?{name:record.name,record,story}:null;
+}
+function waysidePeople(target) {
+  const info=waysideRoomInfo(target);return info?.story.keeper?[{id:info.record.id+':keeper',name:info.story.keeper,activity:'Keeping a welcome beside the old road',home:info.record.name}]:[];
+}
+function waysideAdventure(record) {
+  const save=gameState,core=window.BurbzWildernessPlacesCore;
+  return{read:()=>core.read(gameState,record),act(type,index){
+    if(gameState!==save)throw Error('Your save changed. Reopen Alderwing before continuing.');
+    const before=snapshotGameState();let result;
+    try{result=core.act(gameState,record,type,index);if(!result)return null;
+      if(result.reward){const coins=gameState.player.coins+result.reward.coins;if(!Number.isSafeInteger(coins)||coins<0)throw Error('The coin balance is unavailable.');gameState.player.coins=coins;
+        for(const[id,n]of Object.entries(result.reward.materials)){if(!lootCore().materialById(id))throw Error('That material is unavailable.');const count=(gameState.inventory.items[id]||0)+n;if(!Number.isSafeInteger(count)||count<0)throw Error('The inventory is unavailable.');gameState.inventory.items[id]=count;}}
+      durableSaveState({throwOnFailure:true});
+    }catch(error){restoreGameStateSnapshot(before);throw error;}
+    if(result.reward)try{updateHeader();}catch(_){}return result;
+  }};
+}
+function geographicWaysideRecords(bounds) {
+  const core=window.BurbzWildernessPlacesCore;if(!core)return[];
+  return core.nearby(bounds.center,geographicSettlementRecords(bounds),gameState.playerHome?.anchor).filter(p=>!geographicSettlementRecords({center:p}).some(s=>core.distance(s,p)<(s.tier==='city'?460:s.tier==='town'?340:190)));
+}
+function createTravellingWayside(T,record,options) {
+  const content=window.BurbzWildernessPlaces.create(T,record,options.palette);
+  const api=waysideAdventure(record);content.read=api.read;content.discovery={wayside:record,api,targets:content.targets,world:content.world};content.people=waysidePeople;return content;
+}
 function buildingRoomsAdapter() {
   return {
-    collected:(target,id)=>window.BurbzInteriorLifeCore.collected(gameState,target,id),
+    collected:(target,id)=>target.scope==='wayside'||window.BurbzInteriorLifeCore.collected(gameState,target,id),
     collect:(target,id)=>{
+      if(target.scope==='wayside')return null;
       if(!buildingRoomsAdapter().describe(target))return null;
       const snapshot=snapshotGameState();let text;
       try{const item=window.BurbzInteriorLifeCore.claim(gameState,target,id);if(!item)return null;
@@ -30283,6 +30313,7 @@ function buildingRoomsAdapter() {
       try{updateHeader();}catch(_){}return text;
     },
     people:(target,contextKind)=>{
+      if(target.scope==='wayside')return waysidePeople(target);
       if(target.scope==='academy'){
         return (gameState.flock||[]).flatMap(bird=>{
           const loc=resolveBirdCardLocation(bird);if(loc.screen!=='academy-room')return [];
@@ -30303,6 +30334,7 @@ function buildingRoomsAdapter() {
       });
     },
     talk:(target,person)=>{
+      if(target.scope==='wayside'){const info=waysideRoomInfo(target);return info&&BurbzWildernessPlaces.request(target.placeId)?{handled:true}:info?.story.intro||'A quiet shelter beside the road.';}
       const greeted=interiorGreetingMemory.has(person.id);interiorGreetingMemory.add(person.id);
       const hello=greeted?'Good to see you again.':'Hello, I’m '+person.name+'.';
       const job=person.job?(EMPIRE_BUILDING_INDEX[person.job]?.name||person.job):null;
@@ -30311,6 +30343,7 @@ function buildingRoomsAdapter() {
       return hello+'\n\n'+(person.activity||'Taking a little break')+'. '+(person.need?person.need+'. ':'')+'\n\nHome: '+home+'.'+(job?' Work: '+job+'.':'')+'\n\n'+next;
     },
     describe: target => {
+      if(target.scope==='wayside')return waysideRoomInfo(target);
       if(target.scope==='academy'){const cfg=ACADEMY_ROOMS[target.buildingId];if(cfg&&isAcademyRoomBuilt(target.buildingId))return{name:cfg.label};if(target.buildingId==='dorm'&&isAcademyBuildingBuilt('dorm'))return{name:'The Roost'};return null;}
       const rec = empireVillageRecordBySeed(Number(target.seed) >>> 0);
       const building = EMPIRE_BUILDING_INDEX[target.buildingId];
@@ -30319,6 +30352,7 @@ function buildingRoomsAdapter() {
       return { name:villageBuildingTier(building, villageBuildingLevel(rec, building.id)).name };
     },
     open: (target, action) => {
+      if(target.scope==='wayside')return;
       if (!buildingRoomsAdapter().describe(target)) return;
       if(target.scope==='academy'){openAcademyRoom(target.buildingId==='dorm'?'outdoors':target.buildingId);return;}
       if (action === 'bar' && target.buildingId === 'tavern') villageOpenShop('tavern', target.seed);
@@ -43922,7 +43956,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'building-opening-v405-20260914';
+const BURBZ_BUILD = 'wilderness-discoveries-v406-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45319,7 +45353,7 @@ function continuousWalkingAdapter(record) {
   return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
     style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
     sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
-    records:geographicSettlementRecords,createSettlement:createTravellingSettlement,
+    records:geographicSettlementRecords,createSettlement:createTravellingSettlement,waysides:geographicWaysideRecords,createWayside:createTravellingWayside,waysidePalette:palette=>burbzDaylightPalette(palette||VILLAGE_PALETTES[0],burbzDaylightGradeNow()),
     buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
     getHome:()=>gameState.playerHome,createYard:(T,h)=>BurbzPlayerHomeScene.createYardContent(T,h),
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},

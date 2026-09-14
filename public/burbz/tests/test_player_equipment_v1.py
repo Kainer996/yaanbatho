@@ -21,10 +21,10 @@ def test_offline_dependencies_are_registered_in_every_worker_list_and_updater():
         assert worker.count(f"'./{name}?v={pin}'") == 3
         assert f'"{name}"' in updater
     for name in ['first_person_map.js', 'first_person_hud.js', 'first_person_hud.css']:
-        pin = 'landscape-atlas-v394b-20260913' if name == 'first_person_hud.css' else HUD_PIN
+        pin = 'landscape-atlas-v394b-20260913' if name == 'first_person_hud.css' else 'builder-actions-v404b-20260914' if name=='first_person_hud.js' else HUD_PIN
         assert f"'{name}':'{pin}'" in walk
         assert worker.count(f"'./{name}?v={pin}'") == 3
     for name in ['village_walk.js', 'geographic_world.js']:
-        pin = 'landscape-atlas-v394b-20260913' if name == 'village_walk.js' else PIN
+        pin = 'wilderness-discoveries-v406-20260914' if name == 'village_walk.js' else PIN
         assert f'{name}?v={pin}' in html
         assert worker.count(f"'./{name}?v={pin}'") == 3

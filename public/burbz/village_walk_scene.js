@@ -156,6 +156,9 @@
   // batches only after their entire conservative sphere is behind opaque fog.
   // An outer wrapper preserves the resident routine's own visibility state.
   function distanceCull(T,scene,movers=[]){
+    // Streamed places have just moved from local coordinates to their real
+    // world position. Bounds and their local centres must use that same frame.
+    scene.updateWorldMatrix(true,true);
     const candidates=new Set(movers),rows=[],point=new T.Vector3(),box=new T.Box3(),sphere=new T.Sphere();
     scene.traverse(o=>{if(o.userData.walkBatch)candidates.add(o);});
     for(const object of candidates){
