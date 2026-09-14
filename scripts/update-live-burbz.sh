@@ -235,6 +235,7 @@ FILES=(
   "battle_core.js"
   "battle_aim_core.js"
   "loot_crafting_core.js"
+  "prerequisite_guidance_core.js"
   "world_level_core.js"
   "diary_core.js"
   "assets/audio/footsteps/footstep-soft-ground-01.mp3"

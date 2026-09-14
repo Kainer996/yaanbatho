@@ -23,6 +23,9 @@ async function serverStart(){
   if(!file.startsWith(root+'/')){res.writeHead(403);return res.end();}
   let bytes;try{bytes=fs.readFileSync(file);if(bytes.length<300&&bytes.toString().startsWith('version https://git-lfs'))bytes=null;}catch(_){}
   if(!bytes){
+   for(const base of (process.env.BURBZ_ASSET_ROOTS||'/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/work/gemini-offline-v410/work/runtime-assets:/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/work/companion-release-v363/public/burbz:/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/work/world-sky-v401/public/burbz:/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/work/v362-update-http-cache/burbz').split(':')){const cached=path.resolve(base,name);if(!cached.startsWith(base+'/'))continue;try{const b=fs.readFileSync(cached);if(!(b.length<300&&b.toString().startsWith('version https://git-lfs'))){bytes=b;break;}}catch{}}
+  }
+  if(!bytes){
    if(!/^(assets|bird-art-cache|icons|lib|vendor)\//.test(name)){res.writeHead(404);return res.end();}
    if(!proxyCache.has(name))proxyCache.set(name,fetch('https://yaanbatho.com/burbz/'+name).then(async r=>{if(!r.ok)throw Error('public asset '+r.status+' '+name);return Buffer.from(await r.arrayBuffer());}));
    bytes=await proxyCache.get(name);
