@@ -347,7 +347,7 @@ def test_town_screen_and_pure_core_are_loaded_and_dispatched():
     html = html_text()
     assert 'id="screen-town"' in html
     assert 'id="townHallPanel"' in html
-    assert 'src="town_strategy_core.js?v=town-strategy-v273-20260816"' in html
+    assert 'src="town_strategy_core.js?v=building-opening-v405-20260914"' in html
     assert "if (name === 'town')" in html and "renderTownScreen();" in html
     assert "function openEmpireTown(" in html
     assert "function renderTownScreen(" in html
@@ -393,8 +393,8 @@ def test_city_keeps_every_constituent_town_state_and_paid_hall_timer_reachable()
     assert "townStateKey(seat)" in state
     assert "clean.memberSeeds = seeds" in state
     assert "Object.assign(existing, clean)" in state
-    assert "(info.towns || []).forEach" in completion
-    assert "state.hallConstruction = null" in completion
+    assert "for(const seat of info.towns||[])" in completion
+    assert "state.hallConstruction=null" in completion
     assert "delete empire.towns" not in seats + state + completion
 
 

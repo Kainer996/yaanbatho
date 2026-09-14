@@ -16,6 +16,7 @@ The contracts of this release:
    and a visiting banner with the road back.
 """
 import json
+import re
 import subprocess
 from pathlib import Path
 
@@ -26,7 +27,7 @@ STORY_PATH = ROOT / "STORY.md"
 MERGE_CORE_PATH = ROOT / "settlement_merge_core.js"
 OWN_RELEASE_PIN = "merge-when-ready-v290-20260820"
 PREVIOUS_RELEASE_PIN = "training-your-way-v288-20260819"
-CURRENT_BUILD = "photo-accuracy-v393-20260911"
+CURRENT_BUILD = re.search(r"const BURBZ_BUILD = '([^']+)';", HTML_PATH.read_text(encoding="utf-8")).group(1)
 MERGE_CORE_PIN = "village-work-huts-v311-20260824"  # last release to touch the core
 
 
@@ -289,8 +290,8 @@ def test_wholesale_completion_applies_every_step_atomically():
     html = HTML_PATH.read_text(encoding="utf-8")
     src = function_source(html, "completeWholesaleWorks")
     assert "snapshotGameState()" in src
-    assert "restoreGameStateSnapshot(snapshot)" in src
-    assert "durableSaveState({ throwOnFailure: true })" in src
+    assert "restoreGameStateSnapshot(before)" in src
+    assert "durableSaveState({throwOnFailure:true})" in src
     assert "maybeAwardMergeStar(rec)" in src
     begin = function_source(html, "beginWholesaleUpgrade")
     assert "wholesaleUpgradePlan(records)" in begin

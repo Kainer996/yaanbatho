@@ -39,7 +39,7 @@ def run_flow(staffed: bool, driver: str):
         "villageBuildTimeMs", "villageConstructionFor", "ensureVillageEconomy",
         "villageBuildingLevel", "villageBuildingTier", "empireHasQuarryInvestment",
         "villageBuildingCost", "settlementAllowsBuilding", "villageBuildDurationMs",
-        "villageConstructions", "villageConstructionOf", "villageBuildSlots",
+        "villageConstructions", "villageReadyToOpen", "villageWholesaleProjects", "villageConstructionOf", "villageBuildSlots",
         "villageBuildSlotsFree", "empireBuildStructure",
     ))
     stubs = """

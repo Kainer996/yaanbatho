@@ -195,6 +195,7 @@
     const fromLevel = Math.floor(finiteNumber(raw.fromLevel, 0));
     if (fromLevel === hallLevel) out.fromLevel = fromLevel;
     if (typeof raw.id === 'string' && raw.id.trim()) out.id = raw.id.trim().slice(0, 96);
+    for(const key of ['readyToOpenAt','assistedAt','assistedMs'])if(Number.isFinite(raw[key])&&raw[key]>=0)out[key]=raw[key];
     const paidCost = sanitizedCost(raw.paidCost || raw.cost);
     if (paidCost) out.paidCost = paidCost;
     return out;

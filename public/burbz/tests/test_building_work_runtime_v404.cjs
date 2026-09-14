@@ -9,4 +9,14 @@ const work=ctx.BurbzBuildingWork.attach(s);let frame=0;const update=()=>work.upd
 update();assert(!button.hidden);click();click();assert.equal(saves,0);assert.equal(work.diagnostics().taps,2);s.player.x=-20;update();assert(button.hidden);s.player.x=0;update();click();assert.equal(work.diagnostics().taps,1);assert.equal(saves,0);console.log('PASS Leaving the actual site cancels incomplete help');
 s.player.mode='fly';update();assert(button.hidden);assert.equal(work.key('KeyF'),false);s.player.mode='walk';s.world.height=()=>null;update();assert(button.hidden);s.world.height=()=>0;s.world.allowed=()=>false;update();assert(button.hidden);s.world.allowed=()=>true;update();assert(!button.hidden);console.log('PASS Flight, unknown terrain and blocked approaches cannot help');
 fail=true;for(let i=0;i<3;i++)click();assert.equal(saves,0);assert.equal(ledger.endMs,101000);assert.match(hint.textContent,/Disk full/);fail=false;for(let i=0;i<3;i++)assert(work.key('KeyF'));assert.equal(saves,1);assert.equal(ledger.endMs,76000);assert(button.hidden);assert.equal(work.key('KeyF'),false);update();assert(button.hidden);console.log('PASS Three nearby taps/keys commit exactly one quarter reduction, with retry after failed saving');
+// A real frame-owned opening job must cancel before any ledger commit.
+let prepared=0,discarded=0,opened=0,valid=true,tick=0;
+ctx.performance={now:()=>tick+=3};ledger.endMs=15000;ledger.toLevel=1;delete ledger.assistedAt;
+s.options.work.prepare=()=>({commit(){opened++;return{ok:true};}});
+s.continuity={buildingFrame:()=>({valid:()=>valid,local:()=>({x:0,z:0}),install(){throw Error('Cancelled job installed');}})};
+ctx.BurbzVillageWalkScene={*replacementSteps(){prepared++;try{yield;for(let i=0;i<20;i++)yield;return{clear:()=>true};}finally{discarded++;}}};
+for(const cancel of [()=>{s.player.mode='fly';},()=>{s.player.x=-30;},()=>{s.uiBusy=true;},()=>{valid=false;}]){
+ s.player.mode='walk';s.player.x=0;s.uiBusy=false;valid=true;update();click();assert(work.diagnostics().preparing);cancel();update();assert(!work.diagnostics().preparing);assert.equal(opened,0);assert.equal(discarded,prepared);
+}
+s.player.x=0;s.uiBusy=false;valid=true;update();click();work.reset();assert.equal(discarded,prepared);assert.equal(opened,0);console.log('PASS Flight, departure, UI takeover, unloaded destination and immediate reset discard prepared openings without committing');
 work.dispose();assert(button.removed);assert.equal(work.diagnostics().sites,0);console.log('PASS Clean frame-owned teardown removes the interaction');

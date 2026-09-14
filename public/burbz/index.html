@@ -5568,7 +5568,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
-<script src="town_strategy_core.js?v=town-strategy-v273-20260816"></script>
+<script src="town_strategy_core.js?v=building-opening-v405-20260914"></script>
 <script src="empire_grid_core.js?v=empire-grid-v322-20260825"></script>
 <script src="village_manager_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
@@ -18711,8 +18711,8 @@ function queueCompletionNotice(notice, deferredEffects) {
     sub: notice.sub || '',
     target: notice.target || null
   });
-  while (kept.filter(n => !['empire-building','academy-building'].includes(n.kind)).length > COMPLETION_NOTICE_LIMIT) {
-    kept.splice(kept.findIndex(n => !['empire-building','academy-building'].includes(n.kind)), 1);
+  while (kept.filter(n => !['empire-building','academy-building','wholesale-upgrade'].includes(n.kind)).length > COMPLETION_NOTICE_LIMIT) {
+    kept.splice(kept.findIndex(n => !['empire-building','academy-building','wholesale-upgrade'].includes(n.kind)), 1);
   }
   gameState.completionNotices = kept;
   if (deferredEffects) deferredEffects.push(renderCompletionNotices);
@@ -23102,17 +23102,20 @@ function scanHomeDeskSnapshot() {
   const kitchen=kitchenRosterEntries().map(entry=>{const care=entry.merlin?gameState.merlinCare:entry.bird?.care,status=dietHungerCore()?.hungerStatusForCare(care,now);return status?{id:entry.key,name:entry.name,art:getBirdArtUrl(entry.artBird),hunger:Math.round(status.hunger),level:status.level,label:status.label,away:!!entry.bird&&birdHasActiveExpedition(entry.bird.id)}:null;}).filter(row=>row&&row.level!=='fed').sort((a,b)=>b.hunger-a.hunger);
   const training=(gameState.birdTrainingSessions||[]).filter(s=>s&&s.id).map(s=>window.BurbzAcademyCore?.advanceTrainingSession?BurbzAcademyCore.advanceTrainingSession(s,now):s).filter(s=>!['claimed','cancelled','failed'].includes(s.status)).map(s=>({id:s.id,name:s.birdName||'Bird',detail:s.label||'Training',ready:s.status==='complete',progress:Math.round(s.progressPct??0),remaining:Math.ceil(Math.max(0,s.endMs-now)/60000)*60000}));
   const hospital=flock.filter(b=>b&&b.id&&Number.isFinite(b.hp)&&Number.isFinite(b.maxHp)&&b.hp<b.maxHp).map(b=>({id:b.id,name:birdDisplayName(b),art:getBirdArtUrl(b),hp:Math.max(0,b.hp),maxHp:b.maxHp,admitted:b.academy?.room==='hospital'})).sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp);
-  const completed=(gameState.completionNotices||[]).filter(n=>n&&n.id&&['empire-building','academy-building'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
+  const completed=(gameState.completionNotices||[]).filter(n=>n&&!n.target?.readyToOpen&&n.id&&['empire-building','academy-building','wholesale-upgrade'].includes(n.kind)).map(n=>{const link=n.target?.seed!=null?empireSettlementOfSeed(n.target.seed):null,town=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;return{id:n.id,name:n.title,detail:town?townDisplayName(town):n.sub,icon:n.icon,scope:n.kind==='academy-building'?'academy':'village'};});
   const loadout=gameState.inventory?.equipment?.["@player"]||{};
   const equipment=L.GEAR_SLOTS.map(slot=>{const item=L.gearById(loadout[slot]);return{slot,id:item?.id,name:item?.label,art:item?GEAR_ART_ROOT+encodeURIComponent(item.id)+".webp":null,icon:item?.icon};});
   const villageDesk=empireVillages().map(rec=>{
-    const constructions=rec.economy?.constructions||[],waiting=constructions.filter(c=>c.readyToOpenAt),building=constructions.filter(c=>!c.readyToOpenAt);
-    const notices=(gameState.completionNotices||[]).filter(n=>n.kind==='empire-building'&&Number(n.target?.wardSeed??n.target?.seed)===Number(rec.seed));
+    const constructions=rec.economy?.constructions||[],pending=Object.values(rec.economy?.readyToOpen||{});
+    const ordered=Object.values(gameState.empire?.wholesaleWorks||{}).flatMap(w=>(w.plan||[]).filter(step=>Number(step.seed)===Number(rec.seed)&&!step.openedAt&&!constructions.concat(pending).some(c=>c.id===step.buildingId)).map(step=>({id:step.buildingId,ready:now>=w.endMs})));
+    const hall=gameState.empire?.towns?.['seat-'+(rec.seed>>>0)]?.hallConstruction;
+    const waiting=pending.concat(ordered.filter(c=>c.ready),hall?.readyToOpenAt?[{id:'civic-hall'}]:[]),building=constructions.concat(ordered.filter(c=>!c.ready),hall&&!hall.readyToOpenAt?[{id:'civic-hall'}]:[]);
+    const notices=(gameState.completionNotices||[]).filter(n=>['empire-building','wholesale-upgrade'].includes(n.kind)&&!n.target?.readyToOpen&&(Number(n.target?.wardSeed??n.target?.seed)===Number(rec.seed)||(n.target?.wardSeeds||[]).includes(Number(rec.seed))));
     const link=empireSettlementOfSeed(rec.seed),holding=link?canonicalEmpireSettlement(empireSettlementById(link.id)):null;
     const postSeed=holding?holding.heartSeed:rec.seed,post=rolePostState('village',String(postSeed>>>0));
     const assignment={assigned:!!post.bird,role:empirePostTitleFor('village',String(postSeed>>>0)),name:post.bird?birdDisplayName(post.bird):'',birdId:post.bird?.id||null,art:post.bird?getBirdArtUrl(post.bird):null};
     return {seed:rec.seed>>>0,name:rec.name,assignment,waiting:waiting.length,underway:building.length,finished:notices.length,
-      pendingNames:waiting.map(c=>EMPIRE_BUILDING_INDEX[c.id]?.name||'Building'),underwayNames:building.map(c=>EMPIRE_BUILDING_INDEX[c.id]?.name||'Building')};
+      pendingNames:waiting.map(c=>c.id==='civic-hall'?'Civic Hall':EMPIRE_BUILDING_INDEX[c.id]?.name||'Building'),underwayNames:building.map(c=>c.id==='civic-hall'?'Civic Hall':EMPIRE_BUILDING_INDEX[c.id]?.name||'Building')};
   });
   return {stores,kitchen,training,hospital,completed,equipment,villageDesk};
 }
@@ -26698,8 +26701,8 @@ function villageRuinDefsFor(seed) {
 
 // ---- Construction timers ----------------------------------------------------
 // Raising a structure takes real time, mobile-game style: costs are paid up
-// front, a scaffolded site appears in the village, and the finished building
-// rises when the clock runs out — even if the app was closed meanwhile.
+// front and a scaffolded site appears. Timer completion frees the crew; an
+// assigned manager or an on-site visit then opens the finished building.
 function villageBuildTimeMs(building, level) {
   return Math.max(1, (building.buildMinutes || 5) * (level + 1)) * 60000;
 }
@@ -26753,8 +26756,21 @@ function villageReadyToOpen(rec) {
   const eco=ensureVillageEconomy(rec);
   return eco ? Object.values(eco.readyToOpen || {}) : [];
 }
+// Bulk orders keep their single receipt and reward. Their individual paid
+// sites are projections of the order, never duplicated village crew entries.
+function villageWholesaleProjects(rec) {
+  if(!rec)return [];
+  const busy=new Set([...villageConstructions(rec),...villageReadyToOpen(rec)].map(c=>c.id)),result=[];
+  for(const [orderKey,works]of Object.entries(gameState.empire?.wholesaleWorks||{})){
+    if(!Array.isArray(works?.plan)||!Number.isFinite(works.startMs)||!Number.isFinite(works.endMs))continue;
+    for(const step of works.plan){if(Number(step.seed)!==Number(rec.seed)||step.openedAt||busy.has(step.buildingId)||villageBuildingLevel(rec,step.buildingId)>=step.toLevel)continue;
+      result.push({id:step.buildingId,toLevel:step.toLevel,startMs:works.startMs,endMs:works.endMs,orderKey,readyToOpenAt:works.readyToOpenAt,assistedAt:works.assistedAt,assistedMs:works.assistedMs});busy.add(step.buildingId);
+    }
+  }
+  return result;
+}
 function villageConstructionOf(rec, buildingId) {
-  return villageConstructions(rec).find(con => con && con.id === buildingId) || villageReadyToOpen(rec).find(con=>con.id===buildingId) || null;
+  return villageConstructions(rec).find(con => con && con.id === buildingId) || villageReadyToOpen(rec).find(con=>con.id===buildingId) || villageWholesaleProjects(rec).find(con=>con.id===buildingId) || null;
 }
 function villageBuildSlots(rec) {
   // 2 with a Project Manager, 1 without. Written out rather than kept in a
@@ -26803,6 +26819,7 @@ function empireCompleteConstructions(now, options={}) {
       if (t < Number(con.endMs)) return;
       const opening=options.opening;
       const onSite=opening&&Number(opening.seed)===Number(rec.seed)&&opening.id===con.id&&Number(opening.startMs)===Number(con.startMs);
+      if(opening&&!onSite)return;
       const manager=villageStewardProject(rec.seed);
       if(!manager.staffed&&!onSite){
         if(con.readyToOpenAt)return;
@@ -26880,7 +26897,7 @@ function empireCompleteConstructions(now, options={}) {
   // Then the Project Managers. Each takes its next site; anything the bird
   // would already have finished is finished; round again — so a village nobody
   // has opened since Tuesday lands exactly where it should.
-  for (let pass = 0; pass < MANAGER_CATCHUP_PASSES; pass += 1) {
+  for (let pass = 0; pass < (options.opening?0:MANAGER_CATCHUP_PASSES); pass += 1) {
     let took = false;
     empireVillages().forEach(rec => { if (empireManagerTakeSite(rec, t, { snapshot: takeSnapshot })) took = true; });
     if (!took) break;
@@ -26903,6 +26920,7 @@ function empireCompleteConstructions(now, options={}) {
   });
   if (!completed && !started && !awaitingVisit) return false;
   try {
+    options.beforeCommit?.();
     durableSaveState({ throwOnFailure:true });
   } catch (error) {
     restoreGameStateSnapshot(snapshot);
@@ -28002,7 +28020,7 @@ function renderVillageManagePanel() {
   simulateVillageEconomy(rec, Date.now());
   const now = Date.now();
   const eco = ensureVillageEconomy(rec);
-  const constructions = villageConstructions(rec);
+  const constructions = [...villageConstructions(rec),...villageReadyToOpen(rec),...villageWholesaleProjects(rec)];
   const buildSlots = villageBuildSlots(rec);
   const slotsFree = villageBuildSlotsFree(rec);
   const snap = villageEconomySnapshot(rec);
@@ -28057,6 +28075,7 @@ function renderVillageManagePanel() {
   const constructionHtml = constructions.map(con => {
     const cb = EMPIRE_BUILDING_INDEX[con.id];
     const cbTier = cb ? villageBuildingTier(cb, con.toLevel) : null;
+    if(con.readyToOpenAt)return '<div class="province-construction"><strong>'+escapeHtml(cbTier?.name||'Building')+'</strong><div>Ready to open · Visit in Alderwing</div></div>';
     const pct = Math.round(constructionProgress(con, now) * 100);
     // Two crews can be at work here, so each card says whose it is.
     const crewTag = con.by === 'manager' && managerBird ? ' <span class="province-construction-crew">📋 ' + escapeHtml(birdDisplayName(managerBird)) + '</span>' : '';
@@ -28669,10 +28688,10 @@ function townApplySeatPolicyBundle(seat, bundle) {
 function townTotalDevelopment(settlement) { return townMemberRecords(settlement).reduce((sum, rec) => sum + villageTotalDevelopment(rec), 0); }
 function townMaxDevelopment(settlement) { return townMemberRecords(settlement).length * EMPIRE_BUILDINGS.reduce((sum, b) => sum + b.maxLevel, 0); }
 function townActiveDistrictProjects(settlement) {
-  return townMemberRecords(settlement).map(rec => ({ rec, construction:villageConstructionFor(rec) })).filter(project => project.construction);
+  return townMemberRecords(settlement).flatMap(rec => villageConstructions(rec).map(construction=>({rec,construction})));
 }
 function townActiveProjectCount(settlement) {
-  return townActiveDistrictProjects(settlement).length + townSeatStateRows(settlement).filter(row => row.state.hallConstruction).length;
+  return townActiveDistrictProjects(settlement).length + townSeatStateRows(settlement).filter(row => row.state.hallConstruction&&!row.state.hallConstruction.readyToOpenAt).length;
 }
 // Aggregate every hidden ward exactly once. A City keeps each constituent
 // Town's policy until the player collects and holds a new City-wide vote, so
@@ -28747,33 +28766,33 @@ function townCanChangePolicy(settlement, nowValue) {
   const lockMs = Number(core.TOWN_POLICY_LOCK_MS) || 0;
   return rows.every(row => !row.state.policyChangedAt || now - row.state.policyChangedAt >= lockMs);
 }
-function townCompleteHallConstructions(nowValue) {
-  const now = Number(nowValue) || Date.now(), info = empireSettlementsInfo();
-  // Iterate stable Town seats, including Towns now hidden inside a City.
-  const due = [];
-  (info.towns || []).forEach(seat => {
-    const state = ensureTownSeatState(seat), construction = state && state.hallConstruction;
-    if (!construction || now < Number(construction.endMs)) return;
-    due.push({ seat, state, construction });
-  });
-  if (!due.length) return false;
-  const before = snapshotGameState(), messages = [];
-  try {
-    due.forEach(({ seat, state, construction }) => {
-      state.hallLevel = Math.max(state.hallLevel || 1, Math.min(5, Number(construction.toLevel) || ((state.hallLevel || 1) + 1)));
-      state.hallConstruction = null; addPlayerXp(24 + state.hallLevel * 4);
-      const publicSettlement = seat.cityId ? empireSettlementById(seat.cityId) : seat;
-      messages.push('🏛️ ' + townDisplayName(publicSettlement) + ' Hall reached level ' + state.hallLevel + '!');
-    });
-    durableSaveState({ throwOnFailure:true });
-  } catch (error) {
-    restoreGameStateSnapshot(before);
-    console.warn('Town Hall completion rolled back', error);
-    showToast('A Hall upgrade finished, but its result could not be saved. Please try again.');
-    return false;
+function townCompleteHallConstructions(nowValue,options={}) {
+  const now=Number(nowValue)||Date.now(),info=empireSettlementsInfo(),due=[];
+  for(const seat of info.towns||[]){const state=ensureTownSeatState(seat),construction=state?.hallConstruction;
+    if(!construction||now<Number(construction.endMs))continue;
+    const opening=options.opening,onSite=opening&&Number(opening.seed)===Number(seat.heartSeed)&&opening.id==='civic-hall'&&Number(opening.startMs)===Number(construction.startMs);
+    if(opening&&!onSite)continue;
+    const automatic=villageStewardProject(seat.heartSeed).staffed;
+    if(!onSite&&!automatic&&construction.readyToOpenAt)continue;
+    due.push({seat,state,construction,open:!!onSite||automatic});
   }
-  messages.forEach(showToast); SFX.questComplete(); vibrate(45); return true;
+  if(!due.length)return false;
+  const before=snapshotGameState(),messages=[];let opened=false;
+  try{
+    for(const {seat,state,construction,open} of due){
+      const holding=seat.cityId?empireSettlementById(seat.cityId):seat,name=townDisplayName(holding);
+      const target={seed:holding.heartSeed,wardSeed:seat.heartSeed,buildingId:'civic-hall',startMs:construction.startMs};
+      if(!open){state.hallConstruction={...construction,readyToOpenAt:now};queueCompletionNotice({kind:'empire-building',icon:'🏛️',title:'Hall ready to open',sub:name+' — visit in Alderwing to open',target:{...target,readyToOpen:true}});messages.push(name+' Hall is ready. Visit its work site in Alderwing to open it.');continue;}
+      state.hallLevel=Math.max(state.hallLevel||1,Math.min(5,Number(construction.toLevel)||((state.hallLevel||1)+1)));
+      state.hallConstruction=null;applyPlayerXpState(24+state.hallLevel*4);opened=true;
+      gameState.completionNotices=(gameState.completionNotices||[]).filter(n=>!(n.target?.readyToOpen&&Number(n.target.wardSeed)===Number(seat.heartSeed)&&n.target.buildingId==='civic-hall'&&Number(n.target.startMs)===Number(construction.startMs)));
+      queueCompletionNotice({kind:'empire-building',icon:'🏛️',title:'Hall level '+state.hallLevel,sub:name+' — tap to manage',target});messages.push('🏛️ '+name+' Hall reached level '+state.hallLevel+'!');
+    }
+    options.beforeCommit?.();durableSaveState({throwOnFailure:true});
+  }catch(error){restoreGameStateSnapshot(before);renderCompletionNotices();showToast('The Hall update could not be saved. Please try again.');return false;}
+  messages.forEach(showToast);if(opened){SFX.questComplete();vibrate(45);}return true;
 }
+
 function ensureTownSteward(settlement) {
   const s = canonicalEmpireSettlement(settlement), core = birdRolesCore();
   if (!s || !core) return;
@@ -28854,7 +28873,7 @@ function beginTownHallUpgrade(settlementId) {
 }
 function townNetworkUpgradeTarget(settlement, buildingId) {
   const building = EMPIRE_BUILDING_INDEX[buildingId]; if (!building) return null;
-  return townMemberRecords(settlement).filter(rec => !villageConstructionFor(rec) && villageBuildingLevel(rec, buildingId) < building.maxLevel)
+  return townMemberRecords(settlement).filter(rec => villageBuildSlotsFree(rec)>0 && !villageConstructionOf(rec,buildingId) && villageBuildingLevel(rec, buildingId) < building.maxLevel)
     .sort((a, b) => villageBuildingLevel(a, buildingId) - villageBuildingLevel(b, buildingId) || villageTotalDevelopment(a) - villageTotalDevelopment(b) || (a.seed >>> 0) - (b.seed >>> 0))[0] || null;
 }
 function townBuildNetwork(settlementId, buildingId) {
@@ -28916,7 +28935,9 @@ function townPolicyEffectCopy(policy) {
   return 'All output -10%, but every new Town project finishes 20% faster.';
 }
 function townProjectHTML(icon, label, construction, now) {
-  if (!construction) return ''; const pct = Math.round(constructionProgress(construction, now) * 100);
+  if (!construction) return '';
+  if(construction.readyToOpenAt)return '<div class="town-project"><strong>'+icon+' '+escapeHtml(label)+'</strong><div>Ready to open · Visit in Alderwing</div></div>';
+  const pct = Math.round(constructionProgress(construction, now) * 100);
   return '<div class="town-project"><div class="town-project-head"><span>' + icon + ' ' + escapeHtml(label) + '</span><span class="town-project-eta" data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - now) + '</span></div><div class="province-need-bar"><div class="province-construction-fill" data-build-bar data-build-start="' + construction.startMs + '" data-build-end="' + construction.endMs + '" style="width:' + pct + '%"></div></div></div>';
 }
 
@@ -28950,7 +28971,7 @@ function wholesaleUpgradePlan(records) {
       let level = villageBuildingLevel(rec, b.id);
       // An in-flight ward build counts as done, so the order never pays twice.
       const rising = villageConstructionOf(rec, b.id);
-      if (rising) level = Math.max(level, Number(rising.toLevel) || level);
+      if (rising) return; // Finish/open this paid project before ordering another level.
       if (level >= b.maxLevel) return;
       if (level === 0 && trainerLevel < (Number(b.unlockLevel) || 1)) return;
       // The settlement law holds for wholesale orders too: no new town-tier
@@ -29015,54 +29036,42 @@ function beginWholesaleUpgrade(id, scope) {
   if (isRegion) renderRegionScreen(); else renderTownScreen();
   ensureProvinceCountdownTicker();
 }
-function completeWholesaleWorks(now) {
-  const empire = ensureEmpireState();
-  if (!empire || !empire.wholesaleWorks) return false;
-  const t = Number(now) || Date.now();
-  const due = Object.entries(empire.wholesaleWorks).filter(([, works]) =>
-    works && Array.isArray(works.plan) && Number.isFinite(Number(works.endMs)) && t >= Number(works.endMs));
-  if (!due.length) return false;
-  const snapshot = snapshotGameState();
-  const finished = [];
-  try {
-    due.forEach(([key, works]) => {
-      works.plan.forEach(step => {
-        const rec = empire.villages[String(Number(step.seed) >>> 0)];
-        const building = EMPIRE_BUILDING_INDEX[step.buildingId];
-        if (!rec || !building) return;
-        const eco = ensureVillageEconomy(rec);
-        eco.buildings[building.id] = Math.max(eco.buildings[building.id] || 0, Math.min(building.maxLevel, Number(step.toLevel) || 1));
-        // New homes draw new residents, exactly like a single shelter build.
-        if (building.need === 'shelter') {
-          const cap = villageNeedCapacity(rec, 'shelter');
-          eco.population = Math.max(eco.population, Math.min(cap, eco.population + Math.ceil((building.perLevel || 0) / 2)));
-        }
-        maybeAwardMergeStar(rec);
-      });
-      delete empire.wholesaleWorks[key];
-      addPlayerXp(30);
-      finished.push(works);
-      queueCompletionNotice({
-        kind: 'wholesale-upgrade',
-        icon: '⬆️',
-        title: (works.name || 'Your settlement') + ' rises together',
-        sub: works.plan.length + ' buildings finished in one order — tap to see.',
-        target: works.target || null
-      });
-    });
-    durableSaveState({ throwOnFailure: true });
-  } catch (error) {
-    restoreGameStateSnapshot(snapshot);
-    renderCompletionNotices();
-    console.warn('Wholesale completion rolled back', error);
-    showToast('The upgrade order finished, but its result could not be saved. Please try again.');
-    return false;
-  }
-  finished.forEach(works => showToast('⬆️ ' + (works.name || 'Your settlement') + ': ' + works.plan.length + ' buildings stand taller — the whole place levelled up together.'));
-  if (villageActive) villageBuiltSeed = null;
-  SFX.questComplete();
-  vibrate(45);
-  return true;
+function completeWholesaleWorks(now,options={}) {
+  const empire=ensureEmpireState();if(!empire?.wholesaleWorks)return false;
+  const t=Number(now)||Date.now(),finished=[];let before=null,changed=false,opened=false;const capture=()=>{if(!before)before=snapshotGameState();};
+  try{
+    for(const [key,works]of Object.entries(empire.wholesaleWorks)){
+      if(!Array.isArray(works?.plan)||!Number.isFinite(works.endMs)||t<works.endMs)continue;
+      if(options.opening&&options.opening.orderKey!==key)continue;
+      for(const step of works.plan){
+        if(step.openedAt)continue;
+        const rec=empire.villages[String(Number(step.seed)>>>0)],building=EMPIRE_BUILDING_INDEX[step.buildingId];
+        if(!rec||!building){capture();step.openedAt=t;changed=true;continue;}
+        const eco=ensureVillageEconomy(rec),level=villageBuildingLevel(rec,building.id);
+        if(level>=Number(step.toLevel)){capture();step.openedAt=t;changed=true;continue;}
+        // Legacy orders may already have paid for a later level over an
+        // individual project. Keep both; do not open the later one first.
+        if([...villageConstructions(rec),...villageReadyToOpen(rec)].some(c=>c.id===building.id))continue;
+        const target=options.opening,onSite=target&&Number(target.seed)===Number(rec.seed)&&target.id===building.id&&Number(target.startMs)===Number(works.startMs);
+        if(target&&!onSite)continue;
+        if(!onSite&&!villageStewardProject(rec.seed).staffed)continue;
+        capture();eco.buildings[building.id]=Math.max(level,Math.min(building.maxLevel,Number(step.toLevel)||1));
+        if(building.need==='shelter'){const cap=villageNeedCapacity(rec,'shelter');eco.population=Math.max(eco.population,Math.min(cap,eco.population+Math.ceil((building.perLevel||0)/2)));}
+        maybeAwardMergeStar(rec);step.openedAt=t;changed=true;opened=true;
+      }
+      if(works.plan.every(step=>step.openedAt)){
+        capture();delete empire.wholesaleWorks[key];applyPlayerXpState(30);changed=true;finished.push(works);
+        gameState.completionNotices=(gameState.completionNotices||[]).filter(n=>!(n.target?.readyToOpen&&n.target.orderKey===key));
+        queueCompletionNotice({kind:'wholesale-upgrade',icon:'⬆️',title:(works.name||'Your settlement')+' rises together',sub:works.plan.length+' buildings opened — tap to see.',target:{...works.target,wardSeeds:[...new Set(works.plan.map(step=>Number(step.seed)))]}});
+      }else if(!works.readyToOpenAt){
+        capture();works.readyToOpenAt=t;changed=true;queueCompletionNotice({kind:'empire-building',icon:'🏗️',title:(works.name||'Your settlement')+' buildings ready',sub:'Visit each finished site in Alderwing to open it.',target:{...works.target,orderKey:key,readyToOpen:true}});
+      }
+    }
+    if(!changed)return false;
+    options.beforeCommit?.();durableSaveState({throwOnFailure:true});
+  }catch(error){if(before)restoreGameStateSnapshot(before);renderCompletionNotices();showToast('The order update could not be saved. Please try again.');return false;}
+  finished.forEach(works=>showToast('⬆️ '+(works.name||'Your settlement')+': every building in the order is open.'));
+  if(villageActive)villageBuiltSeed=null;if(opened||finished.length){SFX.questComplete();vibrate(45);}return true;
 }
 // Step back into a merged ward, just to see the old village as it was.
 function visitEmpireWard(seed) {
@@ -29129,7 +29138,7 @@ function villageDistrictState(seed) {
     ruinsLeft: wrecks.length,
     firstWreckKind: wrecks.length ? wrecks[0].kind : null,
     construction: rec ? villageConstructionFor(rec) : null,
-    constructions: rec ? villageConstructions(rec) : []
+    constructions: rec ? [...villageConstructions(rec),...villageReadyToOpen(rec),...villageWholesaleProjects(rec)] : []
   };
 }
 function townSceneKey(settle) {
@@ -29149,11 +29158,13 @@ function villageBuildingSceneKey(rec) {
   return JSON.stringify([
     ensureVillageEconomy(rec).population,
     EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)),
-    villageConstructions(rec).map(c => [c.id, c.toLevel, c.startMs, c.endMs]),
+    [...villageConstructions(rec),...villageReadyToOpen(rec),...villageWholesaleProjects(rec)].map(c => [c.id, c.toLevel, c.startMs, c.endMs,!!c.readyToOpenAt]),
+    ensureVillageEconomy(rec).buildingPlots,
     (ensureVillageEconomy(rec).ruins || []).map(r => !!r.cleared)
   ]);
 }
 function renderTownScreen() {
+  if(window.BurbzVillageWalk?.isOpen())return;
   const panel = $('townHallPanel');
   if (!panel) return;
   townCompleteHallConstructions(); empireCompleteConstructions(); completeWholesaleWorks(); simulateAllVillageEconomies();
@@ -29183,7 +29194,7 @@ function renderTownScreen() {
     const served = Math.min(store.eats, store.rate + store.store), pct = store.eats > 0 ? Math.min(100, Math.round(served / store.eats * 100)) : 100;
     return '<div class="province-need"><div class="province-need-label"><span>' + icon + ' ' + label + ' provisioning</span><span>' + Math.floor(store.rate) + ' fresh + ' + Math.floor(store.store) + '/' + Math.floor(store.cap) + ' stored</span></div><div class="province-need-bar"><div class="province-need-fill' + (pct >= 100 ? '' : pct >= 60 ? ' mid' : ' low') + '" style="width:' + pct + '%"></div></div></div>';
   }).join('');
-  const districtProjects = townActiveDistrictProjects(settle).map(project => {
+  const districtProjects = [...townActiveDistrictProjects(settle),...townMemberRecords(settle).flatMap(rec=>villageReadyToOpen(rec).map(construction=>({rec,construction})))].map(project => {
     const building = EMPIRE_BUILDING_INDEX[project.construction.id];
     return townProjectHTML('🏗️', (building ? building.icon + ' ' + building.name : 'Town network') + ' works', project.construction, now);
   }).join('');
@@ -29207,7 +29218,7 @@ function renderTownScreen() {
     const level = townNetworkLevel(settle, building.id), max = townMemberRecords(settle).length * building.maxLevel;
     const target = townNetworkUpgradeTarget(settle, building.id) || townMemberRecords(settle)[0];
     const tier = villageBuildingTier(building, Math.max(1, target ? villageBuildingLevel(target, building.id) : 0));
-    const rising = townActiveDistrictProjects(settle).some(project => project.construction.id === building.id);
+    const rising = townMemberRecords(settle).some(rec=>villageConstructionOf(rec,building.id));
     const locked = level <= 0 && townTrainerLevel < (Number(building.unlockLevel) || 1);
     const flag = rising ? '⏳' : locked ? '🔒' : level >= max ? '★' : '';
     return '<button type="button" class="province-tile' + (level > 0 ? ' is-built' : '') + (locked ? ' is-locked' : '') + '"' +
@@ -29461,7 +29472,7 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
   if (!building) return '';
   const level = villageBuildingLevel(rec, building.id);
   const tier = villageBuildingTier(building, level), crew = villageWorkforce(rec);
-  const construction = villageConstructionFor(rec);
+  const construction = villageConstructionOf(rec,building.id);
   const buildingHere = construction && construction.id === building.id;
   const trainerLevel = Number(gameState.player.level) || 1;
   const locked = !level && trainerLevel < (Number(building.unlockLevel) || 1);
@@ -29479,6 +29490,7 @@ function townBuildingSheetHTML(settle, rec, buildingId) {
   const output = level ? townBuildingOutputText(building, level, villageCrewShare(building, crew)) : '';
   let action;
   if (maxed) action = '<button class="town-action" disabled>★ FULLY BUILT</button>';
+  else if (buildingHere&&construction.readyToOpenAt) action = '<div class="town-advice">Ready to open · Visit this building in Alderwing</div>';
   else if (buildingHere) action = '<button class="town-action" disabled>🏗️ BUILDING · <span data-build-end="' + construction.endMs + '">⏳ ' + formatBuildCountdown(construction.endMs - Date.now()) + '</span></button>';
   else if (locked) action = '<button class="town-action" disabled>🔒 UNLOCKS AT TRAINER LV ' + building.unlockLevel + '</button>';
   else {
@@ -30057,20 +30069,106 @@ function villageDiscoveryAdapter(seed) {
     ].filter(Boolean).join(' · ')
   };
 }
+// Saved plot coordinates are settlement-local. Capture the already-visible
+// layout with the opening transaction so revisits keep every paid neighbour.
+function settlementSavedPlots(seed, scope) {
+  const rec=empireVillageRecordBySeed(seed),plots=rec?.economy?.buildingPlots?.[scope];
+  if(!plots||typeof plots!=='object'||Array.isArray(plots))return {};
+  return Object.fromEntries(Object.entries(plots).filter(([key,p])=>p&&[p.x,p.z,p.yaw,p.rad].every(Number.isFinite)&&Math.abs(p.x)<4000&&Math.abs(p.z)<4000&&p.rad>0&&p.rad<100));
+}
+function settlementPlotMetadata(object,scope,seed,key,rad,palette) {
+  Object.assign(object.userData,{plotScope:scope,wardSeed:Number(seed),plotKey:key,plotRadius:rad,buildingPalette:palette});
+}
+function settlementRememberPlots(frame,remove,add) {
+  const objects=frame.buildings.filter(b=>!remove.includes(b)).concat(add),inverse=new THREE.Matrix4().copy(frame.scene.matrixWorld).invert();
+  for(const object of objects){const d=object.userData;if(!d.plotScope||!d.plotKey)continue;
+    const rec=empireVillageRecordBySeed(d.wardSeed);if(!rec)continue;
+    const eco=ensureVillageEconomy(rec);
+    if(!eco.buildingPlots||typeof eco.buildingPlots!=='object'||Array.isArray(eco.buildingPlots))eco.buildingPlots={};
+    if(!eco.buildingPlots[d.plotScope]||typeof eco.buildingPlots[d.plotScope]!=='object'||Array.isArray(eco.buildingPlots[d.plotScope]))eco.buildingPlots[d.plotScope]={};
+    const position=object.getWorldPosition(new THREE.Vector3()).applyMatrix4(inverse);
+    eco.buildingPlots[d.plotScope][d.plotKey]={x:position.x,z:position.z,yaw:object.rotation.y,rad:d.plotRadius||3.1};
+  }
+  for(const object of remove){const d=object.userData;if(d.construction&&d.plotScope){const rec=empireVillageRecordBySeed(d.wardSeed);delete rec?.economy?.buildingPlots?.[d.plotScope]?.[d.plotKey];}}
+}
+function settlementRetireBuildingObjects(change){
+  const removed=new Set(change.remove),belongs=object=>{for(let o=object;o;o=o.parent)if(removed.has(o))return true;return false;};
+  const context=captureSettlementBuilder();
+  const registries=[context.villageBuildings,context.townEconBuildings].filter(a=>a?.some(o=>removed.has(o)));
+  for(const value of Object.values(context))if(Array.isArray(value)){
+    const keep=value.filter(object=>!belongs(object));if(keep.length!==value.length)value.splice(0,value.length,...keep);
+  }
+  for(const registry of registries)registry.push(...change.add);
+  if(removed.has(townHallBuilding))townHallBuilding=change.add.find(b=>b.userData.townHall)||townHallBuilding;
+}
 function buildingWorkAdapter() {
   const save=gameState;
   function project(target){
     if(gameState!==save||!target||!empireOwnsVillage(target.seed))return null;
-    const rec=empireVillageRecordBySeed(target.seed),con=villageConstructionOf(rec,target.id);
-    return con&&Number(con.startMs)===Number(target.startMs)?con:null;
+    const seat=target.id==='civic-hall'?(empireSettlementsInfo().towns||[]).find(seat=>Number(seat.heartSeed)===Number(target.seed)):null;
+    const rec=empireVillageRecordBySeed(target.seed),con=seat?ensureTownSeatState(seat)?.hallConstruction:villageConstructionOf(rec,target.id);
+    return con&&Number(con.startMs)===Number(target.startMs)&&(!target.orderKey||target.orderKey===con.orderKey)?con:null;
+  }
+  function finished(target){
+    if(gameState!==save||!target||!Number.isFinite(target.toLevel)||!empireOwnsVillage(target.seed))return null;
+    const hall=target.id==='civic-hall',seat=hall?(empireSettlementsInfo().towns||[]).find(seat=>Number(seat.heartSeed)===Number(target.seed)):null;
+    const level=hall?(seat?ensureTownSeatState(seat).hallLevel:0):villageBuildingLevel(empireVillageRecordBySeed(target.seed),target.id);
+    return level>=target.toLevel?{id:target.id,toLevel:level,startMs:target.startMs,endMs:target.startMs+1,automatic:true}:null;
   }
   return {
-    describe(target){const con=project(target);return con?{...con,key:'village:'+target.seed+':'+target.id,label:EMPIRE_BUILDING_INDEX[target.id]?.name||'Building'}:null;},
+    describe(target){const con=project(target)||finished(target);return con?{...con,key:'village:'+target.seed+':'+target.id,label:target.id==='civic-hall'?'Civic Hall':EMPIRE_BUILDING_INDEX[target.id]?.name||'Building'}:null;},
+    prepare(target,frame){
+      const con=project(target)||finished(target),hall=target.id==='civic-hall',building=hall?{id:'civic-hall',name:'Civic Hall',icon:'🏛️'}:EMPIRE_BUILDING_INDEX[target.id];
+      if(!con||Date.now()<con.endMs||!building)return null;
+      const matches=frame.buildings.filter(b=>Number(b.userData.wardSeed??target.seed)===Number(target.seed)&&b.userData.buildingId===target.id);
+      const site=matches.find(b=>b.userData.construction&&Number(b.userData.construction.startMs)===Number(target.startMs));
+      if(!site)return null;
+      const old=matches.filter(b=>!b.userData.construction),scope=site.userData.plotScope,town=scope?.startsWith('town:'),pal=site.userData.buildingPalette;
+      if(!scope||!pal)return null;
+      frame.scene.updateWorldMatrix(true,true);
+      const inverse=new THREE.Matrix4().copy(frame.scene.matrixWorld).invert(),toLevel=Number(con.toLevel),add=[];
+      const copies=town?1:['cottages','market'].includes(target.id)?toLevel:1;
+      for(let part=0;part<copies;part++){
+        const previous=old.find(b=>b.userData.plotKey===target.id+':'+part)||old[part],at=previous||site;
+        const random=villageRngFrom((Number(target.seed)^Math.imul(part+1,0x51ed270b)^toLevel)>>>0);
+        const model=hall?villageMakeTownHall(random,pal,toLevel,!!old[0]?.userData.townHall?.city):town?townMakeEconBuilding(target.id,toLevel,random,pal):BurbzSettlementModels.building(THREE,target.id,toLevel,random,pal);
+        if(hall&&old[0])model.scale.copy(old[0].scale);
+        model.position.copy(at.getWorldPosition(new THREE.Vector3()).applyMatrix4(inverse));model.rotation.y=previous?previous.rotation.y:Math.atan2(-model.position.x,-model.position.z);
+        if(!town)model.userData.homeId=building.need==='shelter'?target.id+':'+part:null;
+        const box=new THREE.Box3().setFromObject(model),radius=Math.hypot(box.max.x-box.min.x,box.max.z-box.min.z)/2+.3;
+        // Legacy bulk orders may create several separate units at once. Keep
+        // the first on its scaffold and find distinct loaded plots for extras.
+        if(!previous&&add.some(b=>Math.hypot(b.position.x-model.position.x,b.position.z-model.position.z)<.01)){
+          const center=model.position.clone(),occupied=frame.buildings.filter(b=>!matches.includes(b)).concat(add),positions=occupied.map(b=>({p:b.getWorldPosition(new THREE.Vector3()).applyMatrix4(inverse),r:b.userData.plotRadius||3.1}));
+          // Prepared additions are not parented yet, so their positions already
+          // belong to this frame, including when this is a streamed settlement.
+          add.forEach((b,i)=>positions[positions.length-add.length+i].p.copy(b.position));
+          let found=false;
+          for(let ring=radius*2+1;!found&&ring<80;ring+=radius+1)for(let i=0;i<48;i++){
+            const a=i*Math.PI/24,x=center.x+Math.cos(a)*ring,z=center.z+Math.sin(a)*ring;
+            if(positions.some(o=>Math.hypot(x-o.p.x,z-o.p.z)<radius+o.r+.5))continue;
+            let clear=true;for(let n=0;n<9;n++){const a=n*Math.PI/4,dx=n===8?0:Math.cos(a)*radius,dz=n===8?0:Math.sin(a)*radius;if(!(frame.world.allowedBeyond||frame.world.allowed)(x+dx,z+dz)){clear=false;break;}}
+            if(clear){model.position.set(x,center.y,z);model.rotation.y=Math.atan2(-x,-z);found=true;break;}
+          }
+          if(!found)throw Error('The extra building needs a clear nearby plot. Try again when the ground has loaded.');
+        }
+        settlementPlotMetadata(model,scope,target.seed,target.id+':'+part,radius,pal);
+        Object.assign(model.userData,{buildingId:target.id,economyBuilding:true,modelLevel:toLevel,sceneLabel:{icon:building.icon,name:hall?'Civic Hall':villageBuildingTier(building,toLevel).name,detail:'Open building · walk to the door'}});
+        model.traverse(o=>{if(o.isMesh){o.receiveShadow=true;o.castShadow=!o.material?.transparent&&!o.material?.isMeshBasicMaterial;}});add.push(model);
+      }
+      return{remove:matches,add,commit(){
+        const current=con.automatic?finished(target):project(target);if(!current||Number(current.toLevel)!==toLevel||Date.now()<current.endMs)return{ok:false,error:'This project changed. Try again.'};
+        if(con.automatic){const before=snapshotGameState();try{settlementRememberPlots(frame,matches,add);durableSaveState({throwOnFailure:true});return{ok:true};}catch{restoreGameStateSnapshot(before);return{ok:false,error:'The updated building could not be saved.'};}}
+        const complete=hall?townCompleteHallConstructions:con.orderKey?completeWholesaleWorks:empireCompleteConstructions;
+        const ok=complete(Date.now(),{opening:target,beforeCommit:()=>settlementRememberPlots(frame,matches,add)});
+        return{ok:ok&&!project(target),error:'The opening could not be saved. Please try again.'};
+      }};
+    },
     assist(target){
       const con=project(target),next=BurbzBuildingWorkCore.assist(con&&{...con,key:'village:'+target.seed+':'+target.id},Date.now());
       if(!next)return{ok:false,error:'This project cannot be helped again.'};
       const before=snapshotGameState();
-      try{Object.assign(con,{endMs:next.endMs,assistedAt:next.assistedAt,assistedMs:next.assistedMs});durableSaveState({throwOnFailure:true});return{ok:true,savedMs:next.assistedMs};}
+      try{Object.assign(con.orderKey?gameState.empire.wholesaleWorks[con.orderKey]:con,{endMs:next.endMs,assistedAt:next.assistedAt,assistedMs:next.assistedMs});durableSaveState({throwOnFailure:true});return{ok:true,savedMs:next.assistedMs};}
       catch(error){restoreGameStateSnapshot(before);return{ok:false,error:'The help could not be saved. Please try again.'};}
     }
   };
@@ -30080,7 +30178,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=builder-actions-v404b-20260914';
+        script.src = 'village_walk.js?v=building-opening-v405-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -30104,7 +30202,7 @@ $('villageWalkBtn')?.addEventListener('click', async () => {
       discoveries: villageDiscoveryAdapter(seed), harvest:villageHarvestAdapter(seed), character:walkingCharacterState,
       exploreWorld:pose=>exploreFromSettlement(currentVillage(),pose),
       boundaryExit:pose=>exploreFromSettlement(currentVillage(),pose),
-      source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,
+      source: () => ({ scene:villageScene, renderer:villageRenderer, camera:villageCamera, buildings:villageBuildings,changed:settlementRetireBuildingObjects,
         movers:[...villageNpcs,...villageWalkers,...villageTraffic,...villageLivestock,...villageFlocks,...villageRoofBirds,...villageChickens,...villageWindmills,...villageCloths,...villageSigns,...villageDucks,...villageButterflies] }),
       suspend: () => { villageRunning = false; cancelAnimationFrame(villageAnimationRequest); clearTimeout(villagePauseTimer); },
       animate: t => villageAnimateFrame(t, true),
@@ -30132,7 +30230,7 @@ $('townWalkBtn')?.addEventListener('click',async()=>{
       discoveries:villageDiscoveryAdapter(seed),harvest:villageHarvestAdapter(seed),work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),
       exploreWorld:pose=>exploreFromSettlement(settlement.centroid,pose),
       boundaryExit:pose=>exploreFromSettlement(settlement.centroid,pose),
-      source:()=>({scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,
+      source:()=>({scene:townScene,renderer:townRenderer,camera:townCamera,buildings:townEconBuildings,changed:settlementRetireBuildingObjects,
         movers:[...townNpcs,...townWalkers,...townTraffic,...townLivestock,...townFlocks,...townRoofBirds,...townChickens,...townWindmills,...townCloths,...townSigns]}),
       suspend:()=>{townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);},
       animate:t=>townAnimateFrame(t,true),
@@ -30332,6 +30430,7 @@ function villageBuildingSheetHTML(rec, buildingId) {
   const upgradeLabel = level === 0 ? '🔨 BUILD' : (nextTier && nextTier.name !== tier.name ? '⬆️ REBUILD AS ' + nextTier.name.toUpperCase() : '⬆️ UPGRADE');
   let btn;
   if (maxed) btn = '<button class="province-build-btn maxed" disabled><span class="build-btn-act">★ FULLY BUILT</span></button>';
+  else if (inProgress&&rising.readyToOpenAt) btn = '<div class="province-build-btn busy">Ready to open · Visit this building in Alderwing</div>';
   else if (inProgress) btn = '<button class="province-build-btn busy" disabled><span class="build-btn-act">🏗️ BUILDING</span><span class="build-cost-row"><span class="build-cost-bit" data-build-end="' + rising.endMs + '">⏳ ' + formatBuildCountdown(rising.endMs - now) + '</span></span></button>';
   else if (locked) btn = '<button class="province-build-btn locked" disabled><span class="build-btn-act">🔒 UNLOCKS AT TRAINER LV ' + b.unlockLevel + '</span></button>';
   // Short on coins, timber, stone or a specialist material? The button stays live: tapping it opens the
@@ -34336,7 +34435,8 @@ function* buildVillageSceneSteps(v) {
   // ---- placement registry: scatter without piling props into each other -----
   // A hamlet keeps only a small clearing by its well; formal plans keep the
   // whole square clear.
-  const claimed = [{ x: 0, z: 0, rad: layout === 'hamlet' ? 4.2 : 6.4 }];
+  const savedPlots=settlementSavedPlots(v.seed,'village');
+  const claimed = [{ x: 0, z: 0, rad: layout === 'hamlet' ? 4.2 : 6.4 },...Object.values(savedPlots)];
   function spotFree(x, z, rad) {
     for (const c of claimed) { if (Math.hypot(x - c.x, z - c.z) < rad + c.rad) return false; }
     if (layout === 'crossroads') {
@@ -35047,7 +35147,8 @@ function* buildVillageSceneSteps(v) {
   // reshuffling the rest of the settlement every time something is built.
   if (econRec) {
     const er = villageRngFrom((v.seed >>> 0) ^ 0x51ed270b);
-    const econScatter = (minR, maxR, rad) => {
+    const econScatter = (minR, maxR, rad, key) => {
+      if(savedPlots[key])return savedPlots[key];
       for (let attempt = 0; attempt < 16; attempt++) {
         const a = dryArc.c !== undefined ? dryArc.c + (er() - 0.5) * dryArc.s : er() * Math.PI * 2;
         const dd = minR + er() * (maxR - minR);
@@ -35082,9 +35183,10 @@ function* buildVillageSceneSteps(v) {
       yield;
       const level = villageBuildingLevel(econRec, b.id), pending = villageConstructionOf(econRec, b.id);
       if (pending) {
-        const spot = econScatter(8.5, 14, 3.1);
+        const spot = econScatter(8.5, 14, 3.1, "work:"+b.id);
         const site = villageMakeConstructionSite(er, pal, constructionProgress(pending), pending);
         site.position.set(spot.x, 0, spot.z);
+        settlementPlotMetadata(site,'village',v.seed,'work:'+b.id,3.1,pal);
         econLabel(site, '🏗️ ' + b.name + (level ? ' upgrade' : ''), 2.9, b.id);
         villageScene.add(site);
       }
@@ -35095,9 +35197,10 @@ function* buildVillageSceneSteps(v) {
         const model = window.BurbzSettlementModels.building(THREE, b.id, level, er, pal);
         const footprint = model.userData.footprint;
         const radius = Math.hypot(footprint.width, footprint.depth) / 2 + .3;
-        const spot = b.id === 'well' ? {x:0,z:0} : econScatter(7, 16, radius);
+        const spot = savedPlots[b.id+':'+part] || (b.id === 'well' ? {x:0,z:0} : econScatter(7, 16, radius, b.id+':'+part));
         model.position.set(spot.x, 0, spot.z);
-        model.rotation.y = Math.atan2(-spot.x, -spot.z);
+        model.rotation.y = Number.isFinite(spot.yaw)?spot.yaw:Math.atan2(-spot.x, -spot.z);
+        settlementPlotMetadata(model,'village',v.seed,b.id+':'+part,radius,pal);
         model.userData.homeId = b.need === 'shelter' ? b.id + ':' + part : null;
         econLabel(model, b.icon + ' ' + villageBuildingTier(b, level).name, 2.8, b.id);
         villageScene.add(model);
@@ -35795,7 +35898,8 @@ function ensureTownRenderer(stage) {
       while (obj && obj.userData.buildingId === undefined && obj.userData.ruinIndex === undefined && !obj.userData.townHall && !obj.userData.townHallStone && obj.userData.districtSeed === undefined && !obj.userData.npc && !obj.userData.townGround) obj = obj.parent;
       const info = townSceneContextInfo(obj);
       if (info) settlementSceneSetContext('town', obj, info);
-      if (obj && obj.userData.buildingId !== undefined) openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId);
+      if (obj && obj.userData.buildingId === 'civic-hall') { SFX.tap(); settlementSceneScrollTo('townHallSection'); }
+      else if (obj && obj.userData.buildingId !== undefined) openTownBuildingSheet(obj.userData.wardSeed, obj.userData.buildingId);
       else if (obj && obj.userData.ruinIndex !== undefined) info?.action();
       else if (obj && obj.userData.townHall) {
         const hall = obj.userData.townHall;
@@ -36129,6 +36233,7 @@ function* buildTownSceneSteps(settle) {
   townHallBuilding.lookAt(0, 1.1, 0); townHallBuilding.rotation.x = 0; townHallBuilding.rotation.z = 0;
   townScene.add(townHallBuilding);
   townEconBuildings.push(townHallBuilding);
+  townHallBuilding.userData.buildingId='civic-hall';townHallBuilding.userData.wardSeed=primaryHallRow?.seat.heartSeed;
   const hallWorksPlot = primaryHallState && primaryHallState.hallConstruction
     ? { x:townHallX + 4.2, z:townHallZ - 2.8 }
     : null;
@@ -36136,7 +36241,8 @@ function* buildTownSceneSteps(settle) {
     const works = villageMakeConstructionSite(r, pal, constructionProgress(primaryHallState.hallConstruction), primaryHallState.hallConstruction);
     works.scale.setScalar(0.78);
     works.position.set(hallWorksPlot.x, 0, hallWorksPlot.z);
-    townScene.add(works);
+    works.userData.buildingId='civic-hall';settlementPlotMetadata(works,'town:'+settle.id,primaryHallRow.seat.heartSeed,'work:civic-hall',2.5,pal);
+    townScene.add(works);townEconBuildings.push(works);
   }
   yield;
   // No seeded wells, stalls or landmark buildings: the wards below supply
@@ -36190,7 +36296,9 @@ function* buildTownSceneSteps(settle) {
   // civic geometry from swallowing a cottage or intercepting its tap.
   const hallBounds=new THREE.Box3().setFromObject(townHallBuilding);
   const hallRadius=Math.hypot(Math.max(Math.abs(hallBounds.min.x-townHallX),Math.abs(hallBounds.max.x-townHallX)),Math.max(Math.abs(hallBounds.min.z-townHallZ),Math.abs(hallBounds.max.z-townHallZ)))+1.25;
-  const planted = [{ x:townHallX, z:townHallZ, rad:hallRadius }];
+  const plotScope='town:'+settle.id;
+  const allSavedPlots=townMemberRecords(settle).flatMap(rec=>Object.values(settlementSavedPlots(rec.seed,plotScope)));
+  const planted = [{ x:townHallX, z:townHallZ, rad:hallRadius },...allSavedPlots];
   if (hallWorksPlot) planted.push({ ...hallWorksPlot, rad:2.5 });
   const plotCursor = { home: r() * Math.PI * 2, yard: r() * Math.PI * 2, edge: r() * Math.PI * 2 };
   const GOLDEN_ANGLE = 2.399963229728653;
@@ -36216,6 +36324,18 @@ function* buildTownSceneSteps(settle) {
   const HOME_RING = plazaR + 3.4;   // cottages and shopfronts just off the square
   const YARD_RING = plazaR + 7.6;   // working yards on the street behind them
   const EDGE_RING = plazaR + 11.4;  // wreckage waits at the town's edge
+  for(const row of townSeatStateRows(settle)){
+    if(Number(row.seat.heartSeed)===Number(primaryHallRow?.seat.heartSeed))continue;
+    yield 'borough hall';
+    const civic=villageMakeTownHall(r,pal,row.state.hallLevel,false);civic.scale.setScalar(.85);
+    const size=new THREE.Box3().setFromObject(civic),rad=Math.hypot(size.max.x-size.min.x,size.max.z-size.min.z)/2+1.25;
+    const saved=settlementSavedPlots(row.seat.heartSeed,plotScope),plot=saved['civic-hall:0']||takePlot('edge',EDGE_RING+4,1,rad);
+    civic.position.set(plot.x,0,plot.z);civic.rotation.y=Number.isFinite(plot.yaw)?plot.yaw:Math.atan2(-plot.x,-plot.z);
+    civic.userData.buildingId='civic-hall';settlementPlotMetadata(civic,plotScope,row.seat.heartSeed,'civic-hall:0',rad,pal);townScene.add(civic);townEconBuildings.push(civic);
+    const con=row.state.hallConstruction;if(!con)continue;
+    const work=saved['work:civic-hall']||takePlot('edge',EDGE_RING+7,1,2.8),site=villageMakeConstructionSite(r,pal,constructionProgress(con),con);
+    site.position.set(work.x,0,work.z);site.userData.buildingId='civic-hall';settlementPlotMetadata(site,plotScope,row.seat.heartSeed,'work:civic-hall',2.8,pal);townScene.add(site);townEconBuildings.push(site);
+  }
   for(const [i,v] of settle.villages.entries()){
     yield;
     const seed = Number(v.seed) >>> 0;
@@ -36233,7 +36353,7 @@ function* buildTownSceneSteps(settle) {
       : pal;
     // ...and the ward mirrors its village's RECOVERY too: still wrecked,
     // rebuilding, or flourishing — with the same gates the village scene uses.
-    const dState = villageDistrictState(seed);
+    const dState = villageDistrictState(seed),savedPlots=settlementSavedPlots(seed,plotScope);
     const dRuin = dState.ruinStage;
     // Uncleared saved ruins are salvage piles, never phantom buildings.
     const wardRec = empireOwnsVillage(seed) ? ensureEmpireState().villages[String(seed)] : null;
@@ -36251,9 +36371,10 @@ function* buildTownSceneSteps(settle) {
     // one per crew, so a managed ward shows both.
     (dState.constructions || []).forEach(con => {
       const site = villageMakeConstructionSite(dr, dpal, constructionProgress(con), con);
-      const cp = takePlot('yard', YARD_RING, 2.6, 2.8);
+      const cp = savedPlots['work:'+con.id] || takePlot('yard', YARD_RING, 2.6, 2.8);
       site.position.set(cp.x, 0, cp.z);
-      site.rotation.y = dr() * Math.PI * 2;
+      site.rotation.y = Number.isFinite(cp.yaw)?cp.yaw:dr() * Math.PI * 2;
+      settlementPlotMetadata(site,plotScope,seed,'work:'+con.id,2.8,dpal);
       site.userData.wardSeed = seed;
       site.userData.buildingId = con.id;
       district.add(site);
@@ -36271,9 +36392,11 @@ function* buildTownSceneSteps(settle) {
       const isHome = b.id === 'cabin' || b.id === 'cottages';
       const bounds = new THREE.Box3().setFromObject(yard);
       const clearance = Math.hypot(Math.max(Math.abs(bounds.min.x),Math.abs(bounds.max.x)),Math.max(Math.abs(bounds.min.z),Math.abs(bounds.max.z))) + 1.25;
-      const yp = takePlot(isHome ? 'home' : 'yard', isHome ? HOME_RING : YARD_RING, 3.2, clearance);
+      const yp = savedPlots[b.id+':0'] || takePlot(isHome ? 'home' : 'yard', isHome ? HOME_RING : YARD_RING, 3.2, clearance);
       yard.position.set(yp.x, 0, yp.z);
       yard.lookAt(0, 0, 0); yard.rotation.x = 0; yard.rotation.z = 0;
+      if(Number.isFinite(yp.yaw))yard.rotation.y=yp.yaw;
+      settlementPlotMetadata(yard,plotScope,seed,b.id+':0',clearance,dpal);
       yard.userData.wardSeed = seed;
       yard.userData.buildingId = b.id;
       district.add(yard);
@@ -43799,7 +43922,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'builder-actions-v404b-20260914';
+const BURBZ_BUILD = 'building-opening-v405-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45151,9 +45274,9 @@ async function createTravellingSettlement(T,record,{signal,host=false}={}) {
   context.villageCam={...before.villageCam};context.townCam={...before.townCam};
   context.villageActive={...record};context.townActiveId=record.tier==='village'?null:record.id;
   const town=record.tier!=='village';
-  let unbatch=()=>{},closed=false;
+  const batchState={value:null};let closed=false;
   function dispose(){
-    if(closed)return;closed=true;unbatch();
+    if(closed)return;closed=true;batchState.value?.();
     const scene=town?context.townScene:context.villageScene;if(!scene)return;
     scene.removeFromParent();const geometries=new Set(),materials=new Set(),textures=new Set();
     scene.traverse(o=>{o.dispose?.();o.shadow?.dispose?.();if(o.geometry)geometries.add(o.geometry);for(const m of Array.isArray(o.material)?o.material:o.material?[o.material]:[]){materials.add(m);for(const value of Object.values(m))if(value?.isTexture&&!value.userData?.shared)textures.add(value);}});
@@ -45178,10 +45301,11 @@ async function createTravellingSettlement(T,record,{signal,host=false}={}) {
   // traveller, while extra sun lights would change every material on arrival.
   if(!host)scene.traverse(o=>{if(o.userData.sky||o.isLight)o.visible=false;});
   surface.ground.visible=host;
-  unbatch=await prepareSettlementSteps(BurbzVillageWalkScene.batchSteps(T,scene,movers),context,signal,metrics,'batch');
+  batchState.value=await prepareSettlementSteps(BurbzVillageWalkScene.batchSteps(T,scene,movers),context,signal,metrics,'batch');
   if(signal?.aborted)throw new DOMException('Settlement preparation cancelled','AbortError');
   let last=-Infinity;
-  return {group:scene,buildings,movers,solids,discovery:{api:discoveryApi,points:discoveryPoints,world},world:{...world,allowed:world.allowedBeyond},terrain,radius:surface.radius,blendRadius:surface.radius+64,surface,
+  return {group:scene,batchState,buildings,movers,solids,discovery:{api:discoveryApi,points:discoveryPoints,world},world:{...world,allowed:world.allowedBeyond},terrain,radius:surface.radius,blendRadius:surface.radius+64,surface,
+    changed:change=>withSettlementBuilder(context,()=>settlementRetireBuildingObjects(change)),
     people:target=>withSettlementBuilder(context,()=>buildingRoomsAdapter().people(target,town?'town':'village')),
     slowSteps:metrics.slow||[],buildMs:metrics.steps.reduce((a,b)=>a+b,0),maxStepMs:Math.max(0,...metrics.steps),prepareMs:performance.now()-started,
     update(time){if(closed||time-last<1/30)return;last=time;withSettlementBuilder(context,()=>town?townAnimateFrame(time,true):villageAnimateFrame(time,true));},
