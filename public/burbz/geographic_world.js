@@ -19,7 +19,7 @@ function buildUI(s){
  s.status=element('div','gw-status','Loading the ground around you…',host);s.status.setAttribute('role','status');s.status.setAttribute('aria-live','polite');
  s.retry=button('gw-retry','Retry map',host,()=>retry(s));s.retry.hidden=true;
  element('span','gw-reticle','',host).setAttribute('aria-hidden','true');
- s.action=button('gw-action','Enter home',host,()=>interact(s));s.action.hidden=true;s.decorate=button('gw-decorate','Arrange your garden',host,()=>decorate(s));s.decorate.hidden=true;
+ s.action=button('gw-action','Enter home',host,()=>interact(s));s.action.hidden=true;s.decorate=button('gw-decorate','Build',host,()=>decorate(s));s.decorate.hidden=true;
  s.joystick=element('div','gw-stick',undefined,host);s.joystick.tabIndex=0;s.joystick.setAttribute('role','group');s.joystick.setAttribute('aria-label','Drag to walk');s.knob=element('span','gw-stick-knob','',s.joystick);element('span','gw-stick-label','MOVE',s.joystick);
  const controls=element('div','gw-flight-controls',undefined,host);s.fly=button('gw-fly','Spread wings',controls,()=>toggleFlight(s));s.up=button('gw-up','↑ Climb',controls);s.down=button('gw-down','↓ Descend',controls);s.up.hidden=s.down.hidden=true;
  s.hint=element('div','gw-hint','Drag to look · Walk beyond the clearing',host);

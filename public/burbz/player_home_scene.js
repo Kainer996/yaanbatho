@@ -79,9 +79,9 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  if(!options.contentOnly){b.cylinder(C.YARD.ground,17*C.YARD_SCALE,1,0,-.55,0,0x698160,[0,0,0],64);b.cylinder(6.3,6.3,.04,0,-.015,1.8,0x7c8764,[0,0,0],48);}
  for(let z=2;z<C.YARD.walk-.3;z+=.65)for(let x=-.65;x<=.65;x+=.65)b.box(.59,.04,.56,x+(Math.floor(z)%2)*.08,.025,z,0xab9e7c,[0,Math.sin(z)*.04,0]);
  for(const [i,t] of C.visibleTrees(s).entries()){if(C.treeState(s,t.id,createdAt)>=3){b.cylinder(t.r,t.r*1.1,.28,t.x,.14,t.z,0xa58254);continue;}b.cylinder(t.r*.65,t.r,3.8,t.x,1.9,t.z,0x5b4332);for(let k=0;k<3;k++)(t.z>4?front:b).sphere(1.9,t.x+Math.sin(i+k)*.6,3.6+k*.7,t.z+Math.cos(i+k)*.6,[0x547956,0x678651,0x76915d][(i+k)%3],[1,1.05,.95]);}
- for(let i=0;i<90;i++){const a=i*2.4,r=(4+(i%12)*.7)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1&&z>0)continue;b.sphere(.2,x,.1,z,0x82915e,[1,.5,1]);}
+ for(let i=0;i<90;i++){const a=i*2.4,r=(4+(i%12)*.7)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.3&&Math.abs(p.z-z)<1.3))continue;b.sphere(.2,x,.1,z,0x82915e,[1,.5,1]);}
  // Moss, roots and small flowers break up the clearing without claiming resources.
- for(let i=0;i<180;i++){const a=i*2.4,r=(3.8+(i%17)*.51)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1.1&&z>0)continue;const h=.1+(i%3)*.06;b.add(new T.ConeGeometry(.09,h,3),[0x587849,0x688252,0x7e8f59][i%3],[x,h/2,z]);if(i%7===0)b.sphere(.07,x,h,z,[0xe4c773,0xc78ba0,0xe5daca][i%3]);}
+ for(let i=0;i<180;i++){const a=i*2.4,r=(3.8+(i%17)*.51)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1.1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.15&&Math.abs(p.z-z)<1.15))continue;const h=.1+(i%3)*.06;b.add(new T.ConeGeometry(.09,h,3),[0x587849,0x688252,0x7e8f59][i%3],[x,h/2,z]);if(i%7===0)b.sphere(.07,x,h,z,[0xe4c773,0xc78ba0,0xe5daca][i%3]);}
  if(s.outlook){
  // An authored opening beside the shelter. The world owner blends this small
  // clearing into real elevations; its pond and rocks are not resource grants.
@@ -98,6 +98,7 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  // Merlin uses the existing game portrait, perched by the door.
  if(options.portrait!==false){const tex=new T.TextureLoader().load('bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png');tex.colorSpace=T.SRGBColorSpace;const bird=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true}));bird.scale.set(1.8,1.8,1);bird.position.set(2.2,2.1,1.4);scene.add(bird);}
  }
+ const farm=area==='yard'?createFarm(T,s,options.farmHeight):null;if(farm)scene.add(farm);
  for(const p of s.placed.filter(p=>p.area===area)){const mesh=ornament(T,C.ITEMS[p.item].type);mesh.position.set(p.x,0,p.z);mesh.rotation.y=p.turn*Math.PI/2;mesh.userData.placementId=p.id;scene.add(mesh);decor.push(mesh);targets.push(mesh);}
  const finds=[];for(const f of C.FINDS.filter(f=>f.area===area&&!f.id.endsWith('-story'))){const b=root.BurbzSettlementModels.batch(T);if(f.id==='tiny-door'){b.cylinder(.58,.72,1.35,f.x,.675,f.z,0x71543b);b.box(.44,.68,.08,f.x,.35,f.z+.6,0x345f50);for(const x of [-.26,.26])b.box(.065,.76,.09,f.x+x,.38,f.z+.62,0xc3ab74);b.sphere(.045,f.x+.13,.36,f.z+.68,0xd9ba65);}
  else if(f.id==='moon-pool'){b.cylinder(.65,.5,.3,f.x,.15,f.z,0xb1af99);b.cylinder(.53,.53,.015,f.x,.31,f.z,0x79a6a4);for(const x of [-.18,.18])b.sphere(.07,f.x+x,.335,f.z,0xd9e3c6,[1,.1,1]);}
@@ -107,10 +108,25 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  else if(f.id==='floor-star'){b.add(new T.CylinderGeometry(.12,.12,.02,7),0xe5bf65,[f.x,.02,f.z]);}
  else{b.box(.24,.025,.3,f.x,.08,f.z,0xd6bb83);for(let i=0;i<3;i++)b.box(.14,.008,.015,f.x,.099,f.z+(i-1)*.06,0x7b623a);}const m=b.finish();m.userData.findId=f.id;scene.add(m);finds.push(m);targets.push(m);}
  root.BurbzManga?.styleScene(scene);
- return{scene,house,screen,screenSize,targets,decor,finds,world:C.world(s,area,createdAt,{connected:!!options.contentOnly}),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>disposeScene(scene)};
+ return{scene,house,screen,screenSize,targets,decor,finds,farm,update:()=>farm?.userData.update?.(),world:C.world(s,area,createdAt,{connected:!!options.contentOnly}),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>disposeScene(scene)};
 }
 // The exact owned yard, expressed in local metres for the continuous world.
 // Its owner supplies geographic placement, terrain, lighting and one renderer.
+function createFarm(T,home,height=()=>0){const group=new T.Group(),plots=home.farm?.plots||[],soil=root.BurbzSettlementModels.batch(T),growth=[];group.name='player-home-farm';group.userData.plotCount=plots.length;
+ for(const p of plots){soil.box(1.98,.08,1.98,p.x,.045,p.z,p.wateredAt?0x493c2a:0x76563c);
+ if(p.crop==='pondweed')soil.box(1.84,.02,1.84,p.x,.095,p.z,0x568e85);else for(let z=-.6;z<=.6;z+=.4)soil.box(1.78,.02,.1,p.x,.095,p.z+z,0x4a3828);
+ for(const [dx,dz]of [[2,0],[-2,0],[0,2],[0,-2]])if(!plots.some(q=>q.x===p.x+dx&&q.z===p.z+dz))soil.box(dx?.065:2,.13,dz?.065:2,p.x+dx/2,.08,p.z+dz/2,0x987651);}
+ const earth=soil.finish();earth.traverse(o=>{if(!o.geometry)return;const a=o.geometry.attributes.position;for(let i=0;i<a.count;i++){const y=height(a.getX(i),a.getZ(i));if(Number.isFinite(y))a.setY(i,a.getY(i)+y);}a.needsUpdate=true;o.geometry.computeVertexNormals();});group.add(earth);
+ // Nine shared crop draws at most, even for a full 64-plot field. The plan
+ // picks saved grid squares directly, so rendering needs no hidden hit meshes.
+ for(const [id,crop]of Object.entries(C.CROPS)){const rows=plots.filter(p=>p.crop===id).flatMap(p=>Array.from({length:9},(_,i)=>({p,x:p.x+(i%3-1)*.53,z:p.z+(Math.floor(i/3)-1)*.53,stage:null})));if(!rows.length)continue;const stems=root.BurbzSettlementModels.batch(T),tops=root.BurbzSettlementModels.batch(T);
+ {const x=0,z=0;
+ if(id==='pondweed'){stems.sphere(.23,x,.13,z,0x669e65,[1,.12,.8]);tops.sphere(.08,x+.1,.19,z,crop.color,[1,.4,1]);}
+ else if(id==='berries'){stems.sphere(.3,x,.38,z,0x527945,[1,1.2,1]);stems.cylinder(.035,.055,.5,x,.3,z,0x7d6044);for(let k=0;k<3;k++)tops.sphere(.06,x+Math.sin(k*2)*.2,.49+k*.07,z+Math.cos(k*2)*.2,crop.color);}
+ else{const h=id==='reed'?1.1:1.35;stems.cylinder(.023,.033,h,x,h/2+.1,z,0x5e854c);for(const side of [-1,1])stems.sphere(.18,x+side*.12,h*.46,z,0x78995a,[1.2,.2,.4]);if(id==='sunflower'){tops.sphere(.22,x,h+.1,z,crop.color,[1,.95,.25]);tops.sphere(.1,x,h+.11,z+.055,0x694731,[1,1,.3]);}else tops.cylinder(.055,.07,.27,x,h+.08,z,0xb1a16b);}}
+ const meshes=[];for(const [template,fruit]of [[stems.finish(),false],[tops.finish(),true]])for(const part of template.children){const mesh=new T.InstancedMesh(part.geometry,part.material,rows.length);mesh.castShadow=true;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.name='farm-'+id+(fruit?'-fruit':'-stems');group.add(mesh);meshes.push({mesh,fruit});}growth.push({rows,meshes});}
+ group.userData.update=()=>{let changed=false;const matrix=new T.Matrix4(),scale=new T.Vector3();for(const {rows,meshes}of growth){let dirty=false;for(let i=0;i<rows.length;i++){const row=rows[i],stage=C.farmStatus(row.p).stage;if(stage===row.stage)continue;row.stage=stage;dirty=changed=true;const size=stage==='dry'?.13:stage==='sprout'?.25:stage==='growing'?.6:1;for(const {mesh,fruit}of meshes){const amount=size*(fruit?(stage==='ready'?1:stage==='flower'?.6:.01):1);matrix.makeTranslation(row.x,Number.isFinite(height(row.x,row.z))?height(row.x,row.z):0,row.z).scale(scale.setScalar(amount));mesh.setMatrixAt(i,matrix);}}if(dirty)for(const {mesh}of meshes){mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}}return changed;};group.userData.update();return group;
+}
 function createHouse(T,home){const saved=C.normalize(home),group=new T.Group();group.name='player-home-house';group.userData.homeTarget='house';group.add(root.BurbzSettlementModels.building(T,'cabin',saved.tier+1,()=>.47,{roofs:[0x557e72]}),upperRooms(T,saved));return group;}
 function createYardContent(T,home,options={}){const saved=C.normalize(home),now=options.now??Date.now(),view=create(T,saved,'yard',1,{}, {...options,now,contentOnly:true}),group=new T.Group();group.name='player-home-yard';for(const child of [...view.scene.children])group.add(child);group.updateMatrixWorld(true);
  const targets=[{kind:'home',id:'home-door',x:0,y:1.2,z:3.2,label:'Enter your home',range:2}];
@@ -119,7 +135,7 @@ function createYardContent(T,home,options={}){const saved=C.normalize(home),now=
  const solids=saved.outlook?[{id:'outlook-rock-1',x:7,z:18,w:4.8,d:3.2,minY:0,maxY:1.8},{id:'outlook-rock-2',x:9,z:20,w:2.6,d:1.8,minY:0,maxY:1.1}]:[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',x:0,z:0,w:5.5,d:4.5,minY:0,maxY:houseBounds.max.y});
  for(const mesh of view.decor){const p=saved.placed.find(p=>p.id===mesh.userData.placementId),item=C.ITEMS[p.item];if(item.flat)continue;const box=new T.Box3().setFromObject(mesh);solids.push({id:'decoration:'+p.id,x:p.x,z:p.z,w:p.turn%2?item.d:item.w,d:p.turn%2?item.w:item.d,minY:0,maxY:box.max.y});}
  for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:0,maxY:3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:1.6,maxY:7});}
- return{group,world:view.world,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
+ return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
 }
-root.BurbzPlayerHomeScene={create,createHouse,createYardContent,ornament,upperRooms,disposeScene};
+root.BurbzPlayerHomeScene={create,createHouse,createFarm,createYardContent,ornament,upperRooms,disposeScene};
 })(globalThis);

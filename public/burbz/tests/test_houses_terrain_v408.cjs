@@ -1,14 +1,14 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const G=require('../geographic_world_core.js'),K=require('../village_world_core.js');
+const H=require('../player_home_core.js'),G=require('../geographic_world_core.js'),K=require('../village_world_core.js');
 const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
 test('a saved village house projects into the overhead scene without settlement economy changes',()=>{
  const start=html.indexOf('function settlementPlayerHome('),end=html.indexOf('\nfunction ',start+1);assert(start>=0,'overhead home attachment exists');
  const origin={lat:54.45,lon:-2.65},anchor=G.unproject(origin,{x:12,y:0,z:-8});
  const scene={children:[],userData:{walkSurface:{radius:35},walkTerrain:{heightAt:()=>2}},add(o){this.children.push(o);}};
  const home={tier:1,anchor,rooms:{library:true}},state={playerHome:home,player:{branches:111},empire:{villages:{}}},before=JSON.stringify(state);
- const mesh={position:{set(x,y,z){Object.assign(this,{x,y,z});}},userData:{}};
- const ctx={gameState:state,BurbzGeographicWorldCore:G,BurbzPlayerHomeScene:{createHouse:()=>mesh},THREE:{}};vm.createContext(ctx);vm.runInContext(html.slice(start,end),ctx);
+ const mesh={position:{set(x,y,z){Object.assign(this,{x,y,z});}},userData:{},add(){}};
+ const ctx={BurbzPlayerHomeCore:H,gameState:state,BurbzGeographicWorldCore:G,BurbzPlayerHomeScene:{createFarm:()=>({userData:{}}),createHouse:()=>mesh},THREE:{}};vm.createContext(ctx);vm.runInContext(html.slice(start,end),ctx);
  const result=ctx.settlementPlayerHome(scene,origin);assert.equal(scene.children.length,1);assert.strictEqual(result,mesh);assert(Math.abs(mesh.position.x-12)<1e-5);assert(Math.abs(mesh.position.z+8)<1e-5);assert.equal(mesh.position.y,2);assert(mesh.userData.overheadHome);assert.equal(JSON.stringify(state),before);
  for(const bad of [{tier:0,anchor},{tier:1,anchor:null},{tier:1,anchor:G.unproject(origin,{x:500,y:0,z:0})}]){state.playerHome=bad;assert.equal(ctx.settlementPlayerHome(scene,origin),null);}
 });
@@ -33,7 +33,7 @@ test('cascades follow an existing downhill river with unique chunk ownership',()
 });
 test('moving, upgrading or extending a saved home invalidates owned and unowned village overviews',()=>{
  const extract=name=>{const a=html.indexOf('function '+name+'('),b=html.indexOf('\nfunction ',a+1);assert(a>=0);return html.slice(a,b);};
- const ctx={gameState:{playerHome:{tier:1,anchor:{lat:54,lon:-2,revision:1},rooms:{}}},EMPIRE_BUILDINGS:[],ensureVillageEconomy:r=>r,villageConstructions:()=>[],villageReadyToOpen:()=>[],villageWholesaleProjects:()=>[]};vm.createContext(ctx);vm.runInContext(extract('settlementPlayerHomeKey')+'\n'+extract('villageBuildingSceneKey'),ctx);
+ const ctx={BurbzPlayerHomeCore:H,gameState:{playerHome:{tier:1,anchor:{lat:54,lon:-2,revision:1},rooms:{}}},EMPIRE_BUILDINGS:[],ensureVillageEconomy:r=>r,villageConstructions:()=>[],villageReadyToOpen:()=>[],villageWholesaleProjects:()=>[]};vm.createContext(ctx);vm.runInContext(extract('settlementPlayerHomeKey')+'\n'+extract('villageBuildingSceneKey'),ctx);
  for(const rec of [null,{population:4,buildingPlots:{},ruins:[]}]){let key=ctx.villageBuildingSceneKey(rec);for(const edit of [h=>h.tier++,h=>h.anchor.lon+=.001,h=>h.rooms.library=true]){edit(ctx.gameState.playerHome);const next=ctx.villageBuildingSceneKey(rec);assert.notEqual(next,key);key=next;}ctx.gameState.playerHome={tier:1,anchor:{lat:54,lon:-2,revision:1},rooms:{}};}
 });
 
