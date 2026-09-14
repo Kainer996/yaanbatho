@@ -4,7 +4,8 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "continuous-world-v391-20260910"
-CURRENT_BUILD = "wilderness-discoveries-v406-20260914"
+CURRENT_BUILD = "wayside-room-title-v406b-20260914"
+WAYSIDE_PIN = "wilderness-discoveries-v406-20260914"
 CAMERA_PIN = "map-camera-v403-20260914"
 SKY_PIN = "distant-sky-v401-20260913"
 ARRIVAL_PIN = "unified-alderwing-v400-20260913"
@@ -20,7 +21,7 @@ def test_continuous_runtime_installation_is_complete():
                "village_harvest.js", "village_discoveries.js", "manga_render_core.js",
                "geographic_forest_core.js", "geographic_forest_worker.js", "geographic_map_3d.js"]
     for module in modules:
-        pin = CURRENT_BUILD if module in {"village_walk.js", "village_world.js", "village_walk_scene.js", "building_rooms.js", "interior_life.js"} else CAMERA_PIN if module in {"geographic_map_3d.js", "building_rooms.js", "interior_life.js"} else SKY_PIN if module in {"world_sky.js", "village_world.js"} else ARRIVAL_PIN if module in {"village_walk_scene.js", "building_rooms.js", "interior_life.js", "village_discoveries.js"} else PIN
+        pin = CURRENT_BUILD if module in {"village_walk.js", "building_rooms.js"} else WAYSIDE_PIN if module in {"village_world.js", "village_walk_scene.js", "interior_life.js"} else CAMERA_PIN if module in {"geographic_map_3d.js", "building_rooms.js", "interior_life.js"} else SKY_PIN if module in {"world_sky.js", "village_world.js"} else ARRIVAL_PIN if module in {"village_walk_scene.js", "building_rooms.js", "interior_life.js", "village_discoveries.js"} else PIN
         assert (ROOT / module).is_file()
         assert f'"{module}"' in updater
         for name in ["BURBZ_ASSETS", "BURBZ_CORE", "BURBZ_INSTALL_REQUIRED"]:
