@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict'),core=require('../building_work_core.js');
-let now=20000,click;const button={hidden:true,replaceChildren(){},append(){},addEventListener(_,fn){click=fn;},remove(){this.removed=true;}},hint={textContent:''};
+let now=20000,click;const button={hidden:true,setAttribute(){},replaceChildren(){},append(){},addEventListener(_,fn){click=fn;},remove(){this.removed=true;}},hint={textContent:''};
 const ledger={key:'village:7:cabin',label:'Cabin',startMs:1000,endMs:101000},target={id:'cabin',startMs:1000};let saves=0,fail=false;
 class V{set(x,y,z){Object.assign(this,{x,y,z});return this;}}
 const ctx={console,Date:{now:()=>now},THREE:{Vector3:V,Box3:class{setFromObject(){this.min={x:1.4,z:-2.6};this.max={x:6.6,z:2.6};return this;}}},BurbzBuildingWorkCore:core,document:{createElement:()=>button}};vm.createContext(ctx);vm.runInContext(fs.readFileSync(path.join(__dirname,'../building_work.js'),'utf8'),ctx);
