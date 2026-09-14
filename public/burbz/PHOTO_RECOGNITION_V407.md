@@ -1,7 +1,9 @@
 # Photo recognition v407
 
 Prepared in `/root/burbz-photo-recognition-v407`, based on main/live
-`8f2eed08394e2005ced837eb9f1bb3ad14bffc4a`. Publication is pending owner approval.
+`8f2eed08394e2005ced837eb9f1bb3ad14bffc4a`. The owner authorized publication on
+September 14. The final merge, live hashes and installed-PWA evidence are recorded
+separately in `/root/burbz-photo-recognition-evidence/release/`.
 The September 14 report describes two rejected clear photos: one gull and one
 unknown bird. Production logs showed two recent HTTP 422 rejections, but uploads are
 removed after analysis; the originals and exact model rejection reasons were
@@ -106,7 +108,7 @@ Final recorded checks:
   `model-comparison.json`, `pytest-comparison.json`, `http-proof.json`,
   `http-results.json`, `browser-results.json` and `sound-proof.json`.
 
-## Prepare and publish after approval
+## Guarded publication
 
 The reproducible prepared bundle is
 `/root/burbz-photo-recognition-evidence/rebuilt-models`. Its manifest matches the
