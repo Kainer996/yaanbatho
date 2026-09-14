@@ -2606,3 +2606,5 @@ python3 -m pytest tests/ test_continuous_scan_economy.py -q
   - Verified: all JS parses, all data JSON parses, every SW precache/`index.html`
     reference resolves, and the full suite passes (**653 passed, 18 skipped**;
     the skips are the intentional production-server-only tests).
+
+14 September 2026 Gemini release direction: after the Carrion Crow fixture was misidentified as American Crow and the initial deployment rolled back, the user explicitly instructed installing Gemini anyway. That disclosed accuracy mismatch alone is nonblocking in the release verifier; retain its expected species and failed accuracy evidence. Do not replace it with hardcoded runtime results, paid rerolls, or weaker provider/budget/save/cleanup/sound safeguards. See GEMINI_PHOTOS_V410.md.

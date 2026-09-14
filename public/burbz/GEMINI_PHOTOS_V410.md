@@ -30,6 +30,8 @@ The installer patches only that route's temporary-file lifecycle, checks compile
 
 ## Verification status
 
+The first guarded production attempt correctly identified Robin but misidentified the Carrion Crow fixture as American Crow at 0.95. The installer rolled back before publishing. After this exact limitation was disclosed, the user explicitly directed installing Gemini anyway (14 September 2026). The release proof now records that fixture's unchanged expected species and `accuracyPassed:false`, while treating only this known mismatch as nonblocking. Provider identity, confidence, receipt, budget, cleanup and sound checks remain mandatory. No runtime classification is hardcoded or rerolled to hide the mismatch.
+
 The first actual Gemini check identified European Robin / Erithacus rubecula at 0.99, verified in two calls. Conservative ledger charge: £0.008988907. This established key/model access; it was a staging validation, not itself a live release.
 
 Focused tests cover spending concurrency, replay and owner isolation, restart/unknown outcomes, UK month/DST/rollover, usage overruns, provider/socket deadlines, strict response gates, installer rollback and actual extracted-route cleanup. Browser and final deployment results are recorded in the release evidence; do not infer publication from this document alone.
