@@ -41,7 +41,7 @@ def next_month(now):
     y, m = (d.year+1, 1) if d.month == 12 else (d.year, d.month+1)
     return datetime(y, m, 1, tzinfo=LONDON).timestamp()
 
-def cost_for_usage(usage):
+def cost_for_usage(usage, enforce_bounds=True):
     if not isinstance(usage, dict):
         raise ValueError('Missing usage')
     def number(key, default=None):
@@ -56,7 +56,7 @@ def cost_for_usage(usage):
     if total < prompt or total < prompt + candidates + thoughts:
         raise ValueError('Incomplete usage')
     output = max(total-prompt, candidates+thoughts)
-    if prompt > INPUT_LIMIT or output > BILLED_OUTPUT_LIMIT:
+    if enforce_bounds and (prompt > INPUT_LIMIT or output > BILLED_OUTPUT_LIMIT):
         raise ValueError('Usage exceeded reservation')
     return ((prompt*300 + output*2500)*25 + 15)//16
 
@@ -93,7 +93,7 @@ class Ledger:
             ''')
             started = time.time() if now is None else now
             values = [('schema','1'),('salt',secrets.token_hex(32)),
-                      ('pricing_expires',str(started+32*86400)),('disabled','')]
+                      ('pricing_expires',str(min(started+32*86400, datetime(2026,10,16,tzinfo=timezone.utc).timestamp()))),('disabled','')]
             c.executemany('INSERT INTO meta VALUES(?,?)',values)
             c.commit()
         finally:
@@ -123,6 +123,7 @@ class Ledger:
         with self.connection() as c:
             c.execute('BEGIN IMMEDIATE')
             meta=dict(c.execute('SELECT key,value FROM meta').fetchall())
+            if meta.get('schema') != '1': raise BudgetError('accounting-unavailable')
             def key(value):
                 return hmac.new(bytes.fromhex(meta['salt']),value.encode(),hashlib.sha256).hexdigest()
             who, client = key('owner:'+owner), key('caller:'+caller)
@@ -141,6 +142,10 @@ class Ledger:
                 return job,json.loads(cached['result'])
             if meta.get('disabled') or now >= float(meta['pricing_expires']):
                 raise BudgetError('pricing-review-required')
+            # The worker's whole attempt is at most 38 seconds. Keep all new
+            # network work clear of rollover, including connect/TLS before POST.
+            if next_month(now)-now < 45:
+                raise BudgetError('month-changed',next_month(now)+1)
             # Cross-process persistent abuse limits; a changed browser owner
             # cannot bypass the shared caller and whole-service limits.
             for field,value,window,limit in [('caller',client,60,3),('owner',who,86400,30)]:
@@ -160,21 +165,34 @@ class Ledger:
     def begin_call(self, job, stage):
         with self.connection() as c:
             c.execute('BEGIN IMMEDIATE')
+            now=self.clock()
+            meta=dict(c.execute('SELECT key,value FROM meta').fetchall())
+            if meta.get('disabled') or now >= float(meta['pricing_expires']):
+                raise BudgetError('pricing-review-required')
             row=c.execute('SELECT * FROM jobs WHERE id=?',(job,)).fetchone()
             if not row or row['state']!='running' or stage not in (0,1):
                 raise BudgetError('accounting-unavailable')
             # A request started just before rollover cannot spend the new month
             # against the old reservation. Unsent work stops; paid replies are
             # accounted to the month in which the paid request was sent.
-            if row['month'] != month_at(self.clock()):
-                raise BudgetError('month-changed',self.clock()+1)
+            if row['month'] != month_at(now):
+                raise BudgetError('month-changed',now+1)
+            if next_month(now)-now < 45:
+                raise BudgetError('month-changed',next_month(now)+1)
             c.execute('INSERT INTO calls VALUES(?,?,?,NULL)',(job,stage,CALL_LIMIT))
 
     def finish_call(self, job, stage, usage):
         try:
             cost=cost_for_usage(usage)
         except ValueError:
-            # Keep the maximum charge. Unknown usage must never create credit.
+            # Stop ALL new egress on unexpected accounting. Preserve real excess
+            # when measurable; unknown usage retains the entire call ceiling.
+            with self.connection() as c:
+                c.execute('BEGIN IMMEDIATE')
+                c.execute("UPDATE meta SET value='unexpected-provider-usage' WHERE key='disabled'")
+                try: cost=max(CALL_LIMIT,cost_for_usage(usage,enforce_bounds=False))
+                except ValueError: cost=CALL_LIMIT
+                c.execute('UPDATE calls SET cost=? WHERE job=? AND stage=?',(cost,job,stage))
             return False
         with self.connection() as c:
             c.execute('BEGIN IMMEDIATE')
@@ -193,6 +211,7 @@ class Ledger:
             cost=c.execute('SELECT COALESCE(SUM(cost),0) FROM calls WHERE job=?',(job,)).fetchone()[0]
             result=dict(result)
             result['attemptCostNanoGBP']=cost
+            result['receiptId']=job
             c.execute('UPDATE jobs SET held=?,state=?,result=? WHERE id=?',
                       (cost,'accepted' if result.get('found') is True else 'done',json.dumps(result,allow_nan=False),job))
             return result

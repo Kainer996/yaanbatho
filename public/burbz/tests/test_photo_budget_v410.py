@@ -153,3 +153,74 @@ def test_two_verified_views_are_bounded_and_both_charged(ledger):
     paid=[b for a,b in p.calls if a=='generateContent'];assert len(paid)==2
     assert all(b['generationConfig']['maxOutputTokens']==4096 and b['generationConfig']['thinkingConfig']['thinkingBudget']==1024 for b in paid)
     assert result['attemptCostNanoGBP']==2*cost_for_usage(usage())
+
+def test_unknown_usage_trips_global_breaker_and_blocks_already_reserved_stage(ledger):
+    l,_=ledger
+    first=acquire(l,'first');other=acquire(l,'other')
+    l.begin_call(first,0)
+    assert not l.finish_call(first,0,{})
+    assert l.status()['disabled'] is True
+    with pytest.raises(BudgetError,match='pricing-review-required'):l.begin_call(other,0)
+    with pytest.raises(BudgetError,match='pricing-review-required'):acquire(l,'third')
+    result=l.finish(first,{'found':False})
+    assert result['attemptCostNanoGBP']==CALL_LIMIT
+
+def test_measurable_provider_overrun_is_retained_above_reserved_ceiling(ledger):
+    l,_=ledger;job=acquire(l);l.begin_call(job,0)
+    excess=usage(50000,6000)
+    assert not l.finish_call(job,0,excess)
+    result=l.finish(job,{'found':False})
+    assert result['attemptCostNanoGBP']==cost_for_usage(excess,enforce_bounds=False)>CALL_LIMIT
+    assert l.status()['disabled'] is True
+    assert l.status()['reservedAndChargedNanoGBP']==result['attemptCostNanoGBP']
+
+def test_thinking_and_unclassified_output_are_charged_at_output_price():
+    with_thoughts={'promptTokenCount':2000,'candidatesTokenCount':200,'thoughtsTokenCount':900,'totalTokenCount':3200}
+    assert cost_for_usage(with_thoughts)==cost_for_usage(usage(2000,1200))
+
+def test_cached_accepted_receipt_survives_global_pause(ledger):
+    l,_=ledger;job=acquire(l);result=l.finish(job,{'found':True,'species':'Robin'})
+    with l.connection() as c:c.execute("UPDATE meta SET value='paused' WHERE key='disabled'")
+    replay=l.acquire('ownera','different-request','digesta','callera')[1]
+    assert replay==result and replay['receiptId']==job
+
+@pytest.mark.parametrize('count',[0,32769,True,None])
+def test_bad_token_count_never_sends_paid_request(ledger,count):
+    class InvalidCounter(Provider):
+        def request(self,action,body,timeout):
+            self.calls.append(action)
+            if action=='countTokens':return {'totalTokens':count}
+            pytest.fail('GenerateContent must remain unsent')
+    l,_=ledger;p=InvalidCounter()
+    result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
+    assert result['found'] is False and result['attemptCostNanoGBP']==0
+    assert p.calls==['countTokens']
+
+def test_near_rollover_never_sends_even_unbilled_image(ledger):
+    l,now=ledger;reset=next_month(now[0]);now[0]=reset-44
+    p=Provider()
+    result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
+    assert result['reason']=='month-changed' and result['retryAt']==reset+1
+    assert not p.calls and l.status()['reservedAndChargedNanoGBP']==0
+    now[0]=reset+1
+    assert acquire(l)
+
+def test_already_reserved_attempt_cannot_connect_near_rollover(ledger):
+    l,now=ledger;reset=next_month(now[0]);now[0]=reset-60
+    job=acquire(l);l.begin_call(job,0);l.finish_call(job,0,usage())
+    now[0]=reset-44
+    with pytest.raises(BudgetError,match='month-changed') as error:l.begin_call(job,1)
+    assert error.value.retry_at==reset+1
+    result=l.finish(job,{'found':False})
+    assert result['attemptCostNanoGBP']==cost_for_usage(usage())
+
+def test_ledger_persists_no_photo_bytes_or_base64(ledger):
+    import base64
+    l,_=ledger;data=jpeg()
+    Recognizer(l,Provider()).identify(data,'owner_01234567890','request_01234567890','caller')
+    with l.connection() as c:
+        persisted='\n'.join(c.iterdump())
+        columns={row['name'] for table in ('jobs','calls','meta') for row in c.execute('PRAGMA table_info('+table+')')}
+    assert not {'image','photo','blob','base64'} & columns
+    assert base64.b64encode(data).decode() not in persisted
+    assert data[:100] not in l.path.read_bytes()

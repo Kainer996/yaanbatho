@@ -13,6 +13,8 @@ from pathlib import Path
 import re
 import socketserver
 import time
+import threading
+import socket
 from photo_budget import Ledger, BudgetError, INPUT_LIMIT, OUTPUT_LIMIT
 
 POLICY = "photo-gemini-v410"
@@ -22,6 +24,7 @@ MIN_CONFIDENCE = .90
 MIN_MARGIN = .20
 INCONCLUSIVE = "Bird detected, but species not confirmed. Try another angle showing its head, wings and tail."
 SOURCE_HASH = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+BUDGET_HASH = hashlib.sha256(Path(__file__).with_name("photo_budget.py").read_bytes()).hexdigest()
 MAX_BYTES = 10*1024*1024
 
 def _abstain(reason="insufficient-evidence", model_name=MODEL):
@@ -40,7 +43,7 @@ def failure(reason, retry_at=0):
       "pricing-review-required":"Photo identification is paused for service maintenance. Your photo is saved.",
       "request-interrupted":"This photo check was interrupted. Your photo is saved; choose Retry to make a new check.",
       "request-conflict":"This photo request changed. Choose Retry to make a new check.",
-      "month-changed":"A new photo allowance month has started. Your photo is saved; try again.",
+      "month-changed":"The monthly photo allowance is changing. Your saved photo will resume shortly.",
     }
     result=_abstain(reason)
     result.update(message=messages.get(reason,"This photo could not be checked. Your saved photo is still available."),retryable=True,retryAt=retry_at)
@@ -160,14 +163,37 @@ class Google:
     def request(self, action, body, timeout):
         if action not in ('countTokens','generateContent'):
             raise ValueError('Unknown API operation')
+        if not isinstance(timeout,(int,float)) or not math.isfinite(timeout) or timeout<=0:
+            raise ProviderError('photo-provider-unavailable')
+        deadline=time.monotonic()+timeout
         data=json.dumps(body,allow_nan=False,separators=(',',':')).encode()
         if len(data) > 20*1024*1024:
             raise ValueError('Request too large')
-        c=http.client.HTTPSConnection('generativelanguage.googleapis.com',timeout=max(1,min(20,timeout)))
+        c=http.client.HTTPSConnection('generativelanguage.googleapis.com',timeout=min(20,timeout))
+        timer=None
         try:
+            # Resolve/connect before sending any image. A slow DNS lookup cannot
+            # be interrupted by the stdlib, so recheck the deadline before POST.
+            c.connect()
+            remaining=deadline-time.monotonic()
+            if remaining<=0:
+                raise ProviderError('photo-provider-unavailable')
+            transport=c.sock
+            transport.settimeout(min(20,remaining))
+            def expire():
+                # HTTPConnection clears c.sock for Connection: close while the
+                # response body still owns its makefile. Retain the real socket
+                # so a trickled body/headers cannot evade the absolute deadline.
+                try: transport.shutdown(socket.SHUT_RDWR)
+                except OSError: pass
+            timer=threading.Timer(remaining,expire)
+            timer.daemon=True
+            timer.start()
             c.request('POST',f'/v1beta/models/{MODEL}:{action}',body=data,
                       headers={'Content-Type':'application/json','x-goog-api-key':self.key})
             r=c.getresponse(); raw=r.read(128*1024+1)
+            if time.monotonic()>=deadline:
+                raise ProviderError('photo-provider-unavailable')
             if r.status==429:
                 raise ProviderError('photo-service-limit')
             if r.status in (401,403):
@@ -178,6 +204,7 @@ class Google:
         except (OSError,ValueError,http.client.HTTPException) as exc:
             raise ProviderError('photo-provider-unavailable') from exc
         finally:
+            if timer: timer.cancel()
             c.close()
 
 class Recognizer:
@@ -255,6 +282,8 @@ class Recognizer:
             return self.ledger.finish(job,result)
         except (BudgetError,ProviderError) as exc:
             result=failure(exc.reason if isinstance(exc,BudgetError) else str(exc),getattr(exc,'retry_at',0))
+        except (OSError,ValueError,TypeError,KeyError):
+            result=failure('photo-provider-unavailable')
         except Exception:
             result=failure('accounting-unavailable')
         if job:
@@ -277,7 +306,7 @@ def serve(recognizer,path):
         def do_GET(self):
             try:
                 status=recognizer.ledger.status()
-                self.reply(200,{'ready':True,'policy':POLICY,'model':MODEL,'sourceHash':SOURCE_HASH,'budget':status})
+                self.reply(200,{'ready':True,'policy':POLICY,'model':MODEL,'sourceHash':SOURCE_HASH,'budgetHash':BUDGET_HASH,'budget':status})
             except Exception:self.reply(503,{'ready':False})
         def do_POST(self):
             if self.path!='/identify':return self.reply(404,{})

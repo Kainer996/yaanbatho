@@ -121,7 +121,7 @@ def test_audio_upload_and_optional_location_are_disclosed_before_capture():
 
 def test_stop_aborts_active_analysis_and_late_results_cannot_mutate_birdex():
     html = HTML.read_text(encoding="utf-8")
-    analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("function handleBirdIdentified", 1)[0]
+    analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("async function webmToWav", 1)[0]
     stop = html.split("function stopContinuousSoundListening", 1)[1].split("// Live", 1)[0]
     assert "windowData.generation" in analyse
     assert "generation !== soundListenerGeneration" in analyse
@@ -132,7 +132,7 @@ def test_stop_aborts_active_analysis_and_late_results_cannot_mutate_birdex():
 
 def test_success_copy_calls_results_model_suggestions_with_window_age_not_confirmation():
     html = HTML.read_text(encoding="utf-8")
-    analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("function handleBirdIdentified", 1)[0]
+    analyse = html.split("async function analyseContinuousSoundWindow", 1)[1].split("async function webmToWav", 1)[0]
     # The engine is named by the server so BirdNET and Perch both attribute the
     # result to a recogniser rather than asserting the bird was objectively there.
     assert "const engine = soundEngineLabel(result)" in analyse

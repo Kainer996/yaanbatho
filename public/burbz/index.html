@@ -4488,6 +4488,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="scan_home.css?v=home-followup-v399-20260913">
+<link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
@@ -4597,7 +4598,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
-      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button></div>
+      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="savedPhotosButton">Saved photos</button></div>
       </div>
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
@@ -4649,6 +4650,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
+        <p class="photo-privacy-note">Photos are saved on this device before being sent to Google Gemini for identification. Pending photos wait offline or when the shared monthly allowance is used. Device storage can be cleared by your browser; keep important originals.</p>
         <div class="photo-id-status" id="photoIdStatus" hidden>
           <p id="photoIdMessage" role="status" aria-live="polite"></p>
           <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
@@ -5587,6 +5589,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=desk-composition-v397-20260913"></script>
 <script src="scan_home.js?v=home-followup-v399-20260913"></script>
+<script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -6899,6 +6902,8 @@ const DEFAULT_STATE = {
 };
 
 let gameState;
+let photoSaveBaseline;
+let photoSaveConflictShown = false;
 let cloudAuth = { configured: false, clientId: '', token: localStorage.getItem('burbz_cloud_token') || '', user: null, saveTimer: null, saving: false };
 let leaderboardState = { board: 'collection', data: { collection: [], mechanics: [] }, loaded: false, ranked: false, message: '' };
 
@@ -6915,6 +6920,8 @@ function clearBurbzLocalProgress() {
   }
   cloudAuth.token = '';
   cloudAuth.user = null;
+  photoSaveBaseline = localStorage.getItem('burbz_state');
+  photoSaveConflictShown = false;
 }
 
 // ---------------------------------------------------------------------------
@@ -6959,6 +6966,7 @@ function loadState() {
   applyResetUrlIfRequested();
   try {
     const saved = localStorage.getItem('burbz_state');
+    photoSaveBaseline = saved;
     gameState = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_STATE));
   } catch(e) {
     console.warn('BURBZ: saved state was unreadable; starting fresh', e);
@@ -6975,6 +6983,7 @@ function loadState() {
   // receive the globally unique name tied to that identity. Every stored seed
   // reference is healed together so old saves never split or lose a place.
   gameState = migrateGamePlaceNames(gameState);
+  if (!/^[a-zA-Z0-9_-]{16,96}$/.test(gameState.photoProfileId || '')) gameState.photoProfileId = crypto.randomUUID();
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
   const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
   const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
@@ -7125,8 +7134,16 @@ function loadState() {
 function durableSaveState(opts = {}) {
   let serialised;
   try {
+    // Reject stale-tab overwrites, including a claim after another tab saves.
+    // Refresh/load establishes a new baseline; nested synchronous photo work
+    // commits only once with its receipt and rewards in the same value.
+    if (typeof photoSaveBaseline !== 'undefined' && localStorage.getItem('burbz_state') !== photoSaveBaseline) {
+      if (!photoSaveConflictShown) { photoSaveConflictShown=true; setTimeout(() => showToast('Another tab changed this saved game. Reload this tab before continuing.'),0); }
+      throw Error('Another tab changed this saved game. Reload this tab.');
+    }
     serialised = JSON.stringify(gameState);
     localStorage.setItem('burbz_state', serialised);
+    photoSaveBaseline = serialised;
   } catch (error) {
     if (opts.throwOnFailure) throw error;
     return { ok:false, error };
@@ -19184,7 +19201,7 @@ function tavernBirdFactFor(speciesList, seed) {
 
 // A bird found mid-quest (scanned, corrected or recruited) lands ahead of the
 // player on the route as an NPC to go and meet.
-function questRegisterBirdEncounter(bird) {
+function questRegisterBirdEncounter(bird, effects) {
   const quest = activeWalkingQuest();
   if (!quest || !bird) return;
   const pos = liveMapHasPrecisePosition && liveMapLastPosition ? liveMapLastPosition : null;
@@ -19194,10 +19211,12 @@ function questRegisterBirdEncounter(bird) {
     pos ? pos.lat : null, pos ? pos.lon : null
   );
   if (!npc) return;
-  try { fetchBirdArt(npc.species); } catch (e) {}
-  saveState();
-  drawTrailExtrasOnMap(quest);
-  showToast('🐦 A ' + npc.species + ' has landed on your trail ahead — go and say hello!');
+  const present = () => {
+    try { fetchBirdArt(npc.species); } catch (e) {}
+    drawTrailExtrasOnMap(quest);
+    showToast('🐦 A ' + npc.species + ' has landed on your trail ahead — go and say hello!');
+  };
+  if (effects) effects.push(present); else { saveState(); present(); }
 }
 
 function clearTrailExtraMarkers() {
@@ -37017,6 +37036,18 @@ async function savePlayerBirdPhoto(key, blob, meta) {
   } finally { db.close(); }
 }
 
+async function saveFirstPlayerBirdPhoto(key, blob, meta) {
+  const db=await openPlayerPhotoDb();
+  try {
+    return await new Promise((resolve,reject)=>{
+      const tx=db.transaction(PLAYER_PHOTO_STORE,'readwrite'),store=tx.objectStore(PLAYER_PHOTO_STORE);
+      let saved;const request=store.get(key);
+      request.onsuccess=()=>{saved=request.result || {blob,...meta};if(!request.result)store.put(saved,key);};
+      tx.oncomplete=()=>resolve(saved);tx.onerror=tx.onabort=()=>reject(tx.error||Error('Photo save failed'));
+    });
+  } finally {db.close();}
+}
+
 async function loadPlayerBirdPhoto(key) {
   const db = await openPlayerPhotoDb();
   try {
@@ -37099,7 +37130,7 @@ async function openPlayerBirdPhotoViewer(key) {
   el.classList.add('open');
   SFX.tap();
   try {
-    const entry = await loadPlayerBirdPhoto(record.key);
+    const entry = await loadPlayerBirdPhoto(record.photoStorageKey || record.key);
     if (!entry || !entry.blob) {
       closePlayerBirdPhotoViewer();
       showToast('\u{1F4F7} That photo lives on the device that took it.');
@@ -37156,7 +37187,7 @@ function rememberDiscoveredBird(bird, opts = {}) {
     addCoins(discoveryRewardForBird(bird));
     if (typeof logDiary === 'function') logDiary('discover', { species: canonical, rarity: record.rarity });
   }
-  if (isNew) updateQuestProgress('discover', 1);
+  if (isNew) updateQuestProgress('discover', 1, opts.effects);
   return isNew;
 }
 
@@ -37516,6 +37547,18 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
   if (!surfaced.length) {
     showCatalogUnmatchedRecognition(top, opts.source);
     return [];
+  }
+
+  if (opts.commitOnly) {
+    const effects=opts.effects || [], previousLevel=gameState.player.level;
+    const fresh=[];
+    surfaced.forEach(bird => {
+      if(rememberDiscoveredBird(bird,{effects}))fresh.push(bird);
+      questRegisterBirdEncounter(bird,effects);
+    });
+    if(fresh.length && applyPlayerXpState(8*fresh.length)) effects.push(() => announcePlayerLevelUps(previousLevel));
+    checkBadges(effects);
+    return surfaced;
   }
 
   const newDiscoveries = [];
@@ -41364,94 +41407,101 @@ function setPhotoIdStatus(message, retry = false) {
   $('photoIdStatus').hidden = false;
   $('photoIdMessage').textContent = message;
   $('photoIdRetry').hidden = !retry;
-  if (!$('birdCropOverlay').classList.contains('show')) {
-    $('photoIdStatus').scrollIntoView({ block:'center', behavior:'instant' });
-  }
+  // Queue status must not open the session drawer or interrupt other gameplay.
 }
 $('photoIdRetry').addEventListener('click', () => {
   if (photoIdRetryBlob && !photoIdBusy) identifyImage(photoIdRetryBlob, 'camera');
 });
 
+// A random game-profile ID travels with this save; no email/token enters the queue.
+let pendingPhotoQueue = null;
+function currentPhotoOwner() {
+  if (!gameState?.photoProfileId) return '';
+  try {
+    const saved=JSON.parse(localStorage.getItem('burbz_state') || '{}');
+    return saved.photoProfileId===gameState.photoProfileId && localStorage.getItem('burbz_state')===photoSaveBaseline ? gameState.photoProfileId : '';
+  } catch (_) { return ''; }
+}
+async function claimSavedPhoto(item, context) {
+  const claimState=gameState;
+  const current=() => gameState===claimState && currentPhotoOwner()===item.owner && (!context || context.isCurrent());
+  if(!current() || !BurbzPhotoQueue.validResult(item.result)) return false;
+  const primary={species:item.result.species,scientificName:item.result.scientificName,confidence:item.result.confidence};
+  const receipt=item.result.receiptId;
+  let record, birds, effects=[];
+  if(!gameState.photoReceipts?.[receipt]) {
+    const before=snapshotGameState();
+    try {
+      birds=handleBirdCandidates(primary,[],{source:'photo',commitOnly:true,effects});
+      if(!birds.length) return false; // Existing catalogue gate remains authoritative.
+      gameState.photoReceipts={...(gameState.photoReceipts||{}),[receipt]:{at:Date.now(),species:birds[0].species}};
+      durableSaveState({throwOnFailure:true});
+    } catch(error) { restoreGameStateSnapshot(before); throw error; }
+    effects.forEach(effect=>{try{effect();}catch(_){}});
+  }
+  if(!current()) return false;
+  record=getDiscoveredRecordForSpecies(canonicalSpeciesName(primary.species));
+  if(!record) return false;
+  // The reward receipt already committed. A journal failure retains the queue
+  // result, so retrying can save its photo without repeating any game mutation.
+  if(!record.photoAt) {
+    const photo=await compressPlayerPhoto(item.blob);
+    if(!current()) return false;
+    const key=item.owner+':'+record.key, takenAt=new Date(item.created).toISOString();
+    const storedPhoto=await saveFirstPlayerBirdPhoto(key,photo,{takenAt,species:record.species,owner:item.owner});
+    if(!current()) return false;
+    record=getDiscoveredRecordForSpecies(canonicalSpeciesName(primary.species));
+    const before=snapshotGameState();
+    try {
+      if(!record.photoAt){record.photoAt=storedPhoto.takenAt;record.photoStorageKey=key;}
+      durableSaveState({throwOnFailure:true});
+    } catch(error) { restoreGameStateSnapshot(before); throw error; }
+  }
+  if(!current()) return false;
+  pendingPhotoQueue?.hide();switchScreen('scan');
+  const bird=normaliseAcceptedBirdCandidates(primary,[])[0];
+  $('scanResult').classList.add('show');$('scanResultName').textContent=bird.commonName;
+  $('scanResultSci').textContent=bird.scientificName;
+  $('scanResultConf').textContent=Math.round(primary.confidence*100)+'% confidence · Saved in Birdex';
+  $('scanHomeSession').open=true;
+  updateHeader();renderBirdex();renderProfile();
+  showToast('Identified: '+bird.commonName+'. Your photo is saved in Birdex.');
+  return true;
+}
+function savedPhotosQueue() {
+  if(!pendingPhotoQueue) pendingPhotoQueue=BurbzPhotoQueue.create({
+    owner:currentPhotoOwner,claim:claimSavedPhoto,autoClaim:()=>false,
+    count:n=>{const b=$('savedPhotosButton');if(b)b.textContent=n?'Saved photos ('+n+')':'Saved photos';},
+    message:message=>{const el=$('photoIdMessage');if(el)el.textContent=message;showToast(message);},
+    preview:blob=>{
+      pendingPhotoQueue?.hide();
+      const el=playerPhotoOverlayEl();el.style.zIndex='130000';
+      if(playerPhotoObjectUrl)URL.revokeObjectURL(playerPhotoObjectUrl);
+      playerPhotoObjectUrl=URL.createObjectURL(blob);
+      el.innerHTML='<div class="player-photo-card"><img class="player-photo-img" alt="Your saved photo" src="'+playerPhotoObjectUrl+'"><button class="player-photo-close" type="button" onclick="closePlayerBirdPhotoViewer()">Close photo</button></div>';
+      el.classList.add('open');
+    }
+  });
+  return pendingPhotoQueue;
+}
+$('savedPhotosButton').addEventListener('click',()=>savedPhotosQueue().show());
+// Start after the synchronous boot/load establishes durable profile ownership.
+setTimeout(()=>savedPhotosQueue(),0);
 async function identifyImage(fileOrBlob, captureSource = 'camera') {
   if (photoIdBusy) return;
-  photoIdBusy = true;
-  photoIdRetryBlob = fileOrBlob;
-  setBirdPhotoStage('prepare', 'Preparing your photo…');
-  setPhotoIdStatus('Analysing your bird photo… This can take up to 45 seconds.');
-  $('captureBtn').textContent = 'ANALYZING...';
-  $('captureBtn').disabled = true;
-  const controller = new AbortController();
-  let timeout;
-  let cancelled = false;
-  const deadline = new Promise((_, reject) => {
-    photoIdCancel = () => {
-      cancelled = true;
-      controller.abort();
-      reject(new Error('photo-cancelled'));
-    };
-    timeout = setTimeout(() => {
-      controller.abort();
-      reject(new Error('photo-timeout'));
-    }, 45000);
-  });
-
+  photoIdBusy=true;photoIdRetryBlob=fileOrBlob;
+  setBirdPhotoStage('prepare','Saving your photo on this device…');
+  $('captureBtn').disabled=true;
   try {
-    const formData = new FormData();
-    formData.append('image', fileOrBlob, 'photo.jpg');
-    formData.append('captureSource', captureSource);
-    const pos = await Promise.race([getCurrentPositionForPhotoId(), deadline]);
-    if (pos && pos.coords) {
-      formData.append('lat', pos.coords.latitude);
-      formData.append('lon', pos.coords.longitude);
-    }
-
-    setBirdPhotoStage('analyse', 'Sending and checking the bird’s details… This can take up to 45 seconds.');
-
-    const response = await Promise.race([fetch('api/identify/image', {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal
-    }), deadline]);
-
-    const result = await Promise.race([response.json().catch(() => ({
-      found: false,
-      message: 'Photo ID upload failed — try a clearer bird photo.'
-    })), deadline]);
-
-    const photoAccepted = response.ok && result?.found === true && result.accepted === true && result.verified === true && result.policy === 'photo-local-v393' && Number.isFinite(Number(result.confidence)) && Number(result.confidence) >= 0.9 && Number(result.confidence) <= 1;
-    const batLabel = photoAccepted ? batLabelInIdentifyResult(result) : '';
-    if (batLabel) {
-      closeBirdCropper();
-      triggerBatEasterEgg('photo', batLabel);
-      setPhotoIdStatus('A bat! You found a secret visitor.');
-      photoIdRetryBlob = null;
-    }
-    const mainMatchIsBat = looksLikeBatLabel(result && result.species) || looksLikeBatLabel(result && result.scientificName);
-    if (photoAccepted && result.species && !mainMatchIsBat) {
-      closeBirdCropper();
-      handleBirdCandidates({ species: result.species, scientificName: result.scientificName, confidence: result.confidence }, [], { source: 'photo', blob: fileOrBlob, catalogMatched: result.catalogMatched });
-      setPhotoIdStatus('Identified: ' + result.species + '. See the result below.');
-      photoIdRetryBlob = null;
-    } else if (!batLabel) {
-      const message = result && !result.found && result.message ? result.message : 'Bird not found. Try a closer, clearer photo—we couldn’t identify a bird confidently.';
-      setPhotoIdStatus(message, true);
-      setBirdPhotoStage('outcome', message);
-      showToast(message);
-    }
-  } catch(e) {
-    console.log('Photo ID failed:', e);
-    const message = cancelled ? 'Photo check cancelled. You can try this photo again.' : controller.signal.aborted
-      ? 'Photo identification took too long. Try this photo again.'
-      : 'Photo ID could not connect or finish analysing. Check your connection and try this photo again.';
-    setPhotoIdStatus(message, true);
-    setBirdPhotoStage('outcome', message);
-    if (!cancelled) showToast(message);
+    await savedPhotosQueue().enqueue(fileOrBlob);
+    closeBirdCropper();photoIdRetryBlob=null;$('scanHomeSession').open=false;
+    $('photoIdStatus').hidden=true;
+    $('photoIdMessage').textContent=navigator.onLine===false?'Photo saved. It will be checked when you reconnect. You can keep playing.':'Photo saved. Gemini will check it while you play. Open Saved photos for the result.';
+  } catch(error) {
+    const message='Photo was not saved: '+(error.message || 'Device storage is unavailable.')+' Keep this photo and try again.';
+    setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);showToast(message);
   } finally {
-    clearTimeout(timeout);
-    photoIdCancel = null;
-    photoIdBusy = false;
-    $('captureBtn').textContent = 'OPEN CAMERA';
-    $('captureBtn').disabled = false;
+    photoIdBusy=false;$('captureBtn').disabled=false;$('captureBtn').textContent='OPEN CAMERA';
   }
 }
 
@@ -43843,16 +43893,17 @@ function renderDiary() {
     '</div>';
 }
 
-function checkBadges() {
+function checkBadges(effects) {
   if (!gameState.badges) gameState.badges = {};
   BADGES.forEach(b => {
     if (!gameState.badges[b.id] && b.condition()) {
       gameState.badges[b.id] = true;
       if (typeof logDiary === 'function') logDiary('badge', { name: b.name });
-      showToast('Badge earned: ' + b.name + '!');
+      const announce=() => showToast('Badge earned: ' + b.name + '!');
+      if(effects) effects.push(announce); else announce();
     }
   });
-  saveState();
+  if(!effects) saveState();
 }
 
 // ============================================================================
@@ -44004,7 +44055,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-farming-v409-20260914';
+const BURBZ_BUILD = 'gemini-photos-v410-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44957,6 +45008,7 @@ $('resetDataBtn').addEventListener('click', () => {
   if (confirm('Are you sure? This will delete ALL your data!')) {
     clearBurbzLocalProgress();
     gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    gameState.photoProfileId = crypto.randomUUID();
     saveState();
     $('settingsModal').classList.remove('show');
     updateHeader();
@@ -44991,6 +45043,8 @@ function recordScreenTrail(from) {
 // Close the topmost open layer, if any. Returns true when something closed —
 // one back press, one layer, exactly like a native app.
 function closeTopBurbzLayer() {
+  if(document.querySelector('.pending-photo-panel[open]')){pendingPhotoQueue?.hide();return true;}
+
   if(closeDeskPlayerEquipment())return true;
   if(currentScreen==='scan'&&$('birdCropOverlay')?.classList.contains('show')){photoIdCancel?.();closeBirdCropper();return true;}
   const scanSession=$('scanHomeSession');if(currentScreen==='scan'&&scanSession?.open){scanSession.open=false;return true;}
