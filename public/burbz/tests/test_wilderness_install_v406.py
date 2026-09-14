@@ -2,7 +2,7 @@ from pathlib import Path
 import re
 ROOT=Path(__file__).resolve().parents[1]
 PIN='wilderness-discoveries-v406-20260914'
-BUILD='photo-recognition-v407-20260914'
+BUILD='photo-journal-v407b-20260914'
 ROOM_PIN='wayside-room-title-v406b-20260914'
 def test_complete_wayside_runtime_installs_atomically():
     worker=(ROOT/'sw.js').read_text(); loader=(ROOT/'village_walk.js').read_text(); html=(ROOT/'index.html').read_text(); updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()

@@ -137,3 +137,32 @@ waiting, a 6 GiB memory limit and no Internet namespace. Capacity is finite.
 After deployment verify live source/worker/bundle hashes, photo and sound proofs,
 public index/service-worker bytes, and the returning installed PWA/save path.
 The unrelated `videos/friend-shaped.mp4` worktree difference is excluded.
+
+## Photo journal v407b follow-up
+
+The real returning-PWA check verified v406b→v407 activation and accepted a gull
+through the public API, then exposed an existing first-photo save defect. The
+discovery and reward persisted, but `rememberPlayerBirdPhoto` ran before
+`rememberDiscoveredBird` created the record, so it returned without saving the
+JPEG. For a known bird missing its photo, the same ordering let the helper hold
+an old record that the discovery update immediately replaced.
+
+The v407b correction moves that call after the discovery updates. It preserves
+the first stored photo, canonical discovery identity and one-time rewards.
+Only inline app behavior and the global app/cache build change; recognition,
+sound, model files, thresholds and module pins remain identical to tested v407.
+
+The first PWA runner also tried tapping Home's camera button behind the
+intentional results/settings drawer. Native Close and Choose a bird photo were
+already usable; that test navigation was corrected without changing the drawer.
+Original failure reports and separate continuation scopes remain in `release/`.
+First-time storage must be verified using a genuinely undiscovered bird, with
+actual IndexedDB JPEG dimensions/hash retained through online/offline reloads.
+
+Five new behavioral regression groups execute the actual discovery, compression,
+photo-store and save functions, with disposable browser/storage boundaries.
+They pass on the correction and fail on released v407 for the new-photo and
+replaced-record cases. Existing photo/discovery Node checks and 21 focused
+Python checks also pass. Production follow-up receipts are recorded separately
+from the original recognition deployment; the recognizer and its fourteen
+live model controls are unchanged.

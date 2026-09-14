@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "continuous-world-v391-20260910"
-CURRENT_BUILD = "photo-recognition-v407-20260914"
+CURRENT_BUILD = "photo-journal-v407b-20260914"
 ROOM_PIN = "wayside-room-title-v406b-20260914"
 WAYSIDE_PIN = "wilderness-discoveries-v406-20260914"
 CAMERA_PIN = "map-camera-v403-20260914"
