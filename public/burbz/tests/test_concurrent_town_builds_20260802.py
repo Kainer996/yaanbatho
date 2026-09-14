@@ -37,7 +37,7 @@ def build_harness() -> str:
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
             "villageConstructions",
-            "villageConstructionOf",
+            "villageReadyToOpen", "villageWholesaleProjects", "villageConstructionOf",
             "villageBuildSlots",
             "villageBuildSlotsFree",
             "empireBuildStructure",

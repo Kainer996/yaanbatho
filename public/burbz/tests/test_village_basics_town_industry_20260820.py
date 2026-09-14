@@ -17,6 +17,7 @@ Yaan's design (2026-08-20), pinned as `village-basics-town-industry-v299`:
 """
 import json
 import re
+import re
 import subprocess
 from pathlib import Path
 
@@ -24,7 +25,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HTML = ROOT / "index.html"
 SW = ROOT / "sw.js"
 RELEASE = "trail-mode-v329-20260825"
-CURRENT_BUILD = "photo-accuracy-v393-20260911"
+CURRENT_BUILD = re.search(r"const BURBZ_BUILD = '([^']+)';", HTML.read_text(encoding="utf-8")).group(1)
 
 # The Iron Foundry and the Entertainment House are town industry too — they
 # arrived with the towns-3D release and the pin had not been told.
@@ -132,7 +133,7 @@ def build_harness(driver: str) -> str:
             "settlementAllowsBuilding",
             "villageBuildDurationMs",
             "villageConstructions",
-            "villageConstructionOf",
+            "villageReadyToOpen", "villageWholesaleProjects", "villageConstructionOf",
             "villageBuildSlots",
             "villageBuildSlotsFree",
             "empireBuildStructure",
