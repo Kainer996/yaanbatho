@@ -12,17 +12,16 @@ def test_settings_has_a_start_new_game_row_with_confirmation():
     body = HTML[start:HTML.index("\n}", start)]
     # Asks "Are you sure?" before anything is touched.
     assert "confirm('Are you sure?" in body
-    # Restart rides the ?reset flow: wipes progress, Burbz caches and the old
-    # service worker, then boots the fresh game (intro + tutorial replay).
+    # Restart clears progress while retaining the installed offline app and trailer.
     assert "?reset=1" in body
 
 
-def test_reset_url_flow_still_clears_storage_caches_and_service_worker():
+def test_reset_url_clears_progress_without_removing_the_offline_app():
     start = HTML.index("function applyResetUrlIfRequested()")
     body = HTML[start:HTML.index("\nfunction loadState", start)]
     assert "clearBurbzLocalProgress()" in body
-    assert "caches.delete" in body
-    assert "reg.unregister()" in body
+    assert "caches.delete" not in body
+    assert "reg.unregister()" not in body
 
 
 def test_button_is_wired_for_tap_and_keyboard():
