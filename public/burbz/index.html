@@ -3170,6 +3170,10 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .intro-cutscene-skip:active { background:rgba(255,255,255,.18); }
 .intro-cutscene-sound { position:absolute; left:50%; transform:translateX(-50%); top:calc(18px + var(--safe-top)); z-index:2; display:none; min-height:40px; padding:8px 22px; border-radius:999px; border:1px solid rgba(214,168,79,.55); background:rgba(8,8,8,.55); backdrop-filter:blur(8px); color:var(--legendary); font-family:'Rajdhani',sans-serif; font-weight:900; font-size:13px; text-transform:uppercase; letter-spacing:.1em; }
 .intro-cutscene-overlay.muted .intro-cutscene-sound { display:block; }
+.intro-cutscene-recovery{position:absolute;left:20px;right:20px;top:42%;text-align:center;color:#fff;padding:15px;z-index:3;pointer-events:none}
+.intro-cutscene-recovery p:not([hidden]){background:#121914eb;padding:15px;border-radius:10px;margin-bottom:10px}
+#introRetryBtn{pointer-events:auto;min-height:44px;background:#20382c;border:1px solid #c9b27b;border-radius:10px;padding:10px 22px}
+#merlinTutorialOverlay .merlin-tutorial-speaker,#merlinTutorialChapter{display:none}
 
 /* Every quest sheet in the game builds its buttons with this class and nothing
    ever styled it, so they rendered as bare inline text — the Side Quest intro,
@@ -3187,6 +3191,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 /* ========== MERLIN TUTORIAL ========== */
 .merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
 .merlin-tutorial-overlay.show { display:block; }
+.merlin-tutorial-overlay > #settingsBtn { position:fixed; top:calc(10px + var(--safe-top)); right:12px; width:44px; height:44px; z-index:8; pointer-events:auto; background:var(--bg-card,#172a24); border-radius:12px; }
+.tutorial-settings-placeholder { width:44px; flex:0 0 44px; visibility:hidden; }
 .merlin-tutorial-spotlight { position:fixed; border-radius:16px; border:2px solid rgba(240,199,103,.9); box-shadow:0 0 0 200vmax rgba(0,0,0,.8), 0 0 24px rgba(240,199,103,.5), inset 0 0 18px rgba(240,199,103,.22); transition:top .4s ease, left .4s ease, width .4s ease, height .4s ease; pointer-events:none; animation:merlinSpotPulse 1.6s ease-in-out infinite; }
 @keyframes merlinSpotPulse { 0%,100%{ border-color:rgba(240,199,103,.95);} 50%{ border-color:rgba(214,168,79,.45);} }
 .merlin-tutorial-spotlight.none { border-color:transparent; animation:none; }
@@ -5338,6 +5344,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
   <div class="intro-cutscene-overlay" id="introCutsceneOverlay" aria-modal="true" role="dialog" aria-label="Burbz intro cutscene">
     <video class="intro-cutscene-video" id="introCutsceneVideo" src="assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4" playsinline preload="metadata"></video>
     <button class="intro-cutscene-sound" id="introSoundBtn">🔊 Tap for sound</button>
+    <div class="intro-cutscene-recovery"><p id="introCutsceneStatus" role="status" hidden></p><button type="button" id="introRetryBtn" hidden>Retry trailer</button></div>
     <button class="intro-cutscene-skip" id="introSkipBtn">Skip</button>
   </div>
 
@@ -6906,6 +6913,7 @@ const DEFAULT_STATE = {
 };
 
 let gameState;
+let newGameNeedsTrailer=false;
 let photoSaveBaseline;
 let photoSaveConflictShown = false;
 let cloudAuth = { configured: false, clientId: '', token: localStorage.getItem('burbz_cloud_token') || '', user: null, saveTimer: null, saving: false };
@@ -6954,8 +6962,8 @@ function applyResetUrlIfRequested() {
     if (!params.has('reset') && !params.has('freshStart')) return false;
     clearBurbzLocalProgress();
     localStorage.setItem(BURBZ_EPOCH_KEY, BURBZ_FRESH_START_EPOCH);
-    if (window.caches && caches.keys) caches.keys().then(keys => keys.filter(key => key.startsWith('burbz-')).forEach(key => caches.delete(key))).catch(() => {});
-    if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(reg => reg.unregister())).catch(() => {});
+    // New game resets progress, not the installed app or its offline trailer.
+    // The versioned worker continues to update normally.
     const cleanUrl = window.location.pathname + (window.location.hash || '');
     window.history.replaceState({}, document.title, cleanUrl);
     return true;
@@ -6971,6 +6979,8 @@ function loadState() {
   try {
     const saved = localStorage.getItem('burbz_state');
     photoSaveBaseline = saved;
+    newGameNeedsTrailer=!saved;
+    if(newGameNeedsTrailer){localStorage.setItem(BURBZ_INTRO_PENDING_KEY,'1');localStorage.removeItem(BURBZ_INTRO_SEEN_KEY);}
     gameState = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(DEFAULT_STATE));
   } catch(e) {
     console.warn('BURBZ: saved state was unreadable; starting fresh', e);
@@ -44013,49 +44023,45 @@ $('profileBadges')?.addEventListener('click', event => {
 // INTRO CUTSCENE
 // ============================================================================
 const BURBZ_INTRO_SEEN_KEY = 'burbzIntroSeen:two-part-hf-20260729';
+const BURBZ_INTRO_PENDING_KEY = 'burbzIntroPending:two-part-hf-20260729';
+let introPlaybackGeneration=0,introLaunchTimer=null;
+function introCutsceneFailure(blocked=false){
+  if(!$('introCutsceneOverlay')?.classList.contains('show'))return;
+  const status=$('introCutsceneStatus'),retry=$('introRetryBtn');
+  status.textContent=blocked?'Tap Play to start the trailer.':'The trailer could not load. Retry when connected, or skip to continue.';status.hidden=false;retry.textContent=blocked?'Play trailer':'Retry trailer';retry.hidden=false;
+}
 function showIntroCutscene(opts = {}) {
-  const overlay = $('introCutsceneOverlay');
-  const video = $('introCutsceneVideo');
-  if (!overlay || !video) return;
-  setBurbzMusicSuppressed('intro', true);
-  overlay.classList.add('show');
-  overlay.classList.remove('muted');
-  if (opts.replay) video.currentTime = 0;
-  video.muted = false;
-  const attempt = video.play();
-  if (attempt && attempt.catch) attempt.catch(err => {
-    // Skip during buffering pauses the still-pending play(), which rejects it
-    // with AbortError — only a NotAllowedError on a still-visible overlay is a
-    // genuine autoplay block. Anything else must not restart the hidden video.
-    if (!overlay.classList.contains('show')) return;
-    if (err && err.name && err.name !== 'NotAllowedError') return;
-    // Muted autoplay is always allowed, so start silent and offer one tap to
-    // bring the sound in.
-    video.muted = true;
-    overlay.classList.add('muted');
-    video.play().catch(() => {});
+  const overlay=$('introCutsceneOverlay'),video=$('introCutsceneVideo');if(!overlay||!video)return;
+  clearTimeout(introLaunchTimer);introLaunchTimer=null;const generation=++introPlaybackGeneration;
+  if(merlinTutActive)endMerlinTutorial(false,{pause:true});
+  setBurbzMusicSuppressed('intro',true);overlay.classList.add('show');overlay.classList.remove('muted');
+  $('introCutsceneStatus').hidden=true;$('introRetryBtn').hidden=true;$('introSkipBtn').focus({preventScroll:true});
+  if(opts.replay||video.ended)video.currentTime=0;if(opts.retry)video.load();video.muted=false;
+  const current=()=>generation===introPlaybackGeneration&&overlay.classList.contains('show');
+  Promise.resolve(video.play()).catch(async error=>{
+    if(!current())return;
+    if(error?.name!=='NotAllowedError'){introCutsceneFailure();return;}
+    video.muted=true;overlay.classList.add('muted');
+    try{await video.play();}catch(_){if(current())introCutsceneFailure(true);}
   });
 }
 function unmuteIntroCutscene() {
-  const overlay = $('introCutsceneOverlay');
-  const video = $('introCutsceneVideo');
-  if (video) { video.muted = false; video.play().catch(() => {}); }
-  if (overlay) overlay.classList.remove('muted');
+  const overlay=$('introCutsceneOverlay'),video=$('introCutsceneVideo');if(!overlay?.classList.contains('show')||!video)return;
+  video.muted=false;overlay.classList.remove('muted');video.play().catch(()=>introCutsceneFailure(true));
 }
 function closeIntroCutscene() {
-  const overlay = $('introCutsceneOverlay');
-  const video = $('introCutsceneVideo');
-  if (video) video.pause();
-  if (overlay) overlay.classList.remove('show');
-  setBurbzMusicSuppressed('intro', false);
-  try { localStorage.setItem(BURBZ_INTRO_SEEN_KEY, '1'); } catch(e) {}
+  clearTimeout(introLaunchTimer);introLaunchTimer=null;introPlaybackGeneration++;
+  const overlay=$('introCutsceneOverlay'),video=$('introCutsceneVideo');if(video)video.pause();if(overlay)overlay.classList.remove('show');
+  setBurbzMusicSuppressed('intro',false);newGameNeedsTrailer=false;
+  try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');localStorage.removeItem(BURBZ_INTRO_PENDING_KEY);}catch(_){}
   maybeStartMerlinTutorial(450);
 }
 function maybeShowIntroCutscene() {
-  try {
-    if (localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1') { maybeStartMerlinTutorial(800); return; }
-    setTimeout(() => showIntroCutscene(), 450);
-  } catch(e) {}
+  let pending=newGameNeedsTrailer;try{pending||=localStorage.getItem(BURBZ_INTRO_PENDING_KEY)==='1';if(localStorage.getItem(BURBZ_INTRO_SEEN_KEY)==='1')pending=false;}catch(_){}
+  // Only a new or interrupted opening replays automatically. Existing saves
+  // without the old flag remain existing games, even after this repair.
+  if(!pending){maybeStartMerlinTutorial(800);return;}
+  clearTimeout(introLaunchTimer);introLaunchTimer=setTimeout(()=>showIntroCutscene(),450);
 }
 
 // ============================================================================
@@ -44077,7 +44083,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-title-v414b-20260914';
+const BURBZ_BUILD = 'new-game-trailer-v415-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44113,7 +44119,7 @@ const MERLIN_TUTORIAL_CHAPTERS = [
 // Stable lesson IDs preserve saved progress when copy and steps change.
 const MERLIN_LEGACY_STEP_CHAPTERS = ["story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "quests", "quests", "quests", "quests", "errand", "errand", "academy", "academy", "academy", "academy_tour", "academy_tour", "academy_tour", "academy_tour", "explore", "explore", "explore", "scan", "scan", "scan", "birdex", "birdex", "birdex", "battle", "battle", "battle", "village", "village", "village", "empire_villages", "empire_villages", "empire_towns", "empire_towns", "town", "town", "diary", "forge", "forge", "inventory", "leaderboards", "profile"];
 const MERLIN_TUTORIAL_STEPS = [
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome, keeper', screen:'scan', target:null, text:'I’m Merlin, your falcon friend. Welcome to Alderwing! There’s a whole world waiting just beyond this desk.', id:'lesson-0' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome, Earthling!', screen:'scan', target:null, text:'I’m Merlin, your falcon friend. Welcome to Alderwing! There’s a whole world waiting just beyond this desk.', id:'lesson-0' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Tap Enter Alderwing. I’ve made a little shelter for you. Come and take your first look outside.', action:{event:'alderwing-returned',mode:'free',hint:'Enter Alderwing, look outside, then return to the desk'}, id:'alderwing-arrival-v395' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
   { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin on his branch in the top-right corner.', action:{ event:'merlin-care-opened', hint:'Tap Merlin' }, id:'lesson-3' },
@@ -44179,6 +44185,13 @@ let merlinTutOriginScreen = 'map';
 let merlinTutPreviousFocus = null;
 let merlinTutSequence = merlinChapterStepIndices('story');
 let merlinTutMode = 'story';
+let merlinSettingsPause=null;
+let merlinSettingsPlaceholder=null;
+function placeMerlinSettingsControl(active){
+  const button=$('settingsBtn');if(!button)return;
+  if(active&&!merlinSettingsPlaceholder){merlinSettingsPlaceholder=document.createElement('span');merlinSettingsPlaceholder.className='tutorial-settings-placeholder';merlinSettingsPlaceholder.setAttribute('aria-hidden','true');button.replaceWith(merlinSettingsPlaceholder);$('merlinTutorialOverlay').append(button);}
+  else if(!active&&merlinSettingsPlaceholder){merlinSettingsPlaceholder.replaceWith(button);merlinSettingsPlaceholder=null;}
+}
 
 function migratePreviousMerlinTutorialProgress() {
   try {
@@ -44427,6 +44440,7 @@ function merlinTutorialResumePosition(saved, mode, sequence) {
 }
 
 function startMerlinTutorial(options = {}) {
+  if(introLaunchTimer||$('introCutsceneOverlay')?.classList.contains('show')||merlinSettingsPause||$('settingsModal')?.classList.contains('show'))return;
   const overlay = $('merlinTutorialOverlay');
   if (!overlay || merlinTutActive) return;
   merlinTutMode = options.full ? 'full' : (options.chapterId || 'story');
@@ -44447,6 +44461,7 @@ function startMerlinTutorial(options = {}) {
   merlinTutOriginScreen = currentScreen || 'map';
   merlinTutPreviousFocus = document.activeElement;
   merlinTutActive = true;
+  placeMerlinSettingsControl(true);
   setMerlinTutorialBackgroundInert(true);
   overlay.classList.add('show');
   overlay.setAttribute('aria-hidden', 'false');
@@ -44747,6 +44762,7 @@ function merlinTutBack() {
 function endMerlinTutorial(completed, {pause=false}={}) {
   const overlay = $('merlinTutorialOverlay');
   merlinTutActive = false;
+  placeMerlinSettingsControl(false);
   merlinTutClearAction();
   merlinTutStopTracking();
   if (overlay) overlay.classList.remove('show');
@@ -44792,7 +44808,7 @@ function endMerlinTutorial(completed, {pause=false}={}) {
 // First launch: after the intro video, Merlin tells the Tale of Burbz.
 function maybeStartMerlinTutorial(delay = 600) {
   if (merlinChaptersSeen().includes('story')) return;
-  setTimeout(() => { if (!merlinTutActive && !window.BurbzPlayerHome?.isOpen() && !window.BurbzVillageWalk?.isOpen()) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
+  setTimeout(() => { if (!introLaunchTimer && !$('introCutsceneOverlay')?.classList.contains('show') && !merlinTutActive && !window.BurbzPlayerHome?.isOpen() && !window.BurbzVillageWalk?.isOpen()) startMerlinTutorial({ chapterId:'story', resume:true }); }, delay);
 }
 
 // Gradual teaching: each remaining chapter fires the first time its screen
@@ -44849,7 +44865,7 @@ $('merlinTutorialTaskSkip')?.addEventListener('click', () => { merlinTutClearAct
 window.addEventListener('keydown', event => {
   if (!merlinTutActive) return;
   if (event.key === 'Tab') {
-    const controls = [$('merlinTutorialBack'), $('merlinTutorialNext')].filter(button => button && !button.disabled && button.style.display !== 'none');
+    const controls = [$('settingsBtn'), $('merlinTutorialBack'), $('merlinTutorialNext'), $('merlinTutorialTaskSkip')].filter(button => button && !button.disabled && !button.hidden && button.getClientRects().length);
     const current = controls.indexOf(document.activeElement);
     const next = event.shiftKey ? (current <= 0 ? controls.length - 1 : current - 1) : (current + 1) % controls.length;
     event.preventDefault();
@@ -44883,17 +44899,21 @@ $('hudStoneChip')?.addEventListener('click', () => { SFX.tap(); switchScreen('in
 $('introSkipBtn')?.addEventListener('click', closeIntroCutscene);
 $('introSoundBtn')?.addEventListener('click', unmuteIntroCutscene);
 $('introCutsceneVideo')?.addEventListener('ended', closeIntroCutscene);
-// A video that cannot load (offline first run, bad deploy) must not strand the
-// player on a black fullscreen with suppressed music — close and move on.
-$('introCutsceneVideo')?.addEventListener('error', () => {
-  if ($('introCutsceneOverlay')?.classList.contains('show')) closeIntroCutscene();
-});
-$('replayIntroBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); showIntroCutscene({ replay:true }); SFX.tap(); });
-$('replayTutorialBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); SFX.tap(); startMerlinTutorial({ full:true, resume:false }); });
+// A failed media request offers a deliberate Retry/Skip, never a silent skip.
+$('introCutsceneVideo')?.addEventListener('error',()=>introCutsceneFailure());
+$('introCutsceneVideo')?.addEventListener('playing',()=>{$('introCutsceneStatus').hidden=true;$('introRetryBtn').hidden=true;});
+$('introRetryBtn')?.addEventListener('click',()=>showIntroCutscene({retry:true}));
+document.addEventListener('keydown',event=>{
+  const overlay=$('introCutsceneOverlay');if(!overlay?.classList.contains('show'))return;
+  if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();closeIntroCutscene();}
+  else if(event.key==='Tab'){const buttons=[...overlay.querySelectorAll('button')].filter(b=>!b.hidden&&b.getClientRects().length),at=buttons.indexOf(document.activeElement);event.preventDefault();event.stopImmediatePropagation();buttons[(at+(event.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();}
+},{capture:true});
+$('replayIntroBtn')?.addEventListener('click', () => { closeBurbzSettings({resume:false}); showIntroCutscene({ replay:true }); SFX.tap(); });
+$('replayTutorialBtn')?.addEventListener('click', () => { closeBurbzSettings({resume:false}); SFX.tap(); startMerlinTutorial({ full:true, resume:false }); });
 $('replayTutorialBtn')?.addEventListener('keydown', event => {
   if (event.key !== 'Enter' && event.key !== ' ') return;
   event.preventDefault();
-  $('settingsModal')?.classList.remove('show');
+  closeBurbzSettings({resume:false});
   SFX.tap();
   startMerlinTutorial({ full:true, resume:false });
 });
@@ -44942,18 +44962,28 @@ document.querySelectorAll('input[name="appearanceTheme"]').forEach(input => {
 });
 
 $('settingsBtn').addEventListener('click', () => {
+  if(merlinTutActive){merlinSettingsPause={mode:merlinTutMode,origin:merlinTutOriginScreen};endMerlinTutorial(false,{pause:true});}
   showSettingsSection('settingsGeneralTab');
   if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(gameState.settings.appearance, document);
   $('settingsModal').classList.add('show');
+  $('settingsCloseBtn')?.focus({preventScroll:true});
   SFX.tap();
 });
 
-$('settingsModal').addEventListener('click', (e) => {
-  if (e.target === $('settingsModal')) {
-    $('settingsModal').classList.remove('show');
-  }
+function closeBurbzSettings({resume=true}={}) {
+  $('settingsModal')?.classList.remove('show');
+  const paused=merlinSettingsPause;merlinSettingsPause=null;
+  if(resume&&paused){startMerlinTutorial({full:paused.mode==='full',chapterId:paused.mode,resume:true});merlinTutOriginScreen=paused.origin;}
+  else $('settingsBtn')?.focus({preventScroll:true});
+}
+$('settingsModal').addEventListener('click', e => {if(e.target===$('settingsModal'))closeBurbzSettings();});
+$('settingsCloseBtn')?.addEventListener('click', () => {closeBurbzSettings();try{SFX.tap();}catch(e){}});
+$('settingsModal').addEventListener('keydown',event=>{
+  if(event.key==='Escape'){event.preventDefault();event.stopPropagation();closeBurbzSettings();return;}
+  if(event.key!=='Tab')return;
+  const controls=[...$('settingsModal').querySelectorAll('button,input,a[href],[tabindex="0"]')].filter(el=>!el.disabled&&el.getClientRects().length),at=controls.indexOf(document.activeElement);
+  if((event.shiftKey&&at<=0)||(!event.shiftKey&&at===controls.length-1)){event.preventDefault();controls[event.shiftKey?controls.length-1:0]?.focus();}
 });
-$('settingsCloseBtn')?.addEventListener('click', () => { $('settingsModal')?.classList.remove('show'); try { SFX.tap(); } catch (e) {} });
 
 $('birdInfoClose').addEventListener('click', closeBirdInfo);
 $('birdInfoModal').addEventListener('keydown', event => {
@@ -45011,8 +45041,8 @@ $('toggleVibration').addEventListener('click', () => {
 });
 
 // Start New Game: the full restart used for testing playthroughs. Rides the
-// same ?reset flow as the reset link, so local progress, Burbz caches and the
-// old service worker are all cleared before the fresh game boots — the intro
+// same ?reset flow as the reset link, so local progress is cleared while the
+// installed app and cached media remain usable offline — the intro
 // video, Merlin's story and the starter timber all play again from the top.
 function startNewGame() {
   if (!confirm('Are you sure? This starts a brand-new game: all progress, birds, coins and buildings will be wiped, and the intro and tutorial will play again.')) return;
@@ -45088,7 +45118,7 @@ function closeTopBurbzLayer() {
   const trainingHub = $('trainingHubModal');
   if (trainingHub && trainingHub.classList.contains('show')) { closeTrainingHub(); return true; }
   const modal = document.querySelector('.modal-overlay.show');
-  if (modal) { modal.classList.remove('show'); return true; }
+  if (modal) { if(modal.id==='settingsModal')closeBurbzSettings();else modal.classList.remove('show'); return true; }
   return false;
 }
 
@@ -45518,7 +45548,7 @@ function initializePlayerHome() {
   BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
-    command:()=>{try{localStorage.setItem(BURBZ_INTRO_SEEN_KEY,'1');}catch(e){}switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
+    command:()=>{switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
     onClose:()=>{document.body.classList.add('player-at-desk');}
   });
   const last=gameState.lastKnownHome;
@@ -45526,7 +45556,7 @@ function initializePlayerHome() {
   $('playerHomeStand')?.addEventListener('click',()=>{if(!commitPlayerHomeAction({kind:'arrival',event:'enter'}).ok)return;if(merlinTutActive)endMerlinTutorial(false,{pause:true});BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
   // Home is the opening screen. Standing begins the tour only after a gesture.
-  if(gameState.playerHome.arrival!=='done')maybeStartMerlinTutorial(450);else maybeShowIntroCutscene();
+  maybeShowIntroCutscene();
 }
 
 function landOnSoundScanScreen() {
