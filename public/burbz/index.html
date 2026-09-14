@@ -3245,7 +3245,13 @@ body:has(#questClaimCelebration) .merlin-tutorial-overlay :is(.merlin-tutorial-s
 .prerequisite-step p,.prerequisite-note { font-size:13px; line-height:1.45; }
 .prerequisite-goal-banner { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:8px 0 14px; padding:10px; border:1px solid #d8b15b; border-radius:12px; background:#203226; color:#fff2d2; }
 .prerequisite-goal-banner strong { flex:1 0 100%; font-size:14px; }
-.prerequisite-home-resume { position:absolute; top:8px; left:8px; z-index:5; max-width:calc(100% - 16px); min-height:44px; padding:7px 12px; border:1px solid #d8b15b; border-radius:9px; background:#17251eed; color:#fff2d2; font:700 13px/1.25 Inter,sans-serif; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.prerequisite-home-resume { position:static; min-width:44px; min-height:44px; width:52px; align-self:stretch; padding:4px; border:1px solid #d8b15b; border-radius:9px; background:#17251e; color:#fff2d2; font:700 13px/1.25 Inter,sans-serif; text-align:center; }
+#screen-scan #scanHomeActions:has(.prerequisite-home-resume) { display:grid; grid-template-columns:minmax(0,1fr) 52px; gap:4px; }
+#screen-scan #scanHomeActions:has(.prerequisite-home-resume) > :is(.home-action,.desk-empty) { grid-column:1; grid-row:1; min-width:0; width:100%; margin:0; }
+#screen-scan #scanHomeActions > .prerequisite-home-resume { grid-column:2; grid-row:1; }
+#screen-scan #scanHomeActions:has(.prerequisite-home-resume) > .desk-empty { display:none; }
+#screen-scan #scanHomeActions:has(.desk-empty):has(.prerequisite-home-resume) { grid-template-columns:minmax(0,1fr); }
+#screen-scan #scanHomeActions:has(.desk-empty) > .prerequisite-home-resume { grid-column:1; width:100%; }
 .prerequisite-home-resume:focus-visible { outline:3px solid #fff; outline-offset:2px; }
 .prerequisite-target { outline:3px solid #f6d66c !important; outline-offset:3px; scroll-margin:20px; }
 
@@ -23328,6 +23334,7 @@ function renderScanHome(snapshot, counts) {
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
   BurbzScanHome.render({...scanHomeDeskSnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  if(typeof refreshPrerequisiteGoalBanner==='function')refreshPrerequisiteGoalBanner();
 }
 function openScanHomeTarget(target) {
   if (!target) return;
@@ -39254,7 +39261,7 @@ function refreshPrerequisiteGoalBanner() {
   const prerequisiteRecipeGoal=tracked?prerequisiteGoalKey(tracked):null;
   const screen=$('screen-'+currentScreen);
   let homeResume=$('prerequisiteHomeResume');
-  if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());document.querySelector('#screen-scan .desk-introduction')?.append(homeResume);}homeResume.textContent='Your goal · '+plan.facts.recipe.label;homeResume.title=homeResume.textContent;}else homeResume?.remove();
+  if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());$('scanHomeActions')?.append(homeResume);}homeResume.textContent='Goal';homeResume.title='Your goal · '+plan.facts.recipe.label;homeResume.setAttribute('aria-label',homeResume.title);}else homeResume?.remove();
   const existing=document.querySelector('.prerequisite-goal-banner');
   if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen){existing.querySelector('strong').textContent='Working towards: '+plan.facts.recipe.label;return;}
   document.querySelectorAll('.prerequisite-goal-banner').forEach(el=>el.remove());
