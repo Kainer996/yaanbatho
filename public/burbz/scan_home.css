@@ -420,8 +420,6 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan.progressive-home .desk-panel-scroll{display:none;min-height:0;overflow:hidden;padding:4px 8px;pointer-events:auto}
 #screen-scan.progressive-home .home-panel-detail .desk-panel-scroll{display:block;flex:1}
 #screen-scan.progressive-home .home-panel-detail .desk-panel-summary{flex:none}
-#screen-scan.progressive-home .home-panel-detail .desk-panel-scroll>:nth-child(n+3){display:none}
-#screen-scan.progressive-home .home-panel-detail #desk-building-list>:nth-child(n+2){display:none}
 #screen-scan.progressive-home .desk-mini-row{min-height:56px;padding:5px 3px;gap:8px}
 #screen-scan.progressive-home .desk-mini-copy strong{font-size:15px;line-height:1.2}
 #screen-scan.progressive-home .desk-mini-copy small{font-size:12px;line-height:1.3}
@@ -533,3 +531,24 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 /* The old command-bar caption reserved 82px for Merlin. Equipment owns its
    entire button now; inheriting that caption padding clips its real label. */
 #screen-scan.progressive-home .scan-home-command-bar .desk-equipment-control>span{display:block;flex:none;min-width:0;max-width:100%;margin:0;padding:0;overflow:visible;text-overflow:clip;white-space:normal;letter-spacing:0;font:inherit}
+
+/* Real inner lists scroll without increasing the Home page or its grid. */
+#screen-scan.progressive-home .home-panel-detail .desk-panel-scroll{display:none}
+#screen-scan.progressive-home .home-panel-list .desk-panel-scroll{display:block;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scroll-padding-block:4px}
+#screen-scan.progressive-home .home-panel-detail #desk-stores-list{display:none}
+#screen-scan.progressive-home .home-panel-list #desk-stores-list{display:grid;grid-auto-rows:minmax(76px,max-content);align-content:start;flex:1}
+#screen-scan.progressive-home .home-panel-list .desk-village>.desk-mini-row{display:flex}
+#screen-scan.progressive-home .desk-panel-scroll:focus-visible{outline:2px solid #edcc80;outline-offset:-2px}
+
+/* Native modal top layer keeps building notices above the guided dock. */
+#homeBuildingNotices{margin:0;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;border:0}
+#homeBuildingNotices::backdrop{background:transparent}
+
+/* A compact occupied tray uses its count in the heading and leaves the rest
+   of its height to the actual rows, including small portrait screens. */
+#screen-scan.progressive-home .home-panel-list .desk-panel-summary{display:none}
+#screen-scan.progressive-home .home-panel-list .desk-panel-scroll{padding:2px 4px}
+#screen-scan.progressive-home .home-panel-list #desk-stores-list{grid-auto-rows:minmax(56px,max-content);gap:4px}
+#screen-scan.progressive-home .home-panel-list .desk-gear{min-height:56px;padding:2px;gap:0}
+#screen-scan.progressive-home .home-panel-list .desk-gear .desk-mini-art{width:26px;height:30px}
+#screen-scan.progressive-home .home-panel-list .desk-gear>span:not(.desk-mini-art){font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}

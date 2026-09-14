@@ -32,7 +32,7 @@
  const TREES=Array.from({length:28},(_,i)=>{const a=i*2.399963,r=(10.8+(i%4)*1.1)*YARD_SCALE;return{id:'tree-'+i,x:Math.sin(a)*r,z:Math.cos(a)*r,r:.38+(i%3)*.07};});
  for(const [id,r] of Object.entries(ROOMS))FINDS.push({id:id+'-story',area:id,x:0,z:-2.8,name:r.activity,text:r.lore});
  const visibleTrees=s=>s.outlook?TREES.filter(t=>!(t.z>7&&Math.abs(t.x)<11)):TREES;
- const FIXED=[{x:0,z:-3.45,w:2.7,d:1.25},{x:-3,z:1.4,w:1.7,d:2.4},{x:-3.5,z:-1,w:1,d:1.8}];
+ const FIXED=[{x:0,z:-3.45,w:2.7,d:1.25},{x:-3.5,z:-1,w:1,d:1.8}];
  const MAX_MAP_LAT=85.0511287798066;
  function normalizeAnchor(value){if(!value||typeof value!=='object'||!Number.isFinite(value.lat)||!Number.isFinite(value.lon)||Math.abs(value.lat)>MAX_MAP_LAT||Math.abs(value.lon)>180||!Number.isSafeInteger(value.revision)||value.revision<1||!['initial','chosen'].includes(value.source))return null;return{lat:value.lat,lon:value.lon,revision:value.revision,source:value.source};}
  function initial(veteran=false){return{version:3,outlook:true,anchor:null,rooms:{},trees:{},intro:veteran?'done':'welcome',arrival:veteran?'done':'home',tier:0,owned:{bench:1,flowers:1,rug:1},placed:[],finds:[],nextId:1,farm:{version:1,plots:[],seeds:{},nextId:1}};}

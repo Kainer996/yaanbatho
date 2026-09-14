@@ -1,0 +1,18 @@
+# Opening and Home release v416
+
+Based on public v415 (095ec945). This integrates the reviewed motivated opening, focused tutorial navigation, Birdhouse labels and progressive Home handoffs. Home retains full independent Stores/Kitchen/Training/Hospital/village lists whenever a whole row fits; small panels retain usable room headings and counts. Building notices use a native dialog so tutorial navigation cannot cover their acknowledgment controls. Existing Equipment action and inventory authority are reused. No duplicate stats or grants were added.
+
+The placeholder fixed bed and its collision block are removed from the player-home room only. The chair, computer, fireplace, player-owned decorations and saves remain. The opening introduces the shelter/shared world and returns through the actual desk, then uses actual construction, discovery/care and errand controls. First Flight supplies are transactionally saved once; cancelled/denied discovery can be deferred honestly without inventing a species or claiming its quest. Kitchen food and hunger remain under the existing care transaction.
+
+Native integration found three real UI defects and fixed them: the old Merlin care menu could cover Kitchen construction; the guided dock could cover quest send/feeding modal controls; and the meal lesson pointed at a feeding table before opening the Kitchen room. Scanner tutorial targeting now follows the actual closed/open scanner controls. These are navigation fixes, not synthetic tutorial completion events.
+
+## Validation so far
+
+- Full fresh phone-sized native play-through: 6 groups passed, no page errors, complete=true. Actual shelter/shared scene/desk, native Birdhouse placement/cost/XP, file chooser cancellation and denied microphone, actual Play, genuine Kitchen shortage, real First Flight dispatch/wait/claim, reload, native Kitchen construction and feed, saved final opening state. No paid recognition; no fabricated bird. Known synthetic geographic fixture, laptop Chromium/SwiftShader, not a physical phone.
+- Focused navigation: 20 native groups at 390x844, 844x390, 667x375, 1280x800 passed again on the final navigation CSS and meal handoff. The full-flow check separately proves the actual Kitchen meal.
+- Bed removal: 4 native groups passed across portrait/landscape/desktop with actual scene/collision, native desk return and save reload.
+- Motivated opening: 13 transaction/legacy/save-failure groups pass after final runtime edits. Focused navigation and progressive projection/preference suites pass. All inline scripts parse. Synchronous boot URLs match every required worker list.
+- Home: all 24 final native groups pass across five viewport sizes, including full populated Stores/Kitchen scrolling at phone/desktop, equipment quantities, completion notices and scanner. The current tutorial action stays in the viewport after horizontal navigation and inner-list scrolling.
+- Two legacy updater tests fail only because this source-only checkout lacks old materialized art, reproduced identically on deployed v415. Required list memberships pass. No blanket full-suite-green claim.
+
+No v416 production deployment is recorded by this file yet. Installed/offline and public parity/gameplay acceptance remain required. All consumers and three worker lists use opening-home-v416-20260914 for this release's changed modules, including lazy room-core dependencies.
