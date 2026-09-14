@@ -1021,7 +1021,8 @@ body.dock-compact .dock-row-low { justify-content: space-between; }
 #empireCollectBar { display:none; }
 body[data-active-screen="village"] .completion-notice-stack{top:auto;bottom:calc(86px + env(safe-area-inset-bottom));max-height:35dvh;overflow:auto}
 #screen-village .empire-title-row{justify-content:center;margin:3px 0 6px}
-#screen-village .empire-title-row .screen-title{width:100%;text-align:center;font-size:16px;line-height:1.3;margin:0;padding:0}
+#screen-village .empire-title-row .screen-title{display:block;width:100%;text-align:center;font-size:16px;line-height:1.3;margin:0;padding:0}
+#screen-village .empire-title-row .screen-title::before,#screen-village .empire-title-row .screen-title::after{display:none}
 #empireCollectBar .empire-tribute-btn { margin-bottom:10px; }
 #empireRealmPanel, #empireTownsPanel { margin:14px 12px; }
 .village-swipe-pager .bep-dot { display:inline-block; width:7px; height:7px; margin:0 3px; border-radius:50%; background:rgba(240,199,103,.3); vertical-align:middle; }
@@ -44076,7 +44077,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'empire-opening-v414-20260914';
+const BURBZ_BUILD = 'empire-title-v414b-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

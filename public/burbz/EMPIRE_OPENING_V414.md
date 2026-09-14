@@ -20,3 +20,6 @@ Validation before merge:
 Native evidence: /tmp/burbz-overview-proof/results.json and screenshots. Public old-to-new PWA and offline verification is recorded separately in /tmp/burbz-empire-opening-public/results.json; do not infer live status until that report is complete.
 
 This release excludes unverified camp combat, house perimeter checks, Auto/vehicle/water/enemy progression work and independent art/combat/player-camp checkpoints. No story changes.
+
+## Heading correction v414b
+Visual review found the global title pseudo-elements still pulled the text left even though its container was centred. The Empire title now uses a block and hides those decorative pseudo-elements. Native layout validation measures the actual text range against the parent centre in all three viewports. Build/cache advances to `empire-title-v414b-20260914`; the unchanged Home runtime keeps its v414 pin.
