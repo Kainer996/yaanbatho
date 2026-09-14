@@ -14,7 +14,8 @@ The opening says “Welcome, Earthling!” and keeps Merlin’s falcon-friend in
 - 9 native Settings groups: dialogue, spotlight and free action at 390×844, 844×390 and 1280×800; actual clicks/keyboard, cancelled reset, Close/Escape/browser Back and exact saved lesson/economy.
 - 11 cached-video full/range/suffix/invalid-range cases and 8 current-versus-old offline entry/reset/scope cases, plus cancellation/normalized-URL/one-use reset-intent checks.
 - 20 focused reset, save migration, feeding, first-flight target and offline/cache regression checks pass. Two obsolete source-count assertions were excluded: chapter counters expect pre-shelter order; concise lesson test expects the old fixed 36-step copy. They fail identically on the release base; neither is a new runtime regression.
-- Installed and public release evidence is recorded by the release owner before publication is reported complete.
+- 6 final installed/offline groups pass: actual old-to-new worker; retained existing save with no forced movie; exact installed document and full original movie SHA-256; confirmed offline New Game; native cached video seek in landscape; Skip, Settings cancellation and subsequent offline restart. Zero page errors. The fixture deliberately blocks outside map/font/auth requests; those expected network failures do not stand in for gameplay results.
+- Public release evidence is recorded by the release owner before publication is reported complete.
 
 Limits: automated and owner-run Chromium checks on this laptop, with phone viewport/touch emulation. These are not physical-device or independent new-player usability studies. No paid recognition calls, real user resets or changed game rewards.
 
