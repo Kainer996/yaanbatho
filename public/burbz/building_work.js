@@ -3,7 +3,7 @@
 function attach(s){
  const api=s.options.work,core=root.BurbzBuildingWorkCore,T=root.THREE;
  if(!api)return{update(){},reset(){},dispose(){},key(){return false;}};
- const button=document.createElement('button');button.type='button';button.className='vw-building-work';button.hidden=true;s.root.append(button);
+ const button=document.createElement('button');button.type='button';button.className='vw-building-work';button.setAttribute('data-walk-action','building-work');button.hidden=true;s.root.append(button);
  const point=new T.Vector3(),rows=new Map();let nearest=null,streak=null,taps=0,last=-Infinity,closed=false;
  function reset(){streak=null;taps=0;}
  function current(row){return api.describe(row.target);}

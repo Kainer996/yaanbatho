@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Builder actions v404b (`builder-actions-v404b-20260914`) corrects the independently observed simultaneous quest/help overlap. Help belongs to the existing nearby-action tray; its two phone targets must remain independently visible/clickable. Generic extension selectors may match multiple actions. Preserve all action callbacks, receipts, movement and exact changed module/worker pins. Original v404 visual acceptance was withheld; require real simultaneous quest and help interactions, not isolated buttons. See [BUILDER_HELP_V404.md](BUILDER_HELP_V404.md).
+
 Builder help v404 (`builder-help-v404-20260914`) adds one saved 25% original-duration reduction at nearby village/town-ward scaffolds after three taps/F presses. Preserve canonical project identity, finite known-ground proximity, atomic save rollback and one-use receipts. Keep the single walking frame, UI clearance, exact three-list/updater pins and cancelled partial help. On-site commissioning remains separate unfinished work. See [BUILDER_HELP_V404.md](BUILDER_HELP_V404.md).
 
 Map camera/room repair v403 (`map-camera-v403-20260914`) corrects terrain centre elevation and capability-gated room life. Preserve GPS coordinates, idle-only camera work, conservative missing terrain, external manual-camera ownership, owned room rewards and exact consuming/three-list pins. v402 canvas presence was insufficient: public room acceptance must prove advancing rendered frames, native pose change and no caught error overlay. See [MAP_CAMERA_V403.md](MAP_CAMERA_V403.md).

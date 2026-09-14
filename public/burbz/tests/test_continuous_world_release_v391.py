@@ -4,7 +4,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 PIN = "continuous-world-v391-20260910"
-CURRENT_BUILD = "builder-help-v404-20260914"
+CURRENT_BUILD = "builder-actions-v404b-20260914"
 CAMERA_PIN = "map-camera-v403-20260914"
 SKY_PIN = "distant-sky-v401-20260913"
 ARRIVAL_PIN = "unified-alderwing-v400-20260913"
