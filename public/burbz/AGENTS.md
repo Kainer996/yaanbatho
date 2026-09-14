@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Home header controls share the available row width, including Camps, Saved photos, Enter Alderwing and optional Equipment. Preserve 44px targets, the reserved Merlin area, and narrow landscape stacking. Common guidance retains one visible Home resume control without creating outer page scrolling; the available-height track choice also covers the four-panel small-phone state.
+
 Coordinated v417 candidate waits for the profile-scoped initial home-placement promise before deciding whether world entry needs a location picker. Preserve the asynchronous settlement/footprint check, shared in-flight placement, cancelled-handoff/save-identity checks and rejection fallback. Existing owned anchors remain unchanged. Focused race coverage: tests/test_initial_home_wait_v417.cjs; final native opening rerun is required before release.
 
 Unpublished current-action navigation (14 September 2026) reads the real opening objective/active step, places one large native action/reveal control and its hint in reserved dock space, hides only gate-locked guided silhouettes, and pauses/resumes the existing saved lesson. Keep actual dock/Settings handlers, real target events and deferred discovery controls. No UI path grants progression or rewards. See [FOCUSED_TUTORIAL_NAVIGATION_20260914.md](FOCUSED_TUTORIAL_NAVIGATION_20260914.md) for verified checks and the remaining integrated visual run.
