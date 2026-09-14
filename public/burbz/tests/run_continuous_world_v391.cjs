@@ -13,7 +13,7 @@ async function seedRecords(){return run(`(()=>{if(merlinTutActive)endMerlinTutor
 
 async function measure(label){await page.evaluate(()=>__burbzVillageWalkDebug.resetSamples());await page.waitForTimeout(2200);const d=await page.evaluate(()=>__burbzVillageWalkDebug.state());report[label]={meanMs:d.meanMs,p95Ms:d.p95Ms,fps:d.fps,sampleCount:d.sampleCount,draws:d.draws,triangles:d.triangles,dpr:d.dpr,player:d.player,continuity:d.continuity};return d;}
 (async()=>{try{
- await fixture.listen();browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ await fixture.listen();browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const desktop=process.argv.includes('--desktop'),town=process.argv.includes('--town'),viewport=desktop?{width:1280,height:800}:process.argv.includes('--landscape')?{width:667,height:375}:{width:390,height:844};
  const context=await browser.newContext({viewport,hasTouch:!desktop,serviceWorkers:'block',recordVideo:{dir:path.join(out,'video'),size:viewport}});
  await F.routeMap(context,report,{missingTerrain:()=>missingTerrain,realProvider:process.argv.includes('--real')});if(process.argv.includes('--real')){report.mapFixture.terrain='Live Mapterhorn DEM, decoded by actual MapLibre; no synthetic elevation input.';report.mapFixture.features='Live OpenFreeMap vector tiles; no fixture vector replacement.';}

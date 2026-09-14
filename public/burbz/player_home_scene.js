@@ -93,7 +93,7 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  b.add(new T.DodecahedronGeometry(1.6),0x9b9f87,[7,.5,18],[.3,.7,.1],[1.5,.65,1]);
  b.add(new T.DodecahedronGeometry(.9),0x838d78,[9,.25,20],[.2,.5,.1],[1.4,.7,1]);
  }
- scene.add(b.finish());frontLeaves=front.finish();scene.add(frontLeaves);house=root.BurbzSettlementModels.building(T,'cabin',s.tier+1,()=>.47,{roofs:[0x557e72]});house.userData.homeTarget='house';scene.add(house);targets.push(house);const additions=upperRooms(T,s);additions.userData.homeTarget='house';scene.add(additions);targets.push(additions);
+ scene.add(b.finish());frontLeaves=front.finish();scene.add(frontLeaves);house=createHouse(T,s);scene.add(house);targets.push(house);
  if(!options.contentOnly){const hemi=new T.HemisphereLight(0xffe7b5,0x526b70,grade.hemi),key=new T.DirectionalLight(grade.keyColor,grade.keyIntensity);key.position.set(-12,19,10);skyLight=hemi;sunLight=key;key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-25,right:25,top:25,bottom:-25,near:1,far:60});key.shadow.bias=-.001;key.shadow.normalBias=.025;scene.add(hemi,key);scene.background.set(grade.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}
  // Merlin uses the existing game portrait, perched by the door.
  if(options.portrait!==false){const tex=new T.TextureLoader().load('bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png');tex.colorSpace=T.SRGBColorSpace;const bird=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true}));bird.scale.set(1.8,1.8,1);bird.position.set(2.2,2.1,1.4);scene.add(bird);}
@@ -111,6 +111,7 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
 }
 // The exact owned yard, expressed in local metres for the continuous world.
 // Its owner supplies geographic placement, terrain, lighting and one renderer.
+function createHouse(T,home){const saved=C.normalize(home),group=new T.Group();group.name='player-home-house';group.userData.homeTarget='house';group.add(root.BurbzSettlementModels.building(T,'cabin',saved.tier+1,()=>.47,{roofs:[0x557e72]}),upperRooms(T,saved));return group;}
 function createYardContent(T,home,options={}){const saved=C.normalize(home),now=options.now??Date.now(),view=create(T,saved,'yard',1,{}, {...options,now,contentOnly:true}),group=new T.Group();group.name='player-home-yard';for(const child of [...view.scene.children])group.add(child);group.updateMatrixWorld(true);
  const targets=[{kind:'home',id:'home-door',x:0,y:1.2,z:3.2,label:'Enter your home',range:2}];
  for(const f of C.FINDS.filter(f=>f.area==='yard'))targets.push({kind:'find',id:f.id,x:f.x,y:.6,z:f.z,label:saved.finds.includes(f.id)?'Read '+f.name:'Look closer',range:1.65});
@@ -120,5 +121,5 @@ function createYardContent(T,home,options={}){const saved=C.normalize(home),now=
  for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:0,maxY:3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:1.6,maxY:7});}
  return{group,world:view.world,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
 }
-root.BurbzPlayerHomeScene={create,createYardContent,ornament,upperRooms,disposeScene};
+root.BurbzPlayerHomeScene={create,createHouse,createYardContent,ornament,upperRooms,disposeScene};
 })(globalThis);
