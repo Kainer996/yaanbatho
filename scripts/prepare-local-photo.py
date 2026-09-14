@@ -15,16 +15,30 @@ from urllib.request import urlopen
 
 HF = 'https://huggingface.co/'
 BIRDER = HF+'birder-project/rope_vit_reg4_b14_capi-intermediate-eu-common/resolve/04624a2fbbb5a50346ef553dc1b65dcfe707692c/'
-BIO = HF+'imageomics/bioclip-2/resolve/2957b322090f9cb17ae72c71981c7218a28d81e0/'
+BIO = HF+'imageomics/bioclip-2.5-vith14/resolve/6e3d04e3d6522012c88181085c5ae666e14c45cd/'
 TAXA = HF+'datasets/imageomics/TreeOfLife-200M/resolve/5f2dc493b3dc0e544438a04038ab15faa646b749/embeddings/'
 FILES = {
     'birder.json': ('model-config.json', BIRDER+'rope_vit_reg4_b14_capi-intermediate-eu-common.json', '8e7afdd172cd2380153d4ff84b865304d6c4dbe9c2aac7402fb07cd61a2f7461'),
     'birder.pt': ('rope_vit_reg4_b14_capi-intermediate-eu-common.pt', BIRDER+'rope_vit_reg4_b14_capi-intermediate-eu-common.pt', '5f9529dbb354ac755ee7c584fdc9227f469233ca35a09998ddf57afa54199e44'),
-    'bioclip2.safetensors': ('bioclip2.safetensors', BIO+'open_clip_model.safetensors', 'b7b2bf6fbc95799e42630e394cf95803892ab447c1a8ab629dbc82fbeaf7dfef'),
+    'bio25.safetensors': ('bio25.safetensors', BIO+'open_clip_model.safetensors', 'ac2e37c2f89ef8e6b889176a9a3f418970ad9db15a218bd29e3321e95c46ae97'),
     'detector.pth': ('fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth', 'https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_v2_coco-dd69338a.pth', 'dd69338a24b8d7381807e247652bdc356325bcbaf1cd3e092e00e0a1a58706bf'),
-    'taxon-names.json': ('taxon-names.json', TAXA+'txt_emb_bioclip-2.json', '4648928b006f85d83d28e5a27074ca9363465d82e778d708b369c5eaf54b8ef5'),
-    'taxon-embeddings.npy': ('taxon-embeddings.npy', TAXA+'txt_emb_bioclip-2.npy', 'c72442de7b0cb7fcb55ab7ca08099d0f42fbd6769efe16ca64c1daa7a8b87db2'),
+    # Preserve the previously checked common-name joins, then intersect exact
+    # scientific identities with the new taxonomy. Renamed English labels must
+    # not silently disable a cross-check (e.g. European Herring Gull -> Herring gull).
+    'prior-taxon-names.json': ('taxon-names.json', TAXA+'txt_emb_bioclip-2.json', '4648928b006f85d83d28e5a27074ca9363465d82e778d708b369c5eaf54b8ef5'),
+    'taxon-names.json': ('bio25-names.json', TAXA+'txt_emb_bioclip-2.5-vith14.json', 'af0cb41ffbfb31e6a2e2d5e3a402529ec8245a4268f42ce45ee4e977b7127443'),
+    'taxon-embeddings.npy': ('bio25-vectors.npy', TAXA+'txt_emb_bioclip-2.5-vith14.npy', 'd1cc734330d17ea26e6f713b289b2138b4adc90d4f524349cd16fab42d5c3358'),
 }
+
+# Explicit current name for a species otherwise sharing the old broad English
+# label with L. smithsonianus. Scientific identity and every other label stay put.
+CANONICAL_NAMES = {'Larus argentatus': 'European herring gull'}
+PHOTO_STYLE_PROMPTS = [
+    ['a wildlife photograph of a real bird.', 'a photograph of a bird in nature.',
+     'a close-up photograph of a real bird.', 'a phone camera photograph of a live bird.'],
+    ['an illustration of a bird.', 'a drawing of a bird.', 'a cartoon bird.',
+     'a painted bird character in a video game.'],
+]
 
 def digest(path):
     with path.open('rb') as stream:
@@ -54,31 +68,79 @@ def main():
                 raise ValueError('Model checksum mismatch: '+name)
         import numpy as np
         import torch
+        import open_clip
+        from safetensors.torch import load_file, save_file
+        torch.set_num_threads(2)
+        torch.set_num_interop_threads(1)
         names = json.loads((stage/'taxon-names.json').read_text())
         indices = [i for i, n in enumerate(names) if n[0][2] == 'Aves']
         vectors = np.load(stage/'taxon-embeddings.npy', mmap_mode='r', allow_pickle=False)
         birds = [names[i] for i in indices]
-        np.save(stage/'bird-embeddings.npy', np.array(vectors[:, indices]), allow_pickle=False)
+        if vectors.shape[0] != 1024 or vectors.shape[1] != len(names):
+            raise ValueError('BioCLIP 2.5 text embedding/taxonomy mismatch')
+        bird_vectors = np.array(vectors[:, indices])
+        # Text inference is never used at runtime. Preserve every visual tensor
+        # byte and its learned scale, avoiding the unused text model allocation.
+        state = load_file(stage/'bio25.safetensors')
+        model = open_clip.create_model('ViT-H-14', device='meta')
+        model.load_state_dict(state, assign=True)
+        model.attn_mask = torch.full((model.context_length, model.context_length), float('-inf')).triu_(1)
+        model.eval()
+        tokenizer = open_clip.get_tokenizer('ViT-H-14')
+        def embed(prompts):
+            with torch.inference_mode():
+                features = model.encode_text(tokenizer(prompts), normalize=True)
+                return torch.nn.functional.normalize(features.mean(0), dim=0)
+        controls = {}
+        for species, common in CANONICAL_NAMES.items():
+            matches = [i for i,n in enumerate(birds) if ' '.join(n[0][5:7]) == species]
+            if len(matches) != 1:
+                raise ValueError('Ambiguous canonical text label: '+species)
+            i = matches[0]
+            name = ' '.join(birds[i][0])+' with common name '+birds[i][1]
+            # Exact author recipe uses one template; verify it before editing a
+            # common name. A different tokenizer/model/template must fail closed.
+            original = embed(['an image of '+name+'.'])
+            controls[species] = float(original @ torch.from_numpy(bird_vectors[:,i]))
+            if abs(controls[species]-1) > .00001:
+                raise ValueError('Published text embedding reproduction failed')
+            name = ' '.join(birds[i][0])+' with common name '+common
+            bird_vectors[:,i] = embed(['an image of '+name+'.']).numpy()
+            birds[i][1] = common
+        np.save(stage/'bird-embeddings.npy', bird_vectors, allow_pickle=False)
         (stage/'bird-names.json').write_text(json.dumps(birds))
+        np.save(stage/'photo-style.npy', torch.stack([embed(p) for p in PHOTO_STYLE_PROMPTS], dim=1).numpy(), allow_pickle=False)
+        visual = {k:v for k,v in state.items() if k.startswith('visual.') or k == 'logit_scale'}
+        if 'visual.proj' not in visual or 'logit_scale' not in visual:
+            raise ValueError('Incomplete BioCLIP visual checkpoint')
+        save_file(visual, stage/'bio25-vision.safetensors')
+        del state, visual, model
         normal = lambda s: re.sub(r'[^a-z0-9]', '', s.lower())
         by_name = {}
-        for taxon, common in birds:
+        prior_names = json.loads((stage/'prior-taxon-names.json').read_text())
+        for taxon, common in prior_names:
+            if taxon[2] != 'Aves':
+                continue
             if common:
                 by_name.setdefault(normal(common), set()).add(taxon[5]+' '+taxon[6])
         labels = torch.load(stage/'birder.pt', map_location='cpu', weights_only=True)['class_to_idx']
         mapping = {}
+        current_species = {taxon[5]+' '+taxon[6] for taxon, _ in birds}
         for name, index in labels.items():
             identities = by_name.get(normal(name), set())
-            if len(identities) == 1:
+            if len(identities) == 1 and identities <= current_species:
                 mapping.setdefault(next(iter(identities)), []).append(index)
-        runtime_files = ['birder.json','birder.pt','bioclip2.safetensors','detector.pth','bird-names.json','bird-embeddings.npy']
+        runtime_files = ['birder.json','birder.pt','bio25-vision.safetensors','detector.pth','bird-names.json','bird-embeddings.npy','photo-style.npy']
         bundle = stage/'bundle'; bundle.mkdir()
         for name in runtime_files:
             (stage/name).replace(bundle/name)
             (bundle/name).chmod(0o644)
-        manifest = {'id':'photo-local-v393','sha256':{n:digest(bundle/n) for n in runtime_files},
+        manifest = {'id':'photo-models-v407','sha256':{n:digest(bundle/n) for n in runtime_files},
                     'birder_species':mapping,'bird_count':len(birds),
-                    'notes':'Exact unambiguous common-name joins only; unmapped species use the global classifier.'}
+                    'source_sha256':{name:expected for name,(_,_,expected) in FILES.items()},
+                    'canonical_names':CANONICAL_NAMES,'label_reproduction_cosines':controls,
+                    'photo_style_prompts':PHOTO_STYLE_PROMPTS,
+                    'notes':'BioCLIP2.5 visual tensors unchanged; matching 1024-dimensional bird embeddings. Prior exact scientific Birder joins retained where the current taxonomy includes that species.'}
         (bundle/'manifest.json').write_text(json.dumps(manifest, indent=2))
         bundle.replace(args.destination)
     print(f'Prepared {len(birds)} worldwide bird taxa, {len(mapping)} cross-model matches at {args.destination}')

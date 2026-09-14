@@ -17,22 +17,30 @@ import time
 from http.server import BaseHTTPRequestHandler
 
 POLICY = "photo-local-v393"
-MODEL = "bioclip2-birder-local"
+MODEL = "bioclip25-birder-local"
+BUNDLE = "photo-models-v407"
 SOURCE_HASH = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 MAX_BYTES = 10 * 1024 * 1024
 MAX_PIXELS = 24_000_000
 MIN_SCORE = .90
 MIN_MARGIN = .20
+UNCERTAIN_REASONS = {"uncertain-species", "views-disagree", "models-disagree", "unresolved-taxonomy"}
+UNCERTAIN_MESSAGE = "Species not confirmed. Try another angle showing the bird’s head, wings and tail. A tighter close-up may hide useful details."
 
 
 def abstain(reason, message=None):
     return {"found": False, "accepted": False, "verified": False,
             "policy": POLICY, "model": MODEL, "reason": reason,
-            "message": message or "Bird not found. We couldn’t confirm the species. Try a closer, clearer view of the bird."}
+            "message": message or (UNCERTAIN_MESSAGE if reason in UNCERTAIN_REASONS else "Bird not found. We couldn’t confirm the species. Try a closer, clearer view of the bird.")}
 
 
 def valid_score(value):
     return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and 0 <= value <= 1
+
+
+def consistent_illustration(scores):
+    """A new veto needs positive evidence; uncertainty must not reject a photo."""
+    return len(scores) == 2 and all(valid_score(score) and score >= MIN_SCORE for score in scores)
 
 
 def accept_consensus(bio, secondary=None):
@@ -82,9 +90,11 @@ def padded_crop(image, box, fraction):
 
 def check_manifest(root):
     manifest = json.loads((root / "manifest.json").read_text())
-    required = {"birder.json", "birder.pt", "bioclip2.safetensors", "detector.pth", "bird-names.json", "bird-embeddings.npy"}
+    required = {"birder.json", "birder.pt", "bio25-vision.safetensors", "detector.pth", "bird-names.json", "bird-embeddings.npy", "photo-style.npy"}
     if not required.issubset(manifest.get("sha256", {})):
         raise ValueError("Incomplete photo model checksum manifest")
+    if manifest.get("id") != BUNDLE:
+        raise ValueError("Incompatible photo model bundle")
     for name, expected in manifest["sha256"].items():
         if Path(name).name != name:
             raise ValueError("Invalid model filename")
@@ -103,6 +113,7 @@ class Recognizer:
         import torch
         import birder
         import open_clip
+        from safetensors.torch import load_file
         from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
         self.manifest = check_manifest(root)
         torch.set_num_threads(2)
@@ -115,11 +126,26 @@ class Recognizer:
         checkpoint = torch.load(root/"birder.pt", map_location="cpu", weights_only=True)
         self.birder_labels = {i: name for name, i in checkpoint["class_to_idx"].items()}
         self.birder_transform = birder.classification_transform((336, 336), cfg["rgb_stats"])
-        self.bio, _, self.bio_transform = open_clip.create_model_and_transforms("ViT-L-14", pretrained=str(root/"bioclip2.safetensors"))
+        # Construct shapes on meta; assign the checked visual tensors directly.
+        # No text weights, random CPU model, duplicate checkpoint allocation or
+        # network download is needed in this image-only worker.
+        model, _, self.bio_transform = open_clip.create_model_and_transforms("ViT-H-14", device="meta")
+        state = load_file(root/"bio25-vision.safetensors")
+        self.bio = model.visual
+        self.logit_scale = state["logit_scale"]
+        self.bio.load_state_dict({k[7:]:v for k,v in state.items() if k.startswith("visual.")}, assign=True)
+        del model, state
+        if any(p.is_meta for p in self.bio.parameters()):
+            raise ValueError("Incomplete photo visual weights")
         self.bio.eval()
         self.names = json.loads((root/"bird-names.json").read_text())
         self.common_names = {n[0][5]+" "+n[0][6]: n[1] for n in self.names}
         self.vectors = torch.from_numpy(np.load(root/"bird-embeddings.npy", allow_pickle=False))
+        if tuple(self.vectors.shape) != (1024, len(self.names)):
+            raise ValueError("Photo text embedding/taxonomy mismatch")
+        self.photo_style = torch.from_numpy(np.load(root/"photo-style.npy", allow_pickle=False))
+        if tuple(self.photo_style.shape) != (1024, 2) or not torch.isfinite(self.photo_style).all():
+            raise ValueError("Invalid photo style embeddings")
 
     def identify(self, payload):
         from PIL import Image, ImageOps
@@ -145,12 +171,22 @@ class Recognizer:
             # without demanding that a distant subject dominate the full photograph.
             views = [padded_crop(image, box, .12), padded_crop(image, box, .30)]
             readings = []
+            illustration_scores = []
             for view in views:
-                features = self.bio.encode_image(self.bio_transform(view).unsqueeze(0), normalize=True)
-                scores = (self.bio.logit_scale.exp()*features@self.vectors).softmax(-1)[0]
+                features = self.torch.nn.functional.normalize(self.bio(self.bio_transform(view).unsqueeze(0)), dim=-1)
+                # Veto positive illustration evidence on BOTH views. Uncertain
+                # style is not evidence against an otherwise valid photograph.
+                # This cannot prove liveness or reject photographs of screens.
+                photo_score = float((self.logit_scale.exp()*features@self.photo_style).softmax(-1)[0,0])
+                if not valid_score(photo_score):
+                    return abstain("invalid-photo-evidence")
+                illustration_scores.append(1-photo_score)
+                scores = (self.logit_scale.exp()*features@self.vectors).softmax(-1)[0]
                 values, ids = scores.topk(2)
                 taxon = self.names[int(ids[0])][0]
                 readings.append((taxon[5]+" "+taxon[6], float(values[0]), float(values[0]-values[1])))
+            if consistent_illustration(illustration_scores):
+                return abstain("illustrated-bird", "Bird not found. Use a camera photograph of a real bird rather than an illustration.")
             if readings[0][0] != readings[1][0]:
                 return abstain("views-disagree")
             scientific = readings[0][0]
@@ -177,7 +213,7 @@ class Recognizer:
             return {"found": True, "accepted": True, "verified": True,
                     "policy": POLICY, "model": MODEL, "species": common,
                     "scientificName": scientific, "confidence": confidence,
-                    "verification": "detector+two-views" + ("+birder" if birder_ids else ""),
+                    "verification": "detector+photo-style+two-views" + ("+birder" if birder_ids else ""),
                     "seconds": round(time.monotonic()-start, 3)}
 
 

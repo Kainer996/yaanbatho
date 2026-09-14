@@ -21,7 +21,7 @@ worker = module('photo_local')
 
 def accepted(**overrides):
     return dict(found=True, accepted=True, verified=True, policy=photo.PHOTO_POLICY,
-                model='bioclip2-birder-local', species='Common Raven',
+                model='bioclip25-birder-local', species='Common Raven',
                 scientificName='Corvus corax', confidence=.96) | overrides
 
 @pytest.mark.parametrize('overrides', [
@@ -104,6 +104,27 @@ def test_checksum_failure_stops_model_loading(tmp_path):
     (tmp_path/'manifest.json').write_text(json.dumps({'sha256': {'model': 'wrong'}}))
     (tmp_path/'model').write_bytes(b'broken')
     with pytest.raises(ValueError, match='checksum'): worker.check_manifest(tmp_path)
+
+def test_old_bundle_cannot_be_loaded_as_the_new_visual_model(tmp_path):
+    files=['birder.json','birder.pt','bio25-vision.safetensors','detector.pth',
+           'bird-names.json','bird-embeddings.npy','photo-style.npy']
+    (tmp_path/'manifest.json').write_text(json.dumps({'id':'photo-local-v393','sha256':dict.fromkeys(files,'unused')}))
+    with pytest.raises(ValueError, match='Incompatible'): worker.check_manifest(tmp_path)
+
+def test_positive_illustration_veto_needs_both_strong_views():
+    assert worker.consistent_illustration([.94,.99])
+    assert worker.consistent_illustration([.90,.90])
+    for scores in [[.9,.89],[.3,.4],[.99],[],[float('nan'),.99],[True,.99],[1.1,.99]]:
+        assert not worker.consistent_illustration(scores)
+
+def test_new_adapter_rejects_old_model_identity():
+    assert not photo._validate_result(accepted(model='bioclip2-birder-local'))['found']
+
+def test_uncertain_closeup_does_not_tell_player_to_zoom_in_further():
+    result=photo._validate_result(worker.abstain('uncertain-species'))
+    assert not result['found'] and 'species' not in result
+    assert result['message'].startswith('Species not confirmed.')
+    assert 'another angle' in result['message'] and 'head, wings and tail' in result['message']
 
 def test_two_models_must_agree_and_one_must_be_strong_on_both_views():
     a = [('Corvus corax', .95, .8), ('Corvus corax', .94, .8)]

@@ -12,12 +12,13 @@ SOUND_PROOF=${5:?sound runtime verification required}
 SOURCE_DIR=$(dirname -- "$SOURCE")
 WORKER_SOURCE=${6:-$SOURCE_DIR/photo_local.py}
 LOCAL_RUNTIME=${BURBZ_LOCAL_PHOTO_RUNTIME:-/opt/burbz-photo}
+MODEL_ROOT="$LOCAL_RUNTIME/models-photo-models-v407"
 WORKER_UNIT=/etc/systemd/system/burbz-photo.service
 SERVICE=${BURBZ_SERVICE:-burbz}
 ORIGIN=${BURBZ_BACKEND_ORIGIN:-http://127.0.0.1:5055}
 PYTHON="$ROOT/venv/bin/python3"
 [[ -f "$ROOT/server.py" && -x "$PYTHON" && -f "$SOURCE" && -f "$PROOF" && -f "$SOUND_PROOF" && -f "$WORKER_SOURCE" ]] || { echo 'Photo promotion inputs missing' >&2; exit 1; }
-[[ -x "$LOCAL_RUNTIME/venv/bin/python" && -f "$LOCAL_RUNTIME/models/manifest.json" ]] || { echo 'Provision the isolated free photo runtime first; see LOCAL_PHOTO_V393.md' >&2; exit 1; }
+[[ -x "$LOCAL_RUNTIME/venv/bin/python" && -f "$MODEL_ROOT/manifest.json" ]] || { echo 'Provision the isolated free photo runtime first; see LOCAL_PHOTO_V407.md' >&2; exit 1; }
 [[ "$LOCAL_RUNTIME" =~ ^/[a-zA-Z0-9/_-]+$ ]] || { echo 'Invalid local runtime path' >&2; exit 1; }
 [[ "$(systemctl show "$SERVICE" -p WorkingDirectory --value)" == "$ROOT" ]] || { echo 'Photo service webroot mismatch' >&2; exit 1; }
 SOURCE_HASH=$(sha256sum "$SOURCE" | cut -d' ' -f1)
@@ -75,7 +76,7 @@ After=local-fs.target
 Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_GROUP
-ExecStart=$LOCAL_RUNTIME/venv/bin/python $WORKER_RELEASE/photo_local.py --models $LOCAL_RUNTIME/models --socket /run/burbz-photo/recognizer.sock
+ExecStart=$LOCAL_RUNTIME/venv/bin/python $WORKER_RELEASE/photo_local.py --models $MODEL_ROOT --socket /run/burbz-photo/recognizer.sock
 RuntimeDirectory=burbz-photo
 RuntimeDirectoryMode=0750
 Environment=HF_HUB_OFFLINE=1
@@ -109,7 +110,7 @@ class Local(http.client.HTTPConnection):
         self.sock.settimeout(2);self.sock.connect('/run/burbz-photo/recognizer.sock')
 try:
     c=Local('localhost');c.request('GET','/health');r=c.getresponse();p=json.loads(r.read(4096));c.close()
-    sys.exit(0 if r.status==200 and p.get('ready') is True and p.get('policy')=='photo-local-v393' and p.get('sourceHash')==sys.argv[1] else 1)
+    sys.exit(0 if r.status==200 and p.get('ready') is True and p.get('policy')=='photo-local-v393' and p.get('sourceHash')==sys.argv[1] and p.get('bundle')=='photo-models-v407' else 1)
 except (OSError,ValueError,http.client.HTTPException):sys.exit(1)
 PY
   then worker_ready=1; break; fi
