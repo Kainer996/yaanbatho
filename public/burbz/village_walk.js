@@ -99,12 +99,12 @@
     }
     on(document,'fullscreenchange',fullChange);on(document,'webkitfullscreenchange',fullChange);
     full.hidden=!(el.requestFullscreen||el.webkitRequestFullscreen);fullscreen();exit.focus({preventScroll:true});
-    const keys=new Set(),pointers=new Map(),input={side:0,forward:0},auto=root.BurbzVillageWalkCore.autoFlight();s.auto=auto;
+    const keys=new Set(),pointers=new Map(),input={side:0,forward:0};let auto=null;
     const autoTrack=document.createElement('span');autoTrack.className='vw-auto-track';autoTrack.innerHTML='<i></i><span>Auto</span>';autoTrack.setAttribute('aria-hidden','true');stick.append(autoTrack);
     let autoFeedback="";
-    function autoSync(){auto.allow(!!s.continuity&&s.player?.mode==='fly'&&!s.uiBusy&&!s.room&&!s.closed&&!s.failed&&!document.hidden&&!el.querySelector('dialog[open]')&&!(s.combat?.isDead?.()));const a=auto.state(),feedback=[a.enabled,a.armed,a.latched].join(':');if(feedback===autoFeedback)return;autoFeedback=feedback;stick.classList.toggle('vw-auto-available',a.enabled);stick.classList.toggle('vw-auto-armed',a.armed);stick.classList.toggle('vw-auto-on',a.latched);autoTrack.querySelector('span').textContent=a.latched?'Auto · on':a.armed?'Release · Auto':'Auto';stick.setAttribute('aria-label',a.enabled?(a.latched?'Auto flight on. Touch movement control to stop.':'Fly. Drag fully up to Auto and release for forward flight.'):'Walk: drag the thumbstick');}
+    function autoSync(){if(!auto)return;auto.allow(!!s.continuity&&s.player?.mode==='fly'&&!s.uiBusy&&!s.room&&!s.closed&&!s.failed&&!document.hidden&&!el.querySelector('dialog[open]')&&!(s.combat?.isDead?.()));const a=auto.state(),feedback=[a.enabled,a.armed,a.latched].join(':');if(feedback===autoFeedback)return;autoFeedback=feedback;stick.classList.toggle('vw-auto-available',a.enabled);stick.classList.toggle('vw-auto-armed',a.armed);stick.classList.toggle('vw-auto-on',a.latched);autoTrack.querySelector('span').textContent=a.latched?'Auto · on':a.armed?'Release · Auto':'Auto';stick.setAttribute('aria-label',a.enabled?(a.latched?'Auto flight on. Touch movement control to stop.':'Fly. Drag fully up to Auto and release for forward flight.'):'Walk: drag the thumbstick');}
 
-    s.reset=()=>{auto.reset();s.work?.reset();s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();s.combat?.reset();s.continuity?.reset();};
+    s.reset=()=>{auto?.reset();s.work?.reset();s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();s.combat?.reset();s.continuity?.reset();};
     function fail(error){
       if(s.closed)return;s.failed=true;cancelAnimationFrame(s.raf);s.raf=0;s.reset();
       const box=el.querySelector('.vw-error');box.hidden=false;box.querySelector('p').textContent='Walking is unavailable here. '+(error.message||'Please return to the village and try again.');
@@ -133,7 +133,7 @@
       if(e.code==='KeyF'&&!e.repeat&&!s.room&&(options.exploreWorld||options.continuousWorld)){e.preventDefault();e.stopImmediatePropagation();if(s.continuity){if(s.player.mode==='fly'||!s.rooms?.key(e.code))s.continuity.toggleFlight();}else leaveForWorld('fly');return;}
       if(!e.repeat&&(s.flight?.key(e.code)||s.rooms?.key(e.code)||(!s.room&&s.harvest?.key(e.code))||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
-      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight||options.continuousWorld?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code))auto.reset();keys.add(e.code);}
+      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight||options.continuousWorld?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code))auto?.reset();keys.add(e.code);}
     },{capture:true});
     on(document,'keyup',e=>{keys.delete(e.code);},{capture:true});
     // Body-level gesture isolation prevents the dock/page/village swipe stack
@@ -144,7 +144,7 @@
       if(e.cancelable&&!e.target.closest('.fp-panel,.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
     },{passive:false});
     function pointerDown(e){
-      if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy)return;
+      if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy||!auto)return;
       if(e.pointerType==='touch')el.classList.add('vw-touch');
       const node=e.currentTarget,type=node===stick?'move':'look';
       if([...pointers.values()].some(p=>p.type===type))return;
@@ -202,7 +202,7 @@
       }catch(error){fail(error);}
     }
     return load().then(async()=>{
-      if(s.closed)return false;const source=await options.source(s.abort.signal);
+      if(s.closed)return false;auto=root.BurbzVillageWalkCore.autoFlight();s.auto=auto;const source=await options.source(s.abort.signal);
       if(s.closed){source?.dispose?.();return false;}
       if(!root.THREE||!source?.scene||!source.renderer||source.renderer.getContext().isContextLost())throw Error('This browser cannot render the 3D village.');
       s.source=source;const {renderer,camera,scene}=source,canvas=renderer.domElement,size=renderer.getSize(new root.THREE.Vector2());
