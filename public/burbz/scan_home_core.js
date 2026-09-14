@@ -21,7 +21,9 @@
  ];
  function derive(input={}){
   input=input&&typeof input==='object'?input:{};
-  const actions=[],g=input.gates||{},n=input.counts||{},p=input.player||{};
+  const actions=[],g=input.gates||{},playableGates={...g},n=input.counts||{},p=input.player||{};
+  // A route being introduced does not make an unfinished room playable.
+  for(const id of ['kitchen','training','hospital'])playableGates[id]=g[id]===true&&input.rooms?.[id]?.built===true;
   const add=(id,title,detail,icon,target,tone='ready')=>actions.push({id,title,detail,icon,target,tone});
   const questCount=count(input.quests?.count);
   if(input.nextQuest)add('next-quest',input.nextQuest.name||'Your next quest',input.nextQuest.detail||'Continue your next Player Quest','quests',{kind:'quest',id:input.nextQuest.id},'quiet');
@@ -39,13 +41,28 @@
   const player={name:typeof p.name==='string'?p.name:'',level:count(p.level)||null,coins:p.showCoins!==false&&Number.isFinite(p.coins)&&p.coins>=0?Math.floor(p.coins):null};
   const builds=(g.village&&Array.isArray(input.builds)?input.builds:[]).filter(b=>b&&typeof b.id==='string'&&typeof b.name==='string'&&Number.isFinite(b.seed)&&typeof b.building==='string').map(b=>({...b,target:{kind:'build-opportunity',seed:b.seed,building:b.building}}));
   const stores=(g.inventory&&Array.isArray(input.stores)?input.stores:[]).filter(s=>s&&typeof s.id==='string'&&typeof s.name==='string'&&['weapon','armour'].includes(s.slot)&&count(s.count)).map(s=>({...s,count:count(s.count),target:{kind:'stores-gear',id:s.id}}));
-  const kitchen=(g.kitchen&&Array.isArray(input.kitchen)?input.kitchen:[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.hunger)&&b.hunger>0).map(b=>({...b,hunger:Math.max(0,Math.min(100,b.hunger)),target:{kind:'feed-bird',id:b.id}}));
-  const training=(g.training&&Array.isArray(input.training)?input.training:[]).filter(s=>s&&typeof s.id==='string').map(s=>({...s,progress:Math.max(0,Math.min(100,Number(s.progress)||0)),target:{kind:'training'}}));
-  const hospital=(g.hospital&&Array.isArray(input.hospital)?input.hospital:[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.hp)&&Number.isFinite(b.maxHp)&&b.maxHp>0&&b.hp<b.maxHp).map(b=>({...b,target:{kind:'hospital'}}));
+  const kitchen=(playableGates.kitchen&&Array.isArray(input.kitchen)?input.kitchen:[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.hunger)&&b.hunger>0).map(b=>({...b,hunger:Math.max(0,Math.min(100,b.hunger)),target:{kind:'feed-bird',id:b.id}}));
+  const training=(playableGates.training&&Array.isArray(input.training)?input.training:[]).filter(s=>s&&typeof s.id==='string').map(s=>({...s,progress:Math.max(0,Math.min(100,Number(s.progress)||0)),target:{kind:'training'}}));
+  const hospital=(playableGates.hospital&&Array.isArray(input.hospital)?input.hospital:[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.hp)&&Number.isFinite(b.maxHp)&&b.maxHp>0&&b.hp<b.maxHp).map(b=>({...b,target:{kind:'hospital'}}));
   const completed=(Array.isArray(input.completed)?input.completed:[]).filter(n=>n&&typeof n.id==='string'&&(n.scope==='academy'?g.academy:g.village)).map(n=>({...n,target:{kind:'notice',id:n.id,scope:n.scope}}));
   const equipment=(Array.isArray(input.equipment)?input.equipment:[]).filter(i=>i&&['weapon','armour','trinket','spell','potion'].includes(i.slot)).map(i=>({...i,target:{kind:'player-equipment',slot:i.slot}}));
   const villageDesk=(g.village&&Array.isArray(input.villageDesk)?input.villageDesk:[]).filter(v=>v&&Number.isFinite(v.seed)&&typeof v.name==='string').map(v=>({...v,target:{kind:'village',seed:v.seed},builds:builds.filter(b=>b.seed===v.seed)}));
-  return {villageDesk,equipment,gates:g,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
+  playableGates.village=g.village===true&&villageDesk.length>0;
+  const panels=progressivePanels(input,{g:playableGates,completed});
+  return {panels,villageDesk,equipment,gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
  }
- return {derive};
+ // Timestamp facts come from canonical room construction/first settlement saves.
+ // Historical saves without dates have a deterministic order; observing an unlock
+ // can improve the UI preference but never grants a feature or changes a save.
+ function progressivePanels(input,{g,completed}) {
+  const date=v=>{const n=typeof v==='number'?v:Date.parse(v);return Number.isFinite(n)&&n>0?n:0;};
+  const panels=[{id:'discover',at:0},{id:'today',at:0}];
+  if(g.inventory===true)panels.push({id:'stores',at:date(input.featureDates?.inventory)});
+  for(const id of ['kitchen','training','hospital'])if(g[id]===true)panels.push({id,at:date(input.rooms?.[id]?.builtAt)});
+  if(g.village===true||completed.length)panels.push({id:'building',at:date(input.featureDates?.village),feature:g.village===true});
+  let featured=panels[0];
+  for(const p of panels)if(!['today'].includes(p.id)&&(p.id!=='building'||g.village===true)&&(p.at>featured.at||(p.at===featured.at&&p.id!=='discover')))featured=p;
+  return {items:panels,featured:featured.id};
+ }
+ return {derive,progressivePanels};
 });

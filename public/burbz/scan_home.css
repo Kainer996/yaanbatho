@@ -399,3 +399,137 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 }
 
 #screen-scan .home-action>.home-action-chevron{flex:0 0 8px;font-size:16px}
+
+/* Progressive Home: every visible panel represents a usable game action.
+   Old fixed six-tray rules above remain for historical projections only. */
+#screen-scan.progressive-home{display:flex;flex-direction:column;overflow:hidden;background:#171e18}
+#screen-scan.progressive-home .desk-introduction{height:112px;min-height:112px;background:#233125}
+#screen-scan.progressive-home .scan-home-backdrop{object-fit:cover;object-position:center 46%}
+#screen-scan.progressive-home .scan-home-command-bar{left:12px;bottom:9px;width:auto;right:120px;display:flex;flex-direction:row;gap:7px}
+#screen-scan.progressive-home .scan-home-command-bar button{min-height:44px;max-width:160px;width:auto;flex:1;font-size:14px;padding:6px 9px}
+#screen-scan.progressive-home .scan-home-eyebrow{font-size:10px}
+#screen-scan.progressive-home .scan-home-main{display:grid;flex:1;min-height:0;min-width:0;width:100%;grid-template-columns:repeat(var(--home-columns,1),minmax(0,1fr));grid-template-rows:var(--home-tracks,minmax(128px,1.35fr) minmax(96px,1fr) 44px);gap:8px;padding:8px;align-items:stretch;align-content:stretch;background:linear-gradient(145deg,#253326,#191e18);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin}
+#screen-scan.progressive-home .desk-panels{display:contents}
+#screen-scan.progressive-home [data-home-panel]{position:relative;display:flex;flex-direction:column;align-self:stretch;min-width:0;min-height:0;margin:0;padding:0;border:1px solid #b19b6473;border-radius:12px;background:linear-gradient(140deg,#3b3b29,#252c22);box-shadow:inset 0 1px #fff1,0 3px 8px #0003;overflow:hidden}
+#screen-scan.progressive-home [data-home-panel][hidden],#screen-scan.progressive-home [hidden]{display:none!important}
+#screen-scan.progressive-home .home-panel-featured{border-color:#edcc80;background:radial-gradient(ellipse at top left,#8c78432b,transparent 70%),linear-gradient(130deg,#45543a,#293b2e);box-shadow:inset 0 0 0 1px #e1c48130,0 3px 12px #0004}
+#screen-scan.progressive-home .desk-panel-heading{height:auto;min-height:44px;padding:8px 10px;border:0;border-bottom:1px solid #c8b27b30;border-radius:0;background:#75623b20;color:#fff0c9;font:700 16px/1.2 Rajdhani,sans-serif;gap:6px}
+#screen-scan.progressive-home .desk-panel-heading small{font-size:13px}
+#screen-scan.progressive-home .desk-panel-heading>span[aria-hidden]{display:none}
+#screen-scan.progressive-home .desk-panel-summary{margin:0;padding:6px 10px;color:#e5dfce;font:400 12px/1.35 Inter,sans-serif;overflow-wrap:anywhere}
+#screen-scan.progressive-home .desk-panel-scroll{display:none;min-height:0;overflow:hidden;padding:4px 8px;pointer-events:auto}
+#screen-scan.progressive-home .home-panel-detail .desk-panel-scroll{display:block;flex:1}
+#screen-scan.progressive-home .home-panel-detail .desk-panel-summary{flex:none}
+#screen-scan.progressive-home .home-panel-detail .desk-panel-scroll>:nth-child(n+3){display:none}
+#screen-scan.progressive-home .home-panel-detail #desk-building-list>:nth-child(n+2){display:none}
+#screen-scan.progressive-home .desk-mini-row{min-height:56px;padding:5px 3px;gap:8px}
+#screen-scan.progressive-home .desk-mini-copy strong{font-size:15px;line-height:1.2}
+#screen-scan.progressive-home .desk-mini-copy small{font-size:12px;line-height:1.3}
+#screen-scan.progressive-home .desk-mini-art{width:36px;height:40px}
+#screen-scan.progressive-home .desk-empty{padding:6px 2px;font-size:13px;line-height:1.4}
+#screen-scan.progressive-home #desk-stores-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#screen-scan.progressive-home .home-panel-detail #desk-stores-list{display:grid;align-content:start}
+#screen-scan.progressive-home .desk-gear{min-height:76px;padding:5px;gap:4px}
+#screen-scan.progressive-home .desk-gear>span:not(.desk-mini-art){display:block;font-size:12px;line-height:1.25}
+#screen-scan.progressive-home .desk-gear b{font-size:12px;padding:2px}
+#screen-scan.progressive-home .desk-village-head{min-height:56px;padding:4px}
+#screen-scan.progressive-home .desk-village-head strong{font-size:15px}
+#screen-scan.progressive-home .desk-village-badge{font-size:12px;line-height:1.3}
+#screen-scan.progressive-home .desk-assignment{font-size:12px}
+#screen-scan.progressive-home .desk-village-note{font-size:12px}
+#screen-scan.progressive-home .desk-village>.desk-mini-row{display:none}
+#screen-scan.progressive-home .scan-home-start{justify-content:center;padding:8px}
+#screen-scan.progressive-home .scan-home-start-heading{display:none}
+#screen-scan.progressive-home .home-panel-featured .scan-home-start-heading{display:flex;justify-content:center;margin:0 0 12px}
+#screen-scan.progressive-home .scan-home-start-heading h2{font-size:clamp(23px,3vw,32px)}
+#screen-scan.progressive-home .scan-home-start-heading>span{display:none}
+#screen-scan.progressive-home .scan-home-start-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+#screen-scan.progressive-home .scan-home-start-buttons .scan-btn{min-height:60px;height:auto;font-size:14px;line-height:1.2;padding:8px 5px;border-radius:9px;text-align:center}
+#screen-scan.progressive-home .scan-home-start-buttons .scan-btn::before{display:none}
+#screen-scan.progressive-home .home-panel-featured .scan-home-start-buttons .scan-btn{min-height:68px;padding:10px 10px 10px 40px;text-align:left;font-size:17px}
+#screen-scan.progressive-home .home-panel-featured .scan-home-start-buttons .scan-btn::before{display:block;width:27px;height:34px;left:8px}
+#screen-scan.progressive-home .scan-home-start .merlin-listener-line{display:none}
+#screen-scan.progressive-home .home-panel-featured .merlin-listener-line,#screen-scan.progressive-home .merlin-listener-line.is-error{display:block;padding:4px 0 0;text-align:center}
+#screen-scan.progressive-home .merlin-listener-status{font-size:12px;line-height:1.3}
+#screen-scan.progressive-home .scan-home-today{display:grid;grid-template-columns:minmax(0,1fr) 60px;align-items:stretch;gap:3px;padding:5px}
+#screen-scan.progressive-home .scan-home-actions{display:flex;align-items:stretch;min-height:0;height:auto;padding:0;overflow:hidden}
+#screen-scan.progressive-home .home-action{display:flex;flex:1;min-width:0;width:100%;max-width:none;min-height:44px;padding:5px;gap:4px;background:none;box-shadow:none;border:0;align-items:center}
+#screen-scan.progressive-home .home-action>img,#screen-scan.progressive-home .home-action-chevron{display:none}
+#screen-scan.progressive-home .home-action>span{min-width:0}
+#screen-scan.progressive-home .home-action strong{font:700 16px/1.2 Rajdhani,sans-serif}
+#screen-scan.progressive-home .home-action small{display:none;font:400 12px/1.35 Inter,sans-serif;margin-top:6px}
+#screen-scan.progressive-home .home-panel-detail .home-action small{display:block}
+#screen-scan.progressive-home .desk-equipment-control{min-height:64px;min-width:0;padding:4px 0;background:#18392c;border-radius:8px;font-size:11px;overflow:hidden}
+#screen-scan.progressive-home .desk-equipment-control>img{width:32px;height:48px}
+#screen-scan.progressive-home .scan-home-tools{position:static;display:block;min-height:44px;width:auto;margin:0;padding:0;background:#1a271e;border:1px solid #a9905b70;border-radius:9px}
+#screen-scan.progressive-home .scan-home-tools>summary{box-sizing:border-box;display:list-item;min-height:44px;padding:11px 12px;font:600 14px/20px Rajdhani,sans-serif;color:#f2e2bd;cursor:pointer}
+#screen-scan.progressive-home .scan-home-tools[open]{position:absolute;inset:6px 6px calc(var(--nav-height) + var(--safe-bottom) + 6px);z-index:180;display:block;overflow:auto;background:#211b13}
+#screen-scan.progressive-home .scan-home-tools[open]>summary{position:sticky;top:0;z-index:2;background:#3a2c1b}
+#screen-scan.progressive-home :is(button,summary):focus-visible{outline:3px solid #fff1b5;outline-offset:-3px}
+@media(min-width:1000px) and (min-height:600px){#screen-scan.progressive-home .desk-introduction{height:140px;min-height:140px}#screen-scan.progressive-home .desk-panel-heading{font-size:20px}#screen-scan.progressive-home .desk-panel-summary{font-size:14px}#screen-scan.progressive-home .scan-home-today{grid-template-columns:minmax(0,1fr) 82px}#screen-scan.progressive-home .desk-equipment-control{font-size:13px}#screen-scan.progressive-home .desk-equipment-control>img{height:64px;width:43px}}
+@media(orientation:landscape) and (max-height:550px){
+ #screen-scan.progressive-home{display:grid;grid-template-columns:150px minmax(0,1fr);grid-template-rows:minmax(0,1fr);padding-bottom:4px}
+ #screen-scan.progressive-home .desk-introduction{height:100%;min-height:0;grid-column:1;grid-row:1;border-right:1px solid #b19b6473}
+ #screen-scan.progressive-home .scan-home-hero{height:100%}
+ #screen-scan.progressive-home .scan-home-backdrop{object-position:35% center}
+ #screen-scan.progressive-home .scan-home-welcome{left:8px;top:8px;max-width:134px}
+ #screen-scan.progressive-home .scan-home-eyebrow{font-size:9px;letter-spacing:.4px}
+ #screen-scan.progressive-home .scan-home-command-bar{left:8px;right:8px;bottom:8px;display:flex;flex-direction:column;width:auto}
+ #screen-scan.progressive-home .scan-home-command-bar button{width:100%;max-width:none;flex:none}
+ #screen-scan.progressive-home .scan-home-main{grid-column:2;grid-row:1;padding:6px;gap:6px}
+ #screen-scan.progressive-home .scan-home-tools[open]{inset:6px}
+ #screen-scan.progressive-home .desk-panel-heading{font-size:15px;padding:6px 8px}
+ #screen-scan.progressive-home .desk-panel-summary{padding:4px 8px}
+}
+/* More unlocked rooms share the space previously given to the opening art. */
+#screen-scan.progressive-home[data-home-density="growing"] .desk-introduction{height:96px;min-height:96px}
+#screen-scan.progressive-home[data-home-density="full"] .desk-introduction{height:72px;min-height:72px}
+#screen-scan.progressive-home[data-home-density="full"] .scan-home-welcome{display:none}
+#screen-scan.progressive-home[data-home-density="full"] .scan-home-main{gap:6px;padding:6px}
+#screen-scan.progressive-home[data-home-density="full"] .desk-panel-heading{padding:5px 8px;font-size:15px}
+#screen-scan.progressive-home[data-home-density="full"] .desk-panel-summary{font-size:12px;line-height:16px;padding:2px 8px}
+#screen-scan.progressive-home[data-home-density="full"] .scan-home-start{padding:3px}
+#screen-scan.progressive-home[data-home-density="full"] .scan-home-start-buttons{gap:4px}
+#screen-scan.progressive-home[data-home-density="full"] .scan-home-start-buttons .scan-btn{min-height:56px;font-size:13px;padding:5px 3px}
+#screen-scan.progressive-home[data-home-density="full"] .scan-home-today{padding:3px;grid-template-columns:minmax(0,1fr) 59px}
+#screen-scan.progressive-home[data-home-density="full"] .desk-equipment-control{min-height:56px;font-size:10px;padding:0}
+#screen-scan.progressive-home[data-home-density="full"] .desk-equipment-control>img{height:36px;width:24px}
+#screen-scan.progressive-home[data-home-density="full"] .home-action strong{font-size:14px}
+body:has(#screen-scan.progressive-home.active[data-home-density="full"]) #merlinPerchAssembly{top:calc(var(--safe-top) + 68px);transform:scale(.76);transform-origin:top right;animation:none}
+body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #merlinPerchAssembly{transform:scale(.9);transform-origin:top right;animation:none}
+#homeBuildingNotices{z-index:220;background:#080e09bb;padding:16px}
+#homeBuildingNotices .home-notices-card{display:flex;flex-direction:column;width:min(520px,100%);max-height:calc(100dvh - 32px);padding:10px;border:1px solid #bca36c;border-radius:12px;background:#233025;color:#fff0cf}
+#homeBuildingNotices header{display:flex;align-items:center;gap:10px;justify-content:space-between}
+#homeBuildingNotices h2{margin:4px;font:700 22px Rajdhani,sans-serif}
+#homeBuildingNotices button{min-height:44px;padding:8px;border:1px solid #bca36c;border-radius:6px;background:#364a35;color:#fff0cf;font-size:14px}
+#homeBuildingNotices .home-notices-list{flex:1;min-height:0;overflow:auto;margin:8px 0}
+#homeBuildingNotices .desk-panel-completed{display:block;background:none;border:0;overflow:visible}
+#homeBuildingNotices .desk-panel-heading{display:none}
+#homeBuildingNotices #desk-completed-list{display:block;overflow:visible;padding:0}
+#homeBuildingNotices .desk-mini-row{margin-bottom:6px;min-height:64px}
+@media(orientation:landscape) and (max-height:550px){#screen-scan.progressive-home[data-home-density] .desk-introduction{height:100%;min-height:0}body:has(#screen-scan.progressive-home.active[data-home-density]) #merlinPerchAssembly{right:auto;left:25px;margin-right:0;top:calc(var(--safe-top) + 65px);transform:scale(.82);transform-origin:top left;animation:none}}
+#screen-scan.progressive-home .home-panel-featured .scan-home-start-heading{margin-bottom:6px}
+#screen-scan.progressive-home .home-panel-featured .scan-home-start-buttons .scan-btn{min-height:60px;font-size:16px;padding-top:8px;padding-bottom:8px}
+#screen-scan.progressive-home .home-panel-featured .merlin-listener-line{display:none}
+#screen-scan.progressive-home .home-panel-featured.home-panel-detail .merlin-listener-line,#screen-scan.progressive-home .merlin-listener-line.is-error{display:block}
+#screen-scan.progressive-home .scan-home-start:has(.merlin-listener-line.is-error) .scan-home-start-heading{display:none}
+@media(orientation:landscape) and (max-height:550px){#screen-scan.progressive-home .scan-home-main{gap:4px;padding:4px}}
+#screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-today{grid-template-columns:minmax(0,1fr)}
+#screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control{display:flex;flex-direction:row;justify-content:center;align-items:center;min-height:44px;padding:3px 6px;font-size:13px}
+#screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control>img{width:24px;height:36px}
+#screen-scan.progressive-home #desk-stores-list{display:none}
+#screen-scan.progressive-home .home-panel-detail #desk-stores-list{display:grid}
+@media(orientation:landscape) and (max-height:550px){#screen-scan.progressive-home[data-home-density] .scan-home-main{padding:3px;gap:4px}}
+@media(orientation:portrait){
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar{left:8px;right:98px;gap:4px}
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar button{min-width:0;max-width:none;min-height:52px;padding:3px;font-size:13px}
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control{flex-direction:column;gap:0;font-size:10px}
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control>img{width:22px;height:33px}
+}
+@media(orientation:portrait){
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar :is(#playerHomeStand,#savedPhotosButton,.desk-equipment-control){flex:1 1 0;width:0;min-width:0;max-width:none;min-height:52px}
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control{font-size:11px}
+}
+/* The old command-bar caption reserved 82px for Merlin. Equipment owns its
+   entire button now; inheriting that caption padding clips its real label. */
+#screen-scan.progressive-home .scan-home-command-bar .desk-equipment-control>span{display:block;flex:none;min-width:0;max-width:100%;margin:0;padding:0;overflow:visible;text-overflow:clip;white-space:normal;letter-spacing:0;font:inherit}
