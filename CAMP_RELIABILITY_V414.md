@@ -64,17 +64,33 @@ Passed locally: six new controller/combat reliability groups, six existing
 outpost groups, five save/rollback groups, eleven shared-light groups, twelve
 walking-combat groups, thirteen archery groups and four settlement-boundary
 groups. The existing articulated bird geometry/lifecycle test also passed using
-the already-present local Three.js runtime fixture.
+the already-present local Three.js runtime fixture. The three new walking
+initialization groups and existing walking collision/slide/bridge/input core
+checks passed. All changed JavaScript parses and the diff is whitespace-clean.
 
 The focused Python invocation returned 3 passed, 1 failed. The sole failure is
 the retained WIP's missing `scripts/update-live-burbz.sh`, already documented by
 the shared-light patch. That release fixture and exact module pins belong to the
 release owner; this patch does not invent them or claim that check passed.
 
-The first native attempt failed before scene initialization because of the
-walking dependency fault above, with no page errors or camp checks reached.
-It is preserved under `bootstrap-failure/`. A corrected actual-runtime retry is
-queued; native camp acceptance is not yet claimed.
+The corrected native Chromium proof exited 0 with all seven checks passed and
+no page errors. The five changed runtime modules served hashes matching commit
+`13631de3`; `source-sha256.json` and `verification-summary.json` retain that check.
+Natural camp `outpost-v1:10101:19138`, site 17, had a checked western approach.
+Native walking activated its three real guards, and three native Fireballs saved
+HP `[33,0,50]`, then `[0,0,33]`, then `[0,0,0]`. The player's HP fell from 140 to
+110, the camp awarded exactly 120 XP, and the HUD switched to Safe territory.
+The status/collect control fit 390×844 and 844×390 viewports. Full reload retained
+all zero HP and friendly ownership; return flight rendered the saved friendly
+outpost inside its own light with `combat.safe:true` and unchanged XP.
+
+This return check was airborne; grounded combat and attacks were proved before
+reload. Capped earnings and failed-storage rollback are covered by the actual
+extracted save-adapter tests, not an artificial hour advance in the browser.
+The maximum observed camp scan slice was 6.0 ms on this desktop fixture. That
+includes a whole candidate check crossing the nominal 2 ms budget; it is not a
+phone FPS or zero-overhead claim. The first failed bootstrap attempt remains
+preserved under `bootstrap-failure/`.
 
 Evidence directory:
 `/home/yaan/Documents/Codex/2026-09-10/realtime-voice-chat-2/work/evidence/camp-reliability-v414/`
