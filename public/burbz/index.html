@@ -4864,7 +4864,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="empire-map-key-row"><span class="empire-map-key-swatch danger">💀</span>LV on a dark banner — the garrison's recommended level. Green suits your flock; red means come back stronger. Every liberation raises the world level, and the far frontier always fights hardest</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your counties</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch realm">🎨</span>Painted lands — counties sworn to one duchy or kingdom share its colour</div>
-          <div class="empire-map-key-foot">Daylight on the map = lands you have freed. Darkness = lands still waiting.</div>
+          <div class="empire-map-key-foot">Bright daylight = liberated, safe territory. Dim explored land = charted wilderness; enemies remain. Darkness = unexplored.</div>
         </div>
         <div class="empire-map-tapcard" id="empireMapTapCard" role="dialog" aria-live="polite"></div>
         <div class="empire-map-empty"></div>
@@ -45634,7 +45634,7 @@ async function createTravellingSettlement(T,record,{signal,host=false,boundsOnly
 function continuousWalkingAdapter(record) {
   const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
   return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
-    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
+    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,territoryLight:empireTerritoryLight,
     sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
     records:geographicSettlementRecords,createSettlement:createTravellingSettlement,waysides:geographicWaysideRecords,createWayside:createTravellingWayside,waysidePalette:palette=>burbzDaylightPalette(palette||VILLAGE_PALETTES[0],burbzDaylightGradeNow()),
     checkHome:checkPlayerHomePlacement,
