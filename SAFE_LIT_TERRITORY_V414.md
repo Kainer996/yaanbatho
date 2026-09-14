@@ -1,6 +1,15 @@
 # Lit-territory safety integration
 
-Base: retained `3b63df91`. Isolated safety patch; no release pins, deployment,
+Base prerequisite: retained `3b63df91`, including its unfinished enemy-camp
+modules and index adapters. Live `48ea7df1` has no `enemy_outposts_core.js`,
+`enemy_outposts.js` or `enemyOutpost*` adapters. This is **not** an independent
+live cherry-pick: its index changes directly reference that WIP camp authority.
+Integrate only after accepting the camp scaffolding and resolving its overlaps,
+or deliberately extract a separate safe-light port that guards absent camp
+modules and adds the live walking adapter hook. No such live-only port is
+included or claimed verified here.
+
+Isolated safety patch; no release pins, deployment,
 new camp creation, progression AI, terrain, vehicle or uncommitted house changes.
 
 ## Shared authority
@@ -47,7 +56,7 @@ acceptance once the enemy worker supplies it.
 
 Passed locally:
 
-- `node public/burbz/tests/test_lit_territory_safety_v414.cjs`: 10 focused groups,
+- `node public/burbz/tests/test_lit_territory_safety_v414.cjs`: 11 focused groups,
   covering circles/overlaps, geographic seams, tiny tangencies, 10,001 indexed
   circles, canonical source and scout separation, save/rollback/reload/rebase,
   current projectiles, immediate light, splash, chase, melee, elevated guards,
@@ -65,6 +74,20 @@ Node-only query microbenchmark with 10,001 circles: initial index 23.95 ms;
 combined point-plus-segment query mean 0.0020 ms, p95 0.0036 ms, p99 0.0061 ms
 (after warmup). Unrelated saves do not rebuild the index. This measures pure
 queries, not renderer frame time, phone performance or browser integration.
+
+The complete dirty-snapshot path was measured separately using the real
+extracted atlas, settlement, realm and durable-save functions on synthetic saved
+holdings. It still enumerates source geometry and computes its JSON signature
+after any durable save, including HP/ammo saves, but now obtains settlement tiers
+once for the entire snapshot rather than repeatedly for every village. After
+warmup, 100 dirty revalidations measured mean/p95 0.184/0.272 ms at 100 villages,
+and 1.584/1.899 ms at 1,000 villages. Cold snapshots (including initial realm
+and settlement derivation) were 8.43 and 61.70 ms respectively. The earlier
+per-village lookup measured 5.30 ms mean at 100 villages and 498.72 ms at
+1,000 villages (10 post-warmup samples each). Existing save JSON and
+localStorage time, renderer work and device FPS are excluded. Thus large cold
+realm derivation remains a real cost; no claim of zero-overhead invalidation is
+made. The benchmark script was `/tmp/burbz-safe-light-invalidation.cjs`.
 
 Remaining release-owner checks: resolve overlapping index/combat edits with the
 camp and enemy workers; supply release fixture and combined cache pins; run real

@@ -156,8 +156,11 @@ and `enemyOutpostDark` consume that same snapshot. The moving scout half-light
 remains visual scouting only. `durableSaveState` and `restoreGameStateSnapshot`
 invalidate the derived cache, as does changed save identity; callers that mutate
 light before their save must call `invalidateEmpireTerritoryLight()` explicitly.
-There is no new saved ownership map. Camp placement, receipts, rewards and
-collection remain the camp owner's responsibility.
+Unrelated saves reuse the index if geometry is unchanged; dirty snapshots still
+enumerate circles, but share one settlement-tier lookup. There is no new saved
+ownership map. Camp placement, receipts, rewards and collection remain the camp
+owner's responsibility. This patch requires the retained WIP enemy-camp modules;
+live 48ea7df1 lacks them, so it is not an independent live cherry-pick.
 
 `walkingCombatAdapter().territoryLight` exposes geographic `contains(point)` and
 `firstHit(from,to)` (first segment fraction, or null). `empire_map_core.js` indexes

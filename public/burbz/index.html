@@ -25278,7 +25278,8 @@ function invalidateEmpireTerritoryLight() { if(empireTerritoryLightCache)empireT
 function empireTerritoryLight() {
   if(empireTerritoryLightCache?.identity===gameState&&!empireTerritoryLightCache.dirty)return empireTerritoryLightCache.light;
   const M=window.BurbzEmpireMapCore,R=realmCore(),circles=[];
-  for(const v of empireMappableVillages())circles.push({id:'village:'+v.seed,kind:'village',lat:v.lat,lon:v.lon,radius:empireVillageTerritoryRadiusM(v.seed)});
+  const tiers=R?.settlementTierInfo?empireSettlementsInfo().tierBySeed:null;
+  for(const v of empireMappableVillages())circles.push({id:'village:'+v.seed,kind:'village',lat:v.lat,lon:v.lon,radius:empireVillageTerritoryRadiusM(v.seed,tiers)});
   if(R?.regionCoverageRadiusKm)for(const r of empireRegionsInfo().regions)circles.push({id:'region:'+r.id,kind:'region',...r.centroid,radius:Math.max(EMPIRE_TERRITORY_RADIUS_M*2,R.regionCoverageRadiusKm(r,2.2)*1000)});
   for(const c of BurbzEnemyOutpostsCore.receipts(gameState.enemyOutposts))circles.push({id:c.id,kind:'outpost',lat:c.lat,lon:c.lon,radius:c.radius});
   // The camp owner supplies persisted circles; tent placement/rewards stay in
@@ -26341,10 +26342,10 @@ function empireRegionHoldings(region) {
 // How far a liberated settlement's daylight reaches on the royal atlas:
 // districts of a merged town or city glow wider, so neighbouring pools of
 // light fuse into one — three villages literally become one patch of day.
-function empireVillageTerritoryRadiusM(seed) {
+function empireVillageTerritoryRadiusM(seed, tierBySeed) {
   const core = realmCore();
   if (!core || !core.settlementTierInfo) return EMPIRE_TERRITORY_RADIUS_M;
-  const settle = empireSettlementOfSeed(seed);
+  const settle = tierBySeed?tierBySeed[String(Number(seed)>>>0)]:empireSettlementOfSeed(seed);
   return core.settlementTierInfo(settle ? settle.tier : 'village').territoryRadiusM || EMPIRE_TERRITORY_RADIUS_M;
 }
 // Shared guilds: a merged town's builders raise structures 15% faster, a

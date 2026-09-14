@@ -31,6 +31,11 @@ test('Atlas and hostile placement use one saved source; scout half-light grants 
  c.empirePlayerPosition=()=>({lat:50,lon:50});assert(c.enemyOutpostDark(c.empirePlayerPosition()));assert.equal(c.empireTerritoryLight(),light,'reads reuse snapshot');c.durableSaveState();assert.equal(c.empireTerritoryLight(),light,'unrelated saves do not rebuild the spatial index');
  const fog=fn('updateEmpireFogMask');assert(fog.includes('empireTerritoryLight().circles'));assert(fog.includes('empirePlayerPosition()'));assert(!fog.includes('BurbzEnemyOutpostsCore.receipts'));
 });
+test('Save revalidation shares one settlement-tier derivation and preserves promoted daylight radii',()=>{
+ const c=app(),R=require('../empire_realm_core.js');let derivations=0,tier='village';c.realmCore=()=>R;c.empireRegionsInfo=()=>({regions:[]});c.empireSettlementsInfo=()=>{derivations++;return{tierBySeed:{1:{tier}}};};c.empireSettlementOfSeed=()=>({tier});
+ c.gameState.empire.villages=[{seed:1,lat:54,lon:-2}];vm.runInContext(fn('empireVillageTerritoryRadiusM'),c);
+ for(const next of ['village','town','city']){tier=next;const previous=derivations;c.durableSaveState();const light=c.empireTerritoryLight();assert.equal(derivations,previous+1);assert.equal(light.circles[0].radius,R.settlementTierInfo(tier).territoryRadiusM);assert.equal(light.circles[0].radius,c.empireVillageTerritoryRadiusM(1));}
+});
 test('Durable lighting updates, failed placement rollback, stale identity and JSON reload keep one truth',()=>{
  const c=app(),point={lat:54.45,lon:-2.65},before=c.snapshotGameState(),dark=c.empireTerritoryLight();assert(!dark.contains(point));
  c.gameState.exploration.camps.push({id:'tent',...point,lightRadiusM:60});c.fail=true;assert.throws(()=>c.durableSaveState({throwOnFailure:true}));c.restoreGameStateSnapshot(before);assert(!c.empireTerritoryLight().contains(point));
