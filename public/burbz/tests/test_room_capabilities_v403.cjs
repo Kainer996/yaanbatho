@@ -9,3 +9,7 @@ for(const [label,extra,finds]of [['map building',{},false],['NPC-only capability
  const s={options:{room:target,interiors:{describe:()=>({name:'Cabin'}),...extra}},root:new Element(),abort:{signal:{}},source:{scene,buildings:[],renderer:{toneMappingExposure:1}},player:world.spawn(),world,reset(){}};
  const rooms=context.BurbzBuildingRooms.attach(s);assert(rooms.enter(target));for(let i=0;i<10;i++)assert.doesNotThrow(()=>rooms.update(i));const diagnostics=rooms.diagnostics();assert(diagnostics.inside);assert.equal((diagnostics.life?.pickups.length||0)>0,finds);rooms.dispose();assert.equal(s.room,null);console.log('PASS',label,'renders updates with only its actual capabilities');
 }
+{
+ const plan=context.BurbzBuildingRoomsCore.plan(target),world=context.BurbzBuildingRoomsCore.world(plan),scene=new context.THREE.Scene();const s={options:{name:'Starting village',interiors:{describe:()=>({name:'Wayside shelter'})}},root:new Element(),abort:{signal:{}},source:{scene,buildings:[],renderer:{toneMappingExposure:1}},player:world.spawn(),world,reset(){},continuity:{placeVersion:0,buildings:()=>[],syncControls(){},navigation:()=>({places:[{name:'The Mapmaker’s Bothy',x:0,z:0,radius:13}]})}};
+ const rooms=context.BurbzBuildingRooms.attach(s);assert(rooms.enter(target));assert(rooms.leave());assert.equal(s.root.querySelector('.vw-title strong').textContent,'The Mapmaker’s Bothy');rooms.dispose();console.log('PASS Room return restores the actual streamed location heading');
+}
