@@ -153,3 +153,14 @@ def test_http_validation_owner_and_request_are_stable(tmp_path):
     assert identity == 'v410_' + hashlib.sha256(path.read_bytes()).hexdigest()
     assert proof.VALIDATION_OWNER == 'deployment_v410_photos'
     assert len(proof.SMOKE_CASES) == 3
+
+
+def test_user_accepted_crow_accuracy_exception_preserves_provider_and_receipt_guards():
+    wrong = dict(policy=proof.POLICY, model=proof.MODEL, modelName=proof.MODEL_NAME,
+                 found=True, accepted=True, verified=True, confidence=.95,
+                 species='American Crow', scientificName='Corvus brachyrhynchos', receiptId='b' * 64)
+    assert not proof.passes_gemini_case('carrion-crow', 'Corvus corone', 200, wrong)
+    assert proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 200, wrong)
+    for change in ({'modelName':'other'}, {'receiptId':''}, {'confidence':.5}, {'found':False}, {'scientificName':'Corvus corax'}):
+        assert not proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 200, wrong | change)
+    assert not proof.passes_authorized_release_case('robin-clear', 'Erithacus rubecula', 200, wrong)

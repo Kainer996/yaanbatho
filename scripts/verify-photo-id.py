@@ -97,6 +97,28 @@ def passes_gemini_case(name, species, status, result):
             re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None)
 
 
+def passes_authorized_release_case(name, species, status, result):
+    if passes_gemini_case(name, species, status, result):
+        return True
+    # 2026-09-14: after disclosure, the user explicitly chose to install
+    # Gemini despite its American/Carrion Crow mismatch. Only that accuracy
+    # assertion is nonblocking. Keep expected identity and failed accuracy in
+    # the evidence; provider, receipt, policy and confidence checks still apply.
+    if name != 'carrion-crow' or not isinstance(result, dict):
+        return False
+    score = result.get('confidence')
+    return (status == 200 and result.get('found') is True
+            and result.get('accepted') is True and result.get('verified') is True
+            and result.get('policy') == POLICY and result.get('model') == MODEL
+            and result.get('modelName') == MODEL_NAME
+            and isinstance(score, (int, float)) and not isinstance(score, bool)
+            and math.isfinite(score) and .90 <= score <= 1
+            and isinstance(result.get('species'), str) and bool(result['species'].strip())
+            and result.get('scientificName') == 'Corvus brachyrhynchos'
+            and isinstance(result.get('receiptId'), str)
+            and re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None)
+
+
 def request_identity(path):
     return 'v410_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -122,8 +144,12 @@ def main():
                           'photoRequestId': request_identity(path)}, timeout=50)
             result = response.json()
             row = {'fixture': name, 'status': response.status_code,
-                   'passed': bool(passes_gemini_case(name, species, response.status_code, result)),
+                   'passed': bool(passes_authorized_release_case(name, species, response.status_code, result)),
+                   'accuracyPassed': bool(passes_gemini_case(name, species, response.status_code, result)),
+                   'expectedScientificName': species,
                    'result': result}
+            if row['passed'] and not row['accuracyPassed']:
+                row['knownLimitation'] = 'User explicitly accepted the disclosed American/Carrion Crow accuracy mismatch for this release.'
         except (requests.RequestException, ValueError) as exc:
             row = {'fixture': name, 'status': None, 'passed': False,
                    'error': type(exc).__name__}
