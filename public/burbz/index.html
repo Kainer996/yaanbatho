@@ -7151,6 +7151,7 @@ function loadState() {
 }
 
 function durableSaveState(opts = {}) {
+  if(typeof invalidateEmpireTerritoryLight==='function')invalidateEmpireTerritoryLight();
   let serialised;
   try {
     // Reject stale-tab overwrites, including a claim after another tab saves.
@@ -7188,7 +7189,7 @@ function restoreStateTree(target, source) {
 }
 // Restore in place so active quest/discovery/checkpoint references held by the
 // current browser event are rolled back with the gameState root.
-function restoreGameStateSnapshot(snapshot) { gameState = restoreStateTree(gameState, snapshot); return gameState; }
+function restoreGameStateSnapshot(snapshot) { gameState = restoreStateTree(gameState, snapshot); if(typeof invalidateEmpireTerritoryLight==='function')invalidateEmpireTerritoryLight(); return gameState; }
 function questClaimReceipt(key) {
   const receipts = gameState.questClaimReceipts;
   return receipts && receipts[key] || null;
@@ -25270,6 +25271,24 @@ function wrappedLongitudeNear(lon, referenceLon) {
    the true medieval map shows in daylight beneath. */
 const EMPIRE_DARKNESS_FILL = '#39434f'; // multiplied over parchment and sea, this reads as a moonlit Earth
 
+// This one derived snapshot supplies both the atlas's permanent daylight and
+// geographic combat boundaries. Save/load/rollback never persist a second map.
+var empireTerritoryLightCache;
+function invalidateEmpireTerritoryLight() { if(empireTerritoryLightCache)empireTerritoryLightCache.dirty=true; }
+function empireTerritoryLight() {
+  if(empireTerritoryLightCache?.identity===gameState&&!empireTerritoryLightCache.dirty)return empireTerritoryLightCache.light;
+  const M=window.BurbzEmpireMapCore,R=realmCore(),circles=[];
+  for(const v of empireMappableVillages())circles.push({id:'village:'+v.seed,kind:'village',lat:v.lat,lon:v.lon,radius:empireVillageTerritoryRadiusM(v.seed)});
+  if(R?.regionCoverageRadiusKm)for(const r of empireRegionsInfo().regions)circles.push({id:'region:'+r.id,kind:'region',...r.centroid,radius:Math.max(EMPIRE_TERRITORY_RADIUS_M*2,R.regionCoverageRadiusKm(r,2.2)*1000)});
+  for(const c of BurbzEnemyOutpostsCore.receipts(gameState.enemyOutposts))circles.push({id:c.id,kind:'outpost',lat:c.lat,lon:c.lon,radius:c.radius});
+  // The camp owner supplies persisted circles; tent placement/rewards stay in
+  // its transaction. Legacy saved camps retain their existing 80 m refuge.
+  for(const c of gameState.exploration?.camps||[])circles.push({id:c.id,kind:'camp',lat:c.lat,lon:c.lon,radius:c.lightRadiusM??80});
+  const signature=JSON.stringify(circles);
+  const light=empireTerritoryLightCache?.identity===gameState&&empireTerritoryLightCache.signature===signature?empireTerritoryLightCache.light:M.createTerritoryLight(circles);
+  empireTerritoryLightCache={identity:gameState,signature,light,dirty:false};return light;
+}
+
 function updateEmpireFogMask() {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const canvas = $('empireFogCanvas');
@@ -25291,49 +25310,14 @@ function updateEmpireFogMask() {
   const core = window.BurbzEmpireMapCore;
   const referenceLon = empireMap.getCenter().lng;
   const holes = [];
-  empireMappableVillages().forEach(village => {
-    try {
-      const villageLon = Number(village.lon);
-      const wrappedLon = wrappedLongitudeNear(villageLon, referenceLon);
-      const centre = empireMap.project([wrappedLon, Number(village.lat)]);
-      // Merged towns and cities lift wider windows of daylight per district,
-      // so their neighbouring holes fuse into one continuous glow.
-      const east = core.destination(Number(village.lat), villageLon, Math.PI / 2, empireVillageTerritoryRadiusM(village.seed));
-      const wrappedEast = [wrappedLon + (Number(east[0]) - villageLon), Number(east[1])];
-      const edge = empireMap.project(wrappedEast);
-      const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 4, 1400);
-      if (centre.x + radius < -80 || centre.x - radius > width + 80 || centre.y + radius < -80 || centre.y - radius > height + 80) return;
-      holes.push({ x: centre.x, y: centre.y, r: radius });
-    } catch (e) {}
-  });
-  for(const outpost of BurbzEnemyOutpostsCore.receipts(enemyOutpostState())){try{
-    const lon=wrappedLongitudeNear(outpost.lon,referenceLon),centre=empireMap.project([lon,outpost.lat]);
-    const east=core.destination(outpost.lat,outpost.lon,Math.PI/2,outpost.radius),edge=empireMap.project([lon+east[0]-outpost.lon,east[1]]);
-    const radius=clamp(Math.hypot(edge.x-centre.x,edge.y-centre.y),2,1400);
-    if(centre.x+radius>=0&&centre.x-radius<=width&&centre.y+radius>=0&&centre.y-radius<=height)holes.push({x:centre.x,y:centre.y,r:radius});
-  }catch(_){}}
-  // Founding a county unlocks that whole region of the map: one great window
-  // of daylight covers the county's entire lands — centroid out past its
-  // farthest sanctuary — instead of pinpricks around each town. Its rim is
-  // struck in the realm's gold, a founded border on the Crusader map.
   const regionHoles = [];
-  const fogRealmCore = realmCore();
-  if (fogRealmCore && fogRealmCore.regionCoverageRadiusKm) {
-    empireRegionsInfo().regions.forEach(region => {
-      try {
-        const centroid = region.centroid;
-        const radiusM = Math.max(EMPIRE_TERRITORY_RADIUS_M * 2, fogRealmCore.regionCoverageRadiusKm(region, 2.2) * 1000);
-        const wrappedLon = wrappedLongitudeNear(centroid.lon, referenceLon);
-        const centre = empireMap.project([wrappedLon, Number(centroid.lat)]);
-        const east = core.destination(Number(centroid.lat), Number(centroid.lon), Math.PI / 2, radiusM);
-        const wrappedEast = [wrappedLon + (Number(east[0]) - Number(centroid.lon)), Number(east[1])];
-        const edge = empireMap.project(wrappedEast);
-        const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 8, 6000);
-        if (centre.x + radius < -120 || centre.x - radius > width + 120 || centre.y + radius < -120 || centre.y - radius > height + 120) return;
-        regionHoles.push({ x: centre.x, y: centre.y, r: radius });
-      } catch (e) {}
-    });
-  }
+  for(const circle of empireTerritoryLight().circles){try{
+    const lon=wrappedLongitudeNear(circle.lon,referenceLon),centre=empireMap.project([lon,circle.lat]);
+    const east=core.destination(circle.lat,circle.lon,Math.PI/2,circle.radius),edge=empireMap.project([lon+east[0]-circle.lon,east[1]]);
+    const regional=circle.kind==='region',radius=clamp(Math.hypot(edge.x-centre.x,edge.y-centre.y),regional?8:circle.kind==='village'?4:2,regional?6000:1400);
+    if(centre.x+radius < -120||centre.x-radius > width+120||centre.y+radius < -120||centre.y-radius > height+120)continue;
+    (regional?regionHoles:holes).push({x:centre.x,y:centre.y,r:radius});
+  }catch(_){}}
   if (regionHoles.length) {
     ctx.save();
     ctx.lineWidth = 2.6;
@@ -30044,14 +30028,9 @@ function walkingCharacterState() {
 // Enemy outposts share the canonical save, purse, player XP and atlas darkness.
 function enemyOutpostState(){return gameState.enemyOutposts||(gameState.enemyOutposts=BurbzEnemyOutpostsCore.empty());}
 function enemyOutpostDark(point){
- const G=BurbzGeographicWorldCore;
- if(empireMappableVillages().some(v=>G.distance(v,point)<empireVillageTerritoryRadiusM(v.seed)+30))return false;
- const R=realmCore();if(R?.regionCoverageRadiusKm&&empireRegionsInfo().regions.some(r=>G.distance(r.centroid,point)<Math.max(EMPIRE_TERRITORY_RADIUS_M*2,R.regionCoverageRadiusKm(r,2.2)*1000)))return false;
- if(BurbzEnemyOutpostsCore.receipts(enemyOutpostState()).some(c=>G.distance(c,point)<c.radius+20))return false;
- // Additional player homes from the independent exploration checkpoint remain refuges.
- if((gameState.exploration?.camps||[]).some(c=>G.distance(c,point)<80))return false;
- return true;
+ return BurbzGeographicWorldCore.validCoordinate(point)&&!empireTerritoryLight().contains(point);
 }
+
 let enemyOutpostSessionAdapter=null;
 function enemyOutpostAdapter(identity){
  if(enemyOutpostSessionAdapter?.identity===identity&&!enemyOutpostSessionAdapter.closed())return enemyOutpostSessionAdapter.api;
@@ -30079,6 +30058,10 @@ function walkingCombatAdapter() {
     profile:{name:gameState.player.name,level:gameState.player.level},
     settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
     outposts,
+    territoryLight:{
+      contains:point=>identity!==gameState||empireTerritoryLight().contains(point),
+      firstHit:(a,b)=>identity!==gameState?0:empireTerritoryLight().firstHit(a,b)
+    },
     stored:structuredClone(gameState.wildernessCombat || null),
     kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),ammo:{reed_arrow:gameState.inventory.items?.reed_arrow??0}};},
     save:(record,extra)=>{

@@ -17,7 +17,16 @@
   async function refresh(p,time){if(closed||pending||typeof lookup!=='function'||time<retry)return;const at=geo(p.x,p.z);if(!at||known&&centre&&G.distance(at,centre)<80)return;pending=true;const dy=5000/111320,dx=dy/Math.max(.087,Math.cos(at.lat*Math.PI/180));try{const result=await lookup({west:at.lon-dx,east:at.lon+dx,south:Math.max(-G.MAX_LAT,at.lat-dy),north:Math.min(G.MAX_LAT,at.lat+dy),center:at});if(closed)return;if(!Array.isArray(result))throw Error('Unknown settlements');records=result.filter(r=>G.validCoordinate(r)).slice(0,64);centre=at;known=true;}catch(_){known=false;retry=time+5;}finally{pending=false;}}
   return{safeAt,refugeAt,refresh,key:(x,z)=>{const p=geo(x,z);return p?'walk:'+Math.round(p.lat*1e6)+':'+Math.round(p.lon*1e6):'unknown';},inspect:()=>({known,pending,centre,settlements:records.length}),dispose(){closed=true;records=[];}};
  }
- function create({B,L,C,profile={},kit=()=>({}),stored,save=()=>true,safeAt=()=>true,refugeAt=()=>false,ground=()=>null,allowed=()=>false,clear=()=>false,walkClear=clear,key=(x,z)=>x+':'+z,encounter=()=>null,notice=()=>{}}){
+ // Live origin is essential: the geographic scene rebases while flying. No
+ // streamed mesh, visible camp flag or terrain chunk is a light authority.
+ function territoryBoundary({G,origin,light}) {
+  const point=p=>{const at=origin?.();return G&&at?G.unproject(at,{x:p.x,y:0,z:p.z}):null;};
+  return {
+   safeAt:(x,z)=>{if(!light)return true;const p=point({x,z});return !p||light.contains(p)!==false;},
+   firstHit:(a,b)=>{if(!light)return 0;const from=point(a),to=point(b);return from&&to?light.firstHit(from,to):0;}
+  };
+ }
+ function create({B,L,C,profile={},kit=()=>({}),stored,save=()=>true,safeAt=()=>true,safeSegment=()=>null,refugeAt=()=>false,ground=()=>null,allowed=()=>false,clear=()=>false,walkClear=clear,key=(x,z)=>x+':'+z,encounter=()=>null,notice=()=>{}}){
   const initial={version:1,hp:80,barrier:0,mods:[],cr:100,beat:0,cooldowns:{},rngState:hash(profile.name||'keeper'),records:[],potionCrCarry:0,potionUsed:false};
   let state={...initial,...clone(stored||{})},hero,signature='',pending=null,mode=kit().loadout?.weapon?'weapon':kit().loadout?.spell?'spell':'weapon',safe=null,closed=false,saveClock=0,spawnClock=0,serial=0,error='',lastPose=null;
   state.hp=clamp(state.hp,0,10000);state.cr=clamp(state.cr,0,100);state.beat=clamp(state.beat,0,99.999);state.barrier=clamp(state.barrier,0,10000);state.mods=(Array.isArray(state.mods)?state.mods:[]).filter(m=>m&&['atk','mag','def','res','spd','int','cha'].includes(m.stat)&&Number.isFinite(m.pct)&&Number.isFinite(m.turns)).slice(-16).map(m=>({stat:m.stat,pct:clamp(m.pct,-.8,1),turns:Math.max(1,clamp(m.turns,1,4))}));state.potionUsed=state.potionUsed===true;
@@ -30,18 +39,35 @@
   // Walking attacks hit the body, not the camera inside an overhanging canopy.
   function body(pose){return {...pose,y:ground(pose.x,pose.z)+.85};}
   function hostile(p){return !!p&&safeAt(p.x,p.z)===false&&Number.isFinite(ground(p.x,p.z));}
+  // Future aerial/ranged AI must use these guards at launch AND resolution.
+  // The geographic query finds even a very thin/tangent strip between dark
+  // endpoints; local samples retain unknown terrain/settlement fail-closed rules.
+  function darknessPath(a,b) {
+   if(!hostile(a)||!hostile(b)||safeSegment(a,b)!==null)return false;
+   const n=Math.max(1,Math.ceil(distance(a,b)/.16));if(n>2048)return false;
+   for(let i=1;i<n;i++){const t=i/n;if(!hostile({x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t}))return false;}return true;
+  }
+  function canHostileAttack(from,to=lastPose) {return !closed&&hero.hp>0&&darknessPath(from,to);}
+  function hostileAttack(actor,attack,hits=[{fighter:hero,position:lastPose}]) {
+   if(!actors.includes(actor)||actor.side!=='opponent'||actor.fighter.hp<=0||!canHostileAttack(actor.position,lastPose))return false;
+   const valid=hits.filter(hit=>hit.fighter===hero&&canHostileAttack(actor.position,hit.position||lastPose)&&walkClear(actor.position,body(hit.position||lastPose)));
+   if(!valid.length)return false;let result=[];
+   if(!transaction(()=>{result=B.resolveExplorationSkill(state,actor.fighter,attack,valid,'opponent');}))return false;
+   events.push(...result);return true;
+  }
+
   function skill(){sync();const k=kit().loadout||{};if(mode==='spell')return L.spellSkillFor(k.spell);const item=L.gearById(k.weapon);return item?.slot==='weapon'?{...(item.kind==='wand'?B.SPARK:B.PECK),id:item.id,label:item.label,melee:item.kind!=='wand'&&item.kind!=='bow',...(item.attack||{})}:null;}
   function ammoAvailable(){const s=skill();return !s?.ammo||(Number.isSafeInteger(kit().ammo?.[s.ammo])&&kit().ammo[s.ammo]>0);}
   function readiness(){const s=skill(),k=kit().loadout||{};return !!s&&ammoAvailable()&&!closed&&!safe&&hero.hp>0&&state.cr>=100&&!(mode==='spell'&&state.cooldowns[k.spell]>0)&&engine.projectiles.length<C.MAX_PROJECTILES;}
   function remember(actor){if(actor.campId)return;state.records=state.records.filter(r=>r.id!==actor.id);state.records.push({id:actor.id,hp:actor.fighter.hp});if(state.records.length>MAX_RECORDS)state.records.shift();}
   function targets(){return actors.filter(a=>a.side==='opponent'&&hostile(a.position)&&a.fighter.hp>0);}
-  function blockedSegment(a,b){const n=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)/.16));for(let i=0;i<=n;i++){const t=i/n,p={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t},h=ground(p.x,p.z);if(!hostile(p)||h===null||p.y<=h+.08||!allowed(p.x,p.z,p.y))return t;}if(!clear(a,b))return 0;return null;}
-  function impact({projectile:p,target,position}){if(safe||!hostile(position))return;const hits=[];for(const a of targets()){const primary=a.id===target?.id;if(!primary&&(!p.skill.splash||Math.hypot(a.position.x-position.x,a.position.y-position.y,a.position.z-position.z)>SPLASH_RADIUS))continue;if(!clear(position,a.position))continue;hits.push({fighter:a.fighter,scale:primary?1:p.skill.splash});}
+  function blockedSegment(a,b){const lightHit=safeSegment(a,b);if(lightHit!==null)return lightHit;const n=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)/.16));for(let i=0;i<=n;i++){const t=i/n,p={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t},h=ground(p.x,p.z);if(!hostile(p)||h===null||p.y<=h+.08||!allowed(p.x,p.z,p.y))return t;}if(!clear(a,b))return 0;return null;}
+  function impact({projectile:p,target,position}){if(!hostile(lastPose)||!hostile(position)||!darknessPath(p.token.origin,position))return;const hits=[];for(const a of targets()){const primary=a.id===target?.id;if(!primary&&(!p.skill.splash||Math.hypot(a.position.x-position.x,a.position.y-position.y,a.position.z-position.z)>SPLASH_RADIUS))continue;if(!darknessPath(position,a.position)||!clear(position,a.position))continue;hits.push({fighter:a.fighter,scale:primary?1:p.skill.splash});}
    if(!hits.length)return;let result=[];if(transaction(()=>{result=B.resolveExplorationSkill(state,p.token.attacker,p.skill,hits);for(const a of actors)if(hits.some(h=>h.fighter===a.fighter))remember(a);}))events.push(...result);}
-  const engine=C.create({targets,obstacle:blockedSegment,valid:()=>!safe&&!closed,impact});
-  function begin(pose){sync();if(pose){safe=!hostile(pose);lastPose=pose;}if(!readiness()){notice(safe?'Settlements are safe.':hero.hp<=0?'Wounded — return to a settlement.':!skill()?'Equip a weapon or spell in your Satchel.':!ammoAvailable()?'No arrows. Craft a bundle in your Satchel.':'Attack is recharging.');return false;}pending={mode,id:skill().id};return true;}
+  const engine=C.create({targets,obstacle:blockedSegment,valid:()=>!closed&&hostile(lastPose),impact});
+  function begin(pose){sync();if(pose){safe=!hostile(pose);lastPose={...pose};}if(!readiness()){notice(safe?'Lit territory is safe.':hero.hp<=0?'Wounded — return to a settlement.':!skill()?'Equip a weapon or spell in your Satchel.':!ammoAvailable()?'No arrows. Craft a bundle in your Satchel.':'Attack is recharging.');return false;}pending={mode,id:skill().id};return true;}
   function cancel(){pending=null;}
-  function release(pose){sync();safe=!hostile(pose);const s=skill(),k=kit().loadout||{};if(!pending||pending.mode!==mode||pending.id!==s?.id||!readiness()||![pose.x,pose.y,pose.z,pose.yaw,pose.pitch].every(Number.isFinite)){cancel();return false;}pending=null;const token={id:++serial,attacker:clone(hero)};let result=[];
+  function release(pose){sync();lastPose={...pose};safe=!hostile(pose);const s=skill(),k=kit().loadout||{};if(!pending||pending.mode!==mode||pending.id!==s?.id||!readiness()||![pose.x,pose.y,pose.z,pose.yaw,pose.pitch].every(Number.isFinite)){cancel();return false;}pending=null;const token={id:++serial,attacker:clone(hero),origin:{...pose}};let result=[];
    if(!transaction(()=>{state.cr=clamp(hero.potionCrCarry,0,99.5);state.beat=0;hero.potionCrCarry=0;if(mode==='spell')state.cooldowns[k.spell]=s.cd||0;if(s.kind==='heal')result=B.resolveExplorationSkill(state,hero,s);},s.ammo?{ammo:s.ammo,weapon:k.weapon}:undefined))return false;
    events.push({type:'release',skill:s.id},...result);if(engine.impacts.length>=C.MAX_IMPACTS)engine.impacts.shift();
    if(s.kind==='heal'){engine.impacts.push({id:token.id,position:{...pose},skill:s,age:0});return true;}
@@ -65,19 +91,19 @@
    for(let i=actors.length-1;i>=0;i--){const a=actors[i];if(a.side!=='opponent')continue;if(!hostile(a.position)||a.fighter.hp<=0||distance(a.position,pose)>90){actors.splice(i,1);continue;}a.age+=dt;a.moving=false;const d=distance(a.position,pose),rate=Math.max(1,B.effStat(a.fighter,'spd'));
     // Spawn and awareness share a range: a full pool of idle distant birds must
     // never prevent an encounter. Wind-up is a real dodge window, not instant damage.
-    if(a.campId&&a.phase==='guard'){if(d<26&&walkClear(a.position,body(pose)))a.phase='pursuit';else continue;}
+    if(a.campId&&a.phase==='guard'){if(d<26&&canHostileAttack(a.position,pose)&&walkClear(a.position,body(pose)))a.phase='pursuit';else continue;}
     a.cr=Math.min(100,a.cr+dt*rate);a.phase||='pursuit';a.attackTime=(a.attackTime||0)+dt;
     if(a.phase==='windup'){
      if(a.attackTime>=.55){a.phase='strike';a.attackTime=0;a.cr=0;
       a.fighter.mods=a.fighter.mods.map(m=>({...m,turns:m.turns-1})).filter(m=>m.turns>0);
-      if(d<=2.15&&hostile(pose)&&walkClear(a.position,body(pose))){let result=[];if(transaction(()=>{result=B.resolveExplorationSkill(state,a.fighter,B.PECK,[{fighter:hero}], 'opponent');}))events.push(...result);}
+      if(d<=2.15)hostileAttack(a,B.PECK);
      }
     }else if(a.phase==='strike'){if(a.attackTime>=.22){a.phase='recover';a.attackTime=0;}}
     else if(a.phase==='recover'){if(a.attackTime>=.35){a.phase='pursuit';a.attackTime=0;}}
-    else if(d<=1.85&&a.cr>=100&&hostile(pose)&&walkClear(a.position,body(pose))){a.phase='windup';a.attackTime=0;events.push({type:'windup',id:a.id});}
+    else if(d<=1.85&&a.cr>=100&&canHostileAttack(a.position,pose)&&walkClear(a.position,body(pose))){a.phase='windup';a.attackTime=0;events.push({type:'windup',id:a.id});}
     else if(d<60&&d>1.5){const speed=Math.max(.5,rate/40)*3.1,heading=Math.atan2(pose.z-a.position.z,pose.x-a.position.x),hand=hash(a.id)%2?1:-1;
      for(const angle of [0,hand*.65,-hand*.65,hand*1.25,-hand*1.25]){const travel=Math.min(speed*dt,Math.max(0,d-1.5)),q={x:a.position.x+Math.cos(heading+angle)*travel,z:a.position.z+Math.sin(heading+angle)*travel};
-      if(hostile(q)&&allowed(q.x,q.z)&&walkClear(a.position,{...q,y:ground(q.x,q.z)+.85})){a.position={...q,y:ground(q.x,q.z)+.85};a.moving=travel>0;break;}
+      if(darknessPath(a.position,q)&&allowed(q.x,q.z)&&walkClear(a.position,{...q,y:ground(q.x,q.z)+.85})){a.position={...q,y:ground(q.x,q.z)+.85};a.moving=travel>0;break;}
      }
     }
    }
@@ -85,7 +111,7 @@
   }
   function reset(){cancel();engine.clear();if(hero)checkpoint();}
   sync();
-  return{isDead:()=>hero.hp<=0,begin,release,cancel,potion,canPotion,step,reset,checkpoint,engine,actors,events,setMode(value){if(value==='weapon'||value==='spell'){cancel();mode=value;}},snapshot:()=>capture(),inspect(){sync();return{hero:clone(hero),state:capture(),mode,skill:skill(),ready:readiness(),safe,error,actors:clone(actors),projectiles:clone(engine.projectiles),impacts:clone(engine.impacts)};},dispose(){if(closed)return;reset();closed=true;actors.length=0;},rebase(dx,dz){cancel();engine.clear();for(const a of actors){a.position.x-=dx;a.position.z-=dz;if(a.home){a.home.x-=dx;a.home.z-=dz;}}}};
+  return{hostileAt:hostile,darknessPath,canHostileAttack,hostileAttack,isDead:()=>hero.hp<=0,begin,release,cancel,potion,canPotion,step,reset,checkpoint,engine,actors,events,setMode(value){if(value==='weapon'||value==='spell'){cancel();mode=value;}},snapshot:()=>capture(),inspect(){sync();return{hero:clone(hero),state:capture(),mode,skill:skill(),ready:readiness(),safe,error,actors:clone(actors),projectiles:clone(engine.projectiles),impacts:clone(engine.impacts)};},dispose(){if(closed)return;reset();closed=true;actors.length=0;},rebase(dx,dz){cancel();engine.clear();for(const a of actors){a.position.x-=dx;a.position.z-=dz;if(a.home){a.home.x-=dx;a.home.z-=dz;}}}};
  }
- return{create,boundaries,MAX_ZOMBIES,MAX_RECORDS,CELL,SPLASH_RADIUS,MELEE_REACH};
+ return{create,boundaries,territoryBoundary,MAX_ZOMBIES,MAX_RECORDS,CELL,SPLASH_RADIUS,MELEE_REACH};
 });
