@@ -5631,7 +5631,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=home-countryside-v387-20260910"></script>
 <script src="player_home_core.js?v=unified-alderwing-v400-20260913"></script>
-<script src="player_home_scene.js?v=unified-alderwing-v400-20260913"></script>
+<script src="player_home_scene.js?v=houses-terrain-v408-20260914"></script>
 <script src="player_home.js?v=unified-alderwing-v400-20260913"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
@@ -29158,8 +29158,9 @@ function townSceneKey(settle) {
   }).sort().join(',');
 }
 function villageBuildingSceneKey(rec) {
-  if (!rec) return '';
+  if (!rec) return settlementPlayerHomeKey();
   return JSON.stringify([
+    settlementPlayerHomeKey(),
     ensureVillageEconomy(rec).population,
     EMPIRE_BUILDINGS.map(b => villageBuildingLevel(rec, b.id)),
     [...villageConstructions(rec),...villageReadyToOpen(rec),...villageWholesaleProjects(rec)].map(c => [c.id, c.toLevel, c.startMs, c.endMs,!!c.readyToOpenAt]),
@@ -30182,7 +30183,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=wayside-room-title-v406b-20260914';
+        script.src = 'village_walk.js?v=houses-terrain-v408-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -34420,6 +34421,19 @@ const VILLAGE_LANDMARK_MAKERS = [villageMakeChurch, villageMakeWindmill, village
   villageMakeGreatPerch, villageMakeStoneCircle, villageMakeAviary, villageMakeBellTower,
   villageMakeShrine, villageMakeWatchtower];
 
+// The personal home has its own save, but shares the village's metre frame.
+// Keep it out of the civic building ledger: it creates no residents or income.
+function settlementPlayerHome(scene,origin) {
+  const home=gameState.playerHome,C=BurbzGeographicWorldCore;
+  if(!home||home.tier<1||!home.anchor||!C.validCoordinate(origin))return null;
+  const p=C.project(origin,home.anchor),surface=scene.userData.walkSurface,terrain=scene.userData.walkTerrain;
+  if(!p||!surface||!terrain||Math.hypot(p.x,p.z)>surface.radius+3)return null;
+  const y=terrain.heightAt(p.x,p.z);if(!Number.isFinite(y))return null;
+  const house=BurbzPlayerHomeScene.createHouse(THREE,home);
+  house.position.set(p.x,y,p.z);house.userData.overheadHome=true;scene.add(house);return house;
+}
+function settlementPlayerHomeKey(){const h=gameState.playerHome;return JSON.stringify([h?.tier,h?.anchor,h?.rooms]);}
+
 function buildVillageScene(v) { for(const _ of buildVillageSceneSteps(v)){} }
 function* buildVillageSceneSteps(v) {
   disposeVillageScene();
@@ -35285,6 +35299,7 @@ function* buildVillageSceneSteps(v) {
     o.receiveShadow = true;
   });
 
+  const playerHouse=settlementPlayerHome(villageScene,v);
   villageBuiltSeed = v.seed;
   villageBuiltPhase = daylight.phase;
   villageBuiltLifeKey = villageAmbientLifeKey(lifeSnapshot);
@@ -35299,6 +35314,7 @@ function* buildVillageSceneSteps(v) {
   villageCam.polar = .88;
   const builtBounds = new THREE.Box3();
   villageBuildings.filter(o=>o.userData.buildingId).forEach(o=>builtBounds.expandByObject(o));
+  if(playerHouse)builtBounds.expandByObject(playerHouse);
   const builtCenter = builtBounds.isEmpty() ? new THREE.Vector3() : builtBounds.getCenter(new THREE.Vector3());
   const builtSize = builtBounds.isEmpty() ? new THREE.Vector3(12,0,12) : builtBounds.getSize(new THREE.Vector3());
   villageCam.dist = Math.max(18, Math.min(48, Math.hypot(builtSize.x,builtSize.z)*.8+12));
@@ -36627,6 +36643,7 @@ function* buildTownSceneSteps(settle) {
   townFlocks = townFlocks.concat(villageFlocks.splice(flockMark));
   townConstructionSites = townConstructionSites.concat(villageConstructionSites.splice(constructionMark));
 
+  settlementPlayerHome(townScene,settle.centroid);
   townBuiltKey = townSceneKey(settle);
   townBuiltPhase = daylight.phase;
   if (townRenderer) townRenderer.toneMappingExposure = daylight.exposure;
@@ -43984,7 +44001,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'photo-journal-v407b-20260914';
+const BURBZ_BUILD = 'houses-terrain-v408-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45347,6 +45364,7 @@ async function createTravellingSettlement(T,record,{signal,host=false}={}) {
   try {
   await prepareSettlementSteps(town?buildTownSceneSteps(record.settlement):buildVillageSceneSteps(record),context,signal,metrics,'scene');
   const scene=town?context.townScene:context.villageScene;
+  scene.traverse(o=>{if(o.userData.overheadHome)o.visible=false;});
   const buildings=(town?context.townEconBuildings:context.villageBuildings).filter(b=>!b.userData.townGround);
   for(const b of buildings)if(b.userData.wardSeed===undefined)b.userData.wardSeed=record.seed;
   const names=town?['townNpcs','townWalkers','townTraffic','townLivestock','townFlocks','townRoofBirds','townChickens','townWindmills','townCloths','townSigns']:

@@ -12,6 +12,58 @@ function mercator(origin){return{x:(origin.lon+180)/360,z:(1-Math.log(Math.tan(M
 function elevation(tiles,origin,x,z){const m=origin.scale?origin:mercator(origin),mx=m.x+x/m.scale,my=m.z+z/m.scale;for(const tile of tiles){const n=2**tile.z,tx=((mx*n)%n+n)%n,ty=my*n;if(Math.floor(tx)!==tile.x||Math.floor(ty)!==tile.y)continue;const d=tile.dem,fx=(tx-tile.x)*d.dim,fy=(ty-tile.y)*d.dim,ix=Math.floor(fx),iy=Math.floor(fy),dx=fx-ix,dy=fy-iy;try{const h=d.get(ix,iy)*(1-dx)*(1-dy)+d.get(ix+1,iy)*dx*(1-dy)+d.get(ix,iy+1)*(1-dx)*dy+d.get(ix+1,iy+1)*dx*dy;if(Number.isFinite(h))return h;}catch(_){}}return null;}
 function joinedHeight(x,z,{radius,blend=64,authored,raw,datum}){const d=Math.hypot(x,z);if(d<=radius)return authored(x,z);const h=raw(x,z);if(!Number.isFinite(h)||!Number.isFinite(datum))return null;const t=smooth((d-radius)/blend);return authored(x,z)*(1-t)+(h-datum)*t;}
 function trees(chunk,shift={x:0,z:0}){const rows=[],size=TREE_GRID;for(let gx=Math.floor((chunk.x+shift.x)/size);gx<=Math.floor((chunk.x+CHUNK+shift.x)/size);gx++)for(let gz=Math.floor((chunk.z+shift.z)/size);gz<=Math.floor((chunk.z+CHUNK+shift.z)/size);gz++){const x=(gx+.15+hash(gx,gz,71)*.7)*size-shift.x,z=(gz+.15+hash(gx,gz,113)*.7)*size-shift.z;if(x<chunk.x||x>=chunk.x+CHUNK||z<chunk.z||z>=chunk.z+CHUNK)continue;rows.push({id:'cw:'+gx+':'+gz,x,z,size:.75+hash(gx,gz,17)*.95,angle:hash(gx,gz,31)*Math.PI*2,kind:hash(gx,gz,47)<.6?'pines':'leafs',tone:hash(gx,gz,61)});}return rows;}
+// Sample the whole root footprint, not just the trunk's centre. Missing
+// neighbours are not permission to plant on an unverified cliff edge.
+function treeGround(x,z,size,height){
+ const y=height(x,z);if(!Number.isFinite(y))return null;
+ for(const radius of [.45,1.35*size])for(let i=0;i<8;i++){
+  const a=i*Math.PI/4,h=height(x+Math.cos(a)*radius,z+Math.sin(a)*radius);
+  if(!Number.isFinite(h)||Math.abs(h-y)>radius*.65)return null;
+ }
+ return y;
+}
+function habitat(x,z,shift={x:0,z:0}){
+ const u=(x+shift.x)/48,v=(z+shift.z)/48,gx=Math.floor(u),gz=Math.floor(v),a=smooth(u-gx),b=smooth(v-gz);
+ return (hash(gx,gz,409)*(1-a)+hash(gx+1,gz,409)*a)*(1-b)+(hash(gx,gz+1,409)*(1-a)+hash(gx+1,gz+1,409)*a)*b;
+}
+function rockContains(rock,x,y,z){
+ const dx=x-rock.x,dz=z-rock.z,c=Math.cos(rock.angle||0),s=Math.sin(rock.angle||0),u=c*dx-s*dz,v=s*dx+c*dz;
+ return (y===null||y>rock.y-rock.h-.3&&y<rock.y+rock.h+.3)&&Math.hypot(u/(rock.w+.3),v/(rock.d+.3))<1;
+}
+function rocks(cell,shift,height,excluded){
+ const rows=[],grid=11;
+ for(let gx=Math.floor((cell.x+shift.x)/grid);gx<=Math.floor((cell.x+CHUNK+shift.x)/grid);gx++)for(let gz=Math.floor((cell.z+shift.z)/grid);gz<=Math.floor((cell.z+CHUNK+shift.z)/grid);gz++){
+  const x=(gx+.2+hash(gx,gz,613)*.6)*grid-shift.x,z=(gz+.2+hash(gx,gz,617)*.6)*grid-shift.z;
+  if(x<cell.x||x>=cell.x+CHUNK||z<cell.z||z>=cell.z+CHUNK||excluded(x,z,4))continue;
+  const y=height(x,z),a=height(x+2,z),b=height(x-2,z),c=height(x,z+2),d=height(x,z-2);
+  if(![y,a,b,c,d].every(Number.isFinite))continue;
+  const slope=Math.hypot(a-b,c-d)/4,patch=habitat(x,z,shift),r=hash(gx,gz,631);
+  if(slope<.3&&patch<.57&&r>.045||slope>=.3&&r>(patch>.52?.66:.16))continue;
+  const tall=slope>.55,size=.65+hash(gx,gz,641)*1.4;
+  rows.push({id:'rock:'+gx+':'+gz,x,z,y:y-.3*size,w:size*(tall?1.4:1.7),h:size*(tall?2.2:.9),d:size,angle:hash(gx,gz,643)*Math.PI,tone:hash(gx,gz,647)});
+ }
+ return rows;
+}
+// Cascades belong to existing watercourses. The sheet follows sampled ground
+// downhill; neither the geographic elevations nor flat rivers gain fake drops.
+function cascades(cell,corridors,height,excluded){
+ const rows=[];
+ for(let ci=0;ci<corridors.length;ci++){
+  const c=corridors[ci];if(c.kind!=='river')continue;
+  const corners=[[cell.x,cell.z],[cell.x+CHUNK,cell.z],[cell.x,cell.z+CHUNK],[cell.x+CHUNK,cell.z+CHUNK]];
+  const along=corners.map(([x,z])=>(x-c.x)*c.ux+(z-c.z)*c.uz);
+  for(let a=Math.ceil(Math.max(-c.end+6,Math.min(...along))/12)*12;a<=Math.min(c.end-6,Math.max(...along));a+=12){
+   const x=c.x+c.ux*a,z=c.z+c.uz*a,width=corridorWidth(c,a)*.88;
+   if(x<cell.x||x>=cell.x+CHUNK||z<cell.z||z>=cell.z+CHUNK||width<.65||excluded(x,z,6))continue;
+   let points=[];for(let j=-5;j<=5;j++){const px=x+c.ux*j,pz=z+c.uz*j,y=height(px,pz);points.push({x:px,z:pz,y});}
+   if(points.some(p=>!Number.isFinite(p.y)))continue;
+   if(points[0].y<points[10].y)points.reverse();const drop=points[0].y-points[10].y;
+   if(drop<1.35||points.some((p,i)=>i&&p.y>points[i-1].y+.15))continue;
+   rows.push({id:'cascade:'+ci+':'+a,x,z,width,drop,points});
+  }
+ }
+ return rows;
+}
 function groundMesh(chunk,height,radius){const positions=[],uv=[],indices=[],n=CHUNK/STEP;for(let z=0;z<=n;z++)for(let x=0;x<=n;x++){const wx=chunk.x+x*STEP,wz=chunk.z+z*STEP,y=height(wx,wz);if(!Number.isFinite(y))return null;positions.push(x*STEP,y,z*STEP);uv.push(wx/4.6,wz/4.6);}for(let z=0;z<n;z++)for(let x=0;x<n;x++){const wx=chunk.x+(x+.5)*STEP,wz=chunk.z+(z+.5)*STEP;const a=z*(n+1)+x,b=a+1,c=a+n+1,d=c+1;indices.push(a,c,b,b,c,d);}return{positions,uv,indices};}
 function meshHeight(chunk,data,x,z){const u=clamp((x-chunk.x)/STEP,0,CHUNK/STEP-1e-9),v=clamp((z-chunk.z)/STEP,0,CHUNK/STEP-1e-9),ix=Math.floor(u),iz=Math.floor(v),fx=u-ix,fz=v-iz,n=CHUNK/STEP+1,a=(iz*n+ix)*3+1,b=a+3,c=a+n*3,d=c+3,h=data.positions;return fx+fz<=1?h[a]+(h[b]-h[a])*fx+(h[c]-h[a])*fz:h[d]+(h[c]-h[d])*(1-fx)+(h[b]-h[d])*(1-fz);}
 // Authored lanes and tributaries narrow gradually into the surrounding ground.
@@ -34,5 +86,5 @@ function ribbonMesh(cell,c,height,bank=false){
  }
  return {positions,uv,indices};
 }
-return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,trees,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh};
+return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh};
 });

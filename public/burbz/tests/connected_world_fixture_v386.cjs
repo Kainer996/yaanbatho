@@ -52,12 +52,13 @@ function vectorTile(z,x,y){
 const crcTable=Uint32Array.from({length:256},(_,i)=>{for(let k=0;k<8;k++)i=i&1?0xedb88320^(i>>>1):i>>>1;return i>>>0;});
 function crc(bytes){let n=0xffffffff;for(const b of bytes)n=crcTable[(n^b)&255]^(n>>>8);return(n^0xffffffff)>>>0;}
 function chunk(type,bytes){const name=Buffer.from(type),size=Buffer.alloc(4),sum=Buffer.alloc(4);size.writeUInt32BE(bytes.length);sum.writeUInt32BE(crc(Buffer.concat([name,bytes])));return Buffer.concat([size,name,bytes,sum]);}
-function demTile(z,x,y){
+function demTile(z,x,y,height){
  const width=512,raw=Buffer.alloc((width*4+1)*width),anchorX=(ANCHOR.lon+180)/360,metres=C.EARTH_CIRCUMFERENCE*Math.cos(ANCHOR.lat*Math.PI/180);
  for(let py=0;py<width;py++)for(let px=0;px<width;px++){
   // A gentle one-percent eastward slope gives an independent nonzero DEM check.
   let dx=(x+(px+.5)/width)/2**z-anchorX;dx-=Math.round(dx);
-  const elevation=120+Math.max(-40,Math.min(40,dx*metres*.01)),encoded=Math.round((elevation+32768)*256),i=py*(width*4+1)+1+px*4;
+  const north=(1-Math.log(Math.tan(Math.PI/4+ANCHOR.lat*Math.PI/360))/Math.PI)/2,dz=((y+(py+.5)/width)/2**z-north)*metres;
+  const elevation=height?height(dx*metres,dz):120+Math.max(-40,Math.min(40,dx*metres*.01)),encoded=Math.round((elevation+32768)*256),i=py*(width*4+1)+1+px*4;
   raw[i]=(encoded>>>16)&255;raw[i+1]=(encoded>>>8)&255;raw[i+2]=encoded&255;raw[i+3]=255;
  }
  const header=Buffer.alloc(13);header.writeUInt32BE(width);header.writeUInt32BE(width,4);header[8]=8;header[9]=6;
@@ -94,7 +95,7 @@ async function routeMap(context,report,options={}){
   if(url.hostname==='tiles.openfreemap.org'){const m=url.pathname.match(/^\/proof\/(\d+)\/(\d+)\/(\d+)\.pbf$/);if(m){const key=m.slice(1).join('/');report.mapFixture.vectorRequests.push(key);return route.fulfill({contentType:'application/x-protobuf',headers:{'Access-Control-Allow-Origin':'*','Cache-Control':'public,max-age=86400'},body:vectorTile(...m.slice(1).map(Number))});}}
   if(url.hostname==='tiles.mapterhorn.com'){
    if(options.missingTerrain?.())return route.abort('internetdisconnected');
-   const m=url.pathname.match(/\/(\d+)\/(\d+)\/(\d+)\.(webp|png)$/);if(m){const key=m.slice(1,4).join('/');if(!tiles.has(key))tiles.set(key,demTile(...m.slice(1,4).map(Number)));report.mapFixture.demRequests.push(key);return route.fulfill({contentType:'image/png',headers:{'Access-Control-Allow-Origin':'*','Cache-Control':'public,max-age=86400'},body:tiles.get(key)});}
+   const m=url.pathname.match(/\/(\d+)\/(\d+)\/(\d+)\.(webp|png)$/);if(m){const key=m.slice(1,4).join('/');if(!tiles.has(key))tiles.set(key,demTile(...m.slice(1,4).map(Number),options.height));report.mapFixture.demRequests.push(key);return route.fulfill({contentType:'image/png',headers:{'Access-Control-Allow-Origin':'*','Cache-Control':'public,max-age=86400'},body:tiles.get(key)});}
   }
   report.mapFixture.blocked.push({url:request.url(),method:request.method()});return route.abort('blockedbyclient');
  });

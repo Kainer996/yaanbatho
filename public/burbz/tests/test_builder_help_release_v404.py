@@ -7,7 +7,7 @@ def test_builder_dependencies_are_required_and_deployable():
     loader=(ROOT/'village_walk.js').read_text()
     updater=(ROOT.parents[1]/'scripts/update-live-burbz.sh').read_text()
     for name in ('building_work_core.js','building_work.js','building_work.css','village_walk.js','first_person_hud.js'):
-        pin='builder-help-v404-20260914' if name=='building_work_core.js' else 'wayside-room-title-v406b-20260914' if name=='village_walk.js' else 'building-opening-v405-20260914' if name=='building_work.js' else 'builder-actions-v404b-20260914'
+        pin='builder-help-v404-20260914' if name=='building_work_core.js' else 'houses-terrain-v408-20260914' if name=='village_walk.js' else 'building-opening-v405-20260914' if name=='building_work.js' else 'builder-actions-v404b-20260914'
         url='./'+name+'?v='+pin
         for group in ('BURBZ_ASSETS','BURBZ_CORE','BURBZ_INSTALL_REQUIRED'):
             entries=re.search(r'const '+group+r' = \[(.*?)\];',worker,re.S)[1]
