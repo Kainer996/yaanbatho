@@ -563,3 +563,6 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 @media(orientation:landscape) and (max-height:550px){
  #screen-scan.progressive-home .scan-home-command-bar :is(#playerHomeStand,#savedPhotosButton,#campHomeButton,.desk-equipment-control){flex:none;width:100%;min-height:44px;height:44px}
 }
+@media(orientation:portrait) and (max-width:360px){
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control{font-size:10px}
+}
