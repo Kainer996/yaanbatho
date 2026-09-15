@@ -1,5 +1,7 @@
 # Burbz — Maintainer & Agent Handbook
 
+Coordinated v417 common prerequisite guidance extends saved recipe intent to bounded known game goals across Academy, recruitment, equipment, care/work, villages/towns, and home/camp resource gates. Preserve lexical and public action guards, original transaction authority, profile/reset isolation, failed-save rollback, original target return, actual opening gifts and earned supplies. Navigation never spends, sends, claims, equips, or feeds. Coverage inventory and native limits are in [PREREQUISITE_COMMON_V417_HANDOFF.md](../../PREREQUISITE_COMMON_V417_HANDOFF.md); this supersedes the earlier Forge-only scope note below. Parent release coordination owns final pins and publication.
+
 Home header controls share the available row width, including Camps, Saved photos, Enter Alderwing and optional Equipment. Preserve 44px targets, the reserved Merlin area, and narrow landscape stacking. Common guidance retains one visible Home resume control without creating outer page scrolling; the available-height track choice also covers the four-panel small-phone state.
 
 Coordinated v417 candidate waits for the profile-scoped initial home-placement promise before deciding whether world entry needs a location picker. Preserve the asynchronous settlement/footprint check, shared in-flight placement, cancelled-handoff/save-identity checks and rejection fallback. Existing owned anchors remain unchanged. Focused race coverage: tests/test_initial_home_wait_v417.cjs; final native opening rerun is required before release.
