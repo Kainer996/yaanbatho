@@ -49,3 +49,13 @@ test('board distance remains local across the dateline',()=>{
   const a={...pose,lat:0,lon:179.999999},b={...a,lon:-179.999999};
   assert(G.distance(a,b)<1);assert(C.boardable(C.at(a),b));
 });
+
+test('interrupted airborne and water-deck sessions resume at the craft, while dry parking stays independent',()=>{
+  const parked=C.at(pose),fly={...parked,phase:'flying'};
+  assert(!C.resumeRequired(parked));assert(!C.resumeRequired({...parked,phase:'boarded'}));
+  for(const craft of [fly,{...parked,phase:'deck',surface:'sea'},{...parked,phase:'boarded',surface:'freshwater'}]){
+    assert(C.resumeRequired(craft));assert(C.matchesJourney(craft,C.resumePose(craft)));
+  }
+  assert(!C.matchesJourney(fly,pose));assert(!C.matchesJourney(parked,{...pose,altitude:pose.altitude+1}));
+  assert(!C.matchesJourney(parked,{...pose,lon:pose.lon+.00001}));assert(!C.matchesJourney(parked,null));
+});

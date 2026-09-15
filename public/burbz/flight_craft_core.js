@@ -20,6 +20,16 @@ function normalize(raw){
 function at(pose,phase='parked',surface='ground'){
   return normalize({...pose,version:VERSION,phase,surface});
 }
+function resumeRequired(craft){
+  return !!normalize(craft)&&(craft.phase==='flying'||craft.phase==='deck'||craft.phase==='boarded'&&craft.surface!=='ground');
+}
+function resumePose(craft){
+  const c=normalize(craft);return c?{lat:c.lat,lon:c.lon,altitude:c.altitude,yaw:c.yaw,pitch:0,mode:c.phase==='flying'?'fly':'walk'}:null;
+}
+function matchesJourney(craft,pose){
+  return !!normalize(craft)&&geo.validatePose(pose)&&geo.distance(craft,pose)<.25&&
+    Math.abs(craft.altitude-pose.altitude)<.15&&pose.mode===(craft.phase==='flying'?'fly':'walk');
+}
 function occupied(craft){return !!craft&&['boarded','flying'].includes(craft.phase);}
 function boardable(craft,player){
   return !!normalize(craft)&&geo.validatePose(player)&&
@@ -65,5 +75,5 @@ function floatPose(previous,kind,time,dt,reducedMotion=false){
     roll:water&&!reducedMotion?Math.sin(time*1.25)*.045*strength:0,
     pitch:water&&!reducedMotion?Math.sin(time*1.9+.4)*.025*strength:0};
 }
-return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,occupied,boardable,berth,findBerth,floatPose};
+return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,findBerth,floatPose};
 });

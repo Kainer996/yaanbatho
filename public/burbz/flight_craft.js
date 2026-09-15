@@ -52,9 +52,10 @@ function attach(s,opts,env){
  }
  function initialize(){
   provision();
-  if(record){const p=local(),near=p&&Math.hypot(p.x-s.player.x,p.z-s.player.z)<4;
+  if(record){const p=local(),near=p&&C.matchesJourney(record,opts.initialPose);
    if(near&&record.phase==='flying'&&s.player.mode==='fly'){aboard=true;Object.assign(s.player,{x:p.x,y:p.y,z:p.z});}
    else if(near&&['boarded','deck'].includes(record.phase)){aboard=record.phase==='boarded';onDeck=!aboard;Object.assign(s.player,{x:p.x,y:p.y,z:p.z,mode:'walk'});}
+   else if(record.phase==='boarded'&&record.surface==='ground')record={...record,phase:'parked'};
   }
   // Old personal-flight poses never grant new flight. Recover onto verified
   // nearby dry ground while retaining the existing saved journey on failure.
@@ -66,7 +67,7 @@ function attach(s,opts,env){
   update(0);
  }
  function control(){
-  if(closed||s.uiBusy||s.room||s.combat?.isDead?.())return false;
+  if(closed||s.uiBusy||s.room)return false;
   if(!record&&!provision()){env.message('Your craft will be waiting on clear ground near home.');return false;}
   const before={...s.player,velocity:{...s.player.velocity}},oldAboard=aboard,oldDeck=onDeck;
   let next;
@@ -88,7 +89,7 @@ function attach(s,opts,env){
   stop();sync();return true;
  }
  function leave(){
-  if(closed||s.uiBusy||s.room||s.combat?.isDead?.()||!aboard||s.player.mode==='fly')return false;
+  if(closed||s.uiBusy||s.room||!aboard||s.player.mode==='fly')return false;
   const before={...s.player,velocity:{...s.player.velocity}},p=local();
   const bank=C.findBerth(p,env.sample,env.parkingClear,{minRadius:1.8,maxRadius:3.3});
   let next={...record,phase:'parked'};
@@ -102,7 +103,6 @@ function attach(s,opts,env){
  const flightWorld={height:(x,z)=>env.sample(x,z)?.height??null,allowed:()=>true,
   allowed3(x,y,z){for(const [dx,dz] of [[0,0],[-.65,0],[.65,0],[0,-.85],[0,.85]])if(!env.clear(x+dx,y,z+dz))return false;return true;},maxAGL:400};
  function move(input,dt){
-  if((aboard||onDeck)&&s.combat?.isDead?.()){stop();return true;}
   if(aboard&&s.player.mode==='fly'){G.step(s.player,input,dt,flightWorld,'fly');return true;}
   if(aboard||onDeck){
    const p=local();if(p)Object.assign(s.player,{x:p.x,y:p.y,z:p.z});
