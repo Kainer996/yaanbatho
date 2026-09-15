@@ -1,6 +1,6 @@
 # Alderwing follow-ups v417
 
-Release candidate `alderwing-followups-v417-20260914`, based on the verified Home/opening v416. Final local and installed-update verification passed. Publication and public verification are pending until recorded by the release owner.
+Released `alderwing-followups-v417-20260914` through PR353, merge `032b6d8b3002a2ed30b558a8bc857ab5899220c8`, based on the verified Home/opening v416. The guarded deployment marker and exact public bytes match.
 
 ## Result
 
@@ -25,10 +25,16 @@ The final Home regression caught an invented Stores-unlock prerequisite preventi
 
 Durable evidence lives in the owner's `outputs/v417-local/` and `outputs/world-release-intake/`. Earlier rejected fixture runs and the separately labelled shelter-race image are not final acceptance. Old Python string-pin failures documented in the world intake are not claimed green.
 
+## Verified publicly
+
+Public verification passed with zero page errors: installed/offline6, cards9, common guidance9 and real-provider world4 groups. All33 changed public files match the tested committed bytes. Actual offline Fieldcraft saves a Bow goal, resumes it from Home after restart and stops without spending. Native Academy/equipment/food guidance reaches original transactions; the full public Market purchase debits actual coins, and the existing Feed action consumes the purchased food. Real Mapterhorn terrain loads; Camps controls fit all three tested sizes, turning/movement retain the same canvas, and exit/reload preserve home/inventory/player state.
+
+Machine-readable release evidence is in `reports/BURBZ_V417_PUBLIC_VERIFICATION.json`; screenshots and full reports remain in the owner’s `outputs/v417-public/`. The test harness corrections are listed there; no game runtime changed during public verification.
+
 ## Release boundaries and limits
 
 All23 changed runtime modules have matching consumer and three-worker-list revisions; the existing building_rooms_core v416 lazy pin is preserved. Seven new art/audio assets are in all lists and the updater. Runtime assets are ordinary committed bytes; sparse-checkout hydration is a local test concern. Gemini's £5 Europe/London monthly budget, durable photo queue and Cornell sound are unchanged.
 
-These are laptop Chromium/software-WebGL and viewport tests, not physical-phone GPU/FPS or actual GPS fieldwork. Retained hostile-camp turning measured mean76.24ms/p95 83.5ms; combat CPU mean1.05ms/p95 3.8ms. Fireball phase CPU maxima were mean2.05ms/p95 5.1ms;26 visible flame particles used one draw, capacity384, with121 terrain chunks. These show bounded resources, not a proven hardware speedup. Final public real-provider and installed/offline checks belong to the release owner.
+These are laptop Chromium/software-WebGL and viewport tests, not physical-phone GPU/FPS or actual GPS fieldwork. Retained hostile-camp turning measured mean76.24ms/p95 83.5ms; combat CPU mean1.05ms/p95 3.8ms. Fireball phase CPU maxima were mean2.05ms/p95 5.1ms;26 visible flame particles used one draw, capacity384, with121 terrain chunks. These show bounded resources, not a proven hardware speedup. The public real-provider and installed/offline checks above passed within these limits.
 
 The rejected 3D Merlin and separately planned September15 enemy roster remain outside this release.
