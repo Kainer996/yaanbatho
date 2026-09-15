@@ -3235,6 +3235,26 @@ body:has(#questClaimCelebration) .merlin-tutorial-overlay :is(.merlin-tutorial-s
  .merlin-tutorial-overlay.has-current-action.free .merlin-tutorial-task { left:12px; transform:none; max-width:min(340px,calc(100vw - 180px)); }
 }
 
+.prerequisite-guide { width:min(560px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; padding:18px; border:2px solid #d8b15b; border-radius:16px; background:#17251e; color:#fff2d2; box-shadow:0 16px 50px #0009; }
+.prerequisite-guide::backdrop { background:#0009; }
+.prerequisite-guide-head { display:flex; gap:12px; align-items:start; }
+.prerequisite-guide h2 { flex:1; margin:0; font-size:20px; }
+.prerequisite-guide button,.prerequisite-goal-banner button { min-height:44px; padding:10px 12px; border:1px solid #d8b15b; border-radius:9px; background:#eaca79; color:#231b0b; font:700 14px/1.25 'Inter',sans-serif; }
+.prerequisite-guide button:focus-visible,.prerequisite-goal-banner button:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+.prerequisite-step { padding:12px 0; border-top:1px solid #bda15a66; }
+.prerequisite-step p,.prerequisite-note { font-size:13px; line-height:1.45; }
+.prerequisite-goal-banner { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:8px 0 14px; padding:10px; border:1px solid #d8b15b; border-radius:12px; background:#203226; color:#fff2d2; }
+.prerequisite-goal-banner strong { flex:1 0 100%; font-size:14px; }
+.prerequisite-home-resume { position:static; min-width:44px; min-height:44px; width:52px; align-self:stretch; padding:4px; border:1px solid #d8b15b; border-radius:9px; background:#17251e; color:#fff2d2; font:700 13px/1.25 Inter,sans-serif; text-align:center; }
+#screen-scan #scanHomeActions:has(.prerequisite-home-resume) { display:grid; grid-template-columns:minmax(0,1fr) 52px; gap:4px; }
+#screen-scan #scanHomeActions:has(.prerequisite-home-resume) > :is(.home-action,.desk-empty) { grid-column:1; grid-row:1; min-width:0; width:100%; margin:0; }
+#screen-scan #scanHomeActions > .prerequisite-home-resume { grid-column:2; grid-row:1; }
+#screen-scan #scanHomeActions:has(.prerequisite-home-resume) > .desk-empty { display:none; }
+#screen-scan #scanHomeActions:has(.desk-empty):has(.prerequisite-home-resume) { grid-template-columns:minmax(0,1fr); }
+#screen-scan #scanHomeActions:has(.desk-empty) > .prerequisite-home-resume { grid-column:1; width:100%; }
+.prerequisite-home-resume:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+.prerequisite-target { outline:3px solid #f6d66c !important; outline-offset:3px; scroll-margin:20px; }
+
 /* ========== MERLIN TUTORIAL ========== */
 .merlin-tutorial-overlay { position:fixed; inset:0; z-index:1500; display:none; overflow:hidden; }
 .merlin-tutorial-overlay.show { display:block; }
@@ -4540,11 +4560,11 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
-<link rel="stylesheet" href="illustrated_world.css?v=full-cards-v375-20260908">
+<link rel="stylesheet" href="illustrated_world.css?v=alderwing-followups-v417-20260914">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=opening-home-v416-20260914">
+<link rel="stylesheet" href="scan_home.css?v=alderwing-followups-v417-20260914">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4611,6 +4631,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Live conditions</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
+        <button class="camp-map-control" id="campMapButton" type="button">⛺ Camps</button>
         <button class="map-quest-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/burbz-icon-set/quests.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label">Show Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <button class="map-quest-btn map-side-quest-btn" id="mapSideQuestBtn" type="button" aria-label="Start a free-roaming Side Quest" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label" id="mapSideQuestBtnLabel">Side Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
@@ -4655,7 +4676,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
-      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="savedPhotosButton">Saved photos</button></div>
+      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="savedPhotosButton">Saved photos</button><button type="button" id="campHomeButton">Camps & homes</button></div>
       </div>
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
@@ -4897,7 +4918,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="empire-map-vignette"></div>
         <canvas class="empire-fog-overlay" id="empireFogCanvas" aria-hidden="true"></canvas>
         <div class="empire-map-corner tl"></div><div class="empire-map-corner tr"></div><div class="empire-map-corner bl"></div><div class="empire-map-corner br"></div>
-        <div class="empire-map-tools"><button class="empire-map-btn" id="empireMapMeBtn">Me</button><button class="empire-map-btn" id="empireMapRealmBtn">My Realm</button><button class="empire-map-btn" id="empireMapWorldBtn">World</button><button class="empire-map-btn" id="empireMapKeyBtn" aria-expanded="false" aria-controls="empireMapKey">Key</button></div>
+        <div class="empire-map-tools"><button class="empire-map-btn" id="campRealmButton" type="button">⛺ Camps</button><button class="empire-map-btn" id="empireMapMeBtn">Me</button><button class="empire-map-btn" id="empireMapRealmBtn">My Realm</button><button class="empire-map-btn" id="empireMapWorldBtn">World</button><button class="empire-map-btn" id="empireMapKeyBtn" aria-expanded="false" aria-controls="empireMapKey">Key</button></div>
         <div class="empire-map-key" id="empireMapKey" role="dialog" aria-label="Map key">
           <div class="empire-map-key-title">READING THE ROYAL ATLAS</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch zoom">🔍</span>One banner per patch of land — the biggest title that holds it. Zoom in and it opens: kingdoms &amp; duchies → counties → towns → villages</div>
@@ -4910,7 +4931,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
           <div class="empire-map-key-row"><span class="empire-map-key-swatch danger">💀</span>LV on a dark banner — the garrison's recommended level. Green suits your flock; red means come back stronger. Every liberation raises the world level, and the far frontier always fights hardest</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch trade">〰️</span>Gold arc — a trade route between your counties</div>
           <div class="empire-map-key-row"><span class="empire-map-key-swatch realm">🎨</span>Painted lands — counties sworn to one duchy or kingdom share its colour</div>
-          <div class="empire-map-key-foot">Daylight on the map = lands you have freed. Darkness = lands still waiting.</div>
+          <div class="empire-map-key-foot">Bright daylight = liberated, safe territory. Dim explored land = charted wilderness; enemies remain. Darkness = unexplored.</div>
         </div>
         <div class="empire-map-tapcard" id="empireMapTapCard" role="dialog" aria-live="polite"></div>
         <div class="empire-map-empty"></div>
@@ -5620,19 +5641,20 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_size_core.js?v=every-bird-carries-its-weight-v335-20260827"></script>
 <script src="bird_roles_core.js?v=rook-recognition-special-characters-v347-20260904"></script>
 <script src="bird_bond_core.js?v=bird-bond-love-v256-20260812"></script>
-<script src="battle_core.js?v=continuous-world-v391-20260910"></script>
+<script src="battle_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="battle_aim_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="loot_crafting_core.js?v=wilderness-birds-v395-20260913"></script>
+<script src="prerequisite_guidance_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="player_equipment_core.js?v=continuous-world-v391-20260910"></script>
-<script src="player_equipment.js?v=wilderness-birds-v395-20260913"></script>
+<script src="player_equipment.js?v=alderwing-followups-v417-20260914"></script>
 <script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
-<script src="first_person_cast_controls.js?v=continuous-world-v391-20260910"></script>
-<script src="wilderness_combat_core.js?v=wilderness-birds-v395-20260913"></script>
+<script src="first_person_cast_controls.js?v=alderwing-followups-v417-20260914"></script>
+<script src="wilderness_combat_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="wilderness_birds.js?v=wilderness-birds-v395-20260913"></script>
-<script src="wilderness_combat.js?v=wilderness-birds-v395-20260913"></script>
+<script src="wilderness_combat.js?v=alderwing-followups-v417-20260914"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
 <link rel="stylesheet" href="wilderness_combat.css?v=wilderness-birds-v395-20260913">
-<script src="empire_map_core.js?v=liberation-map-v3-20260714"></script>
+<script src="empire_map_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
 <script src="town_strategy_core.js?v=building-opening-v405-20260914"></script>
@@ -5649,7 +5671,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=opening-home-v416-20260914"></script>
-<script src="scan_home.js?v=opening-home-v416-20260914"></script>
+<script src="scan_home.js?v=alderwing-followups-v417-20260914"></script>
 <script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -5693,14 +5715,20 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=home-countryside-v387-20260910"></script>
+<script src="audio_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="player_home_core.js?v=opening-home-v416-20260914"></script>
 <script src="player_home_scene.js?v=opening-home-v416-20260914"></script>
 <script src="player_home.js?v=opening-home-v416-20260914"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
+<script src="enemy_outposts_core.js?v=alderwing-followups-v417-20260914"></script>
+<script src="enemy_outposts.js?v=alderwing-followups-v417-20260914"></script>
+<link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
+<script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
+<script src="exploration.js?v=alderwing-followups-v417-20260914"></script>
+<link rel="stylesheet" href="exploration.css?v=alderwing-followups-v417-20260914">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_home_picker.js?v=connected-world-v386-20260910"></script>
+<script src="geographic_home_picker.js?v=alderwing-followups-v417-20260914"></script>
 <script src="geographic_world.js?v=home-farming-v409-20260914"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=opening-home-v416-20260914"></script>
@@ -6661,6 +6689,7 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   ? window.BurbzAudioCore.createAudioManager({ getEnabled: () => sfxEnabled })
   : oscillatorSfxFallback;
 window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
+window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
@@ -6871,6 +6900,7 @@ function warnOrBlockBirdWork(bird, activityType) {
   const readiness = birdWorkReadiness(bird, activityType, Date.now());
   const name = birdDisplayName ? birdDisplayName(bird) : ((bird && (bird.commonName || bird.species)) || 'This bird');
   if (!readiness.ok) {
+    if(typeof prerequisiteGuideGoal==='function'&&bird?.id&&prerequisiteGuideGoal(prerequisiteActionContext||{type:'bird-work',args:[bird.id,String(activityType||'work')]}))return false;
     if (readiness.sleepBlocked) showToast('💤 ' + name + ' is ' + (readiness.sleep && readiness.sleep.sleeping ? 'fast asleep in the tree' : 'too tired and needs a rest in the tree') + '.');
     else showToast('🍽️ ' + name + ' needs food before ' + String(activityType || 'work').replace(/_/g, ' ') + '.');
     return false;
@@ -6934,6 +6964,7 @@ const DEFAULT_STATE = {
   kitchenPreyLarderVersion: 1, // One-time prey top-up so existing saves get meat for their birds of prey too.
   stoneEconomyVersion: 1, // Quarries produce persistent Stone used by every settlement construction yard.
   lootPity: { rareMisses: 0 }, // pity counter — a rare+ drop is guaranteed before too long
+  prerequisiteGoal: null, // One saved recipe intent; actual prerequisites always come from current game state.
   forgeJobs: [], // commissions on the Fletcher's anvil: { id, gearId, startMs, endMs }
   quests: {},
   questsLastReset: null,
@@ -7050,6 +7081,7 @@ function loadState() {
   // reference is healed together so old saves never split or lose a place.
   gameState = migrateGamePlaceNames(gameState);
   if (!/^[a-zA-Z0-9_-]{16,96}$/.test(gameState.photoProfileId || '')) gameState.photoProfileId = crypto.randomUUID();
+  gameState.prerequisiteGoal = normalisePrerequisiteRecipeGoal(gameState.prerequisiteGoal);
   const academyBuilderVersionBeforeDefaults = Number(gameState.academyBuilderVersion) || 0;
   const needsAcademyBuilderGrant = academyBuilderVersionBeforeDefaults < 7;
   const needsKitchenStarterLarderGrant = (Number(gameState.kitchenStarterLarderVersion) || 0) < 1;
@@ -7198,6 +7230,7 @@ function loadState() {
 }
 
 function durableSaveState(opts = {}) {
+  if(typeof invalidateEmpireTerritoryLight==='function')invalidateEmpireTerritoryLight();
   let serialised;
   try {
     // Reject stale-tab overwrites, including a claim after another tab saves.
@@ -7235,7 +7268,7 @@ function restoreStateTree(target, source) {
 }
 // Restore in place so active quest/discovery/checkpoint references held by the
 // current browser event are rolled back with the gameState root.
-function restoreGameStateSnapshot(snapshot) { gameState = restoreStateTree(gameState, snapshot); return gameState; }
+function restoreGameStateSnapshot(snapshot) { gameState = restoreStateTree(gameState, snapshot); if(typeof invalidateEmpireTerritoryLight==='function')invalidateEmpireTerritoryLight(); return gameState; }
 function questClaimReceipt(key) {
   const receipts = gameState.questClaimReceipts;
   return receipts && receipts[key] || null;
@@ -7347,6 +7380,7 @@ function mergeCloudState(cloudState) {
   if (!merged.player || typeof merged.player !== 'object') merged.player = { ...DEFAULT_STATE.player };
   if (!Array.isArray(merged.flock)) merged.flock = [];
   if (globalThis.BurbzPlayerHomeCore) merged.playerHome = globalThis.BurbzPlayerHomeCore.normalize(merged.playerHome, true);
+  merged.exploration = BurbzExplorationCore.normalize(merged.exploration);
   merged.flock.forEach(b => { if (b && typeof b === 'object') applySpecialBirdCharacter(b); }); // cloud special characters too
   merged.flock.forEach(migrateBirdPersonality);
   const core = dietHungerCore();
@@ -13522,6 +13556,16 @@ Object.assign(BUILT_IN_BIRD_ART, GENERATED_ART_COMPLETION);
 // icon/sprite route so transparent birds can still move cleanly over the UI.
 const BUILT_IN_BIRD_CARD_ART = Object.freeze({
   ...BUILT_IN_BIRD_ART,
+  // Integrated, armless manga paintings in the current Treecreeper style.
+  // Card-only overrides keep the existing transparent moving sprites intact.
+  'Blue Tit': '/burbz/assets/bird-cards-v411/blue_tit-manga-20260914.webp',
+  'Eurasian Blue Tit': '/burbz/assets/bird-cards-v411/blue_tit-manga-20260914.webp',
+  'Great Tit': '/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp',
+  'Great Titmouse': '/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp',
+  'Long-tailed Tit': '/burbz/assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp',
+  'Long Tailed Tit': '/burbz/assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp',
+  'Goldcrest': '/burbz/assets/bird-cards-v411/goldcrest-manga-20260914.webp',
+  'Gold Crest': '/burbz/assets/bird-cards-v411/goldcrest-manga-20260914.webp',
   // Special-character painting: full Blackfeather Hex scene on cards, while
   // compact moving Rooks keep the existing natural armless cutout.
   'Rook': '/burbz/bird-art-cache/rook_witch_blackfeather_hex_burbz_manga_20260904.png'
@@ -14210,6 +14254,7 @@ function academyBuildBuilding(id, opts = {}) {
     renderAcademy();
     return true;
   }
+  if (id === 'magpie_market' && typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe() && !isAcademyBuildingBuilt(id) && ((Number(gameState.player.level)||1)<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return false; }
   const level = Number(gameState.player.level) || 1;
   const branchCost = Math.max(0, Number(cfg.branches) || 0);
   if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return false; }
@@ -14255,6 +14300,7 @@ function academyStartPlaceBuilding(id) {
   ensureAcademyBuildings();
   const level = Number(gameState.player.level) || 1;
   if (!isAcademyBuildingBuilt(id)) {
+    if (id === 'magpie_market' && typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe() && (level<cfg.unlockLevel || (gameState.player.coins||0)<cfg.cost || playerBranches()<cfg.branches)) { showPrerequisiteGuide(); return; }
     if (id === 'tavern' && !tutorialFlowState().barracksGiftGranted && !maybeGrantMerlinBarracksGift()) return;
     if (level < cfg.unlockLevel) { showToast(cfg.label + ' unlocks at trainer level ' + cfg.unlockLevel); return; }
     const progressLock = academyBuildingProgressLock(id);
@@ -14334,7 +14380,7 @@ function renderAcademyBuildPanel() {
     const btn = built
       ? '<button class="academy-build-btn secondary" onclick="academyStartPlaceBuilding(\'' + id + '\')">Move</button><button class="academy-build-btn secondary" onclick="academySelectRoom(\'' + b.room + '\')">Open</button>'
       : locked
-        ? '<button class="academy-build-btn" disabled>' + (progressLock ? progressLock.button : 'LV ' + b.unlockLevel) + '</button>'
+        ? '<button class="academy-build-btn" data-requires-help="true" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (progressLock ? progressLock.button : 'LV ' + b.unlockLevel) + ' · HELP</button>'
         : '<button class="academy-build-btn" onclick="academyStartPlaceBuilding(\'' + id + '\')">' + (placing ? 'Tap tree' : 'Build') + '</button>';
     return '<div class="academy-building-card' + cls + (placing ? ' active' : '') + (recommended ? ' recommended' : '') + (guided ? ' quest-guided' : '') + '" data-building="' + id + '">' +
       '<img class="academy-building-art" src="' + b.asset + '" alt="' + escapeHtml(b.label) + ' sprite">' +
@@ -15390,7 +15436,9 @@ function goalWithThe(label) { return /^the\s/i.test(label) ? label : 'The ' + la
 // kind: 'coins' | 'branches'. need: the full cost. goal: what the player was
 // trying to raise ("The Alehouse", "A birdhouse in Elmbrook").
 function showResourceQuestPrompt(kind, need, goal, customRoute) {
+  if(!prerequisiteRouting&&['coins','branches','stone'].includes(kind)&&Number.isSafeInteger(need)&&need>0){const target=prerequisiteActionContext||{type:'resource',args:[kind,need,String(goal||'Continue your goal').slice(0,120),currentScreen]};if(prerequisiteGuideGoal(target))return;}
   if (kind === 'coins') { showCoinShortage(need, goal); return; }
+  if(kind==='material'&&customRoute?.templateId){const t=getExpeditionTemplate(customRoute.templateId);if(t?.material&&prerequisiteGuideGoal(prerequisiteActionContext||{type:'gather',args:[t.material,Number(need),currentScreen]}))return;}
   const route = customRoute || RESOURCE_QUEST_ROUTES[kind];
   if (!route) return;
   const have = Number.isFinite(Number(route.have)) ? Number(route.have)
@@ -16778,7 +16826,8 @@ function renderFeedSheet() {
   const options = feedFoodOptions(entry);
   const status = entry.wild ? null : kitchenRosterHungerStatus(entry);
   const foodRows = options.map(option => feedFoodRowHTML(entry, option)).join('');
-  const empty = '<div class="inventory-empty">Nothing edible in the stores. Send a bird out on a food quest — every food in the game has one — or pick some up on a walk.</div>';
+  const empty = '<div class="inventory-empty">No food is in the stores. Review supplies for this bird’s diet below.</div>';
+  const suppliesHelp=!options.some(o=>o.accepted)&&!entry.wild?'<button type="button" class="academy-btn" onclick="prerequisiteGuideGoal({type: &quot;feed&quot;,args:[&quot;'+escapeHtml(entry.key)+'&quot;]})">Find food for '+escapeHtml(entry.name)+'</button>':'';
 
   const hungerLine = status
     ? hungerBarHTML(status, 'feed-sheet')
@@ -16790,7 +16839,7 @@ function renderFeedSheet() {
       '<div class="feed-sheet-main"><div class="feed-sheet-name">' + (entry.merlin ? '🧙 ' : '') + escapeHtml(entry.name) + '</div>' +
       '<div class="feed-sheet-species">' + escapeHtml(entry.speciesLine || '') + '</div>' + hungerLine + '</div></div>' +
     feedDietMenuHTML(entry) + chefNotice +
-    '<div class="feed-food-list">' + (foodRows || empty) + '</div>' + feedReceiptHTML() + '</div>';
+    '<div class="feed-food-list">' + (foodRows || empty) + suppliesHelp + '</div>' + feedReceiptHTML() + '</div>';
   el.classList.add('open');
 }
 
@@ -22217,6 +22266,7 @@ function handleLivePosition(pos, fly) {
   liveMapLastPosition = { lat, lon, accuracy, at:Number(pos.timestamp), source:'Your live position' };
   rememberHomeFix(lat, lon);
   anchorPlayerHomeAt(lat, lon);
+  processCampGPS({lat,lon,accuracy,at:Number(pos.timestamp)});
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy, at:Number(pos.timestamp) });
   // A cached GPS position may draw the map, but cannot award trail rewards.
   if (mapGatheringGate({lat,lon}).ready) {
@@ -23284,13 +23334,14 @@ function renderScanHome(snapshot, counts) {
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
   BurbzScanHome.render({...scanHomeDeskSnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  if(typeof refreshPrerequisiteGoalBanner==='function')refreshPrerequisiteGoalBanner();
 }
 function openScanHomeTarget(target) {
   if (!target) return;
   const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
   if(target.kind==='route'&&!routes.includes(target.screen))return;
   const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village','build-opportunity':'village','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
-  if (gate&&!featureGateOpen(gate)) { showToast(featureUnlockHint(gate));renderScanHome();return; }
+  if (gate&&!featureGateOpen(gate)) { if(!prerequisiteGuideGoal({type:'feature',args:[gate]}))showToast(featureUnlockHint(gate));return; }
   SFX.tap();
   if(target.kind==='player-equipment')openDeskPlayerEquipment(target.slot);
   else if(target.kind==='feed-bird'){const entry=kitchenRosterEntryByKey(target.id);if(entry){if(entry.bird&&birdHasActiveExpedition(entry.bird.id)){showToast('This bird is away on a quest.');return;}openFeedSheet(entry.key);}}
@@ -23482,7 +23533,7 @@ function guardLockedDockClick(event) {
   if (featureGateOpen(key)) return;
   event.preventDefault();
   event.stopImmediatePropagation();
-  showToast(featureUnlockHint(key));
+  if(!prerequisiteGuideGoal({type:'feature',args:[key]}))showToast(featureUnlockHint(key));
 }
 document.addEventListener('click', guardLockedDockClick, true);
 
@@ -23530,7 +23581,7 @@ function switchScreen(name) {
   if(name!=='scan')closeDeskPlayerEquipment();
   closeResourceQuestPrompt();
   // Every Stores shortcut uses the same existing progression gate as the dock.
-  if (name === 'inventory' && !featureGateOpen('inventory')) { showToast(featureUnlockHint('inventory')); return false; }
+  if (name === 'inventory' && !featureGateOpen('inventory')) { if(!prerequisiteGuideGoal({type:'feature',args:['inventory']}))showToast(featureUnlockHint('inventory')); return false; }
   if (name === currentScreen) return;
   if (currentScreen === 'battle') {
     if (battleState?.aimFlight) return;
@@ -23583,6 +23634,7 @@ function switchScreen(name) {
   if (name === 'profile') renderProfile();
   queueActionBadgeUpdate();
 
+  if (typeof refreshPrerequisiteGoalBanner === 'function') refreshPrerequisiteGoalBanner();
   // Gradual tutorial: Merlin teaches each system the first time its screen opens.
   if (typeof maybeStartMerlinChapterForScreen === 'function') maybeStartMerlinChapterForScreen(name);
   if (typeof updateMerlinFlowPointer === 'function') updateMerlinFlowPointer();
@@ -25370,6 +25422,25 @@ function wrappedLongitudeNear(lon, referenceLon) {
    the true medieval map shows in daylight beneath. */
 const EMPIRE_DARKNESS_FILL = '#39434f'; // multiplied over parchment and sea, this reads as a moonlit Earth
 
+// This one derived snapshot supplies both the atlas's permanent daylight and
+// geographic combat boundaries. Save/load/rollback never persist a second map.
+var empireTerritoryLightCache;
+function invalidateEmpireTerritoryLight() { if(empireTerritoryLightCache)empireTerritoryLightCache.dirty=true; }
+function empireTerritoryLight() {
+  if(empireTerritoryLightCache?.identity===gameState&&!empireTerritoryLightCache.dirty)return empireTerritoryLightCache.light;
+  const M=window.BurbzEmpireMapCore,R=realmCore(),circles=[];
+  const tiers=R?.settlementTierInfo?empireSettlementsInfo().tierBySeed:null;
+  for(const v of empireMappableVillages())circles.push({id:'village:'+v.seed,kind:'village',lat:v.lat,lon:v.lon,radius:empireVillageTerritoryRadiusM(v.seed,tiers)});
+  if(R?.regionCoverageRadiusKm)for(const r of empireRegionsInfo().regions)circles.push({id:'region:'+r.id,kind:'region',...r.centroid,radius:Math.max(EMPIRE_TERRITORY_RADIUS_M*2,R.regionCoverageRadiusKm(r,2.2)*1000)});
+  for(const c of BurbzEnemyOutpostsCore.receipts(gameState.enemyOutposts))circles.push({id:c.id,kind:'outpost',lat:c.lat,lon:c.lon,radius:c.radius});
+  // The camp owner supplies persisted circles; tent placement/rewards stay in
+  // its transaction. Legacy saved camps retain their existing 80 m refuge.
+  for(const c of gameState.exploration?.camps||[])circles.push({id:c.id,kind:'camp',lat:c.lat,lon:c.lon,radius:c.lightRadiusM??80});
+  const signature=JSON.stringify(circles);
+  const light=empireTerritoryLightCache?.identity===gameState&&empireTerritoryLightCache.signature===signature?empireTerritoryLightCache.light:M.createTerritoryLight(circles);
+  empireTerritoryLightCache={identity:gameState,signature,light,dirty:false};return light;
+}
+
 function updateEmpireFogMask() {
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const canvas = $('empireFogCanvas');
@@ -25391,43 +25462,14 @@ function updateEmpireFogMask() {
   const core = window.BurbzEmpireMapCore;
   const referenceLon = empireMap.getCenter().lng;
   const holes = [];
-  empireMappableVillages().forEach(village => {
-    try {
-      const villageLon = Number(village.lon);
-      const wrappedLon = wrappedLongitudeNear(villageLon, referenceLon);
-      const centre = empireMap.project([wrappedLon, Number(village.lat)]);
-      // Merged towns and cities lift wider windows of daylight per district,
-      // so their neighbouring holes fuse into one continuous glow.
-      const east = core.destination(Number(village.lat), villageLon, Math.PI / 2, empireVillageTerritoryRadiusM(village.seed));
-      const wrappedEast = [wrappedLon + (Number(east[0]) - villageLon), Number(east[1])];
-      const edge = empireMap.project(wrappedEast);
-      const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 4, 1400);
-      if (centre.x + radius < -80 || centre.x - radius > width + 80 || centre.y + radius < -80 || centre.y - radius > height + 80) return;
-      holes.push({ x: centre.x, y: centre.y, r: radius });
-    } catch (e) {}
-  });
-  // Founding a county unlocks that whole region of the map: one great window
-  // of daylight covers the county's entire lands — centroid out past its
-  // farthest sanctuary — instead of pinpricks around each town. Its rim is
-  // struck in the realm's gold, a founded border on the Crusader map.
   const regionHoles = [];
-  const fogRealmCore = realmCore();
-  if (fogRealmCore && fogRealmCore.regionCoverageRadiusKm) {
-    empireRegionsInfo().regions.forEach(region => {
-      try {
-        const centroid = region.centroid;
-        const radiusM = Math.max(EMPIRE_TERRITORY_RADIUS_M * 2, fogRealmCore.regionCoverageRadiusKm(region, 2.2) * 1000);
-        const wrappedLon = wrappedLongitudeNear(centroid.lon, referenceLon);
-        const centre = empireMap.project([wrappedLon, Number(centroid.lat)]);
-        const east = core.destination(Number(centroid.lat), Number(centroid.lon), Math.PI / 2, radiusM);
-        const wrappedEast = [wrappedLon + (Number(east[0]) - Number(centroid.lon)), Number(east[1])];
-        const edge = empireMap.project(wrappedEast);
-        const radius = clamp(Math.hypot(edge.x - centre.x, edge.y - centre.y), 8, 6000);
-        if (centre.x + radius < -120 || centre.x - radius > width + 120 || centre.y + radius < -120 || centre.y - radius > height + 120) return;
-        regionHoles.push({ x: centre.x, y: centre.y, r: radius });
-      } catch (e) {}
-    });
-  }
+  for(const circle of empireTerritoryLight().circles){try{
+    const lon=wrappedLongitudeNear(circle.lon,referenceLon),centre=empireMap.project([lon,circle.lat]);
+    const east=core.destination(circle.lat,circle.lon,Math.PI/2,circle.radius),edge=empireMap.project([lon+east[0]-circle.lon,east[1]]);
+    const regional=circle.kind==='region',radius=clamp(Math.hypot(edge.x-centre.x,edge.y-centre.y),regional?8:circle.kind==='village'?4:2,regional?6000:1400);
+    if(centre.x+radius < -120||centre.x-radius > width+120||centre.y+radius < -120||centre.y-radius > height+120)continue;
+    (regional?regionHoles:holes).push({x:centre.x,y:centre.y,r:radius});
+  }catch(_){}}
   if (regionHoles.length) {
     ctx.save();
     ctx.lineWidth = 2.6;
@@ -25448,6 +25490,7 @@ function updateEmpireFogMask() {
   holes.forEach(hole => { ctx.beginPath(); ctx.arc(hole.x, hole.y, hole.r, 0, Math.PI * 2); ctx.stroke(); });
   ctx.restore();
   ctx.globalCompositeOperation = 'destination-out';
+  BurbzExploration.paint(ctx,explorationState(),p=>empireMap.project([wrappedLongitudeNear(p.lon,referenceLon),p.lat]),width,height);
   regionHoles.concat(holes).forEach(hole => {
     const reveal = ctx.createRadialGradient(hole.x, hole.y, 0, hole.x, hole.y, hole.r);
     reveal.addColorStop(0, 'rgba(0,0,0,1)');
@@ -25706,6 +25749,7 @@ function openEmpireVillage(seed) {
 }
 
 function refreshEmpireMap(options = {}) {
+  refreshCampMarkers(empireMap);
   const settlementsOnMap = empireSettlementsInfo();
   if (!empireMap || !empireMapReady || !window.BurbzEmpireMapCore) return;
   const villages = empireMappableVillages();
@@ -26451,10 +26495,10 @@ function empireRegionHoldings(region) {
 // How far a liberated settlement's daylight reaches on the royal atlas:
 // districts of a merged town or city glow wider, so neighbouring pools of
 // light fuse into one — three villages literally become one patch of day.
-function empireVillageTerritoryRadiusM(seed) {
+function empireVillageTerritoryRadiusM(seed, tierBySeed) {
   const core = realmCore();
   if (!core || !core.settlementTierInfo) return EMPIRE_TERRITORY_RADIUS_M;
-  const settle = empireSettlementOfSeed(seed);
+  const settle = tierBySeed?tierBySeed[String(Number(seed)>>>0)]:empireSettlementOfSeed(seed);
   return core.settlementTierInfo(settle ? settle.tier : 'village').territoryRadiusM || EMPIRE_TERRITORY_RADIUS_M;
 }
 // Shared guilds: a merged town's builders raise structures 15% faster, a
@@ -30135,11 +30179,43 @@ function walkingCharacterState() {
   return {name:p.name,level:p.level,coins:p.coins,branches:p.branches,stone:p.stone,equipment:playerEquipmentAdapter(),combat:walkingCombatAdapter()};
 }
 // Combat and equipped potion consumption commit with the existing ownership ledger.
+// Enemy outposts share the canonical save, purse, player XP and atlas darkness.
+function enemyOutpostState(){return gameState.enemyOutposts||(gameState.enemyOutposts=BurbzEnemyOutpostsCore.empty());}
+function enemyOutpostDark(point){
+ return BurbzGeographicWorldCore.validCoordinate(point)&&!empireTerritoryLight().contains(point);
+}
+
+let enemyOutpostSessionAdapter=null;
+function enemyOutpostAdapter(identity){
+ if(enemyOutpostSessionAdapter?.identity===identity&&!enemyOutpostSessionAdapter.closed())return enemyOutpostSessionAdapter.api;
+ const O=BurbzEnemyOutpostsCore;if(gameState.enemyOutposts)gameState.enemyOutposts=O.normalize(gameState.enemyOutposts);
+ let base=gameState.enemyOutposts?.clock||0,started=performance.now(),closed=false;
+ const now=()=>base+Math.max(0,performance.now()-started),assertCurrent=()=>{if(identity!==gameState)throw Error('Your save changed. Reopen Alderwing.');};
+ // HEAD bypasses the offline worker's GET cache. A cached Date or laptop wall
+ // clock never advances earnings. Offline restarts earn only time actually played.
+ const abort=new AbortController(),timeout=setTimeout(()=>abort.abort(),5000);
+ fetch('/burbz/',{method:'HEAD',cache:'no-store',signal:abort.signal}).then(response=>{
+  const trusted=Date.parse(response.headers.get('Date'));if(!response.ok||!Number.isFinite(trusted)||trusted<1700000000000||closed||identity!==gameState)return;
+  const snapshot=snapshotGameState();try{const state=enemyOutpostState(),old=now();if(base<1700000000000){const delta=trusted-old;for(const c of Object.values(state.camps)){c.at+=delta;if(c.liberated)c.liberatedAt+=delta;}state.clock=Math.max(0,state.clock+delta);}O.accrue(state,Math.max(state.clock,trusted));durableSaveState({throwOnFailure:true});base=state.clock;started=performance.now();}catch(e){restoreGameStateSnapshot(snapshot);}
+ }).catch(()=>{}).finally(()=>clearTimeout(timeout));
+ function commit(fn){assertCurrent();const snapshot=snapshotGameState();try{const result=fn(enemyOutpostState());durableSaveState({throwOnFailure:true});return result;}catch(e){restoreGameStateSnapshot(snapshot);throw Error('The outpost could not save. Nothing was spent or claimed. Reload if another tab changed this game.');}}
+ const api={read:()=>{assertCurrent();return enemyOutpostState();},now,dark:enemyOutpostDark,
+  discover:c=>commit(state=>{O.accrue(state,now());return O.discover(state,c,now());}),
+  collect:id=>{const coins=commit(state=>{const n=O.collect(state,id,now());if(!Number.isSafeInteger(gameState.player.coins)||gameState.player.coins<0||!Number.isSafeInteger(gameState.player.coins+n))throw Error('Invalid purse');gameState.player.coins+=n;return n;});try{updateHeader();updateEmpireFogMask();}catch(_){}return coins;},
+  dispose(){closed=true;abort.abort();clearTimeout(timeout);}};
+ enemyOutpostSessionAdapter={identity,closed:()=>closed,api};return api;
+}
+
 function walkingCombatAdapter() {
-  const identity=gameState;
+  const identity=gameState,outposts=enemyOutpostAdapter(identity);
   return {
     profile:{name:gameState.player.name,level:gameState.player.level},
     settlementsInBounds:bounds=>identity===gameState?geographicSettlementRecords(bounds):Promise.reject(Error('Your save changed.')),
+    outposts,
+    territoryLight:{
+      contains:point=>identity!==gameState||empireTerritoryLight().contains(point),
+      firstHit:(a,b)=>identity!==gameState?0:empireTerritoryLight().firstHit(a,b)
+    },
     stored:structuredClone(gameState.wildernessCombat || null),
     kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),ammo:{reed_arrow:gameState.inventory.items?.reed_arrow??0}};},
     save:(record,extra)=>{
@@ -30156,8 +30232,11 @@ function walkingCombatAdapter() {
           if(weapon?.id!==extra.weapon||weapon?.attack?.ammo!==id||!Number.isSafeInteger(bag?.[id])||bag[id]<1)throw Error('No arrow available for this bow.');
           bag[id]--;
         }
+        const reward=BurbzEnemyOutpostsCore.damage(enemyOutpostState(),extra?.outpostHits,outposts.now());
+        if(reward.xp)applyPlayerXpState(reward.xp);
         gameState.wildernessCombat=structuredClone(record);
-        durableSaveState({throwOnFailure:true});return true;
+        durableSaveState({throwOnFailure:true});
+        if(reward.xp)setTimeout(()=>{showToast("Outpost liberated · +"+reward.xp+" XP · darkness cleared");try{updateHeader();updateEmpireFogMask();}catch(_){}},0);return true;
       } catch(error){restoreGameStateSnapshot(snapshot);throw error;}
     }
   };
@@ -30325,7 +30404,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=opening-home-v416-20260914';
+        script.src = 'village_walk.js?v=alderwing-followups-v417-20260914';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -36976,6 +37055,7 @@ function villageShopAmbientHTML(shopKey) {
   return motes + steam + glow;
 }
 
+let prerequisiteShopSeed=null;
 function villageOpenShop(shopKey, settlementSeed) {
   const shop = VILLAGE_SHOPS[shopKey];
   const overlay = $('villageShopOverlay');
@@ -36999,6 +37079,7 @@ function villageOpenShop(shopKey, settlementSeed) {
       '<button class="shop-buy-btn" onclick="villageBuy(\'' + shopKey + '\',\'' + item.id + '\')">' + buyLabel + '</button>' +
       '</div>';
   }).join('');
+  prerequisiteShopSeed=shopVillage?.seed??null;
   const interior = VILLAGE_SHOP_INTERIORS[shopKey] || VILLAGE_SHOP_INTERIORS.general;
   overlay.innerHTML = '<section class="shop-panel" role="dialog" aria-modal="true" aria-labelledby="villageShopTitle">' +
     '<div class="village-shop-interior shop-scene-' + shopKey + '">' +
@@ -38302,6 +38383,7 @@ function magpieMarketTradeReady() {
 }
 function requireMagpieMarketTrade() {
   if (magpieMarketTradeReady()) return true;
+  if(typeof prerequisiteGuideGoal==='function'&&prerequisiteGuideGoal(prerequisiteActionContext||{type:'academy',args:['magpie_market']}))return false;
   focusMagpieMarketBuild();
   return false;
 }
@@ -38391,7 +38473,7 @@ function magpieMarketBuy(id, qty, kind = 'material') {
   const quote = magpieMarketBuyQuote(id, qty, kind);
   if (!quote.each) { showToast('The magpies do not deal in that.'); return false; }
   const label = storesSellLabel(kind,id);
-  if (quote.qty < qty) { showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
+  if (quote.qty < qty) { if (typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe()) { showPrerequisiteGuide(); return false; } showResourceQuestPrompt('coins', quote.each * qty, qty + ' × ' + label); return false; }
   const owned = magpieMarketOwned(id,kind);
   if (!Number.isSafeInteger(owned + qty) || !Number.isSafeInteger(quote.total)) return false;
   const committed = storesCommitTrade(effects => {
@@ -38797,6 +38879,444 @@ function forgeGearStatLine(item) {
   return parts.join(' · ');
 }
 
+// Audited prerequisite adapter: Forge recipes, their upgrades, and Magpie Market
+// construction/purchases. Persist only intent in this game's canonical save,
+// never a route, quote, inventory value or cached prerequisite result.
+function normalisePrerequisiteRecipeGoal(value) {
+  return window.BurbzPrerequisiteGuidance?.normaliseTrackedRecipe(value, gameState?.photoProfileId, id=>!!lootCore()?.recipeFor(id)) || window.BurbzPrerequisiteGuidance?.normaliseTrackedGoal(value,gameState?.photoProfileId,typeof prerequisiteKnownGoal==='function'?prerequisiteKnownGoal:()=>false) || null;
+}
+function prerequisiteTrackedRecipe() {
+  return normalisePrerequisiteRecipeGoal(gameState?.prerequisiteGoal)?.recipeId || null;
+}
+function setPrerequisiteRecipeGoal(id) {
+  const next=id===null ? null : normalisePrerequisiteRecipeGoal({version:1,owner:gameState?.photoProfileId,recipeId:id});
+  if(id!==null&&!next)return false;
+  const had=Object.prototype.hasOwnProperty.call(gameState,'prerequisiteGoal'),previous=gameState.prerequisiteGoal;
+  if(JSON.stringify(next)===JSON.stringify(previous))return true;
+  try {
+    gameState.prerequisiteGoal=next;
+    durableSaveState({throwOnFailure:true});
+    return true;
+  } catch(error) {
+    if(had)gameState.prerequisiteGoal=previous;else delete gameState.prerequisiteGoal;
+    showToast('Could not save this recipe goal. Your previous goal is unchanged.');
+    return false;
+  }
+}
+// Shared game prerequisite goals. Only bounded intent is saved; prices, gates,
+// readiness, ownership and possible routes are reconstructed from current state.
+const PREREQUISITE_GOAL_TYPES=['academy','room','feature','recruit','purchase','shop','forge-upgrade','village-build','supply-cart','town-hall','town-network','wholesale','trade-route','equipment','training','expedition','bird-work','home','camp','role','gather','resource','feed','move-bird','claim-village','trail-drink','town-policy','chef'];
+let prerequisiteActionContext=null,prerequisiteRouting=false;
+function prerequisiteKnownGoal(goal) {
+  if(!goal||!PREREQUISITE_GOAL_TYPES.includes(goal.type)||!Array.isArray(goal.args)||goal.args.length>4)return false;
+  if(!goal.args.every(a=>typeof a==='string'?a.length>0&&a.length<=120&&!/[<>\u0000-\u001f]/.test(a):Number.isSafeInteger(a)&&Math.abs(a)<=10000000000))return false;
+  const [a,b,c,d]=goal.args,knownScreen=x=>['scan','map','birdex','academy','academy-room','quests','forge','inventory','village','town','region','county','battle','training','hospital','kitchen','diary','leaderboards'].includes(x),id=x=>typeof x==='string',positive=x=>Number.isSafeInteger(x)&&x>0;
+  if(['academy','room'].includes(goal.type))return goal.args.length===1&&id(a);
+  if(goal.type==='feature')return goal.args.length===1&&knownScreen(a);
+  if(['recruit','town-hall','trade-route','feed'].includes(goal.type))return goal.args.length===1&&id(a);
+  if(goal.type==='purchase')return id(a)&&positive(b)&&b<=999&&['material','food'].includes(c)&&(d===undefined||positive(d));
+  if(goal.type==='shop')return id(a)&&id(b)&&(c===undefined||Number.isSafeInteger(c));
+  if(goal.type==='move-bird')return goal.args.length===2&&id(a)&&id(b);
+  if(goal.type==='claim-village')return goal.args.length===1&&Number.isSafeInteger(a)&&a>=0&&a<=4294967295;
+  if(goal.type==='trail-drink'||goal.type==='town-policy')return goal.args.length===2&&id(a)&&id(b);
+  if(goal.type==='chef')return goal.args.length===1&&a==='feed-all';
+  if(goal.type==='forge-upgrade')return goal.args.length===1&&positive(a)&&a<=5;
+  if(goal.type==='village-build')return Number.isSafeInteger(a)&&a>=0&&a<=4294967295&&id(b)&&positive(c);
+  if(goal.type==='supply-cart')return goal.args.length===1&&Number.isSafeInteger(a)&&a>=0&&a<=4294967295;
+  if(goal.type==='wholesale')return id(a)&&['town','region'].includes(b);
+  if(goal.type==='equipment')return id(a)&&['weapon','armour','trinket','spell','potion'].includes(b)&&id(c);
+  if(goal.type==='role')return ['academy','village','region'].includes(a)&&id(b)&&id(c);
+  if(goal.type==='camp')return ['fire','upgrade'].includes(a)&&id(b);
+  if(goal.type==='home')return ['build-home','upgrade','build-room','craft','place','farm-plot','farm-buy','farm-plant'].includes(a)&&id(b)&&(c===undefined||id(c))&&(d===undefined||positive(d));
+  if(goal.type==='resource')return ['coins','branches','stone'].includes(a)&&positive(b)&&id(c)&&knownScreen(d);
+  if(goal.type==='gather')return id(a)&&positive(b)&&knownScreen(c);
+  return id(a)&&id(b);
+}
+function prerequisiteTrackedGoal() {
+  const value=gameState?.prerequisiteGoal;
+  const recipe=window.BurbzPrerequisiteGuidance?.normaliseTrackedRecipe(value,gameState?.photoProfileId,id=>!!lootCore().recipeFor(id));
+  if(recipe)return {type:'recipe',recipeId:recipe.recipeId};
+  return window.BurbzPrerequisiteGuidance?.normaliseTrackedGoal(value,gameState?.photoProfileId,prerequisiteKnownGoal)?.goal||null;
+}
+function setPrerequisiteGoal(goal) {
+  if(goal?.type==='recipe')return setPrerequisiteRecipeGoal(goal.recipeId);
+  const next=goal===null?null:window.BurbzPrerequisiteGuidance?.normaliseTrackedGoal({version:2,owner:gameState?.photoProfileId,goal},gameState?.photoProfileId,prerequisiteKnownGoal);
+  if(goal!==null&&!next)return false;
+  const had=Object.prototype.hasOwnProperty.call(gameState,'prerequisiteGoal'),old=gameState.prerequisiteGoal;
+  if(JSON.stringify(old)===JSON.stringify(next))return true;
+  try{gameState.prerequisiteGoal=next;durableSaveState({throwOnFailure:true});return true;}
+  catch(error){if(had)gameState.prerequisiteGoal=old;else delete gameState.prerequisiteGoal;showToast('Could not save this goal. Your previous goal and supplies are unchanged.');return false;}
+}
+function prerequisiteGoalKey(goal){return JSON.stringify(goal);}
+function prerequisiteBird(id){return id===MERLIN_GUIDE.id?{...MERLIN_GUIDE,care:JSON.parse(JSON.stringify(gameState.merlinCare||{}))}:academyBirdById(id);}
+function prerequisiteGeneralPlan(goal) {
+  if(!prerequisiteKnownGoal(goal))return null;
+  const nodes={},shortages=[],visiting=new Set();let serial=0;
+  const add=(id,node)=>(nodes[id]={label:id,...node},id);
+  const review=(label,action,reason)=>add('review:'+(serial++),{label,available:!!action,action,reason});
+  const ownedSeed=seed=>gameState.empire?.villages?.[String(Number(seed)>>>0)];
+  const resource=(kind,need,label)=>{
+    const id='resource:'+kind+':'+need,have=kind==='branches'?playerBranches():kind==='stone'?playerStone():Number(gameState.player.coins)||0;
+    if(nodes[id])return id;const short=Math.max(0,Number(need)-have);
+    if(short)shortages.push({key:id,label:label||kind,have,need,short});
+    return add(id,{label:'Need '+short+' more '+(label||kind),satisfied:!short,requires:short?[source(kind)]:[]});
+  };
+  const level=(need)=>{const have=Number(gameState.player.level)||1,id='trainer:'+need;if(have<need)shortages.push({key:id,label:'Trainer level',have,need,short:need-have});return add(id,{label:'Reach trainer level '+need,satisfied:have>=need,requires:have<need?[source('xp')]:[]});};
+  const source=kind=>{
+    const id='source:'+kind;if(nodes[id])return id;
+    add(id,{label:'Find '+kind,reason:'A source has not loaded.'});
+    if(['coins','branches','xp'].includes(kind)){const s=prerequisiteEarningSource(kind);return add(id,{label:s.label,action:s.action,available:s.available===true,reason:s.reason});}
+    const t=(window.BurbzAcademyCore?.getQuestTemplates()||[]).find(t=>kind==='stone'?Number(t.stone?.[1]||t.stone)>0:kind.startsWith('food:')?t.items?.includes(kind.slice(5)):t.material===kind);
+    if(!t)return add(id,{label:'Find '+kind,reason:'No available gathering source is known for this material.'});
+    const ready=(gameState.birdExpeditions||[]).find(q=>q.templateId===t.id&&!['claimed','cancelled','failed'].includes(q.status)&&!gameState.questClaimReceipts?.['expedition:'+q.id]);
+    if(ready)return add(id,{label:'Review '+(ready.birdName||'your bird')+'’s '+t.label,action:{kind:'quest-return',id:ready.id},available:featureGateOpen('quests')});
+    const req=[feature('quests')];if(!t.starter)req.push(build({type:'academy',args:['quest_roost']}));
+    const birds=expeditionDispatchBirds(gameState.flock||[]),bird=birds.find(b=>(b.level||1)>=(t.minLevel||1)&&!birdAssignedPost(b.id)&&!birdHasActiveExpedition(b.id)&&!birdHasActiveTraining(b.id)&&birdWorkReadiness(JSON.parse(JSON.stringify(b.id===MERLIN_GUIDE.id?{...b,care:gameState.merlinCare}:b)),'expedition').ok);
+    if(!bird)req.push(review('Review a bird’s level, work and care for '+t.label,{kind:'care-review'}));
+    return add(id,{label:'Choose a bird for '+t.label,requires:req,available:!!bird,action:{kind:'errand',id:t.id},reason:'No bird is currently ready for this errand; review its real care, training or current job.'});
+  };
+  const feature=screen=>{
+    const id='feature:'+screen;if(nodes[id])return id;if(featureGateOpen(screen))return add(id,{satisfied:true});
+    const q=activePlayerQuest(),objective=openingObjective();
+    return add(id,{label:featureUnlockHint(screen),available:!!q||!!objective,action:q?{kind:'player-quest-go',id:q.id}:{kind:'opening',screen:objective?.screen||'scan'}});
+  };
+  const material=(id,need,reserve=0)=>{
+    const have=Number(gameState.inventory?.items?.[id])||0,m=lootCore().materialById(id),key='material:'+id+':'+need;
+    if(have>=need)return add(key,{satisfied:true});const short=need-have;
+    shortages.push({key,id,label:m?.label||id,have,need,short});
+    if(m&&!m.craftOnly&&magpieMarketStock().some(x=>x.id===id)){
+      const quote=magpieMarketBuyQuote(id,1);return add(key,{label:'Buy '+short+' × '+m.label,requires:[build({type:'academy',args:['magpie_market']}),resource('coins',reserve+quote.each*short,'coins for supplies and this goal')],available:quote.each>0,action:{kind:'market',itemId:id,quantity:short}});
+    }
+    if(lootCore().recipeFor(id))return recipeNode(id);
+    return add(key,{label:'Find '+(m?.label||id),requires:[source(id)]});
+  };
+  function recipeNode(id){
+    const facts=prerequisiteRecipeFacts(id);if(!facts)return review('This recipe is no longer available',null,'Unknown recipe.');
+    const graph=BurbzPrerequisiteGuidance.forgePlan(facts),prefix='craft:'+id+':';
+    for(const [key,node]of Object.entries(graph.nodes))nodes[prefix+key]={...node,requires:(node.requires||[]).map(x=>prefix+x),action:node.action?.kind==='recipe'?{kind:'craft-review',recipeId:id}:node.action};
+    shortages.push(...graph.shortages.map(s=>({...s,key:prefix+s.key})));return prefix+graph.goal;
+  }
+  const cost=c=>{const req=[],materials=Object.entries(c?.materials||{}),budget=(Number(c?.coins)||0)+materials.reduce((sum,[id,n])=>sum+Math.max(0,n-(Number(gameState.inventory?.items?.[id])||0))*magpieMarketBuyQuote(id,1).each,0);for(const kind of ['coins','branches','stone'])if(Number(c?.[kind])>0)req.push(resource(kind,Number(c[kind])));for(const [id,n]of materials)req.push(material(id,n,budget-Math.max(0,n-(Number(gameState.inventory?.items?.[id])||0))*magpieMarketBuyQuote(id,1).each));return req;};
+  const birdReq=(id,activity)=>{
+    const bird=prerequisiteBird(id);if(!bird)return [review('Choose an owned companion',{kind:'screen',screen:'birdex'})];
+    const job=(gameState.birdExpeditions||[]).find(q=>q.birdId===id&&!['claimed','cancelled','failed'].includes(q.status)&&!gameState.questClaimReceipts?.['expedition:'+q.id]);
+    if(job)return [review('Review '+birdDisplayName(bird)+'’s active errand',{kind:'quest-return',id:job.id})];
+    if(birdHasActiveTraining(id))return [review('Review '+birdDisplayName(bird)+'’s training',{kind:'training-review',birdId:id})];
+    const post=birdAssignedPost(id);if(post&&activity!=='role')return [review('Review '+birdDisplayName(bird)+'’s '+post.role.title+' post',{kind:'role-review',scope:post.scope,key:String(post.key)})];
+    if(activity==='role'||activity==='move')return bird.care?.sleeping&&activity==='role'?[review('Review '+birdDisplayName(bird)+'’s rest',{kind:'bird-care',birdId:id})]:[];
+    const ready=birdWorkReadiness(JSON.parse(JSON.stringify(bird.id===MERLIN_GUIDE.id?{...bird,care:gameState.merlinCare}:bird)),activity);
+    return ready.ok?[]:[review('Review '+birdDisplayName(bird)+'’s '+(ready.sleepBlocked?'rest':'food'),{kind:'bird-care',birdId:id})];
+  };
+  function build(g){
+    const key='goal:'+prerequisiteGoalKey(g);if(nodes[key])return key;
+    if(visiting.has(key))return add(key,{reason:'This requirement is circular; review the goal instead.'});visiting.add(key);add(key,{reason:'This goal is no longer available.'});
+    const [a,b,c]=g.args||[];let label='',requires=[],done=false,valid=true;
+    if(g.type==='academy'||g.type==='room'){
+      const id=g.type==='room'?(ACADEMY_ROOMS[a]?.buildingId||a):a,cfg=ACADEMY_BUILDINGS[id];if(!cfg)valid=false;
+      else{label=(g.type==='room'?'Visit ':'Build ')+cfg.label;done=g.type==='academy'&&isAcademyBuildingBuilt(id);requires=[feature('academy')];if(!isAcademyBuildingBuilt(id)){requires.push(level(cfg.unlockLevel),...cost({coins:cfg.cost,branches:cfg.branches}));if(id==='kitchen'&&!isAcademyBuildingBuilt('tavern'))requires.push(build({type:'academy',args:['tavern']}));const lock=academyBuildingProgressLock(id);if(lock)requires.push(review(lock.message,id==='manager_office'?{kind:'screen',screen:'village'}:{kind:'opening',screen:openingObjective().screen}));}}
+    }else if(g.type==='feature'){label='Open '+String(a);requires=[feature(a)];}
+    else if(g.type==='recruit'){
+      const record=gameState.discoveredSpecies?.[a],candidate=record?{bird:createBirdFromDiscovery(record)}:barracksCandidateForKey(a);if(!candidate)valid=false;else{label='Recruit '+(candidate.bird.commonName||candidate.bird.species);done=!!companionForSpecies(candidate.bird.species||candidate.bird.commonName);requires=[build({type:'academy',args:['tavern']}),resource('coins',recruitCostForBird(candidate.bird))];}
+    }else if(g.type==='purchase'){
+      const quote=magpieMarketBuyQuote(a,b,c||'material'),item=c==='food'?kitchenIngredientById(a):lootCore().materialById(a);if(!item||!quote.each)valid=false;else{const remaining=g.args[3]===undefined?b:Math.max(0,g.args[3]-magpieMarketOwned(a,c||'material'));done=remaining===0;label='Buy '+remaining+' × '+item.label;requires=[build({type:'academy',args:['magpie_market']}),resource('coins',quote.each*remaining)];}
+    }else if(g.type==='shop'){
+      const item=VILLAGE_SHOPS[a]?.stock.find(i=>i.id===b);if(!item)valid=false;else{label='Buy '+item.label;requires=[build({type:'academy',args:['magpie_market']}),resource('coins',item.price)];}
+    }else if(g.type==='forge-upgrade'){
+      const n=burbzForgeLevel(),upgrade=lootCore().forgeUpgradeCost(n);label='Upgrade Forge to level '+a;done=n>=Number(a);if(!done&&!upgrade)valid=false;requires=[feature('forge'),...cost(upgrade)];
+    }else if(g.type==='equipment'){
+      const item=lootCore().gearById(c),owner=a==='@player'||!!prerequisiteBird(a);if(!item||item.slot!==b||!owner)valid=false;else{label='Equip '+item.label;done=gameState.inventory.equipment?.[a]?.[b]===c;requires=[]; // Owned equipment keeps its existing direct equip authority, independent of the Stores screen.
+if(!done&&!(Number(gameState.inventory.gear?.[c])>0)){const worn=Object.entries(gameState.inventory.equipment||{}).find(([id,slots])=>id!==a&&slots?.[b]===c);const job=(gameState.forgeJobs||[]).find(j=>j.gearId===c);requires.push(worn?review('Review the equipped '+item.label+' — unequip it before sharing',{kind:'owner-equipment',owner:worn[0],slot:b}):job?review('Review the '+item.label+' commission',{kind:'forge-queue'}):recipeNode(c));}}
+    }else if(g.type==='training'||g.type==='expedition'){
+      const t=g.type==='training'?trainingTemplateById(b):getExpeditionTemplate(b);if(!t||!prerequisiteBird(a)||g.type==='training'&&!academyBirdById(a))valid=false;else{label=(g.type==='training'?'Train ':'Send ')+birdDisplayName(prerequisiteBird(a))+' · '+t.label;requires=[feature(g.type==='training'?'academy':'quests'),...birdReq(a,g.type==='training'?'training':'expedition')];if(g.type==='training')requires.push(build({type:'academy',args:['training']}),build({type:'academy',args:[t.room||'training']}));else if(!t.starter)requires.push(build({type:'academy',args:['quest_roost']}));if((prerequisiteBird(a).level||1)<(t.minLevel||1))requires.push(review('Train this bird to level '+t.minLevel,{kind:'training-review',birdId:a}));}
+    }else if(g.type==='move-bird'){const bird=prerequisiteBird(a);if(!bird||!ACADEMY_ROOMS[b])valid=false;else{label='Move '+birdDisplayName(bird)+' to '+ACADEMY_ROOMS[b].label;done=bird.academy?.room===b;requires=[build({type:'room',args:[b]}),...birdReq(a,'move')];if(isAcademyRoomBuilt(b))requires=birdReq(a,'move');}}
+    else if(g.type==='feed'){const facts=prerequisiteFoodFacts(a);if(!facts)valid=false;else{label='Feed '+facts.entry.name;done=facts.fed;if(!facts.stocked){const best=facts.sources[0];if(best){requires.push(build({type:'purchase',args:[best.id,1,'food',1]}));const t=(window.BurbzAcademyCore?.getQuestTemplates()||[]).find(t=>t.items?.includes(best.id));if(t)requires.push(source('food:'+best.id));}else requires.push(review('Review this bird’s diet and available pantry food',{kind:'bird-care',birdId:a},'No compatible Market meal was found.'));}}}
+    else if(g.type==='claim-village'){const v=currentVillage();label='Liberate '+(v?.name||'this village');done=!!ownedSeed(a);if(!done){if(!v||Number(v.seed)!==a)requires=[review('Return to the discovered village on your map',{kind:'screen',screen:'map'})];else if(!empireHasLiberationVictory(a))requires=[review('Review the liberation battle for '+v.name,{kind:'screen',screen:'village'})];else requires=cost(birdhouseCostForNextVillage());}}
+    else if(g.type==='trail-drink'){const quest=activeWalkingQuest(),drink=TRAIL_TAVERN_DRINKS.find(d=>d.id===b);if(!quest||quest.id!==a||!quest.trailTavern||!drink)valid=false;else{label='Buy '+drink.name;done=!!quest.trailTavern.drinkBought;requires=[build({type:'academy',args:['magpie_market']}),resource('coins',drink.cost)];}}
+    else if(g.type==='bird-work'){label='Prepare '+(prerequisiteBird(a)?birdDisplayName(prerequisiteBird(a)):'your bird')+' for '+b;requires=birdReq(a,b);}
+    else if(g.type==='village-build'){
+      const rec=ownedSeed(a),building=EMPIRE_BUILDING_INDEX[b];if(!rec||!building)valid=false;else{const n=villageBuildingLevel(rec,b);label='Build '+building.name+' in '+rec.name;done=n>=Number(c||n+1);requires=[feature('village')];if(!done){const rising=villageConstructionOf(rec,b);if(rising||villageBuildSlotsFree(rec)<=0)requires.push(review(rising?'Review this building’s construction':'Review the occupied builder crews',{kind:'village-review',seed:rec.seed,buildingId:b}));if(n===0&&!settlementAllowsBuilding(rec,building))requires.push(review('Merge eligible starred villages into a Town for this building',{kind:'screen',screen:'village'}));if(n===0)requires.push(level(building.unlockLevel||1));requires.push(...cost(villageBuildingCost(building,n,rec.seed)));}}
+    }else if(g.type==='supply-cart'){const rec=ownedSeed(a);if(!rec)valid=false;else{label='Send supplies to '+rec.name;requires=[build({type:'academy',args:['magpie_market']}),...cost(VILLAGE_SUPPLY_CART)];}}
+    else if(['town-hall','town-network','wholesale'].includes(g.type)){
+      const region=g.type==='wholesale'&&b==='region',s=region?empireRegionById(a):townSettlementByActiveId(a);if(!s)valid=false;else{label=(g.type==='town-hall'?'Upgrade the Hall in ':g.type==='town-network'?'Build the '+(EMPIRE_BUILDING_INDEX[b]?.name||'network')+' in ':'Upgrade ')+(region?s.name:townDisplayName(s));
+        if(g.type==='town-hall'){const row=townNextHallUpgradeRow(s),next=row&&townStrategyCore().nextHallUpgrade(row.state),snap=townEconomySnapshot(s);if(!next)requires.push(review('Review the existing Hall work and levels',{kind:'town-review',id:s.id}));else{requires.push(...cost(next.cost));if(townTotalDevelopment(s)<next.minDevelopment||snap.pop<next.minPopulation||snap.happiness<next.minHappiness)requires.push(review('Hall level '+next.level+' needs '+next.minDevelopment+' infrastructure, '+next.minPopulation+' residents and '+Math.round(next.minHappiness*100)+'% happiness. Review homes, food, water and existing construction.',{kind:'town-review',id:s.id}));}}
+        else if(g.type==='town-network'){const rec=townNetworkUpgradeTarget(s,b);if(rec)requires.push(build({type:'village-build',args:[rec.seed,b,villageBuildingLevel(rec,b)+1]}));else requires.push(review('Review completed networks and current construction',{kind:'town-review',id:s.id}));}
+        else{const plan=wholesaleUpgradePlan(region?regionMemberRecords(s):townMemberRecords(s));requires.push(...cost(plan.cost));if(!plan.steps.length||wholesaleWorksFor(s.id))requires.push(review('Review the existing upgrade order or completed buildings',{kind:region?'region-review':'town-review',id:s.id}));}
+        if(!region&&townActiveProjectCount(s)>=townBuilderSlots(s))requires.push(review('Review busy builder crews and the Hall',{kind:'town-review',id:s.id}));
+      }
+    }else if(g.type==='trade-route'){
+      const candidate=realmCore().tradeRouteCandidates(empireRegionsInfo().regions).find(x=>x.key===a);if(!candidate)valid=false;else{label='Open the sky-caravan route';done=!!gameState.empire?.tradeRoutes?.[a];requires=cost(realmCore().tradeRouteCost(empireTradeRouteInvestmentCount()));}
+    }else if(g.type==='town-policy'){
+      const settlement=townSettlementByActiveId(a),core=townStrategyCore();if(!settlement||!core.TOWN_POLICIES[b])valid=false;else{label='Set '+core.TOWN_POLICIES[b].label+' in '+townDisplayName(settlement);const rows=townSeatStateRows(settlement);done=rows.length>0&&rows.every(r=>r.state.policy===b);if(rows.some(r=>(r.state.hallLevel||1)<2))requires=[build({type:'town-hall',args:[a]})];else{const result=core.setPolicy(townPrimarySeatRow(settlement)?.state,b,townHasAccruedTribute(settlement,Date.now()),Date.now());if(!result.ok||!townCanChangePolicy(settlement,Date.now()))requires=[review(result.reason||'Review the current policy’s 24-hour term before changing it',{kind:'town-review',id:a})];}}
+    }else if(g.type==='chef'){
+      label='Head Chef: feed all birds';requires=[build({type:'academy',args:['kitchen']})];const post=rolePostState('academy','kitchen');if(!post.staffed||!post.bird)requires.push(review('Appoint an owned companion as Head Chef',{kind:'role-review',scope:'academy',key:'kitchen'}));else{const career=birdRolesCore().chefCareerProgress(gameState.chefCareers?.[post.bird.id],Date.now());if(!career.feedAllUnlocked)requires.push(review('Chef level '+career.level+' of 10: leave the Head Chef appointed to gain real time served',{kind:'screen',screen:'kitchen'}));}
+    }else if(g.type==='home'){
+      const core=window.BurbzPlayerHomeCore,h=g.args[2]&&g.args[2]!=='primary'?gameState.exploration?.camps?.find(x=>x.id===g.args[2])?.home:gameState.playerHome;label='Continue your home: '+a.replace(/-/g,' ');if(!core||!h)valid=false;else{done=a==='build-home'?h.tier>=1:a==='build-room'?!!h.rooms[b]:a==='upgrade'?h.tier>=Number(g.args[3]||2):a==='craft'&&g.args[3]?(h.owned?.[b]||0)>=g.args[3]:a==='farm-buy'&&g.args[3]?(h.farm?.seeds?.[b]||0)>=g.args[3]:a==='farm-plot'&&g.args[3]?(h.farm?.plots?.length||0)>=g.args[3]:a==='farm-plant'&&g.args[3]?h.farm?.plots?.some(p=>p.id===g.args[3]&&p.crop===b):a==='place'&&g.args[3]?(h.placed?.filter(p=>p.item===b).length||0)>=g.args[3]:false;let need=0;if(a==='build-home')need=core.TIERS[1].timber;else if(a==='upgrade')need=core.TIERS[(h.tier||0)+1]?.timber||0;else if(a==='build-room')need=core.ROOMS[b]?.timber||0;else if(a==='craft'||a==='place'&&core.available(h,b)<1)need=core.ITEMS[b]?.timber||0;else if(a==='farm-plot')need=core.FARM.timber;else if(a==='farm-buy')requires.push(resource('coins',core.CROPS[b]?.coins||0));else if(a==='farm-plant'){const crop=core.CROPS[b];if(crop&&!(h.farm?.seeds?.[b]>0)&&!(gameState.inventory?.[crop.store]?.[crop.item]>0))requires.push(review('Review seed packets for '+crop.name,{kind:'home-review',camp:g.args[2]}));}if(need)requires.push(resource('branches',need));if(['build-room','farm-plot','farm-buy','farm-plant'].includes(a)&&h.tier<1)requires.push(build({type:'home',args:['build-home','default',g.args[2]||'primary']}));}
+    }else if(g.type==='camp'){
+      const camp=gameState.exploration?.camps?.find(x=>x.id===b);if(!camp)valid=false;else{label=(a==='fire'?'Build the campfire at ':'Build a house at ')+camp.name;done=a==='fire'?!!camp.fire:!!camp.home;if(a==='fire')requires=[resource('branches',5,'timber for the campfire')];else if(!camp.visitedAt)requires=[review('Visit this camp in real life with location enabled to unlock its house. In-game travel does not qualify.',{kind:'camp-map',id:camp.id})];}
+    }else if(g.type==='role'){
+      const role=roleDefFor(a,b),bird=prerequisiteBird(c);if(!role||!bird)valid=false;else{const post=birdAssignedPost(c);done=post?.scope===a&&String(post.key)===b;label='Appoint '+birdDisplayName(bird)+' as '+role.title;requires=birdReq(c,'role');if(projectManagerAppointmentGate(a,b))requires.push(build({type:'academy',args:['manager_office']}));}
+    }else if(g.type==='gather'){const m=lootCore().materialById(a);label='Gather '+b+' × '+(m?.label||a);requires=[material(a,b)];}
+    else if(g.type==='resource'){label=String(c||'Continue your goal');requires=[resource(a,b)];}
+    else valid=false;
+    visiting.delete(key);return add(key,{label:label||'Review this goal',satisfied:done,requires,available:valid,action:{kind:'guidance-return',goal:g},reason:valid?undefined:'This target is no longer available in this saved game.'});
+  }
+  const key=build(goal),graph={goal:key,nodes,shortages},resolved=BurbzPrerequisiteGuidance.resolve(graph,key,{maxNodes:160});
+  return {...graph,...resolved,facts:{recipe:{label:nodes[key].label}},blocked:resolved.status!=='satisfied'&&!resolved.actions.some(a=>a.id===key),trackedGoal:goal};
+}
+function prerequisiteGuideGoal(goal) {
+  if(prerequisiteRouting)return false;
+  const existing=prerequisiteTrackedGoal();
+  // Following a prerequisite keeps the original goal, including a recipe's
+  // Market/upgrade detour. Choosing a separate blocked goal can replace it.
+  const plan=existing&&prerequisiteCurrentPlan(),key=prerequisiteGoalKey(goal);
+  const related=existing?.type==='recipe'&&(['purchase','forge-upgrade'].includes(goal.type)||goal.type==='academy'&&goal.args[0]==='magpie_market')||plan&&Object.values(plan.nodes).some(n=>n.action?.goal&&prerequisiteGoalKey(n.action.goal)===key||goal.type==='purchase'&&n.action?.kind==='market'&&n.action.itemId===goal.args[0]||goal.type==='academy'&&goal.args[0]==='magpie_market'&&n.action?.kind==='market-build'||goal.type==='forge-upgrade'&&n.action?.kind==='forge-upgrade'||goal.type==='feed'&&n.action?.kind==='bird-care'&&(n.action.birdId===MERLIN_GUIDE.id?'merlin':n.action.birdId)===goal.args[0]||goal.type==='expedition'&&n.action?.kind==='errand'&&n.action.id===goal.args[1]);
+  if(!related&&!setPrerequisiteGoal(goal))return false;
+  return showPrerequisiteGuide();
+}
+function prerequisiteGeneralReturn(goal) {
+  if(!prerequisiteKnownGoal(goal))return;
+  const [a,b,c]=goal.args;if(goal.type==='feature'&&!featureGateOpen(a)){showPrerequisiteGuide();return;}closePrerequisiteGuide();closePrerequisiteNavigationLayers();prerequisiteRouting=true;
+  try{
+    if(goal.type==='academy')focusAcademyBuildCard(a);
+    else if(goal.type==='room')openAcademyRoom(a);
+    else if(goal.type==='feature'){prerequisiteScreen(a);}
+    else if(goal.type==='recruit'){gotoTavernRecruit();openBarracksRecruitOverlay();openBarracksRecruitCard(a);}
+    else if(goal.type==='purchase'){magpieMarketState.tab='buy';openAcademyRoom('magpie_market');focusPrerequisiteElement('.magpie-row[data-item="'+CSS.escape(a)+'"]');}
+    else if(goal.type==='shop')villageOpenShop(a,c);
+    else if(goal.type==='forge-upgrade'){openForge('craft');const d=document.querySelector('.forge-upgrade-details');if(d)d.open=true;focusPrerequisiteElement('.forge-upgrade-btn');}
+    else if(goal.type==='equipment'){if(a==='@player')openDeskPlayerEquipment(b);else{openBirdEquip(a);birdEquipOpenSlot(b);}}
+    else if(goal.type==='expedition')openQuestSend(b);
+    else if(goal.type==='training'){openAcademyRoom(trainingTemplateById(b)?.room||'training');}
+    else if(goal.type==='feed')openFeedSheet(a);
+    else if(goal.type==='move-bird'){openBirdEquip(a);}
+    else if(goal.type==='claim-village')switchScreen('village');
+    else if(goal.type==='trail-drink'){const q=activeWalkingQuest();if(q?.id===a)openTrailTavernSheet(q);}
+    else if(goal.type==='bird-work')openFeedSheet(kitchenRosterEntries().find(e=>e.bird?.id===a||e.key===a)?.key||a);
+    else if(goal.type==='village-build'){openEmpireVillage(a);openBuildingInterior(a,b);}
+    else if(goal.type==='supply-cart')openEmpireVillage(a);
+    else if(goal.type==='chef')openKitchenHudShortcut();
+    else if(goal.type==='town-hall'||goal.type==='town-policy'||goal.type==='town-network'||goal.type==='wholesale'&&b!=='region')openEmpireTown(a);
+    else if(goal.type==='wholesale'&&b==='region')openEmpireRegion(a);
+    else if(goal.type==='trade-route')switchScreen('village');
+    else if(goal.type==='home'){if(goal.args[2]&&goal.args[2]!=='primary'&&typeof enterCampHome==='function')enterCampHome(goal.args[2]);else $('playerHomeStand')?.click();}
+    else if(goal.type==='camp'){window.BurbzExploration?.sheet();}
+    else if(goal.type==='role')openRolePicker(a,b);
+    else if(goal.type==='gather')switchScreen(c||'inventory');
+    else if(goal.type==='resource')switchScreen(goal.args[3]||'inventory');
+  }finally{prerequisiteRouting=false;refreshPrerequisiteGoalBanner();}
+}
+function prerequisiteScreen(screen){if(!featureGateOpen(screen)){prerequisiteGuideGoal({type:'feature',args:[screen]});return;}if(screen==='kitchen')openKitchenHudShortcut();else if(screen==='hospital')openHospitalHudShortcut();else if(screen==='training')openTrainingHub();else if(screen==='forge')openForge('craft');else switchScreen(screen);}
+function prerequisiteCommonRoute(action) {
+  if(action.kind==='owner-equipment'){if(action.owner==='@player')openDeskPlayerEquipment(action.slot);else{openBirdEquip(action.owner);birdEquipOpenSlot(action.slot);}return true;}
+  if(action.kind==='camp-map'){if(typeof showCampRealMap==='function')showCampRealMap(action.id);return true;}
+  if(action.kind==='guidance-return'){prerequisiteGeneralReturn(action.goal);return true;}
+  if(action.kind==='player-quest-go'){const q=PLAYER_QUESTS.find(q=>q.id===action.id);if(q)playerQuestGo(q);return true;}
+  if(action.kind==='screen'){prerequisiteScreen(action.screen);return true;}
+  if(action.kind==='craft-review'){openForge('craft');focusPrerequisiteElement('[data-forge-recipe="'+CSS.escape(action.recipeId)+'"]');return true;}
+  if(action.kind==='village-review'){openEmpireVillage(action.seed);openBuildingInterior(action.seed,action.buildingId);return true;}
+  if(action.kind==='town-review'){openEmpireTown(action.id);return true;}
+  if(action.kind==='region-review'){openEmpireRegion(action.id);return true;}
+  if(action.kind==='training-review'){openTrainingHub();return true;}
+  if(action.kind==='role-review'){openRolePicker(action.scope,action.key);return true;}
+  if(action.kind==='home-review'){if(action.camp&&action.camp!=='primary'&&typeof enterCampHome==='function')enterCampHome(action.camp);else $('playerHomeStand')?.click();return true;}
+  if(action.kind==='bird-care'){const entry=kitchenRosterEntries().find(e=>e.bird?.id===action.birdId||e.key===(action.birdId===MERLIN_GUIDE.id?'merlin':action.birdId));if(entry)openFeedSheet(entry.key);else openAcademyRoom(FREE_BIRD_ROOM);return true;}
+  return false;
+}
+function prerequisiteFoodFacts(key){
+  const entry=kitchenRosterEntries().find(e=>e.key===key),core=kitchenDietCore();if(!entry||!core)return null;
+  const accepted=(id,pantry=false)=>{const ing=core.INGREDIENTS[id];const spec=pantry?core.normalizeFeedingSpec({pantryKey:id,source:'pantry'}):{ingredientId:id,prep:kitchenRosterWantedPrep(entry.target,ing)};return feedOptionVerdict(core.scoreFoodCompatibility(entry.target,spec)).accepted;};
+  const stocked=Object.keys(gameState.pantry||{}).some(id=>gameState.pantry[id]>0&&accepted(id,true))||Object.keys(gameState.inventory?.larder||{}).some(id=>gameState.inventory.larder[id]>0&&core.INGREDIENTS[id]&&accepted(id));
+  const sources=Object.keys(core.INGREDIENTS||{}).filter(id=>kitchenIngredientById(id)&&accepted(id)).map(id=>({id,quote:magpieMarketBuyQuote(id,1,'food')})).filter(x=>x.quote.each>0).sort((a,b)=>a.quote.each-b.quote.each);
+  const care=entry.merlin?gameState.merlinCare:entry.bird?.care, status=core.hungerStatusForCare(care||{},Date.now());
+  return {entry,stocked,sources,fed:status.hunger===0};
+}
+function prerequisiteHomeGoal(action,camp='primary'){
+  if(!action||!['build-home','upgrade','build-room','craft','place','farm-plot','farm-buy','farm-plant'].includes(action.kind)||action.kind==='place'&&action.id)return null;
+  const h=camp==='primary'?gameState.playerHome:gameState.exploration?.camps?.find(x=>x.id===camp)?.home,id=action.room||action.item||action.crop||'default';
+  const target=action.kind==='craft'?(Number(h?.owned?.[id])||0)+1:action.kind==='upgrade'?(Number(h?.tier)||0)+1:action.kind==='farm-buy'?(Number(h?.farm?.seeds?.[id])||0)+3:action.kind==='farm-plot'?(h?.farm?.plots?.length||0)+1:action.kind==='farm-plant'?action.id:action.kind==='place'?(h?.placed?.filter(p=>p.item===id).length||0)+1:1;
+  return {type:'home',args:[action.kind,id,camp,target]};
+}
+function installPrerequisiteActionHooks(){
+  const factories={
+    academyBuildAndMoveBird:a=>({type:'move-bird',args:[a[0],a[1]]}),gotoTavernRecruit:()=>({type:'room',args:['tavern']}),focusProjectManagerOffice:()=>({type:'academy',args:['manager_office']}),setTownPolicy:a=>({type:'town-policy',args:[a[0],a[1]]}),chefFeedAllBirds:()=>({type:'chef',args:['feed-all']}),
+    openAcademyRoomHudShortcut:a=>({type:'room',args:[a[0]]}),trainingHubOpenRoom:a=>({type:'room',args:[a[0]]}),academyMoveBird:a=>['tavern','kitchen','magpie_market','manager_office'].includes(a[1])?null:({type:'move-bird',args:[a[0],a[1]]}),cardSendBirdToRoom:a=>['tavern','kitchen','magpie_market','manager_office'].includes(a[1])?null:({type:'move-bird',args:[a[0],a[1]]}),
+    claimCurrentVillage:()=>currentVillage()?({type:'claim-village',args:[Number(currentVillage().seed)]}):null,buyTrailTavernDrink:a=>activeWalkingQuest()?({type:'trail-drink',args:[activeWalkingQuest().id,a[0]]}):null,
+    academyBuildBuilding:a=>({type:'academy',args:[a[0]]}),academyStartPlaceBuilding:a=>({type:'academy',args:[a[0]]}),openAcademyRoom:a=>({type:'room',args:[a[0]]}),
+    recruitDiscoveredBird:a=>({type:'recruit',args:[a[0]]}),birdexRecruitBird:a=>({type:'recruit',args:[a[0]]}),barracksRecruitBird:a=>({type:'recruit',args:[a[0]]}),
+    magpieMarketBuy:a=>({type:'purchase',args:[a[0],a[1],a[2]||'material',magpieMarketOwned(a[0],a[2]||'material')+a[1]]}),villageBuy:a=>({type:'shop',args:prerequisiteShopSeed===null?[a[0],a[1]]:[a[0],a[1],Number(prerequisiteShopSeed)]}),upgradeForge:()=>({type:'forge-upgrade',args:[prerequisiteNextForgeLevel()]}),
+    empireBuildStructure:a=>({type:'village-build',args:[Number(a[0]),a[1],villageBuildingLevel(gameState.empire?.villages?.[String(Number(a[0])>>>0)],a[1])+1]}),empireSendSupplyCart:a=>({type:'supply-cart',args:[Number(a[0])]}),
+    beginTownHallUpgrade:a=>({type:'town-hall',args:[String(a[0])]}),townBuildNetwork:a=>({type:'town-network',args:[String(a[0]),a[1]]}),beginWholesaleUpgrade:a=>({type:'wholesale',args:[String(a[0]),a[1]||'town']}),empireOpenTradeRoute:a=>({type:'trade-route',args:[a[0]]}),
+    startBirdTrainingSession:a=>({type:'training',args:[a[0],a[1]]}),startBirdExpedition:a=>a[1]==='merlin_first_flight'?null:({type:'expedition',args:[a[0],a[1]]}),
+    assignBirdRole:a=>({type:'role',args:[a[0],String(a[1]),a[2]]}),
+    buildCampFire:a=>({type:'camp',args:['fire',a[0]]}),upgradeCamp:a=>({type:'camp',args:['upgrade',a[0]]}),
+    commitCampHomeAction:a=>prerequisiteHomeGoal(a[0],typeof activeCampHomeId==='string'?activeCampHomeId:'primary'),
+    commitEquipmentChange:a=>a[2]?({type:'equipment',args:[a[0],a[1],a[2]]}):null,
+    commitPlayerHomeAction:a=>prerequisiteHomeGoal(a[0])
+  };
+
+  const originals={academyBuildAndMoveBird:typeof academyBuildAndMoveBird==='function'?academyBuildAndMoveBird:null,gotoTavernRecruit:typeof gotoTavernRecruit==='function'?gotoTavernRecruit:null,focusProjectManagerOffice:typeof focusProjectManagerOffice==='function'?focusProjectManagerOffice:null,setTownPolicy:typeof setTownPolicy==='function'?setTownPolicy:null,chefFeedAllBirds:typeof chefFeedAllBirds==='function'?chefFeedAllBirds:null,openAcademyRoomHudShortcut:typeof openAcademyRoomHudShortcut==='function'?openAcademyRoomHudShortcut:null,trainingHubOpenRoom:typeof trainingHubOpenRoom==='function'?trainingHubOpenRoom:null,academyMoveBird:typeof academyMoveBird==='function'?academyMoveBird:null,cardSendBirdToRoom:typeof cardSendBirdToRoom==='function'?cardSendBirdToRoom:null,claimCurrentVillage:typeof claimCurrentVillage==='function'?claimCurrentVillage:null,buyTrailTavernDrink:typeof buyTrailTavernDrink==='function'?buyTrailTavernDrink:null,academyBuildBuilding:typeof academyBuildBuilding==='function'?academyBuildBuilding:null,academyStartPlaceBuilding:typeof academyStartPlaceBuilding==='function'?academyStartPlaceBuilding:null,openAcademyRoom:typeof openAcademyRoom==='function'?openAcademyRoom:null,recruitDiscoveredBird:typeof recruitDiscoveredBird==='function'?recruitDiscoveredBird:null,birdexRecruitBird:typeof birdexRecruitBird==='function'?birdexRecruitBird:null,barracksRecruitBird:typeof barracksRecruitBird==='function'?barracksRecruitBird:null,magpieMarketBuy:typeof magpieMarketBuy==='function'?magpieMarketBuy:null,villageBuy:typeof villageBuy==='function'?villageBuy:null,upgradeForge:typeof upgradeForge==='function'?upgradeForge:null,empireBuildStructure:typeof empireBuildStructure==='function'?empireBuildStructure:null,empireSendSupplyCart:typeof empireSendSupplyCart==='function'?empireSendSupplyCart:null,beginTownHallUpgrade:typeof beginTownHallUpgrade==='function'?beginTownHallUpgrade:null,townBuildNetwork:typeof townBuildNetwork==='function'?townBuildNetwork:null,beginWholesaleUpgrade:typeof beginWholesaleUpgrade==='function'?beginWholesaleUpgrade:null,empireOpenTradeRoute:typeof empireOpenTradeRoute==='function'?empireOpenTradeRoute:null,startBirdTrainingSession:typeof startBirdTrainingSession==='function'?startBirdTrainingSession:null,startBirdExpedition:typeof startBirdExpedition==='function'?startBirdExpedition:null,assignBirdRole:typeof assignBirdRole==='function'?assignBirdRole:null,buildCampFire:typeof buildCampFire==='function'?buildCampFire:null,upgradeCamp:typeof upgradeCamp==='function'?upgradeCamp:null,commitCampHomeAction:typeof commitCampHomeAction==='function'?commitCampHomeAction:null,commitEquipmentChange:typeof commitEquipmentChange==='function'?commitEquipmentChange:null,commitPlayerHomeAction:typeof commitPlayerHomeAction==='function'?commitPlayerHomeAction:null};
+  for(const [name,factory]of Object.entries(factories)){
+    const original=originals[name];if(typeof original!=='function'||original.prerequisiteHook)continue;
+    const wrapped=function(...args){const prior=prerequisiteActionContext;let goal;try{goal=factory(args);}catch(_){}prerequisiteActionContext=goal||prior;
+      try{
+        // The opening's own atomic gift/shortage/meal flow remains authoritative.
+        const openingBuild=goal?.type==='academy'&&['tavern','kitchen'].includes(goal.args[0])&&!openingObjective().complete;
+        if(goal&&!openingBuild&&!prerequisiteRouting){let plan;try{plan=prerequisiteGeneralPlan(goal);}catch(error){console.warn('Prerequisite review unavailable',name,error);}
+          if(plan?.blocked&&prerequisiteGuideGoal(goal))return ['commitEquipmentChange','commitPlayerHomeAction','commitCampHomeAction','buildCampFire','upgradeCamp'].includes(name)?{ok:false,reason:'Review the highlighted prerequisites.',error:'Review the highlighted prerequisites.'}:false;
+        }
+        return original.apply(this,args);
+      }finally{prerequisiteActionContext=prior;}
+    };wrapped.prerequisiteHook=true;window[name]=wrapped;
+    switch(name){case 'academyBuildAndMoveBird':academyBuildAndMoveBird=wrapped;break;case 'gotoTavernRecruit':gotoTavernRecruit=wrapped;break;case 'focusProjectManagerOffice':focusProjectManagerOffice=wrapped;break;case 'setTownPolicy':setTownPolicy=wrapped;break;case 'chefFeedAllBirds':chefFeedAllBirds=wrapped;break;case 'openAcademyRoomHudShortcut':openAcademyRoomHudShortcut=wrapped;break;case 'trainingHubOpenRoom':trainingHubOpenRoom=wrapped;break;case 'academyMoveBird':academyMoveBird=wrapped;break;case 'cardSendBirdToRoom':cardSendBirdToRoom=wrapped;break;case 'claimCurrentVillage':claimCurrentVillage=wrapped;break;case 'buyTrailTavernDrink':buyTrailTavernDrink=wrapped;break;case 'academyBuildBuilding':academyBuildBuilding=wrapped;break;case 'academyStartPlaceBuilding':academyStartPlaceBuilding=wrapped;break;case 'openAcademyRoom':openAcademyRoom=wrapped;break;case 'recruitDiscoveredBird':recruitDiscoveredBird=wrapped;break;case 'birdexRecruitBird':birdexRecruitBird=wrapped;break;case 'barracksRecruitBird':barracksRecruitBird=wrapped;break;case 'magpieMarketBuy':magpieMarketBuy=wrapped;break;case 'villageBuy':villageBuy=wrapped;break;case 'upgradeForge':upgradeForge=wrapped;break;case 'empireBuildStructure':empireBuildStructure=wrapped;break;case 'empireSendSupplyCart':empireSendSupplyCart=wrapped;break;case 'beginTownHallUpgrade':beginTownHallUpgrade=wrapped;break;case 'townBuildNetwork':townBuildNetwork=wrapped;break;case 'beginWholesaleUpgrade':beginWholesaleUpgrade=wrapped;break;case 'empireOpenTradeRoute':empireOpenTradeRoute=wrapped;break;case 'startBirdTrainingSession':startBirdTrainingSession=wrapped;break;case 'startBirdExpedition':startBirdExpedition=wrapped;break;case 'assignBirdRole':assignBirdRole=wrapped;break;case 'buildCampFire':buildCampFire=wrapped;break;case 'upgradeCamp':upgradeCamp=wrapped;break;case 'commitCampHomeAction':commitCampHomeAction=wrapped;break;case 'commitEquipmentChange':commitEquipmentChange=wrapped;break;case 'commitPlayerHomeAction':commitPlayerHomeAction=wrapped;break;}
+  }
+}
+function prerequisiteNextForgeLevel(){return Math.min(5,burbzForgeLevel()+1);}
+
+function prerequisiteEarningSource(kind) {
+  const now=Date.now(), jobs=(gameState.birdExpeditions||[]).filter(q=>q&&q.id&&!gameState.questClaimReceipts?.['expedition:'+q.id]&&!['claimed','cancelled','failed'].includes(q.status));
+  const relevant=q=>Number(q.rewards?.[kind])>0;
+  const ready=jobs.find(q=>relevant(q)&&Number.isFinite(Number(q.endMs))&&Number(q.endMs)<=now);
+  if(ready&&featureGateOpen('quests'))return {label:'Review the returning bird’s '+(kind==='xp'?'XP':kind==='branches'?'timber':kind),available:true,action:{kind:'quest-return',id:ready.id}};
+  const q=typeof activePlayerQuest==='function'?activePlayerQuest():null;
+  const reward=kind==='xp'?q?.reward:q?.[kind], qs=q&&gameState.quests?.[q.id];
+  if(q&&!qs?.claimed&&Number(reward)>0&&Number(qs?.progress)>=Number(q.target)&&featureGateOpen('quests'))return {label:'Review ready Player Quest: '+q.name,available:true,action:{kind:'player-quest',id:q.id}};
+  if(!openingErrandsIntroduced()||!featureGateOpen('quests')){
+    const objective=typeof openingObjective==='function'?openingObjective():null;
+    return objective&&!objective.complete&&featureGateOpen(objective.screen)
+      ? {label:'Continue the opening: '+objective.label+' — errands unlock later',available:true,action:{kind:'opening',screen:objective.screen}}
+      : {label:'Errands are not available yet',reason:'Continue the current Player Quest to unlock errands.',available:false};
+  }
+  const template=getExpeditionTemplate(kind==='branches'?'branch_run':'find_coins');
+  const training=gameState.birdTrainingSessions||[];
+  const birds=expeditionDispatchBirds(gameState.flock||[]);
+  const usable=template&&template.starter===true&&Number(template[kind]?.[1]||template[kind])>0&&birds.some(raw=>{
+    const bird=JSON.parse(JSON.stringify(raw.id===MERLIN_GUIDE.id?{...raw,care:gameState.merlinCare||{}}:raw));
+    return Number(bird.level||1)>=Number(template.minLevel||1)&&!birdAssignedPost(bird.id)&&!jobs.some(job=>job.birdId===bird.id)&&!training.some(job=>job.birdId===bird.id&&job.status!=='claimed')&&birdWorkReadiness(bird,'expedition',now).ok;
+  });
+  if(usable)return {label:'Choose a bird for '+template.label+(kind==='xp'?' — earns trainer XP':''),available:true,action:{kind:'errand',id:template.id}};
+  const pending=jobs.find(relevant);
+  if(pending)return {label:'Review '+(pending.birdName||'your bird')+'’s active errand — rewards are still travelling',available:true,action:{kind:'quest-return',id:pending.id}};
+  if(featureGateOpen('academy'))return {label:'Review your birds’ rest and care before an errand',available:true,action:{kind:'care-review'}};
+  return {label:'No bird is ready for this errand',reason:'Review your birds’ current jobs, rest or care before sending another errand.',available:false};
+}
+function prerequisiteRecipeFacts(id) {
+  const L=lootCore(), item=L.craftableById(id), recipe=L.recipeFor(id);
+  if(!item||!recipe)return null;
+  const stock=gameState.inventory?.items||{}, marketIds=new Set(magpieMarketStock().map(m=>m.id));
+  const materialFacts=materials=>Object.entries(materials||{}).map(([id,need])=>{
+    const material=L.materialById(id), quote=magpieMarketBuyQuote(id,1);
+    return {id,label:material?.label||id,need,have:Number(stock[id])||0,buyable:marketIds.has(id),each:quote.each||null};
+  });
+  const level=burbzForgeLevel(), upgrade=L.forgeUpgradeCost(level), market=ACADEMY_BUILDINGS.magpie_market;
+  const jobs=(gameState.forgeJobs||[]).filter(j=>j&&L.craftableById(j.gearId));
+  return {recipe:{id,label:item.label,coins:recipe.coins,materials:materialFacts(recipe.materials)},coins:Number(gameState.player.coins)||0,branches:playerBranches(),level:Number(gameState.player.level)||1,
+    market:{built:magpieMarketTradeReady(),level:market.unlockLevel,coins:market.cost,branches:market.branches,lock:academyBuildingProgressLock('magpie_market')?.message||null},
+    forge:{level,required:L.minForgeLevelForRarity(item.rarity),upgrade:upgrade?{...upgrade,materials:materialFacts(upgrade.materials)}:null,queueFull:jobs.length>=L.FORGE_MAX_JOBS,readyJob:jobs.some(j=>Number(j.endMs)<=Date.now())},
+    routes:{academy:featureGateOpen('academy'),forge:featureGateOpen('forge')},sources:{coins:prerequisiteEarningSource('coins'),branches:prerequisiteEarningSource('branches'),xp:prerequisiteEarningSource('xp')}};
+}
+function prerequisiteCurrentPlan() {
+  const tracked=prerequisiteTrackedGoal();
+  if(tracked&&tracked.type!=='recipe')return prerequisiteGeneralPlan(tracked);
+  const id=prerequisiteTrackedRecipe();
+  if(!id||!window.BurbzPrerequisiteGuidance)return null;
+  const facts=prerequisiteRecipeFacts(id);
+  if(!facts)return null;
+  const graph=BurbzPrerequisiteGuidance.forgePlan(facts);
+  return {...graph,...BurbzPrerequisiteGuidance.resolve(graph,graph.goal),facts};
+}
+function closePrerequisiteGuide() { $('prerequisiteGuide')?.close(); }
+function closePrerequisiteNavigationLayers() {
+  closeResourceQuestPrompt();villageCloseShop();closeBuildingInterior();closeWalkQuestSheet();closeQuestOverlay();closeRolePicker();closeBarracksRecruitOverlay();closeFeedSheet();closeDeskPlayerEquipment();
+  window.BurbzPlayerHome?.close('navigation');
+}
+function showPrerequisiteGuide(id) {
+  const tracked=prerequisiteTrackedGoal(),priorPlan=tracked?.type!=='recipe'&&tracked?prerequisiteCurrentPlan():null;
+  const continueOriginal=id&&priorPlan&&Object.values(priorPlan.nodes).some(n=>n.action?.kind==='craft-review'&&n.action.recipeId===id);
+  const recipeId=continueOriginal?null:id||prerequisiteTrackedRecipe();
+  if(!window.BurbzPrerequisiteGuidance||(!recipeId&&!prerequisiteTrackedGoal()))return false;
+  if(recipeId&&!setPrerequisiteRecipeGoal(recipeId))return false;
+  if(typeof pauseMerlinNavigation==='function'&&merlinTutActive)pauseMerlinNavigation();
+  let dialog=$('prerequisiteGuide');
+  if(!dialog){
+    dialog=document.createElement('dialog');dialog.id='prerequisiteGuide';dialog.className='prerequisite-guide';dialog.setAttribute('aria-labelledby','prerequisiteGuideTitle');
+    dialog.addEventListener('cancel',event=>{event.preventDefault();closePrerequisiteGuide();});
+    dialog.addEventListener('click',event=>{
+      const button=event.target.closest('button');if(!button)return;
+      if(button.dataset.guideAction)activatePrerequisiteAction(button.dataset.guideAction);
+      else if(button.dataset.guideReturn!==undefined)returnPrerequisiteRecipe();
+      else if(button.dataset.guideClose!==undefined)closePrerequisiteGuide();
+      else if(button.dataset.guideStop!==undefined&&setPrerequisiteGoal(null)){closePrerequisiteGuide();refreshPrerequisiteGoalBanner();}
+    });document.body.append(dialog);
+  }
+  const plan=prerequisiteCurrentPlan();if(!plan)return false;
+  const shortages=plan.shortages.map(s=>'<li>'+escapeHtml(s.label)+': <strong>'+s.have+' / '+s.need+'</strong>'+(s.id?' ('+s.short+' missing)':'')+'</li>').join('');
+  const paths=plan.actions.map(action=>'<div class="prerequisite-step"><p>'+escapeHtml(action.path.map(n=>n.label).join(' → '))+'</p><button type="button" data-guide-action="'+escapeHtml(action.id)+'">'+escapeHtml(action.label)+'</button></div>').join('');
+  const issues=[...new Set(plan.issues.map(issue=>plan.nodes[issue.id]?.reason||'This prerequisite needs another route.'))];
+  dialog.innerHTML='<div class="prerequisite-guide-head"><h2 id="prerequisiteGuideTitle">Your goal: '+escapeHtml(plan.nodes[plan.goal].label)+'</h2><button type="button" data-guide-close aria-label="Close prerequisite guide">Close</button></div><p>Choose your next step. Purchases, building and crafting stay under your control.</p>'+(shortages?'<details open><summary>What is still needed</summary><ul>'+shortages+'</ul><p class="prerequisite-note">Material budgets include the original recipe or upgrade coins; overlapping budgets are not added together. Amounts refresh after each action.</p></details>':'<p>'+(plan.status==='satisfied'?'This goal is complete.':'Review the next available action below.')+'</p>')+paths+issues.map(issue=>'<p class="prerequisite-note">'+escapeHtml(issue)+'</p>').join('')+'<button type="button" data-guide-return>Return to '+escapeHtml(plan.facts.recipe.label)+'</button> <button type="button" data-guide-stop>Stop tracking</button>';
+  dialog.inert=false;if(!dialog.open)dialog.showModal();dialog.querySelector('button')?.focus({preventScroll:true});
+  refreshPrerequisiteGoalBanner();return true;
+}
+function startPrerequisiteRecipe(id) { return showPrerequisiteGuide(id); }
+function refreshPrerequisiteGoalBanner() {
+  const tracked=prerequisiteTrackedGoal(),plan=tracked&&prerequisiteCurrentPlan();
+  const prerequisiteRecipeGoal=tracked?prerequisiteGoalKey(tracked):null;
+  const screen=$('screen-'+currentScreen);
+  let homeResume=$('prerequisiteHomeResume');
+  if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());$('scanHomeActions')?.append(homeResume);}homeResume.textContent='Goal';homeResume.title='Your goal · '+plan.facts.recipe.label;homeResume.setAttribute('aria-label',homeResume.title);}else homeResume?.remove();
+  const existing=document.querySelector('.prerequisite-goal-banner');
+  if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen){existing.querySelector('strong').textContent='Working towards: '+plan.facts.recipe.label;return;}
+  document.querySelectorAll('.prerequisite-goal-banner').forEach(el=>el.remove());
+  if(!prerequisiteRecipeGoal||!plan||!screen||currentScreen==='scan')return;
+  const item={label:plan.facts.recipe.label};
+  const banner=document.createElement('div');banner.className='prerequisite-goal-banner';banner.dataset.recipeId=prerequisiteRecipeGoal;
+  const label=document.createElement('strong');label.textContent='Working towards: '+item.label;banner.append(label);
+  for(const [label,handler] of [['Next step',()=>showPrerequisiteGuide()],[tracked.type==='recipe'?'Return to recipe':'Return to goal',returnPrerequisiteRecipe],['Stop tracking',()=>{if(setPrerequisiteGoal(null))refreshPrerequisiteGoalBanner();}]]){
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.addEventListener('click',handler);banner.append(button);
+  }screen.prepend(banner);
+}
+function focusPrerequisiteElement(selector) {
+  requestAnimationFrame(()=>{
+    const el=$('screen-'+currentScreen)?.querySelector(selector)||Array.from(document.querySelectorAll(selector)).find(node=>!node.closest('.screen')&&node.checkVisibility());if(!el)return;
+    el.scrollIntoView({block:'center',behavior:'auto'});el.classList.add('prerequisite-target');
+    const control=el.matches('button')?el:el.querySelector('button:not(:disabled)');control?.focus({preventScroll:true});
+    setTimeout(()=>el.classList.remove('prerequisite-target'),4000);
+  });
+}
+function returnPrerequisiteRecipe() {
+  const goal=prerequisiteTrackedGoal();if(goal&&goal.type!=='recipe'){prerequisiteGeneralReturn(goal);return;}
+  const id=prerequisiteTrackedRecipe();if(!id)return;
+  closePrerequisiteGuide();closePrerequisiteNavigationLayers();openForge('craft');
+  focusPrerequisiteElement('[data-forge-recipe="'+CSS.escape(id)+'"]');refreshPrerequisiteGoalBanner();
+}
+function activatePrerequisiteAction(nodeId) {
+  // Re-resolve before routing: purchases, rewards or another tab may have
+  // changed this prerequisite while the dialog was open. Never trust a stale plan.
+  const plan=prerequisiteCurrentPlan(), entry=plan?.actions.find(action=>action.id===nodeId);
+  if(!entry){showPrerequisiteGuide();return;}
+  const action=entry.action;closePrerequisiteGuide();closePrerequisiteNavigationLayers();
+  if(prerequisiteCommonRoute(action)){refreshPrerequisiteGoalBanner();return;}
+  if(action.kind==='recipe'){returnPrerequisiteRecipe();return;}
+  if(action.kind==='market'){
+    if(!magpieMarketTradeReady()){showPrerequisiteGuide();return;}
+    magpieMarketState.tab='buy';openAcademyRoom('magpie_market');
+    focusPrerequisiteElement('.magpie-row[data-item="'+CSS.escape(action.itemId)+'"]');
+  }else if(action.kind==='market-build')focusAcademyBuildCard('magpie_market');
+  else if(action.kind==='forge-upgrade'){
+    openForge('craft');const details=document.querySelector('.forge-upgrade-details');if(details)details.open=true;focusPrerequisiteElement('.forge-upgrade-btn');
+  }else if(action.kind==='forge-queue'){openForge('craft');focusPrerequisiteElement('.forge-job-list');}
+  else if(action.kind==='errand'){
+    if(!openingErrandsIntroduced()||!featureGateOpen('quests')){showPrerequisiteGuide();return;}
+    switchScreen('quests');openQuestSend(action.id);
+  }else if(action.kind==='quest-return'||action.kind==='player-quest'){
+    if(!featureGateOpen('quests')){showPrerequisiteGuide();return;}
+    switchScreen('quests');
+    if(action.kind==='quest-return')openQuestLog(action.id);
+    else focusPrerequisiteElement('[data-player-quest-claim="'+CSS.escape(action.id)+'"]');
+  }else if(action.kind==='care-review'&&featureGateOpen('academy'))openAcademyRoom(FREE_BIRD_ROOM);
+  else if(action.kind==='opening'&&featureGateOpen(action.screen))switchScreen(action.screen);
+  refreshPrerequisiteGoalBanner();
+}
+
 function renderForge() {
   const body = $('forgeBody');
   if (!body) return;
@@ -38852,7 +39372,7 @@ function renderForgeEquip(body) {
         const color = L.RARITY_META[x.item.rarity].color;
         return '<button class="forge-picker-row" style="border-color:' + color + '66;" onclick="forgeEquip(\'' + slot + '\',\'' + x.item.id + '\')">' +
           '<span class="fp-icon">' + gearIconHTML(x.item) + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
-      }).join('') : '<div class="inventory-empty">No spare ' + slot + 's in the Stores — find loot on the map or craft one below.</div>') +
+      }).join('') : '<div class="inventory-empty">No spare ' + slot + 's in the Stores. <button type="button" class="academy-btn" onclick="prerequisiteGuideGoal({type: &quot;feature&quot;,args:[&quot;forge&quot;]})">Find equipment at the Forge</button></div>') +
       '</div>';
   }
   body.innerHTML = strip + stats + slots + picker;
@@ -38884,7 +39404,7 @@ function playerEquipmentAdapter() {
     const L=lootCore(),now=Date.now(),ids=['ember_wisp','reed_bow','reed_arrow'];
     return {arrows:gameState.inventory.items?.reed_arrow||0,full:forgeQueueIsFull(),recipes:ids.map(id=>{const item=L.craftableById(id),recipe=L.recipeFor(id);return {id,label:item.label,icon:item.icon,qty:recipe.output?.qty||1,coins:recipe.coins,materials:Object.entries(recipe.materials).map(([key,n])=>({label:L.materialById(key).label,need:n,have:gameState.inventory.items?.[key]||0})),seconds:Math.ceil(L.craftTimeMs(id)/1000),ok:L.canCraft(recipe,gameState.inventory.items,gameState.player.coins).ok};}),jobs:ensureForgeJobs().filter(j=>ids.includes(j.gearId)).map(j=>({id:j.id,label:L.craftableById(j.gearId).label,seconds:Math.max(0,Math.ceil((j.endMs-now)/1000))}))};
   },craft:id=>valid()&&['ember_wisp','reed_bow','reed_arrow'].includes(id)?craftGear(id):false,
-    collect:id=>valid()?collectForgeJob(id):false,cancel:id=>valid()?cancelForgeJob(id):false};
+    collect:id=>valid()?collectForgeJob(id):false,cancel:id=>valid()?cancelForgeJob(id):false,find:()=>valid()&&prerequisiteGuideGoal({type:'feature',args:['forge']}),guideCraft:id=>valid()&&['ember_wisp','reed_bow','reed_arrow'].includes(id)&&showPrerequisiteGuide(id)};
 }
 
 function equipItemOnBird(birdId, slot, gearId) {
@@ -39090,6 +39610,7 @@ function upgradeForge() {
   if (!cost) return;
   const stock = gameState.inventory.items;
   const check = L.canUpgradeForge(lv, stock, gameState.player.coins || 0, gameState.player.branches || 0);
+  if (!check.ok && typeof prerequisiteTrackedRecipe === 'function' && prerequisiteTrackedRecipe()) { showPrerequisiteGuide(); return; }
   if ((gameState.player.coins || 0) < cost.coins) { showResourceQuestPrompt('coins', cost.coins, 'Upgrading the forge'); return; }
   if (!check.ok) { showToast('⚒️ Missing: ' + check.missing.join(', ')); return; }
   addCoins(-cost.coins);
@@ -39137,12 +39658,12 @@ function renderForgeCraft(body) {
         costBits.push(have >= need ? bit : '<span class="short">' + bit + '</span>');
       });
       const craftMs = L.craftTimeMs(item);
-      return '<div class="forge-recipe" style="border-color:' + color + '44;">' +
+      return '<div class="forge-recipe" data-forge-recipe="' + escapeHtml(item.id) + '" style="border-color:' + color + '44;">' +
         '<div class="fr-icon">' + gearIconHTML(item) + '</div>' +
         '<div class="fr-main"><div class="fr-name" style="color:' + color + ';">' + escapeHtml(item.label) + ' <span class="fr-time">⏳ ' + formatForgeDuration(craftMs) + '</span></div>' +
         '<div class="fr-stats">' + forgeGearStatLine(item) + '</div>' +
         '<div class="fr-cost">' + costBits.join(' · ') + '</div></div>' +
-        '<button class="forge-craft-btn"' + (!queueFull && !locked ? '' : ' disabled') + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? '🔒 FORGE LV ' + L.minForgeLevelForRarity(item.rarity) : queueFull ? 'ANVIL FULL' : 'FORGE') + '</button>' +
+        '<button class="forge-craft-btn"' + ' onclick="craftGear(\'' + item.id + '\')">' + (locked ? 'FORGE LV ' + L.minForgeLevelForRarity(item.rarity) + ' · HELP' : queueFull ? 'ANVIL FULL · HELP' : 'FORGE') + '</button>' +
         '</div>';
     }).join('');
   });
@@ -39163,6 +39684,7 @@ function craftGear(gearId) {
   const recipe = L.recipeFor(gearId);
   const item = L.craftableById(gearId);
   if (!recipe || !item) return;
+  if (typeof startPrerequisiteRecipe === 'function' && (!L.canForgeAtLevel(item, burbzForgeLevel()) || !L.canCraft(recipe, gameState.inventory.items, gameState.player.coins || 0).ok || forgeQueueIsFull()) && startPrerequisiteRecipe(gearId)) return;
   if (!L.canForgeAtLevel(item, burbzForgeLevel())) { showToast('⚒️ ' + item.label + ' needs Forge Lv ' + L.minForgeLevelForRarity(item.rarity) + ' — upgrade the forge first.'); return; }
   const stock = gameState.inventory.items;
   const check = L.canCraft(recipe, stock, gameState.player.coins || 0);
@@ -39174,11 +39696,14 @@ function craftGear(gearId) {
     gameState.player.coins-=recipe.coins;
     Object.keys(recipe.materials).forEach(id=>{stock[id]-=recipe.materials[id];if(stock[id]===0)delete stock[id];});
     ensureForgeJobs().push({id:'forge_'+gearId+'_'+now+'_'+Math.floor(Math.random()*1000000),gearId,startMs:now,endMs:now+craftMs});
+    // Goal completion and paid commission share one durable transaction.
+    if(typeof prerequisiteTrackedRecipe==='function'&&prerequisiteTrackedRecipe()===gearId)gameState.prerequisiteGoal=null;
   }))return false;
   updateHeader();
   SFX.questComplete();
   vibrate(30);
   showToast('⚒️ ' + item.icon + ' ' + item.label + ' is on the anvil — ready in ' + formatForgeDuration(craftMs) + '.');
+  if (typeof refreshPrerequisiteGoalBanner === 'function') refreshPrerequisiteGoalBanner();
   renderForge();
   return true;
 }
@@ -39529,7 +40054,9 @@ function renderBirdEquip(target, previewBird) {
   const loadout = unowned ? {} : birdLoadout(bird.id);
   const bonus = unowned ? {} : birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  const cardArt = window.BurbzSpecialBirdSprites?.keyFor(bird) ? birdCardImgAttrs(bird) : null;
+  // Keep the four restored full paintings in the full-card inspector too.
+  const restoredManga = String(getBirdCardArtUrl(bird) || '').startsWith('/burbz/assets/bird-cards-v411/');
+  const cardArt = (restoredManga || window.BurbzSpecialBirdSprites?.keyFor(bird)) ? birdCardImgAttrs(bird) : null;
   const artUrl = cardArt?.src || getBirdArtUrl(bird);
   const fallback = '<div class="bird-equip-art-fallback" role="img" aria-label="' + escapeHtml(bird.commonName || bird.species) + '">' + (bird.emoji || '🐦') + '</div>';
   const art = fallback + (artUrl
@@ -39611,7 +40138,7 @@ function renderBirdEquip(target, previewBird) {
         const color = L.RARITY_META[x.item.rarity].color;
         return '<button class="forge-picker-row" style="border-color:' + color + '66;" onclick="birdEquipSet(\'' + slot + '\',\'' + x.item.id + '\')">' +
           '<span class="fp-icon">' + gearIconHTML(x.item) + '</span><span><div class="fp-name" style="color:' + color + ';">' + escapeHtml(x.item.label) + '</div><div class="fp-meta">' + forgeGearStatLine(x.item) + '</div></span><span class="fp-count">×' + x.count + '</span></button>';
-      }).join('') : '<div class="inventory-empty">No spare ' + FORGE_SLOT_META[slot].label.toLowerCase() + 's in the Stores — loot the map, win battles, or craft one at the Fletcher\'s Forge.</div>') +
+      }).join('') : '<div class="inventory-empty">No spare ' + FORGE_SLOT_META[slot].label.toLowerCase() + 's in the Stores. <button type="button" class="academy-btn" onclick="prerequisiteGuideGoal({type: &quot;feature&quot;,args:[&quot;forge&quot;]})">Find equipment at the Forge</button></div>') +
       '</div>';
   }
 
@@ -39678,6 +40205,7 @@ function setHudChipValue(chipId, valueId, amount) {
 }
 
 function updateHeader() {
+  if (typeof refreshPrerequisiteGoalBanner === 'function') refreshPrerequisiteGoalBanner();
   const lv = gameState.player.level;
   const xp = Math.max(0, Math.floor(gameState.player.xp || 0));
   const xpNeeded = XP_PER_LEVEL(lv);
@@ -40158,8 +40686,8 @@ function createBirdCardHTML(bird, idx) {
         </div>
         <div class="card-level">LV.${cardLv}</div>
         <div class="card-info">
-          <div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>${cardBondHeartsHTML(bird)}
-          <div class="card-care-gauges">${birdCardLocationButtonHTML(bird)}${hungerBarHTML(hungerStatus, 'companion-card')}
+          <div class="card-heading"><div class="card-identity"><div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>${cardBondHeartsHTML(bird)}</div>${birdCardLocationButtonHTML(bird)}</div>
+          <div class="card-care-gauges">${hungerBarHTML(hungerStatus, 'companion-card')}
             <div class="card-health" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hpPct}"><div class="bird-hunger-head"><span>Health</span><span>${hpPct}%</span></div><div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpPct > 50 ? 'var(--hp-green)' : 'var(--hp-red)'}"></div></div></div>
           </div>
           <div class="card-front-actions">${feed}<button type="button" class="card-pet-btn" data-action="flip-card" aria-pressed="false">Full card ↻</button></div>
@@ -42333,7 +42861,7 @@ function battlePickToggle(birdId) {
   const idx = battleSelectedIds.indexOf(birdId);
   if (idx >= 0) battleSelectedIds.splice(idx, 1);
   else {
-    if (!birdBattleReady(bird)) { showToast('🍽️ ' + birdDisplayName(bird) + ' needs food before battle.'); return; }
+    if (!birdBattleReady(bird)) { prerequisiteGuideGoal({type:'bird-work',args:[bird.id,'battle']}); return; }
     if (battleSelectedIds.length >= 4) battleSelectedIds.shift();
     battleSelectedIds.push(birdId);
   }
@@ -42350,11 +42878,12 @@ function startPerchBattle() {
   const team = battleSelectedIds.map(id => flock.find(b => b.id === id)).filter(Boolean);
   if (!team.length) return;
   const posted = team.find(b => !isMerlinCompanion(b) && birdAssignedPost(b.id));
-  if (posted) { const post = birdAssignedPost(posted.id); showToast(birdDisplayName(posted) + ' is working as ' + post.role.title + ' — stand them down first.'); renderBattleSelect(); return; }
+  if (posted) { prerequisiteGuideGoal({type:'bird-work',args:[posted.id,'battle']}); return; }
   const busy = team.find(b => !isMerlinCompanion(b) && (birdHasActiveTraining(b.id) || birdHasActiveExpedition(b.id)));
-  if (busy) { showToast(birdDisplayName(busy) + ' is already busy with ' + (birdHasActiveTraining(busy.id) ? 'training' : 'a quest') + ' - finish that activity first.'); renderBattleSelect(); return; }
+  if (busy) { prerequisiteGuideGoal({type:'bird-work',args:[busy.id,'battle']}); return; }
   const blocked = team.find(b => !birdBattleReady(b));
   if (blocked) {
+    if(prerequisiteGuideGoal({type:'bird-work',args:[blocked.id,'battle']}))return;
     const readiness = birdWorkReadiness(blocked, 'battle');
     showToast((readiness.sleepBlocked ? '💤 ' + birdDisplayName(blocked) + ' is sleeping and needs a rest in the tree.' : '🍽️ ' + birdDisplayName(blocked) + ' needs food before battle.'));
     renderBattleSelect();
@@ -44196,7 +44725,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'opening-home-v416-20260914';
+const BURBZ_BUILD = 'alderwing-followups-v417-20260914';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44818,7 +45347,7 @@ function activateMerlinCurrentAction() {
   const objective = merlinNavigationObjective();
   if (!objective || objective.complete) return;
   if (objective.screen && objective.screen !== currentScreen) {
-    if (!featureGateOpen(objective.screen)) { showToast(featureUnlockHint(objective.screen)); return; }
+    if (!featureGateOpen(objective.screen)) { if(!prerequisiteGuideGoal({type:'feature',args:[objective.screen]}))showToast(featureUnlockHint(objective.screen)); return; }
     activateGameHudDestination(objective.screen);
   }
   const reveal = () => {
@@ -45593,8 +46122,83 @@ function addDemoBirds() {
 // only shows the controls. Returning players begin at their command desk;
 // saved walks remain available through their existing routes.
 // The personal clearing is separate from claimed villages and their economy.
+let activeCampHomeId=null;
+const campMapMarkers=new WeakMap();
+function explorationState(){return gameState.exploration||(gameState.exploration=BurbzExplorationCore.empty());}
+function revealExploration(pose){return BurbzExplorationCore.reveal(explorationState(),pose);}
+function commitExploration(proposal){
+ if(!proposal.ok)return proposal;
+ const before=gameState.exploration;gameState.exploration=proposal.state;
+ if(!durableSaveState().ok){gameState.exploration=before;return{ok:false,error:'Your camp could not be saved. Nothing was spent. Please retry.'};}
+ try{refreshCampMarkers(liveMap);refreshCampMarkers(empireMap);updateHeader();}catch(e){}return{ok:true,message:proposal.message};
+}
+function placeCamp(point){const result=BurbzExplorationCore.place(explorationState(),point,crypto.randomUUID());if(result.ok)result.message=result.camp.name+' saved. Your tent is ready; add a campfire for 5 timber.';return commitExploration(result);}
+function upgradeCamp(id){const p=BurbzExplorationCore.upgrade(explorationState(),id);p.message='Your additional home is built. Your original home is still yours.';return commitExploration(p);}
+function processCampGPS(fix){
+ // Called only from handleLivePosition, never from avatar movement, saved home,
+ // map-camera updates or fast travel. Eligibility survives an offline reload.
+ for(const camp of [...explorationState().camps]){
+  const proposal=BurbzExplorationCore.visit(explorationState(),camp.id,fix);if(!proposal.ok)continue;
+  const before=snapshotGameState(),level=gameState.player.level;
+  try{gameState.exploration=proposal.state;const r=proposal.reward;
+   gameState.player.coins+=r.coins;gameState.player.branches+=r.branches;applyPlayerXpState(r.xp);
+   if(!Number.isSafeInteger(gameState.player.coins)||!Number.isSafeInteger(gameState.player.branches))throw Error('Your reward could not be counted.');
+   setQuestClaimReceipt('camp-visit:'+camp.id,{at:Date.now(),lat:camp.lat,lon:camp.lon,rewards:r});
+   durableSaveState({throwOnFailure:true});
+  }catch(error){restoreGameStateSnapshot(before);showToast('Your camp visit could not be saved. Keep location on and retry; your reward is still waiting.');return false;}
+  showToast(proposal.reward.coins?camp.name+' visited! +500 coins · +250 XP · +50 timber. Open Camps to build your free house.':camp.name+' visited! Build your free house in Camps. This place’s bonus was already collected.');announcePlayerLevelUps(level);
+ }
+ refreshCampMarkers(liveMap);refreshCampMarkers(empireMap);return true;
+}
+function buildCampFire(id,pose){const camp=explorationState().camps.find(c=>c.id===id);if(!camp||camp.fire)return{ok:false,error:'This campfire is already built.'};if(!BurbzGeographicWorldCore.validCoordinate(pose)||BurbzGeographicWorldCore.distance(camp,pose)>12)return{ok:false,error:'Fast travel to this camp and build the fire beside your tent.'};
+ if(!Number.isSafeInteger(gameState.player.branches)||gameState.player.branches<5)return{ok:false,error:'Campfire needs 5 timber. Chop trees in your home clearing or village, then return here.'};
+ const before=gameState.player.branches;gameState.player.branches-=5;const result=commitExploration({ok:true,state:{...explorationState(),camps:explorationState().camps.map(c=>c===camp?{...c,fire:true}:c)},message:'Campfire built · 5 timber used.'});if(!result.ok)gameState.player.branches=before;else updateHeader();return result;
+}
+async function travelToCamp(id){const camp=explorationState().camps.find(c=>c.id===id);if(!camp)return{ok:false,error:'That camp is no longer in this save.'};const p=BurbzGeographicWorldCore.unproject(camp,{x:0,y:0,z:4.5});try{const opened=await enterGeographicWorld({pose:{...p,yaw:0,pitch:0,mode:'walk'},safeArrival:true,release:()=>BurbzVillageWalk?.close('world')});if(opened!==true)throw Error('The camp could not open. Retry when its terrain is available.');return{ok:true};}catch(e){showToast('Camp is saved. '+e.message);return{ok:false,error:e.message};}}
+async function showCampRealMap(id){const camp=explorationState().camps.find(c=>c.id===id);if(!camp)return;BurbzVillageWalk?.close('navigation');BurbzPlayerHome.close('navigation');switchScreen('map');if(!liveMap)await initLiveMap();if(liveMap){liveMapUserMoved=true;liveMap.jumpTo({center:[camp.lon,camp.lat],zoom:17});refreshCampMarkers(liveMap);}showToast(camp.name+' · Visit within 45 m in real life with location enabled.');}
+function refreshCampMarkers(map){if(!map||!window.maplibregl)return;const old=campMapMarkers.get(map)||[];old.forEach(m=>m.remove());const center=map.getCenter();const camps=[...explorationState().camps].sort((a,b)=>BurbzGeographicWorldCore.distance(a,{lat:center.lat,lon:center.lng})-BurbzGeographicWorldCore.distance(b,{lat:center.lat,lon:center.lng})).slice(0,80);const next=camps.map(c=>{const el=document.createElement('button');el.type='button';el.className='camp-marker';el.textContent=c.home?'⌂':'⛺';el.title=c.name+(c.home?' · Home':'');el.setAttribute('aria-label',el.title);el.onclick=e=>{e.stopPropagation();BurbzExploration.sheet();};return new maplibregl.Marker({element:el}).setLngLat([c.lon,c.lat]).addTo(map);});campMapMarkers.set(map,next);}
+function currentPlayerHome(){return activeCampHomeId?explorationState().camps.find(c=>c.id===activeCampHomeId)?.home||gameState.playerHome:gameState.playerHome;}
+async function enterCampHome(id,area='room'){const camp=id&&explorationState().camps.find(c=>c.id===id);if(id&&!camp?.home)return{ok:false,error:'Visit this camp in real life, then build its house.'};BurbzVillageWalk?.close('world');BurbzPlayerHome.close('world');activeCampHomeId=id||null;return BurbzPlayerHome.open(area,{fromDesk:false,returnToWorld:true});}
+function commitCampHomeAction(action){const camp=explorationState().camps.find(c=>c.id===activeCampHomeId);if(!camp?.home)return{ok:false,error:'Reopen this home from Camps.'};if(['anchor','build-home'].includes(action.kind))return{ok:false,error:'This home stays at your visited camp.'};const farming=action?.kind?.startsWith('farm-'),p=farming?BurbzPlayerHomeCore.proposeFarm(camp.home,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(camp.home,gameState.player,action);if(!p.ok)return p;const before=snapshotGameState();camp.home=p.home;gameState.player.branches=p.wallet.branches;if(farming){gameState.player.coins=p.wallet.coins;gameState.inventory=p.inventory;}if(!durableSaveState().ok){restoreGameStateSnapshot(before);return{ok:false,error:'Your home could not be saved. Nothing was spent.'};}updateHeader();return{ok:true,message:p.message};}
+
 let geographicWorldVisit = null, geographicAvatarMarker = null;
+// Placement reads the same authored settlement geometry as walking. Existing
+// homes are left intact; only a new anchor/house needs a fresh one-use permit.
+const homePlacementPermits=new WeakSet(),homeSettlementBounds=new Map();
+let initialHomePlacementPending=null;
+function homeSettlementGeometryKey(record){const members=record.settlement?townMemberRecords(record.settlement):[empireVillageRecordBySeed(record.seed)].filter(Boolean);return JSON.stringify([record.id,record.seed,record.tier,record.lat,record.lon,record.settlement,members.map(r=>({seed:r.seed,buildings:r.economy?.buildings,plots:r.economy?.buildingPlots,constructions:r.economy?.constructions,ready:r.economy?.readyToOpen,ruins:r.economy?.ruins}))]);}
+async function checkPlayerHomePlacement(point){
+ const G=BurbzGeographicWorldCore;if(!G.validCoordinate(point)||!window.THREE)return{ok:false,error:'Choose a loaded place outside villages and towns.'};
+ const identity=gameState,records=await geographicSettlementRecords({center:point}),signatures=records.map(r=>homeSettlementGeometryKey(r)),home=BurbzPlayerHomeCore.normalize(gameState.playerHome,true),T=THREE;
+ // Check the real house, attached rooms and fields, not merely its anchor.
+ const model=BurbzPlayerHomeScene.createHouse(T,{...home,tier:Math.max(1,home.tier)});model.add(BurbzPlayerHomeScene.createFarm(T,home));model.updateMatrixWorld(true);const footprint=new T.Box3().setFromObject(model);
+ BurbzPlayerHomeScene.disposeScene(model);
+ const low={x:footprint.min.x-1,z:footprint.min.z-1},high={x:footprint.max.x+1,z:footprint.max.z+1};
+ for(const record of records){
+  if(identity!==gameState)return{ok:false,error:'Your save changed. Choose the place again.'};
+  const key=homeSettlementGeometryKey(record);let bounds=homeSettlementBounds.get(record.id);
+  if(bounds?.key!==key){const content=await createTravellingSettlement(T,record,{boundsOnly:true});bounds={key,radius:content.radius,boxes:content.boxes};content.dispose();homeSettlementBounds.set(record.id,bounds);if(homeSettlementBounds.size>32)homeSettlementBounds.delete(homeSettlementBounds.keys().next().value);}
+  if(key!==homeSettlementGeometryKey(record))return{ok:false,error:'This settlement changed while checking the site. Please try again.'};
+  const at=G.project(point,record),nearestX=Math.max(low.x,Math.min(high.x,at.x)),nearestZ=Math.max(low.z,Math.min(high.z,at.z));
+  const overlapsGround=Math.hypot(nearestX-at.x,nearestZ-at.z)<=bounds.radius;
+  const overlapsBuilding=bounds.boxes.some(b=>low.x<=at.x+b.maxX&&high.x>=at.x+b.minX&&low.z<=at.z+b.maxZ&&high.z>=at.z+b.minZ);
+  if(overlapsGround||overlapsBuilding)return{ok:false,error:'Your house needs its own clearing outside '+record.name+'. Move beyond the village or town perimeter, leaving room for the whole house.'};
+ }
+ if(identity!==gameState||records.some((r,i)=>homeSettlementGeometryKey(r)!==signatures[i]))return{ok:false,error:'Your save or a settlement changed. Check the site again.'};
+ return{ok:true};
+}
+async function commitPlayerHomePlacement(action,isCurrent=()=>true){
+ if(!isCurrent())return{ok:false,error:'Home placement cancelled.'};
+ const identity=gameState,revision=gameState.playerHome?.anchor?.revision||0;
+ const valid=await checkPlayerHomePlacement(action);if(!valid.ok)return valid;
+ if(!isCurrent())return{ok:false,error:'Home placement cancelled.'};
+ if(identity!==gameState||revision!==(gameState.playerHome?.anchor?.revision||0))return{ok:false,error:'Your home changed. Choose its place again.'};
+ homePlacementPermits.add(action);return commitPlayerHomeAction(action);
+}
+
 function commitPlayerHomeAction(action) {
+  if(typeof activeCampHomeId!=='undefined'&&activeCampHomeId)return commitCampHomeAction(action);
+  if(['anchor','build-home'].includes(action?.kind)){if(!homePlacementPermits.has(action))return{ok:false,error:'Check this place outside village and town boundaries before placing your home.'};homePlacementPermits.delete(action);}
   const farming=action?.kind?.startsWith('farm-');
   const proposal=farming?BurbzPlayerHomeCore.proposeFarm(gameState.playerHome,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(gameState.playerHome,gameState.player,action);
   if(!proposal.ok)return proposal;
@@ -45608,7 +46212,13 @@ function commitPlayerHomeAction(action) {
 }
 function anchorPlayerHomeAt(lat,lon) {
   if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
-  return commitPlayerHomeAction({kind:'anchor',lat,lon,source:'initial',expectedRevision:0}).ok;
+  if(initialHomePlacementPending?.identity===gameState)return initialHomePlacementPending.promise;
+  const attempt={identity:gameState,promise:null};
+  attempt.promise=commitPlayerHomePlacement({kind:'anchor',lat,lon,source:'initial',expectedRevision:0})
+    .then(r=>{if(!r.ok&&gameState===attempt.identity)showToast(r.error);return r.ok;})
+    .catch(e=>{if(gameState===attempt.identity)showToast(e.message);return false;})
+    .finally(()=>{if(initialHomePlacementPending===attempt)initialHomePlacementPending=null;});
+  initialHomePlacementPending=attempt;return attempt.promise;
 }
 function savedGeographicPose() {
   const journey=gameState.worldJourney,anchor=gameState.playerHome?.anchor;
@@ -45648,18 +46258,23 @@ async function enterGeographicWorld(handoff={}) {
   const entrySave=gameState,entryScreen=currentScreen;
   const C=BurbzGeographicWorldCore;
   if(!gameState.playerHome?.anchor){
-    const last=gameState.lastKnownHome;if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
+    if(initialHomePlacementPending?.identity===entrySave)await initialHomePlacementPending.promise;
+    else {const last=gameState.lastKnownHome;if(last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)await anchorPlayerHomeAt(last.lat,last.lon);}
   }
+  if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
   if(!gameState.playerHome?.anchor)return chooseGeographicHomeLocation(handoff);
   await ensureVillageWalkModule();
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
-  const anchor={...gameState.playerHome.anchor};
+  const anchor={...(handoff.anchor||gameState.playerHome.anchor)};
   const local=handoff.localPose||(!handoff.pose&&!savedGeographicPose()?{x:0,y:0,z:4,yaw:Math.PI,pitch:0}:null);
   const pose=handoff.pose||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
   const record=geographicSettlementRecords({center:pose||anchor})[0];
   if(!record)throw Error('The nearby world could not be located. Your home is safe; please try again.');
   handoff.release?.();BurbzPlayerHome.close('world');geographicWorldVisit=null;
-  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;
+  // Let the old fullscreen exit finish before a new walking root requests it.
+  await BurbzVillageWalk.whenClosed?.();
+  if(gameState!==entrySave||currentScreen!==entryScreen)return false;
+  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=!!handoff.safeArrival;
   let ownedSource;
   return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
     character:walkingCharacterState,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
@@ -45680,6 +46295,7 @@ async function enterGeographicWorld(handoff={}) {
   });
 }
 async function chooseGeographicHomeLocation(handoff={}) {
+  if(activeCampHomeId){showToast('This home stays at your visited camp.');return false;}
   const sessionSave=gameState,entryScreen=currentScreen;
   await loadMapLibreIfNeeded();if(gameState!==sessionSave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
   const anchor=gameState.playerHome.anchor,expectedRevision=anchor?.revision||0,oldHome=gameState.playerHome;
@@ -45687,7 +46303,8 @@ async function chooseGeographicHomeLocation(handoff={}) {
   handoff.release?.();BurbzPlayerHome.close('location');BurbzGeographicWorld.close('location');
   const restore=()=>{if(handoff.restore)return handoff.restore();const r=handoff.returnOptions;if(handoff.pose)return enterGeographicWorld({pose:handoff.pose});if(r||handoff.localPose||handoff.area)return BurbzPlayerHome.open(r?.start||'room',r?.options||{fromDesk:false,pose:handoff.localPose,area:handoff.area});return true;};
   return BurbzGeographicHomePicker.open({anchor,location,style:burbzMapStyle(),loadMapLibre:loadMapLibreIfNeeded,
-    commit:point=>gameState!==sessionSave||gameState.playerHome!==oldHome&&gameState.playerHome.anchor?.revision!==expectedRevision?{ok:false,error:'Your home changed while the map was open. Cancel and choose again.'}:commitPlayerHomeAction({kind:'anchor',...point,source:'chosen',expectedRevision}),
+    preview:checkPlayerHomePlacement,
+    commit:point=>gameState!==sessionSave||gameState.playerHome!==oldHome&&gameState.playerHome.anchor?.revision!==expectedRevision?{ok:false,error:'Your home changed while the map was open. Cancel and choose again.'}:commitPlayerHomePlacement({kind:'anchor',...point,source:'chosen',expectedRevision},()=>gameState===sessionSave&&BurbzGeographicHomePicker.isOpen()),
     cancel:()=>Promise.resolve(restore()).catch(error=>showToast(error.message)),placed:()=>enterGeographicWorld(handoff.pose?{pose:handoff.pose}:{localPose:{x:0,y:0,z:4,yaw:Math.PI,pitch:0}}).catch(error=>showToast(error.message))
   });
 }
@@ -45717,13 +46334,14 @@ function mountWalkingRealmMap(container,pose) {
   const oldStyle=card.style.cssText,hadMap=!!empireMap,oldCamera=empireMap?{center:empireMap.getCenter(),zoom:empireMap.getZoom(),bearing:empireMap.getBearing(),pitch:empireMap.getPitch()}:null;
   const framed=empireMapHasFramed,adjusted=empireMapUserAdjusted;
   const buttons=['empireMapMeBtn','empireMapRealmBtn','empireMapWorldBtn','empireMapKeyBtn'].map(id=>{const node=$(id);return{node,click:node.onclick};});
-  let closed=false,marker=null,map=null;container.append(card);card.classList.add('fp-borrowed-atlas');
+  let closed=false,marker=null,map=null;const outpostMarkers=[];container.append(card);card.classList.add('fp-borrowed-atlas');
   const resize=new ResizeObserver(()=>{if(!closed)map?.resize();});resize.observe(container);
   const center=()=>{if(!map)return;hideEmpireMapCard();hideEmpireMapKey();map.easeTo({center:[pose.lon,pose.lat],zoom:14,duration:0});};
   function realm(){if(!map)return;hideEmpireMapCard();hideEmpireMapKey();const villages=empireMappableVillages(),points=[pose,...villages];const bounds=BurbzEmpireMapCore.claimBounds(points.map((p,i)=>({...p,seed:p.seed??i})));if(bounds&&points.length>1)map.fitBounds(bounds,{padding:Math.min(60,container.clientHeight/5),maxZoom:12,duration:0});else center();}
-  const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
+  const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();outpostMarkers.forEach(m=>m.remove());hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
   walkingRealmLease=lease;buttons[0].node.onclick=center;buttons[1].node.onclick=realm;buttons[2].node.onclick=showEmpireWorld;buttons[3].node.onclick=toggleEmpireMapKey;
-  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';const arrow=document.createElement('span');arrow.textContent='➤';arrow.style.transform='rotate('+(-pose.yaw*180/Math.PI-90)+'deg)';pin.append(arrow);pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);realm();return map;});
+  lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';const arrow=document.createElement('span');arrow.textContent='➤';arrow.style.transform='rotate('+(-pose.yaw*180/Math.PI-90)+'deg)';pin.append(arrow);pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);
+    for(const c of Object.values(enemyOutpostState().camps).sort((a,b)=>BurbzGeographicWorldCore.distance(a,pose)-BurbzGeographicWorldCore.distance(b,pose)).slice(0,64)){const el=document.createElement('span');el.className='eo-atlas-marker'+(c.liberated?' friendly':'');el.textContent=c.liberated?'⚑':'⚔';el.title=c.liberated?'Friendly outpost · 5 coins/hour · holds 60':'Hostile camp · '+c.hp.filter(n=>n>0).length+' guards remain';el.setAttribute('aria-label',el.title);outpostMarkers.push(new maplibregl.Marker({element:el}).setLngLat([c.lon,c.lat]).addTo(map));}realm();return map;});
   return lease;
 }
 function leaveWalkingRealmMap(){if(walkingRealmLease)BurbzVillageWalk.close('map-navigation');}
@@ -45757,7 +46375,7 @@ async function prepareSettlementSteps(steps,context,signal,metrics,phase) {
     return result.value;
   }finally{if(!result?.done)withSettlementBuilder(context,()=>steps.return?.());}
 }
-async function createTravellingSettlement(T,record,{signal,host=false}={}) {
+async function createTravellingSettlement(T,record,{signal,host=false,boundsOnly=false}={}) {
   const before=captureSettlementBuilder(),context={...before},started=performance.now(),metrics={steps:[]};
   for(const [key,value] of Object.entries(context)) {
     if(Array.isArray(value))context[key]=[];
@@ -45782,6 +46400,7 @@ async function createTravellingSettlement(T,record,{signal,host=false}={}) {
   scene.traverse(o=>{if(o.userData.overheadHome)o.visible=false;});
   const buildings=(town?context.townEconBuildings:context.villageBuildings).filter(b=>!b.userData.townGround);
   for(const b of buildings)if(b.userData.wardSeed===undefined)b.userData.wardSeed=record.seed;
+  if(boundsOnly){scene.updateMatrixWorld(true);return{radius:scene.userData.walkSurface.radius,boxes:buildings.map(b=>new T.Box3().setFromObject(b)).filter(b=>Number.isFinite(b.min.x+b.min.z+b.max.x+b.max.z)).map(b=>({minX:b.min.x,maxX:b.max.x,minZ:b.min.z,maxZ:b.max.z})),dispose};}
   const names=town?['townNpcs','townWalkers','townTraffic','townLivestock','townFlocks','townRoofBirds','townChickens','townWindmills','townCloths','townSigns']:
     ['villageNpcs','villageWalkers','villageTraffic','villageLivestock','villageFlocks','villageRoofBirds','villageChickens','villageWindmills','villageCloths','villageSigns','villageDucks','villageButterflies'];
   const movers=names.flatMap(key=>context[key]);
@@ -45812,10 +46431,12 @@ async function createTravellingSettlement(T,record,{signal,host=false}={}) {
 function continuousWalkingAdapter(record) {
   const sessionSave=gameState,revision=gameState.playerHome?.anchor?.revision;
   return {record:{...record},anchor:gameState.playerHome?.anchor&&{...gameState.playerHome.anchor},
-    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,
+    style:burbzMapStyle(),loadMap:loadMapLibreIfNeeded,realmMap:mountWalkingRealmMap,territoryLight:empireTerritoryLight,
     sky:{moonTexture:villageMoonTexture,grade:burbzDaylightGradeNow,colors:(grade,palette)=>villageSkyColors(burbzDaylightPalette(palette,grade))},
     records:geographicSettlementRecords,createSettlement:createTravellingSettlement,waysides:geographicWaysideRecords,createWayside:createTravellingWayside,waysidePalette:palette=>burbzDaylightPalette(palette||VILLAGE_PALETTES[0],burbzDaylightGradeNow()),
-    buildHome:(pose,expectedRevision)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomeAction({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision}),
+    checkHome:checkPlayerHomePlacement,
+    buildHome:(pose,expectedRevision,isCurrent)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomePlacement({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision},isCurrent),
+    exploration:{read:explorationState,reveal:revealExploration,place:point=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing.'}:placeCamp(point),home:enterCampHome},
     getHome:()=>gameState.playerHome,createYard:(T,h,options)=>BurbzPlayerHomeScene.createYardContent(T,h,options),
     openBuild:localPose=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('yard',{build:true,pose:localPose,returnToWorld:true});},
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
@@ -45836,6 +46457,7 @@ async function exploreFromSettlement(record,localPose) {
 // An informational reference only: it has no travel action and never steers
 // the real quest map or changes its phone-location marker.
 function refreshGeographicAvatarMarker() {
+  refreshCampMarkers(liveMap);
   if(!liveMap||!window.maplibregl)return;
   const pose=savedGeographicPose();
   if(!pose){geographicAvatarMarker?.remove();geographicAvatarMarker=null;return;}
@@ -45845,15 +46467,18 @@ function refreshGeographicAvatarMarker() {
   geographicAvatarMarker.setLngLat([pose.lon,pose.lat]);
 }
 function initializePlayerHome() {
+  gameState.exploration=BurbzExplorationCore.normalize(gameState.exploration);
+  BurbzExploration.bind({read:explorationState,travel:travelToCamp,map:showCampRealMap,home:enterCampHome,primary:()=>enterCampHome(null,'yard'),upgrade:upgradeCamp,fire:buildCampFire,timber:()=>gameState.player.branches});
+  for(const id of ['campHomeButton','campMapButton','campRealmButton'])$(id)?.addEventListener('click',()=>BurbzExploration.sheet());
   if (!window.BurbzPlayerHome || !window.BurbzPlayerHomeCore) { maybeShowIntroCutscene(); return; }
   const veteran = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1' || gameState.player.level > 1 || gameState.flock.length > 0;
   gameState.playerHome = BurbzPlayerHomeCore.normalize(gameState.playerHome, veteran);
   saveState();
-  BurbzPlayerHome.bind({read:()=>gameState.playerHome,timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
+  BurbzPlayerHome.bind({read:()=>currentPlayerHome(),timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
     command:()=>{switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
-    onClose:()=>{document.body.classList.add('player-at-desk');}
+    onClose:()=>{activeCampHomeId=null;document.body.classList.add('player-at-desk');}
   });
   const last=gameState.lastKnownHome;
   if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
@@ -45981,6 +46606,8 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 // Run
 window.BurbzFieldMapUI?.controls(document);
 window.BurbzLandscapeUI?.bind({ resizeVillage:onVillageResize, resizeTown:onTownResize, resizeAtlas:fitEmpireAtlasHeight });
+installPrerequisiteActionHooks();
+Object.assign(window,{prerequisiteGuideGoal});
 init();
 
 })();

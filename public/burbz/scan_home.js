@@ -56,12 +56,14 @@
  function fitLayout(){
   if(!options?.visible()||!layoutModel)return;
   const main=boundSection.querySelector('.scan-home-main'),width=main.clientWidth,{ids,featured}=layoutModel;
-  const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=shortLandscape||(ids.length>4&&width<400&&innerHeight<700),kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
+  const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=shortLandscape||((ids.length>4||document.getElementById('prerequisiteHomeResume'))&&width<400&&innerHeight<700),kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
   if(kit.parentElement!==kitHost)kitHost.append(kit);boundSection.dataset.equipmentInHeader=String(compactKit);
   const columns=ids.length<=2?1:ids.length>=5&&width>=(shortLandscape?350:460)?3:2,others=ids.filter(id=>id!==featured),rows=columns===3?Math.ceil((ids.length+1)/3):1+Math.ceil(others.length/columns);
   const key=[width,main.clientHeight,columns,...ids,featured,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
   main.style.setProperty('--home-columns',columns);main.style.setProperty('--home-rows',rows);
-  const compact=ids.length>4,firstMin=compact?88:128,otherMin=compact?66:88;
+  const guidanceFitStyle=getComputedStyle(main),guidanceRowGap=parseFloat(guidanceFitStyle.rowGap)||0,guidancePadding=(parseFloat(guidanceFitStyle.paddingTop)||0)+(parseFloat(guidanceFitStyle.paddingBottom)||0);
+  const comfortableHeight=128+(rows-1)*88+44+rows*guidanceRowGap+guidancePadding;
+  const compact=ids.length>4||main.clientHeight<comfortableHeight,firstMin=compact?88:128,otherMin=compact?66:88;
   main.style.setProperty('--home-tracks',`minmax(${firstMin}px,1.35fr) repeat(${rows-1},minmax(${otherMin}px,1fr)) 44px`);
   const first=panelElement(featured);first.style.gridArea=`1 / 1 / 2 / ${columns===3?3:columns+1}`;
   others.forEach((id,i)=>{const row=columns===3?1+Math.floor((i+2)/3):2+Math.floor(i/columns),col=columns===3?1+(i+2)%3:1+i%columns,remaining=others.length-i;panelElement(id).style.gridArea=`${row} / ${col} / ${row+1} / ${remaining===1?(columns===3?Math.min(columns+1,col+2):columns+1):col+1}`;});

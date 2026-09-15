@@ -1,0 +1,105 @@
+{
+  "mode": "local candidate",
+  "checks": [
+    {
+      "name": "Six actual companion cards load expected paintings; both reference paintings and compact sprites stay unchanged",
+      "data": [
+        {
+          "name": "Blue Tit",
+          "attrs": {
+            "src": "/burbz/assets/bird-cards-v411/blue_tit-manga-20260914.webp",
+            "extra": " class=\"card-art-painting\" data-fallback-art=\"/burbz/bird-art-cache/blue_tit_burbz_manga_warrior_20260802.png\" data-fallback-emoji=\"🐦\""
+          },
+          "sprite": "<img class=\"proof\" src=\"/burbz/bird-art-cache/cutouts/blue_tit_burbz_manga_warrior_20260802_cutout.png\" data-fallback-emoji=\"🐦\" alt=\"Blue Tit\">",
+          "habitat": "woodland"
+        },
+        {
+          "name": "Great Tit",
+          "attrs": {
+            "src": "/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp",
+            "extra": " class=\"card-art-painting\" data-fallback-art=\"/burbz/bird-art-cache/great_tit_burbz_manga_warrior_20260802.png\" data-fallback-emoji=\"🐦\""
+          },
+          "sprite": "<img class=\"proof\" src=\"/burbz/bird-art-cache/cutouts/great_tit_burbz_manga_warrior_20260802_cutout.png\" data-fallback-emoji=\"🐦\" alt=\"Great Tit\">",
+          "habitat": "woodland"
+        },
+        {
+          "name": "Long-tailed Tit",
+          "attrs": {
+            "src": "/burbz/assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp",
+            "extra": " class=\"card-art-painting\" data-fallback-art=\"/burbz/bird-art-cache/long_tailed_tit_burbz_manga_warrior_20260802.png\" data-fallback-emoji=\"🐦\""
+          },
+          "sprite": "<img class=\"proof\" src=\"/burbz/bird-art-cache/cutouts/long_tailed_tit_burbz_manga_warrior_20260802_cutout.png\" data-fallback-emoji=\"🐦\" alt=\"Long-tailed Tit\">",
+          "habitat": "heath"
+        },
+        {
+          "name": "Goldcrest",
+          "attrs": {
+            "src": "/burbz/assets/bird-cards-v411/goldcrest-manga-20260914.webp",
+            "extra": " class=\"card-art-painting\" data-fallback-art=\"/burbz/bird-art-cache/goldcrest_burbz_manga_warrior_20260802.png\" data-fallback-emoji=\"🐦\""
+          },
+          "sprite": "<img class=\"proof\" src=\"/burbz/bird-art-cache/cutouts/goldcrest_burbz_manga_warrior_20260802_cutout.png\" data-fallback-emoji=\"🐦\" alt=\"Goldcrest\">",
+          "habitat": "woodland"
+        },
+        {
+          "name": "Treecreeper",
+          "attrs": {
+            "src": "/burbz/bird-art-cache/treecreeper_burbz_manga_20260624_v2.png",
+            "extra": " class=\"card-art-painting\" data-fallback-art=\"/burbz/bird-art-cache/treecreeper_burbz_manga_warrior_20260802.png\" data-fallback-emoji=\"🐦\""
+          },
+          "sprite": "<img class=\"proof\" src=\"/burbz/bird-art-cache/cutouts/treecreeper_burbz_manga_20260624_v2_cutout.png\" data-fallback-emoji=\"🐦\" alt=\"Treecreeper\">",
+          "habitat": "woodland"
+        },
+        {
+          "name": "Great Spotted Woodpecker",
+          "attrs": {
+            "src": "/burbz/bird-art-cache/great_spotted_woodpecker_burbz_manga_20260624.png",
+            "extra": " class=\"card-art-painting\" data-fallback-art=\"/burbz/bird-art-cache/great_spotted_woodpecker_burbz_manga_warrior_20260802.png\" data-fallback-emoji=\"🐦\""
+          },
+          "sprite": "<img class=\"proof\" src=\"/burbz/bird-art-cache/cutouts/great_spotted_woodpecker_burbz_manga_20260624_cutout.png\" data-fallback-emoji=\"🐦\" alt=\"Great Spotted Woodpecker\">",
+          "habitat": "woodland"
+        }
+      ]
+    },
+    {
+      "name": "Saved alternate names use the same four card paintings",
+      "data": [
+        "/burbz/assets/bird-cards-v411/blue_tit-manga-20260914.webp",
+        "/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp",
+        "/burbz/assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp",
+        "/burbz/assets/bird-cards-v411/goldcrest-manga-20260914.webp"
+      ]
+    },
+    {
+      "name": "Cards fit 390×844 without page overflow"
+    },
+    {
+      "name": "Cards fit 844×390 without page overflow"
+    },
+    {
+      "name": "Discreet location controls stay below all six pictures with 44px targets; native click still finds the bird without opening equipment"
+    },
+    {
+      "name": "Native Full card and picture clicks retain the full-card equipment interaction"
+    },
+    {
+      "name": "Bird information uses the same full scene",
+      "data": "/burbz/assets/bird-cards-v411/great_tit-manga-20260914.webp"
+    },
+    {
+      "name": "Actual service worker reload preserves save and renders all four paintings offline"
+    },
+    {
+      "name": "No uncaught browser errors"
+    }
+  ],
+  "errors": [],
+  "sourceSHA": {
+    "index": "2398ca48ee9dab6fbbee10110a6326cd5b383db84629a6864f06c38a13c2b550",
+    "worker": "ab4f7986d91f61d8bf71b1e3cc58ac0e26fcab76402f8695e3e6525e5f14106c"
+  },
+  "limits": [
+    "Chromium desktop and phone viewport emulation; no physical-phone claim.",
+    "Disposable test save; HTML adds only a closure test hook and deterministic save seed."
+  ],
+  "complete": true
+}

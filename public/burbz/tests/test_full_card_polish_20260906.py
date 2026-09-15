@@ -14,7 +14,7 @@ const birdEquipSwipeReset=()=>{},birdEquipPrepareNeighbours=()=>{},specialBirdAn
 const bird={id:'robin',commonName:'Robin',species:'Robin',scientificName:'Erithacus rubecula',level:3,xp:40,power:162,rarity:'common',maxHp:70,atk:26,mag:68,def:44,spd:50,bond:{}};
 const gameState={flock:[bird],inventory:{gear:{thorn_talons:1}}};
 const birdEquipState={birdId:'robin',slotPicker:'weapon'},loadout={weapon:'thorn_talons'};
-const birdLoadout=()=>loadout,birdGearBonuses=()=>({atk:12}),RARITY_COLORS={common:'#aaa'},getBirdArtUrl=()=>'/original-robin.png';
+const birdLoadout=()=>loadout,birdGearBonuses=()=>({atk:12}),RARITY_COLORS={common:'#aaa'},getBirdArtUrl=()=>'/original-robin.png',getBirdCardArtUrl=()=>'/original-robin.png';
 const birdPersonalityValue=b=>b.cha||0,birdCardCarryCapacity=()=>5;
 const hungerBarHTML=()=>'',hungerStatusForBird=()=>({}),birdEquipFactsHTML=()=>'<p>Species facts</p>';
 const birdPersonalStoryHTML=()=>'',specialBirdCharacterPanelHTML=()=>'',renderBirdSizePanel=()=>'',renderBirdPostLine=()=>'',renderBirdDietPanel=()=>'',academyRoomButtonsHTML=()=>'';

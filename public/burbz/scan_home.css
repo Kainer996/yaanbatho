@@ -552,3 +552,17 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 #screen-scan.progressive-home .home-panel-list .desk-gear{min-height:56px;padding:2px;gap:0}
 #screen-scan.progressive-home .home-panel-list .desk-gear .desk-mini-art{width:26px;height:30px}
 #screen-scan.progressive-home .home-panel-list .desk-gear>span:not(.desk-mini-art){font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* Home adds Camps beside the existing saved-photo and world controls. Reset
+   their older fixed widths so each keeps its own target in the shared row. */
+#screen-scan.progressive-home .scan-home-command-bar :is(#playerHomeStand,#savedPhotosButton,#campHomeButton){flex:1 1 0;width:0;min-width:44px;max-width:none;min-height:52px;margin:0;padding:4px;font-size:13px}
+@media(orientation:portrait) and (max-width:360px){
+ #screen-scan.progressive-home .scan-home-command-bar{left:8px;right:98px;gap:4px}
+ #screen-scan.progressive-home .scan-home-command-bar :is(#playerHomeStand,#savedPhotosButton,#campHomeButton){font-size:12px}
+}
+@media(orientation:landscape) and (max-height:550px){
+ #screen-scan.progressive-home .scan-home-command-bar :is(#playerHomeStand,#savedPhotosButton,#campHomeButton,.desk-equipment-control){flex:none;width:100%;min-height:44px;height:44px}
+}
+@media(orientation:portrait) and (max-width:360px){
+ #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control{font-size:10px}
+}

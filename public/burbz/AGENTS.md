@@ -1,6 +1,20 @@
 # Burbz — Maintainer & Agent Handbook
 
+Coordinated v417 integrates the finished card/world/common-guidance handoffs on v416. Current result and acceptance boundaries are in ALDERWING_FOLLOWUPS_V417_RELEASE.md at repository root; earlier intake-status paragraphs below are historical. Equipped or spare owned items remain usable independently of the Stores-screen unlock. Do not add an inventory-screen gate to the canonical equipment transaction: that creates a circular equip quest prerequisite. Missing-item guidance still uses real wearer, anvil and recipe requirements.
+
+Coordinated v417 common prerequisite guidance extends saved recipe intent to bounded known game goals across Academy, recruitment, equipment, care/work, villages/towns, and home/camp resource gates. Preserve lexical and public action guards, original transaction authority, profile/reset isolation, failed-save rollback, original target return, actual opening gifts and earned supplies. Navigation never spends, sends, claims, equips, or feeds. Coverage inventory and native limits are in [PREREQUISITE_COMMON_V417_HANDOFF.md](../../PREREQUISITE_COMMON_V417_HANDOFF.md); this supersedes the earlier Forge-only scope note below. Parent release coordination owns final pins and publication.
+
+Home header controls share the available row width, including Camps, Saved photos, Enter Alderwing and optional Equipment. Preserve 44px targets, the reserved Merlin area, and narrow landscape stacking. Common guidance retains one visible Home resume control without creating outer page scrolling; the available-height track choice also covers the four-panel small-phone state.
+
+Coordinated v417 candidate waits for the profile-scoped initial home-placement promise before deciding whether world entry needs a location picker. Preserve the asynchronous settlement/footprint check, shared in-flight placement, cancelled-handoff/save-identity checks and rejection fallback. Existing owned anchors remain unchanged. Focused race coverage: tests/test_initial_home_wait_v417.cjs; final native opening rerun is required before release.
+
 Unpublished current-action navigation (14 September 2026) reads the real opening objective/active step, places one large native action/reveal control and its hint in reserved dock space, hides only gate-locked guided silhouettes, and pauses/resumes the existing saved lesson. Keep actual dock/Settings handlers, real target events and deferred discovery controls. No UI path grants progression or rewards. See [FOCUSED_TUTORIAL_NAVIGATION_20260914.md](FOCUSED_TUTORIAL_NAVIGATION_20260914.md) for verified checks and the remaining integrated visual run.
+
+Species manga artwork intake retains the approved four bright final paintings and smaller location control below the picture. Preserve original transparent sprites, both Treecreeper and Great Spotted Woodpecker reference files, and current release behavior. The module pin remains `species-manga-cards-v411-20260914`; the release owner must promote one current global build/cache before publication. See [ART_RELEASE_INTAKE_20260914.md](ART_RELEASE_INTAKE_20260914.md) for exact source provenance and current validation limits.
+
+Prerequisite intake now persists only the versioned recipe intent in the canonical save, scoped to the existing game profile. Preserve bounded record validation, reset isolation, no-write reads, failed-save rollback and atomic goal removal with a paid Forge commission. See [PREREQUISITE_PERSISTENCE_INTAKE_20260914.md](PREREQUISITE_PERSISTENCE_INTAKE_20260914.md); native integration and publication remain the release owner’s responsibility.
+
+Unpublished prerequisite guidance (14 September 2026) adds a read-only common resolver and a bounded Forge → real Magpie Market → actual build/level/supply adapter. Never turn its navigation controls into automatic spending, crafting, dispatch, claims or grants. Preserve original recipe return, actual gates/quotes/receipt exclusions, unknown-source honesty and unchanged transaction authority. See [PREREQUISITE_GUIDANCE_20260914.md](PREREQUISITE_GUIDANCE_20260914.md) for audited coverage, tests, pending native acceptance and release-owner updater duties. This is separate from v416 and does not claim game-wide guidance.
 
 New-game trailer v415 (`new-game-trailer-v415-20260914`) restores the original movie before the Home-first opening. Preserve separate pending/seen receipts, existing-save non-replay, explicit Retry/Skip, cached byte ranges and installed assets across confirmed New Game. Settings must remain outside tutorial inert/shield layers and pause/resume the same lesson without gifts or progression changes. Keep stable IDs and the Earthling/falcon-friend greeting. See [NEW_GAME_TRAILER_V415.md](NEW_GAME_TRAILER_V415.md); the broader opening-loop and progressive Home work are separate.
 
@@ -9,6 +23,8 @@ Prepared opening slice (2026-09-14, not released): Birdhouse → actual discover
 Progressive Home integration candidate (2026-09-14) replaces the always-visible six-tray Home with a weighted grid of actually playable features. Preserve canonical room/holding gates, existing scanner and Equipment DOM/action ownership, real building-completion actions, and read-only rendering. Home-only display preferences must never grant an unlock or mutate game progression. Artwork allocation scales with visible sections. The release owner must align all three existing Home module/CSS pins in the consuming document, three worker lists and updater; no version bump is included in this candidate. Contracts and evidence: [PROGRESSIVE_HOME_20260914.md](PROGRESSIVE_HOME_20260914.md). Playable visibility and proportional sizing replace the fixed slots; usable inner Stores and care lists still scroll independently within their panels.
 
 Empire/direct opening v414 (`empire-opening-v414-20260914`) follows the user's revised rule: tapping the finished overview model/tile or ready notification commissions a due building; first-person travel is optional. This supersedes v405's physical-site-only restriction. Preserve passive waiting, canonical managers, due/project/order/Hall guards, original rewards and durable rollback. Empire retains its three tabs/navigation with the redundant controls removed. See [EMPIRE_OPENING_V414.md](EMPIRE_OPENING_V414.md).
+
+Exploration/camps v413 is an **unpublished shutdown checkpoint**, not release acceptance. Continue from [EXPLORATION_CAMPS_RESUME_V413.md](EXPLORATION_CAMPS_RESUME_V413.md). Preserve free tents/travel, 5-timber fires, actual-movement fog, GPS-only visit receipts and separate additional homes. The fullscreen travel-race fix still needs browser verification. Global build/cache promotion and deployment remain with the release owner after art/Fireball.
 
 Gemini photos v410 (`gemini-photos-v410-20260914`) restores the user-approved Gemini 2.5 Flash path with ONE persistent £5 total Europe/London monthly ledger and a durable browser photo queue. This supersedes prior free-model/no-Google photo requirements. Preserve pre-egress whole-attempt reservations, dated pricing review, fail-closed usage/timeout/replay handling, accepted catalogue gates, atomic game receipts, owner/session isolation and first-photo storage. Never reset the ledger or retain uploaded server photos: route-owned temporary files must clean up on every outcome and service stop. All three worker lists/updater pins agree. See [GEMINI_PHOTOS_V410.md](GEMINI_PHOTOS_V410.md) for behavior, accounting assumptions, retention and verification.
 
@@ -153,6 +169,39 @@ Manga world v356 (`manga-world-v356-20260907`): the 3D Academy, villages and tow
 > file in the *same* commit.
 
 Full-card review draft (unpublished): the existing equipment overlay now leads with the original species portrait, identity, experience and unchanged combat stats. Desktop places bond/loadout beside the portrait; phones stack the same sections. Six generated 256px transparent WebP icons replace only empty equipment slots and the Preen illustration; equipped gear still uses gearIconHTML. Equipment transactions, Preen cooldown, favourite state and roster swipe are unchanged. Slot buttons expose picker expansion state; favourite has an explicit accessible label, and primary controls are at least 44px. Assets and provenance: assets/bird-card/README.md. Rendered markup and existing interaction/core coverage: 29 focused checks pass. Close is on the left so the live coin HUD remains unobstructed at the right; focus enters the dialog, Tab wraps and Escape restores the opener. Potion notes match the existing player-turn bonus action and spare-bottle refill. Build/cache registration is intentionally left to the consolidating release; do not publish these assets without registering them.
+
+Unpublished lit-territory safety (14 September): `empireTerritoryLight()` in
+`index.html` derives one cached immutable union of permanent atlas circles from
+saved village/town districts, counties, liberated enemy outposts and
+`exploration.camps` (`lightRadiusM`, legacy default 80 m). `updateEmpireFogMask`
+and `enemyOutpostDark` consume that same snapshot. The moving scout half-light
+remains visual scouting only. `durableSaveState` and `restoreGameStateSnapshot`
+invalidate the derived cache, as does changed save identity; callers that mutate
+light before their save must call `invalidateEmpireTerritoryLight()` explicitly.
+Unrelated saves reuse the index if geometry is unchanged; dirty snapshots still
+enumerate circles, but share one settlement-tier lookup. There is no new saved
+ownership map. Camp placement, receipts, rewards and collection remain the camp
+owner's responsibility. This patch requires the retained WIP enemy-camp modules;
+live 48ea7df1 lacks them, so it is not an independent live cherry-pick.
+
+`walkingCombatAdapter().territoryLight` exposes geographic `contains(point)` and
+`firstHit(from,to)` (first segment fraction, or null). `empire_map_core.js` indexes
+saved circles in sphere space so every query need not scan every holding; small
+camp tangencies and dateline crossings are covered. The walking adapter reads
+the live geographic origin after rebases, alongside existing unknown-terrain and
+settlement fail-closed guards. Suppression deletes runtime actors, never writes a
+defeat/XP receipt. Lit wilderness does not introduce automatic healing.
+
+`wilderness_combat_core.js` exposes `hostileAt(point)`, `darknessPath(from,to)`,
+`canHostileAttack(from,to)` and the existing ground-hit transactional helper
+`hostileAttack(actor,skill)`. New enemy aerial/projectile/splash implementations
+must recheck the actual geographic attack path at launch, every swept step and
+resolution using these guards; height never bypasses light. Existing player
+projectiles, splash, pursuit and telegraphed melee do so now. Target tests:
+`tests/test_lit_territory_safety_v414.cjs`, the walking/outpost behavior suites and
+save rollback suites. No browser renderer/performance or installed/public release
+claim has been made for this isolated patch. Release owner supplies the combined
+cache/version pin and merged visual/offline verification.
 
 Artwork in v354: Empire/Towns/Villages use generated alpha-preserving painted tab icons (144px WebP, displayed40×36px). The sound listener uses a clean opaque864px square Merlin/walnut-wand panel; keep its full square composition and animated gemstone at82.5%/19.5%. The tiny listener dock uses canonical Merlin tutorial art. Asset provenance is in assets/ui/ART_V354.md. Both service worker and legacy updater include all four new files.
 
@@ -310,6 +359,12 @@ and maintained `sound_id/` integration; verify its deployment proof rather
 than treating the historical “no backend” description as current.
 
 ---
+
+### Standing bird artwork direction — user decision, 2026-09-14
+
+The visual standard is the **current Treecreeper card** (called “Treekeeper” in speech): `bird-art-cache/treecreeper_burbz_manga_20260624_v2.png`. Preserve that reference. Also preserve the current **Great Spotted Woodpecker** (`bird-art-cache/great_spotted_woodpecker_burbz_manga_20260624.png`) as the reference for **vibrancy, brightness and immediate readability at small card sizes**. Combine expressive manga ink and coherent scenes with vivid species colours, clear foreground/background separation and luminous environments; avoid muddy sepia, uniformly dark detail or washed-out frames. Framed cards should read as one integrated illustration, not a realistic bird cutout pasted over a generic habitat background.
+
+Design each outfit around that species' recognizable markings, shape, habitat and behaviour, as Treecreeper's bark-toned woodland outfit does. Do not repeat one generic costume across birds. Clothing and accessories must follow ordinary bird anatomy: feathered wings, two legs and feet, **no human arms, hands, fingers or extra limbs**. Keep identifying plumage and silhouettes legible; wings must not become hands. Prefer suitable recovered original art when it meets these requirements. If an original has arms or materially misses this style, use the inspected Treecreeper reference for a necessary correction/replacement. Compact moving sprites still require transparency and must not carry a square scenic painting around the world. This direction applies to future artwork work; unrelated existing art is not automatically in scope.
 
 ## 2. The shape of the code
 

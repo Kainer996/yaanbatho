@@ -245,8 +245,11 @@ def test_founding_a_region_lifts_the_darkness_over_its_whole_lands():
     fog_start = html.index("function updateEmpireFogMask()")
     fog_end = html.index("// The veil is static", fog_start)
     fog = html[fog_start:fog_end]
-    assert "regionCoverageRadiusKm" in fog
-    assert "unlocks that whole region of the map" in fog
+    authority_start = html.index("function empireTerritoryLight()")
+    authority = html[authority_start:fog_start]
+    assert "regionCoverageRadiusKm" in authority
+    assert "empireRegionsInfo().regions" in authority
+    assert "empireTerritoryLight().circles" in fog
     # Region daylight is punched together with the village windows, and its
     # rim is struck in the realm's gold.
     assert "regionHoles.concat(holes).forEach" in fog
