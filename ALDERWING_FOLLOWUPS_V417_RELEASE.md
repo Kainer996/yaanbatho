@@ -1,6 +1,6 @@
 # Alderwing follow-ups v417
 
-Release candidate `alderwing-followups-v417-20260914`, based on the verified Home/opening v416. Publication and final installed/public verification are pending until recorded by the release owner.
+Release candidate `alderwing-followups-v417-20260914`, based on the verified Home/opening v416. Final local and installed-update verification passed. Publication and public verification are pending until recorded by the release owner.
 
 ## Result
 
@@ -21,7 +21,7 @@ The final Home regression caught an invented Stores-unlock prerequisite preventi
 - World intake: 40 native groups — Fireball9, exploration/GPS/homes11, outposts8, home perimeter6, terrain/Auto6 — with zero page errors. Detailed contracts and evidence in `WORLD_RELEASE_INTAKE.md`.
 - Guidance: recipe12, common8 and expanded Home/current-quest4 native groups; full actual opening6. Root Home24 passes all five viewport sizes, readable equipment text, no overlapping controls, canonical equipment/feed/building actions and complete inner lists.
 - Source/transactions: common guidance18, recipe persistence8, recipe graph/all36 catalogue cases, actual adapter, shared equipment12, motivated opening13, initial home race5; Fireball effects/audio/provenance/cache5 and focused offline boot/card Python4 pass.
-- Preliminary installed v416→v417: 6 groups passed before final common-guidance corrections. Final rerun must verify exact document/movie, all23 changed modules, four WebPs and three Fireball clips, then preserve save and real offline New Game/movie/Settings/Skip/restart.
+- Final installed v416→v417: 6 groups passed with zero page errors, verifying exact document/movie, all23 changed modules, four WebPs and three Fireball clips, preserved saves, real offline New Game/movie byte-range playback, Settings cancellation, Skip and subsequent restart. An initial final-navigation timeout was rerun with a 90-second cold-navigation limit; the same runtime and unchanged save/cache/behavior assertions then passed.
 
 Durable evidence lives in the owner's `outputs/v417-local/` and `outputs/world-release-intake/`. Earlier rejected fixture runs and the separately labelled shelter-race image are not final acceptance. Old Python string-pin failures documented in the world intake are not claimed green.
 
