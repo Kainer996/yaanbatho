@@ -4676,7 +4676,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="scan-home-welcome"><span class="scan-home-eyebrow">YOUR HOME IN ALDERWING</span></div>
         <p class="scan-home-summary" id="scanHomeSummary">Every new bird is the start of something.</p>
       </div>
-      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="savedPhotosButton">Saved photos</button><button type="button" id="campHomeButton">Camps & homes</button></div>
+      <div class="scan-home-command-bar"><button type="button" id="playerHomeStand">Enter Alderwing</button><button type="button" id="campHomeButton">Camps & homes</button></div>
       </div>
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
@@ -4728,7 +4728,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
-        <p class="photo-privacy-note">Photos are saved on this device before being sent to Google Gemini for identification. Pending photos wait offline or when the shared monthly allowance is used. Device storage can be cleared by your browser; keep important originals.</p>
+        <p class="photo-privacy-note">Your framed camera photo is sent only for this check and is not saved on your device by Burbz. If the check cannot finish, you can retry while this screen stays open.</p>
         <div class="photo-id-status" id="photoIdStatus" hidden>
           <p id="photoIdMessage" role="status" aria-live="polite"></p>
           <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
@@ -42081,7 +42081,7 @@ function setPhotoIdStatus(message, retry = false) {
   // Queue status must not open the session drawer or interrupt other gameplay.
 }
 $('photoIdRetry').addEventListener('click', () => {
-  if (photoIdRetryBlob && !photoIdBusy) identifyImage(photoIdRetryBlob, 'camera');
+  if (photoIdRetryBlob && !photoIdBusy) identifyImage(photoIdRetryBlob, 'camera', true);
 });
 
 // A random game-profile ID travels with this save; no email/token enters the queue.
@@ -42155,23 +42155,59 @@ function savedPhotosQueue() {
   });
   return pendingPhotoQueue;
 }
-$('savedPhotosButton').addEventListener('click',()=>savedPhotosQueue().show());
-// Start after the synchronous boot/load establishes durable profile ownership.
-setTimeout(()=>savedPhotosQueue(),0);
-async function identifyImage(fileOrBlob, captureSource = 'camera') {
+$('savedPhotosButton')?.addEventListener('click',()=>savedPhotosQueue().show());
+// The old persistent queue is kept only so players can remove any historical
+// entries. New captures are analysed immediately and never added to it.
+function newPhotoRequestId() {
+  if (crypto?.randomUUID) return crypto.randomUUID();
+  const bytes=new Uint8Array(18);crypto.getRandomValues(bytes);
+  return Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
+}
+function acceptedPhotoResult(result) {
+  return result?.found === true && result.accepted === true && result.verified === true &&
+    result.policy === 'photo-gemini-v410' && result.model === 'gemini-vision' &&
+    result.modelName === 'gemini-2.5-flash' && typeof result.species === 'string' &&
+    /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(result.scientificName || '') &&
+    Number.isFinite(result.confidence) && result.confidence >= .9 && result.confidence <= 1 &&
+    /^[a-f0-9]{64}$/.test(result.receiptId || '');
+}
+async function identifyImage(fileOrBlob, captureSource = 'camera', isRetry = false) {
   if (photoIdBusy) return;
   photoIdBusy=true;photoIdRetryBlob=fileOrBlob;
-  setBirdPhotoStage('prepare','Saving your photo on this device…');
+  const owner=currentPhotoOwner();
+  if (!owner) {
+    photoIdBusy=false;
+    const message='Your game is still loading. Wait a moment, then try this photo again.';
+    setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);return;
+  }
+  const controller=new AbortController(), requestId=newPhotoRequestId();
+  let cancelled=false, timeout, cancelRequest;
+  const cancelledRequest=new Promise((_,reject)=>{cancelRequest=()=>{cancelled=true;controller.abort();reject(Error('photo-cancelled'));};});
+  photoIdCancel=cancelRequest;
+  setBirdPhotoStage('analyse','Checking your bird…');
   $('captureBtn').disabled=true;
   try {
-    await savedPhotosQueue().enqueue(fileOrBlob);
-    closeBirdCropper();photoIdRetryBlob=null;$('scanHomeSession').open=false;
-    $('photoIdStatus').hidden=true;
-    $('photoIdMessage').textContent=navigator.onLine===false?'Photo saved. It will be checked when you reconnect. You can keep playing.':'Photo saved. Gemini will check it while you play. Open Saved photos for the result.';
+    const deadline=new Promise((_,reject)=>{timeout=setTimeout(()=>{controller.abort();reject(Error('photo-timeout'));},50000);});
+    const form=new FormData();
+    form.append('image',fileOrBlob,'photo.jpg');form.append('captureSource',captureSource);
+    form.append('photoOwner',owner);form.append('photoRequestId',requestId);
+    const response=await Promise.race([fetch('api/identify/image',{method:'POST',body:form,signal:controller.signal}),deadline,cancelledRequest]);
+    let result={};try{result=await Promise.race([response.json(),deadline,cancelledRequest]);}catch(error){if(error?.message==='photo-timeout'||error?.message==='photo-cancelled')throw error;}
+    if(cancelled) return;
+    if(!response.ok || !acceptedPhotoResult(result)) {
+      const message=result?.message || (globalThis.navigator?.onLine===false ? 'Reconnect to check this photo.' : 'Photo checking is unavailable right now. Try this photo again.');
+      setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);showToast(message);return;
+    }
+    // The discovery is saved; the camera image is deliberately not.
+    handleBirdCandidates({species:result.species,scientificName:result.scientificName,confidence:result.confidence},[],{source:'photo'});
+    closeBirdCropper();photoIdRetryBlob=null;$('photoIdStatus').hidden=true;$('photoIdRetry').hidden=true;
+    showToast('Identified: '+result.species+'. Added to your Birdex.');
   } catch(error) {
-    const message='Photo was not saved: '+(error.message || 'Device storage is unavailable.')+' Keep this photo and try again.';
+    if(cancelled) { setBirdPhotoStage('frame','Photo check cancelled.');return; }
+    const message=controller.signal.aborted ? 'Photo checking took too long. Try this photo again.' : globalThis.navigator?.onLine===false ? 'Reconnect to check this photo, then try again.' : 'Photo checking could not connect. Try this photo again.';
     setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);showToast(message);
   } finally {
+    clearTimeout(timeout);photoIdCancel=null;
     photoIdBusy=false;$('captureBtn').disabled=false;$('captureBtn').textContent='OPEN CAMERA';
   }
 }
