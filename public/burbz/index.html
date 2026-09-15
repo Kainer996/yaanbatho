@@ -5649,12 +5649,12 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_equipment.js?v=alderwing-followups-v417-20260914"></script>
 <script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="first_person_cast_controls.js?v=alderwing-followups-v417-20260914"></script>
-<script src="zombie_progression_core.js?v=zombie-flocks-v418-20260915"></script>
-<script src="wilderness_combat_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="wilderness_birds.js?v=wilderness-birds-v395-20260913"></script>
-<script src="wilderness_combat.js?v=alderwing-followups-v417-20260914"></script>
+<script src="zombie_progression_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_combat_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_birds.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_combat.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
-<link rel="stylesheet" href="wilderness_combat.css?v=wilderness-birds-v395-20260913">
+<link rel="stylesheet" href="wilderness_combat.css?v=alderwing-flight-shores-v418-20260915">
 <script src="empire_map_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -5722,9 +5722,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home.js?v=opening-home-v416-20260914"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
-<script src="flight_craft_core.js?v=flight-craft-v418-20260915"></script>
-<script src="enemy_outposts_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="enemy_outposts.js?v=alderwing-followups-v417-20260914"></script>
+<script src="flight_craft_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="enemy_outposts_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
 <script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="exploration.js?v=alderwing-followups-v417-20260914"></script>
@@ -30408,7 +30408,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-followups-v417-20260914';
+        script.src = 'village_walk.js?v=alderwing-flight-shores-v418-20260915';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -44729,7 +44729,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-followups-v417-20260914';
+const BURBZ_BUILD = 'alderwing-flight-shores-v418-20260915';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

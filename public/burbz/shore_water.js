@@ -12,9 +12,11 @@ function coverage(cell,width,entries,project,exclusions=[]){
   for(const polygon of polys){ctx.beginPath();for(const ring of polygon){let first=true;for(const v of ring){const p=project(v);if(!p)continue;const x=(p.x-x0)/step,z=(p.z-z0)/step;if(first){ctx.moveTo(x,z);first=false;}else ctx.lineTo(x,z);}ctx.closePath();}ctx.fill('evenodd');}
  }
  ctx.globalCompositeOperation='destination-out';for(const p of exclusions){ctx.beginPath();ctx.arc((p.x-x0)/step,(p.z-z0)/step,p.radius/step,0,Math.PI*2);ctx.fill();}
- return{canvas,x0,z0,span,step};
+ const pixels=ctx.getImageData(0,0,SIZE,SIZE).data;let any=false,full=true,sea=pixels[1]===255;
+ for(let i=0;i<pixels.length;i+=4){any||=pixels[i+3]>0;if(pixels[i+3]!==255||(pixels[i+1]===255)!==sea)full=false;}
+ return any?{canvas,x0,z0,span,step,fullWater:full?(sea?'sea':'freshwater'):null}:null;
 }
-function style(material,time,{texture,x0,z0,span}={}){
+function style(material,time,{texture,x0,z0,span,sea=0}={}){
  const previous=material.onBeforeCompile,key=material.customProgramCacheKey;
  material.onBeforeCompile=function(shader,renderer){previous.call(this,shader,renderer);shader.uniforms.shoreTime=time;
   shader.vertexShader='varying vec2 shoreWorld;\n'+shader.vertexShader;
@@ -22,7 +24,7 @@ function style(material,time,{texture,x0,z0,span}={}){
   shader.fragmentShader='uniform float shoreTime; varying vec2 shoreWorld;\n'+(texture?'uniform sampler2D shoreMask; uniform vec3 shoreFrame;\n':'')+shader.fragmentShader;
   if(texture){shader.uniforms.shoreMask={value:texture};shader.uniforms.shoreFrame={value:new root.THREE.Vector3(x0,z0,span)};}
   shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
- ${texture?'vec4 shore=texture2D(shoreMask,(shoreWorld-shoreFrame.xy)/shoreFrame.z);':'vec4 shore=vec4(1.,0.,0.,1.);'}
+ ${texture?'vec4 shore=texture2D(shoreMask,(shoreWorld-shoreFrame.xy)/shoreFrame.z);':'vec4 shore=vec4(1.,'+(sea?'1.':'0.')+',0.,1.);'}
  float sea=shore.g;
  float wave=sin(shoreWorld.x*.67+shoreWorld.y*.43-shoreTime*(1.05+sea*.4));
  float ripple=sin(shoreWorld.x*1.9-shoreWorld.y*1.4+shoreTime*1.3+wave*.6);
@@ -33,7 +35,7 @@ function style(material,time,{texture,x0,z0,span}={}){
  ${texture?'water=mix(vec3(.28,.43,.37),water,smoothstep(.05,.9,shore.a));':''}
  diffuseColor.rgb=mix(diffuseColor.rgb,water,shore.a);`);
  };
- material.customProgramCacheKey=function(){return key.call(this)+':shore-water-v418:'+!!texture;};material.needsUpdate=true;
+ material.customProgramCacheKey=function(){return key.call(this)+':shore-water-v418:'+!!texture+':'+sea;};material.needsUpdate=true;
 }
 root.BurbzShoreWater={coverage,style,SIZE,PAD};
 })(globalThis);
