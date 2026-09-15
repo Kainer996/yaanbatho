@@ -39275,7 +39275,7 @@ function refreshPrerequisiteGoalBanner() {
 }
 function focusPrerequisiteElement(selector) {
   requestAnimationFrame(()=>{
-    const el=document.querySelector(selector);if(!el)return;
+    const el=$('screen-'+currentScreen)?.querySelector(selector)||Array.from(document.querySelectorAll(selector)).find(node=>!node.closest('.screen')&&node.checkVisibility());if(!el)return;
     el.scrollIntoView({block:'center',behavior:'auto'});el.classList.add('prerequisite-target');
     const control=el.matches('button')?el:el.querySelector('button:not(:disabled)');control?.focus({preventScroll:true});
     setTimeout(()=>el.classList.remove('prerequisite-target'),4000);
