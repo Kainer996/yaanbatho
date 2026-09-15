@@ -35,7 +35,7 @@ async function context(){const c=await browser.newContext({viewport:{width:390,h
 
  // Return the disposable craft to its original checked berth. The cruise can
  // end above a sloped patch that correctly refuses landing; do not weaken it.
- await page.evaluate(record=>{const d=__burbzVillageWalkDebug.state(),p=BurbzGeographicWorldCore.project(d.continuity.origin,record);if(!__burbzVillageWalkDebug.place({...d.player,x:p.x,z:p.z,y:Math.max(d.player.y,p.y+10),yaw:record.yaw,mode:'fly'}))throw Error('Original berth flight column unavailable');},first.continuity.craft.record);
+ await page.evaluate(record=>{const d=__burbzVillageWalkDebug.state(),p=BurbzGeographicWorldCore.project(d.continuity.origin,record);if(!__burbzVillageWalkDebug.place({...d.player,x:p.x,z:p.z,y:__burbzVillageWalkDebug.world().height(p.x,p.z)+10,yaw:record.yaw,mode:'fly',velocity:{x:0,y:0,z:0}}))throw Error('Original berth flight column unavailable');},first.continuity.craft.record);
  await hold('Descend',()=>{const d=__burbzVillageWalkDebug.state();return d.player.y-__burbzVillageWalkDebug.world().height(d.player.x,d.player.z)<1.7;});
  await page.getByRole('button',{name:'Land craft',exact:true}).click();await page.waitForFunction(()=>__burbzVillageWalkDebug.state().player.mode==='walk'&&!__burbzVillageWalkDebug.state().auto.enabled);
  await page.getByRole('button',{name:'Exit craft',exact:true}).click();assert(!(await read()).continuity.craft.aboard);
