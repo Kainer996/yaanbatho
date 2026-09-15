@@ -83,3 +83,7 @@ The integrated flight HUD revealed old flight-only CSS hiding health/loadout and
 ### Local acceptance completed
 
 Runtime checkpointb57023e3 is unchanged through final tests. Native flight8 (including five sizes and simultaneous look/attack/Auto), airborne camp11, full opening6, live-provider candidate4, final water2, and exact final installed/offline6 pass. Final water medians are freshwater49.26ms versus54.16 baseline, sea45.46ms versus44.72; median p95 improves to66.8ms for both, with identical draws/geometry and only3/2 additional visible shoreline textures. No meaningful regression detected within the measured desktop variance; physical-phone performance remains unmeasured. The remaining work is release/public acceptance and saving completion. Exact local verification is in `reports/BURBZ_V418_VERIFICATION.json` and `ALDERWING_FLIGHT_SHORES_V418_RELEASE.md`.
+
+### Published acceptance — 15 September 2026
+
+PR355 merged as a005c4ccc1406980e51e28020e522d011224b93c and the guarded live marker matches. All16 public runtime files match tested hashes. Actual live-provider world passes4 groups and actual installed/offline public app passes6 groups, both complete with zero page errors. GitHub Pages workflow34953878564 succeeded. All seven remaining mechanical/publication checklist items are verified complete; Rowan story remains paused. Physical-phone FPS and actual GPS fieldwork remain unmeasured. This evidence update changes no runtime bytes.
