@@ -56,7 +56,7 @@
  function fitLayout(){
   if(!options?.visible()||!layoutModel)return;
   const main=boundSection.querySelector('.scan-home-main'),width=main.clientWidth,{ids,featured}=layoutModel;
-  const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=shortLandscape||(ids.length>4&&width<400&&innerHeight<700),kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
+  const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=shortLandscape||((ids.length>4||document.getElementById('prerequisiteHomeResume'))&&width<400&&innerHeight<700),kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
   if(kit.parentElement!==kitHost)kitHost.append(kit);boundSection.dataset.equipmentInHeader=String(compactKit);
   const columns=ids.length<=2?1:ids.length>=5&&width>=(shortLandscape?350:460)?3:2,others=ids.filter(id=>id!==featured),rows=columns===3?Math.ceil((ids.length+1)/3):1+Math.ceil(others.length/columns);
   const key=[width,main.clientHeight,columns,...ids,featured,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
