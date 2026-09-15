@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'builder-actions-v404b-20260914','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'alderwing-followups-v417-20260914','village_world_core.js':'houses-terrain-v408-20260914','village_world.js':'alderwing-followups-v417-20260914','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'alderwing-followups-v417-20260914','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'opening-home-v416-20260914','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'wayside-room-title-v406b-20260914','village_walk_core.js':'alderwing-followups-v417-20260914','first_person_hud.js':'builder-actions-v404b-20260914','first_person_hud.css':'landscape-atlas-v394b-20260913','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
+  const PIN={'flight_craft.js':'flight-craft-v418-20260915','wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'builder-actions-v404b-20260914','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'alderwing-followups-v417-20260914','village_world_core.js':'houses-terrain-v408-20260914','village_world.js':'alderwing-followups-v417-20260914','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'alderwing-followups-v417-20260914','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'opening-home-v416-20260914','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'wayside-room-title-v406b-20260914','village_walk_core.js':'alderwing-followups-v417-20260914','first_person_hud.js':'builder-actions-v404b-20260914','first_person_hud.css':'landscape-atlas-v394b-20260913','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
   let session=null,dependencies=null,closingFullscreen=Promise.resolve();
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -25,6 +25,7 @@
   }
   function load(){
     if(!dependencies)dependencies=Promise.all([
+      script('flight_craft.js','BurbzFlightCraft'),
       script('wilderness_places_core.js','BurbzWildernessPlacesCore').then(()=>script('wilderness_places.js','BurbzWildernessPlaces')),
       style('wilderness_places.css','wildernessPlacesStyle'),
       script('building_work_core.js','BurbzBuildingWorkCore').then(()=>script('building_work.js','BurbzBuildingWork')),
@@ -49,6 +50,7 @@
     const s=session;if(!s)return false;
     if(['back','escape'].includes(reason)&&(s.continuity?.closePanel?.()||s.hud?.closePanel?.()||s.rooms?.closePanel?.()||s.discoveries?.closePanel()))return true;
     if(!s.failed&&['exit','back','escape'].includes(reason)&&s.rooms?.leave())return true;
+    if(!s.failed&&['exit','back','escape'].includes(reason)&&s.continuity?.canClose?.()===false)return false;
     session=null;s.closed=true;
     cancelAnimationFrame(s.raf);s.abort.abort();s.resizeObserver?.disconnect();s.reset?.();
     if(document.pointerLockElement&&s.root.contains(document.pointerLockElement))document.exitPointerLock?.();
@@ -102,7 +104,7 @@
     const keys=new Set(),pointers=new Map(),input={side:0,forward:0};let auto=null;
     const autoTrack=document.createElement('span');autoTrack.className='vw-auto-track';autoTrack.innerHTML='<i></i><span>Auto</span>';autoTrack.setAttribute('aria-hidden','true');stick.append(autoTrack);
     let autoFeedback="";
-    function autoSync(){if(!auto)return;auto.allow(!!s.continuity&&s.player?.mode==='fly'&&!s.uiBusy&&!s.room&&!s.closed&&!s.failed&&!document.hidden&&!el.querySelector('dialog[open]')&&!(s.combat?.isDead?.()));const a=auto.state(),feedback=[a.enabled,a.armed,a.latched].join(':');if(feedback===autoFeedback)return;autoFeedback=feedback;stick.classList.toggle('vw-auto-available',a.enabled);stick.classList.toggle('vw-auto-armed',a.armed);stick.classList.toggle('vw-auto-on',a.latched);autoTrack.querySelector('span').textContent=a.latched?'Auto · on':a.armed?'Release · Auto':'Auto';stick.setAttribute('aria-label',a.enabled?(a.latched?'Auto flight on. Touch movement control to stop.':'Fly. Drag fully up to Auto and release for forward flight.'):'Walk: drag the thumbstick');}
+    function autoSync(){if(!auto)return;auto.allow(!!s.continuity&&s.player?.mode==='fly'&&s.continuity?.craftAboard?.()&&!s.uiBusy&&!s.room&&!s.closed&&!s.failed&&!document.hidden&&!el.querySelector('dialog[open]')&&!(s.combat?.isDead?.()));const a=auto.state(),feedback=[a.enabled,a.armed,a.latched].join(':');if(feedback===autoFeedback)return;autoFeedback=feedback;stick.classList.toggle('vw-auto-available',a.enabled);stick.classList.toggle('vw-auto-armed',a.armed);stick.classList.toggle('vw-auto-on',a.latched);autoTrack.querySelector('span').textContent=a.latched?'Auto · on':a.armed?'Release · Auto':'Auto';stick.setAttribute('aria-label',a.enabled?(a.latched?'Auto flight on. Touch movement control to stop.':'Fly. Drag fully up to Auto and release for forward flight.'):'Walk: drag the thumbstick');}
 
     s.reset=()=>{auto?.reset();s.work?.reset();s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();s.combat?.reset();s.continuity?.reset();};
     function fail(error){

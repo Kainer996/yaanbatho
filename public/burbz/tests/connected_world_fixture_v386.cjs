@@ -26,11 +26,11 @@ const style={version:8,name:'Explicit deterministic geographic proof input',sour
 // production feature/collision readers therefore consume MapLibre-decoded tiles.
 function vi(n){const out=[];n=Math.round(n);while(n>127){out.push((n%128)|128);n=Math.floor(n/128);}out.push(n);return Buffer.from(out);}
 const packed=values=>Buffer.concat(values.map(vi)),field=(id,b)=>Buffer.concat([vi(id*8+2),vi(b.length),b]),integer=(id,n)=>Buffer.concat([vi(id*8),vi(n)]);
-function vectorTile(z,x,y){
+function vectorTile(z,x,y,extraFeatures=[]){
  const scale=2**z,extent=4096,layers=[];
  for(const name of ['landcover','transportation','water','building']){
   const keys=[],values=[],features=[];
-  for(const f of data.features){const kind=f.properties.class,layer=kind==='grass'||kind==='wood'?'landcover':kind==='path'?'transportation':kind;if(layer!==name)continue;
+  for(const f of [...data.features,...extraFeatures]){const kind=f.properties.class,layer=kind==='grass'||kind==='wood'?'landcover':kind==='path'?'transportation':kind;if(layer!==name)continue;
    const coords=f.geometry.type==='Polygon'?f.geometry.coordinates[0].slice(0,-1):f.geometry.coordinates;let points=coords.map(([lon,lat])=>[(lon+180)/360,(1-Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))/Math.PI)/2]).map(([mx,my])=>[Math.round((mx*scale-x)*extent),Math.round((my*scale-y)*extent)]);
    if(Math.max(...points.map(p=>p[0]))<0||Math.min(...points.map(p=>p[0]))>extent||Math.max(...points.map(p=>p[1]))<0||Math.min(...points.map(p=>p[1]))>extent)continue;
    // Every fixture polygon is an axis-aligned rectangle and every path is an
@@ -92,7 +92,7 @@ async function routeMap(context,report,options={}){
   const request=route.request(),url=new URL(request.url());if(options.offline?.()){(report.mapFixture.offlineDenied||=[]).push(request.url());return route.abort('internetdisconnected');}if(url.hostname==='localhost'||url.hostname==='127.0.0.1')return route.continue();
   if(options.realProvider&&['tiles.openfreemap.org','tiles.mapterhorn.com'].includes(url.hostname)){(report.mapFixture.realProviderRequests||=[]).push(request.url());return route.continue();}
   if(url.hostname==='tiles.openfreemap.org'&&url.pathname==='/styles/liberty'){report.mapFixture.styleRequests++;return route.fulfill({contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(style)});}
-  if(url.hostname==='tiles.openfreemap.org'){const m=url.pathname.match(/^\/proof\/(\d+)\/(\d+)\/(\d+)\.pbf$/);if(m){const key=m.slice(1).join('/');report.mapFixture.vectorRequests.push(key);return route.fulfill({contentType:'application/x-protobuf',headers:{'Access-Control-Allow-Origin':'*','Cache-Control':'public,max-age=86400'},body:vectorTile(...m.slice(1).map(Number))});}}
+  if(url.hostname==='tiles.openfreemap.org'){const m=url.pathname.match(/^\/proof\/(\d+)\/(\d+)\/(\d+)\.pbf$/);if(m){const key=m.slice(1).join('/');report.mapFixture.vectorRequests.push(key);return route.fulfill({contentType:'application/x-protobuf',headers:{'Access-Control-Allow-Origin':'*','Cache-Control':'public,max-age=86400'},body:vectorTile(...m.slice(1).map(Number),options.extraFeatures||[])});}}
   if(url.hostname==='tiles.mapterhorn.com'){
    if(options.missingTerrain?.())return route.abort('internetdisconnected');
    const m=url.pathname.match(/\/(\d+)\/(\d+)\/(\d+)\.(webp|png)$/);if(m){const key=m.slice(1,4).join('/');if(!tiles.has(key))tiles.set(key,demTile(...m.slice(1,4).map(Number),options.height));report.mapFixture.demRequests.push(key);return route.fulfill({contentType:'image/png',headers:{'Access-Control-Allow-Origin':'*','Cache-Control':'public,max-age=86400'},body:tiles.get(key)});}

@@ -44,7 +44,7 @@ FILES=(
   "geographic_cache.js"
   "geographic_home_picker.js"
   "geographic_settlement_scene.js"
-  "geographic_world_core.js"
+  "geographic_world_core.js" "flight_craft_core.js" "flight_craft.js"
   "geographic_world.js"
   "geographic_world.css"
   "index.html"

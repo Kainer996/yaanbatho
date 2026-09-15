@@ -31,3 +31,14 @@ Rowan story remains paused for Yaan. Rejected assistant dialogue/escape/ending a
 ## Execution record
 
 Fresh isolated checkout: `/root/burbz-remaining-v418`, branch `codex/burbz-remaining-v418`. The clone uses Git LFS attributes on some ordinary tracked images; read status with filters disabled to avoid false artwork changes. Do not stage unrelated art normalization. Initial unconnected `flight_craft_core.js` now defines strict single-craft records, nearby boarding, full-hull berth validation, bounded dry-ground provisioning and stable freshwater/sea floating motion. Six Node groups pass; runtime integration, rendering, durable adapter, controls and all native/public acceptance remain unfinished. Baseline geographic movement 12, houses/terrain 6 and outpost reliability 6 groups pass. This module is not loaded by the game yet and no feature is marked complete.
+
+
+### Aircraft integration checkpoint
+
+The working candidate now loads the aircraft core/controller, renders a compact original folding/flapping-wing pontoon craft, provisions it near home with a clear overhead column, exposes native Board / Take off / Land / Exit, gates Auto on occupancy, adds map location markers, and saves craft/player transitions atomically. Parking searches and flight clearance remain separate so ground obstacles do not become invisible walls at altitude. A pilot-view support-strut obstruction was corrected after screenshot inspection.
+
+Evidence: `/tmp/burbz-flight-craft-v418/results.json` reports seven native groups with no page errors: provision/parking, no remote personal flight, rejected-save boarding rollback, board/takeoff, actual touch Auto movement/cancel/manual stop, land/exit, and scene reconstruction. `/tmp/burbz-craft-water-v418/results.json` reports actual freshwater and sea landing/float/deck-exit/reboard/takeoff groups, stronger measured sea bob and unchanged player/inventory. Geographic inputs are explicitly synthetic MapLibre-decoded tiles, not real-provider or physical-phone proof. Eleven core/save groups and the twelve original geographic movement groups pass.
+
+Still unfinished: interruption/remote-flight recovery and full reload/home-move/profile behavior in the browser; aircraft clearance and parking under streamed geography changes; full camera/model review and screen-layout coverage; multitouch/casting/death/capture checks; real-provider and installed/offline acceptance; comparable performance; final current-byte reruns and release pin promotion. In particular, a flying aircraft left behind by another travel route must remain recoverable, and a saved boarded phase must not auto-board a player merely passing nearby. Do not mark the vehicle or water/Auto checklist complete yet.
+
+No cache/build release promotion, merge or deployment has happened. Enemy progression, shoreline work and biome investigation remain untouched pending the aircraft integration checks.
