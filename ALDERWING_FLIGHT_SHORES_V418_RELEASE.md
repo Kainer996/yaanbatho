@@ -2,7 +2,8 @@
 
 Build: `alderwing-flight-shores-v418-20260915`.
 Runtime checkpoint: `b57023e3adcfcb53d950533f42482182cbd219b9`, based on deployed v417/main `314f0a3dd9b710c89457510cbe82456df1b4bc81`.
-Status: local acceptance complete; publication pending.
+Status: merged and published; local and actual public acceptance complete.
+Runtime release: [PR355](https://github.com/Kainer996/yaanbatho/pull/355), merge `a005c4ccc1406980e51e28020e522d011224b93c`.
 
 ## Result
 
@@ -37,4 +38,4 @@ There is no meaningful slowdown detected in these samples; between-round varianc
 
 Fourteen changed JS/CSS URLs agree between their consumers, all three worker lists and the guarded updater. The global build/cache is promoted together. Existing Home/tutorial, prerequisite guidance, camps/light, farming, equipment, durable photos, the shared £5 monthly Gemini guard and sound recognition remain intact. No paid recognition requests are used by these tests.
 
-Full evidence is retained at `/root/burbz-remaining-v418-evidence/`; `reports/BURBZ_V418_VERIFICATION.json` records local checks and exact hashes; public acceptance is pending. Rowan's user-authored story remains paused.
+Full evidence is retained at `/root/burbz-remaining-v418-evidence/`; `reports/BURBZ_V418_VERIFICATION.json` records local checks and exact hashes; all16 live file hashes match. Actual public real-provider world passes four groups, and installed/offline public acceptance passes six groups with zero page errors. GitHub Pages workflow34953878564 succeeded; the guarded live marker matches the runtime merge. Rowan's user-authored story remains paused.
