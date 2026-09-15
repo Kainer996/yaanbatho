@@ -11,7 +11,7 @@
 @media(max-width:600px) and (min-height:521px){.wc-hud{bottom:calc(160px + env(safe-area-inset-bottom));left:12px;transform:none;width:145px}.wc-toast{bottom:calc(265px + env(safe-area-inset-bottom))}#villageWalk.wc-ready .fp-actions{bottom:calc(275px + env(safe-area-inset-bottom))}}
 @media(max-height:520px){.wc-hud{bottom:calc(8px + env(safe-area-inset-bottom));width:225px}.wc-vitals{padding:4px 8px}.wc-toast{bottom:170px;max-width:calc(100% - 245px)}#villageWalk.wc-ready .fp-actions{bottom:135px;right:130px;max-width:260px}#geographicWorld.wc-ready .gw-action{bottom:125px}}
 
-.wc-noncombat .fp-cast-stick{visibility:hidden}.wc-travel{pointer-events:auto;margin-top:6px}.wc-travel .cw-wings{position:static!important;inset:auto!important;transform:none!important;min-height:44px!important;width:100%;margin:0!important;font:600 11px system-ui!important;padding:8px!important}.wc-flying .wc-vitals,.wc-flying .wc-loadout,.wc-flying .wc-attack-name{display:none}
+.wc-noncombat .fp-cast-stick{visibility:hidden}.wc-travel{pointer-events:auto;margin-top:6px}.wc-travel .cw-wings{position:static!important;inset:auto!important;transform:none!important;min-height:44px!important;width:100%;margin:0!important;font:600 11px system-ui!important;padding:8px!important}.wc-flying .wc-attack-name{display:none}.wc-flying .wc-zone{flex:1 1 100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:600px) and (min-height:521px){#villageWalk.wc-ready:has(.wc-travel) .fp-actions{bottom:calc(340px + env(safe-area-inset-bottom))}}
 @media(max-height:520px){.wc-travel{position:absolute;bottom:calc(100% + 8px);left:0;right:0}#villageWalk.wc-ready:has(.wc-travel) .fp-actions{bottom:210px}}
 
@@ -21,3 +21,15 @@
 @media(max-width:600px) and (min-height:521px){.wc-toast{top:calc(230px + env(safe-area-inset-top));bottom:auto}}
 
 .wc-hurt:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 48px 12px #a1496977;z-index:3}.wc-hurt .wc-health{color:#ffbfc4}
+
+/* Aircraft combat keeps health, warnings and loadout readable. Flight lift
+   controls use free space beside the attack stick or in the middle column. */
+#villageWalk.wc-ready.fp-ready .wc-climb,#villageWalk.wc-ready.fp-ready .wc-descend{right:calc(270px + env(safe-area-inset-right))!important}
+@media(max-width:600px) and (min-height:521px){
+ .wc-hud.wc-flying{bottom:calc(230px + env(safe-area-inset-bottom))}
+ #villageWalk.wc-ready.fp-ready .wc-climb,#villageWalk.wc-ready.fp-ready .wc-descend{left:50%!important;right:auto!important;transform:translateX(-50%)!important;bottom:calc(150px + env(safe-area-inset-bottom))!important}
+ #villageWalk.wc-ready.fp-ready .wc-descend{bottom:calc(98px + env(safe-area-inset-bottom))!important}
+}
+@media(orientation:landscape){
+ #villageWalk .wc-hud.wc-flying .wc-travel{left:calc(128px + env(safe-area-inset-left));bottom:calc(128px + env(safe-area-inset-bottom))}
+}

@@ -3,7 +3,7 @@
  * Scroll cooldowns and temporary effects tick once per full readiness beat.
  * A released attack spends CR and cooldown even on a miss; scrolls are durable.
  */
-(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BurbzWildernessCombatCore=api;})(globalThis,function(){
+(function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./zombie_progression_core.js'):root.BurbzZombieProgressionCore);if(typeof module==='object'&&module.exports)module.exports=api;else root.BurbzWildernessCombatCore=api;})(globalThis,function(Z){
  'use strict';
  const MAX_ZOMBIES=4,MAX_RECORDS=64,CELL=48,SPLASH_RADIUS=3,MELEE_REACH=2.4;
  const FIREBALL='spell_ember_wisp',BURN_SECONDS=3,BURN_DAMAGE=2;
@@ -27,9 +27,9 @@
    firstHit:(a,b)=>{if(!light)return 0;const from=point(a),to=point(b);return from&&to?light.firstHit(from,to):0;}
   };
  }
- function create({B,L,C,profile={},kit=()=>({}),stored,save=()=>true,safeAt=()=>true,safeSegment=()=>null,refugeAt=()=>false,ground=()=>null,allowed=()=>false,clear=()=>false,walkClear=clear,key=(x,z)=>x+':'+z,encounter=()=>null,notice=()=>{}}){
+ function create({B,L,C,profile={},kit=()=>({}),progression=()=>({}),stored,save=()=>true,safeAt=()=>true,safeSegment=()=>null,refugeAt=()=>false,ground=()=>null,allowed=()=>false,clear=()=>false,walkClear=clear,key=(x,z)=>x+':'+z,encounter=()=>null,notice=()=>{}}){
   const initial={version:1,hp:80,barrier:0,mods:[],cr:100,beat:0,cooldowns:{},rngState:hash(profile.name||'keeper'),records:[],potionCrCarry:0,potionUsed:false};
-  let state={...initial,...clone(stored||{})},hero,signature='',pending=null,mode=kit().loadout?.weapon?'weapon':kit().loadout?.spell?'spell':'weapon',safe=null,closed=false,saveClock=0,spawnClock=0,serial=0,error='',lastPose=null;
+  let state={...initial,...clone(stored||{})},hero,signature='',pending=null,mode=kit().loadout?.weapon?'weapon':kit().loadout?.spell?'spell':'weapon',safe=null,closed=false,saveClock=0,spawnClock=0,flockClock=0,serial=0,error='',lastPose=null;
   state.hp=clamp(state.hp,0,10000);state.cr=clamp(state.cr,0,100);state.beat=clamp(state.beat,0,99.999);state.barrier=clamp(state.barrier,0,10000);state.mods=(Array.isArray(state.mods)?state.mods:[]).filter(m=>m&&['atk','mag','def','res','spd','int','cha'].includes(m.stat)&&Number.isFinite(m.pct)&&Number.isFinite(m.turns)).slice(-16).map(m=>({stat:m.stat,pct:clamp(m.pct,-.8,1),turns:Math.max(1,clamp(m.turns,1,4))}));state.potionUsed=state.potionUsed===true;
   state.cooldowns=Object.fromEntries(Object.entries(state.cooldowns||{}).filter(([id])=>L.gearById(id)?.slot==='spell').map(([id,n])=>[id,clamp(n,0,4)]));state.records=(Array.isArray(state.records)?state.records:[]).filter(r=>typeof r.id==='string'&&Number.isFinite(r.hp)).slice(-MAX_RECORDS);
   const actors=[],events=[];
@@ -38,7 +38,7 @@
   function transaction(fn,extra){const before=capture(),h=clone(hero),a=clone(actors);try{const result=fn();if(save(capture(),{...extra,outpostHits:actors.filter(a=>a.campId).map(a=>({id:a.id,campId:a.campId,member:a.member,hp:a.fighter.hp}))})===false)throw Error('Could not save');error='';return result??true;}catch(e){state=before;Object.assign(hero,h);actors.splice(0,actors.length,...a);pending=null;error='Combat could not save. Retry when storage is available.';notice(error);return false;}}
   function checkpoint(){return transaction(()=>true);}
   // Walking attacks hit the body, not the camera inside an overhanging canopy.
-  function body(pose){return {...pose,y:ground(pose.x,pose.z)+.85};}
+  function body(pose){return {...pose,y:pose.mode==='fly'?pose.y-.7:ground(pose.x,pose.z)+.85};}
   function hostile(p){return !!p&&safeAt(p.x,p.z)===false&&Number.isFinite(ground(p.x,p.z));}
   // Future aerial/ranged AI must use these guards at launch AND resolution.
   // The geographic query finds even a very thin/tangent strip between dark
@@ -51,7 +51,7 @@
   function canHostileAttack(from,to=lastPose) {return !closed&&hero.hp>0&&darknessPath(from,to);}
   function hostileAttack(actor,attack,hits=[{fighter:hero,position:lastPose}]) {
    if(!actors.includes(actor)||actor.side!=='opponent'||actor.fighter.hp<=0||!canHostileAttack(actor.position,lastPose))return false;
-   const valid=hits.filter(hit=>hit.fighter===hero&&canHostileAttack(actor.position,hit.position||lastPose)&&walkClear(actor.position,body(hit.position||lastPose)));
+   const valid=hits.filter(hit=>hit.fighter===hero&&canHostileAttack(actor.position,hit.position||lastPose)&&(actor.aerial?clear:walkClear)(actor.position,body(hit.position||lastPose)));
    if(!valid.length)return false;let result=[];
    if(!transaction(()=>{result=B.resolveExplorationSkill(state,actor.fighter,attack,valid,'opponent');}))return false;
    events.push(...result);return true;
@@ -60,7 +60,7 @@
   function skill(){sync();const k=kit().loadout||{};if(mode==='spell')return L.spellSkillFor(k.spell);const item=L.gearById(k.weapon);return item?.slot==='weapon'?{...(item.kind==='wand'?B.SPARK:B.PECK),id:item.id,label:item.label,melee:item.kind!=='wand'&&item.kind!=='bow',...(item.attack||{})}:null;}
   function ammoAvailable(){const s=skill();return !s?.ammo||(Number.isSafeInteger(kit().ammo?.[s.ammo])&&kit().ammo[s.ammo]>0);}
   function readiness(){const s=skill(),k=kit().loadout||{};return !!s&&ammoAvailable()&&!closed&&!safe&&hero.hp>0&&state.cr>=100&&!(mode==='spell'&&state.cooldowns[k.spell]>0)&&engine.projectiles.length<C.MAX_PROJECTILES;}
-  function remember(actor){if(actor.campId)return;state.records=state.records.filter(r=>r.id!==actor.id);state.records.push({id:actor.id,hp:actor.fighter.hp});if(state.records.length>MAX_RECORDS)state.records.shift();}
+  function remember(actor){if(actor.campId)return;state.records=state.records.filter(r=>r.id!==actor.id);state.records.push({id:actor.id,hp:actor.fighter.hp,enemyKind:actor.enemyKind||'chickenz'});if(state.records.length>MAX_RECORDS)state.records.shift();}
   function targets(){return actors.filter(a=>a.side==='opponent'&&hostile(a.position)&&a.fighter.hp>0);}
   function blockedSegment(a,b){const lightHit=safeSegment(a,b);if(lightHit!==null)return lightHit;const n=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,b.y-a.y,b.z-a.z)/.16));for(let i=0;i<=n;i++){const t=i/n,p={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t},h=ground(p.x,p.z);if(!hostile(p)||h===null||p.y<=h+.08||!allowed(p.x,p.z,p.y))return t;}if(!clear(a,b))return 0;return null;}
   function impact({projectile:p,target,position}){if(!hostile(lastPose)||!hostile(position)||!darknessPath(p.token.origin,position))return;const hits=[];for(const a of targets()){const primary=a.id===target?.id;if(!primary&&(!p.skill.splash||Math.hypot(a.position.x-position.x,a.position.y-position.y,a.position.z-position.z)>SPLASH_RADIUS))continue;if(!darknessPath(position,a.position)||!clear(position,a.position))continue;hits.push({fighter:a.fighter,scale:primary?1:p.skill.splash});}
@@ -86,32 +86,36 @@
   }
   function canPotion(){sync();return !closed&&state.cr>=100&&!state.potionUsed&&B.canUsePotionEffect(hero,L.potionEffectFor(kit().loadout?.potion));}
   function potion(){sync();const id=kit().loadout?.potion,effect=L.potionEffectFor(id);if(!canPotion())return false;return transaction(()=>{state.potionUsed=true;const count=hero.mods.length;B.applyPotionEffect(hero,effect);hero.mods=hero.mods.map((m,i)=>i<count?m:({...m,turns:Math.max(1,m.turns-1)}));},{potion:id});}
+  function enemyFighter(spec,kind){const fighter=B.buildFighter(spec);if(!kind.aerial){fighter.atk*=.4;fighter.spd*=.7;fighter.def*=.8;fighter.res*=.8;}return fighter;}
   function spawn(pose){const camp=encounter(pose);if(camp){
    for(let i=actors.length-1;i>=0;i--)if(actors[i].campId!==camp.campId)actors.splice(i,1);
-   for(const g of camp.guards.slice(0,MAX_ZOMBIES)){if(actors.some(a=>a.id===g.id)||g.hp<=0||!hostile(g.position)||!allowed(g.position.x,g.position.z))continue;const p={...g.position,y:ground(g.position.x,g.position.z)+.85},fighter=B.buildFighter({id:g.id,commonName:'Shadow guard',species:'Crow',hp:g.maxHp,maxHp:g.maxHp});fighter.hp=g.hp;actors.push({id:g.id,campId:g.campId,member:g.member,side:'opponent',position:p,radius:.65,fighter,cr:0,home:{...p},age:0,phase:'guard',attackTime:0,moving:false});}
+   for(const g of camp.guards.slice(0,MAX_ZOMBIES)){if(actors.some(a=>a.id===g.id)||g.hp<=0||!hostile(g.position)||!allowed(g.position.x,g.position.z))continue;const kind=Z.byId(g.enemyKind),p={...g.position,y:ground(g.position.x,g.position.z)+.85},fighter=enemyFighter({id:g.id,commonName:kind.name,species:kind.species,hp:g.maxHp,maxHp:g.maxHp},kind);fighter.hp=g.hp;actors.push({id:g.id,enemyKind:kind.id,aerial:kind.aerial,campId:g.campId,member:g.member,side:'opponent',position:p,radius:.65*kind.size,fighter,cr:0,home:{...p},age:0,phase:'guard',attackTime:0,moving:false});}
    return;
   }const cx=Math.floor(pose.x/CELL),cz=Math.floor(pose.z/CELL),cells=[];
    for(let dx=-1;dx<=1;dx++)for(let dz=-1;dz<=1;dz++){const x=(cx+dx)*CELL,z=(cz+dz)*CELL,base=String(key(x,z)),seed=hash(base);cells.push({base,x:x+8+seed%32,z:z+8+(seed>>>8)%32});}
    cells.sort((a,b)=>distance(a,pose)-distance(b,pose));
-   for(const cell of cells)for(let member=0;member<2;member++){if(actors.length>=Math.min(2,MAX_ZOMBIES))return;const id=cell.base+':'+member,p={x:cell.x+(member?1.1:-1.1),z:cell.z},d=distance(p,pose);if(d<12||d>48||!hostile(p)||!allowed(p.x,p.z)||actors.some(a=>a.id===id))continue;const receipt=state.records.find(r=>r.id===id);if(receipt?.hp<=0)continue;p.y=ground(p.x,p.z)+.85;const fighter=B.buildFighter({id,commonName:'Zombie Burbz',species:'Crow',hp:80,maxHp:80});fighter.hp=receipt?clamp(receipt.hp,0,80):80;actors.push({id,side:'opponent',position:p,radius:.65,fighter,cr:0,home:{...p},age:0,phase:'pursuit',attackTime:0,moving:false});}
+   for(const cell of cells)for(let member=0;member<2;member++){if(actors.length>=Math.min(2,MAX_ZOMBIES))return;const id=cell.base+':'+member,p={x:cell.x+(member?1.1:-1.1),z:cell.z},d=distance(p,pose);if(d<12||d>48||!hostile(p)||!allowed(p.x,p.z)||actors.some(a=>a.id===id))continue;const receipt=state.records.find(r=>r.id===id);if(receipt?.hp<=0)continue;p.y=ground(p.x,p.z)+.85;const kind=receipt?.enemyKind?Z.byId(receipt.enemyKind):Z.choose(progression(),hash(id)),fighter=enemyFighter({id,commonName:kind.name,species:kind.species,hp:80,maxHp:80},kind);fighter.hp=receipt?clamp(receipt.hp,0,80):80;actors.push({id,enemyKind:kind.id,aerial:kind.aerial,side:'opponent',position:p,radius:.65*kind.size,fighter,cr:0,home:{...p},age:0,phase:'pursuit',attackTime:0,moving:false});remember(actors[actors.length-1]);}
   }
   function step(dt,pose,{paused=false,elapsed=dt}={}){if(closed)return;sync();const burnDt=clamp(elapsed,0,BURN_SECONDS);dt=clamp(dt,0,.05);lastPose={...pose};const nextSafe=!hostile(pose);if(nextSafe!==safe){safe=nextSafe;cancel();engine.clear();actors.length=0;if(safe&&refugeAt(pose.x,pose.z))transaction(()=>{hero.hp=hero.maxHp;hero.fainted=false;hero.barrier=0;hero.mods=[];});}if(paused){cancel();engine.clear();extinguish();return;}if(safe)return;
    const rate=Math.max(1,B.effStat(hero,'spd'));state.cr=Math.min(100,state.cr+dt*rate);state.beat+=dt*rate;if(state.beat>=100){state.beat-=100;state.potionUsed=false;for(const id of Object.keys(state.cooldowns))state.cooldowns[id]=Math.max(0,state.cooldowns[id]-1);hero.mods=hero.mods.map(m=>({...m,turns:m.turns-1})).filter(m=>m.turns>0);}
-   if(hero.hp<=0){engine.clear();actors.length=0;return;}spawnClock+=dt;if(spawnClock>.75){spawnClock=0;spawn(pose);}
-   for(let i=actors.length-1;i>=0;i--){const a=actors[i];if(a.side!=='opponent')continue;if(!hostile(a.position)||a.campId&&!allowed(a.position.x,a.position.z)||a.fighter.hp<=0||distance(a.position,pose)>90){actors.splice(i,1);continue;}a.age+=dt;a.moving=false;const d=distance(a.position,pose),rate=Math.max(1,B.effStat(a.fighter,'spd'));
+   if(hero.hp<=0){engine.clear();actors.length=0;return;}flockClock+=dt;spawnClock+=dt;if(spawnClock>.75){spawnClock=0;spawn(pose);}
+   for(let i=actors.length-1;i>=0;i--){const a=actors[i];if(a.side!=='opponent')continue;if(!hostile(a.position)||a.campId&&!allowed(a.position.x,a.position.z,a.aerial?a.position.y:undefined)||a.fighter.hp<=0||distance(a.position,pose)>90){actors.splice(i,1);continue;}a.age+=dt;a.moving=false;const d=distance(a.position,pose),rate=Math.max(1,B.effStat(a.fighter,'spd'));
     // Spawn and awareness share a range: a full pool of idle distant birds must
     // never prevent an encounter. Wind-up is a real dodge window, not instant damage.
-    if(a.campId&&a.phase==='guard'){if(d<26&&canHostileAttack(a.position,pose)&&walkClear(a.position,body(pose)))a.phase='pursuit';else continue;}
+    if(a.campId&&a.phase==='guard'){if(d<26&&canHostileAttack(a.position,pose)&&(a.aerial?clear:walkClear)(a.position,body(pose)))a.phase='pursuit';else continue;}
     a.cr=Math.min(100,a.cr+dt*rate);a.phase||='pursuit';a.attackTime=(a.attackTime||0)+dt;
+    if(a.aerial){Z.flyStep(a,actors,pose,dt,flockClock,{body,ground,dark:darknessPath,
+     valid:p=>allowed(p.x,p.z,p.y),clear,attack:bird=>hostileAttack(bird,B.PECK),warn:bird=>events.push({type:'windup',id:bird.id})});continue;}
+    const reach=Math.hypot(a.position.x-body(pose).x,a.position.y-body(pose).y,a.position.z-body(pose).z);
     if(a.phase==='windup'){
      if(a.attackTime>=.55){a.phase='strike';a.attackTime=0;a.cr=0;
       a.fighter.mods=a.fighter.mods.map(m=>({...m,turns:m.turns-1})).filter(m=>m.turns>0);
-      if(d<=2.15)hostileAttack(a,B.PECK);
+      if(reach<=2.15)hostileAttack(a,B.PECK);
      }
     }else if(a.phase==='strike'){if(a.attackTime>=.22){a.phase='recover';a.attackTime=0;}}
     else if(a.phase==='recover'){if(a.attackTime>=.35){a.phase='pursuit';a.attackTime=0;}}
-    else if(d<=1.85&&a.cr>=100&&canHostileAttack(a.position,pose)&&walkClear(a.position,body(pose))){a.phase='windup';a.attackTime=0;events.push({type:'windup',id:a.id});}
-    else if(d<60&&d>1.5){const speed=Math.max(.5,rate/40)*3.1,heading=Math.atan2(pose.z-a.position.z,pose.x-a.position.x),hand=hash(a.id)%2?1:-1;
+    else if(reach<=1.85&&a.cr>=100&&canHostileAttack(a.position,pose)&&walkClear(a.position,body(pose))){a.phase='windup';a.attackTime=0;events.push({type:'windup',id:a.id});}
+    else if(d<60&&d>1.5){const speed=Math.max(.5,rate/40)*Z.byId(a.enemyKind).speed,heading=Math.atan2(pose.z-a.position.z,pose.x-a.position.x),hand=hash(a.id)%2?1:-1;
      for(const angle of [0,hand*.65,-hand*.65,hand*1.25,-hand*1.25]){const travel=Math.min(speed*dt,Math.max(0,d-1.5)),q={x:a.position.x+Math.cos(heading+angle)*travel,z:a.position.z+Math.sin(heading+angle)*travel};
       if(darknessPath(a.position,q)&&allowed(q.x,q.z)&&walkClear(a.position,{...q,y:ground(q.x,q.z)+.85})){a.position={...q,y:ground(q.x,q.z)+.85};a.moving=travel>0;break;}
      }

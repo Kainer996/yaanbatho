@@ -1,0 +1,501 @@
+{
+  "build": "alderwing-flight-shores-v418-20260915",
+  "runtimeCheckpoint": "b57023e3adcfcb53d950533f42482182cbd219b9",
+  "state": "Local acceptance passed; public deployment/acceptance pending",
+  "runtimeHashes": {
+    "index.html": "c355552ffd63e68655f4723f7db92cd0a7705fc5dc80a60f8a40a590e85401c1",
+    "sw.js": "5e38f9603833fcc6e007e72924ad5b5383ed967bd5cc71acd73c5dcb281b7bad",
+    "flight_craft_core.js": "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0",
+    "flight_craft.js": "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8",
+    "first_person_map.js": "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65",
+    "village_walk.js": "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541",
+    "village_world.js": "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603",
+    "zombie_progression_core.js": "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5",
+    "wilderness_combat_core.js": "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa",
+    "wilderness_combat.js": "36117829446f01138613d48dd6fae23eb0fc32d10fe48a50b1cef2d8713af65a",
+    "wilderness_birds.js": "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31",
+    "enemy_outposts_core.js": "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb",
+    "enemy_outposts.js": "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde",
+    "shore_water.js": "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9",
+    "open_land_core.js": "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562",
+    "wilderness_combat.css": "aac0a8b130e943ac601bf98321e90eee1472024e4132983bd68e13f7d6649fec"
+  },
+  "sourceSuites": [
+    {
+      "file": "test_flight_craft_v418.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_flight_craft_save_v418.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_craft_wounded_v418.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_zombie_progression_v418.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_open_land_v418.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_initial_home_wait_v417.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_wilderness_combat_v1.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_wilderness_boundaries_v1.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_wilderness_birds_v395.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_outpost_reliability_v414.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_geographic_world_v386.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_houses_terrain_v408.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_prerequisite_common_20260914.cjs",
+      "exit": 0
+    },
+    {
+      "file": "test_motivated_opening_20260914.cjs",
+      "exit": 0
+    }
+  ],
+  "localChecks": {
+    "flight": {
+      "complete": true,
+      "checks": [
+        "A single visible craft is provisioned near the saved home and durably parked",
+        "Keyboard flight away from the parked craft refuses personal flight",
+        "A rejected boarding save preserves the player and parked craft",
+        "Native boarding then takeoff uses the actual craft and enables Auto",
+        "Airborne health, warnings, equipment, lift and touch controls fit five viewports without overlapping",
+        "Aboard touch Auto rejects partial/cancel, moves on full release, keeps simultaneous look/attack touch, and stops with manual touch",
+        "Native landing and exit clear Auto and persist the parked craft",
+        "The same parked craft returns after world disposal and reconstruction"
+      ],
+      "errors": [],
+      "limits": [
+        "Actual retained renderer with explicitly synthetic DEM/vector input.",
+        "This does not certify installed offline assets or real provider availability.",
+        "Software WebGL, not physical phone hardware."
+      ],
+      "sourceHashes": {
+        "index.html": [
+          "c355552ffd63e68655f4723f7db92cd0a7705fc5dc80a60f8a40a590e85401c1"
+        ],
+        "zombie_progression_core.js": [
+          "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5"
+        ],
+        "wilderness_combat_core.js": [
+          "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa"
+        ],
+        "wilderness_birds.js": [
+          "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31"
+        ],
+        "wilderness_combat.js": [
+          "36117829446f01138613d48dd6fae23eb0fc32d10fe48a50b1cef2d8713af65a"
+        ],
+        "wilderness_combat.css": [
+          "aac0a8b130e943ac601bf98321e90eee1472024e4132983bd68e13f7d6649fec"
+        ],
+        "enemy_outposts_core.js": [
+          "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb"
+        ],
+        "flight_craft_core.js": [
+          "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0"
+        ],
+        "enemy_outposts.js": [
+          "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde"
+        ],
+        "village_walk.js": [
+          "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541"
+        ],
+        "flight_craft.js": [
+          "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8"
+        ],
+        "shore_water.js": [
+          "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9"
+        ],
+        "first_person_map.js": [
+          "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65"
+        ],
+        "open_land_core.js": [
+          "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+        ],
+        "village_world.js": [
+          "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603"
+        ]
+      }
+    },
+    "airborneCamp": {
+      "complete": true,
+      "checks": [
+        "Actual retained walking scene loads with no camp in the safe settlement",
+        "A deterministic real camp is discovered through loaded wilderness travel",
+        "Discovered upgraded bird families produce genuine flying camp defenders",
+        "Native walking reaches the checked approach and activates all three real guards",
+        "Native boarding and takeoff retain the active camp and airborne combat controls",
+        "Native Fireball attacks defeat actual defenders and atomically liberate the camp",
+        "Aircraft Fireball combat resolves through real health/rewards and returns through native landing and exit",
+        "Camp status and collect control fit portrait and landscape alongside existing controls",
+        "Exit disposes camp resources and reload preserves ownership and all defeated guards",
+        "Saved friendly outpost renders inside its own canonical light without respawning guards or XP",
+        "Retained walking, turning and real Fireball samples obey actor, camp, projectile, particle and terrain caps; exit removes combat inputs"
+      ],
+      "errors": [],
+      "limits": "Disposable save; deterministic DEM/vector fixture; real renderer and native attack input. Guarded debug flight/aim, native walking along verified collision routes and native attacks; no injected enemies or damage. Desktop Chromium responsive simulation, not phone hardware.",
+      "sourceHashes": {
+        "index.html": [
+          "c355552ffd63e68655f4723f7db92cd0a7705fc5dc80a60f8a40a590e85401c1"
+        ],
+        "zombie_progression_core.js": [
+          "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5"
+        ],
+        "wilderness_combat_core.js": [
+          "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa"
+        ],
+        "wilderness_birds.js": [
+          "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31"
+        ],
+        "wilderness_combat.js": [
+          "36117829446f01138613d48dd6fae23eb0fc32d10fe48a50b1cef2d8713af65a"
+        ],
+        "wilderness_combat.css": [
+          "aac0a8b130e943ac601bf98321e90eee1472024e4132983bd68e13f7d6649fec"
+        ],
+        "flight_craft_core.js": [
+          "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0"
+        ],
+        "enemy_outposts_core.js": [
+          "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb"
+        ],
+        "enemy_outposts.js": [
+          "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde"
+        ],
+        "village_walk.js": [
+          "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541"
+        ],
+        "flight_craft.js": [
+          "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8"
+        ],
+        "shore_water.js": [
+          "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9"
+        ],
+        "open_land_core.js": [
+          "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+        ],
+        "first_person_map.js": [
+          "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65"
+        ],
+        "village_world.js": [
+          "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603"
+        ]
+      }
+    },
+    "water": {
+      "complete": true,
+      "checks": [
+        "Native freshwater landing, visible buoyancy, safe deck exit and reboarding/takeoff",
+        "Native sea landing, visible buoyancy, safe deck exit and reboarding/takeoff"
+      ],
+      "errors": [],
+      "limits": [
+        "Actual retained renderer with explicitly synthetic DEM/vector input.",
+        "This does not certify installed offline assets or real provider availability.",
+        "Software WebGL, not physical phone hardware."
+      ],
+      "sourceHashes": {
+        "index.html": [
+          "c355552ffd63e68655f4723f7db92cd0a7705fc5dc80a60f8a40a590e85401c1"
+        ],
+        "zombie_progression_core.js": [
+          "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5"
+        ],
+        "wilderness_combat_core.js": [
+          "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa"
+        ],
+        "wilderness_birds.js": [
+          "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31"
+        ],
+        "wilderness_combat.js": [
+          "36117829446f01138613d48dd6fae23eb0fc32d10fe48a50b1cef2d8713af65a"
+        ],
+        "wilderness_combat.css": [
+          "aac0a8b130e943ac601bf98321e90eee1472024e4132983bd68e13f7d6649fec"
+        ],
+        "flight_craft_core.js": [
+          "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0"
+        ],
+        "enemy_outposts_core.js": [
+          "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb"
+        ],
+        "enemy_outposts.js": [
+          "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde"
+        ],
+        "village_walk.js": [
+          "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541"
+        ],
+        "flight_craft.js": [
+          "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8"
+        ],
+        "shore_water.js": [
+          "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9"
+        ],
+        "open_land_core.js": [
+          "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+        ],
+        "first_person_map.js": [
+          "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65"
+        ],
+        "village_world.js": [
+          "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603"
+        ]
+      }
+    },
+    "realProvider": {
+      "complete": true,
+      "checks": [
+        "Exact runtime build enters the retained first-person world using successful real elevation/provider responses",
+        "Camps opens and closes natively with no quest/tool/minimap/movement overlap at phone portrait, landscape and desktop sizes",
+        "Native turning and walking input continue on the same retained canvas with loaded terrain and advancing frames",
+        "Native exit restores the settlement overview and a genuine reload retains home, inventory and player state"
+      ],
+      "errors": [],
+      "limits": [
+        "Local candidate and live map/elevation providers, with a disposable seeded save and HTML closure reader only.",
+        "Chromium software WebGL at phone/desktop viewports; not physical-phone FPS or real GPS visitation.",
+        "Installed/offline acceptance is separate. One real location is not worldwide coverage."
+      ],
+      "sourceHashes": {
+        "index.html": [
+          "c355552ffd63e68655f4723f7db92cd0a7705fc5dc80a60f8a40a590e85401c1"
+        ],
+        "wilderness_birds.js": [
+          "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31"
+        ],
+        "zombie_progression_core.js": [
+          "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5"
+        ],
+        "wilderness_combat_core.js": [
+          "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa"
+        ],
+        "wilderness_combat.js": [
+          "36117829446f01138613d48dd6fae23eb0fc32d10fe48a50b1cef2d8713af65a"
+        ],
+        "wilderness_combat.css": [
+          "aac0a8b130e943ac601bf98321e90eee1472024e4132983bd68e13f7d6649fec"
+        ],
+        "flight_craft_core.js": [
+          "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0"
+        ],
+        "enemy_outposts_core.js": [
+          "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb"
+        ],
+        "enemy_outposts.js": [
+          "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde"
+        ],
+        "village_walk.js": [
+          "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541"
+        ],
+        "flight_craft.js": [
+          "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8"
+        ],
+        "shore_water.js": [
+          "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9"
+        ],
+        "open_land_core.js": [
+          "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+        ],
+        "first_person_map.js": [
+          "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65"
+        ],
+        "village_world.js": [
+          "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603"
+        ]
+      }
+    },
+    "opening": {
+      "complete": true,
+      "checks": [
+        "Fresh Home enters actual shelter/shared world and returns through the real desk to the next lesson",
+        "Native Birdhouse construction spends its original cost and commits 60XP once",
+        "Cancelled camera and denied microphone offer honest Continue with Merlin, without fabricating a bird or claiming discovery quests",
+        "Real companion Play leads to Kitchen need and actual affordability failure before errands",
+        "Real send/wait/claim earns Kitchen supplies once and saves across reload",
+        "Native Kitchen meal consumes one actual ration and improves hunger/bond; opening ends with real discovery still outstanding"
+      ],
+      "errors": [],
+      "limits": "Fresh disposable save; real native gameplay controls. Synthetic geographic fixture with a known start, denied camera/microphone and no paid recognition. Phone viewport on laptop Chromium, not physical phone.",
+      "sourceHashes": {
+        "index.html": [
+          "49534eb5ee09e2cb9324f1a0c9ebfb26d5204d970306bcc2c6fd02db6646fd80"
+        ],
+        "zombie_progression_core.js": [
+          "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5"
+        ],
+        "wilderness_combat_core.js": [
+          "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa"
+        ],
+        "wilderness_birds.js": [
+          "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31"
+        ],
+        "wilderness_combat.js": [
+          "1532fcc731f711213459da1eb9e76d387444651a64cb406cc982360b6c261092"
+        ],
+        "wilderness_combat.css": [
+          "ffba3e048e23f1b27459c0366161938821010c04affef7efcf732165e470cc18"
+        ],
+        "flight_craft_core.js": [
+          "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0"
+        ],
+        "enemy_outposts_core.js": [
+          "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb"
+        ],
+        "enemy_outposts.js": [
+          "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde"
+        ],
+        "village_walk.js": [
+          "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541"
+        ],
+        "flight_craft.js": [
+          "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8"
+        ],
+        "open_land_core.js": [
+          "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+        ],
+        "shore_water.js": [
+          "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9"
+        ],
+        "first_person_map.js": [
+          "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65"
+        ],
+        "village_world.js": [
+          "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603"
+        ]
+      }
+    },
+    "installedOffline": {
+      "complete": true,
+      "checks": [
+        "Previous public-version worker installed with an existing save lacking the old trailer flag",
+        "Real old-to-new installed update preserves save and never forces an older game to replay",
+        "Installed document, original movie, all14 changed runtime modules match exact release/cache bytes",
+        "Native confirmed New Game works offline, preserves installation and plays the original cached movie",
+        "Cached byte-range seek advances real video frames offline and remains usable in landscape",
+        "Offline Skip, Settings cancellation and subsequent restart retain fresh progress and resume tutorial without replay"
+      ],
+      "errors": [],
+      "limits": "Chromium on this laptop with portrait/landscape viewport. Real installed worker and original movie; disposable game. No physical phone or paid photo calls.",
+      "sourceHashes": {},
+      "cacheByteHashes": {
+        "index.html": "c355552ffd63e68655f4723f7db92cd0a7705fc5dc80a60f8a40a590e85401c1",
+        "wilderness_combat.css?v=alderwing-flight-shores-v418-20260915": "aac0a8b130e943ac601bf98321e90eee1472024e4132983bd68e13f7d6649fec",
+        "flight_craft_core.js?v=alderwing-flight-shores-v418-20260915": "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0",
+        "flight_craft.js?v=alderwing-flight-shores-v418-20260915": "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8",
+        "first_person_map.js?v=alderwing-flight-shores-v418-20260915": "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65",
+        "village_walk.js?v=alderwing-flight-shores-v418-20260915": "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541",
+        "village_world.js?v=alderwing-flight-shores-v418-20260915": "6dbb9c0790adeab08c6bfa5d8c4d7983a5cacbc2d26e1768b30595c0bbcce603",
+        "zombie_progression_core.js?v=alderwing-flight-shores-v418-20260915": "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5",
+        "wilderness_combat_core.js?v=alderwing-flight-shores-v418-20260915": "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa",
+        "wilderness_combat.js?v=alderwing-flight-shores-v418-20260915": "36117829446f01138613d48dd6fae23eb0fc32d10fe48a50b1cef2d8713af65a",
+        "wilderness_birds.js?v=alderwing-flight-shores-v418-20260915": "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31",
+        "enemy_outposts_core.js?v=alderwing-flight-shores-v418-20260915": "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb",
+        "enemy_outposts.js?v=alderwing-flight-shores-v418-20260915": "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde",
+        "shore_water.js?v=alderwing-flight-shores-v418-20260915": "75f2ad0114cf314009ac8790756b8fa550f4068658c5823d64dbf0bb597bebc9",
+        "open_land_core.js?v=alderwing-flight-shores-v418-20260915": "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+      }
+    },
+    "shorelineCoverage": {
+      "complete": true,
+      "checks": [
+        "Polygon holes, subpixel channels and identical adjacent chunk samples survive antialiased coverage",
+        "Existing 2m terrain grid renders a smooth diagonal coast and island with four draws and no extra geometry",
+        "Retired chunks release all coverage textures and geometry"
+      ],
+      "errors": [],
+      "limits": "Actual Canvas/Three shader and polygon geometry in desktop software WebGL; isolated shoreline comparison, not phone or public provider proof.",
+      "sourceHashes": {}
+    },
+    "mappedHeath": {
+      "complete": true,
+      "checks": [
+        "Native freshwater landing, visible buoyancy, safe deck exit and reboarding/takeoff",
+        "Native sea landing, visible buoyancy, safe deck exit and reboarding/takeoff"
+      ],
+      "errors": [],
+      "limits": [
+        "Actual retained renderer with explicitly synthetic DEM/vector input.",
+        "This does not certify installed offline assets or real provider availability.",
+        "Software WebGL, not physical phone hardware."
+      ],
+      "sourceHashes": {
+        "index.html": [
+          "49534eb5ee09e2cb9324f1a0c9ebfb26d5204d970306bcc2c6fd02db6646fd80"
+        ],
+        "zombie_progression_core.js": [
+          "762e640f3fb843e925387e0e81c7795c0de1f1cbb7cba08204786e15d1a75de5"
+        ],
+        "wilderness_combat_core.js": [
+          "112ba23427d93a80a7588e4f5e3597ff524b5edca6335d6a0e13f39c9eea98fa"
+        ],
+        "wilderness_birds.js": [
+          "0cd2d20ca62b0046658ae112aa4966e38f5d8ef1795a8300fb9b3e3c02a2cb31"
+        ],
+        "wilderness_combat.js": [
+          "1532fcc731f711213459da1eb9e76d387444651a64cb406cc982360b6c261092"
+        ],
+        "wilderness_combat.css": [
+          "ffba3e048e23f1b27459c0366161938821010c04affef7efcf732165e470cc18"
+        ],
+        "flight_craft_core.js": [
+          "7c8d17300a9e0409c783202f6781cd148f48db67525f7a5caf052f38daa5dcc0"
+        ],
+        "enemy_outposts_core.js": [
+          "823163599692b6c2a82512199742cfd38799730cb041031f192b147e188fd5cb"
+        ],
+        "enemy_outposts.js": [
+          "c705cf611a431da42675c74acb4a229771143b7fc62eca704262a424fc43edde"
+        ],
+        "village_walk.js": [
+          "719789d6e9d7a496d83d4d97a9e9670cb644d657d521a638f2588124cffc3541"
+        ],
+        "flight_craft.js": [
+          "5bfb6a67680c50661dc90d099d7a947892e789b8cd554f941fafc85ce77918d8"
+        ],
+        "shore_water.js": [
+          "f4b6d56617757826532d6377e118f404e87f6b4da43aee3e2a83a24eaf69cfc9"
+        ],
+        "open_land_core.js": [
+          "39e1133b36f3f8c0060da96091d40341e096d7b2248d9b71ba2a5586ac1be562"
+        ],
+        "first_person_map.js": [
+          "6e1451b48f1ac26c7ded82e8c35ba7d9922d5da1de2d97c0840c0da808114a65"
+        ],
+        "village_world.js": [
+          "713a33584d8f020502d179cc7041385125a64e8527b2dfab6b178b2bb83ff0af"
+        ]
+      }
+    }
+  },
+  "publication": null,
+  "physicalPhoneTested": false,
+  "rowanStory": "Paused by user"
+}

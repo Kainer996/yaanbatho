@@ -5649,11 +5649,12 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_equipment.js?v=alderwing-followups-v417-20260914"></script>
 <script src="first_person_spell_core.js?v=wilderness-birds-v395-20260913"></script>
 <script src="first_person_cast_controls.js?v=alderwing-followups-v417-20260914"></script>
-<script src="wilderness_combat_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="wilderness_birds.js?v=wilderness-birds-v395-20260913"></script>
-<script src="wilderness_combat.js?v=alderwing-followups-v417-20260914"></script>
+<script src="zombie_progression_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_combat_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_birds.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_combat.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
-<link rel="stylesheet" href="wilderness_combat.css?v=wilderness-birds-v395-20260913">
+<link rel="stylesheet" href="wilderness_combat.css?v=alderwing-flight-shores-v418-20260915">
 <script src="empire_map_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="empire_realm_core.js?v=merge-when-ready-v290-20260820"></script>
 <script src="settlement_merge_core.js?v=village-work-huts-v311-20260824"></script>
@@ -5721,8 +5722,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home.js?v=opening-home-v416-20260914"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
-<script src="enemy_outposts_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="enemy_outposts.js?v=alderwing-followups-v417-20260914"></script>
+<script src="flight_craft_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="enemy_outposts_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
 <script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="exploration.js?v=alderwing-followups-v417-20260914"></script>
@@ -30180,6 +30182,7 @@ function walkingCharacterState() {
 }
 // Combat and equipped potion consumption commit with the existing ownership ledger.
 // Enemy outposts share the canonical save, purse, player XP and atlas darkness.
+function wildernessEnemyProgression(){return{gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),unlockedSpecies:[...discoveredSpeciesRecords(),...(gameState.flock||[])].map(b=>canonicalSpeciesName(b.species||b.commonName)).filter(Boolean)};}
 function enemyOutpostState(){return gameState.enemyOutposts||(gameState.enemyOutposts=BurbzEnemyOutpostsCore.empty());}
 function enemyOutpostDark(point){
  return BurbzGeographicWorldCore.validCoordinate(point)&&!empireTerritoryLight().contains(point);
@@ -30200,7 +30203,7 @@ function enemyOutpostAdapter(identity){
  }).catch(()=>{}).finally(()=>clearTimeout(timeout));
  function commit(fn){assertCurrent();const snapshot=snapshotGameState();try{const result=fn(enemyOutpostState());durableSaveState({throwOnFailure:true});return result;}catch(e){restoreGameStateSnapshot(snapshot);throw Error('The outpost could not save. Nothing was spent or claimed. Reload if another tab changed this game.');}}
  const api={read:()=>{assertCurrent();return enemyOutpostState();},now,dark:enemyOutpostDark,
-  discover:c=>commit(state=>{O.accrue(state,now());return O.discover(state,c,now());}),
+  discover:c=>commit(state=>{O.accrue(state,now());return O.discover(state,c,now(),Array.from({length:O.DEFENDERS},(_,i)=>BurbzZombieProgressionCore.choose(wildernessEnemyProgression(),(c.seed||0)+i).id));}),
   collect:id=>{const coins=commit(state=>{const n=O.collect(state,id,now());if(!Number.isSafeInteger(gameState.player.coins)||gameState.player.coins<0||!Number.isSafeInteger(gameState.player.coins+n))throw Error('Invalid purse');gameState.player.coins+=n;return n;});try{updateHeader();updateEmpireFogMask();}catch(_){}return coins;},
   dispose(){closed=true;abort.abort();clearTimeout(timeout);}};
  enemyOutpostSessionAdapter={identity,closed:()=>closed,api};return api;
@@ -30217,6 +30220,7 @@ function walkingCombatAdapter() {
       firstHit:(a,b)=>identity!==gameState?0:empireTerritoryLight().firstHit(a,b)
     },
     stored:structuredClone(gameState.wildernessCombat || null),
+    progression:wildernessEnemyProgression,
     kit:()=>{if(identity!==gameState)throw Error('Your save changed. Reopen walking.');return {loadout:{...window.BurbzPlayerEquipmentCore.loadout(gameState)},gearLevel:lootCore().normalizeForgeLevel(gameState.forgeLevel),ammo:{reed_arrow:gameState.inventory.items?.reed_arrow??0}};},
     save:(record,extra)=>{
       if(identity!==gameState)throw Error('Your save changed. Reopen walking.');
@@ -30404,7 +30408,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-followups-v417-20260914';
+        script.src = 'village_walk.js?v=alderwing-flight-shores-v418-20260915';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -44725,7 +44729,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-followups-v417-20260914';
+const BURBZ_BUILD = 'alderwing-flight-shores-v418-20260915';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46231,6 +46235,20 @@ function saveGeographicPose(pose,revision) {
   if(!durableSaveState().ok){gameState.worldJourney=before;return false;}
   refreshGeographicAvatarMarker();return true;
 }
+// The aircraft and traveller are one durable transaction. Home relocation does
+// not move the aircraft; a stale scene/profile may never overwrite either save.
+function saveFlightCraft(next,pose,expected,identity,revision) {
+  const C=globalThis.BurbzFlightCraftCore,G=BurbzGeographicWorldCore;
+  if(gameState!==identity||gameState.playerHome?.anchor?.revision!==revision||!C)return false;
+  const craft=C.normalize(next),current=C.normalize(gameState.flightCraft);
+  if(!craft||!G.validatePose(pose)||JSON.stringify(current)!==JSON.stringify(C.normalize(expected)))return false;
+  const previous=gameState.flightCraft,journey=gameState.worldJourney;
+  gameState.flightCraft=craft;
+  gameState.worldJourney={version:1,anchorRevision:revision,pose:G.normalizePose(pose,gameState.playerHome.anchor)};
+  let saved=false;try{saved=durableSaveState().ok;}catch(_){}
+  if(!saved){gameState.flightCraft=previous;gameState.worldJourney=journey;return false;}
+  refreshGeographicAvatarMarker();return true;
+}
 function geographicSettlementRecords(bounds) {
   const C=BurbzGeographicWorldCore,center=bounds.center||gameState.playerHome?.anchor;if(!C.validCoordinate(center))return[];
   const mapped=new Map(),claims=empireVillages(),near=villagesNearLatLng(center.lat,center.lon,4);
@@ -46256,7 +46274,11 @@ function geographicSettlementRecords(bounds) {
 }
 async function enterGeographicWorld(handoff={}) {
   const entrySave=gameState,entryScreen=currentScreen;
-  const C=BurbzGeographicWorldCore;
+  const C=BurbzGeographicWorldCore,craft=BurbzFlightCraftCore.normalize(gameState.flightCraft);
+  const resumeCraft=BurbzFlightCraftCore.resumeRequired(craft);
+  if(resumeCraft&&handoff.pose&&!BurbzFlightCraftCore.matchesJourney(craft,handoff.pose)){
+    showToast('Land your craft and step onto shore before travelling elsewhere. Enter Alderwing resumes your craft.');return false;
+  }
   if(!gameState.playerHome?.anchor){
     if(initialHomePlacementPending?.identity===entrySave)await initialHomePlacementPending.promise;
     else {const last=gameState.lastKnownHome;if(last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)await anchorPlayerHomeAt(last.lat,last.lon);}
@@ -46267,14 +46289,14 @@ async function enterGeographicWorld(handoff={}) {
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
   const anchor={...(handoff.anchor||gameState.playerHome.anchor)};
   const local=handoff.localPose||(!handoff.pose&&!savedGeographicPose()?{x:0,y:0,z:4,yaw:Math.PI,pitch:0}:null);
-  const pose=handoff.pose||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
+  const pose=(resumeCraft?BurbzFlightCraftCore.resumePose(craft):handoff.pose)||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
   const record=geographicSettlementRecords({center:pose||anchor})[0];
   if(!record)throw Error('The nearby world could not be located. Your home is safe; please try again.');
   handoff.release?.();BurbzPlayerHome.close('world');geographicWorldVisit=null;
   // Let the old fullscreen exit finish before a new walking root requests it.
   await BurbzVillageWalk.whenClosed?.();
   if(gameState!==entrySave||currentScreen!==entryScreen)return false;
-  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=!!handoff.safeArrival;
+  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=!!handoff.safeArrival&&!resumeCraft;
   let ownedSource;
   return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
     character:walkingCharacterState,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
@@ -46337,10 +46359,11 @@ function mountWalkingRealmMap(container,pose) {
   let closed=false,marker=null,map=null;const outpostMarkers=[];container.append(card);card.classList.add('fp-borrowed-atlas');
   const resize=new ResizeObserver(()=>{if(!closed)map?.resize();});resize.observe(container);
   const center=()=>{if(!map)return;hideEmpireMapCard();hideEmpireMapKey();map.easeTo({center:[pose.lon,pose.lat],zoom:14,duration:0});};
-  function realm(){if(!map)return;hideEmpireMapCard();hideEmpireMapKey();const villages=empireMappableVillages(),points=[pose,...villages];const bounds=BurbzEmpireMapCore.claimBounds(points.map((p,i)=>({...p,seed:p.seed??i})));if(bounds&&points.length>1)map.fitBounds(bounds,{padding:Math.min(60,container.clientHeight/5),maxZoom:12,duration:0});else center();}
+  function realm(){if(!map)return;hideEmpireMapCard();hideEmpireMapKey();const villages=empireMappableVillages(),craft=BurbzFlightCraftCore.normalize(gameState.flightCraft),points=[pose,...villages,...(craft?[craft]:[])];const bounds=BurbzEmpireMapCore.claimBounds(points.map((p,i)=>({...p,seed:p.seed??i})));if(bounds&&points.length>1)map.fitBounds(bounds,{padding:Math.min(60,container.clientHeight/5),maxZoom:12,duration:0});else center();}
   const lease={ready:null,dispose(){if(closed)return;closed=true;resize.disconnect();marker?.remove();outpostMarkers.forEach(m=>m.remove());hideEmpireMapCard();hideEmpireMapKey();for(const b of buttons)b.node.onclick=b.click;parent.insertBefore(card,next?.parentNode===parent?next:null);card.classList.remove('fp-borrowed-atlas');card.style.cssText=oldStyle;if(walkingRealmLease===lease)walkingRealmLease=null;if(map){map.stop();if(oldCamera)map.jumpTo(oldCamera);if(hadMap)map.resize();}empireMapHasFramed=framed;empireMapUserAdjusted=adjusted;}};
   walkingRealmLease=lease;buttons[0].node.onclick=center;buttons[1].node.onclick=realm;buttons[2].node.onclick=showEmpireWorld;buttons[3].node.onclick=toggleEmpireMapKey;
   lease.ready=initialiseEmpireMap().then(value=>{if(closed)return null;map=value;if(!map)return null;map.resize();refreshEmpireMap();const pin=document.createElement('span');pin.className='fp-atlas-player';const arrow=document.createElement('span');arrow.textContent='➤';arrow.style.transform='rotate('+(-pose.yaw*180/Math.PI-90)+'deg)';pin.append(arrow);pin.setAttribute('aria-label','Your walking position');pin.title='Your walking position';marker=new maplibregl.Marker({element:pin}).setLngLat([pose.lon,pose.lat]).addTo(map);
+    const craft=BurbzFlightCraftCore.normalize(gameState.flightCraft);if(craft){const el=document.createElement('span');el.className='eo-atlas-marker friendly';el.textContent='✦';el.title='Your flight craft';el.setAttribute('aria-label',el.title);outpostMarkers.push(new maplibregl.Marker({element:el}).setLngLat([craft.lon,craft.lat]).addTo(map));}
     for(const c of Object.values(enemyOutpostState().camps).sort((a,b)=>BurbzGeographicWorldCore.distance(a,pose)-BurbzGeographicWorldCore.distance(b,pose)).slice(0,64)){const el=document.createElement('span');el.className='eo-atlas-marker'+(c.liberated?' friendly':'');el.textContent=c.liberated?'⚑':'⚔';el.title=c.liberated?'Friendly outpost · 5 coins/hour · holds 60':'Hostile camp · '+c.hp.filter(n=>n>0).length+' guards remain';el.setAttribute('aria-label',el.title);outpostMarkers.push(new maplibregl.Marker({element:el}).setLngLat([c.lon,c.lat]).addTo(map));}realm();return map;});
   return lease;
 }
@@ -46437,6 +46460,7 @@ function continuousWalkingAdapter(record) {
     checkHome:checkPlayerHomePlacement,
     buildHome:(pose,expectedRevision,isCurrent)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomePlacement({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision},isCurrent),
     exploration:{read:explorationState,reveal:revealExploration,place:point=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing.'}:placeCamp(point),home:enterCampHome},
+    craft:{read:()=>gameState===sessionSave?BurbzFlightCraftCore.normalize(gameState.flightCraft):null,commit:(next,pose,expected)=>saveFlightCraft(next,pose,expected,sessionSave,revision)},
     getHome:()=>gameState.playerHome,createYard:(T,h,options)=>BurbzPlayerHomeScene.createYardContent(T,h,options),
     openBuild:localPose=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('yard',{build:true,pose:localPose,returnToWorld:true});},
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
