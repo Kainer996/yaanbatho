@@ -4575,6 +4575,27 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 #alderwingIntroGuide button[hidden] { display:none; }
 #alderwingIntroGuide button:focus-visible { outline:3px solid #32674a;outline-offset:2px; }
 @media(orientation:landscape) and (max-height:550px){#alderwingIntroGuide{top:calc(58px + env(safe-area-inset-top));width:min(410px,60vw)}#alderwingIntroGuide>img{width:48px;height:60px}#alderwingIntroGuide p{font-size:12px}#alderwingIntroGuide>div{padding:7px 9px}}
+/* Compact, darker Merlin guidance; every action retains a 44px touch target. */
+#merlinTutorialStage { max-width:440px; margin-inline:auto; }
+#merlinTutorialOverlay.alderwing-cinematic #merlinTutorialStage { max-width:600px; }
+#merlinTutorialStage .merlin-tutorial-merlin { width:56px;height:56px;border-width:1px;box-shadow:0 4px 14px #0005; }
+#merlinTutorialStage .merlin-tutorial-bubble { margin-left:70px;padding:9px 10px;background:#18261f;color:#f0eadc;border:1px solid #61715b;border-radius:12px;box-shadow:0 6px 20px #0007; }
+#merlinTutorialStage .merlin-tutorial-bubble::after { border-right-color:#18261f; }
+#merlinTutorialStage :is(.merlin-tutorial-title,.merlin-tutorial-text) { color:#f0eadc; }
+#merlinTutorialStage .merlin-tutorial-title { font-size:14px; }
+#merlinTutorialStage .merlin-tutorial-text { font-size:12px;line-height:1.4;margin-top:5px; }
+#merlinTutorialStage .merlin-tutorial-actions { gap:5px;margin-top:6px; }
+#merlinTutorialStage :is(.merlin-tutorial-nav,.merlin-tutorial-counter) { color:#d4dccb; }
+#merlinTutorialStage .merlin-tutorial-nav { min-height:44px;min-width:48px;padding:0 8px;font-size:11px;border:1px solid #53644f;background:#25372b; }
+#merlinTutorialStage .merlin-tutorial-nav.primary { min-width:64px;background:#344932;color:#f0eadc; }
+#tutorialNavPointer { max-width:min(360px,calc(100vw - 16px));border-color:#53644f;border-radius:11px;padding:6px;box-shadow:0 4px 16px #0006; }
+#tutorialNavPointer .tutorial-current-action-main { min-height:44px;padding:7px 10px;font-size:13px;border:1px solid #67795b;background:#293d2e;color:#f0eadc; }
+#tutorialNavPointer :is(.tutorial-current-action-pause,.merlin-tutorial-task-skip) { min-height:44px;padding:6px 8px;font-size:11px;letter-spacing:0;text-transform:none;background:#1d2d23;border:1px solid #53644f;color:#d4dccb; }
+#alderwingIntroGuide { width:min(390px,calc(100vw - 24px));gap:8px;color:#f0eadc; }
+#alderwingIntroGuide>img { width:52px;height:64px; }
+#alderwingIntroGuide>div { padding:8px 10px;background:#18261f;border-color:#61715b; }
+#alderwingIntroGuide p { font-size:12px;line-height:1.4; }
+#alderwingIntroGuide button { min-width:64px;padding:6px 10px;background:#344932;color:#f0eadc;border:1px solid #61715b;font-size:12px; }
 </style>
 <script src="appearance_core.js?v=appearance-v362-20260907"></script>
 <script>
@@ -4596,7 +4617,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=alderwing-intro-desk-v420-20260917">
+<link rel="stylesheet" href="scan_home.css?v=home-squares-v421-20260917">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4720,16 +4741,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         </div>
       </div>
 
-      <section class="scan-home-today" aria-label="Your next quest and player equipment"><div id="scanHomeActions" class="scan-home-actions"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><img src="assets/home-v399/warrior-equipment.webp" alt="" width="256" height="384"><span>Equipment</span></button></section>
+      <section class="scan-home-today" aria-label="Your next quest and player equipment"><span class="desk-current-label"><span>Current</span><span>goal</span></span><div id="scanHomeActions" class="scan-home-actions"></div><div id="deskBuildOptions" class="desk-build-options" aria-label="Available buildings"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><img src="assets/home-v399/warrior-equipment.webp" alt="" width="256" height="384"><span>Equipment</span></button></section>
       <div id="scanHomeDeskPanels" class="desk-panels">
-        <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Stores</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Weapons & armour; open the room for all entries"></div></section>
+        <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Crafting</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Crafting; open the Forge"></div></section>
         <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-training" aria-labelledby="desk-training-title"><button type="button" class="desk-panel-heading" data-home-action="panel-training"><span id="desk-training-title">Training</span><small id="desk-training-count"></small><span aria-hidden="true">↗</span></button><div id="desk-training-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Drills & rewards; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-hospital" aria-labelledby="desk-hospital-title"><button type="button" class="desk-panel-heading" data-home-action="panel-hospital"><span id="desk-hospital-title">Hospital</span><small id="desk-hospital-count"></small><span aria-hidden="true">↗</span></button><div id="desk-hospital-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Birds needing care; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-completed" aria-labelledby="desk-completed-title"><button type="button" class="desk-panel-heading" data-home-action="panel-completed"><span id="desk-completed-title">Completed</span><small id="desk-completed-count"></small><span aria-hidden="true">↗</span></button><div id="desk-completed-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Not yet checked; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Your Empire</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Your Empire: villages, towns and regions"></div></section>
       </div>
-      <details id="scanHomeSession" class="scan-home-tools"><summary>Scan results & settings</summary><div class="desk-session-body"><button type="button" id="deskSessionStop" hidden>Stop listening</button>
+      <details id="scanHomeSession" class="scan-home-tools" hidden><summary>Scan results & settings</summary><div class="desk-session-body"><button type="button" id="deskSessionStop" hidden>Stop listening</button>
       <!-- Session tools remain below the prominent home scanning controls. -->
       <div class="scan-mode-toggle">
         <button class="scan-mode-btn active" id="scanSoundBtn" data-mode="sound"><img class="ui-inline-icon" src="assets/ui/burbz-icon-set/sound.webp" alt="">Sound</button>
@@ -5706,8 +5727,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=alderwing-intro-desk-v420-20260917"></script>
-<script src="scan_home.js?v=alderwing-intro-desk-v420-20260917"></script>
+<script src="scan_home_core.js?v=home-squares-v421-20260917"></script>
+<script src="scan_home.js?v=home-squares-v421-20260917"></script>
 <script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -23303,7 +23324,7 @@ function updateActionBadges() {
 }
 
 let scanHomeBound = false;
-function scanHomeBuildOpportunities() {
+function scanHomeBuildOpportunities(limitPerPlace=2) {
   if(!featureGateOpen('village'))return [];
   const rows=[],seen=new Set(),wallet=gameState.player,trainerLevel=Number(wallet.level)||1;
   for(const rec of empireVillages()) {
@@ -23320,10 +23341,14 @@ function scanHomeBuildOpportunities() {
       if(wallet.coins<cost.coins||playerBranches()<cost.branches||playerStone()<cost.stone)continue;
       const tier=villageBuildingTier(building,Math.max(1,level+1));
       rows.push({id:'build-'+target.seed+'-'+building.id,seed:target.seed>>>0,building:building.id,icon:tier.icon||building.icon,name:(level?'Upgrade ':'')+tier.name,place:town?townDisplayName(town):rec.name,detail:[cost.coins+' coins',cost.branches+' timber',cost.stone?cost.stone+' stone':null].filter(Boolean).join(' · ')});
-      if(++shown>=2)break;
+      if(++shown>=limitPerPlace)break;
     }
   }
   return rows;
+}
+function scanHomeAvailableBuildOptions() {
+  const academy=featureGateOpen('academy')?ACADEMY_BUILDING_ORDER.filter(id=>{const c=ACADEMY_BUILDINGS[id];return c&&!isAcademyBuildingBuilt(id)&&(Number(gameState.player.level)||1)>=c.unlockLevel&&!academyBuildingProgressLock(id)&&(gameState.player.coins||0)>=c.cost&&playerBranches()>=(Number(c.branches)||0);}).map(id=>{const c=ACADEMY_BUILDINGS[id];return{id:'academy-'+id,name:c.label,icon:c.icon,art:c.asset,place:'Academy',target:{kind:'academy-build',id}};}):[];
+  return academy.concat(scanHomeBuildOpportunities(Infinity).map(b=>({...b,target:{kind:'build-opportunity',seed:b.seed,building:b.building}})));
 }
 function scanHomeDeskSnapshot() {
   const L=lootCore(),now=Date.now(),flock=gameState.flock||[];
@@ -23360,7 +23385,7 @@ function scanHomeDeskSnapshot() {
   };
   const rooms=Object.fromEntries(['kitchen','training','hospital'].map(id=>[id,{built:!!gameState.academyBuildings?.[id]?.built,builtAt:gameState.academyBuildings?.[id]?.builtAt}]));
   const firstVillage=empireVillages().map(v=>v.claimedAt).filter(v=>typeof v==='string').sort()[0]||'';
-  return {stores,kitchen,training,hospital,completed,equipment,villageDesk,empireDesk,rooms,featureDates:{village:firstVillage}};
+  return {stores,kitchen,training,hospital,completed,equipment,villageDesk,empireDesk,availableBuilds:scanHomeAvailableBuildOptions(),rooms,featureDates:{village:firstVillage}};
 }
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
@@ -23390,7 +23415,7 @@ function openScanHomeTarget(target) {
   if (!target) return;
   const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
   if(target.kind==='route'&&!routes.includes(target.screen))return;
-  const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',town:'village',region:'village',villages:'village',notice:'village','build-opportunity':'village','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
+  const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',town:'village',region:'village',villages:'village',notice:'village','build-opportunity':'village','academy-build':'academy','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { if(!prerequisiteGuideGoal({type:'feature',args:[gate]}))showToast(featureUnlockHint(gate));return; }
   SFX.tap();
   if(target.kind==='player-equipment')openDeskPlayerEquipment(target.slot);
@@ -23401,8 +23426,12 @@ function openScanHomeTarget(target) {
   else if(target.kind==='training')openTrainingHub();
   else if(target.kind==='forge')openForge('craft');
   else if(target.kind==='quest')focusQuestFromNotice({questId:target.id});
+  else if(target.kind==='academy-build'){
+    if(!scanHomeAvailableBuildOptions().some(b=>b.target.kind==='academy-build'&&b.target.id===target.id)){showToast('That building opportunity has changed.');renderScanHome();return;}
+    focusAcademyBuildCard(target.id);
+  }
   else if(target.kind==='build-opportunity'){
-    const available=scanHomeBuildOpportunities().find(b=>b.seed===target.seed&&b.building===target.building);
+    const available=scanHomeBuildOpportunities(Infinity).find(b=>b.seed===target.seed&&b.building===target.building);
     if(!available){showToast('That building opportunity has changed. Your desk is up to date.');renderScanHome();return;}
     const link=empireSettlementOfSeed(target.seed);
     if(link)openEmpireTown(link.id);else openEmpireVillage(target.seed);
@@ -23630,6 +23659,7 @@ document.addEventListener('click', ev => {
 let currentScreen = 'map';
 
 function switchScreen(name) {
+  window.BurbzScanHome?.closeSession();
   if(name!=='scan')closeDeskPlayerEquipment();
   closeResourceQuestPrompt();
   // Every Stores shortcut uses the same existing progression gate as the dock.
@@ -42206,7 +42236,7 @@ async function claimSavedPhoto(item, context) {
   $('scanResult').classList.add('show');$('scanResultName').textContent=bird.commonName;
   $('scanResultSci').textContent=bird.scientificName;
   $('scanResultConf').textContent=Math.round(primary.confidence*100)+'% confidence · Saved in Birdex';
-  $('scanHomeSession').open=true;
+  BurbzScanHome.openSession();
   updateHeader();renderBirdex();renderProfile();
   showToast('Identified: '+bird.commonName+'. Your photo is saved in Birdex.');
   return true;
@@ -44837,7 +44867,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-intro-desk-v420-20260917';
+const BURBZ_BUILD = 'home-squares-v421-20260917';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

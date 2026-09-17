@@ -40,6 +40,7 @@
   const routes=ROUTES.filter(([id])=>g[id]===true).map(([id,title,detail,icon,group])=>({id:'route-'+id,title,detail,icon,group,target:['kitchen','hospital','training','forge'].includes(id)?{kind:id}:id==='village'?{kind:'villages'}:id==='settings'?{kind:'settings'}:{kind:'route',screen:id}}));
   const player={name:typeof p.name==='string'?p.name:'',level:count(p.level)||null,coins:p.showCoins!==false&&Number.isFinite(p.coins)&&p.coins>=0?Math.floor(p.coins):null};
   const builds=(g.village&&Array.isArray(input.builds)?input.builds:[]).filter(b=>b&&typeof b.id==='string'&&typeof b.name==='string'&&Number.isFinite(b.seed)&&typeof b.building==='string').map(b=>({...b,target:{kind:'build-opportunity',seed:b.seed,building:b.building}}));
+  const availableBuilds=(Array.isArray(input.availableBuilds)?input.availableBuilds:[]).filter(b=>b&&typeof b.id==='string'&&typeof b.name==='string'&&(b.target?.kind==='academy-build'?g.academy===true:b.target?.kind==='build-opportunity'&&g.village===true));
   const stores=(g.inventory&&Array.isArray(input.stores)?input.stores:[]).filter(s=>s&&typeof s.id==='string'&&typeof s.name==='string'&&['weapon','armour'].includes(s.slot)&&count(s.count)).map(s=>({...s,count:count(s.count),target:{kind:'stores-gear',id:s.id}}));
   const kitchen=(playableGates.kitchen&&Array.isArray(input.kitchen)?input.kitchen:[]).filter(b=>b&&typeof b.id==='string'&&Number.isFinite(b.hunger)&&b.hunger>0).map(b=>({...b,hunger:Math.max(0,Math.min(100,b.hunger)),target:{kind:'feed-bird',id:b.id}}));
   const training=(playableGates.training&&Array.isArray(input.training)?input.training:[]).filter(s=>s&&typeof s.id==='string').map(s=>({...s,progress:Math.max(0,Math.min(100,Number(s.progress)||0)),target:{kind:'training'}}));
@@ -50,7 +51,7 @@
   playableGates.village=g.village===true&&villageDesk.length>0;
   const empire=empireColumns(g.village?input.empireDesk:null,builds);
   const panels=progressivePanels(input,{g:playableGates,completed});
-  return {panels,empire,villageDesk,equipment,gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
+  return {panels,empire,villageDesk,equipment,availableBuilds,forgeReady:count(input.forgeReady),gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
  }
  function empireColumns(input,builds=[]) {
   return ['villages','towns','regions'].map(id=>({id,title:{villages:'Villages',towns:'Towns',regions:'Regions'}[id],rows:(Array.isArray(input?.[id])?input[id]:[]).filter(r=>r&&typeof r.id==='string'&&typeof r.name==='string'&&r.target).map(r=>{
@@ -65,7 +66,7 @@
  function progressivePanels(input,{g,completed}) {
   const date=v=>{const n=typeof v==='number'?v:Date.parse(v);return Number.isFinite(n)&&n>0?n:0;};
   const panels=[{id:'discover',at:0},{id:'today',at:0}];
-  if(g.inventory===true)panels.push({id:'stores',at:date(input.featureDates?.inventory)});
+  if(g.forge===true)panels.push({id:'stores',at:date(input.featureDates?.forge)});
   for(const id of ['kitchen','training','hospital'])if(g[id]===true)panels.push({id,at:date(input.rooms?.[id]?.builtAt)});
   if(g.village===true||completed.length)panels.push({id:'building',at:date(input.featureDates?.village),feature:g.village===true});
   let featured=panels[0];
