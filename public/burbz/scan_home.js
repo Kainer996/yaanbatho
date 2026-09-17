@@ -16,7 +16,7 @@
   update('scanHomeActions',brief,()=>brief.map(a=>`<button type="button" class="home-action" data-home-action="${escape(a.id)}" title="${escape(a.title)}">${icon(a.icon)}<span><strong>${escape(a.title)}</strong><small>${escape(a.detail)}</small></span><span class="home-action-chevron" aria-hidden="true">›</span></button>`).join('')||'<p class="desk-empty">No active player goal.</p>');
   buildOptions=m.availableBuilds;renderBuildOption();
   const empty=copy=>`<p class="desk-empty">${escape(copy)}</p>`;
-  update('desk-stores-list',m.forgeReady,()=>row('panel-stores','Open the Forge',m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',picture(options.icon('forge'),'⚒️')));
+  update('desk-stores-list',{ready:m.forgeReady,open:m.gates.forge},()=>row('panel-stores',m.gates.forge?'Open the Forge':'Unlock Crafting',m.gates.forge?(m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells'):'Follow your Current Goal',picture(options.icon('forge'),'⚒️')));
   update('desk-kitchen-list',{rows:m.kitchen,open:m.gates.kitchen},()=>m.kitchen.map(b=>{const full=100-b.hunger;return row('feed-'+b.id,b.name,(b.away?'Away · ':b.label+' · ')+Math.round(full)+'% full',picture(b.art),bar(full,'Fullness',b.level),b.away);}).join('')||empty(m.gates.kitchen?'Your birds are well fed.':'Kitchen unlocks as you progress.'));
   update('desk-training-list',{rows:m.training,open:m.gates.training},()=>m.training.map(s=>row('train-'+s.id,s.name,s.ready?'Finished · collect reward':s.detail+' · '+Math.max(1,Math.ceil(s.remaining/60000))+'m',null,bar(s.ready?100:s.progress,'Training progress'))).join('')||empty(m.gates.training?'No active drills. Choose a bird to train.':'Training unlocks as you progress.'));
   update('desk-hospital-list',{rows:m.hospital,open:m.gates.hospital},()=>m.hospital.map(b=>row('patient-'+b.id,b.name,Math.round(b.hp)+' / '+Math.round(b.maxHp)+' HP · '+(b.admitted?'Recovering':'Needs care'),picture(b.art),bar(b.hp/b.maxHp*100,'Health'))).join('')||empty(m.gates.hospital?'No injured birds.':'Hospital unlocks as you progress.'));
@@ -31,20 +31,13 @@
   for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
   if(focused&&document.activeElement?.dataset?.homeAction!==focused)Array.from(boundSection.querySelectorAll('[data-home-action]')).find(el=>el.dataset.homeAction===focused)?.focus({preventScroll:true});queueLayout();return m;
  }
- // This is a display preference only. Saved game gates are rechecked on every
- // render; a remembered feature can never reveal an unbuilt/locked panel.
- function preferredFeature(panels){
-  const ids=panels.items.map(p=>p.id),key='burbz_home_panel_preference_v1';let saved=null;
-  try{saved=JSON.parse(localStorage.getItem(key));}catch(_){}
-  const added=saved&&Array.isArray(saved.ids)?ids.filter(id=>!saved.ids.includes(id)&&!['today','completed'].includes(id)&&panels.items.find(p=>p.id===id)?.feature!==false):[];
-  const featured=added.length?added.reduce((best,id)=>panels.items.find(p=>p.id===id).at>=panels.items.find(p=>p.id===best).at?id:best):ids.includes(saved?.featured)&&panels.items.find(p=>p.id===saved.featured)?.feature!==false?saved.featured:panels.featured;
-  const next={ids,featured,dates:JSON.stringify(panels.items)};
-  try{if(JSON.stringify(saved)!==JSON.stringify(next))localStorage.setItem(key,JSON.stringify(next));}catch(_){}
-  return featured;
- }
  function applyProgression(m){
   const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages'};
-  const ids=m.panels.items.map(p=>p.id),featured=ids.includes('building')&&m.gates.village?'building':preferredFeature(m.panels),main=boundSection.querySelector('.scan-home-main');
+  // Layout B is stable even before its features unlock. Native actions still
+  // enforce real gates; empty/locked panels never imply ownership or progress.
+  const ids=['building','discover','today','stores','kitchen','training','hospital'],featured='building',main=boundSection.querySelector('.scan-home-main');
+  for(const id of ['kitchen','training','hospital'])if(!m.gates[id])summaries[id]='Not built yet';
+  if(!m.gates.forge)summaries.stores='Follow your Current Goal';
   boundSection.classList.add('progressive-home');main.dataset.panelCount=ids.length;boundSection.dataset.homeDensity=ids.length>4?'full':ids.length>2?'growing':'early';
   document.getElementById('desk-building-title').textContent='Your Empire';document.getElementById('desk-stores-title').textContent='Crafting';
   document.getElementById('homeNoticesVillages').hidden=!m.villageDesk.length;
@@ -72,9 +65,7 @@
   panelElement('discover').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(scanHeight+'px');row++;
   panelElement('today').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(goalHeight+'px');row++;
   others.forEach((id,i)=>{const r=row+Math.floor(i/columns),col=1+i%columns;panelElement(id).style.gridArea=`${r} / ${col} / ${r+1} / ${i===others.length-1?columns+1:col+1}`;});
-  // A newly unlocked lone room must not consume all the unused Home height.
-  // Complete dashboards retain the selected historical B tracks unchanged.
-  for(let i=0;i<careRows;i++)tracks.push(careRows===1&&others.length<columns?`${otherMin}px`:`minmax(${otherMin}px,1fr)`);
+  for(let i=0;i<careRows;i++)tracks.push(`minmax(${otherMin}px,1fr)`);
   const rows=tracks.length;main.style.setProperty('--home-rows',rows);main.style.setProperty('--home-tracks',tracks.join(' '));
   for(const id of ids){
    const el=panelElement(id),h=el.clientHeight;
