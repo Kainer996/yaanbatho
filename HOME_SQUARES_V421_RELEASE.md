@@ -1,6 +1,6 @@
 # Home squares and controls v421
 
-Candidate build `home-squares-v421-20260917`, based on completed v420 and its public verification (PR357/358). Publication pending.
+Published build `home-squares-v421-20260917`, PR359, runtime/deployed commit `7e8534d224ca265846526e7445ccdad2a6d75f8c`.
 
 Your Empire retains Villages, Towns and Regions, each with its own scrolling list. Holdings are square, one across each category, with visible column dividers, native destinations, governor art and condition text/colours. The scanning buttons sit at the top of a snug box; the row immediately below uses the existing activePlayerQuest selection and reads Current / goal, then eligible building options and Equipment. Building options cycle through affordable, unlocked Academy and settlement construction and reopen the existing controls, with eligibility checked again before navigation. No automatic spending or invented construction rules.
 
@@ -14,4 +14,4 @@ The recognition investigation is deliberately excluded by the user’s explicit 
 
 Local acceptance: 24 native Home/card/layout/navigation groups passed at 320×568, 390×844, 844×390 and 1280×800; 9 native prerequisite navigation/rollback groups passed against these Home changes. Home projection/Empire/core regressions passed. Nine native chooser/cropper interaction checks and seven installed/offline/tutorial-size groups passed on the isolated UI release, with zero page errors. The installed update retained saves, played and sought the real cached trailer, and resumed the same tutorial. Testing uses Chromium on the laptop with phone viewport/touch emulation, not a physical phone.
 
-Publication proof will be added after deployment.
+Public verification passed: all five changed runtime files match SHA-256 bytes, deployment marker and managed hashes agree, and recognition worker/adapter hashes remain unchanged. Thirty-nine actual public browser groups passed (24 Home, 6 installed/offline, 9 chooser), zero page errors. Evidence: reports/BURBZ_V421_PUBLIC_VERIFICATION.json. The native chooser tests use controlled recognition responses and make no claim about model accuracy. The separately held recognition investigation is ongoing.
