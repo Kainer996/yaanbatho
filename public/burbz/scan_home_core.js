@@ -26,7 +26,7 @@
   for(const id of ['kitchen','training','hospital'])playableGates[id]=g[id]===true&&input.rooms?.[id]?.built===true;
   const add=(id,title,detail,icon,target,tone='ready')=>actions.push({id,title,detail,icon,target,tone});
   const questCount=count(input.quests?.count);
-  if(input.nextQuest)add('next-quest',input.nextQuest.name||'Your next quest',input.nextQuest.detail||'Continue your next Player Quest','quests',{kind:'quest',id:input.nextQuest.id},'quiet');
+  if(input.nextQuest)add('next-quest',input.nextQuest.name||'Your next quest',input.nextQuest.detail||'Continue your next Player Quest','quests',input.nextQuest.source==='progression'?{kind:'home-goal'}:{kind:'quest',id:input.nextQuest.id},'quiet');
   if(questCount)add('quests',questCount+' '+(questCount===1?'reward ready':'rewards ready'),input.quests.first?.name||'Open your quests to collect','quests',{kind:'quest',id:input.quests.first?.id});
   if(g.kitchen&&input.kitchenBuilt===false)add('kitchen','Build the Kitchen','A place to feed your birds','kitchen',{kind:'kitchen'},'quiet');
   else if(g.kitchen&&count(n.kitchen))add('kitchen','Kitchen',count(n.kitchen)+' '+(count(n.kitchen)===1?'bird would like a meal':'birds would like a meal'),'kitchen',{kind:'kitchen'},'care');
