@@ -48,8 +48,16 @@
   const equipment=(Array.isArray(input.equipment)?input.equipment:[]).filter(i=>i&&['weapon','armour','trinket','spell','potion'].includes(i.slot)).map(i=>({...i,target:{kind:'player-equipment',slot:i.slot}}));
   const villageDesk=(g.village&&Array.isArray(input.villageDesk)?input.villageDesk:[]).filter(v=>v&&Number.isFinite(v.seed)&&typeof v.name==='string').map(v=>({...v,target:{kind:'village',seed:v.seed},builds:builds.filter(b=>b.seed===v.seed)}));
   playableGates.village=g.village===true&&villageDesk.length>0;
+  const empire=empireColumns(g.village?input.empireDesk:null,builds);
   const panels=progressivePanels(input,{g:playableGates,completed});
-  return {panels,villageDesk,equipment,gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
+  return {panels,empire,villageDesk,equipment,gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
+ }
+ function empireColumns(input,builds=[]) {
+  return ['villages','towns','regions'].map(id=>({id,title:{villages:'Villages',towns:'Towns',regions:'Regions'}[id],rows:(Array.isArray(input?.[id])?input[id]:[]).filter(r=>r&&typeof r.id==='string'&&typeof r.name==='string'&&r.target).map(r=>{
+   const bad=!r.assigned||['empty','unhappy'].includes(r.need?.id),available=builds.filter(b=>(r.wards||[]).includes(b.seed));
+   const status=!r.assigned?'No governor':r.need?.label||'Status unavailable';
+   return {...r,tone:bad?'bad':'good',status,buildCount:available.length,buildNames:available.map(b=>b.name),work:r.waiting?r.waiting+' ready to open':r.underway?r.underway+' building':available.length?available.length+' can build':''};
+  })}));
  }
  // Timestamp facts come from canonical room construction/first settlement saves.
  // Historical saves without dates have a deterministic order; observing an unlock
@@ -64,5 +72,5 @@
   for(const p of panels)if(!['today'].includes(p.id)&&(p.id!=='building'||g.village===true)&&(p.at>featured.at||(p.at===featured.at&&p.id!=='discover')))featured=p;
   return {items:panels,featured:featured.id};
  }
- return {derive,progressivePanels};
+ return {derive,progressivePanels,empireColumns};
 });

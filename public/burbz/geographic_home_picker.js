@@ -42,7 +42,8 @@
     try{
       await options.loadMapLibre();if(done)return false;
       const anchor=options.anchor||options.location;
-      map=new root.maplibregl.Map({container:element.querySelector('.gwp-map'),style:options.style,center:anchor?[anchor.lon,anchor.lat]:[0,0],zoom:anchor?15:2,maxZoom:19,pitch:0,attributionControl:{compact:true},pixelRatio:Math.min(1.5,root.devicePixelRatio||1),canvasContextAttributes:{antialias:false}});
+      map=new root.maplibregl.Map({container:element.querySelector('.gwp-map'),style:options.style,center:anchor?[anchor.lon,anchor.lat]:[0,0],zoom:anchor?15:2,maxZoom:19,pitch:0,attributionControl:false,pixelRatio:Math.min(1.5,root.devicePixelRatio||1),canvasContextAttributes:{antialias:false}});
+      root.BurbzFieldMapUI?.mapCredits(map);
       locate.disabled=false;
       map.on('load',()=>{update();preview();});map.on('move',()=>{previewSeq++;update();if(options.preview){place.disabled=true;clearTimeout(previewTimer);previewTimer=setTimeout(preview,350);}});map.on('error',()=>{if(!busy&&!done&&!notice)setNotice('Map data is unavailable here. You can use cached areas or try again when connected.');});
       element.querySelector('[data-picker=cancel]').focus({preventScroll:true});return true;

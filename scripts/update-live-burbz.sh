@@ -32,6 +32,7 @@ LFS_FILES=(
   "player_home_core.js"
   "player_home_scene.js"
   "player_home.js"
+  "alderwing_intro.js"
   "assets/comic-ui/ink-paper-v359.webp"
   "assets/comic-ui/battlefield-v359.webp"
   "assets/cutscenes/burbz-intro-two-part-hf-20260729.mp4"

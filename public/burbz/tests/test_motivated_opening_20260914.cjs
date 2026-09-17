@@ -139,10 +139,11 @@ test('feature gates follow actual built Kitchen, discovery access and existing u
   map=gate.unlockedFeatures({chainIds:ids,claimedIds:[],evidence:{kitchenBuilt:true,kitchen:true,birdex:true},playerLevel:1});assert.equal(map.kitchen,true);assert.equal(map.birdex,true);
 });
 
-test('all surviving stable tutorial IDs resume and no lesson runs over five beats',()=>{
+test('all stable tutorial IDs resume; concise opening story and later five-beat lessons',()=>{
   const c=runtime();use(c,`for(const mode of ['full',...new Set(MERLIN_TUTORIAL_STEPS.map(s=>s.chapterId))]) {
     const seq=MERLIN_TUTORIAL_STEPS.map((s,i)=>mode==='full'||s.chapterId===mode?i:-1).filter(i=>i>=0);
     for(let position=0;position<seq.length;position++) { if(merlinTutorialResumePosition({status:'in_progress',mode,stepId:MERLIN_TUTORIAL_STEPS[seq[position]].id},mode,seq)!==position)throw Error('resume mismatch'); }
-    if(mode!=='full' && seq.length>5)throw Error(mode+' too long');
+    if(mode==='story' && seq.some(i=>MERLIN_TUTORIAL_STEPS[i].text.length>220))throw Error('opening bubble too long');
+    if(!['full','story'].includes(mode) && seq.length>5)throw Error(mode+' too long');
   }`);
 });

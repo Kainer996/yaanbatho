@@ -566,3 +566,26 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 @media(orientation:portrait) and (max-width:360px){
  #screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-command-bar .desk-equipment-control{font-size:10px}
 }
+
+/* One real holding per tile, with all three ranks visible together. */
+#screen-scan.progressive-home .desk-panel-building { position:relative; }
+#screen-scan.progressive-home .desk-panel-building #desk-building-list { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;flex:1;min-height:0;overflow:hidden;padding:0 4px 4px; }
+#screen-scan .desk-empire-column { display:flex;flex-direction:column;min-width:0;min-height:0; }
+#screen-scan .desk-empire-column h3 { flex:none;margin:0;padding:2px 0;font:700 12px/16px 'Inter',sans-serif;color:#f0ddaf; }
+#screen-scan .desk-empire-holdings { flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin; }
+#screen-scan .desk-empire-holding { display:block;width:100%;min-height:44px;margin:0 0 4px;padding:4px;border:1px solid #779b68;border-radius:5px;text-align:left;background:#203e2f;color:#edffe9;cursor:pointer; }
+#screen-scan .desk-empire-holding.is-bad { border-color:#c27d6f;background:#542f2b;color:#ffebe2; }
+#screen-scan .desk-empire-name { display:flex;align-items:center;gap:3px;min-width:0; }
+#screen-scan .desk-empire-name .desk-mini-art { flex:none;width:20px;height:23px; }
+#screen-scan .desk-empire-name strong { font-size:12px;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis; }
+#screen-scan .desk-empire-holding small { display:block;font-size:10px;line-height:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+#screen-scan .desk-empire-work { color:#ffe6a9; }
+#screen-scan .desk-empire-holdings:focus-visible,#screen-scan .desk-empire-holding:focus-visible { outline:2px solid #ffefc9;outline-offset:-2px; }
+#screen-scan #desk-empire-notices { flex:none;position:absolute;right:4px;top:0;min-height:44px;background:#33291e;color:#ffe2a1;border:0;border-radius:4px;font:600 11px 'Inter',sans-serif;cursor:pointer; }
+#screen-scan .desk-panel-building:has(#desk-empire-notices:not([hidden])) .desk-panel-heading { padding-right:120px; }
+#screen-scan.progressive-home .desk-panel-building .desk-panel-summary { display:none; }
+
+#screen-scan .desk-empire-holding { position:relative; }
+#screen-scan .desk-empire-holding .desk-empire-work { display:none; }
+#screen-scan .desk-empire-holding[data-work]:not([data-work=""]) .desk-empire-name { padding-right:24px; }
+#screen-scan .desk-empire-holding::after { content:attr(data-work);position:absolute;top:5px;right:3px;font-size:10px;color:#ffe6a9; }
