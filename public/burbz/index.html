@@ -2239,6 +2239,10 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
   min-height: calc(100dvh - var(--nav-height) - 260px);
   border-color: rgba(214,168,79,0.5); color: var(--text);
 }
+#imageScanArea .scan-upload-area { background: transparent; font: inherit; }
+.photo-library-button { display:block; width:100%; max-width:420px; min-height:48px; margin:12px auto 6px; border:1px solid var(--accent); border-radius:12px; background:var(--bg3); color:var(--text); font:600 16px 'Rajdhani',sans-serif; cursor:pointer; }
+.photo-library-button:focus-visible, #uploadArea:focus-visible { outline:3px solid var(--accent2); outline-offset:3px; }
+.photo-library-help { margin:0 auto 12px; max-width:420px; text-align:center; color:var(--text2); font-size:12px; }
 #imageScanArea .scan-upload-icon { width: 74px; height: 74px; object-fit: contain; }
 .scan-upload-subtext { font-size: 12px; font-weight: 600; color: var(--text3); }
 #nativePhotoPreview {
@@ -4728,7 +4732,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
-        <p class="photo-privacy-note">Your framed camera photo is sent only for this check and is not saved on your device by Burbz. If the check cannot finish, you can retry while this screen stays open.</p>
+        <p class="photo-privacy-note">Your framed photo is sent only for this check and is not saved on your device by Burbz. If the check cannot finish, you can retry while this screen stays open.</p>
         <div class="photo-id-status" id="photoIdStatus" hidden>
           <p id="photoIdMessage" role="status" aria-live="polite"></p>
           <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
@@ -4749,11 +4753,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
             <span class="camera-zoom-value" id="cameraZoomValue">1.0x</span>
           </label>
         </div>
-        <div class="scan-upload-area" id="uploadArea">
+        <button type="button" id="choosePhotoBtn" class="photo-library-button" aria-describedby="choosePhotoHelp">Choose photo</button>
+        <p id="choosePhotoHelp" class="photo-library-help">Select a JPEG, PNG or WebP image from your device (up to 10 MB).</p>
+        <button type="button" class="scan-upload-area" id="uploadArea">
           <img id="nativePhotoPreview" alt="Your last bird photo" style="display:none;">
           <img class="scan-upload-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">
-          <div class="scan-upload-text">Choose a bird photo</div>
-        </div>
+          <span class="scan-upload-text">Take a new photo</span>
+        </button>
+        <input type="file" id="photoLibraryInput" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display:none;" aria-hidden="true">
         <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
       </div>
 
@@ -41670,6 +41677,7 @@ if (cameraZoomSlider) {
 // (via the capture input) so players get its full quality — every lens, HDR,
 // night mode, real optical zoom — instead of the browser's capped video stream.
 const nativeCameraInput = $('nativeCameraInput');
+const photoLibraryInput = $('photoLibraryInput');
 
 function openNativeCamera() {
   if (!nativeCameraInput) return;
@@ -41677,13 +41685,31 @@ function openNativeCamera() {
   nativeCameraInput.click();
 }
 
+$('choosePhotoBtn').addEventListener('click', () => {
+  if (photoIdBusy) return;
+  SFX.tap(); showImageScanMode();
+  photoLibraryInput.value = '';
+  photoLibraryInput.click();
+});
+
 $('uploadArea').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });
 $('captureBtn').addEventListener('click', () => { SFX.tap(); showImageScanMode(); openNativeCamera(); });
 
-nativeCameraInput?.addEventListener('change', async () => {
-  const file = nativeCameraInput.files && nativeCameraInput.files[0];
-  if (!file) return;
-  if (photoIdBusy) return;
+function selectedPhotoError(file) {
+  const supported = /^(image\/(jpeg|png|webp))$/i.test(file.type || '') ||
+    (!file.type && /\.(jpe?g|png|webp)$/i.test(file.name || ''));
+  if (!supported) return 'Choose a JPEG, PNG or WebP photo.';
+  if (!file.size) return 'That photo is empty. Choose another photo.';
+  if (file.size > 10 * 1024 * 1024) return 'Choose a photo smaller than 10 MB.';
+  return '';
+}
+async function handlePhotoSelection(input, fromLibrary = false) {
+  const file = input.files && input.files[0];
+  if (!file || photoIdBusy) return;
+  if (fromLibrary) {
+    const error = selectedPhotoError(file);
+    if (error) { setPhotoIdStatus(error); return; }
+  }
   photoIdRetryBlob = null;
   setPhotoIdStatus('Preparing your photo…');
   showNativePhotoPreview(file);
@@ -41691,13 +41717,20 @@ nativeCameraInput?.addEventListener('change', async () => {
   // recogniser sees the bird, not a frame full of background.
   try {
     initBirdCropperControls();
-    await openBirdCropper(file);
+    await openBirdCropper(file, { requireDecode:fromLibrary });
   } catch (e) {
     closeBirdCropper();
+    if (fromLibrary) {
+      photoIdRetryBlob = null;
+      setPhotoIdStatus('That photo could not be read. Choose another JPEG, PNG or WebP photo.');
+      return;
+    }
     photoIdRetryBlob = file;
     setPhotoIdStatus('Could not prepare that photo. Try it again or take another picture.', true);
   }
-});
+}
+nativeCameraInput?.addEventListener('change', () => handlePhotoSelection(nativeCameraInput));
+photoLibraryInput.addEventListener('change', () => handlePhotoSelection(photoLibraryInput, true));
 
 // ----- Merlin-style bird cropper -------------------------------------------
 // After the phone's camera returns a photo we show it in a fixed square with a
@@ -41705,7 +41738,7 @@ nativeCameraInput?.addEventListener('change', async () => {
 // the original frame for a bird whose body or wings do not fit in the square.
 const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, preparing: false, fullPhoto: false, pointers: new Map(), pinch: null };
 
-async function openBirdCropper(file) {
+async function openBirdCropper(file, { requireDecode = false } = {}) {
   closeBirdCropper();
   const generation = birdCrop.generation;
   let bitmap = null;
@@ -41714,6 +41747,7 @@ async function openBirdCropper(file) {
   } catch (e) { bitmap = null; }
   if (generation !== birdCrop.generation) { bitmap?.close?.(); return; }
   if (!bitmap) {
+    if (requireDecode) throw new Error('Selected photo could not be decoded');
     // Can't decode to crop (exotic format) — send the original straight through.
     const blob = await prepareNativePhotoForUpload(file);
     await identifyImage(blob || file, 'camera');
@@ -44765,7 +44799,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-flight-shores-v418-20260915';
+const BURBZ_BUILD = 'choose-photo-v420-20260917';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
