@@ -589,3 +589,60 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 #screen-scan .desk-empire-holding .desk-empire-work { display:none; }
 #screen-scan .desk-empire-holding[data-work]:not([data-work=""]) .desk-empire-name { padding-right:24px; }
 #screen-scan .desk-empire-holding::after { content:attr(data-work);position:absolute;top:5px;right:3px;font-size:10px;color:#ffe6a9; }
+
+/* v421: three square holdings, a close-fitting scanner and one canonical goal. */
+#screen-scan.progressive-home .desk-empire-column + .desk-empire-column { border-left:1px solid #dac68b99;padding-left:5px; }
+#screen-scan.progressive-home .desk-empire-column h3 { text-align:center; }
+#screen-scan.progressive-home .desk-empire-holding { box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;align-items:center;width:var(--empire-tile-size,84px);height:var(--empire-tile-size,84px);min-height:44px;max-width:100%;aspect-ratio:1;margin:0 auto 5px;padding:5px;text-align:center; }
+#screen-scan.progressive-home .desk-empire-name { flex-direction:column;width:100%;gap:3px; }
+#screen-scan.progressive-home .desk-empire-name .desk-mini-art { width:26px;height:28px; }
+#screen-scan.progressive-home .desk-empire-name strong { max-width:100%;font-size:12px; }
+#screen-scan.progressive-home .desk-empire-holding small { max-width:100%; }
+#screen-scan.progressive-home .desk-empire-holding[data-work]:not([data-work=""]) .desk-empire-name { padding-right:0; }
+#screen-scan.progressive-home .scan-home-start { align-self:start;justify-content:flex-start;padding:5px;height:auto; }
+#screen-scan.progressive-home .scan-home-start-heading { display:none; }
+#screen-scan.progressive-home .scan-home-start-buttons { grid-template-columns:repeat(2,minmax(0,1fr));gap:6px; }
+#screen-scan.progressive-home .scan-home-start-buttons .scan-btn { box-sizing:border-box;height:56px;min-height:44px;padding:5px;font-size:15px;text-align:center; }
+#screen-scan.progressive-home .scan-home-start-buttons .scan-btn::before { display:none; }
+#screen-scan.progressive-home .scan-home-today { grid-template-columns:50px minmax(0,1fr) 59px;gap:4px;padding:3px; }
+#screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-today { grid-template-columns:50px minmax(0,1fr); }
+#screen-scan .desk-current-label { display:flex;flex-direction:column;align-items:center;justify-content:center;border-right:1px solid #cab87a80;color:#f1dbaf;font:600 12px/15px Inter,sans-serif; }
+#screen-scan.progressive-home .scan-home-today .home-action { padding:2px 5px;min-height:38px; }
+#screen-scan.progressive-home .scan-home-today .home-action strong { font-size:14px;line-height:17px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+#screen-scan.progressive-home .scan-home-today .home-action small { display:none; }
+#screen-scan.progressive-home .scan-home-today .desk-equipment-control { min-height:44px;display:flex;align-items:center;justify-content:center;gap:2px; }
+#screen-scan.progressive-home .scan-home-today .desk-equipment-control>img { width:17px;height:28px; }
+#screen-scan.progressive-home .scan-home-tools[hidden] { display:none!important; }
+@media(max-height:700px){
+ #screen-scan.progressive-home .scan-home-start { padding:5px; }
+ #screen-scan.progressive-home .scan-home-start-buttons .scan-btn { height:44px;min-height:44px;font-size:13px; }
+ #screen-scan.progressive-home .scan-home-today { padding:0; }
+ #screen-scan.progressive-home .scan-home-today .home-action { min-height:44px; }
+}
+@media(orientation:landscape) and (max-height:550px){
+ #screen-scan.progressive-home .desk-empire-name { flex-direction:row;gap:2px; }
+ #screen-scan.progressive-home .desk-empire-name .desk-mini-art { width:14px;height:16px; }
+ #screen-scan.progressive-home .desk-empire-name strong { font-size:10px; }
+ #screen-scan.progressive-home .desk-empire-holding small { font-size:9px;line-height:11px; }
+ #screen-scan.progressive-home .desk-empire-holding::after { position:static;font-size:9px;line-height:10px; }
+}
+
+#screen-scan.progressive-home .scan-home-today { grid-template-columns:42px minmax(0,1fr) 88px 53px!important;gap:3px; }
+#screen-scan .desk-build-options { display:grid;grid-template-columns:44px 44px;grid-template-rows:44px 12px;align-content:center;min-width:0;border-left:1px solid #c8b27b66;border-right:1px solid #c8b27b66; }
+#screen-scan .desk-build-options button { width:44px;height:44px;min-height:44px;padding:2px;background:#302f22;color:#fff0cf;border:0;font:700 22px/1 Inter,sans-serif; }
+#screen-scan .desk-build-options button:disabled { opacity:.3; }
+#screen-scan .desk-build-options .desk-mini-art { width:30px;height:36px;margin:auto; }
+#screen-scan .desk-build-options small { grid-column:1/-1;display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;font:500 10px/12px Inter,sans-serif; }
+#screen-scan .desk-build-options .desk-empty { grid-column:1/-1;grid-row:1/-1;align-self:center;text-align:center;font:500 10px/13px Inter,sans-serif;padding:1px; }
+#screen-scan.progressive-home .scan-home-today .desk-equipment-control { flex-direction:column;font-size:9px;line-height:10px; }
+#screen-scan.progressive-home .scan-home-today .home-action strong { font-size:12px;line-height:14px; }
+@media(max-height:700px){#screen-scan.progressive-home .scan-home-start { padding:3px; }#screen-scan.progressive-home .scan-home-today .desk-equipment-control { min-height:50px; }}
+
+@media(max-height:700px){#screen-scan.progressive-home .desk-empire-name .desk-mini-art{width:18px;height:18px}#screen-scan.progressive-home .desk-empire-name{gap:1px}#screen-scan.progressive-home .desk-empire-name strong{font-size:10px;line-height:12px}#screen-scan.progressive-home .desk-empire-holding small{font-size:9px;line-height:11px}#screen-scan.progressive-home .desk-empire-holding{padding:3px}}
+
+#screen-scan.progressive-home[data-home-density] .scan-home-start .scan-home-start-buttons .scan-btn { min-height:44px;height:56px; }
+#screen-scan.progressive-home #desk-stores-list .desk-mini-row { width:100%; }
+@media(max-height:700px){#screen-scan.progressive-home[data-home-density] .scan-home-start .scan-home-start-buttons .scan-btn{height:44px;min-height:44px}}
+
+#screen-scan.progressive-home .desk-panel-stores #desk-stores-list { grid-template-columns:minmax(0,1fr);grid-auto-rows:minmax(44px,max-content); }
+#screen-scan.progressive-home .desk-panel-stores .desk-mini-copy small { overflow:hidden;white-space:nowrap;text-overflow:ellipsis; }

@@ -10,12 +10,13 @@
  function render(snapshot){if(!options?.visible())return;const m=C.derive(snapshot),focused=document.activeElement?.dataset?.homeAction;targets=new Map();
   targets.set('player-equipment',{kind:'player-equipment'});
   applyProgression(m);
-  const headings={stores:{kind:'stores-gear'},kitchen:{kind:'kitchen'},training:{kind:'training'},hospital:{kind:'hospital'},completed:{kind:'villages'},building:{kind:'villages'}};for(const [id,target]of Object.entries(headings))targets.set('panel-'+id,target);
+  const headings={stores:{kind:'forge'},kitchen:{kind:'kitchen'},training:{kind:'training'},hospital:{kind:'hospital'},completed:{kind:'villages'},building:{kind:'villages'}};for(const [id,target]of Object.entries(headings))targets.set('panel-'+id,target);
   const register=(prefix,rows)=>rows.forEach(r=>targets.set(prefix+r.id,r.target));register('store-',m.stores);m.equipment.forEach(i=>targets.set('equip-'+i.slot,i.target));register('feed-',m.kitchen);register('train-',m.training);register('patient-',m.hospital);register('complete-',m.completed);register('',m.builds);
-  const brief=m.actions.filter(a=>['next-quest','quests','forge'].includes(a.id)).slice(0,1);brief.forEach(a=>targets.set(a.id,a.target));if(m.walk&&!brief.length){targets.set('walk',m.walk.target);brief.push({id:'walk',title:m.walk.name,detail:'Resume your walk',icon:'map'});}
-  update('scanHomeActions',brief,()=>brief.map(a=>`<button type="button" class="home-action" data-home-action="${escape(a.id)}">${icon(a.icon)}<span><strong>${escape(a.title)}</strong><small>${escape(a.detail)}</small></span><span class="home-action-chevron" aria-hidden="true">›</span></button>`).join('')||'<p class="desk-empty">Your next adventure starts with a bird.</p>');
+  const brief=m.actions.filter(a=>a.id==='next-quest').slice(0,1);brief.forEach(a=>targets.set(a.id,a.target));
+  update('scanHomeActions',brief,()=>brief.map(a=>`<button type="button" class="home-action" data-home-action="${escape(a.id)}" title="${escape(a.title)}">${icon(a.icon)}<span><strong>${escape(a.title)}</strong><small>${escape(a.detail)}</small></span><span class="home-action-chevron" aria-hidden="true">›</span></button>`).join('')||'<p class="desk-empty">No active player goal.</p>');
+  buildOptions=m.availableBuilds;renderBuildOption();
   const empty=copy=>`<p class="desk-empty">${escape(copy)}</p>`;
-  update('desk-stores-list',{rows:m.stores,open:m.gates.inventory},()=>m.stores.map(s=>`<button type="button" class="desk-gear" data-home-action="store-${escape(s.id)}" aria-label="${escape(s.name)}, ${s.count} in Stores">${picture(s.art,s.icon)}<span>${escape(s.name)}</span><b>×${s.count}</b></button>`).join('')||empty(m.gates.inventory?'No weapons or armour in Stores.':'Stores unlock as you progress.'));
+  update('desk-stores-list',m.forgeReady,()=>row('panel-stores','Open the Forge',m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',picture(options.icon('forge'),'⚒️')));
   update('desk-kitchen-list',{rows:m.kitchen,open:m.gates.kitchen},()=>m.kitchen.map(b=>{const full=100-b.hunger;return row('feed-'+b.id,b.name,(b.away?'Away · ':b.label+' · ')+Math.round(full)+'% full',picture(b.art),bar(full,'Fullness',b.level),b.away);}).join('')||empty(m.gates.kitchen?'Your birds are well fed.':'Kitchen unlocks as you progress.'));
   update('desk-training-list',{rows:m.training,open:m.gates.training},()=>m.training.map(s=>row('train-'+s.id,s.name,s.ready?'Finished · collect reward':s.detail+' · '+Math.max(1,Math.ceil(s.remaining/60000))+'m',null,bar(s.ready?100:s.progress,'Training progress'))).join('')||empty(m.gates.training?'No active drills. Choose a bird to train.':'Training unlocks as you progress.'));
   update('desk-hospital-list',{rows:m.hospital,open:m.gates.hospital},()=>m.hospital.map(b=>row('patient-'+b.id,b.name,Math.round(b.hp)+' / '+Math.round(b.maxHp)+' HP · '+(b.admitted?'Recovering':'Needs care'),picture(b.art),bar(b.hp/b.maxHp*100,'Health'))).join('')||empty(m.gates.hospital?'No injured birds.':'Hospital unlocks as you progress.'));
@@ -27,7 +28,7 @@
   noticeButton.hidden=!m.completed.length;noticeButton.textContent=m.completed.length+' completed · check';
   update('desk-building-list',m.empire,()=>m.empire.map(column=>`<section class="desk-empire-column" aria-labelledby="desk-empire-${column.id}"><h3 id="desk-empire-${column.id}">${column.title}</h3><div class="desk-empire-holdings" tabindex="0" role="region" aria-label="${column.title}">${column.rows.map(h=>`<button type="button" class="desk-empire-holding is-${h.tone}" data-work="${h.waiting?'✓'+h.waiting:h.buildCount?'🔨'+h.buildCount:h.underway?'⌛'+h.underway:''}" data-home-action="holding-${column.id}-${escape(h.id)}" title="${escape([h.name,h.status,h.governor?.name,h.work,...h.buildNames].filter(Boolean).join(' · '))}" aria-label="${escape(h.name+', '+h.status+(h.governor?', '+h.role+': '+h.governor.name:'')+(h.work?', '+h.work:''))}"><span class="desk-empire-name">${picture(h.governor?.art,h.assigned?'🪶':'!')}<strong>${escape(h.name)}</strong></span><small>${escape(h.status)}</small>${h.work?`<small class="desk-empire-work">${h.buildCount?'🔨 ':h.waiting?'✓ ':''}${escape(h.work)}</small>`:''}</button>`).join('')||empty('None yet')}</div></section>`).join(''));
 
-  for(const [id,rows]of Object.entries({stores:m.stores,kitchen:m.kitchen,training:m.training,hospital:m.hospital,completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
+  for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
   if(focused&&document.activeElement?.dataset?.homeAction!==focused)Array.from(boundSection.querySelectorAll('[data-home-action]')).find(el=>el.dataset.homeAction===focused)?.focus({preventScroll:true});queueLayout();return m;
  }
  // This is a display preference only. Saved game gates are rechecked on every
@@ -42,10 +43,10 @@
   return featured;
  }
  function applyProgression(m){
-  const summaries={stores:m.stores.length?m.stores.reduce((n,s)=>n+s.count,0)+' spare items':'No spare gear',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages'};
+  const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages'};
   const ids=m.panels.items.map(p=>p.id),featured=ids.includes('building')&&m.gates.village?'building':preferredFeature(m.panels),main=boundSection.querySelector('.scan-home-main');
   boundSection.classList.add('progressive-home');main.dataset.panelCount=ids.length;boundSection.dataset.homeDensity=ids.length>4?'full':ids.length>2?'growing':'early';
-  document.getElementById('desk-building-title').textContent='Your Empire';
+  document.getElementById('desk-building-title').textContent='Your Empire';document.getElementById('desk-stores-title').textContent='Crafting';
   document.getElementById('homeNoticesVillages').hidden=!m.villageDesk.length;
   for(const id of ['discover','today','stores','kitchen','training','hospital','building']){
    const el=panelElement(id);if(!el)continue;el.hidden=!ids.includes(id);el.dataset.homePanel=id;el.classList.toggle('home-panel-featured',id===featured);
@@ -58,18 +59,21 @@
  function fitLayout(){
   if(!options?.visible()||!layoutModel)return;
   const main=boundSection.querySelector('.scan-home-main'),width=main.clientWidth,{ids,featured}=layoutModel;
-  const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=shortLandscape||((ids.length>4||document.getElementById('prerequisiteHomeResume'))&&width<400&&innerHeight<700),kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
+  const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=false,kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
   if(kit.parentElement!==kitHost)kitHost.append(kit);boundSection.dataset.equipmentInHeader=String(compactKit);
-  const columns=ids.length<=2?1:ids.length>=5&&width>=(shortLandscape?350:460)?3:2,others=ids.filter(id=>id!==featured),fullEmpire=featured==='building',rows=columns===3&&!fullEmpire?Math.ceil((ids.length+1)/3):1+Math.ceil(others.length/columns);
-  const key=[width,main.clientHeight,columns,...ids,featured,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
-  main.style.setProperty('--home-columns',columns);main.style.setProperty('--home-rows',rows);
-  const guidanceFitStyle=getComputedStyle(main),guidanceRowGap=parseFloat(guidanceFitStyle.rowGap)||0,guidancePadding=(parseFloat(guidanceFitStyle.paddingTop)||0)+(parseFloat(guidanceFitStyle.paddingBottom)||0);
-  const comfortableHeight=128+(rows-1)*88+44+rows*guidanceRowGap+guidancePadding;
-  const compact=ids.length>4||main.clientHeight<comfortableHeight,firstMin=fullEmpire?114:compact?88:128,otherMin=compact?(fullEmpire?60:66):88;
-  main.style.setProperty('--home-tracks',`minmax(${firstMin}px,1.35fr) repeat(${rows-1},minmax(${otherMin}px,1fr)) 44px`);
-  const first=panelElement(featured);first.style.gridArea=`1 / 1 / 2 / ${columns===3&&!fullEmpire?3:columns+1}`;
-  others.forEach((id,i)=>{const row=columns===3&&!fullEmpire?1+Math.floor((i+2)/3):2+Math.floor(i/columns),col=columns===3&&!fullEmpire?1+(i+2)%3:1+i%columns,remaining=others.length-i;panelElement(id).style.gridArea=`${row} / ${col} / ${row+1} / ${remaining===1?(columns===3?Math.min(columns+1,col+2):columns+1):col+1}`;});
-  const session=document.getElementById('scanHomeSession');session.style.gridArea=`${rows+1} / 1 / ${rows+2} / ${columns+1}`;
+  const fullEmpire=ids.includes('building'),others=ids.filter(id=>!['building','discover','today'].includes(id)),columns=shortLandscape||width>=760?4:2;
+  const key=[width,main.clientHeight,columns,...ids,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
+  const dense=main.clientHeight<440,scanHeight=dense?56:68,goalHeight=dense?60:64,careRows=Math.ceil(others.length/columns),otherMin=dense?44:88;
+  const fitStyle=getComputedStyle(main),fitGap=parseFloat(fitStyle.rowGap)||0,fitPadding=(parseFloat(fitStyle.paddingTop)||0)+(parseFloat(fitStyle.paddingBottom)||0),trackCount=(fullEmpire?3:2)+careRows;
+  const tile=Math.max(44,Math.min(width<760?104:128,Math.floor((width-36)/3),Math.floor(main.clientHeight-scanHeight-goalHeight-careRows*otherMin-(trackCount-1)*fitGap-fitPadding-70)));
+  const tracks=[];let row=1;
+  main.style.setProperty('--home-columns',columns);main.style.setProperty('--empire-tile-size',tile+'px');
+  if(fullEmpire){panelElement('building').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push((tile+70)+'px');row++;}
+  panelElement('discover').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(scanHeight+'px');row++;
+  panelElement('today').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(goalHeight+'px');row++;
+  others.forEach((id,i)=>{const r=row+Math.floor(i/columns),col=1+i%columns;panelElement(id).style.gridArea=`${r} / ${col} / ${r+1} / ${i===others.length-1?columns+1:col+1}`;});
+  for(let i=0;i<careRows;i++)tracks.push(`minmax(${otherMin}px,1fr)`);
+  const rows=tracks.length;main.style.setProperty('--home-rows',rows);main.style.setProperty('--home-tracks',tracks.join(' '));
   for(const id of ids){
    const el=panelElement(id),h=el.clientHeight;
    el.classList.toggle('home-panel-detail',h>=188&&el.clientWidth>=180);
@@ -80,12 +84,16 @@
    el.classList.toggle('home-panel-list',!!el.querySelector('.desk-panel-scroll button')&&h>=minimum&&el.clientWidth>=140);
   }
   const style=getComputedStyle(main),gap=parseFloat(style.rowGap)||0,padding=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
-  const required=firstMin+(rows-1)*otherMin+44+rows*gap+padding;
+  const required=(fullEmpire?tile+70:0)+scanHeight+goalHeight+careRows*otherMin+(rows-1)*gap+padding;
   boundSection.dataset.homeConstrained=String(main.clientHeight<required);
   main.dataset.minimumHeight=String(required);
  }
- function onClick(event){if(event.target.closest('[data-home-notices-close]')){closeNotices();return;}const button=event.target.closest('[data-home-action]');if(button&&boundSection.contains(button)){const target=targets.get(button.dataset.homeAction);if(target?.kind==='home-notices'){openNotices(button);return;}if(target){closeNotices(false);options.open(target);}}}
- let noticesFocus;
+ function onClick(event){if(event.target.closest('[data-build-next]')){const i=buildOptions.findIndex(b=>b.id===buildSelection);buildSelection=buildOptions[(i+1)%buildOptions.length]?.id;renderBuildOption();return;}if(event.target.closest('[data-home-notices-close]')){closeNotices();return;}const button=event.target.closest('[data-home-action]');if(button&&boundSection.contains(button)){const target=targets.get(button.dataset.homeAction);if(target?.kind==='home-notices'){openNotices(button);return;}if(target){closeNotices(false);options.open(target);}}}
+ let noticesFocus,buildOptions=[],buildSelection=null;
+ function renderBuildOption(){
+  const host=document.getElementById('deskBuildOptions');if(!host)return;const b=buildOptions.find(b=>b.id===buildSelection)||buildOptions[0];buildSelection=b?.id||null;targets.delete('available-build');if(b)targets.set('available-build',b.target);
+  update('deskBuildOptions',{id:b?.id,count:buildOptions.length,name:b?.name},()=>b?`<button type="button" class="desk-build-open" data-home-action="available-build" title="${escape('Build '+b.name+' · '+b.place)}" aria-label="${escape('Build '+b.name+' at '+b.place)}">${picture(b.art,b.icon||'🔨')}</button><button type="button" data-build-next title="Next available building" aria-label="Next available building" ${buildOptions.length<2?'disabled':''}>›</button><small title="${escape(b.name)}">${escape(b.name)}</small>`:'<p class="desk-empty">Nothing to build yet</p>');
+ }
  function openNotices(button){const el=document.getElementById('homeBuildingNotices');noticesFocus=button;el.showModal();el.classList.add('show');el.querySelector('button').focus();}
  function closeNotices(restore=true){const el=document.getElementById('homeBuildingNotices');if(!el?.classList.contains('show'))return;el.classList.remove('show');el.close();if(restore)noticesFocus?.focus({preventScroll:true});}
  function bind(next){options=next;const section=document.getElementById('screen-scan');if(boundSection!==section){boundSection?.removeEventListener('click',onClick);section.addEventListener('click',onClick);section.addEventListener('error',e=>{if(e.target.matches('.desk-mini-art img'))e.target.remove();},true);boundSection=section;
@@ -96,11 +104,13 @@
    }
    signatures.clear();layoutKey='';layoutObserver?.disconnect();layoutObserver=new ResizeObserver(queueLayout);layoutObserver.observe(section.querySelector('.scan-home-main'));window.addEventListener('resize',queueLayout,{passive:true});
    const session=document.getElementById('scanHomeSession'),photo=document.getElementById('photoIdStatus');
-   if(photo)new MutationObserver(()=>{if(!photo.hidden)session.open=true;}).observe(photo,{attributes:true,attributeFilter:['hidden']});
-   section.addEventListener('click',e=>{if(e.target.closest('#captureBtn,#scanImageBtn'))session.open=true;});
-   session?.addEventListener('toggle',()=>{if(!session.open&&section.classList.contains('camera-mode'))options.closeSession?.();});
+   if(photo)new MutationObserver(()=>{if(!session.hidden&&!photo.hidden)session.open=true;}).observe(photo,{attributes:true,attributeFilter:['hidden']});
+   section.addEventListener('click',e=>{if(e.target.closest('#captureBtn,#scanBtn,#scanImageBtn,#scanSoundBtn'))openSession();},true);
+   session?.addEventListener('toggle',()=>{if(!session.open)closeSession();});
    const stop=document.getElementById('deskSessionStop'),syncStop=()=>{if(stop)stop.hidden=!options.listening?.();};stop?.addEventListener('click',()=>{options.stopListening?.();syncStop();});new MutationObserver(syncStop).observe(document.getElementById('scanBtn'),{childList:true,subtree:true});syncStop();
-   section.addEventListener('keydown',e=>{if(e.key==='Escape'&&session?.open&&!document.getElementById('birdCropOverlay')?.classList.contains('show')){session.open=false;session.querySelector('summary')?.focus();e.stopPropagation();}});
+   section.addEventListener('keydown',e=>{if(e.key==='Escape'&&session?.open&&!document.getElementById('birdCropOverlay')?.classList.contains('show')){closeSession();document.getElementById('captureBtn')?.focus();e.stopPropagation();}});
 }}
- root.BurbzScanHome={bind,render};
+ function openSession(){if(!options?.visible())return;const session=document.getElementById('scanHomeSession');session.hidden=false;session.open=true;}
+ function closeSession(){const session=document.getElementById('scanHomeSession');if(!session)return;const wasVisible=!session.hidden;session.open=false;session.hidden=true;if(wasVisible&&boundSection.classList.contains('camera-mode'))options.closeSession?.();}
+ root.BurbzScanHome={bind,render,openSession,closeSession};
 })(globalThis);

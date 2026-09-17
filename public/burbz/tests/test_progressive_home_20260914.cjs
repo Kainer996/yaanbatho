@@ -5,7 +5,7 @@ const fresh={gates:{inventory:false,kitchen:true,training:true,hospital:true,vil
 let m=C.derive(fresh);assert.deepEqual(m.panels.items.map(p=>p.id),['discover','today']);assert.equal(m.kitchen.length,0);assert.equal(m.panels.featured,'discover');
 assert.equal(C.derive({...fresh,villageDesk:[{seed:NaN,name:'Invalid'}]}).panels.items.some(p=>p.id==='building'),false);
 const middle={...fresh,rooms:{kitchen:{built:true,builtAt:'2026-09-14T12:00:00Z'}}};m=C.derive(middle);assert.deepEqual(m.panels.items.map(p=>p.id),['discover','today','kitchen']);assert.equal(m.panels.featured,'kitchen');assert.equal(m.kitchen[0].target.kind,'feed-bird');
-const many={...middle,gates:{inventory:true,kitchen:true,training:true,hospital:true,village:true,academy:true},rooms:{...middle.rooms,training:{built:true,builtAt:'2026-09-14T13:00:00Z'},hospital:{built:true,builtAt:'2026-09-14T14:00:00Z'}},villageDesk:[{seed:42,name:'Willow'}],featureDates:{village:Date.parse('2026-09-14T11:00:00Z')},completed:[{id:'completed-hospital',name:'Hospital built',scope:'academy'}]};
+const many={...middle,gates:{inventory:true,forge:true,kitchen:true,training:true,hospital:true,village:true,academy:true},rooms:{...middle.rooms,training:{built:true,builtAt:'2026-09-14T13:00:00Z'},hospital:{built:true,builtAt:'2026-09-14T14:00:00Z'}},villageDesk:[{seed:42,name:'Willow'}],featureDates:{village:Date.parse('2026-09-14T11:00:00Z')},completed:[{id:'completed-hospital',name:'Hospital built',scope:'academy'}]};
 const before=JSON.stringify(many);m=C.derive(many);assert.equal(m.panels.items.length,7);assert.equal(m.panels.featured,'hospital');assert.equal(m.completed[0].target.scope,'academy');assert.equal(JSON.stringify(many),before);assert.deepEqual(C.derive(JSON.parse(before)).panels,m.panels);
 assert.equal(C.derive({...many,rooms:{...many.rooms,hospital:{built:false}}}).panels.items.some(p=>p.id==='hospital'),false);
 assert.equal(C.derive({...many,gates:{...many.gates,kitchen:false}}).panels.items.some(p=>p.id==='kitchen'),false);
@@ -19,10 +19,10 @@ const start=source.indexOf(' function preferredFeature('),end=source.indexOf(' f
 const context=vm.createContext({localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>{writes++;store.set(k,v);}}});vm.runInContext(source.slice(start,end),context);
 assert.equal(context.preferredFeature(C.derive(fresh).panels),'discover');
 assert.equal(context.preferredFeature(C.derive(middle).panels),'kitchen');
-const kitThenStores=C.derive({...middle,gates:{...middle.gates,inventory:true}}).panels;
-assert.equal(context.preferredFeature(kitThenStores),'stores','a newly usable Stores receives emphasis even without a historical timestamp');
+const kitThenStores=C.derive({...middle,gates:{...middle.gates,inventory:true,forge:true}}).panels;
+assert.equal(context.preferredFeature(kitThenStores),'stores','a newly usable Crafting receives emphasis even without a historical timestamp');
 const writesBefore=writes;assert.equal(context.preferredFeature(kitThenStores),'stores');assert.equal(writes,writesBefore,'unchanged heartbeat writes no UI preference');
 const resumed=vm.createContext({localStorage:context.localStorage});vm.runInContext(source.slice(start,end),resumed);assert.equal(resumed.preferredFeature(kitThenStores),'stores','emphasis survives runtime reload');
-const notices=C.derive({...middle,gates:{...middle.gates,inventory:true,academy:true},completed:[{id:'room-note',name:'Built',scope:'academy'}]}).panels;assert.equal(resumed.preferredFeature(notices),'stores','a completion notice does not steal feature emphasis');
+const notices=C.derive({...middle,gates:{...middle.gates,inventory:true,forge:true,academy:true},completed:[{id:'room-note',name:'Built',scope:'academy'}]}).panels;assert.equal(resumed.preferredFeature(notices),'stores','a completion notice does not steal feature emphasis');
 assert.equal(resumed.preferredFeature(C.derive(fresh).panels),'discover','reset or save replacement cannot reveal remembered features');
 console.log('PASS: actual unlock emphasis persists across reload, completion notices do not steal it, reset revokes it, unchanged renders make zero storage writes');
