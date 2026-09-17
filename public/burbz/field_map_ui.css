@@ -54,3 +54,16 @@ body[data-active-screen="map"] #petCompanion:not(.merlin-in-flight) #petSprite {
   #liveMapShell .map-locate-btn,#liveMapShell.quest-focused .map-locate-btn { top:auto; bottom:12px; right:112px; height:50px; }
 }
 @media (prefers-reduced-motion:reduce) { #liveMapShell .wq-offer-badge { animation:none!important; } }
+
+/* Full notices live in Settings; the map retains a legible expandable credit. */
+.maplibregl-ctrl-attrib.maplibregl-compact { min-height:44px;min-width:44px;opacity:1;background:#10231bcc!important; }
+.maplibregl-ctrl-attrib-button { width:44px!important;height:44px!important;filter:none; }
+.maplibregl-ctrl-attrib.maplibregl-compact-show { padding-right:48px;max-width:calc(100vw - 40px);font:11px/1.4 system-ui,sans-serif; }
+.burbz-world-credits { position:absolute;bottom:2px;left:50%;transform:translateX(-50%);z-index:6;color:#f4edda;font:11px/1.4 system-ui,sans-serif;max-width:calc(100% - 16px);background:#10231bdd;border-radius:6px;pointer-events:auto; }
+.burbz-world-credits summary { cursor:pointer;list-style:none;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;font-size:19px; }
+.burbz-world-credits summary::-webkit-details-marker { display:none; }
+.burbz-world-credits[open] { width:max-content;padding:4px 48px 4px 8px; }
+.burbz-world-credits[open] summary { position:absolute;right:0;top:0; }
+.burbz-world-credits div { max-width:460px;min-height:36px; }
+.burbz-world-credits a { color:inherit; }
+.burbz-world-credits :focus-visible { outline:2px solid #ffefc9;outline-offset:-2px; }

@@ -58,5 +58,26 @@
       }
     });
   }
-  return Object.freeze({apply,icon,pickupIcon,controls});
+  const fullCredits='<a href="audio-credits.html#maps" target="_blank" rel="noopener">Credits &amp; licences</a>';
+  const providerCredits='<a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · <a href="https://openmaptiles.org/" target="_blank" rel="noopener">© OpenMapTiles</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>';
+  // Show credit on entry, then retain a discoverable, keyboard-accessible control.
+  function mapCredits(map){
+    if(!map||map.__burbzCredits||!globalThis.maplibregl?.AttributionControl)return;
+    map.__burbzCredits=true;
+    const control=new globalThis.maplibregl.AttributionControl({compact:true,customAttribution:fullCredits});
+    map.addControl(control,'bottom-right');
+    const box=map.getContainer().querySelector('.maplibregl-ctrl-attrib');
+    if(!box)return;
+    const button=box.querySelector('summary,button');let timer;
+    const show=()=>{box.classList.add('maplibregl-compact-show');if(box.tagName==='DETAILS')box.open=true;button?.setAttribute('aria-expanded','true');timer=setTimeout(()=>{box.classList.remove('maplibregl-compact-show');if(box.tagName==='DETAILS')box.open=false;button?.setAttribute('aria-expanded','false');},5000);};
+    button?.addEventListener('click',()=>{clearTimeout(timer);queueMicrotask(()=>button.setAttribute('aria-expanded',String(box.classList.contains('maplibregl-compact-show'))));});
+    map.once('load',show);map.once('remove',()=>clearTimeout(timer));
+  }
+  function mountCredits(host,{terrain=false}={}){
+    const el=document.createElement('details');el.className='burbz-world-credits';el.open=true;
+    el.innerHTML='<summary aria-label="Map credits and licences">ⓘ</summary><div>'+providerCredits+(terrain?' · <a href="data/geographic-terrain-credits.html" target="_blank" rel="noopener">Elevation © Mapterhorn</a>':'')+'<br>'+fullCredits+'</div>';
+    host.append(el);const timer=setTimeout(()=>el.open=false,5000);el.querySelector('summary').addEventListener('click',()=>clearTimeout(timer));
+    el.dispose=()=>{clearTimeout(timer);el.remove();};return el;
+  }
+  return Object.freeze({apply,icon,pickupIcon,controls,mapCredits,mountCredits});
 });

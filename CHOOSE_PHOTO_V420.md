@@ -1,0 +1,9 @@
+# Choose photo follow-up
+
+Prepared on current main75e2f8e35ce569fb2dfbb592ecbab35c9f42495b. Not yet published; combined release also owns the newly requested Merlin opening, map credits and Your Empire panel.
+
+Home → Scan results & settings → Camera → Choose photo opens a native device picker without capture=environment. Take a new photo remains the original camera input, now also a keyboard-accessible button. JPEG, PNG and WebP are accepted up to10MB; unsupported, empty, oversized and undecodable selections cannot reach recognition. Cancellation does nothing, and the same file can be chosen again. Both inputs share framing/full-photo and current identifyImage.
+
+The coordinating task explicitly confirmed preserving main973adb4f immediate recognition/no-new-photo-storage; its earlier offline-queue wording was stale. Existing offline retry feedback and historical photo handling are untouched. No model, server, billing, sound or tutorial changes in this slice. Server £5 shared monthly guard remains authoritative.
+
+Validation:4 focused Node selection groups,12 existing photo/cancellation/crop gate groups,36 budget tests,9 real-browser groups with actual inputs/framing/results and controlled HTTP responses; zero page errors. Browser checks cover four viewports, simulated camera refusal, repeated species reward protection, valid PNG/WebP decoding and invalid-file/cap/offline paths. This is not a model accuracy test or physical-device picker test. Native discovery dialogs are closed using their real Keep exploring action. Evidence: outputs/v420-local/choose-photo in the owning task. Flask adapter tests were not run in the initially selected venv (Flask unavailable); adapter/server sources are unchanged.

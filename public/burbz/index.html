@@ -2239,6 +2239,10 @@ body[data-active-screen="county"] .merlin-perch-assembly { display: none; }
   min-height: calc(100dvh - var(--nav-height) - 260px);
   border-color: rgba(214,168,79,0.5); color: var(--text);
 }
+#imageScanArea .scan-upload-area { background: transparent; font: inherit; }
+.photo-library-button { display:block; width:100%; max-width:420px; min-height:48px; margin:12px auto 6px; border:1px solid var(--accent); border-radius:12px; background:var(--bg3); color:var(--text); font:600 16px 'Rajdhani',sans-serif; cursor:pointer; }
+.photo-library-button:focus-visible, #uploadArea:focus-visible { outline:3px solid var(--accent2); outline-offset:3px; }
+.photo-library-help { margin:0 auto 12px; max-width:420px; text-align:center; color:var(--text2); font-size:12px; }
 #imageScanArea .scan-upload-icon { width: 74px; height: 74px; object-fit: contain; }
 .scan-upload-subtext { font-size: 12px; font-weight: 600; color: var(--text3); }
 #nativePhotoPreview {
@@ -3235,17 +3239,25 @@ body:has(#questClaimCelebration) .merlin-tutorial-overlay :is(.merlin-tutorial-s
  .merlin-tutorial-overlay.has-current-action.free .merlin-tutorial-task { left:12px; transform:none; max-width:min(340px,calc(100vw - 180px)); }
 }
 
-.prerequisite-guide { width:min(560px,calc(100vw - 24px)); max-height:calc(100dvh - 24px); overflow:auto; padding:18px; border:2px solid #d8b15b; border-radius:16px; background:#17251e; color:#fff2d2; box-shadow:0 16px 50px #0009; }
-.prerequisite-guide::backdrop { background:#0009; }
-.prerequisite-guide-head { display:flex; gap:12px; align-items:start; }
-.prerequisite-guide h2 { flex:1; margin:0; font-size:20px; }
-.prerequisite-guide button,.prerequisite-goal-banner button { min-height:44px; padding:10px 12px; border:1px solid #d8b15b; border-radius:9px; background:#eaca79; color:#231b0b; font:700 14px/1.25 'Inter',sans-serif; }
-.prerequisite-guide button:focus-visible,.prerequisite-goal-banner button:focus-visible { outline:3px solid #fff; outline-offset:2px; }
-.prerequisite-step { padding:12px 0; border-top:1px solid #bda15a66; }
-.prerequisite-step p,.prerequisite-note { font-size:13px; line-height:1.45; }
-.prerequisite-goal-banner { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin:8px 0 14px; padding:10px; border:1px solid #d8b15b; border-radius:12px; background:#203226; color:#fff2d2; }
-.prerequisite-goal-banner strong { flex:1 0 100%; font-size:14px; }
-.prerequisite-home-resume { position:static; min-width:44px; min-height:44px; width:52px; align-self:stretch; padding:4px; border:1px solid #d8b15b; border-radius:9px; background:#17251e; color:#fff2d2; font:700 13px/1.25 Inter,sans-serif; text-align:center; }
+ .prerequisite-guide { box-sizing:border-box; margin:auto; width:min(340px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; overscroll-behavior:contain; padding:18px; border:1px solid #75664d; border-radius:14px; background:#211c15; color:#f5e6c4; box-shadow:0 16px 50px #0009; }
+.prerequisite-guide::backdrop { background:#080c0b99; }
+.prerequisite-guide-head { display:flex; gap:10px; align-items:center; }
+.prerequisite-guide h2 { flex:1; margin:0; font-size:17px; line-height:1.3; }
+.prerequisite-guide button { min-height:44px; padding:10px 12px; border:1px solid #8d7a585c; border-radius:9px; background:#ffffff08; color:inherit; font:600 13px/1.3 'Inter',sans-serif; overflow-wrap:anywhere; }
+.prerequisite-guide button:hover { background:#ffffff12; }
+.prerequisite-guide button:focus-visible,.prerequisite-guide summary:focus-visible { outline:2px solid #ccb17a; outline-offset:2px; }
+.prerequisite-guide [data-guide-close] { width:44px; padding:0; border-color:transparent; font-size:22px; }
+.prerequisite-guide-message { margin:8px 0 16px; color:#d5c7ac; font-size:14px; line-height:1.5; overflow-wrap:anywhere; }
+.prerequisite-guide-primary { width:100%; background:#bca2781a !important; }
+.prerequisite-guide details { margin-top:10px; border-top:1px solid #8d7a5833; }
+.prerequisite-guide summary { min-height:44px; padding:13px 0; color:#c8b98f; font-size:12px; cursor:pointer; }
+.prerequisite-step { padding:8px 0; }
+.prerequisite-step button { width:100%; text-align:left; }
+.prerequisite-guide ul { padding-left:18px; }
+.prerequisite-note { margin:8px 0; font-size:12px; line-height:1.45; color:#c8b98f; }
+.prerequisite-guide-footer { display:flex; gap:8px; margin-top:12px; }
+.prerequisite-guide-footer button { flex:1; font-size:12px; }
+.prerequisite-home-resume { position:static; min-width:44px; min-height:44px; width:52px; align-self:stretch; padding:4px; border:1px solid #8d7a585c; border-radius:9px; background:#211c15; color:#f5e6c4; font:600 13px/1.25 Inter,sans-serif; text-align:center; }
 #screen-scan #scanHomeActions:has(.prerequisite-home-resume) { display:grid; grid-template-columns:minmax(0,1fr) 52px; gap:4px; }
 #screen-scan #scanHomeActions:has(.prerequisite-home-resume) > :is(.home-action,.desk-empty) { grid-column:1; grid-row:1; min-width:0; width:100%; margin:0; }
 #screen-scan #scanHomeActions > .prerequisite-home-resume { grid-column:2; grid-row:1; }
@@ -4543,6 +4555,26 @@ img.quest-log-art, .quest-log-art { width:52px; height:52px; border-radius:14px;
 #bottomDock .nav-item.is-locked .nav-label { color:var(--text3); }
 #bottomDock .nav-item.is-locked .nav-label::after { content:' ·'; }
 
+
+/* Merlin's opening uses one sentence, with the bird to its right. */
+#merlinTutorialOverlay.alderwing-cinematic { background:#060909; }
+#merlinTutorialOverlay.alderwing-cinematic .merlin-tutorial-stage { top:50%;bottom:auto;transform:translateY(-50%);max-width:760px;margin:auto; }
+#merlinTutorialOverlay.alderwing-cinematic .merlin-tutorial-merlin { left:auto;right:14px;width:clamp(88px,24vw,190px);height:clamp(88px,24vw,190px);object-fit:contain;border:0;background:transparent;box-shadow:none; }
+#merlinTutorialOverlay.alderwing-cinematic .merlin-tutorial-bubble { margin-left:0;margin-right:clamp(106px,28vw,216px); }
+#merlinTutorialOverlay.alderwing-cinematic .merlin-tutorial-bubble::after { left:auto;right:-13px;transform:rotate(180deg); }
+#merlinTutorialOverlay.alderwing-cinematic #merlinTutorialTitle { display:none; }
+#merlinTutorialOverlay.alderwing-cinematic .merlin-tutorial-text { font-size:clamp(14px,2vw,19px);max-height:none; }
+#alderwingIntroGuide { position:fixed;z-index:1600;right:12px;top:calc(68px + env(safe-area-inset-top));display:flex;flex-direction:row-reverse;align-items:flex-start;gap:10px;width:min(470px,calc(100vw - 24px));pointer-events:none;color:#291e0e; }
+#alderwingIntroGuide>img { width:66px;height:80px;object-fit:contain;flex:none; }
+#alderwingIntroGuide>div { min-width:0;flex:1;background:#fff5dc;border:1px solid #bca170;border-radius:14px;padding:10px 12px;box-shadow:0 5px 18px #0004;pointer-events:auto; }
+#alderwingIntroGuide p { margin:0;font:500 14px/1.4 'Inter',sans-serif; }
+#alderwingIntroGuide small { display:block;font:11px/1.4 'Inter',sans-serif;margin-top:5px; }
+#alderwingIntroGuide small:empty { display:none; }
+#alderwingIntroGuide button { min-height:44px;min-width:84px;padding:8px 14px;float:right;margin-top:7px;background:#644b26;color:#fff5dc;border-radius:9px;cursor:pointer; }
+#alderwingIntroGuide button:disabled { opacity:.6; }
+#alderwingIntroGuide button[hidden] { display:none; }
+#alderwingIntroGuide button:focus-visible { outline:3px solid #32674a;outline-offset:2px; }
+@media(orientation:landscape) and (max-height:550px){#alderwingIntroGuide{top:calc(58px + env(safe-area-inset-top));width:min(410px,60vw)}#alderwingIntroGuide>img{width:48px;height:60px}#alderwingIntroGuide p{font-size:12px}#alderwingIntroGuide>div{padding:7px 9px}}
 </style>
 <script src="appearance_core.js?v=appearance-v362-20260907"></script>
 <script>
@@ -4559,12 +4591,12 @@ if (window.BurbzAppearanceCore) {
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
-<link rel="stylesheet" href="field_map_ui.css?v=map-pictures-v374-20260908">
-<link rel="stylesheet" href="illustrated_world.css?v=alderwing-followups-v417-20260914">
+<link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
+<link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=alderwing-followups-v417-20260914">
+<link rel="stylesheet" href="scan_home.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4695,7 +4727,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <section class="desk-panel desk-panel-training" aria-labelledby="desk-training-title"><button type="button" class="desk-panel-heading" data-home-action="panel-training"><span id="desk-training-title">Training</span><small id="desk-training-count"></small><span aria-hidden="true">↗</span></button><div id="desk-training-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Drills & rewards; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-hospital" aria-labelledby="desk-hospital-title"><button type="button" class="desk-panel-heading" data-home-action="panel-hospital"><span id="desk-hospital-title">Hospital</span><small id="desk-hospital-count"></small><span aria-hidden="true">↗</span></button><div id="desk-hospital-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Birds needing care; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-completed" aria-labelledby="desk-completed-title"><button type="button" class="desk-panel-heading" data-home-action="panel-completed"><span id="desk-completed-title">Completed</span><small id="desk-completed-count"></small><span aria-hidden="true">↗</span></button><div id="desk-completed-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Not yet checked; open the room for all entries"></div></section>
-        <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Your villages</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Your villages and their building status; open the room for all entries"></div></section>
+        <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Your Empire</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Your Empire: villages, towns and regions"></div></section>
       </div>
       <details id="scanHomeSession" class="scan-home-tools"><summary>Scan results & settings</summary><div class="desk-session-body"><button type="button" id="deskSessionStop" hidden>Stop listening</button>
       <!-- Session tools remain below the prominent home scanning controls. -->
@@ -4728,7 +4760,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
-        <p class="photo-privacy-note">Your framed camera photo is sent only for this check and is not saved on your device by Burbz. If the check cannot finish, you can retry while this screen stays open.</p>
+        <p class="photo-privacy-note">Your framed photo is sent only for this check and is not saved on your device by Burbz. If the check cannot finish, you can retry while this screen stays open.</p>
         <div class="photo-id-status" id="photoIdStatus" hidden>
           <p id="photoIdMessage" role="status" aria-live="polite"></p>
           <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
@@ -4749,11 +4781,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
             <span class="camera-zoom-value" id="cameraZoomValue">1.0x</span>
           </label>
         </div>
-        <div class="scan-upload-area" id="uploadArea">
+        <button type="button" id="choosePhotoBtn" class="photo-library-button" aria-describedby="choosePhotoHelp">Choose photo</button>
+        <p id="choosePhotoHelp" class="photo-library-help">Select a JPEG, PNG or WebP image from your device (up to 10 MB).</p>
+        <button type="button" class="scan-upload-area" id="uploadArea">
           <img id="nativePhotoPreview" alt="Your last bird photo" style="display:none;">
           <img class="scan-upload-icon" src="assets/ui/burbz-icon-set/camera.webp" alt="">
-          <div class="scan-upload-text">Choose a bird photo</div>
-        </div>
+          <span class="scan-upload-text">Take a new photo</span>
+        </button>
+        <input type="file" id="photoLibraryInput" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" style="display:none;" aria-hidden="true">
         <input type="file" id="nativeCameraInput" accept="image/*" capture="environment" style="display:none;" aria-hidden="true">
       </div>
 
@@ -4936,7 +4971,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="empire-map-tapcard" id="empireMapTapCard" role="dialog" aria-live="polite"></div>
         <div class="empire-map-empty"></div>
         <div class="empire-map-status" id="empireMapStatus">Charting the darkened world…</div>
-        <div class="empire-map-attribution"><a href="https://openfreemap.org" target="_blank" rel="noopener">OpenFreeMap</a> · © <a href="https://openmaptiles.org" target="_blank" rel="noopener">OpenMapTiles</a> · © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
+
       </div>
           <div id="empireRealmPanel"></div>
         </section>
@@ -5345,7 +5380,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
       <div class="settings-row">
-        <a class="settings-label" href="audio-credits.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Sound Credits &amp; Licences</a>
+        <a class="settings-label" href="audio-credits.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Credits &amp; Licences</a>
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
       <div class="settings-row" id="replayIntroBtn" role="button" tabindex="0">
@@ -5671,8 +5706,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=opening-home-v416-20260914"></script>
-<script src="scan_home.js?v=alderwing-followups-v417-20260914"></script>
+<script src="scan_home_core.js?v=alderwing-intro-desk-v420-20260917"></script>
+<script src="scan_home.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -5686,7 +5721,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
-<script src="field_map_ui.js?v=map-pictures-v374-20260908"></script>
+<script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="landscape_ui.js?v=landscape-v388-20260910"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
 <script src="walking_story_core.js?v=opening-home-v416-20260914"></script>
@@ -5719,7 +5754,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="audio_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="player_home_core.js?v=opening-home-v416-20260914"></script>
 <script src="player_home_scene.js?v=opening-home-v416-20260914"></script>
-<script src="player_home.js?v=opening-home-v416-20260914"></script>
+<script src="alderwing_intro.js?v=alderwing-intro-v420-20260917"></script>
+<script src="player_home.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="flight_craft_core.js?v=alderwing-flight-shores-v418-20260915"></script>
@@ -5730,8 +5766,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="exploration.js?v=alderwing-followups-v417-20260914"></script>
 <link rel="stylesheet" href="exploration.css?v=alderwing-followups-v417-20260914">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_home_picker.js?v=alderwing-followups-v417-20260914"></script>
-<script src="geographic_world.js?v=home-farming-v409-20260914"></script>
+<script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
+<script src="geographic_world.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=opening-home-v416-20260914"></script>
 <script src="merlin_companion_core.js?v=opening-home-v416-20260914"></script>
@@ -19091,7 +19127,7 @@ function applyBurbzCameraPadding() {
     if (!current || Object.keys(padding).some(key => current[key] !== padding[key])) liveMap.setPadding(padding);
   } catch (e) {}
 }
-async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:{ compact:true }, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); refreshGeographicAvatarMarker(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
+async function initLiveMap() { const fallback = getFallbackMapCenter(); liveMapLastPosition = fallback; setMapLabels('Finding you...', 'Allow location and Burbz will centre this enchanted map on your phone — no demo coordinates.'); try { await loadMapLibreIfNeeded(); if (!window.maplibregl) throw new Error('MapLibre unavailable'); liveMap = new maplibregl.Map({ container:'burbzLiveMap', style:burbzMapStyle(), center:[fallback.lon, fallback.lat], zoom:BURBZ_START_ZOOM, pitch:burbzPitchForZoom(BURBZ_START_ZOOM), bearing:-24, minZoom:4, maxZoom:BURBZ_MAX_ZOOM, maxPitch:60, attributionControl:false, fadeDuration:80, pixelRatio:Math.min(2, window.devicePixelRatio || 1), canvasContextAttributes:{ antialias:false, powerPreference:'high-performance' } }); BurbzFieldMapUI.mapCredits(liveMap); applyBurbzCameraPadding(); liveMap.on('resize', applyBurbzCameraPadding); wireMapRotateOnly(); liveMap.on('load', () => { applyBurbzCameraPadding(); styleBurbzMapLayers(); ensureBurbzMapSources(); enableBurbzTerrain(); wireMapMoveTracking(); wireMapRotateOnly(); resumeWalkingQuestIfAny(); resumeSideQuestIfAny(); drawSideQuestNpcLandmarks(); if (!questMapInspectionMode() && liveMapHasPrecisePosition && liveMapLastPosition) { try { liveMap.setCenter([liveMapLastPosition.lon, liveMapLastPosition.lat]); } catch (e) {} } restoreSelectedQuestMapAfterLoad(); refreshGeographicAvatarMarker(); }); } catch (err) { console.warn('BURBZ map fallback:', err); $('mapFallbackGrid')?.classList.add('show'); buildFallbackHabitatMarkers(fallback.lat, fallback.lon, 'Location needed'); } startLiveGeolocation(); wireMapControls(); }
 function styleBurbzMapLayers() { window.BurbzFieldMapUI?.apply(liveMap); }
 // Real elevation and woodland are optional. Sustained slow movement pauses
 // the terrain mesh while retaining pitched trees and real-elevation shading.
@@ -23310,9 +23346,21 @@ function scanHomeDeskSnapshot() {
     return {seed:rec.seed>>>0,name:rec.name,assignment,waiting:waiting.length,underway:building.length,finished:notices.length,
       pendingNames:waiting.map(c=>c.id==='civic-hall'?'Civic Hall':EMPIRE_BUILDING_INDEX[c.id]?.name||'Building'),underwayNames:building.map(c=>c.id==='civic-hall'?'Civic Hall':EMPIRE_BUILDING_INDEX[c.id]?.name||'Building')};
   });
+  const holdingRow=(tile,id,target,wards=[])=>{
+    const work=villageDesk.filter(v=>wards.includes(v.seed)),waiting=work.reduce((n,v)=>n+v.waiting,0),underway=work.reduce((n,v)=>n+v.underway,0);
+    return {id,name:tile.name,target,need:tile.need,assigned:!!tile.post?.staffed,
+      governor:tile.post?.bird?{name:birdDisplayName(tile.post.bird),art:getBirdArtUrl(tile.post.bird)}:null,
+      role:tile.postTitle,waiting,underway,wards};
+  };
+  const holdings=empireSettlementsInfo();
+  const empireDesk={
+    villages:empireVillages().filter(v=>!empireSettlementOfSeed(v.seed)).map(v=>holdingRow(empireVillageTile(v),String(v.seed>>>0),{kind:'village',seed:v.seed>>>0},[v.seed>>>0])),
+    towns:holdings.cities.concat(holdings.towns.filter(t=>!t.cityId)).map(t=>holdingRow(empireTownTile(t),t.id,{kind:'town',id:t.id},t.villages.map(v=>v.seed>>>0))),
+    regions:empireRegionsInfo().regions.map(r=>holdingRow(empireCountyTile(r),r.id,{kind:'region',id:r.id},r.villages.map(v=>v.seed>>>0)))
+  };
   const rooms=Object.fromEntries(['kitchen','training','hospital'].map(id=>[id,{built:!!gameState.academyBuildings?.[id]?.built,builtAt:gameState.academyBuildings?.[id]?.builtAt}]));
   const firstVillage=empireVillages().map(v=>v.claimedAt).filter(v=>typeof v==='string').sort()[0]||'';
-  return {stores,kitchen,training,hospital,completed,equipment,villageDesk,rooms,featureDates:{village:firstVillage}};
+  return {stores,kitchen,training,hospital,completed,equipment,villageDesk,empireDesk,rooms,featureDates:{village:firstVillage}};
 }
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
@@ -23342,7 +23390,7 @@ function openScanHomeTarget(target) {
   if (!target) return;
   const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
   if(target.kind==='route'&&!routes.includes(target.screen))return;
-  const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',villages:'village',notice:'village','build-opportunity':'village','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
+  const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',town:'village',region:'village',villages:'village',notice:'village','build-opportunity':'village','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { if(!prerequisiteGuideGoal({type:'feature',args:[gate]}))showToast(featureUnlockHint(gate));return; }
   SFX.tap();
   if(target.kind==='player-equipment')openDeskPlayerEquipment(target.slot);
@@ -23361,6 +23409,8 @@ function openScanHomeTarget(target) {
     openBuildingInterior(target.seed,target.building);
   }
   else if(target.kind==='village')openEmpireVillage(target.seed);
+  else if(target.kind==='town'){const town=empireSettlementById(target.id);if(town)openEmpireTown(town.id);}
+  else if(target.kind==='region'){const region=empireRegionById(target.id);if(region)openEmpireRegion(region.id);}
   else if(target.kind==='notice')completionNoticeGo(target.id);
   else if(target.kind==='villages'){empireLedgerOnlyMode=false;showEmpirePage('villages',{silent:true});switchScreen('village');}
   else if(target.kind==='walk')switchScreen('map');
@@ -25999,6 +26049,7 @@ function initialiseEmpireMap() {
       minZoom:1, maxZoom:17, dragPan:true, scrollZoom:true, touchZoomRotate:true,
       pitchWithRotate:false, attributionControl:false
     });
+    BurbzFieldMapUI.mapCredits(map);
     empireMap = map;
     map.on('dragstart', () => { empireMapUserAdjusted = true; hideEmpireMapCard(); });
     map.on('click', event => {
@@ -30408,7 +30459,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-flight-shores-v418-20260915';
+        script.src = 'village_walk.js?v=alderwing-intro-desk-v420-20260917';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -39253,30 +39304,24 @@ function showPrerequisiteGuide(id) {
     });document.body.append(dialog);
   }
   const plan=prerequisiteCurrentPlan();if(!plan)return false;
-  const shortages=plan.shortages.map(s=>'<li>'+escapeHtml(s.label)+': <strong>'+s.have+' / '+s.need+'</strong>'+(s.id?' ('+s.short+' missing)':'')+'</li>').join('');
-  const paths=plan.actions.map(action=>'<div class="prerequisite-step"><p>'+escapeHtml(action.path.map(n=>n.label).join(' → '))+'</p><button type="button" data-guide-action="'+escapeHtml(action.id)+'">'+escapeHtml(action.label)+'</button></div>').join('');
+  const shortages=plan.shortages.map(s=>'<li>'+escapeHtml(s.label)+': <strong>'+s.have+' / '+s.need+'</strong></li>').join('');
   const issues=[...new Set(plan.issues.map(issue=>plan.nodes[issue.id]?.reason||'This prerequisite needs another route.'))];
-  dialog.innerHTML='<div class="prerequisite-guide-head"><h2 id="prerequisiteGuideTitle">Your goal: '+escapeHtml(plan.nodes[plan.goal].label)+'</h2><button type="button" data-guide-close aria-label="Close prerequisite guide">Close</button></div><p>Choose your next step. Purchases, building and crafting stay under your control.</p>'+(shortages?'<details open><summary>What is still needed</summary><ul>'+shortages+'</ul><p class="prerequisite-note">Material budgets include the original recipe or upgrade coins; overlapping budgets are not added together. Amounts refresh after each action.</p></details>':'<p>'+(plan.status==='satisfied'?'This goal is complete.':'Review the next available action below.')+'</p>')+paths+issues.map(issue=>'<p class="prerequisite-note">'+escapeHtml(issue)+'</p>').join('')+'<button type="button" data-guide-return>Return to '+escapeHtml(plan.facts.recipe.label)+'</button> <button type="button" data-guide-stop>Stop tracking</button>';
+  const primary=plan.actions[0];
+  const actionButton=action=>'<button type="button" data-guide-action="'+escapeHtml(action.id)+'">'+escapeHtml(action.label)+'</button>';
+  const missing=plan.shortages.slice(0,2).map(s=>s.label==='Trainer level'?'trainer level '+s.need:(s.short??Math.max(0,s.need-s.have))+' more '+s.label);
+  const message=plan.status==='satisfied'?'Ready when you are.':missing.length?'You need '+missing.join(' and ')+(plan.shortages.length>2?', plus '+(plan.shortages.length-2)+' other requirement'+(plan.shortages.length>3?'s':''):'')+'.':issues[0]||'Complete the next step first.';
+  dialog.setAttribute('aria-describedby','prerequisiteGuideMessage');
+  dialog.innerHTML='<div class="prerequisite-guide-head"><h2 id="prerequisiteGuideTitle">'+(plan.status==='satisfied'?'Ready to continue':'Still needed')+'</h2><button type="button" data-guide-close aria-label="Close prerequisite guide">×</button></div><p class="prerequisite-guide-message" id="prerequisiteGuideMessage">'+escapeHtml(message)+'</p>'+(primary?actionButton(primary).replace('<button ','<button class="prerequisite-guide-primary" '):'')+'<details><summary>More options</summary><p class="prerequisite-note">'+escapeHtml(plan.nodes[plan.goal].label)+'</p>'+(shortages?'<ul class="prerequisite-note">'+shortages+'</ul>':'')+plan.actions.slice(1).map(action=>'<div class="prerequisite-step">'+actionButton(action)+'</div>').join('')+issues.map(issue=>'<p class="prerequisite-note">'+escapeHtml(issue)+'</p>').join('')+'<div class="prerequisite-guide-footer"><button type="button" data-guide-return>Return to goal</button><button type="button" data-guide-stop>Stop tracking</button></div></details>';
   dialog.inert=false;if(!dialog.open)dialog.showModal();dialog.querySelector('button')?.focus({preventScroll:true});
   refreshPrerequisiteGoalBanner();return true;
 }
 function startPrerequisiteRecipe(id) { return showPrerequisiteGuide(id); }
 function refreshPrerequisiteGoalBanner() {
   const tracked=prerequisiteTrackedGoal(),plan=tracked&&prerequisiteCurrentPlan();
-  const prerequisiteRecipeGoal=tracked?prerequisiteGoalKey(tracked):null;
-  const screen=$('screen-'+currentScreen);
   let homeResume=$('prerequisiteHomeResume');
   if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());$('scanHomeActions')?.append(homeResume);}homeResume.textContent='Goal';homeResume.title='Your goal · '+plan.facts.recipe.label;homeResume.setAttribute('aria-label',homeResume.title);}else homeResume?.remove();
-  const existing=document.querySelector('.prerequisite-goal-banner');
-  if(prerequisiteRecipeGoal&&existing?.dataset.recipeId===prerequisiteRecipeGoal&&existing.parentElement===screen){existing.querySelector('strong').textContent='Working towards: '+plan.facts.recipe.label;return;}
+  // Retire legacy banners on every screen; the quiet Home control resumes saved intent.
   document.querySelectorAll('.prerequisite-goal-banner').forEach(el=>el.remove());
-  if(!prerequisiteRecipeGoal||!plan||!screen||currentScreen==='scan')return;
-  const item={label:plan.facts.recipe.label};
-  const banner=document.createElement('div');banner.className='prerequisite-goal-banner';banner.dataset.recipeId=prerequisiteRecipeGoal;
-  const label=document.createElement('strong');label.textContent='Working towards: '+item.label;banner.append(label);
-  for(const [label,handler] of [['Next step',()=>showPrerequisiteGuide()],[tracked.type==='recipe'?'Return to recipe':'Return to goal',returnPrerequisiteRecipe],['Stop tracking',()=>{if(setPrerequisiteGoal(null))refreshPrerequisiteGoalBanner();}]]){
-    const button=document.createElement('button');button.type='button';button.textContent=label;button.addEventListener('click',handler);banner.append(button);
-  }screen.prepend(banner);
 }
 function focusPrerequisiteElement(selector) {
   requestAnimationFrame(()=>{
@@ -40682,7 +40727,7 @@ function createBirdCardHTML(bird, idx) {
   const art = cardArt ? `${cardArtWashHTML(cardArt)}<img src="${escapeHtml(cardArt.src)}"${cardArt.extra} alt="${escapeHtml(birdSpeciesLabel(bird))}" loading="lazy">` : `<div class="bird-emoji">${bird.emoji || '🐦'}</div>`;
   const feed = `<button type="button" class="card-pet-btn card-feed-btn" data-action="feed-bird" data-feed-key="${id}">Feed</button>`;
   const stats = [['Health',`${bird.hp ?? bird.maxHp ?? 100}/${bird.maxHp || 100}`],['Attack',bird.atk || 0],['Defence',bird.def || 0],['Speed',bird.spd || 0],['Magic',bird.mag || 0],['Personality',birdPersonalityValue(bird)],['Intelligence',bird.int || 0],['Stamina',bird.stamina || 0],['Carry',birdCardCarryCapacity(bird)]];
-  return `<div class="bird-card bird-family-outline" data-owned-bird-card tabindex="0" role="group" aria-label="${escapeHtml(birdDisplayName(bird))} — press Enter to open full card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
+  return `<div class="bird-card bird-family-outline" data-owned-bird-card tabindex="0" role="group" aria-label="${escapeHtml([birdSpeciesLabel(bird),birdNickname(bird)].filter(Boolean).join(' · '))} — press Enter to open full card" data-rarity="${bird.rarity}" data-idx="${idx}" data-bird-id="${id}" data-species-key="${speciesKey(canonicalSpeciesName(bird.species || bird.commonName))}" data-hunger-surface="companion-card" data-hunger-state="${hungerStatus.level}"${birdFamilyAttrs(bird)}>
     <div class="bird-card-inner">
       <div class="card-front">
         <div class="card-art" title="Open full companion card">
@@ -40690,7 +40735,7 @@ function createBirdCardHTML(bird, idx) {
         </div>
         <div class="card-level">LV.${cardLv}</div>
         <div class="card-info">
-          <div class="card-heading"><div class="card-identity"><div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div>${cardBondHeartsHTML(bird)}</div>${birdCardLocationButtonHTML(bird)}</div>
+          <div class="card-heading"><div class="card-identity"><div class="card-name-row" title="${escapeHtml([birdSpeciesLabel(bird),birdNickname(bird)].filter(Boolean).join(' · '))}"><div class="card-name">${escapeHtml(birdSpeciesLabel(bird))}</div><div class="card-nickname">${escapeHtml(birdNickname(bird))}</div></div>${cardBondHeartsHTML(bird)}</div>${birdCardLocationButtonHTML(bird)}</div>
           <div class="card-care-gauges">${hungerBarHTML(hungerStatus, 'companion-card')}
             <div class="card-health" role="progressbar" aria-label="Health" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${hpPct}"><div class="bird-hunger-head"><span>Health</span><span>${hpPct}%</span></div><div class="card-hp-bar"><div class="card-hp-fill" style="width:${hpPct}%;background:${hpPct > 50 ? 'var(--hp-green)' : 'var(--hp-red)'}"></div></div></div>
           </div>
@@ -41670,6 +41715,7 @@ if (cameraZoomSlider) {
 // (via the capture input) so players get its full quality — every lens, HDR,
 // night mode, real optical zoom — instead of the browser's capped video stream.
 const nativeCameraInput = $('nativeCameraInput');
+const photoLibraryInput = $('photoLibraryInput');
 
 function openNativeCamera() {
   if (!nativeCameraInput) return;
@@ -41677,13 +41723,31 @@ function openNativeCamera() {
   nativeCameraInput.click();
 }
 
+$('choosePhotoBtn').addEventListener('click', () => {
+  if (photoIdBusy) return;
+  SFX.tap(); showImageScanMode();
+  photoLibraryInput.value = '';
+  photoLibraryInput.click();
+});
+
 $('uploadArea').addEventListener('click', () => { SFX.tap(); openNativeCamera(); });
 $('captureBtn').addEventListener('click', () => { SFX.tap(); showImageScanMode(); openNativeCamera(); });
 
-nativeCameraInput?.addEventListener('change', async () => {
-  const file = nativeCameraInput.files && nativeCameraInput.files[0];
-  if (!file) return;
-  if (photoIdBusy) return;
+function selectedPhotoError(file) {
+  const supported = /^(image\/(jpeg|png|webp))$/i.test(file.type || '') ||
+    (!file.type && /\.(jpe?g|png|webp)$/i.test(file.name || ''));
+  if (!supported) return 'Choose a JPEG, PNG or WebP photo.';
+  if (!file.size) return 'That photo is empty. Choose another photo.';
+  if (file.size > 10 * 1024 * 1024) return 'Choose a photo smaller than 10 MB.';
+  return '';
+}
+async function handlePhotoSelection(input, fromLibrary = false) {
+  const file = input.files && input.files[0];
+  if (!file || photoIdBusy) return;
+  if (fromLibrary) {
+    const error = selectedPhotoError(file);
+    if (error) { setPhotoIdStatus(error); return; }
+  }
   photoIdRetryBlob = null;
   setPhotoIdStatus('Preparing your photo…');
   showNativePhotoPreview(file);
@@ -41691,13 +41755,20 @@ nativeCameraInput?.addEventListener('change', async () => {
   // recogniser sees the bird, not a frame full of background.
   try {
     initBirdCropperControls();
-    await openBirdCropper(file);
+    await openBirdCropper(file, { requireDecode:fromLibrary });
   } catch (e) {
     closeBirdCropper();
+    if (fromLibrary) {
+      photoIdRetryBlob = null;
+      setPhotoIdStatus('That photo could not be read. Choose another JPEG, PNG or WebP photo.');
+      return;
+    }
     photoIdRetryBlob = file;
     setPhotoIdStatus('Could not prepare that photo. Try it again or take another picture.', true);
   }
-});
+}
+nativeCameraInput?.addEventListener('change', () => handlePhotoSelection(nativeCameraInput));
+photoLibraryInput.addEventListener('change', () => handlePhotoSelection(photoLibraryInput, true));
 
 // ----- Merlin-style bird cropper -------------------------------------------
 // After the phone's camera returns a photo we show it in a fixed square with a
@@ -41705,7 +41776,7 @@ nativeCameraInput?.addEventListener('change', async () => {
 // the original frame for a bird whose body or wings do not fit in the square.
 const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, preparing: false, fullPhoto: false, pointers: new Map(), pinch: null };
 
-async function openBirdCropper(file) {
+async function openBirdCropper(file, { requireDecode = false } = {}) {
   closeBirdCropper();
   const generation = birdCrop.generation;
   let bitmap = null;
@@ -41714,6 +41785,7 @@ async function openBirdCropper(file) {
   } catch (e) { bitmap = null; }
   if (generation !== birdCrop.generation) { bitmap?.close?.(); return; }
   if (!bitmap) {
+    if (requireDecode) throw new Error('Selected photo could not be decoded');
     // Can't decode to crop (exotic format) — send the original straight through.
     const blob = await prepareNativePhotoForUpload(file);
     await identifyImage(blob || file, 'camera');
@@ -44765,7 +44837,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-flight-shores-v418-20260915';
+const BURBZ_BUILD = 'alderwing-intro-desk-v420-20260917';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -44803,8 +44875,18 @@ const MERLIN_TUTORIAL_CHAPTERS = [
 // Stable lesson IDs preserve saved progress when copy and steps change.
 const MERLIN_LEGACY_STEP_CHAPTERS = ["story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "quests", "quests", "quests", "quests", "errand", "errand", "academy", "academy", "academy", "academy_tour", "academy_tour", "academy_tour", "academy_tour", "explore", "explore", "explore", "scan", "scan", "scan", "birdex", "birdex", "birdex", "battle", "battle", "battle", "village", "village", "village", "empire_villages", "empire_villages", "empire_towns", "empire_towns", "town", "town", "diary", "forge", "forge", "inventory", "leaderboards", "profile"];
 const MERLIN_TUTORIAL_STEPS = [
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome, Earthling!', screen:'scan', target:null, text:'I’m Merlin, your falcon friend. Welcome to Alderwing! There’s a whole world waiting just beyond this desk.', id:'lesson-0' },
-  { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Tap Enter Alderwing. I’ve made a little shelter for you. Come and take your first look outside.', action:{event:'alderwing-returned',mode:'free',hint:'Enter Alderwing, look outside, then return to the desk'}, id:'alderwing-arrival-v395' },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"Greetings, Earthling.", id:"lesson-0" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"I am Merlin and I come to you from across the multiverse.", id:"alderwing-story-v420-1" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"I’m from the planet Alderwing.", id:"alderwing-story-v420-2" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"On Alderwing, birds are the dominant species.", id:"alderwing-story-v420-3" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"An evil zombie civilization, the evil Burbz, has imprisoned our best fighters under a dark spell.", id:"alderwing-story-v420-4" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"This is where you come in.", id:"alderwing-story-v420-5" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"The app you’re looking at is a spell of mine, sent to Earth.", id:"alderwing-story-v420-6" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"Every bird you capture on Earth frees one of Alderwing’s bird warriors from the evil Burbz.", id:"alderwing-story-v420-7" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"But we’ll get to that later.", id:"alderwing-story-v420-8" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"First, let me show you around.", id:"alderwing-story-v420-9" },
+  { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your portal', screen:'scan', target:null, text:'This is your main hub and your direct portal to Alderwing.', id:'alderwing-hub-v420' },
+  { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Click here and I’ll show you what I mean.', action:{event:'alderwing-returned',mode:'free',hint:'Click here and I’ll show you what I mean.'}, id:'alderwing-arrival-v395' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
   { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
   { chapterId:'academy', chapter:'Academy', title:'Your first building', screen:'academy', target:'#academyBuildPanel', text:'The Birdhouse lets you recruit discovered birds as companions. Merlin’s gift covers this first building.', id:'lesson-19' },
@@ -45079,6 +45161,7 @@ function merlinTutArmAction(step) {
   if (action.deferLabel) { $('merlinTutorialNext').style.display = ''; $('merlinTutorialNext').textContent = action.deferLabel; }
   const armedAt = merlinTutStep;
   clearTimeout(merlinTutActionRescueTimer);
+  if(action.event==='alderwing-returned')return;
   merlinTutActionRescueTimer = setTimeout(() => {
     if (!merlinTutActive || merlinTutStep !== armedAt || !merlinTutAwaitingAction) return;
     const button = $('merlinTutorialNext');
@@ -45138,7 +45221,7 @@ function merlinTutorialResumePosition(saved, mode, sequence) {
 }
 
 function startMerlinTutorial(options = {}) {
-  if(introLaunchTimer||$('introCutsceneOverlay')?.classList.contains('show')||merlinSettingsPause||$('settingsModal')?.classList.contains('show'))return;
+  if(document.getElementById('alderwingIntroGuide')||introLaunchTimer||$('introCutsceneOverlay')?.classList.contains('show')||merlinSettingsPause||$('settingsModal')?.classList.contains('show'))return;
   const overlay = $('merlinTutorialOverlay');
   if (!overlay || merlinTutActive) return;
   merlinTutMode = options.full ? 'full' : (options.chapterId || 'story');
@@ -45525,8 +45608,10 @@ function merlinTutShowStep(i) {
   const step = MERLIN_TUTORIAL_STEPS[merlinTutSequence[i]];
   const text = $('merlinTutorialText');
   if (!step || !text) return;
-  if(step.action?.event==='alderwing-returned'&&gameState.playerHome?.arrival==='done'&&merlinTutMode!=='full'){merlinTutShowStep(i+1);return;}
   merlinTutStep = i;
+  if(step.action?.event==='alderwing-returned'&&gameState.playerHome?.arrival==='done'&&merlinTutMode!=='full'){if(BurbzAlderwingIntro.phase()==='portrait'){endMerlinTutorial(false,{pause:true});BurbzAlderwingIntro.desk(true);return;}merlinTutShowStep(i+1);return;}
+  merlinTutStep = i;
+  $('merlinTutorialOverlay')?.classList.toggle('alderwing-cinematic',!!step.cinematic);
   merlinTutClearAction();
   saveMerlinTutorialState('in_progress');
   if (step.screen && step.screen !== currentScreen) switchScreen(step.screen);
@@ -46348,8 +46433,8 @@ async function enterGeographicWorld(handoff={}) {
       return ownedSource;
     },
     animate:time=>ownedSource?.update(time),
-    ready:()=>{if(gameState!==entrySave)return;const result=commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);},
-    resume:reason=>{if(['navigation','world','pagehide'].includes(reason))return;switchScreen('scan');renderScanHome();}
+    ready:()=>{if(gameState!==entrySave)return;const result=commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);else BurbzAlderwingIntro.outside($('villageWalk'));},
+    resume:reason=>{BurbzAlderwingIntro.clear();if(['navigation','world','pagehide'].includes(reason))return;switchScreen('scan');renderScanHome();maybeStartMerlinTutorial(650);}
   });
 }
 async function chooseGeographicHomeLocation(handoff={}) {
@@ -46534,15 +46619,17 @@ function initializePlayerHome() {
   const veteran = localStorage.getItem(BURBZ_INTRO_SEEN_KEY) === '1' || gameState.player.level > 1 || gameState.flock.length > 0;
   gameState.playerHome = BurbzPlayerHomeCore.normalize(gameState.playerHome, veteran);
   saveState();
+  BurbzAlderwingIntro.bind({read:()=>tutorialFlowState().alderwingIntroPhase,commit:phase=>commitOpeningFlow({alderwingIntroPhase:phase}),done:()=>maybeStartMerlinTutorial(100)});
   BurbzPlayerHome.bind({read:()=>currentPlayerHome(),timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
+    openingRoom:host=>!activeCampHomeId&&BurbzAlderwingIntro.room(host),tutorialHome:()=>!activeCampHomeId,allowExit:()=>!!activeCampHomeId||BurbzAlderwingIntro.allowExit(),allowSeat:()=>!!activeCampHomeId||BurbzAlderwingIntro.allowSeat(),
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
-    command:()=>{switchScreen('scan');document.body.classList.add('player-at-desk');maybeStartMerlinTutorial(650);},
-    onClose:()=>{activeCampHomeId=null;document.body.classList.add('player-at-desk');}
+    command:viaChair=>{switchScreen('scan');document.body.classList.add('player-at-desk');if(!BurbzAlderwingIntro.desk(viaChair))maybeStartMerlinTutorial(650);},
+    onClose:()=>{BurbzAlderwingIntro.clear();activeCampHomeId=null;document.body.classList.add('player-at-desk');}
   });
   const last=gameState.lastKnownHome;
   if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
-  $('playerHomeStand')?.addEventListener('click',()=>{if(!commitPlayerHomeAction({kind:'arrival',event:'enter'}).ok)return;if(merlinTutActive)endMerlinTutorial(false,{pause:true});BurbzPlayerHome.open('room',{fromDesk:true});});
+  $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutCurrentStep()?.id==='alderwing-arrival-v395'&&merlinTutActive&&!BurbzAlderwingIntro.phase()&&!BurbzAlderwingIntro.begin())return;if(!commitPlayerHomeAction({kind:'arrival',event:'enter'}).ok)return;if(merlinTutActive)endMerlinTutorial(false,{pause:true});BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
   // Home is the opening screen. Standing begins the tour only after a gesture.
   maybeShowIntroCutscene();

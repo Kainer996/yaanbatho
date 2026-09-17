@@ -211,3 +211,8 @@ body:has(#birdEquipOverlay.show) #globalMoneyHud { display:none!important; }
  #birdEquipOverlay .bird-equip-scroll { padding-left:9px; padding-right:9px; }
  #birdEquipOverlay .bird-equip-name { font-size:16px; }
 }
+
+/* Owned companions keep species and personal identity on one stable line. */
+#screen-birdex [data-owned-bird-card] .card-name-row { display:flex; align-items:baseline; gap:6px; min-width:0; height:20px; overflow:hidden; }
+#screen-birdex [data-owned-bird-card] .card-name-row .card-name { flex:1 1 55%; min-width:0; line-height:20px; }
+#screen-birdex [data-owned-bird-card] .card-name-row .card-nickname { flex:0 1 45%; min-width:0; margin:0; line-height:20px; }
