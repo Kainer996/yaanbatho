@@ -4617,7 +4617,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=home-squares-v421-20260917">
+<link rel="stylesheet" href="scan_home.css?v=home-b-charcoal-v422-20260917">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -5727,8 +5727,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
-<script src="scan_home_core.js?v=home-squares-v421-20260917"></script>
-<script src="scan_home.js?v=home-squares-v421-20260917"></script>
+<script src="scan_home_core.js?v=home-b-charcoal-v422-20260917"></script>
+<script src="scan_home.js?v=home-b-charcoal-v422-20260917"></script>
 <script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -23387,6 +23387,29 @@ function scanHomeDeskSnapshot() {
   const firstVillage=empireVillages().map(v=>v.claimedAt).filter(v=>typeof v==='string').sort()[0]||'';
   return {stores,kitchen,training,hospital,completed,equipment,villageDesk,empireDesk,availableBuilds:scanHomeAvailableBuildOptions(),rooms,featureDates:{village:firstVillage}};
 }
+// Home presents the same live lesson/opening authority as the navigation guide.
+// Targets are re-resolved on every tap; this projection cannot grant progress.
+function scanHomeCurrentGoal() {
+  if (merlinNavigationPaused) return {id:'resume-lesson',name:'Resume lesson',source:'progression'};
+  if (merlinTutActive) {
+    const objective=merlinNavigationObjective(),step=merlinTutCurrentStep();
+    return {id:'lesson-'+(step?.id||'current'),name:objective?.label||'Continue Merlin’s introduction',source:'progression'};
+  }
+  const opening=openingObjective();
+  if (!opening.complete) return {id:'opening-'+opening.id,name:opening.label,source:'progression'};
+  const quest=activePlayerQuest();
+  if (quest) return {...quest,source:'progression',name:(Number(gameState.quests?.[quest.id]?.progress)>=quest.target?'Collect reward: ':'')+quest.name};
+  return {id:'next-discovery',name:opening.label,source:'progression'};
+}
+function activateHomeCurrentGoal() {
+  if (merlinNavigationPaused) { resumeMerlinNavigation();return; }
+  if (merlinTutActive && !merlinTutAwaitingAction) { const next=$('merlinTutorialNext');if(next&&!next.disabled)next.click();return; }
+  if (merlinTutActive || !openingObjective().complete) { activateMerlinCurrentAction();return; }
+  const quest=activePlayerQuest();
+  if (quest) { focusQuestFromNotice({questId:quest.id});return; }
+  $('captureBtn')?.focus({preventScroll:true});
+  showToast('Choose Camera or Sound to discover your next bird.');
+}
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
   if (!scanHomeBound) {
@@ -23408,7 +23431,7 @@ function renderScanHome(snapshot, counts) {
     const waiting=(sideWalk.discoveries||[]).filter(d=>!d.claimed).length;
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
-  BurbzScanHome.render({...scanHomeDeskSnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:activePlayerQuest(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  BurbzScanHome.render({...scanHomeDeskSnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:scanHomeCurrentGoal(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
   if(typeof refreshPrerequisiteGoalBanner==='function')refreshPrerequisiteGoalBanner();
 }
 function openScanHomeTarget(target) {
@@ -23418,6 +23441,7 @@ function openScanHomeTarget(target) {
   const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',town:'village',region:'village',villages:'village',notice:'village','build-opportunity':'village','academy-build':'academy','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { if(!prerequisiteGuideGoal({type:'feature',args:[gate]}))showToast(featureUnlockHint(gate));return; }
   SFX.tap();
+  if(target.kind==='home-goal'){activateHomeCurrentGoal();return;}
   if(target.kind==='player-equipment')openDeskPlayerEquipment(target.slot);
   else if(target.kind==='feed-bird'){const entry=kitchenRosterEntryByKey(target.id);if(entry){if(entry.bird&&birdHasActiveExpedition(entry.bird.id)){showToast('This bird is away on a quest.');return;}openFeedSheet(entry.key);}}
   else if(target.kind==='stores-gear'){storesState.tab='armoury';switchScreen('inventory');requestAnimationFrame(()=>document.getElementById('stores-gear-'+target.id)?.scrollIntoView({block:'center'}));}
@@ -44867,7 +44891,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-squares-v421-20260917';
+const BURBZ_BUILD = 'home-b-charcoal-v422-20260917';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45448,7 +45472,7 @@ function pauseMerlinNavigation() {
   merlinNavigationPaused = true;
   endMerlinTutorial(false, {pause:true});
   updateMerlinFlowPointer();
-  $('tutorialCurrentAction')?.focus({preventScroll:true});
+  (currentScreen==='scan'?document.querySelector('#scanHomeActions [data-home-action="next-quest"]'):$('tutorialCurrentAction'))?.focus({preventScroll:true});
 }
 function resumeMerlinNavigation() {
   const saved = readMerlinTutorialState();
@@ -45474,8 +45498,11 @@ function updateMerlinFlowPointer() {
   placeMerlinNavigationControls(merlinTutActive, guided);
   document.querySelectorAll('[data-game-route].tutorial-alert').forEach(item => item.classList.remove('tutorial-alert'));
   const reading = merlinTutActive && !merlinTutAwaitingAction;
-  const show = merlinTutActive || merlinNavigationPaused || !!(objective && !objective.complete);
+  const onHome=currentScreen==='scan';
+  const show = !onHome ? merlinTutActive || merlinNavigationPaused || !!(objective && !objective.complete) : merlinTutActive;
+  button.hidden=onHome;
   panel.hidden = !show;
+  if(onHome){if(!show)document.body.style.setProperty('--tutorial-action-row','0px');renderScanHome();}
   panel.classList.toggle('show', show);
   panel.classList.toggle('is-reading', reading);
   pause.hidden = !merlinTutActive;
@@ -45686,7 +45713,7 @@ function merlinTutShowStep(i) {
     }
     merlinTutTrackTarget(step);
     updateMerlinFlowPointer();
-    (merlinTutAwaitingAction ? $('tutorialCurrentAction') : $('merlinTutorialNext'))?.focus({ preventScroll:true });
+    (merlinTutAwaitingAction ? (currentScreen==='scan' ? merlinNavigationControl(merlinNavigationTarget(merlinTutTargetSelector(merlinTutCurrentStep()))) : $('tutorialCurrentAction')) : $('merlinTutorialNext'))?.focus({ preventScroll:true });
   }, step.screen ? 360 : 70);
 }
 
@@ -45848,7 +45875,7 @@ window.addEventListener('keydown', event => {
     const target = merlinNavigationTarget(merlinTutTargetSelector(merlinTutCurrentStep()));
     const targetControls = target ? [target, ...target.querySelectorAll('button, a[href], input, select, textarea, [tabindex], [role="button"]')] : [];
     const freeControls = $('merlinTutorialOverlay')?.classList.contains('free') ? [...document.querySelectorAll('.screen.active button, .screen.active input, .screen.active select, .screen.active [tabindex], .quest-overlay.open button, .quest-overlay.open [tabindex], .resource-quest-overlay.open button, .bird-equip-overlay.show button')] : [];
-    const controls = [...new Set([$('tutorialCurrentAction'), ...targetControls, ...freeControls, $('merlinTutorialTaskSkip'), $('merlinTutorialBack'), $('merlinTutorialNext'), $('tutorialNavigationPause'), $('settingsBtn'), ...document.querySelectorAll('#bottomDock .nav-item')])]
+    const controls = [...new Set([$('tutorialCurrentAction'), ...(currentScreen==='scan'&&$('merlinTutorialOverlay')?.classList.contains('free')?[document.querySelector('#scanHomeActions [data-home-action="next-quest"]')]:[]), ...targetControls, ...freeControls, $('merlinTutorialTaskSkip'), $('merlinTutorialBack'), $('merlinTutorialNext'), $('tutorialNavigationPause'), $('settingsBtn'), ...document.querySelectorAll('#bottomDock .nav-item')])]
       .filter(button => button && button.tabIndex >= 0 && !button.disabled && !button.closest('[hidden], [inert]') && button.getAttribute('aria-disabled') !== 'true' && button.getClientRects().length && getComputedStyle(button).visibility !== 'hidden');
     const current = controls.indexOf(document.activeElement);
     const next = event.shiftKey ? (current <= 0 ? controls.length - 1 : current - 1) : (current + 1) % controls.length;

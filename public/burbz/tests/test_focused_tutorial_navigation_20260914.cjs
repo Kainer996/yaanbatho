@@ -15,7 +15,7 @@ const button = {disabled:false, tabIndex:0, id:'real-action', closest:()=>null, 
 const panel = {...button, matches:()=>false, querySelectorAll:()=>[button]};
 const context = vm.createContext({document:{querySelectorAll:()=>matches}, getComputedStyle:el=>({position:'static',visibility:el.invisible?'hidden':'visible',display:'block'}),
   window:{innerWidth:390,innerHeight:844}, console, merlinNavigationPaused:false, merlinTutActive:false,
-  featureGateOpen:()=>true, featureUnlockHint:()=>'', currentScreen:'scan',
+  featureGateOpen:()=>true, featureUnlockHint:()=>'', prerequisiteGuideGoal:()=>false, currentScreen:'scan',
   activateGameHudDestination:name=>{route=name;context.currentScreen=name;},
   showToast:message=>toast=message, updateMerlinFlowPointer:()=>{}, positionMerlinCurrentAction:()=>{},
   merlinTutSpotlightTarget:()=>{}, positionMerlinTutorialStage:()=>{},

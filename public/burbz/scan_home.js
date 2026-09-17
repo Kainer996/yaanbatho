@@ -63,7 +63,7 @@
   if(kit.parentElement!==kitHost)kitHost.append(kit);boundSection.dataset.equipmentInHeader=String(compactKit);
   const fullEmpire=ids.includes('building'),others=ids.filter(id=>!['building','discover','today'].includes(id)),columns=shortLandscape||width>=760?4:2;
   const key=[width,main.clientHeight,columns,...ids,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
-  const dense=main.clientHeight<440,scanHeight=dense?56:68,goalHeight=dense?60:64,careRows=Math.ceil(others.length/columns),otherMin=dense?44:88;
+  const dense=main.clientHeight<440,tinyPortrait=matchMedia('(orientation:portrait) and (max-height:650px)').matches,scanHeight=tinyPortrait?48:dense?56:68,goalHeight=dense?60:64,careRows=Math.ceil(others.length/columns),otherMin=dense?44:88;
   const fitStyle=getComputedStyle(main),fitGap=parseFloat(fitStyle.rowGap)||0,fitPadding=(parseFloat(fitStyle.paddingTop)||0)+(parseFloat(fitStyle.paddingBottom)||0),trackCount=(fullEmpire?3:2)+careRows;
   const tile=Math.max(44,Math.min(width<760?104:128,Math.floor((width-36)/3),Math.floor(main.clientHeight-scanHeight-goalHeight-careRows*otherMin-(trackCount-1)*fitGap-fitPadding-70)));
   const tracks=[];let row=1;
@@ -72,7 +72,9 @@
   panelElement('discover').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(scanHeight+'px');row++;
   panelElement('today').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(goalHeight+'px');row++;
   others.forEach((id,i)=>{const r=row+Math.floor(i/columns),col=1+i%columns;panelElement(id).style.gridArea=`${r} / ${col} / ${r+1} / ${i===others.length-1?columns+1:col+1}`;});
-  for(let i=0;i<careRows;i++)tracks.push(`minmax(${otherMin}px,1fr)`);
+  // A newly unlocked lone room must not consume all the unused Home height.
+  // Complete dashboards retain the selected historical B tracks unchanged.
+  for(let i=0;i<careRows;i++)tracks.push(careRows===1&&others.length<columns?`${otherMin}px`:`minmax(${otherMin}px,1fr)`);
   const rows=tracks.length;main.style.setProperty('--home-rows',rows);main.style.setProperty('--home-tracks',tracks.join(' '));
   for(const id of ids){
    const el=panelElement(id),h=el.clientHeight;
