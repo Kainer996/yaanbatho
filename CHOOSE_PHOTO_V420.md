@@ -1,6 +1,6 @@
 # Choose photo follow-up
 
-Prepared on current main75e2f8e35ce569fb2dfbb592ecbab35c9f42495b. Not yet published; combined release also owns the newly requested Merlin opening, map credits and Your Empire panel.
+Published in PR357, runtime commit 4ce3e473d458df4d121db144a8765a34e9ad1dd4, with the Merlin opening, map credits, Your Empire, companion names and compact requirements popup. All nine actual public picker groups pass. See ALDERWING_INTRO_DESK_V420_RELEASE.md and reports/BURBZ_V420_PUBLIC_VERIFICATION.json.
 
 Home → Scan results & settings → Camera → Choose photo opens a native device picker without capture=environment. Take a new photo remains the original camera input, now also a keyboard-accessible button. JPEG, PNG and WebP are accepted up to10MB; unsupported, empty, oversized and undecodable selections cannot reach recognition. Cancellation does nothing, and the same file can be chosen again. Both inputs share framing/full-photo and current identifyImage.
 

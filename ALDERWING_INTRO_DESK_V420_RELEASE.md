@@ -1,7 +1,7 @@
 # Alderwing introduction and field desk v420
 
 Build: `alderwing-intro-desk-v420-20260917`.
-Base: current main `75e2f8e35ce569fb2dfbb592ecbab35c9f42495b` (includes immediate-photo recognition fix `973adb4f`). Status: local candidate; publication and public verification pending.
+Base: current main `75e2f8e35ce569fb2dfbb592ecbab35c9f42495b` (includes immediate-photo recognition fix `973adb4f`). Status: published through [PR357](https://github.com/Kainer996/yaanbatho/pull/357), deployed runtime commit `4ce3e473d458df4d121db144a8765a34e9ad1dd4`. Production marker, managed-file manifest and all 15 changed public files match. Public verification passed.
 
 ## Changes
 
@@ -27,4 +27,12 @@ Official OpenFreeMap guidance requires attribution. OpenMapTiles’ [licence](ht
 
 Evidence: `/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-local/`.
 
-These are desktop Chromium and phone viewport/touch emulation, not physical-phone measurements. Geographic inputs for tutorial checks are explicit local vector/elevation fixtures; rendering, movement and game transactions are real. Recognition responses in picker tests are controlled fixtures, not a new photo-accuracy benchmark or paid Gemini calls. Existing geography, combat, real-life quests and save authority are retained. The independent prerequisite-popup handoff (303a44e2) is integrated: compact brown/cream dialog, collapsed secondary routes and no shared Working towards banners. Saved intent and the small Home Goal resume remain; resolver and transaction authority are unchanged. Its owner verified 18 logic and 9 native groups; all nine groups also pass against the integrated candidate. Public acceptance remains pending.
+These are desktop Chromium and phone viewport/touch emulation, not physical-phone measurements. Geographic inputs for tutorial checks are explicit local vector/elevation fixtures; rendering, movement and game transactions are real. Recognition responses in picker tests are controlled fixtures, not a new photo-accuracy benchmark or paid Gemini calls. Existing geography, combat, real-life quests and save authority are retained. The independent prerequisite-popup handoff (303a44e2) is integrated: compact brown/cream dialog, collapsed secondary routes and no shared Working towards banners. Saved intent and the small Home Goal resume remain; resolver and transaction authority are unchanged. Its owner verified 18 logic and 9 native groups; all nine groups also pass against the integrated candidate. Its nine actual public groups and installed/offline goal checks also pass.
+
+## Public acceptance
+
+51 public browser groups pass with zero page errors: installed/offline (6), full Merlin tour and subsequent opening gameplay (11), Home/companion cards (16), photo chooser (9), and compact prerequisite interactions (9). The original movie and all 12 changed/new module cache entries match local SHA-256 bytes. The live native tutorial follows actual shelter/door/world/chair actions, preserves orientation/reload phases, and completes the real Birdhouse, supply errand and Kitchen meal. Stores/equipment/care and Market purchase authority remain intact.
+
+The initial cold public shelter request hit the existing bounded loader timeout; a subsequent complete cold run passed without retry or app changes. The public harness also needed its readiness check switched from a localhost-only alias to the existing public diagnostics API. Both observations are retained in the evidence; no runtime workaround was shipped. The final suite uses public assets, explicit geographic/recognition fixtures where documented, and disposable saves.
+
+Machine-readable proof: [reports/BURBZ_V420_PUBLIC_VERIFICATION.json](reports/BURBZ_V420_PUBLIC_VERIFICATION.json). Raw screenshots/results are in `/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-public/`. All finished work in this release is live. Separate paused work is excluded.

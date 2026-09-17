@@ -1,0 +1,826 @@
+{
+  "runtimeCommit": "4ce3e473d458df4d121db144a8765a34e9ad1dd4",
+  "releasePR": "https://github.com/Kainer996/yaanbatho/pull/357",
+  "build": "alderwing-intro-desk-v420-20260917",
+  "verifiedAt": "2026-09-17T18:56:02.460145+00:00",
+  "publicURL": "https://yaanbatho.com/burbz/",
+  "production": {
+    "guardedDeployExit": 0,
+    "markerMatches": true,
+    "managedManifestMatches": true
+  },
+  "publicFiles": [
+    {
+      "name": "index.html",
+      "size": 3066264,
+      "hash": "d8c4b17fefbbc518fa59881c77d9757e8096fd6043b0264583badfbb124f6c50"
+    },
+    {
+      "name": "sw.js",
+      "size": 74073,
+      "hash": "6211ee59c7de69ecd611800a2e30bfadf5db0481c34a02de9a5fe0252494060e"
+    },
+    {
+      "name": "audio-credits.html",
+      "size": 7137,
+      "hash": "ef7d7c5afcb698768926f8e74a628971892f35d8f0c0cb98ed2d44d4372519ef"
+    },
+    {
+      "name": "alderwing_intro.js",
+      "size": 4093,
+      "hash": "8d0a8b65feab6c48e5658f3f4af0c820c9f3d50f7507331cd0bf800dc1982392"
+    },
+    {
+      "name": "field_map_ui.js",
+      "size": 6717,
+      "hash": "e9586eeebd76fa4d712f190f21875a9fe40c0eb2a800b3bfd6f92fc01e283b9a"
+    },
+    {
+      "name": "field_map_ui.css",
+      "size": 7633,
+      "hash": "c8f4b76cd908331f0d606517fdf64403bbd65c0b9afe3d740dbad61530709ac0"
+    },
+    {
+      "name": "geographic_home_picker.js",
+      "size": 9688,
+      "hash": "6dedbc3bbb97d06df2a243aed130edcd9c54188399be2e614fe2652500438658"
+    },
+    {
+      "name": "geographic_world.js",
+      "size": 40523,
+      "hash": "1197523b4590f5ee70096b708707d2e2dd22cd8c93510848d0aad08d2392087b"
+    },
+    {
+      "name": "illustrated_world.css",
+      "size": 19592,
+      "hash": "6755eb6eb96305f7983e9a87beafc3c9a40e069fa7a87ae525f2bdb14c154bbe"
+    },
+    {
+      "name": "player_home.js",
+      "size": 43030,
+      "hash": "224c200ad9b31996a2d8287974bca6bc71a8346312b95bb96426881a6df3c772"
+    },
+    {
+      "name": "scan_home.js",
+      "size": 17137,
+      "hash": "57ee80c8bcbfaf4a86ca908fb938ee99cf7523b78ce8a27e528148d4af6d7f01"
+    },
+    {
+      "name": "scan_home.css",
+      "size": 72520,
+      "hash": "8ecbee1d312235c3dca9e3f0c0f81fc9023ec2484cc89217834d75ea9fc1ab71"
+    },
+    {
+      "name": "scan_home_core.js",
+      "size": 8907,
+      "hash": "0946f795fdd565b5e638a2d89500fc413974fd48c5343e5dcfd66a26ce3108e4"
+    },
+    {
+      "name": "village_walk.js",
+      "size": 26719,
+      "hash": "184fff66f32dd4945a3006b56cbc49aac8f490e008e4de5825d9faefeeab8ad8"
+    },
+    {
+      "name": "village_world.js",
+      "size": 58964,
+      "hash": "117b09da361080f57f05d3bf37301cfd4b8b78460ccca8c723a233cb2c54ec57"
+    }
+  ],
+  "suites": {
+    "installed": {
+      "checks": [
+        "Actual public fresh game plays original trailer before the tutorial",
+        "Public Earthling greeting and clean labels; native Settings cancellation resumes the same tutorial with preserved progress",
+        "Actual installed public document, original trailer and all12 changed/new modules match tested SHA-256 bytes",
+        "Public installed app restarts offline without replaying an existing save; confirmed disposable New Game then plays cached trailer and opens tutorial",
+        "Actual offline Home opens all five Equipment slots and the scanner drawer, closes with Escape and preserves inventory",
+        "Actual offline Fieldcraft opens Bow supply guidance, saves its goal across reload, resumes from Home and stops without spending"
+      ],
+      "count": 6,
+      "pageErrors": [],
+      "evidenceDirectory": "/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-public/installed"
+    },
+    "opening-final": {
+      "checks": [
+        "Story reload resumes the same single-sentence bubble",
+        "Failed dialogue save holds the same phase; retry commits once",
+        "Interrupted shelter tour resumes at the saved door instruction",
+        "Only one Merlin guide appears and full world map credits remain expandable",
+        "Interrupted portrait gate resumes without duplicate overlay or skipped orientation",
+        "Fresh Home enters actual shelter/shared world and returns through the real desk to the next lesson",
+        "Native Birdhouse construction spends its original cost and commits 60XP once",
+        "Cancelled camera and denied microphone offer honest Continue with Merlin, without fabricating a bird or claiming discovery quests",
+        "Real companion Play leads to Kitchen need and actual affordability failure before errands",
+        "Real send/wait/claim earns Kitchen supplies once and saves across reload",
+        "Native Kitchen meal consumes one actual ration and improves hunger/bond; opening ends with real discovery still outstanding"
+      ],
+      "count": 11,
+      "pageErrors": [],
+      "evidenceDirectory": "/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-public/opening-final"
+    },
+    "desk-cards": {
+      "checks": [
+        {
+          "name": "Mixed named, unnamed, special and long names share one row and equal cards at 320",
+          "data": [
+            {
+              "height": 299.25,
+              "rowHeight": 20,
+              "title": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "aria": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d \u2014 press Enter to open full card",
+              "species": "Rook",
+              "nickname": "A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 299.25,
+              "rowHeight": 20,
+              "title": "Herring Gull \u00b7 Steven",
+              "aria": "Herring Gull \u00b7 Steven \u2014 press Enter to open full card",
+              "species": "Herring Gull",
+              "nickname": "Steven",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 299.25,
+              "rowHeight": 20,
+              "title": "Great Tit \u00b7 Ada",
+              "aria": "Great Tit \u00b7 Ada \u2014 press Enter to open full card",
+              "species": "Great Tit",
+              "nickname": "Ada",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 299.25,
+              "rowHeight": 20,
+              "title": "Blue Tit",
+              "aria": "Blue Tit \u2014 press Enter to open full card",
+              "species": "Blue Tit",
+              "nickname": "",
+              "sameLine": true,
+              "overflow": false
+            }
+          ]
+        },
+        {
+          "name": "Mixed named, unnamed, special and long names share one row and equal cards at 390",
+          "data": [
+            {
+              "height": 328.75,
+              "rowHeight": 20,
+              "title": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "aria": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d \u2014 press Enter to open full card",
+              "species": "Rook",
+              "nickname": "A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 328.75,
+              "rowHeight": 20,
+              "title": "Herring Gull \u00b7 Steven",
+              "aria": "Herring Gull \u00b7 Steven \u2014 press Enter to open full card",
+              "species": "Herring Gull",
+              "nickname": "Steven",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 328.75,
+              "rowHeight": 20,
+              "title": "Great Tit \u00b7 Ada",
+              "aria": "Great Tit \u00b7 Ada \u2014 press Enter to open full card",
+              "species": "Great Tit",
+              "nickname": "Ada",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 328.75,
+              "rowHeight": 20,
+              "title": "Blue Tit",
+              "aria": "Blue Tit \u2014 press Enter to open full card",
+              "species": "Blue Tit",
+              "nickname": "",
+              "sameLine": true,
+              "overflow": false
+            }
+          ]
+        },
+        {
+          "name": "Mixed named, unnamed, special and long names share one row and equal cards at 844",
+          "data": [
+            {
+              "height": 499.75,
+              "rowHeight": 20,
+              "title": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "aria": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d \u2014 press Enter to open full card",
+              "species": "Rook",
+              "nickname": "A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 499.75,
+              "rowHeight": 20,
+              "title": "Herring Gull \u00b7 Steven",
+              "aria": "Herring Gull \u00b7 Steven \u2014 press Enter to open full card",
+              "species": "Herring Gull",
+              "nickname": "Steven",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 499.75,
+              "rowHeight": 20,
+              "title": "Great Tit \u00b7 Ada",
+              "aria": "Great Tit \u00b7 Ada \u2014 press Enter to open full card",
+              "species": "Great Tit",
+              "nickname": "Ada",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 499.75,
+              "rowHeight": 20,
+              "title": "Blue Tit",
+              "aria": "Blue Tit \u2014 press Enter to open full card",
+              "species": "Blue Tit",
+              "nickname": "",
+              "sameLine": true,
+              "overflow": false
+            }
+          ]
+        },
+        {
+          "name": "Mixed named, unnamed, special and long names share one row and equal cards at 1280",
+          "data": [
+            {
+              "height": 605.75,
+              "rowHeight": 20,
+              "title": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "aria": "Rook \u00b7 A very long name with <tags> & punctuation \u201cMoon\u201d \u2014 press Enter to open full card",
+              "species": "Rook",
+              "nickname": "A very long name with <tags> & punctuation \u201cMoon\u201d",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 605.75,
+              "rowHeight": 20,
+              "title": "Herring Gull \u00b7 Steven",
+              "aria": "Herring Gull \u00b7 Steven \u2014 press Enter to open full card",
+              "species": "Herring Gull",
+              "nickname": "Steven",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 605.75,
+              "rowHeight": 20,
+              "title": "Great Tit \u00b7 Ada",
+              "aria": "Great Tit \u00b7 Ada \u2014 press Enter to open full card",
+              "species": "Great Tit",
+              "nickname": "Ada",
+              "sameLine": true,
+              "overflow": false
+            },
+            {
+              "height": 605.75,
+              "rowHeight": 20,
+              "title": "Blue Tit",
+              "aria": "Blue Tit \u2014 press Enter to open full card",
+              "species": "Blue Tit",
+              "nickname": "",
+              "sameLine": true,
+              "overflow": false
+            }
+          ]
+        },
+        {
+          "name": "Full companion card interaction remains available"
+        },
+        {
+          "name": "Home projects actual signed village, town and region holdings without duplicate town wards",
+          "data": {
+            "villages": [
+              {
+                "id": "8109",
+                "name": "Willow 9",
+                "target": {
+                  "kind": "village",
+                  "seed": 8109
+                },
+                "need": {
+                  "id": "well",
+                  "tone": "green",
+                  "icon": "\u2705",
+                  "label": "All is well",
+                  "tributeReady": false
+                },
+                "assigned": true,
+                "governor": {
+                  "name": "Blue Tit",
+                  "art": "/burbz/bird-art-cache/blue_tit_burbz_manga_warrior_20260802.png"
+                },
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8109
+                ]
+              },
+              {
+                "id": "8110",
+                "name": "Willow 10",
+                "target": {
+                  "kind": "village",
+                  "seed": 8110
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Project Manager",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8110
+                ]
+              },
+              {
+                "id": "8111",
+                "name": "Willow 11",
+                "target": {
+                  "kind": "village",
+                  "seed": 8111
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Project Manager",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8111
+                ]
+              },
+              {
+                "id": "8112",
+                "name": "Willow 12",
+                "target": {
+                  "kind": "village",
+                  "seed": 8112
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Project Manager",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8112
+                ]
+              },
+              {
+                "id": "8113",
+                "name": "Willow 13",
+                "target": {
+                  "kind": "village",
+                  "seed": 8113
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Project Manager",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8113
+                ]
+              },
+              {
+                "id": "8114",
+                "name": "Willow 14",
+                "target": {
+                  "kind": "village",
+                  "seed": 8114
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Project Manager",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8114
+                ]
+              },
+              {
+                "id": "8115",
+                "name": "Willow 15",
+                "target": {
+                  "kind": "village",
+                  "seed": 8115
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Project Manager",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Project Manager",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8115
+                ]
+              }
+            ],
+            "towns": [
+              {
+                "id": "town-8100",
+                "name": "Town of Oatgarth",
+                "target": {
+                  "kind": "town",
+                  "id": "town-8100"
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Lord Mayor",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Lord Mayor",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8100,
+                  8101,
+                  8102
+                ]
+              },
+              {
+                "id": "town-8103",
+                "name": "Town of Ravenmere",
+                "target": {
+                  "kind": "town",
+                  "id": "town-8103"
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Lord Mayor",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Lord Mayor",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8103,
+                  8104,
+                  8105
+                ]
+              },
+              {
+                "id": "town-8106",
+                "name": "Town of Sorrelton",
+                "target": {
+                  "kind": "town",
+                  "id": "town-8106"
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Lord Mayor",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Lord Mayor",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8106,
+                  8107,
+                  8108
+                ]
+              }
+            ],
+            "regions": [
+              {
+                "id": "8100",
+                "name": "Ashenfell",
+                "target": {
+                  "kind": "region",
+                  "id": "8100"
+                },
+                "need": {
+                  "id": "vacant",
+                  "tone": "violet",
+                  "icon": "\ud83e\udea7",
+                  "label": "No Warden",
+                  "tributeReady": false
+                },
+                "assigned": false,
+                "governor": null,
+                "role": "Warden",
+                "waiting": 0,
+                "underway": 0,
+                "wards": [
+                  8100,
+                  8101,
+                  8102,
+                  8103,
+                  8104,
+                  8105,
+                  8106,
+                  8107,
+                  8108
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "Three simultaneous Empire columns fit without outer scrolling at 320",
+          "data": {
+            "cols": [
+              {
+                "x": 11,
+                "y": 191.614013671875,
+                "w": 96,
+                "h": 64
+              },
+              {
+                "x": 112,
+                "y": 191.614013671875,
+                "w": 96,
+                "h": 64
+              },
+              {
+                "x": 213,
+                "y": 191.614013671875,
+                "w": 96,
+                "h": 64
+              }
+            ],
+            "main": {
+              "h": 373,
+              "sh": 374,
+              "w": 320,
+              "sw": 320
+            },
+            "empire": {
+              "x": 6,
+              "y": 146.614013671875,
+              "w": 308,
+              "h": 114
+            },
+            "bad": 10,
+            "good": 1
+          }
+        },
+        {
+          "name": "Three simultaneous Empire columns fit without outer scrolling at 390",
+          "data": {
+            "cols": [
+              {
+                "x": 11,
+                "y": 191.59375,
+                "w": 119.328125,
+                "h": 96.296875
+              },
+              {
+                "x": 135.328125,
+                "y": 191.59375,
+                "w": 119.328125,
+                "h": 96.296875
+              },
+              {
+                "x": 259.65625,
+                "y": 191.59375,
+                "w": 119.34375,
+                "h": 96.296875
+              }
+            ],
+            "main": {
+              "h": 551,
+              "sh": 551,
+              "w": 390,
+              "sw": 390
+            },
+            "empire": {
+              "x": 6,
+              "y": 146.59375,
+              "w": 378,
+              "h": 146.296875
+            },
+            "bad": 10,
+            "good": 1
+          }
+        },
+        {
+          "name": "Three simultaneous Empire columns fit without outer scrolling at 844",
+          "data": {
+            "cols": [
+              {
+                "x": 158,
+                "y": 124.59375,
+                "w": 188,
+                "h": 64
+              },
+              {
+                "x": 351,
+                "y": 124.59375,
+                "w": 188,
+                "h": 64
+              },
+              {
+                "x": 544,
+                "y": 124.59375,
+                "w": 188,
+                "h": 64
+              }
+            ],
+            "main": {
+              "h": 297,
+              "sh": 297,
+              "w": 590,
+              "sw": 590
+            },
+            "empire": {
+              "x": 153,
+              "y": 79.59375,
+              "w": 584,
+              "h": 114
+            },
+            "bad": 10,
+            "good": 1
+          }
+        },
+        {
+          "name": "Three simultaneous Empire columns fit without outer scrolling at 1280",
+          "data": {
+            "cols": [
+              {
+                "x": 11,
+                "y": 199.59375,
+                "w": 369.0625,
+                "h": 176.234375
+              },
+              {
+                "x": 385.0625,
+                "y": 199.59375,
+                "w": 369.0625,
+                "h": 176.234375
+              },
+              {
+                "x": 759.125,
+                "y": 199.59375,
+                "w": 369.078125,
+                "h": 176.234375
+              }
+            ],
+            "main": {
+              "h": 635,
+              "sh": 635,
+              "w": 1139,
+              "sw": 1139
+            },
+            "empire": {
+              "x": 6,
+              "y": 154.59375,
+              "w": 1127.203125,
+              "h": 226.234375
+            },
+            "bad": 10,
+            "good": 1
+          }
+        },
+        {
+          "name": "Completed building opens its actual destination and acknowledges the notice"
+        },
+        {
+          "name": "Village tile opens its actual management view"
+        },
+        {
+          "name": "Town tile opens its actual management view"
+        },
+        {
+          "name": "Region tile opens its actual county hall"
+        },
+        {
+          "name": "Village column scrolls independently"
+        },
+        {
+          "name": "Empty holdings produce honest empty columns"
+        }
+      ],
+      "count": 16,
+      "pageErrors": [],
+      "evidenceDirectory": "/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-public/desk-cards"
+    },
+    "choose-photo": {
+      "checks": [
+        "Choose photo is labelled, reachable and at least44px at small phone, phone, landscape and desktop sizes",
+        "Native device picker has no capture constraint; cancelled selection preserves state and sends nothing",
+        "Despite denied camera, selected JPEG uses real cropper/full-photo, existing request identity and shared discovery/results flow",
+        "Choosing the same file again works; crop identification cannot repeat discovery coins or XP",
+        "PNG and WebP device images decode into the same framing UI",
+        "Unsupported, empty, oversized and corrupt selections are rejected before recognition",
+        "Offline failure keeps the existing retry feedback and adds no background photo storage or rewards",
+        "Shared monthly-cap response remains visible and awards no discovery",
+        "Take a new photo retains the native camera input and same framing flow"
+      ],
+      "count": 9,
+      "pageErrors": [],
+      "evidenceDirectory": "/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-public/choose-photo"
+    },
+    "compact-popup": {
+      "checks": [
+        {
+          "name": "Visible level-locked Hospital control opens actual trainer/coins/timber help without spending"
+        },
+        {
+          "name": "Common goal survives full reload and remains reachable on phone, landscape and desktop"
+        },
+        {
+          "name": "Home saved-goal resume is visible and hit-testable with no control overlap or outer scroll at small phone, phone, landscape and desktop"
+        },
+        {
+          "name": "Home saved-goal resume is visible and hit-testable with no control overlap or outer scroll at small phone, phone, landscape and desktop"
+        },
+        {
+          "name": "Failed Stop preserves the general goal and resources; explicit successful Stop clears only intent"
+        },
+        {
+          "name": "Actual unavailable keeper item guides to its real bird owner, native unequip returns one copy, original keeper equip target is retained"
+        },
+        {
+          "name": "Visible Fieldcraft Find supplies opens the real arrow recipe requirements without creating arrows or a commission"
+        },
+        {
+          "name": "Hungry bird\u2019s actual Home feed entry and empty feeding sheet expose compatible Market/errand food paths with no free food or automatic feeding"
+        },
+        {
+          "name": "Food goal survives reload and a paid native purchase, then returns to the exact original bird meal controls"
+        }
+      ],
+      "count": 9,
+      "pageErrors": [],
+      "evidenceDirectory": "/home/yaan/Documents/Codex/2026-09-06/burbz-visual-polish/outputs/v420-public/compact-popup"
+    }
+  },
+  "limits": [
+    "Desktop Chromium with phone viewport/touch emulation, not physical-device measurements.",
+    "Public runtime/art assets; disposable saves and a closure-only test hook for seeded functional tests. Installed/offline checks use unmodified public HTML.",
+    "Tutorial geographic vector/elevation inputs are declared fixtures; native movement, door/chair and economy actions are real.",
+    "Photo test HTTP recognition responses are controlled; no paid Gemini calls, new accuracy benchmark or changed model/server.",
+    "An initial public cold shelter load hit the existing bounded loader timeout. A subsequent complete cold tour passed without retry or runtime modification. A separate public test wait was corrected to use the public diagnostics API instead of its localhost-only alias."
+  ],
+  "publicBrowserGroups": 51,
+  "complete": true
+}
