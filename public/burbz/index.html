@@ -6864,7 +6864,7 @@ function birdIsFull(bird, now = Date.now()) {
 // immediately and walks back to the room it was pulled from.
 function reconcileBirdSleep(bird, now = Date.now()) {
   if (!bird) return { changed:false, sleeping:false };
-  if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room:'outdoors', lastGroom:null, lastRest:null, lastForage:null };
+  if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room:'outdoors', lastGroom:null, lastForage:null };
   const wasSleeping = !!(bird.care && bird.care.sleeping);
   const requested = (bird.care && bird.care.sleepReturnRoom) || null;
   const core = birdSleepCore();
@@ -13855,16 +13855,9 @@ function birdOnlyImgHTML(bird, className, extraAttrs) {
   return '<img class="' + escapeHtml(className) + '" src="' + escapeHtml(cutout) + '" data-fallback-emoji="' + escapeHtml(emoji) + '" alt="' + escapeHtml(species) + '"' + extra + '>';
 }
 
-// The blurred bed a fitted painting sits on. Same picture, scaled to fill and
-// pushed out of focus, so a square painting in a wide frame still reads as one
-// whole image instead of a cropped bird between two bars.
-function cardArtWashHTML(cardArt) {
-  // A transparent cutout gets no wash: the habitat backdrop behind it is the
-  // whole point, and a blurred copy of a cutout would smear over that scene.
-  if (!cardArt || !cardArt.src || cardArt.isCutout) return '';
-  return '<img class="card-art-wash" src="' + escapeHtml(cardArt.src) +
-    '" alt="" aria-hidden="true" loading="lazy" onerror="this.remove()">';
-}
+// Habitat artwork supplies the card background. An enlarged copy of the
+// foreground painting would cover that species' selected natural habitat.
+function cardArtWashHTML(cardArt) { return ''; }
 
 // Bird image for FRAMED contexts: always the original complete painting.
 // Framed contexts (Birdex codex cards, companion cards, capture reveal) keep
@@ -13999,7 +13992,7 @@ function createBirdEntry(speciesName, scientificName, confidence) {
     artUrl: resolveBuiltInBirdArt(canonicalName) || null,
     care: defaultBirdCare(), // Per-bird care state
     training: { feedCount: 0, trainCount: 0 }, // Per-bird training state
-    academy: { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null }, // Starts unlocked for Academy play
+    academy: { room: 'outdoors', lastGroom: null, lastForage: null }, // Starts unlocked for Academy play
     biologyStatsVersion: BIRD_BIOLOGY_STATS_VERSION,
     ...stats
   };
@@ -14457,7 +14450,7 @@ function ensureBirdAcademy(bird) {
   if (!bird.care || typeof bird.care !== 'object') bird.care = defaultBirdCare();
   normalizeBirdCare(bird);
   if (!bird.training || typeof bird.training !== 'object') bird.training = { feedCount: 0, trainCount: 0 };
-  if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room: 'outdoors', lastGroom: null, lastRest: null, lastForage: null };
+  if (!bird.academy || typeof bird.academy !== 'object') bird.academy = { room: 'outdoors', lastGroom: null, lastForage: null };
   if (!bird.academy.disciplines || typeof bird.academy.disciplines !== 'object') {
     // Migrate old drill investment into battle move disciplines so
     // already-trained birds arrive with their moves unlocked.
@@ -15901,11 +15894,10 @@ function renderAcademyRoomPanel(birds) {
     let actions = '';
     let tray = '';
     if (academySelectedRoom === 'outdoors') {
-      // The tree is home: feeding, grooming, deep rest and foraging all
+      // The tree is home: feeding, grooming and foraging all
       // happen wherever a free bird stands, now the Roost has retired.
       actions = '<button class="academy-btn primary" onclick="academyFeed(\'' + b.id + '\')">🍽️ Feed' + (academyFeedTrayBirdId === b.id ? ' ▲' : ' ▼') + '</button>' +
         academyActionBtn('academyGroom', b.id, '🪮 Groom', academyCdLeft(b.academy.lastGroom, 30*60*1000), false) +
-        academyActionBtn('academyRest', b.id, '💤 Deep Rest', academyCdLeft(b.academy.lastRest, 2*60*60*1000), false) +
         academyActionBtn('academyForage', b.id, '🪱 Forage', academyCdLeft(b.academy.lastForage, 60*60*1000), true);
       if (academyFeedTrayBirdId === b.id) tray = academyFeedTrayHTML(b);
     } else if (academySelectedRoom === 'training') {
@@ -17753,28 +17745,6 @@ function academyGroom(birdId) {
   renderAcademy();
 }
 
-function academyRest(birdId) {
-  const bird = academyBirdById(birdId);
-  if (!bird) return;
-  ensureBirdAcademy(bird);
-  if (academyCdLeft(bird.academy.lastRest, 2*60*60*1000) > 0) { showToast('Not sleepy yet!'); return; }
-  bird.academy.lastRest = new Date().toISOString();
-  bird.hp = bird.maxHp;
-  bird.care.tiredness = 0;
-  bird.care.lastTirednessAt = Date.now();
-  bird.care.sleeping = false;
-  bird.care.sleepingSince = null;
-  bird.care.sleepReason = null;
-  const returnRoom = bird.care.sleepReturnRoom;
-  bird.care.sleepReturnRoom = null;
-  if (returnRoom && ACADEMY_ROOMS[returnRoom] && returnRoom !== 'tavern' && returnRoom !== 'kitchen' && isAcademyRoomBuilt(returnRoom)) bird.academy.room = returnRoom;
-  bird.care.happiness = clamp((bird.care.happiness || 80) + 6, 0, 100);
-  saveState();
-  showToast('💤 ' + (bird.commonName || bird.species) + ' slept deeply — fully rested and healed!');
-  SFX.tap();
-  renderAcademy();
-}
-
 function academyDrill(birdId, stat) {
   const bird = academyBirdById(birdId);
   if (!bird || !['atk','def','spd','int'].includes(stat)) return;
@@ -18722,7 +18692,6 @@ Object.assign(window, {
   academyFeed,
   academyFeedFood,
   academyGroom,
-  academyRest,
   academyDrill,
   kitchenSelectSpecies,
   kitchenRosterToggleTray,
@@ -40157,9 +40126,8 @@ function renderBirdEquip(target, previewBird) {
   const loadout = unowned ? {} : birdLoadout(bird.id);
   const bonus = unowned ? {} : birdGearBonuses(bird);
   const rarityColor = RARITY_COLORS[bird.rarity] || RARITY_COLORS.common;
-  // Keep the four restored full paintings in the full-card inspector too.
-  const restoredManga = String(getBirdCardArtUrl(bird) || '').startsWith('/burbz/assets/bird-cards-v411/');
-  const cardArt = (restoredManga || window.BurbzSpecialBirdSprites?.keyFor(bird)) ? birdCardImgAttrs(bird) : null;
+  // Every unlocked card uses the same artwork and habitat as its Birdex entry.
+  const cardArt = birdCardImgAttrs(bird);
   const artUrl = cardArt?.src || getBirdArtUrl(bird);
   const fallback = '<div class="bird-equip-art-fallback" role="img" aria-label="' + escapeHtml(bird.commonName || bird.species) + '">' + (bird.emoji || '🐦') + '</div>';
   const art = fallback + (artUrl
@@ -40172,8 +40140,8 @@ function renderBirdEquip(target, previewBird) {
   const xpGoal = XP_PER_LEVEL(level);
   const xp = Math.max(0, Number(bird.xp) || 0);
   const xpPercent = level >= 50 ? 100 : Math.min(100, xp / xpGoal * 100);
-  const hero = '<div class="bird-equip-hero" style="--companion-rarity:' + rarityColor + ';">' +
-    '<div class="bird-equip-portrait">' + art + specialBirdAnimationButtonHTML(bird, true) + favBtn +
+  const hero = '<div class="bird-equip-hero" style="--companion-rarity:' + rarityColor + ';' + birdHabitatBackgroundStyle(bird, rarityColor) + 'box-shadow:inset 0 0 0 1000px rgba(0,0,0,.78);">' +
+    '<div class="bird-equip-portrait" style="' + birdHabitatBackgroundStyle(bird, rarityColor) + '">' + art + specialBirdAnimationButtonHTML(bird, true) + favBtn +
     '<span class="bird-equip-rarity">' + escapeHtml(bird.rarity || 'common') + '</span></div>' +
     '<div class="bird-equip-identity"><div class="bird-equip-name">' + escapeHtml(birdDisplayName(bird)) + '</div>' +
     '<div class="bird-equip-sub">' + escapeHtml(bird.customName ? birdSpeciesLabel(bird) : (bird.scientificName || bird.species)) + '</div>' +
@@ -43731,7 +43699,7 @@ $('battleAgainBtn').addEventListener('click', () => {
   else renderBattleSelect();
 });
 
-Object.assign(window, { academyBuildBuilding, birdEquipCare, birdEquipRecruit, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyRest, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, magpieMarketSetTab, magpieMarketTabKey, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
+Object.assign(window, { academyBuildBuilding, birdEquipCare, birdEquipRecruit, focusMagpieMarketBuild, focusProjectManagerOffice, academyMoveBird, academyBuildAndMoveBird, academySelectRoom, academyFeed, academyFeedFood, academyGroom, academyDrill, academyForage, openAcademyRoom, academyStartPlaceBuilding, academyHandleTreeTap, startBirdExpedition, claimBirdExpedition, villageOpenShop, villageCloseShop, villageBuy, openBuildingInterior, closeBuildingInterior, buildingInteriorBuild, openQuestSend, openQuestLog, selectQuestDuration, selectQuestBird, confirmQuestSend, closeQuestOverlay, openBirdKnowledgeQuiz, openVillageKnowledgeQuiz, answerBirdKnowledgeQuiz, closeBirdKnowledgeQuiz, renameCompanionBird, birdDisplayName, battlePickToggle, battleUsePotion, battleSelectSkill, battleTargetPick, battleConfirmAttack, forgeSetTab, openForge, forgeSelectBird, forgeOpenSlot, forgeEquip, forgeUnequip, craftGear, forgeTransmute, collectForgeJob, cancelForgeJob, upgradeForge, storesSetTab, storesSellItem, magpieMarketBuy, magpieMarketSell, magpieMarketSetTab, magpieMarketTabKey, setQuestCategoryOpen, openXpScrollPicker, closeXpScrollSheet, useXpScroll, switchScreen, openEmpireTown, openEmpireCountyMap, openBirdEquip, closeBirdEquip, birdEquipSwipeTo, birdEquipArtReady, birdEquipOpenSlot, birdEquipSet, birdEquipClear, toggleFavouriteBird, birdEquipToggleFavourite, birdEquipPreen, closePlayerBirdPhotoViewer });
 
 // Quest taps must never fail silently: surface + report any exception so a
 // bad saved state shows a toast (and a server log line) instead of a dead tap.
@@ -44891,7 +44859,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-b-stable-v423-20260917';
+const BURBZ_BUILD = 'companion-care-habitats-v424-20260918';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

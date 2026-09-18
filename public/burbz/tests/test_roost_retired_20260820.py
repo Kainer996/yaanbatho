@@ -10,7 +10,7 @@ What replaced each duty:
   60 coins and 8 timber);
 * the gentle HP mend the Roost sold now happens to birds roosting in the
   Aviary Gardens — the tree is home, so home heals;
-* feeding, grooming and deep rest moved to the gardens with them;
+* feeding and grooming moved to the gardens with them;
 * old saves migrate: a built Roost refunds its 50 coins and 10 timber, its
   lodgers move out to the gardens, and the Roost Warden post retires.
 """
@@ -48,11 +48,13 @@ def test_the_tree_carries_the_rest_and_the_care_actions():
     sweep = sweep[:sweep.index("academyGraduationOverlay")]
     assert "if (room === 'outdoors') b.hp = clamp((b.hp || b.maxHp) + Math.max(1, Math.round((b.maxHp || 100) * 0.04 * roomBoost)), 1, b.maxHp || 100);" in sweep
     assert "'dorm'" not in sweep
-    # Feed, groom, deep rest and forage all live in the gardens panel.
+    # Feed, groom and forage all live in the gardens panel.
     panel = HTML[HTML.index("if (academySelectedRoom === 'outdoors') {"):]
     panel = panel[:panel.index("} else if (academySelectedRoom === 'training')")]
-    for marker in ("academyFeed", "academyGroom", "academyRest", "academyForage"):
+    for marker in ("academyFeed", "academyGroom", "academyForage"):
         assert marker in panel, marker
+    assert "academyRest" not in HTML
+    assert "Deep Rest" not in HTML
 
 
 def test_the_barracks_is_the_tutorial_build_lesson():
