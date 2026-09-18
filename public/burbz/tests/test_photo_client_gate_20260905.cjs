@@ -219,3 +219,10 @@ test('receipt-backed tentative species remain visible without awarding a discove
   assert.equal((await invoke(accepted('Grey Wagtail','Motacilla cinerea',.85))).awards.length,1);
   assert.equal((await invoke(accepted('Grey Wagtail','Motacilla cinerea',.79))).awards.length,0);
 });
+
+
+test('full-photo recognition preserves bounded original file bytes and clears them on close',async()=>{
+  const h=cropUploadHarness();const original={size:2048,type:'image/jpeg',originalPixels:true};
+  vm.runInContext('birdCrop.originalFile = null',h.ctx);h.ctx.original=original;vm.runInContext('birdCrop.originalFile = original',h.ctx);
+  await h.ctx.confirmBirdCrop(true);assert.equal(h.uploads[0],original);assert.equal(vm.runInContext('birdCrop.originalFile',h.ctx),null);
+});

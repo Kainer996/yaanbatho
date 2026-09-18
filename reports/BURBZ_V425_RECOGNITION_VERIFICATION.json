@@ -181,7 +181,8 @@
     "California gull remained unconfirmed but its tentative European Herring Gull suggestion was wrong.",
     "Original woodpecker remains tentative; original wagtail now confirms Grey Wagtail.",
     "Broad model trials used the same final prompt, model, crop and evidence algorithm under the old experimental policy label; final source rechecked both originals.",
-    "Earlier rejected candidate incorrectly confirmed Yellow-legged Gull; it was never published."
+    "Earlier rejected candidate incorrectly confirmed Yellow-legged Gull; it was never published.",
+    "The two user problem images are 518px photo regions recovered from supplied screenshots, not original camera files. Original-byte preservation means preserving those supplied file bytes."
   ],
   "regressions": {
     "python": "80 passed, 5 live-route snapshot cases skipped; live upload lifecycle is separately verified by guarded deployment.",
@@ -206,5 +207,30 @@
       "Offline client uses the new recognition contract"
     ]
   },
-  "privateData": "No originals, source filenames, raw traces, receipts, identities or service credentials are included."
+  "privateData": "No originals, source filenames, raw traces, receipts, identities or service credentials are included.",
+  "publicV425": {
+    "commit": "3a261a0a123f320bc681ec55914eb4d833c410f5",
+    "managedAndPublicHashes": true,
+    "loadedWorkerAndBudgetHashes": true,
+    "uploadCleanup": true,
+    "soundProofs": 4,
+    "nativePhotoGroups": 10,
+    "installedOffline": [
+      "Actual public v425 service worker installed and unmodified shell reopened with existing save",
+      "Installed cache contains the exact published app bytes",
+      "Actual public app restarts offline with v425 and retained save"
+    ],
+    "originalPhotoLimit": "Both originals returned correct tentative suggestions through the v425 app; wagtail was not confirmed on this public run."
+  },
+  "originalPhotoFollowup": {
+    "build": "bird-photo-original-v425b-20260918",
+    "candidateWithLiveWorker": [
+      "Original wagtail bytes preserved in actual HTTP upload",
+      "Original wagtail recognized through public endpoint and actual discovery/result UI",
+      "Confirmed Grey Wagtail discovery survives public app reload"
+    ],
+    "clientChecks": 18,
+    "nativePhotoGroups": 10,
+    "limitation": "Single successful original-byte comparison; model variation remains possible. Woodpecker remains tentative."
+  }
 }

@@ -41796,7 +41796,7 @@ photoLibraryInput.addEventListener('change', () => handlePhotoSelection(photoLib
 // After the phone's camera returns a photo we show it in a fixed square with a
 // zoom + drag interaction. Identify sends that square; Use full photo preserves
 // the original frame for a bird whose body or wings do not fit in the square.
-const birdCrop = { source: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, preparing: false, fullPhoto: false, pointers: new Map(), pinch: null };
+const birdCrop = { source: null, originalFile: null, W: 0, H: 0, size0: 0, size: 0, cx: 0, cy: 0, zmax: 1, generation: 0, preparing: false, fullPhoto: false, pointers: new Map(), pinch: null };
 
 async function openBirdCropper(file, { requireDecode = false } = {}) {
   closeBirdCropper();
@@ -41833,6 +41833,11 @@ async function openBirdCropper(file, { requireDecode = false } = {}) {
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
 
   birdCrop.source = bitmap; birdCrop.W = W; birdCrop.H = H;
+  // Keep bounded, decoded originals for full-photo recognition. The server
+  // strips EXIF and normalizes once; another JPEG encode here loses detail.
+  birdCrop.originalFile = fit === 1 && Math.max(W, H) <= CAPTURE_MAX_SIDE &&
+    /^image\/(jpeg|png|webp)$/i.test(file.type || '') &&
+    file.size > 0 && file.size <= 10 * 1024 * 1024 ? file : null;
   birdCrop.size0 = Math.min(W, H);
   birdCrop.zmax = Math.max(1, birdCrop.size0 / 48);
   birdCrop.size = birdCrop.size0;           // start framed on the centre square
@@ -41962,7 +41967,7 @@ function closeBirdCropper() {
   birdCrop.pointers.clear(); birdCrop.pinch = null;
   const img = $('birdCropImg');
   if (img && img.dataset.blobUrl) { URL.revokeObjectURL(img.dataset.blobUrl); img.dataset.blobUrl = ''; img.src = ''; }
-  birdCrop.source?.close?.(); birdCrop.source = null;
+  birdCrop.source?.close?.(); birdCrop.source = null; birdCrop.originalFile = null;
 }
 
 async function confirmBirdCrop(fullPhoto = false) {
@@ -41974,7 +41979,7 @@ async function confirmBirdCrop(fullPhoto = false) {
   try {
     let blob, out;
     if (fullPhoto) {
-      blob = await normalizeCapturedPhoto(birdCrop.source, birdCrop.W, birdCrop.H, 1);
+      blob = birdCrop.originalFile || await normalizeCapturedPhoto(birdCrop.source, birdCrop.W, birdCrop.H, 1);
     } else {
       clampBirdCrop();
       const s = birdCrop.size;
@@ -44872,7 +44877,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-photo-recognition-v425-20260918';
+const BURBZ_BUILD = 'bird-photo-original-v425b-20260918';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

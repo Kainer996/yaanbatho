@@ -1,3 +1,5 @@
+Photo preparation v425b (`bird-photo-original-v425b-20260918`) preserves bounded decoded JPEG/PNG/WebP original bytes for Use full photo, retains bounded crop/oversize preparation, and releases originals on close. Keep server EXIF stripping and current v425 recognition/model/policy contract.
+
 Recognition v425 (`bird-photo-recognition-v425-20260918`) uses Gemini 3.8 Flash with independent original-plus-crop verification, taxonomy-aware alternatives and clearly tentative non-awarding suggestions. Keep policy/model/receipt gates aligned, policy-specific cache digests, the existing persistent £5 ledger, no server photo retention, and unchanged sound. Do not turn tentative output into a discovery. See [../../PHOTO_RECOGNITION_V425.md](../../PHOTO_RECOGNITION_V425.md) for finite test coverage and unresolved gull/original-woodpecker limits.
 
 # Burbz — Maintainer & Agent Handbook
