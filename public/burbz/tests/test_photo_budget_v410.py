@@ -31,8 +31,8 @@ def test_reserves_whole_attempt_before_work(ledger):
     l,_=ledger;job=acquire(l)
     assert l.status()['reservedAndChargedNanoGBP']==ATTEMPT_LIMIT
     l.begin_call(job,0);l.finish_call(job,0,usage());result=l.finish(job,{'found':False})
-    assert result['attemptCostNanoGBP']==1_718_750
-    assert l.status()['reservedAndChargedNanoGBP']==1_718_750
+    assert result['attemptCostNanoGBP']==7_031_250
+    assert l.status()['reservedAndChargedNanoGBP']==7_031_250
 
 def test_missing_ledger_never_recreates(tmp_path):
     with pytest.raises(BudgetError):Ledger(tmp_path/'gone.db')
@@ -151,7 +151,7 @@ def test_two_verified_views_are_bounded_and_both_charged(ledger):
     p=Provider(raw);result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
     assert result['found'] and result['verified']
     paid=[b for a,b in p.calls if a=='generateContent'];assert len(paid)==2
-    assert all(b['generationConfig']['maxOutputTokens']==4096 and b['generationConfig']['thinkingConfig']['thinkingBudget']==1024 for b in paid)
+    assert all(b['generationConfig']['maxOutputTokens']==8192 and b['generationConfig']['thinkingConfig']['thinkingLevel'] in ('medium','high') for b in paid)
     assert result['attemptCostNanoGBP']==2*cost_for_usage(usage())
 
 def test_unknown_usage_trips_global_breaker_and_blocks_already_reserved_stage(ledger):
@@ -224,3 +224,33 @@ def test_ledger_persists_no_photo_bytes_or_base64(ledger):
     assert not {'image','photo','blob','base64'} & columns
     assert base64.b64encode(data).decode() not in persisted
     assert data[:100] not in l.path.read_bytes()
+
+
+def test_new_policy_does_not_replay_previous_model_result(ledger):
+    import hashlib
+    l,_=ledger;data=jpeg()
+    job,_=l.acquire('owner_01234567890','old_request_012345',hashlib.sha256(data).hexdigest(),'caller')
+    l.finish(job,{'found':True,'species':'Wrong cached species','policy':'photo-gemini-v410'})
+    p=Provider();r=Recognizer(l,p).identify(data,'owner_01234567890','new_request_012345','caller')
+    assert not r['found'] and len(p.calls)==2 and r['policy']=='photo-gemini-v425'
+
+
+def test_original_localization_survives_crop_relative_second_coordinates(ledger):
+    from photo_gemini import _normalise_species_result
+    l,_=ledger
+    raw=dict(found=True,species='Grey Wagtail',scientificName='Motacilla cinerea',confidence=.85,
+             alternatives=[{'species':'Grey Wagtail (adult)','scientificName':'Motacilla cinerea','confidence':.85},
+                           {'species':'Yellow Wagtail','scientificName':'Motacilla flava','confidence':.65}],
+             evidence=dict(liveBird=True,quality='blurred',diagnosticDetailsVisible=True,
+                           diagnosticFeatures=['Long narrow dark tail','Yellow underparts with grey upperparts'],subjectBox=[20,20,980,980]))
+    class TwoViews(Provider):
+        def request(self, action, body, timeout):
+            if action=='generateContent' and any(a=='generateContent' for a,b in self.calls):
+                self.response=json.loads(json.dumps(raw));self.response['evidence']['subjectBox']=[0,0,1,1]
+            return super().request(action,body,timeout)
+    p=TwoViews(raw);result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
+    assert result['verified'] and result['scientificName']=='Motacilla cinerea'
+    paid=[b for a,b in p.calls if a=='generateContent']
+    assert len([p for p in paid[1]['contents'][0]['parts'] if 'inlineData' in p])==2
+    raw['alternatives'][0]['scientificName']='Motacilla flava'
+    assert not _normalise_species_result(raw,io.BytesIO(jpeg()))['accepted']

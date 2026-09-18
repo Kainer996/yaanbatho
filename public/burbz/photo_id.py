@@ -11,8 +11,8 @@ import socket
 
 MAX_IMAGE_PIXELS = 24_000_000
 ANALYSIS_MAX_SIDE = 2560
-PHOTO_POLICY = "photo-gemini-v410"
-MIN_CONFIDENCE = .90
+PHOTO_POLICY = "photo-gemini-v425"
+MIN_CONFIDENCE = .80
 INCONCLUSIVE = "Bird not found. We couldn’t confirm the species. Try a closer, clearer view of the bird."
 
 def normalise_image_file(source_path: str, dest_path: str) -> None:
@@ -41,7 +41,7 @@ def normalise_image_file(source_path: str, dest_path: str) -> None:
 
 def _abstain(reason, message=None):
     return {"found": False, "accepted": False, "verified": False, "policy": PHOTO_POLICY,
-            "model": "gemini-vision", "modelName":"gemini-2.5-flash", "retryable":True, "reason": reason,
+            "model": "gemini-vision", "modelName":"gemini-3.8-flash", "retryable":True, "reason": reason,
             "message": message or INCONCLUSIVE}
 
 
@@ -56,13 +56,25 @@ class _LocalConnection(http.client.HTTPConnection):
 
 
 def _validate_result(result):
-    if not isinstance(result, dict) or result.get("policy") != PHOTO_POLICY or result.get("model") != "gemini-vision" or result.get("modelName") != "gemini-2.5-flash":
+    if not isinstance(result, dict) or result.get("policy") != PHOTO_POLICY or result.get("model") != "gemini-vision" or result.get("modelName") != "gemini-3.8-flash":
         return _abstain("invalid-worker-result")
     if result.get("found") is not True:
-        # Never pass a species through on any failure, even from the local worker.
+        # Suggestions are an explicitly non-awarding channel, never a primary species.
         clean=_abstain(str(result.get("reason", "uncertain-species")), result.get("message") if isinstance(result.get("message"), str) else None)
         clean.update(retryable=result.get('retryable') is True,retryAt=result.get('retryAt',0))
         if isinstance(result.get('receiptId'),str) and re.fullmatch(r'[a-f0-9]{64}',result['receiptId']): clean['receiptId']=result['receiptId']
+        reasons={'insufficient-evidence','low-confidence','ambiguous-species','unclear-subject',
+                 'missing-diagnostic-details','verification-disagrees'}
+        if clean['reason'] in reasons and not clean['retryable'] and 'receiptId' in clean:
+            candidates=[];seen=set()
+            raw=result.get('suggestions')
+            for c in raw[:3] if isinstance(raw,list) else []:
+                if not isinstance(c,dict): continue
+                name=c.get('species');scientific=c.get('scientificName')
+                if (isinstance(name,str) and 1<=len(name.strip())<=100 and isinstance(scientific,str)
+                        and re.fullmatch(r'[A-Z][a-z]+ [a-z][a-z-]+',scientific) and scientific not in seen):
+                    candidates.append({'species':name.strip(),'scientificName':scientific});seen.add(scientific)
+            if candidates: clean['suggestions']=candidates
         return clean
     score = result.get("confidence")
     if (result.get("accepted") is not True or result.get("verified") is not True
@@ -96,7 +108,7 @@ def identify_bird_from_image(path, lat=None, lon=None):
     # Retain the route interface; the worker alone owns billing and egress.
     try: owner,request_id,caller=_request_identity()
     except (ValueError,ImportError):
-        return _abstain('photo-update-required','Close and reopen Burbz to update photo identification. Your saved photos will wait.')
+        return _abstain('photo-update-required','Close and reopen Burbz to update photo identification. Then choose your photo again.')
     connection = _LocalConnection()
     try:
         with open(path, "rb") as stream:

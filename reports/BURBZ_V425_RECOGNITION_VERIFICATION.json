@@ -1,0 +1,210 @@
+{
+  "cases": [
+    {
+      "case": "herring-american-california.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "verification-disagrees",
+      "suggestions": [
+        "Larus argentatus"
+      ],
+      "seconds": 23.15,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "herring-european-adult.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "verification-disagrees",
+      "suggestions": [
+        "Larus argentatus",
+        "Larus smithsonianus"
+      ],
+      "seconds": 15.13,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "woodpecker-clear.jpg",
+      "accepted": true,
+      "scientificName": "Dendrocopos major",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 15.2,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "carrion-crow.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "low-confidence",
+      "suggestions": [
+        "Corvus corone",
+        "Corvus brachyrhynchos"
+      ],
+      "seconds": 5.49,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "raven-perched.jpg",
+      "accepted": true,
+      "scientificName": "Corvus corax",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 10.38,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "raven-flight.jpg",
+      "accepted": true,
+      "scientificName": "Corvus corax",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 11.31,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "herring-american-maine.jpg",
+      "accepted": true,
+      "scientificName": "Larus smithsonianus",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 13.39,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "herring-european-winter.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "verification-disagrees",
+      "suggestions": [
+        "Larus smithsonianus",
+        "Larus argentatus"
+      ],
+      "seconds": 22.29,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "robin-clear.jpg",
+      "accepted": true,
+      "scientificName": "Erithacus rubecula",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 9.67,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "great-tit-clear.jpg",
+      "accepted": true,
+      "scientificName": "Parus major",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 8.33,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "illustrated-crow.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "insufficient-evidence",
+      "suggestions": [],
+      "seconds": 3.63,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "distant-blob.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "insufficient-evidence",
+      "suggestions": [],
+      "seconds": 4.63,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "empty-scene.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "insufficient-evidence",
+      "suggestions": [],
+      "seconds": 1.81,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "nonbird-shapes.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "insufficient-evidence",
+      "suggestions": [],
+      "seconds": 1.6,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "blurred-bird.jpg",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "low-confidence",
+      "suggestions": [
+        "Erithacus rubecula"
+      ],
+      "seconds": 7.35,
+      "policy": "photo-gemini-v410"
+    },
+    {
+      "case": "Private original woodpecker photo",
+      "accepted": false,
+      "scientificName": null,
+      "reason": "low-confidence",
+      "suggestions": [
+        "Dendrocopos major"
+      ],
+      "seconds": 4.29,
+      "policy": "photo-gemini-v425"
+    },
+    {
+      "case": "Private original wagtail photo",
+      "accepted": true,
+      "scientificName": "Motacilla cinerea",
+      "reason": null,
+      "suggestions": [],
+      "seconds": 18.68,
+      "policy": "photo-gemini-v425"
+    }
+  ],
+  "summary": {
+    "photos": 17,
+    "correctConfirmed": 7,
+    "wrongConfirmed": 0,
+    "inconclusiveBirds": 5,
+    "negativeImagesRejected": 5
+  },
+  "limitations": [
+    "Finite regression sample, not a measured real-world accuracy rate.",
+    "California gull remained unconfirmed but its tentative European Herring Gull suggestion was wrong.",
+    "Original woodpecker remains tentative; original wagtail now confirms Grey Wagtail.",
+    "Broad model trials used the same final prompt, model, crop and evidence algorithm under the old experimental policy label; final source rechecked both originals.",
+    "Earlier rejected candidate incorrectly confirmed Yellow-legged Gull; it was never published."
+  ],
+  "regressions": {
+    "python": "80 passed, 5 live-route snapshot cases skipped; live upload lifecycle is separately verified by guarded deployment.",
+    "javascript": "17 client/crop/gate checks pass.",
+    "queue": "All 10 real IndexedDB/browser scenarios pass.",
+    "nativePhotoUI": [
+      "Choose photo is labelled, reachable and at least44px at small phone, phone, landscape and desktop sizes",
+      "Native device picker has no capture constraint; cancelled selection preserves state and sends nothing",
+      "Despite denied camera, selected JPEG uses real cropper/full-photo, existing request identity and shared discovery/results flow",
+      "Choosing the same file again works; crop identification cannot repeat discovery coins or XP",
+      "PNG and WebP device images decode into the same framing UI",
+      "Unsupported, empty, oversized and corrupt selections are rejected before recognition",
+      "Offline failure keeps the existing retry feedback and adds no background photo storage or rewards",
+      "Tentative species stays visible beside the photo and awards no discovery",
+      "Shared monthly-cap response remains visible and awards no discovery",
+      "Take a new photo retains the native camera input and same framing flow"
+    ],
+    "installedApp": [
+      "Real v424 service worker installed with existing save",
+      "Installed app updated to v425 and retained existing save",
+      "Offline restart retains v425 and the original save",
+      "Offline client uses the new recognition contract"
+    ]
+  },
+  "privateData": "No originals, source filenames, raw traces, receipts, identities or service credentials are included."
+}

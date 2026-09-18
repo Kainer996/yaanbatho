@@ -1,3 +1,4 @@
+# Gemini photo recognition. Gemini 3.8 Flash Standard full rates $1.50/$7.50 per million (conservative versus current $0.75/$3.75 promotion). https://ai.google.dev/gemini-api/docs/pricing checked 2026-09-18. Existing £5 ledger/cap unchanged.
 """Persistent photo-only spending reservations. No network, keys or photo storage.
 
 Amounts are integer nano-pounds. GBP charging deliberately overestimates the
@@ -19,11 +20,11 @@ from zoneinfo import ZoneInfo
 
 MONTH_LIMIT = 5_000_000_000
 INPUT_LIMIT = 32768
-OUTPUT_LIMIT = 4096  # Includes any thinking tokens; also reserved separately below.
-# Conservative double output allowance even if a provider reports thoughts in
-# addition to maxOutputTokens. Runtime requests <=1024 thought tokens.
+OUTPUT_LIMIT = 8192  # Includes any thinking tokens; also reserved separately below.
+# maxOutputTokens includes thoughts; reserve an extra 1024-token margin.
+# Any over-bound or missing usage fails closed and retains its reservation.
 BILLED_OUTPUT_LIMIT = OUTPUT_LIMIT + 1024
-CALL_LIMIT = ((INPUT_LIMIT * 300 + BILLED_OUTPUT_LIMIT * 2500) * 25 + 15) // 16
+CALL_LIMIT = ((INPUT_LIMIT * 1500 + BILLED_OUTPUT_LIMIT * 7500) * 25 + 15) // 16
 ATTEMPT_LIMIT = 2 * CALL_LIMIT
 LONDON = ZoneInfo('Europe/London')
 
@@ -58,7 +59,7 @@ def cost_for_usage(usage, enforce_bounds=True):
     output = max(total-prompt, candidates+thoughts)
     if enforce_bounds and (prompt > INPUT_LIMIT or output > BILLED_OUTPUT_LIMIT):
         raise ValueError('Usage exceeded reservation')
-    return ((prompt*300 + output*2500)*25 + 15)//16
+    return ((prompt*1500 + output*7500)*25 + 15)//16
 
 class Ledger:
     def __init__(self, filename, clock=time.time):

@@ -11,10 +11,10 @@ import time
 
 import requests
 
-POLICY = 'photo-gemini-v410'
+POLICY = 'photo-gemini-v425'
 MODEL = 'gemini-vision'
-MODEL_NAME = 'gemini-2.5-flash'
-VALIDATION_OWNER = 'deployment_v410_photos'
+MODEL_NAME = 'gemini-3.8-flash'
+VALIDATION_OWNER = 'deployment_v425_photos'
 # Three attempts fit the shared caller rate limit. Every request has a stable
 # owner/id, so another release proof replays the persistent result, never a new
 # paid attempt. This smoke proof does not claim exhaustive model accuracy.
@@ -80,13 +80,13 @@ def passes_case(name, species, status, result):
                 and result.get('scientificName') == species
                 and isinstance(result.get('species'), str) and bool(result['species'].strip())
                 and isinstance(score, (int, float)) and not isinstance(score, bool)
-                and math.isfinite(score) and .90 <= score <= 1)
+                and math.isfinite(score) and .80 <= score <= 1)
     return (status == 422 and result.get('found') is False
             and result.get('accepted') is False and result.get('verified') is False
             and result.get('reason') in PHOTO_REJECTIONS
             and not any(key in result for key in ('species', 'scientificName', 'allDetections'))
             and isinstance(result.get('message'), str)
-            and result['message'].startswith(('Bird not found.', 'Species not confirmed.', 'Bird detected, but species not confirmed.')))
+            and result['message'].startswith(('Bird not found.', 'Species not confirmed.', 'Bird detected, but species not confirmed.', 'No identifiable real bird')))
 
 
 def passes_gemini_case(name, species, status, result):
@@ -100,27 +100,19 @@ def passes_gemini_case(name, species, status, result):
 def passes_authorized_release_case(name, species, status, result):
     if passes_gemini_case(name, species, status, result):
         return True
-    # 2026-09-14: after disclosure, the user explicitly chose to install
-    # Gemini despite its American/Carrion Crow mismatch. Only that accuracy
-    # assertion is nonblocking. Keep expected identity and failed accuracy in
-    # the evidence; provider, receipt, policy and confidence checks still apply.
-    if name != 'carrion-crow' or not isinstance(result, dict):
+    # A crow that cannot distinguish geographically separated lookalikes is
+    # honest uncertainty, never permission to award the wrong species.
+    if name != 'carrion-crow' or not passes_gemini_case(name, None, status, result):
         return False
-    score = result.get('confidence')
-    return (status == 200 and result.get('found') is True
-            and result.get('accepted') is True and result.get('verified') is True
-            and result.get('policy') == POLICY and result.get('model') == MODEL
-            and result.get('modelName') == MODEL_NAME
-            and isinstance(score, (int, float)) and not isinstance(score, bool)
-            and math.isfinite(score) and .90 <= score <= 1
-            and isinstance(result.get('species'), str) and bool(result['species'].strip())
-            and result.get('scientificName') == 'Corvus brachyrhynchos'
+    return (result.get('retryable') is False
             and isinstance(result.get('receiptId'), str)
-            and re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None)
+            and re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None
+            and any(isinstance(c, dict) and c.get('scientificName') == species
+                    for c in result.get('suggestions', [])))
 
 
 def request_identity(path):
-    return 'v410_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return 'v425_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def main():
@@ -149,7 +141,7 @@ def main():
                    'expectedScientificName': species,
                    'result': result}
             if row['passed'] and not row['accuracyPassed']:
-                row['knownLimitation'] = 'User explicitly accepted the disclosed American/Carrion Crow accuracy mismatch for this release.'
+                row['knownLimitation'] = 'Crow lookalikes remain unconfirmed; the correct species appears among tentative suggestions. No discovery is awarded.'
         except (requests.RequestException, ValueError) as exc:
             row = {'fixture': name, 'status': None, 'passed': False,
                    'error': type(exc).__name__}

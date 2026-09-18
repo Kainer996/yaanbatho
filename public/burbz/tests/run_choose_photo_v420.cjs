@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const {chromium}=require('/home/yaan/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const {chromium}=require(process.env.PLAYWRIGHT_PATH || '/home/yaan/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const F=require('./connected_world_fixture_v386.cjs'),root=path.resolve(__dirname,'..'),live=process.env.BURBZ_URL;
 const out=process.env.EVIDENCE_DIR||'/tmp/burbz-choose-photo-v420';fs.mkdirSync(out,{recursive:true});
 const report={checks:[],errors:[],served:{},missing:[],requests:[],limits:'Real app and native file inputs/cropper/results on disposable save; controlled recognition HTTP responses, not a model accuracy test. Camera permission denial is simulated. Chromium touch/viewport emulation, not a physical phone.'};
@@ -11,7 +11,7 @@ const fixture=path.join(root,'tests/fixtures/photo-v407/herring-european-adult.j
 let browser,page,responseMode='success';const run=code=>page.evaluate(code=>__testEval(code),code),pass=s=>{report.checks.push(s);console.log('PASS',s);};
 const snapshot=()=>run('JSON.stringify({player:gameState.player,inventory:gameState.inventory,discovered:gameState.discovered})');
 (async()=>{try{
- if(!live)await server.listen();browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});
+ if(!live)await server.listen();browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',args:['--no-sandbox']});
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,serviceWorkers:'block'});
  await context.addInitScript(()=>{window.cameraCalls=0;Object.defineProperty(navigator.mediaDevices,'getUserMedia',{configurable:true,value:async()=>{cameraCalls++;throw new DOMException('Denied for test','NotAllowedError');}});});
  await context.route('**/*',async route=>{
@@ -20,7 +20,7 @@ const snapshot=()=>run('JSON.stringify({player:gameState.player,inventory:gameSt
    if(responseMode==='offline')return route.abort('internetdisconnected');
    const body=req.postDataBuffer();report.requests.push({method:req.method(),bytes:body?.length,hasOwner:body?.includes(Buffer.from('name="photoOwner"')),hasRequest:body?.includes(Buffer.from('name="photoRequestId"')),hasJpeg:body?.includes(Buffer.from('image/jpeg'))});
    if(responseMode==='cap')return route.fulfill({status:200,json:{found:false,accepted:false,reason:'monthly-budget',message:'The shared monthly photo allowance is used. Try again next month.'}});
-   return route.fulfill({json:{found:true,accepted:true,verified:true,policy:'photo-gemini-v410',model:'gemini-vision',modelName:'gemini-2.5-flash',species:'Herring Gull',scientificName:'Larus argentatus',confidence:.98,receiptId:String(report.requests.length%10).repeat(64)}});
+   return route.fulfill({json:{found:true,accepted:true,verified:true,policy:'photo-gemini-v425',model:'gemini-vision',modelName:'gemini-3.8-flash',species:'Herring Gull',scientificName:'Larus argentatus',confidence:.98,receiptId:String(report.requests.length%10).repeat(64)}});
   }
   if(live){if(req.resourceType()==='document'&&req.method()==='GET'&&['/burbz/','/burbz/index.html'].includes(u.pathname)){const r=await route.fetch();const b=await r.body();assert.equal(F.sha(b),F.sha(fs.readFileSync(path.join(root,'index.html'))));return route.fulfill({response:r,body:b.toString().replace('\ninit();',F.HOOK+'\n'+F.SEED+'\ninit();')});}return route.continue();}
   if(!['localhost','127.0.0.1'].includes(u.hostname))return route.abort();

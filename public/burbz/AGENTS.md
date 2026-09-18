@@ -1,3 +1,5 @@
+Recognition v425 (`bird-photo-recognition-v425-20260918`) uses Gemini 3.8 Flash with independent original-plus-crop verification, taxonomy-aware alternatives and clearly tentative non-awarding suggestions. Keep policy/model/receipt gates aligned, policy-specific cache digests, the existing persistent £5 ledger, no server photo retention, and unchanged sound. Do not turn tentative output into a discovery. See [../../PHOTO_RECOGNITION_V425.md](../../PHOTO_RECOGNITION_V425.md) for finite test coverage and unresolved gull/original-woodpecker limits.
+
 # Burbz — Maintainer & Agent Handbook
 
 Companion care/habitats v424 removes Deep Rest and its global action entirely. Preserve ordinary garden healing, Hospital treatment and Merlin naps. All unlocked full cards use the existing species habitat resolver and the same canonical art as Birdex, including armless cutouts; retain the approved paintings and animation. The old blurred painting overlay no longer hides habitat backgrounds. Recognition remains held separately.

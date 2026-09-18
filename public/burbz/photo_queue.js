@@ -5,8 +5,8 @@
   const LEASE_MS = 70000, REQUEST_MS = 50000;
   const receipt = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
   const validResult = r => r && r.found === true && r.accepted === true && r.verified === true &&
-    r.policy === 'photo-gemini-v410' && r.model === 'gemini-vision' && r.modelName === 'gemini-2.5-flash' && receipt(r.receiptId) &&
-    typeof r.confidence === 'number' && Number.isFinite(r.confidence) && r.confidence >= .9 && r.confidence <= 1 &&
+    r.policy === 'photo-gemini-v425' && r.model === 'gemini-vision' && r.modelName === 'gemini-3.8-flash' && receipt(r.receiptId) &&
+    typeof r.confidence === 'number' && Number.isFinite(r.confidence) && r.confidence >= .8 && r.confidence <= 1 &&
     typeof r.species === 'string' && typeof r.scientificName === 'string' && /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(r.scientificName);
   function open() {
     return new Promise((resolve, reject) => {

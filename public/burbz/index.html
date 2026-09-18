@@ -5729,7 +5729,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
 <script src="scan_home_core.js?v=home-b-charcoal-v422-20260917"></script>
 <script src="scan_home.js?v=home-b-stable-v423-20260917"></script>
-<script src="photo_queue.js?v=gemini-photos-v410-20260914"></script>
+<script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -42259,11 +42259,24 @@ function newPhotoRequestId() {
 }
 function acceptedPhotoResult(result) {
   return result?.found === true && result.accepted === true && result.verified === true &&
-    result.policy === 'photo-gemini-v410' && result.model === 'gemini-vision' &&
-    result.modelName === 'gemini-2.5-flash' && typeof result.species === 'string' &&
+    result.policy === 'photo-gemini-v425' && result.model === 'gemini-vision' &&
+    result.modelName === 'gemini-3.8-flash' && typeof result.species === 'string' &&
     /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(result.scientificName || '') &&
-    Number.isFinite(result.confidence) && result.confidence >= .9 && result.confidence <= 1 &&
+    Number.isFinite(result.confidence) && result.confidence >= .8 && result.confidence <= 1 &&
     /^[a-f0-9]{64}$/.test(result.receiptId || '');
+}
+function photoResultMessage(result) {
+  const valid = result?.found === false && result.accepted === false && result.verified === false &&
+    result.retryable === false && result.policy === 'photo-gemini-v425' &&
+    result.model === 'gemini-vision' && result.modelName === 'gemini-3.8-flash' &&
+    /^[a-f0-9]{64}$/.test(result.receiptId || '');
+  const names = valid && Array.isArray(result.suggestions) ? result.suggestions.slice(0, 3)
+    .filter(c => c && typeof c.species === 'string' && c.species.trim().length <= 100 &&
+      /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(c.scientificName || ''))
+    .map(c => c.species.trim()).filter(Boolean) : [];
+  if (names.length) return 'Possible bird: ' + [...new Set(names)].join(' or ') +
+    '. Not confirmed or added to Birdex. Try another angle showing its head, wings and tail.';
+  return typeof result?.message === 'string' ? result.message : '';
 }
 async function identifyImage(fileOrBlob, captureSource = 'camera', isRetry = false) {
   if (photoIdBusy) return;
@@ -42289,7 +42302,7 @@ async function identifyImage(fileOrBlob, captureSource = 'camera', isRetry = fal
     let result={};try{result=await Promise.race([response.json(),deadline,cancelledRequest]);}catch(error){if(error?.message==='photo-timeout'||error?.message==='photo-cancelled')throw error;}
     if(cancelled) return;
     if(!response.ok || !acceptedPhotoResult(result)) {
-      const message=result?.message || (globalThis.navigator?.onLine===false ? 'Reconnect to check this photo.' : 'Photo checking is unavailable right now. Try this photo again.');
+      const message=photoResultMessage(result) || (globalThis.navigator?.onLine===false ? 'Reconnect to check this photo.' : 'Photo checking is unavailable right now. Try this photo again.');
       setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);showToast(message);return;
     }
     // The discovery is saved; the camera image is deliberately not.
@@ -44859,7 +44872,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'companion-care-habitats-v424-20260918';
+const BURBZ_BUILD = 'bird-photo-recognition-v425-20260918';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
