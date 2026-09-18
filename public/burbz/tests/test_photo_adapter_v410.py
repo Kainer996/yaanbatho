@@ -90,14 +90,14 @@ def test_google_never_posts_after_connection_deadline(monkeypatch):
 
 
 def accepted():
-    return dict(found=True, accepted=True, verified=True, policy='photo-gemini-v410',
-                model='gemini-vision', modelName='gemini-2.5-flash', confidence=.98,
+    return dict(found=True, accepted=True, verified=True, policy='photo-gemini-v425',
+                model='gemini-vision', modelName='gemini-3.8-flash', confidence=.98,
                 species='European Robin', scientificName='Erithacus rubecula', receiptId='a' * 64)
 
 
 @pytest.mark.parametrize('change', [
     {'receiptId': ''}, {'receiptId': 'a' * 63}, {'confidence': True},
-    {'confidence': float('nan')}, {'confidence': .899}, {'verified': False},
+    {'confidence': float('nan')}, {'confidence': .799}, {'verified': False},
     {'accepted': False}, {'modelName': 'gemini-2.5-pro'}, {'policy': 'photo-local-v393'},
     {'scientificName': 'not a binomial'},
 ])
@@ -233,3 +233,15 @@ def test_patched_live_route_deletes_photo_files_on_every_exit(monkeypatch, tmp_p
     assert response.status_code == (200 if outcome == 'success' else 422)
     assert paths
     assert not any(path.exists() for path in paths), 'Uploaded photo file escaped route cleanup'
+
+
+def test_suggestions_are_bounded_non_awarding_and_require_a_current_receipt():
+    raw = accepted() | dict(found=False, accepted=False, verified=False, retryable=False,
+                            reason='verification-disagrees', suggestions=[
+                                {'species':'Grey Wagtail','scientificName':'Motacilla cinerea'},
+                                {'species':'bad','scientificName':'not-binomial'}])
+    clean = photo_id._validate_result(raw)
+    assert not clean['found'] and 'species' not in clean
+    assert clean['suggestions'] == raw['suggestions'][:1]
+    for change in ({'receiptId':''}, {'retryable':True}, {'reason':'photo-provider-unavailable'}, {'policy':'photo-gemini-v410'}):
+        assert 'suggestions' not in photo_id._validate_result(raw | change)

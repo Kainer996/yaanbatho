@@ -4,7 +4,7 @@ const start=html.includes('let photoIdBusy = false;')?html.indexOf('let photoIdB
 const fn=html.slice(start,html.indexOf('\nasync function startCamera()',start));
 const TEST_OWNER='photo_profile_test_12345',TEST_STATE=JSON.stringify({photoProfileId:TEST_OWNER});
 const testIdentity={gameState:{photoProfileId:TEST_OWNER},photoSaveBaseline:TEST_STATE,localStorage:{getItem:()=>TEST_STATE},crypto:{randomUUID:()=>TEST_OWNER+'-request-id'}};
-const accepted=(species='European Robin',scientificName='Erithacus rubecula',confidence=.98)=>({found:true,accepted:true,verified:true,policy:'photo-gemini-v410',model:'gemini-vision',modelName:'gemini-2.5-flash',receiptId:'a'.repeat(64),species,scientificName,confidence});
+const accepted=(species='European Robin',scientificName='Erithacus rubecula',confidence=.98)=>({found:true,accepted:true,verified:true,policy:'photo-gemini-v425',model:'gemini-vision',modelName:'gemini-3.8-flash',receiptId:'a'.repeat(64),species,scientificName,confidence});
 async function invoke(result,ok=true){
   const awards=[],bats=[],toasts=[],button={addEventListener(){},classList:{contains:()=>false,toggle(){}},scrollIntoView(){}};const context={...testIdentity,$:()=>button,closeBirdCropper(){},AbortController,setTimeout,clearTimeout,FormData:class{append(){}},getCurrentPositionForPhotoId:async()=>null,
     fetch:async()=>({ok,json:async()=>result}),batLabelInIdentifyResult:r=>/bat/i.test(r.species||'')?'bat':'',looksLikeBatLabel:s=>/bat/i.test(s||''),
@@ -13,7 +13,7 @@ async function invoke(result,ok=true){
 }
 test('inconclusive, legacy guesses, bad HTTP and invalid confidences never enter discovery or bat rewards',async()=>{
   const clear=accepted();
-  const cases=[{found:false,message:'Bird not found. Try a closer, clearer photo.'},{found:true,species:'Kestrel',confidence:.5},{...clear,accepted:false},{...clear,confidence:.89},{...clear,confidence:Infinity},{...clear,policy:'old'},{found:false,species:'bat'}];
+  const cases=[{found:false,message:'Bird not found. Try a closer, clearer photo.'},{found:true,species:'Kestrel',confidence:.5},{...clear,accepted:false},{...clear,confidence:.79},{...clear,confidence:Infinity},{...clear,policy:'old'},{found:false,species:'bat'}];
   for(const raw of cases){const r=await invoke(raw);assert.equal(r.awards.length,0);assert.equal(r.bats.length,0);assert.match(r.toasts[0],/Bird not found|Photo checking/);assert.equal(r.button.disabled,false);}
   assert.equal((await invoke(clear,false)).awards.length,0);
   assert.equal((await invoke({...clear,verified:false})).awards.length,0);
@@ -208,4 +208,14 @@ test('full-photo cancellation during real identifyImage flow blocks a late accep
   release({ok:true,json:async()=>accepted('European herring gull','Larus argentatus',.99)});
   for(let i=0;i<8;i++)await Promise.resolve();
   assert.equal(h.awards.length,0);assert.equal(h.elements.captureBtn.disabled,false);
+});
+
+test('receipt-backed tentative species remain visible without awarding a discovery',async()=>{
+  const result={...accepted('Grey Wagtail','Motacilla cinerea',.85),found:false,accepted:false,verified:false,retryable:false,reason:'verification-disagrees',suggestions:[{species:'Grey Wagtail',scientificName:'Motacilla cinerea'}]};
+  const h=photoHarness(async()=>({ok:false,json:async()=>result}));await h.ctx.identifyImage({});
+  assert.match(h.elements.photoIdMessage.textContent,/Possible bird: Grey Wagtail.*Not confirmed or added to Birdex/);
+  assert.equal(h.awards.length,0);
+  for(const change of [{receiptId:''},{policy:'photo-gemini-v410'},{retryable:true}])assert(!h.ctx.photoResultMessage({...result,...change}).includes('Possible bird'));
+  assert.equal((await invoke(accepted('Grey Wagtail','Motacilla cinerea',.85))).awards.length,1);
+  assert.equal((await invoke(accepted('Grey Wagtail','Motacilla cinerea',.79))).awards.length,0);
 });

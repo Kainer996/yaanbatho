@@ -9,7 +9,7 @@ const path=require('node:path');
 const http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_PATH || '/home/yaan/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const base=path.resolve(__dirname,'..');
-const accepted={found:true,accepted:true,verified:true,policy:'photo-gemini-v410',model:'gemini-vision',modelName:'gemini-2.5-flash',receiptId:'a'.repeat(64),confidence:.99,species:'European Robin',scientificName:'Erithacus rubecula'};
+const accepted={found:true,accepted:true,verified:true,policy:'photo-gemini-v425',model:'gemini-vision',modelName:'gemini-3.8-flash',receiptId:'a'.repeat(64),confidence:.99,species:'European Robin',scientificName:'Erithacus rubecula'};
 let mode='success',calls=[],paid=new Set(),release=[];
 const html=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/photo_queue.css"><button id="game">Keep playing</button><button id="saved">Saved photos</button><script src="/photo_queue.js"></script><script>
 window.scope='profile-a';window.messages=[];window.claims=0;window.clicks=0;window.savedBeforeFetch=[];
@@ -39,7 +39,7 @@ const server=http.createServer(async(req,res)=>{
 const wait=async fn=>{for(let i=0;i<1000;i++){if(await fn())return;await new Promise(r=>setTimeout(r,30));}throw Error('Condition did not become true');};
 (async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const url=`http://127.0.0.1:${server.address().port}`;
- const browser=await chromium.launch({executablePath:'/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-gpu']});
+ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH || '/usr/bin/chromium',headless:true,args:['--no-sandbox','--disable-gpu']});
  let context;
  async function fresh(next='success',viewport={width:390,height:844}){if(context)await context.close();mode=next;calls=[];paid=new Set();release=[];context=await browser.newContext({viewport});const page=await context.newPage();await page.goto(url);await page.evaluate(()=>boot);await page.waitForFunction(()=>!!navigator.serviceWorker.controller);return page;}
  try{

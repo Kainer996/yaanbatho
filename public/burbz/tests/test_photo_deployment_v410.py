@@ -19,7 +19,7 @@ def gemini(deployment):
     d['original_server'] = ROUTE
     dropin = d['root'].parent / 'burbz.service.d/photo-uploads.conf'
     d['dropin'] = dropin
-    (stage / 'photo_gemini.py').write_text("POLICY = 'photo-gemini-v410'\nMODEL = 'gemini-2.5-flash'\n")
+    (stage / 'photo_gemini.py').write_text("POLICY = 'photo-gemini-v425'\nMODEL = 'gemini-3.8-flash'\n")
     (stage / 'photo_budget.py').write_text('MONTH_LIMIT = 5000000000\n')
     state_dir = d['root'].parent / 'private-ledger'
     state_dir.mkdir(mode=0o700)
@@ -45,7 +45,7 @@ if args[0]=='show' and 'RestrictAddressFamilies' in args:
 if args[0]=='show':""")
     command = command.replace("if '/releases/' in unit:", """if '/photo_gemini.py' in unit:
         worker=pathlib.Path(re.search(r'ExecStart=\\S+ (\\S+)',unit).group(1))
-        state['loaded']={'ready':True,'policy':'photo-gemini-v410','model':'gemini-2.5-flash',
+        state['loaded']={'ready':True,'policy':'photo-gemini-v425','model':'gemini-3.8-flash',
             'sourceHash':hashlib.sha256(worker.read_bytes()).hexdigest(),
             'budgetHash':hashlib.sha256((worker.parent/'photo_budget.py').read_bytes()).hexdigest()}
         fault=os.environ.get('READINESS_FAULT')
@@ -150,17 +150,21 @@ def test_http_validation_owner_and_request_are_stable(tmp_path):
     path = tmp_path / 'bird.jpg'; path.write_bytes(b'fixture pixels')
     identity = proof.request_identity(path)
     assert identity == proof.request_identity(path)
-    assert identity == 'v410_' + hashlib.sha256(path.read_bytes()).hexdigest()
-    assert proof.VALIDATION_OWNER == 'deployment_v410_photos'
+    assert identity == 'v425_' + hashlib.sha256(path.read_bytes()).hexdigest()
+    assert proof.VALIDATION_OWNER == 'deployment_v425_photos'
     assert len(proof.SMOKE_CASES) == 3
 
 
-def test_user_accepted_crow_accuracy_exception_preserves_provider_and_receipt_guards():
+def test_crow_uncertainty_never_permits_wrong_confirmed_species():
     wrong = dict(policy=proof.POLICY, model=proof.MODEL, modelName=proof.MODEL_NAME,
                  found=True, accepted=True, verified=True, confidence=.95,
                  species='American Crow', scientificName='Corvus brachyrhynchos', receiptId='b' * 64)
-    assert not proof.passes_gemini_case('carrion-crow', 'Corvus corone', 200, wrong)
-    assert proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 200, wrong)
-    for change in ({'modelName':'other'}, {'receiptId':''}, {'confidence':.5}, {'found':False}, {'scientificName':'Corvus corax'}):
-        assert not proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 200, wrong | change)
-    assert not proof.passes_authorized_release_case('robin-clear', 'Erithacus rubecula', 200, wrong)
+    assert not proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 200, wrong)
+    uncertain = dict(policy=proof.POLICY, model=proof.MODEL, modelName=proof.MODEL_NAME,
+                     found=False, accepted=False, verified=False, retryable=False,
+                     reason='ambiguous-species', message='Bird detected, but species not confirmed.',
+                     receiptId='b' * 64, suggestions=[{'species':'Carrion Crow','scientificName':'Corvus corone'}])
+    assert proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 422, uncertain)
+    assert not proof.passes_gemini_case('carrion-crow', 'Corvus corone', 422, uncertain)
+    for change in ({'modelName':'other'}, {'receiptId':''}, {'retryable':True}, {'suggestions':[]}, {'reason':'photo-provider-unavailable'}):
+        assert not proof.passes_authorized_release_case('carrion-crow', 'Corvus corone', 422, uncertain | change)
