@@ -44877,7 +44877,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-photo-original-v425b-20260918';
+const BURBZ_BUILD = 'shelter-tour-v426-20260919';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46436,6 +46436,31 @@ function geographicSettlementRecords(bounds) {
     return {...record,buildings,residents};
   });
 }
+// The opening shelter is not the player's paid/chosen house. A missing GPS
+// fix or a settlement under that fix must not send Merlin's tour to Build.
+async function prepareOpeningShelter(isCurrent) {
+  const identity=gameState,C=BurbzGeographicWorldCore;
+  const last=identity.lastKnownHome;
+  const center=last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000?last:getFallbackMapCenter();
+  const candidates=[center];
+  for(const radius of [500,1000,2000,4000])for(let i=0;i<8;i++){
+    const angle=i*Math.PI/4;
+    candidates.push(C.unproject(center,{x:Math.cos(angle)*radius,y:0,z:Math.sin(angle)*radius}));
+  }
+  for(const point of candidates){
+    if(gameState!==identity||!isCurrent())return false;
+    if(identity.playerHome?.anchor)return true;
+    const valid=await checkPlayerHomePlacement(point);
+    if(gameState!==identity||!isCurrent())return false;
+    if(identity.playerHome?.anchor)return true;
+    if(!valid.ok)continue;
+    const result=await commitPlayerHomePlacement({kind:'anchor',lat:point.lat,lon:point.lon,source:'initial',expectedRevision:0},isCurrent);
+    if(!result.ok&&gameState===identity&&isCurrent())showToast(result.error);
+    return result.ok;
+  }
+  if(gameState===identity&&isCurrent())showToast('The shelter clearing could not load. Please try the door again.');
+  return false;
+}
 async function enterGeographicWorld(handoff={}) {
   const entrySave=gameState,entryScreen=currentScreen;
   const C=BurbzGeographicWorldCore,craft=BurbzFlightCraftCore.normalize(gameState.flightCraft);
@@ -46448,7 +46473,12 @@ async function enterGeographicWorld(handoff={}) {
     else {const last=gameState.lastKnownHome;if(last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)await anchorPlayerHomeAt(last.lat,last.lon);}
   }
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
-  if(!gameState.playerHome?.anchor)return chooseGeographicHomeLocation(handoff);
+  if(!gameState.playerHome?.anchor){
+    if(!BurbzAlderwingIntro.active())return chooseGeographicHomeLocation(handoff);
+    const isCurrent=()=>gameState===entrySave&&currentScreen===entryScreen&&(!handoff.isCurrent||handoff.isCurrent())&&BurbzAlderwingIntro.active();
+    if(!await prepareOpeningShelter(isCurrent))return false;
+    if(!isCurrent())return false;
+  }
   await ensureVillageWalkModule();
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
   const anchor={...(handoff.anchor||gameState.playerHome.anchor)};

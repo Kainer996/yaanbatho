@@ -1,0 +1,20 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),{test}=require('node:test');
+const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+const helper=html.slice(html.indexOf('async function prepareOpeningShelter('),html.indexOf('async function enterGeographicWorld('));
+const entry=html.slice(html.indexOf('async function enterGeographicWorld('),html.indexOf('async function chooseGeographicHomeLocation('));
+function fixture({gps=null,blocked=0,active=true}={}){
+ const c={Date,Number,Math,gameState:{playerHome:{tier:0},lastKnownHome:gps},currentScreen:'scan',initialHomePlacementPending:null,
+ BurbzGeographicWorldCore:require('../geographic_world_core.js'),BurbzFlightCraftCore:require('../flight_craft_core.js'),BurbzAlderwingIntro:{active:()=>active},
+ getFallbackMapCenter:()=>({lat:54.45,lon:-2.65}),checks:[],commits:[],toasts:[],pickers:0,showToast:t=>c.toasts.push(t),
+ chooseGeographicHomeLocation:()=>{c.pickers++;return 'picker';},ensureVillageWalkModule:()=>{throw Error('world reached');},anchorPlayerHomeAt:async()=>false};
+ c.checkPlayerHomePlacement=async p=>{c.checks.push(p);return {ok:c.checks.length>blocked};};
+ c.commitPlayerHomePlacement=async(a,current)=>{if(!current())return {ok:false};c.commits.push(a);c.gameState.playerHome.anchor={lat:a.lat,lon:a.lon,revision:1};return {ok:true};};
+ vm.createContext(c);vm.runInContext(helper+entry,c);return c;
+}
+test('No GPS goes straight to world with a temporary shelter, no built house or invented GPS',async()=>{const c=fixture();await assert.rejects(c.enterGeographicWorld(),/world reached/);assert.equal(c.pickers,0);assert.equal(c.gameState.playerHome.tier,0);assert.equal(c.gameState.lastKnownHome,null);assert.equal(c.commits[0].source,'initial');});
+test('Enabled GPS overlapping settlement searches checked nearby clearings',async()=>{const gps={lat:53.4,lon:-2.2,at:Date.now()},c=fixture({gps,blocked:3});await assert.rejects(c.enterGeographicWorld(),/world reached/);assert.equal(c.pickers,0);assert.equal(c.checks.length,4);assert.equal(c.checks[0],gps);assert.equal(c.gameState.lastKnownHome,gps);assert.equal(c.gameState.playerHome.tier,0);});
+test('Delayed enabled GPS placement is awaited before choosing any fallback',async()=>{const c=fixture();let finish;c.initialHomePlacementPending={identity:c.gameState,promise:new Promise(r=>finish=r)};const p=c.enterGeographicWorld();await Promise.resolve();assert.equal(c.checks.length,0);c.gameState.playerHome.anchor={lat:54,lon:-2,revision:1};finish();await assert.rejects(p,/world reached/);assert.equal(c.checks.length,0);assert.equal(c.pickers,0);});
+test('Existing anchor is unchanged and completed players retain normal picker',async()=>{const c=fixture();const anchor={lat:54,lon:-2,revision:3};c.gameState.playerHome.anchor=anchor;await assert.rejects(c.enterGeographicWorld(),/world reached/);assert.equal(c.gameState.playerHome.anchor,anchor);assert.equal(c.checks.length,0);const veteran=fixture({active:false});assert.equal(await veteran.enterGeographicWorld(),'picker');assert.equal(veteran.commits.length,0);});
+test('Cancellation, navigation and profile change during validation do not commit',async()=>{for(const kind of ['handoff','screen','profile']){const c=fixture();let current=true;c.checkPlayerHomePlacement=async()=>{if(kind==='handoff')current=false;if(kind==='screen')c.currentScreen='birdex';if(kind==='profile')c.gameState={playerHome:{}};return {ok:true};};assert.equal(await c.enterGeographicWorld({isCurrent:()=>current}),false);assert.equal(c.commits.length,0);assert.equal(c.pickers,0);}});
+test('Unavailable clearing or failed save stays in shelter without opening Build',async()=>{const c=fixture({blocked:Infinity});assert.equal(await c.enterGeographicWorld(),false);assert.equal(c.checks.length,33);assert.equal(c.pickers,0);const f=fixture();f.commitPlayerHomePlacement=async()=>({ok:false,error:'Save failed'});assert.equal(await f.enterGeographicWorld(),false);assert.equal(f.gameState.playerHome.anchor,undefined);assert.equal(f.pickers,0);assert.deepEqual(f.toasts,['Save failed']);});
