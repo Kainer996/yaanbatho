@@ -42,11 +42,15 @@ function attach(s,opts,env){
  }
  function stop(){s.auto?.reset();G.reset(s.player);env.resetLift();}
  function provision(){
-  if(record||closed)return !!record;
+  if(closed)return false;
+  if(record&&!opts.craft?.shelterIntro?.())return true;
   const home=opts.getHome?.()?.anchor;if(!G.validCoordinate(home))return false;
   const p=env.local(home);if(!p)return false;
+  // Repair only an unoccupied starter craft blocking the tutorial doorway.
+  // A travelled, airborne or manually parked distant craft keeps its save.
+  if(record){const old=local();if(record.phase!=='parked'||aboard||onDeck||!old||Math.abs(old.x-p.x)>3||old.z-p.z<3||old.z-p.z>26)return true;}
   const launchClear=(x,y,z)=>env.parkingClear(x,y,z)&&[1.5,3,4.5,6].every(up=>env.clear(x,y+up,z));
-  const place=C.findBerth(p,env.sample,launchClear,{minRadius:8,maxRadius:24});
+  const place=C.findHomeBerth(p,env.sample,launchClear);
   if(!place)return false;
   return commit(C.at({...env.geo({x:place.x,y:place.height,z:place.z}),yaw:Math.atan2(-(place.x-p.x),-(place.z-p.z))},'parked',place.kind));
  }
@@ -119,8 +123,9 @@ function attach(s,opts,env){
  function sync(){
   const p=local(),distance=p?Math.hypot(p.x-s.player.x,p.z-s.player.z):Infinity;
   exit.hidden=closed||s.uiBusy||!!s.room||!aboard||s.player.mode==='fly';
-  return {label:aboard?(s.player.mode==='fly'?'Land craft':'Take off'):onDeck?'Board craft':distance<=C.BOARD_DISTANCE?'Board craft':Number.isFinite(distance)?'Craft · '+Math.round(distance)+' m':'Craft near home',
-   enabled:aboard||onDeck||distance<=C.BOARD_DISTANCE,aboard,onDeck};
+  const nearby=C.boardable(record,env.pose());
+  return {label:aboard?(s.player.mode==='fly'?'Land craft':'Take off'):'Enter craft',
+   visible:aboard||nearby,enabled:aboard||nearby,aboard,onDeck};
  }
  function update(time){
   if(closed)return;if(!record&&time-lastProvision>1){lastProvision=time;provision();}

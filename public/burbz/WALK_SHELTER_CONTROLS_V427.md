@@ -1,0 +1,22 @@
+# Walk picker and shelter controls v427
+
+Build: `walk-shelter-controls-v427-20260920`. Based on main `2577fffccc7e3c42eff2dcc1a44db73edc2f8c8d` (v426); no older Home, photo, terrain or combat implementation was replayed.
+
+## Behavior
+
+Show Quests opens a compact map-attached panel. Its header/44px close button remain fixed while offers, Retry and Side Quest scroll inside. Full route details and saved journals retain their existing modal flow. On a 390×844 viewport the picker is 270px high (previously 746px), and offer cards are about 104px (previously 194px). Short portrait, landscape and desktop use the actual map rectangle. The map remains interactive, route inspection suppresses avatar recentering, and the existing terrain-aware route fitter places the walks around real UI occluders. Rotation refits; closing or navigating away cancels observers/timers and restores normal map controls. Escape works from either picker or map.
+
+The existing `shelter` introduction phase gates movement, look, interactions, back and house controls until Next successfully persists `door`. Keyboard, pointer and frame-level guards share this state. Pointer capture/held movement are reset at lock changes; Next remains outside the inert controls. The camera pullback still plays. Failed saves retain the gate; later phases, completed tutorials, camp homes and error recovery do not inherit it.
+
+The one saved craft is provisioned 8–20m left of the fixed south-facing home doorway, using the existing full-hull, dry-ground and launch-clearance tests. A narrowly identified parked starter craft in the forward doorway corridor may move while the initial shelter/outside tutorial is active. Travelled, distant, occupied, airborne and water-deck records stay untouched. No clear ground means no speculative parking. Boarding uses one authoritative 1.8m horizontal/2.2m height gate. The readable Enter craft control hides outside that range; Take off/Land craft remain available aboard. Existing atomic craft/journey saves, rollback, water behavior and flight controls are retained.
+
+## Verification
+
+- `tests/run_compact_walk_picker_v427.cjs`: actual MapLibre renderer, six recorded real-OSM offers, explicit synthetic terrain input; four layout sizes, all marker rectangles in unobstructed map, native mouse/touch map pan, touch marker selection, internal scrolling, details/Begin, Retry/provider fallback, recent offline and uncached errors, empty results, navigation and saved quest reload. Set `QUEST_OSM_FIXTURE` to a recorded Overpass response and `EVIDENCE_DIR`; optional `BURBZ_URL` verifies public document SHA and uses native public module bytes.
+- `tests/run_shelter_controls_v427.cjs`: fresh native tutorial, keyboard/mouse/multitouch/action/back lock, accessible Next, forced save failure, reload at door, actual shared-world exit/left craft, return through chair, orientation and completed-state recovery. Optional `BURBZ_URL`, `INTRO_DESKTOP_ONLY=1`, `SHELTER_GPS_BLOCKED=1` reuse current v426 scenarios.
+- `tests/run_craft_controls_v427.cjs`: native close approach and readable boarding on phone layouts; rejected-save rollback, takeoff/Auto/multitouch, five flight layouts, landing/exit and unchanged reconstructed parking.
+- Node checks: existing walking UI, network integration, discovery, v426 shelter placement, aircraft core/save tests; new `test_starter_craft_parking_v427.cjs` checks initial relocation boundaries and failure preservation.
+- `test_offline_boot_v394.py` checks every real synchronous boot script in all three required worker lists. Nine changed module URLs have exact matching consuming/cache pins and are already owned by the guarded updater.
+- `tests/run_controls_pwa_v427.cjs` is the publication check for installed public worker hashes, genuine offline startup/save preservation and usable offline picker recovery.
+
+Browser evidence is produced outside the game tree in the selected evidence directories. All browser checks use disposable saves on laptop Chromium, with touch/phone viewports, not physical-phone hardware. Synthetic map input makes assertions repeatable; it does not certify live trail-provider availability. No photo/sound recognition requests or player save modifications are part of this change. Publication acceptance additionally requires the intended main merge SHA to match `.burbz-deployed-sha`, the managed manifest to pass, and native public/offline checks.

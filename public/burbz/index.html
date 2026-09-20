@@ -4610,12 +4610,12 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="comic_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
 
-<link rel="stylesheet" href="walking_quest_ui.css?v=walking-quests-v361-20260907">
+<link rel="stylesheet" href="walking_quest_ui.css?v=walk-shelter-controls-v427-20260920">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
-<link rel="stylesheet" href="player_home.css?v=home-farming-v409-20260914">
+<link rel="stylesheet" href="player_home.css?v=walk-shelter-controls-v427-20260920">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="scan_home.css?v=home-b-charcoal-v422-20260917">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
@@ -5741,7 +5741,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
-<script src="walking_quest_ui.js?v=walking-quests-v361-20260907"></script>
+<script src="walking_quest_ui.js?v=walk-shelter-controls-v427-20260920"></script>
 <script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="landscape_ui.js?v=landscape-v388-20260910"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
@@ -5776,10 +5776,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home_core.js?v=opening-home-v416-20260914"></script>
 <script src="player_home_scene.js?v=opening-home-v416-20260914"></script>
 <script src="alderwing_intro.js?v=alderwing-intro-v420-20260917"></script>
-<script src="player_home.js?v=alderwing-intro-desk-v420-20260917"></script>
+<script src="player_home.js?v=walk-shelter-controls-v427-20260920"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
-<script src="flight_craft_core.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="flight_craft_core.js?v=walk-shelter-controls-v427-20260920"></script>
 <script src="enemy_outposts_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
@@ -19174,13 +19174,13 @@ function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoo
 // real GPS and a one-finger swipe rotates the view. A selected quest temporarily
 // enables drag-pan so the player can inspect the route behind the briefing card.
 function questMapInspectionMode() {
-  return !!$('liveMapShell')?.classList.contains('quest-focused');
+  return !!$('liveMapShell')?.classList.contains('quest-focused') || !!document.querySelector('#walkQuestSheet.open.is-walk-picker');
 }
 function setQuestMapInspectionMode(enabled) {
   if (!liveMap) return;
   try {
-    if (enabled) liveMap.dragPan.enable();
-    else liveMap.dragPan.disable();
+    if (enabled) { liveMap.dragPan.enable(); liveMap.keyboard?.enable(); }
+    else { liveMap.dragPan.disable(); liveMap.keyboard?.disable(); }
   } catch (e) {}
   const canvas = liveMap.getCanvasContainer && liveMap.getCanvasContainer();
   if (canvas) {
@@ -19709,16 +19709,55 @@ function walkQuestSheetEl() {
   return el;
 }
 let walkQuestDialogCleanup = null;
+let walkQuestPickerCleanup = null;
+function placeWalkQuestPicker(el) {
+  const map = $('liveMapShell');
+  let fitTimer = 0;
+  function resize() {
+    const r = map?.getBoundingClientRect();
+    const area = r && r.width > 0 && r.height > 0 ? r : {x:0,y:80,width:innerWidth,height:innerHeight-160,bottom:innerHeight-80};
+    const side = area.width > area.height;
+    const width = side ? Math.min(340, area.width * .4) : area.width - 16;
+    const height = side ? Math.min(400, area.height - 16) : Math.min(270, area.height * .44);
+    const values = {x:area.x+8,y:side?area.y+8:area.bottom-height-8,width,height};
+    for (const [key,value] of Object.entries(values)) el.style.setProperty('--wq-picker-'+key,value+'px');
+    el.dataset.pickerSide = side ? 'true' : 'false';
+    clearTimeout(fitTimer); fitTimer = setTimeout(() => { if (el.classList.contains('open') && questOverview.on) fitAllLocalQuestRoutes(); }, 180);
+  }
+  resize();
+  const observer = new ResizeObserver(resize); if (map) observer.observe(map);
+  window.addEventListener('resize',resize); window.visualViewport?.addEventListener('resize',resize);
+  return () => { clearTimeout(fitTimer); observer.disconnect(); window.removeEventListener('resize',resize); window.visualViewport?.removeEventListener('resize',resize); };
+}
+function walkQuestOverviewPadding() {
+  const r = $('liveMapShell')?.getBoundingClientRect();
+  const el = $('walkQuestSheet');
+  if (!r?.height) return {top:150,right:34,bottom:88,left:34};
+  const padding = {top:Math.min(90,r.height*.2),right:24,bottom:32,left:24};
+  if (el?.classList.contains('is-walk-picker') && el.classList.contains('open')) {
+    const panel = el.querySelector('.wq-walk-picker').getBoundingClientRect();
+    if (el.dataset.pickerSide==='true') padding.left = panel.right-r.left+16;
+    else padding.bottom = r.bottom-panel.top+16;
+  }
+  return padding;
+}
 function showWalkQuestSheet(el) {
   if (walkQuestDialogCleanup) { walkQuestDialogCleanup(); walkQuestDialogCleanup = null; }
+  if (walkQuestPickerCleanup) { walkQuestPickerCleanup(); walkQuestPickerCleanup = null; }
+  const picker = !!el.querySelector('.wq-walk-picker');
+  el.classList.toggle('is-walk-picker',picker);
   el.classList.add('open');
-  walkQuestDialogCleanup = window.BurbzWalkingQuestUI.bindDialog(el, closeWalkQuestSheet);
+  if (picker) walkQuestPickerCleanup = placeWalkQuestPicker(el);
+  setQuestMapInspectionMode(questMapInspectionMode());
+  walkQuestDialogCleanup = window.BurbzWalkingQuestUI.bindDialog(el, closeWalkQuestSheet, {modal:!picker,escapeScope:picker?$('liveMapShell'):null});
 }
 function closeWalkQuestSheet() {
   walkQuestActivationRequest++;
   walkQuestPendingActivation = null;
   uninstallWalkQuestAlignmentReadinessRetry();
-  const el = $('walkQuestSheet'); if (el) el.classList.remove('open');
+  const el = $('walkQuestSheet'); if (el) el.classList.remove('open','is-walk-picker');
+  setQuestMapInspectionMode(questMapInspectionMode());
+  if (walkQuestPickerCleanup) { walkQuestPickerCleanup(); walkQuestPickerCleanup = null; }
   if (walkQuestDialogCleanup) { walkQuestDialogCleanup(); walkQuestDialogCleanup = null; }
 }
 function previewWalkingEncounters(offer) {
@@ -19775,13 +19814,13 @@ function openQuestBoard(opts = {}) {
   if (activeWalkingQuest()) { openActiveWalkQuestSheet(); return; }
   if (sideQuestActive()) { openSideQuestLogSheet(); return; }
   const el = walkQuestSheetEl();
-  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel wq-walk-picker"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
     '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="wq-eyebrow">THE ALDERWING FIELD GUIDE</div><div class="quest-board-title">Find your next walk</div><div class="quest-board-intro" id="walkQuestSheetStatus" role="status">Finding connected footpaths and worthwhile walks near you…</div></div></div>' +
 
-    questDetourActionsHTML() +
+    '<div class="wq-picker-scroll" tabindex="0" role="region" aria-label="Nearby walks">' + questDetourActionsHTML() +
     '<div id="walkQuestOfferList" aria-busy="true"><div class="quest-all-done">Loading nearby mapped walks…</div></div><button class="wq-npc-ok" id="walkQuestRetry" type="button" hidden>Retry nearby walks</button>' +
     '<div class="quest-section-title">🎒 Side Quest</div><div id="walkQuestSideQuestSlot"></div>' +
-    '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div>';
+    '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div></div>';
   showWalkQuestSheet(el);
   // Side Quest: no route, no markers — just explore and Burbz charts where you go.
   const sideSlot = $('walkQuestSideQuestSlot');
@@ -21982,7 +22021,15 @@ function fitAllLocalQuestRoutes(offers = questOverview.offers) {
       pointCount++;
     }
     if (!pointCount) return;
-    const camera = liveMap.cameraForBounds(bounds, { padding:{ top:150, right:34, bottom:88, left:34 }, maxZoom:QUEST_OVERVIEW_MAX_ZOOM });
+    const picker = document.querySelector('#walkQuestSheet.open.is-walk-picker');
+    if (picker && geographicMap3D) {
+      const points = offers.flatMap(questOfferDisplayPoints);
+      if (liveMapHasPrecisePosition && liveMapLastPosition) points.push(liveMapLastPosition);
+      const occluders = Array.from(document.querySelectorAll('#walkQuestSheet .wq-walk-picker, #liveMapShell .map-zoom-controls, #liveMapShell .map-locate-btn, #liveMapShell .map-quest-btn, #liveMapShell .geographic-map-control, #liveMapShell .map-area-birds-tab'));
+      const isCurrent = () => picker.classList.contains('open') && picker.classList.contains('is-walk-picker') && questOverview.on;
+      if (geographicMap3D.fitRoute(points,{occluders,isCurrent})) return;
+    }
+    const camera = liveMap.cameraForBounds(bounds, { padding:walkQuestOverviewPadding(), maxZoom:QUEST_OVERVIEW_MAX_ZOOM });
     if (!camera) return;
     liveMap.easeTo({ center:camera.center, zoom:Math.min(QUEST_OVERVIEW_MAX_ZOOM, camera.zoom), bearing:camera.bearing || 0, pitch:0, duration:950 });
   } catch (e) {
@@ -23658,6 +23705,7 @@ function switchScreen(name) {
   // Every Stores shortcut uses the same existing progression gate as the dock.
   if (name === 'inventory' && !featureGateOpen('inventory')) { if(!prerequisiteGuideGoal({type:'feature',args:['inventory']}))showToast(featureUnlockHint('inventory')); return false; }
   if (name === currentScreen) return;
+  if (document.querySelector('#walkQuestSheet.open.is-walk-picker')) closeWalkQuestSheet();
   if (currentScreen === 'battle') {
     if (battleState?.aimFlight) return;
     if (battleAimPlan()) battleCancelAim();
@@ -30482,7 +30530,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-intro-desk-v420-20260917';
+        script.src = 'village_walk.js?v=walk-shelter-controls-v427-20260920';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -44877,7 +44925,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'shelter-tour-v426-20260919';
+const BURBZ_BUILD = 'walk-shelter-controls-v427-20260920';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46654,7 +46702,7 @@ function continuousWalkingAdapter(record) {
     checkHome:checkPlayerHomePlacement,
     buildHome:(pose,expectedRevision,isCurrent)=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing before building.'}:commitPlayerHomePlacement({kind:'build-home',lat:pose.lat,lon:pose.lon,expectedRevision},isCurrent),
     exploration:{read:explorationState,reveal:revealExploration,place:point=>gameState!==sessionSave?{ok:false,error:'Your save changed. Reopen Alderwing.'}:placeCamp(point),home:enterCampHome},
-    craft:{read:()=>gameState===sessionSave?BurbzFlightCraftCore.normalize(gameState.flightCraft):null,commit:(next,pose,expected)=>saveFlightCraft(next,pose,expected,sessionSave,revision)},
+    craft:{shelterIntro:()=>gameState===sessionSave&&gameState.playerHome?.tier===0&&['shelter','door','landscape'].includes(BurbzAlderwingIntro.phase()),read:()=>gameState===sessionSave?BurbzFlightCraftCore.normalize(gameState.flightCraft):null,commit:(next,pose,expected)=>saveFlightCraft(next,pose,expected,sessionSave,revision)},
     getHome:()=>gameState.playerHome,createYard:(T,h,options)=>BurbzPlayerHomeScene.createYardContent(T,h,options),
     openBuild:localPose=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('yard',{build:true,pose:localPose,returnToWorld:true});},
     enterSettlement:enterGeographicSettlement,enterHome:()=>{BurbzVillageWalk.close('world');return BurbzPlayerHome.open('room',{fromDesk:false});},
@@ -46694,6 +46742,7 @@ function initializePlayerHome() {
   saveState();
   BurbzAlderwingIntro.bind({read:()=>tutorialFlowState().alderwingIntroPhase,commit:phase=>commitOpeningFlow({alderwingIntroPhase:phase}),done:()=>maybeStartMerlinTutorial(100)});
   BurbzPlayerHome.bind({read:()=>currentPlayerHome(),timber:()=>Math.floor(Number(gameState.player.branches)||0),supplies:()=>({coins:gameState.player.coins,inventory:gameState.inventory}),grade:burbzDaylightGradeNow,
+    allowMovement:()=>!!activeCampHomeId||!BurbzAlderwingIntro.active()||BurbzAlderwingIntro.phase()!=='shelter',
     openingRoom:host=>!activeCampHomeId&&BurbzAlderwingIntro.room(host),tutorialHome:()=>!activeCampHomeId,allowExit:()=>!!activeCampHomeId||BurbzAlderwingIntro.allowExit(),allowSeat:()=>!!activeCampHomeId||BurbzAlderwingIntro.allowSeat(),
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},

@@ -59,3 +59,20 @@ test('interrupted airborne and water-deck sessions resume at the craft, while dr
   assert(!C.matchesJourney(fly,pose));assert(!C.matchesJourney(parked,{...pose,altitude:pose.altitude+1}));
   assert(!C.matchesJourney(parked,{...pose,lon:pose.lon+.00001}));assert(!C.matchesJourney(parked,null));
 });
+
+test('starter parking stays left of the doorway for every heading and fails closed',()=>{
+ for(const yaw of [0,Math.PI/2,Math.PI,-Math.PI/2]){
+  const p=C.findHomeBerth({x:20,z:30},()=>({height:5,kind:'ground'}),()=>true,yaw);
+  assert(p);const dx=p.x-20,dz=p.z-30;
+  assert(-Math.cos(yaw)*dx+Math.sin(yaw)*dz>=7.99);
+ }
+ assert.equal(C.findHomeBerth({x:0,z:0},()=>null,()=>true),null);
+ assert.equal(C.findHomeBerth({x:0,z:0},()=>({height:0,kind:'sea'}),()=>true),null);
+ const p=C.findHomeBerth({x:0,z:0},()=>({height:0,kind:'ground'}),(x,y,z)=>x>10);
+ assert(p&&p.x>10);
+});
+test('boarding is within reach of the hull, never a remote or wrong-height action',()=>{
+ const c=C.at(pose),near=G.unproject(pose,{x:1.7,y:80,z:0}),far=G.unproject(pose,{x:1.9,y:80,z:0});
+ assert(C.boardable(c,{...pose,...near,altitude:80}));assert(!C.boardable(c,{...pose,...far,altitude:80}));
+ assert(!C.boardable(c,{...pose,altitude:83}));
+});
