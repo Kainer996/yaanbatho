@@ -8,7 +8,8 @@ function attach(s){
  const pack=document.createElement('button');pack.type='button';pack.className='fp-pack';pack.innerHTML=root.BurbzPlayerEquipment.icon('satchel');pack.setAttribute('aria-label','Satchel — your equipment and supplies');pack.title='Satchel (B)';pack.setAttribute('aria-expanded','false');
  const panel=document.createElement('section');panel.className='fp-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Your travelling satchel');panel.innerHTML='<button type="button" class="fp-close">← Keep exploring</button><h2>Your travelling satchel</h2><p class="fp-pack-caption">Your equipment and supplies</p><dl></dl><p class="fp-pack-note"></p>';
  tracker.innerHTML='<button type="button" class="fp-quest-heading" aria-expanded="false" aria-label="Expand current quest"><span class="fp-quest-kicker">NEXT STEP <span aria-hidden="true">⌄</span></span><strong></strong></button><div class="fp-progress" role="progressbar" aria-label="Request progress" aria-valuemin="0"><span></span></div>';
- tools.append(pack);el.append(character,compass,tools,tracker,tray,panel);el.classList.add('fp-ready');
+ const settings=document.createElement('button');settings.type='button';settings.className='fp-settings';settings.textContent='⚙';settings.setAttribute('aria-label','Settings');settings.title='Settings';
+ tools.append(pack,settings);el.append(character,compass,tools,tracker,tray,panel);el.classList.add('fp-ready');
  let last=-Infinity,focusBefore=null,packKey='',equipment=null;const navigation=root.BurbzFirstPersonMap?.attach(s,tools);const title=character.querySelector('strong'),level=character.querySelector('small'),bearing=compass.querySelector('.fp-bearing'),quest=tracker.querySelector('strong'),progress=tracker.querySelector('.fp-progress'),bar=progress.firstElementChild;
  const text=(node,value)=>{if(!node)return;if(node.textContent!==value)node.textContent=value;};
  const on=(node,event,fn)=>node.addEventListener(event,fn,{signal:abort});
@@ -19,6 +20,7 @@ function attach(s){
  function paintPack(){const c=stats();if(c.equipment){if(!equipment)equipment=root.BurbzPlayerEquipment.mount(panel,c.equipment,abort);else equipment.update();}const dl=panel.querySelector('dl'),key=JSON.stringify([c.coins,c.branches,c.stone]);if(key===packKey)return;packKey=key;dl.replaceChildren();for(const [name,value] of [['Coins',c.coins],['Timber',c.branches],['Stone',c.stone]]){if(!Number.isFinite(value))continue;const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=Math.max(0,Math.floor(value)).toLocaleString();dl.append(dt,dd);}text(panel.querySelector('.fp-pack-note'),s.options.flight?'You are exploring the Academy. Room services open when you approach them.':'Face a tree to chop timber, read the illustrated scrolls, and talk to the village folk. Your finds stay saved when you leave.');}
  on(tracker.querySelector('button'),'click',()=>expandQuest(!tracker.classList.contains('fp-expanded')));
  on(el,'pointerdown',e=>{if(!tracker.contains(e.target))expandQuest(false);});
+ on(settings,'click',()=>root.BurbzLookSettings?.open({host:el,pause(){s.reset();s.uiBusy=true;},resume(){s.uiBusy=false;s.reset();}}));
  on(pack,'click',showPack);on(panel.querySelector('button'),'click',closePanel);
  if(typeof s.options.exploreWorld==='function'){
   for(const [label,mode] of [['Walk beyond this settlement','walk'],['Fly into the world','fly']]){

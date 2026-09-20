@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'open_land_core.js':'alderwing-flight-shores-v418-20260915','shore_water.js':'alderwing-flight-shores-v418-20260915','flight_craft.js':'walk-shelter-controls-v427-20260920','wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'builder-actions-v404b-20260914','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'alderwing-flight-shores-v418-20260915','village_world_core.js':'houses-terrain-v408-20260914','village_world.js':'walk-shelter-controls-v427-20260920','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'alderwing-followups-v417-20260914','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'opening-home-v416-20260914','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'wayside-room-title-v406b-20260914','village_walk_core.js':'alderwing-followups-v417-20260914','first_person_hud.js':'builder-actions-v404b-20260914','first_person_hud.css':'walk-shelter-controls-v427-20260920','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
+  const PIN={'open_land_core.js':'alderwing-flight-shores-v418-20260915','shore_water.js':'alderwing-flight-shores-v418-20260915','flight_craft.js':'walk-shelter-controls-v427-20260920','wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'builder-actions-v404b-20260914','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'unified-alderwing-v400-20260913','first_person_map.js':'alderwing-flight-shores-v418-20260915','village_world_core.js':'houses-terrain-v408-20260914','village_world.js':'walk-shelter-controls-v427-20260920','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'unified-alderwing-v400-20260913','village_walk.css':'alderwing-followups-v417-20260914','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'opening-home-v416-20260914','building_rooms_scene.js':'map-pictures-v374-20260908','building_rooms.js':'wayside-room-title-v406b-20260914','village_walk_core.js':'alderwing-followups-v417-20260914','first_person_hud.js':'hands-on-world-tutorial-v429-20260920','first_person_hud.css':'walk-shelter-controls-v427-20260920','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
   let session=null,dependencies=null,closingFullscreen=Promise.resolve();
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -53,7 +53,7 @@
     if(['back','escape'].includes(reason)&&(s.continuity?.closePanel?.()||s.hud?.closePanel?.()||s.rooms?.closePanel?.()||s.discoveries?.closePanel()))return true;
     if(!s.failed&&['exit','back','escape'].includes(reason)&&s.rooms?.leave())return true;
     if(!s.failed&&['exit','back','escape'].includes(reason)&&s.continuity?.canClose?.()===false)return false;
-    session=null;s.closed=true;
+    root.BurbzLookSettings?.closeFor(s.root);session=null;s.closed=true;
     cancelAnimationFrame(s.raf);s.abort.abort();s.resizeObserver?.disconnect();s.reset?.();
     if(document.pointerLockElement&&s.root.contains(document.pointerLockElement))document.exitPointerLock?.();
     if(document.fullscreenElement===s.root)closingFullscreen=Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
@@ -93,7 +93,7 @@
       try{const request=el.requestFullscreen||el.webkitRequestFullscreen;if(!request)return;Promise.resolve(request.call(el)).then(()=>{if(s.closed&&(document.fullscreenElement===el))document.exitFullscreen?.();}).catch(()=>{});}catch(_){}
     }
     for(const event of ['pointerdown','click'])on(el,event,e=>{
-      if(s.uiBusy&&!e.target.closest('.fp-panel:not([hidden]),.vd-panel:not([hidden]),.il-panel:not([hidden]),dialog[open],.vw-exit,.vw-error')){e.preventDefault();e.stopImmediatePropagation();}
+      if(s.uiBusy&&!e.target.closest('.fp-panel:not([hidden]),.vd-panel:not([hidden]),.il-panel:not([hidden]),dialog[open],.vw-exit,.vw-error,#settingsModal')){e.preventDefault();e.stopImmediatePropagation();}
     },{capture:true});
     on(exit,'click',()=>close(s.uiBusy?'back':'exit'));on(el.querySelector('.vw-error button'),'click',()=>close());on(full,'click',fullscreen);
     function fullChange(){
@@ -108,7 +108,7 @@
     let autoFeedback="";
     function autoSync(){if(!auto)return;auto.allow(!!s.continuity&&s.player?.mode==='fly'&&s.continuity?.craftAboard?.()&&!s.uiBusy&&!s.room&&!s.closed&&!s.failed&&!document.hidden&&!el.querySelector('dialog[open]')&&!(s.combat?.isDead?.()));const a=auto.state(),feedback=[a.enabled,a.armed,a.latched].join(':');if(feedback===autoFeedback)return;autoFeedback=feedback;stick.classList.toggle('vw-auto-available',a.enabled);stick.classList.toggle('vw-auto-armed',a.armed);stick.classList.toggle('vw-auto-on',a.latched);autoTrack.querySelector('span').textContent=a.latched?'Auto · on':a.armed?'Release · Auto':'Auto';stick.setAttribute('aria-label',a.enabled?(a.latched?'Auto flight on. Touch movement control to stop.':'Fly. Drag fully up to Auto and release for forward flight.'):'Walk: drag the thumbstick');}
 
-    s.reset=()=>{auto?.reset();s.work?.reset();s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();s.combat?.reset();s.continuity?.reset();};
+    s.reset=()=>{root.BurbzAlderwingIntro?.inputReset(el);auto?.reset();s.work?.reset();s.footsteps?.reset();keys.clear();pointers.forEach((p,id)=>{try{p.node.releasePointerCapture(id);}catch(_){}});pointers.clear();input.side=input.forward=0;knob.style.transform='';s.flight?.reset();s.combat?.reset();s.continuity?.reset();};
     function fail(error){
       if(s.closed)return;s.failed=true;cancelAnimationFrame(s.raf);s.raf=0;s.reset();
       const box=el.querySelector('.vw-error');box.hidden=false;box.querySelector('p').textContent='Walking is unavailable here. '+(error.message||'Please return to the village and try again.');
@@ -123,7 +123,7 @@
       Promise.resolve().then(()=>options.exploreWorld(pose)).then(result=>{if(result===false)throw Error('The countryside could not open. Try again.');}).catch(error=>{if(!s.closed)hint.textContent=error.message||'The countryside could not open. Try again.';}).finally(()=>{if(!s.closed){s.uiBusy=false;s.reset();}});
     }
     on(document,'keydown',e=>{
-      if(el.querySelector('dialog[open]'))return;
+      if(el.querySelector('dialog[open]')||root.BurbzLookSettings?.isOpen())return;
       if(['Space','Enter'].includes(e.code)&&e.target.closest?.('button,a,input,select,textarea')&&!e.target.closest('.vw-stick,.fp-look-stick'))return;
       if(e.code==='Escape'){e.preventDefault();e.stopImmediatePropagation();close('escape');return;}
       if(e.code==='Tab'){
@@ -137,15 +137,15 @@
       if(e.code==='KeyF'&&!e.repeat&&!s.room&&(options.exploreWorld||options.continuousWorld)){e.preventDefault();e.stopImmediatePropagation();if(s.continuity){if(s.player.mode==='fly'||!s.rooms?.key(e.code))s.continuity.toggleFlight();}else leaveForWorld('fly');return;}
       if(!e.repeat&&(s.flight?.key(e.code)||s.rooms?.key(e.code)||(!s.room&&s.harvest?.key(e.code))||(!s.room&&s.discoveries?.key?.(e.code)))){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
-      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight||options.continuousWorld?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code))auto?.reset();keys.add(e.code);}
+      if(['KeyW','KeyA','KeyS','KeyD','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',...(options.flight||options.continuousWorld?['Space','ShiftLeft','ShiftRight']:[])].includes(e.code)){e.preventDefault();e.stopImmediatePropagation();if(['KeyW','KeyA','KeyS','KeyD'].includes(e.code))auto?.reset();if(!e.repeat&&!keys.has(e.code))root.BurbzAlderwingIntro?.inputStart(el,e.code,'key');keys.add(e.code);}
     },{capture:true});
-    on(document,'keyup',e=>{keys.delete(e.code);},{capture:true});
+    on(document,'keyup',e=>{keys.delete(e.code);root.BurbzAlderwingIntro?.inputEnd(el,e.code);},{capture:true});
     // Body-level gesture isolation prevents the dock/page/village swipe stack
     // and the borrowed canvas's orbit/tap handlers from receiving walking input.
     for(const event of ['touchstart','touchmove','touchend','touchcancel','wheel','dblclick','contextmenu'])on(el,event,e=>{
       e.stopPropagation();
       // Exit/fullscreen buttons must keep the browser's synthetic touch click.
-      if(e.cancelable&&!e.target.closest('.exploration-sheet,.fp-panel,.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
+      if(e.cancelable&&!e.target.closest('#settingsModal,.exploration-sheet,.fp-panel,.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
     },{passive:false});
     function pointerDown(e){
       if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy||!auto)return;
@@ -154,6 +154,7 @@
       if([...pointers.values()].some(p=>p.type===type))return;
       node.focus({preventScroll:true});node.setPointerCapture(e.pointerId);
       const r=stick.getBoundingClientRect();pointers.set(e.pointerId,{type,node,x:e.clientX,y:e.clientY,cx:r.left+r.width/2,cy:r.top+r.height/2});
+      root.BurbzAlderwingIntro?.inputStart(el,e.pointerId,type);
       if(type==='move'){autoSync();auto.start(e.pointerId);pointerMove(e);}
     }
     function pointerMove(e){
@@ -161,10 +162,10 @@
       if(p.type==='move'){
         let dx=e.clientX-p.cx,dy=e.clientY-p.cy;auto.drag(e.pointerId,dx,dy,stick.clientHeight/2+62);autoSync();const distance=Math.hypot(dx,dy),limit=34,k=distance>limit?limit/distance:1;dx*=k;dy*=k;
         input.side=Math.abs(dx)<3?0:dx/limit;input.forward=Math.abs(dy)<3?0:-dy/limit;knob.style.transform='translate('+dx+'px,'+dy+'px)';
-      }else if(s.player)root.BurbzVillageWalkCore.look(s.player,e.clientX-p.x,e.clientY-p.y,e.pointerType==='touch'?.004:.003);
+      }else if(s.player){const yaw=s.player.yaw,pitch=s.player.pitch;root.BurbzVillageWalkCore.look(s.player,e.clientX-p.x,root.BurbzLookSettings?.vertical(e.clientY-p.y)??e.clientY-p.y,e.pointerType==='touch'?.004:.003);root.BurbzAlderwingIntro?.inputLook(el,e.pointerId,e.clientX-p.x,e.clientY-p.y,Math.hypot(s.player.yaw-yaw,s.player.pitch-pitch));}
       p.x=e.clientX;p.y=e.clientY;
     }
-    function release(e){const p=pointers.get(e.pointerId);if(!p)return;pointers.delete(e.pointerId);if(p.type==='move'){auto.release(e.pointerId,e.type==='pointerup');autoSync();input.side=input.forward=0;knob.style.transform='';}try{p.node.releasePointerCapture(e.pointerId);}catch(_){};e.stopPropagation();}
+    function release(e){const p=pointers.get(e.pointerId);if(!p)return;pointers.delete(e.pointerId);root.BurbzAlderwingIntro?.inputEnd(el,e.pointerId,e.type==='pointerup');if(p.type==='move'){auto.release(e.pointerId,e.type==='pointerup');autoSync();input.side=input.forward=0;knob.style.transform='';}try{p.node.releasePointerCapture(e.pointerId);}catch(_){};e.stopPropagation();}
     for(const node of [look,stick]){on(node,'pointerdown',pointerDown);on(node,'pointermove',pointerMove);for(const ev of ['pointerup','pointercancel','lostpointercapture'])on(node,ev,release);}
     const touch=matchMedia('(pointer: coarse)').matches||navigator.maxTouchPoints>0;if(touch)el.classList.add('vw-touch');
     function pause(){cancelAnimationFrame(s.raf);s.raf=0;s.last=0;s.intervals=[];s.reset();}
@@ -190,8 +191,13 @@
         if(s.flight&&!s.room)s.flight.update(dt);
         else if(!s.uiBusy){if(s.continuity&&!s.room)s.continuity.move(movement,dt);else core.move(s.player,movement,dt,s.world);}
         if(!s.uiBusy&&s.player.mode!=='fly'&&(!s.flight||s.room))s.footsteps?.update(before,s.player,dt,s.room?'wood':s.world.surface?.(s.player.x,s.player.z));else s.footsteps?.reset();
+        if(!s.uiBusy&&!s.room&&s.player.mode!=='fly'){
+          const intro=root.BurbzAlderwingIntro,dx=s.player.x-before.x,dz=s.player.z-before.z;
+          for(const [id,p] of pointers)if(p.type==='move')intro?.inputMove(el,id,input.side,input.forward,dt,dx,dz,s.player.yaw);
+          if(![...pointers.values()].some(p=>p.type==='move'))for(const key of keys)if(['KeyW','KeyA','KeyS','KeyD'].includes(key))intro?.inputMove(el,key,key==='KeyD'?movement.side:key==='KeyA'?movement.side:0,key==='KeyW'?movement.forward:key==='KeyS'?movement.forward:0,dt,dx,dz,s.player.yaw);
+        }
         const turn=Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
-        s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))*turn));
+        s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+(root.BurbzLookSettings?.vertical((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))??((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0)))*turn));
         const {camera,renderer,scene}=s.source;
         if(!s.room){if(!s.continuity||s.continuity.animateOrigin())s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}else s.flight?.update(0);
         s.work?.update(ts/1000);s.combat?.update(dt);s.rooms?.update(ts/1000);s.harvest?.update(ts/1000);s.hud?.update(ts/1000);s.continuity?.update(ts/1000);
