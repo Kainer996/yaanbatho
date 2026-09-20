@@ -5369,6 +5369,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="settings-toggle on" id="toggleVibration"></div>
       </div>
       <div class="settings-row">
+        <div><div class="settings-label" id="invertLookLabel">Invert vertical look</div><small>Reverse looking up and down in first person.</small></div>
+        <button type="button" role="switch" aria-checked="false" aria-labelledby="invertLookLabel" class="settings-toggle" id="toggleInvertLook" style="min-width:44px;min-height:44px"></button>
+      </div>
+      <p id="invertLookStatus" role="status"></p>
+      <div class="settings-row">
         <a class="settings-label" href="privacy.html" target="_blank" rel="noopener" style="color: var(--accent2); text-decoration: none;">Privacy Policy</a>
         <span style="color: var(--text3); font-size: 18px;">&#8250;</span>
       </div>
@@ -5682,7 +5687,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="zombie_progression_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="wilderness_combat_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="wilderness_birds.js?v=alderwing-flight-shores-v418-20260915"></script>
-<script src="wilderness_combat.js?v=alderwing-flight-shores-v418-20260915"></script>
+<script src="wilderness_combat.js?v=hands-on-world-tutorial-v429-20260920"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
 <link rel="stylesheet" href="wilderness_combat.css?v=alderwing-flight-shores-v418-20260915">
 <script src="empire_map_core.js?v=alderwing-followups-v417-20260914"></script>
@@ -5749,8 +5754,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="audio_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="player_home_core.js?v=opening-home-v416-20260914"></script>
 <script src="player_home_scene.js?v=opening-home-v416-20260914"></script>
-<script src="alderwing_intro.js?v=alderwing-intro-v420-20260917"></script>
-<script src="player_home.js?v=walk-shelter-controls-v427-20260920"></script>
+<script src="alderwing_intro.js?v=hands-on-world-tutorial-v429-20260920"></script>
+<script src="player_home.js?v=hands-on-world-tutorial-v429-20260920"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
 <script src="flight_craft_core.js?v=walk-shelter-controls-v427-20260920"></script>
@@ -5762,7 +5767,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="exploration.css?v=alderwing-followups-v417-20260914">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
-<script src="geographic_world.js?v=alderwing-intro-desk-v420-20260917"></script>
+<script src="geographic_world.js?v=hands-on-world-tutorial-v429-20260920"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=opening-home-v416-20260914"></script>
 <script src="merlin_companion_core.js?v=opening-home-v416-20260914"></script>
@@ -7001,7 +7006,7 @@ const DEFAULT_STATE = {
   forgeJobs: [], // commissions on the Fletcher's anvil: { id, gearId, startMs, endMs }
   quests: {},
   questsLastReset: null,
-  settings: { sfx: true, music: true, particles: true, vibration: true, appearance: 'normal' },
+  settings: { sfx: true, music: true, particles: true, vibration: true, invertVerticalLook: false, appearance: 'normal' },
   badges: {},
   merlinCare: { ...window.BurbzMerlinCompanionCore.DEFAULT_MERLIN_CARE, hunger:60 }, // Fresh Merlin is ready for the later Kitchen meal; existing care is never rewritten.
   birdCare: defaultBirdCare(), // Default per-bird care state
@@ -7138,6 +7143,7 @@ function loadState() {
   ensureAcademyBuildings(needsAcademyBuilderGrant);
   gameState.settings = { ...DEFAULT_STATE.settings, ...(gameState.settings && typeof gameState.settings === 'object' ? gameState.settings : {}) };
   gameState.settings.appearance = gameState.settings.appearance === 'comic' ? 'comic' : 'normal';
+  gameState.settings.invertVerticalLook = gameState.settings.invertVerticalLook === true;
   if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(gameState.settings.appearance, document);
   gameState.quests = (gameState.quests && typeof gameState.quests === 'object' && !Array.isArray(gameState.quests)) ? gameState.quests : {};
   gameState.badges = (gameState.badges && typeof gameState.badges === 'object' && !Array.isArray(gameState.badges)) ? gameState.badges : {};
@@ -30504,7 +30510,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=walk-shelter-controls-v427-20260920';
+        script.src = 'village_walk.js?v=hands-on-world-tutorial-v429-20260920';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -44899,7 +44905,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'compact-guidance-v428-20260920';
+const BURBZ_BUILD = 'hands-on-world-tutorial-v429-20260920';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45940,20 +45946,29 @@ document.querySelectorAll('input[name="appearanceTheme"]').forEach(input => {
   });
 });
 
-$('settingsBtn').addEventListener('click', () => {
+let worldSettingsLease=null;
+function syncInvertLook(){const on=gameState.settings.invertVerticalLook===true;$('toggleInvertLook').classList.toggle('on',on);$('toggleInvertLook').setAttribute('aria-checked',String(on));}
+window.BurbzLookSettings={vertical:value=>value*(gameState?.settings?.invertVerticalLook===true?-1:1),isOpen:()=>$('settingsModal')?.classList.contains('show'),open:openBurbzSettings,closeFor:host=>{if(worldSettingsLease?.host===host)closeBurbzSettings({resume:false});}};
+$('toggleInvertLook').addEventListener('click',()=>{const before=gameState.settings.invertVerticalLook;gameState.settings.invertVerticalLook=!before;if(!durableSaveState().ok)gameState.settings.invertVerticalLook=before;syncInvertLook();$('invertLookStatus').textContent=gameState.settings.invertVerticalLook===before?'Could not save your choice. Please try again.':'Saved. Vertical look is '+(gameState.settings.invertVerticalLook?'inverted.':'normal.');});
+function openBurbzSettings(lease=null){
+  if(window.BurbzLookSettings.isOpen())return;
+  if(lease?.host){const modal=$('settingsModal'),placeholder=document.createComment('settings return');modal.before(placeholder);worldSettingsLease={...lease,placeholder,inert:modal.inert,focus:document.activeElement,zIndex:modal.style.zIndex};lease.pause?.();modal.inert=false;modal.style.zIndex='3000';lease.host.append(modal);}
+  syncInvertLook();$('invertLookStatus').textContent='';
   if(merlinTutActive){merlinSettingsPause={mode:merlinTutMode,origin:merlinTutOriginScreen};endMerlinTutorial(false,{pause:true});}
   showSettingsSection('settingsGeneralTab');
   if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(gameState.settings.appearance, document);
   $('settingsModal').classList.add('show');
   $('settingsCloseBtn')?.focus({preventScroll:true});
   SFX.tap();
-});
+}
+$('settingsBtn').addEventListener('click',()=>openBurbzSettings());
 
 function closeBurbzSettings({resume=true}={}) {
   $('settingsModal')?.classList.remove('show');
+  const lease=worldSettingsLease;worldSettingsLease=null;if(lease){lease.placeholder.replaceWith($('settingsModal'));$('settingsModal').inert=lease.inert;$('settingsModal').style.zIndex=lease.zIndex;lease.resume?.();if(lease.focus?.isConnected)lease.focus.focus({preventScroll:true});}
   const paused=merlinSettingsPause;merlinSettingsPause=null;
   if(resume&&paused){startMerlinTutorial({full:paused.mode==='full',chapterId:paused.mode,resume:true});merlinTutOriginScreen=paused.origin;}
-  else $('settingsBtn')?.focus({preventScroll:true});
+  else if(!lease) $('settingsBtn')?.focus({preventScroll:true});
 }
 $('settingsModal').addEventListener('click', e => {if(e.target===$('settingsModal'))closeBurbzSettings();});
 $('settingsCloseBtn')?.addEventListener('click', () => {closeBurbzSettings();try{SFX.tap();}catch(e){}});
