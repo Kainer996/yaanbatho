@@ -157,13 +157,14 @@
     const message = reason === 'data-incomplete' ? 'The walking map is incomplete here. We could not verify a useful connected route.' : 'No useful public-footpath walk was found nearby. Try another starting area or return when more paths are mapped.';
     return '<div class="wq-empty">' + icon('compass') + '<h3>No suitable walk yet</h3><p>' + message + '</p><p class="wq-empty-copy">A short street fragment will not be offered as a walking adventure.</p></div>';
   }
-  function bindDialog(el, onClose) {
+  function bindDialog(el, onClose, options = {}) {
     if (!el || !el.ownerDocument) return function () {};
     const doc = el.ownerDocument;
     const opener = doc.activeElement;
+    const keyHost = options.modal === false ? doc : el;
     let active = true;
     el.setAttribute('role', 'dialog');
-    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-modal', String(options.modal !== false));
     if ((!el.hasAttribute('aria-label') || el.hasAttribute('data-wq-generated-label')) && !el.hasAttribute('aria-labelledby')) {
       const title = el.querySelector('h1,h2,h3,.quest-name,.quest-board-title,.wq-npc-name');
       el.setAttribute('aria-label', title ? title.textContent : 'Walking quest');
@@ -173,16 +174,17 @@
     function cleanup() {
       if (!active) return;
       active = false;
-      el.removeEventListener('keydown', keydown);
+      keyHost.removeEventListener('keydown', keydown);
       if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus({ preventScroll:true });
     }
     function keydown(event) {
+      if (options.modal === false && !el.contains(event.target) && !options.escapeScope?.contains(event.target)) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
         if (typeof onClose === 'function') onClose();
         cleanup();
-      } else if (event.key === 'Tab') {
+      } else if (event.key === 'Tab' && options.modal !== false) {
         const nodes = focusables();
         if (!nodes.length) { event.preventDefault(); el.focus(); return; }
         const first = nodes[0], last = nodes[nodes.length - 1];
@@ -190,7 +192,7 @@
         else if (!event.shiftKey && (doc.activeElement === last || !el.contains(doc.activeElement))) { event.preventDefault(); first.focus(); }
       }
     }
-    el.addEventListener('keydown', keydown);
+    keyHost.addEventListener('keydown', keydown);
     const start = el.querySelector('[data-wq-initial-focus]') || focusables()[0] || el;
     if (start === el && !el.hasAttribute('tabindex')) el.setAttribute('tabindex', '-1');
     start.focus({ preventScroll:true });

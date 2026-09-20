@@ -6,7 +6,7 @@
   root.BurbzFlightCraftCore=api;
 })(globalThis,function(geo){
 'use strict';
-const VERSION=1,BOARD_DISTANCE=3,HULL_RADIUS=.9,DECK_HEIGHT=.55;
+const VERSION=1,BOARD_DISTANCE=1.8,HULL_RADIUS=.9,DECK_HEIGHT=.55;
 const phases=['parked','deck','boarded','flying'];
 const surfaces=['ground','freshwater','sea'];
 const finite=Number.isFinite;
@@ -62,6 +62,17 @@ function findBerth(origin,sample,clear,{minRadius=3,maxRadius=18}={}){
   }
   return null;
 }
+// Homes face +Z. Search only left of their doorway so the first forward view
+// stays open; no berth is preferable to unknown or obstructed ground.
+function findHomeBerth(origin,sample,clear,yaw=Math.PI){
+  if(!origin||!finite(origin.x)||!finite(origin.z)||!finite(yaw))return null;
+  const left={x:-Math.cos(yaw),z:Math.sin(yaw)},forward={x:-Math.sin(yaw),z:-Math.cos(yaw)};
+  for(let side=8;side<=20;side+=1.5)for(const ahead of [5,3,8,11]){
+    const row=berth(origin.x+left.x*side+forward.x*ahead,origin.z+left.z*side+forward.z*ahead,sample,clear);
+    if(row?.kind==='ground')return row;
+  }
+  return null;
+}
 // Bounded analytic critical damping is stable across long pause/resume gaps.
 // Waves affect the visible hull only: parking coordinates never accumulate bob.
 function floatPose(previous,kind,time,dt,reducedMotion=false){
@@ -75,5 +86,5 @@ function floatPose(previous,kind,time,dt,reducedMotion=false){
     roll:water&&!reducedMotion?Math.sin(time*1.25)*.045*strength:0,
     pitch:water&&!reducedMotion?Math.sin(time*1.9+.4)*.025*strength:0};
 }
-return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,findBerth,floatPose};
+return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,findBerth,findHomeBerth,floatPose};
 });
