@@ -6,7 +6,7 @@
   'use strict';
 
   const VERSION = 'destination-quest-ui-v431-20260921';
-  const PIN = 'destination-cleanup-v434-20260921';
+  const PIN = 'destination-touch-v435-20260921';
   const DEFAULT_ROUTE_OPTIONS = {
     timeoutMs: 25000,
     minRouteM: 25,
@@ -139,7 +139,8 @@
         previewId: state.previewId,
         pending: !!state.pending,
         lastProvider: state.lastProvider,
-        lastElevation: state.lastElevation
+        lastElevation: state.lastElevation,
+        providerProgress: state.providerProgress
       };
     }
     function ensureReady() {
@@ -289,6 +290,7 @@
       const routeOptions = Object.assign({}, DEFAULT_ROUTE_OPTIONS, state.routeOptions, extra && extra.routeOptions || {});
       if (controller) routeOptions.signal = controller.signal;
 
+      routeOptions.onProgress = progress => {if(generation!==state.generation)return;state.providerProgress=progress;emit('provider-progress');};
       let routeRequest;
       try {
         routeRequest = routeCore.fetchDestinationRoute(state.start, state.end, routeOptions);
@@ -668,7 +670,7 @@
     let mapPick = null;
     let nativeHandlers = null;
     let archiveViewId = null;
-    let disposed = false, mainButton = null, mainHandler = null;
+    let disposed = false, mainButton = null, mainHandler = null, markerKey = '', manualCoordinates = false;
     const timelineController = createTimelineController(Object.assign({}, options, {
       nativeHandlers: () => nativeHandlers || {},
       onStatus: function(status) {
@@ -727,10 +729,11 @@
         try { map.off('click', mapPick.handler); } catch (_) {}
       }
       mapPick = null;
-      if (typeof options.setMapInspectionMode === 'function') options.setMapInspectionMode(false);
       doc.body.classList.remove('destination-map-picking');
+      if (typeof options.setMapInspectionMode === 'function') options.setMapInspectionMode(!!sheet?.classList.contains('open'));
     }
     function clearPreviewLayer() {
+      markerKey = '';
       markers.splice(0).forEach(marker => {
         try { marker.remove(); } catch (_) {}
       });
@@ -754,10 +757,11 @@
     function makeMarker(point, label, className) {
       const map = getMap();
       if (!map || !point || !validCoordinate(point)) return;
-      const el = doc.createElement('button');
-      el.type = 'button';
+      const el = doc.createElement('div');
       el.className = 'destination-route-marker ' + className;
-      el.textContent = label;
+      el.dataset.latitude = String(point.lat); el.dataset.longitude = String(point.lon);
+      el.setAttribute('role','img');
+      el.innerHTML = '<strong>' + (className === 'start' ? '1' : '2') + '</strong><span>' + (className === 'start' ? 'START' : 'DESTINATION') + '</span>';
       el.setAttribute('aria-label', 'Destination ' + label + ' marker');
       try {
         const factory = typeof options.createMarker === 'function' ? options.createMarker : (root.maplibregl && root.maplibregl.Marker ? cfg => new root.maplibregl.Marker(cfg) : null);
@@ -765,6 +769,13 @@
         const marker = factory({ element: el, anchor: 'center' }).setLngLat([point.lon, point.lat]).addTo(map);
         markers.push(marker);
       } catch (_) {}
+    }
+    function syncSelectionMarkers() {
+      const s = controller.state(), key = JSON.stringify([s.start,s.end]);
+      if (key === markerKey) return;
+      markers.splice(0).forEach(m=>m.remove());
+      makeMarker(s.start,'Start','start'); makeMarker(s.end,'Destination','end');
+      markerKey=key;
     }
     function drawPreview(preview) {
       clearPreviewLayer();
@@ -781,8 +792,7 @@
           map.getSource('burbz-destination-route').setData(routeGeoJSON(route));
         }
       } catch (_) {}
-      makeMarker(points[0], 'Start', 'start');
-      makeMarker(points[points.length - 1], 'End', 'end');
+      syncSelectionMarkers();
       if (typeof options.fitRoute === 'function') {
         options.fitRoute(points);
       } else if (root.maplibregl && typeof map.fitBounds === 'function') {
@@ -868,6 +878,9 @@
     function render() {
       if (!sheet || !sheet.classList.contains('open')) return;
       const current = controller.state();
+      if (!current.preview) clearPreviewLayer();
+      syncSelectionMarkers();
+      sheet.classList.toggle('show-coordinates',manualCoordinates);
       const planning = current.phase === 'planning' || current.pending;
       const preview = current.preview;
       const error = current.error;
@@ -876,12 +889,13 @@
       sheet.innerHTML = '<div class="destination-quest-panel">' +
         '<button type="button" class="destination-sheet-close" data-destination-close aria-label="Close Main Quests">x</button>' +
         '<header class="destination-sheet-head"><div><span>Main Quests</span><h2 id="destinationQuestTitle">Plan a destination walk</h2></div>' +
-        '<p>Pick a real start and destination. Burbz suggests a route along mapped public walking paths.</p></header>' +
+        '<p>' + (mapPick ? (mapPick.kind === 'start' ? '1. Tap the map to place your START.' : '2. Start set. Tap the map to place your DESTINATION.') : 'Choose your start, choose a destination, then preview the walk.') + '</p></header>' +
+        '<button type="button" class="destination-coordinate-toggle" data-destination-coordinates aria-pressed="' + manualCoordinates + '">' + (manualCoordinates ? 'Hide coordinates' : 'Enter coordinates manually') + '</button>' +
         activeHTML +
         '<form class="destination-coordinate-form" data-destination-form>' +
-        '<fieldset><legend>Start</legend><label>Latitude<input id="destinationStartLat" name="startLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lat != null ? current.start.lat : '') + '"></label><label>Longitude<input id="destinationStartLon" name="startLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lon != null ? current.start.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(pointLabel(current.start)) + '</div><div class="destination-button-row"><button type="button" data-destination-gps>Use precise GPS</button><button type="button" data-destination-pick="start">Tap start on map</button></div></fieldset>' +
-        '<fieldset><legend>Destination</legend><label>Latitude<input id="destinationEndLat" name="endLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lat != null ? current.end.lat : '') + '"></label><label>Longitude<input id="destinationEndLon" name="endLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lon != null ? current.end.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(pointLabel(current.end)) + '</div><div class="destination-button-row"><button type="button" data-destination-pick="end">Tap destination on map</button></div></fieldset>' +
-        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? 'Checking the public walking network...' : error ? error.message : preview ? 'Preview ready. Begin will save the full route, quote and encounters now.' : 'Choose both points to preview.') + '</div>' +
+        '<fieldset><legend>1 · Start</legend><label>Latitude<input id="destinationStartLat" name="startLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lat != null ? current.start.lat : '') + '"></label><label>Longitude<input id="destinationStartLon" name="startLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lon != null ? current.start.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.start ? 'Start selected' : 'Choose a start') + '</div><div class="destination-button-row"><button type="button" data-destination-gps>Use precise GPS</button><button type="button" data-destination-pick="start">Tap start on map</button></div></fieldset>' +
+        '<fieldset><legend>2 · Destination</legend><label>Latitude<input id="destinationEndLat" name="endLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lat != null ? current.end.lat : '') + '"></label><label>Longitude<input id="destinationEndLon" name="endLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lon != null ? current.end.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.end ? 'Destination selected' : 'Choose a destination') + '</div><div class="destination-button-row"><button type="button" data-destination-pick="end">Tap destination on map</button></div></fieldset>' +
+        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? (current.providerProgress?.alternative ? 'First map service unavailable. Checking another public map source...' : 'Checking the public walking network...') : error ? error.message : preview ? 'Preview ready. Begin will save the full route, quote and encounters now.' : 'Choose both points to preview.') + '</div>' +
         routeMetricHTML(preview) +
         '<div class="destination-actions"><button type="submit" data-destination-preview ' + (planning ? 'disabled' : '') + '>' + (preview ? 'Preview Again' : 'Preview Route') + '</button><button type="button" data-destination-begin ' + (!preview || planning ? 'disabled' : '') + '>Begin</button><button type="button" data-destination-cancel>Cancel</button></div>' +
         '</form>' +
@@ -896,6 +910,7 @@
       const startLon = sheet.querySelector('#destinationStartLon');
       const endLat = sheet.querySelector('#destinationEndLat');
       const endLon = sheet.querySelector('#destinationEndLon');
+      sheet.querySelector('[data-destination-coordinates]')?.addEventListener('click',()=>{manualCoordinates=!manualCoordinates;render();});
       sheet.querySelector('[data-destination-close]')?.addEventListener('click', () => closePlanner());
       sheet.querySelector('[data-destination-cancel]')?.addEventListener('click', () => {
         controller.cancel('user-cancel');
@@ -912,8 +927,8 @@
       });
       form?.addEventListener('submit', ev => {
         ev.preventDefault();
-        const a = controller.setManualStart(startLat && startLat.value, startLon && startLon.value);
-        const b = controller.setManualEnd(endLat && endLat.value, endLon && endLon.value);
+        const a = manualCoordinates ? controller.setManualStart(startLat && startLat.value, startLon && startLon.value) : {ok:!!controller.state().start};
+        const b = manualCoordinates ? controller.setManualEnd(endLat && endLat.value, endLon && endLon.value) : {ok:!!controller.state().end};
         if (!a.ok || !b.ok) { render(); return; }
         controller.preview().then(render);
       });
@@ -976,9 +991,11 @@
         if (kind === 'start') controller.setMapStart(lat, lon);
         else controller.setMapEnd(lat, lon);
         render();
+        if(kind === 'start' && !controller.state().end) queueMicrotask(()=>{if(sheet?.classList.contains('open'))beginMapPick('end');});
       };
       mapPick = { map, handler, kind };
       map.on('click', handler);
+      render();
       showToast('Tap the map to choose the ' + (kind === 'start' ? 'start' : 'destination') + '. You can still pan and zoom first.');
     }
     async function openNativeEntry(entryId, choice) {
@@ -1015,6 +1032,7 @@
       if (precise && !controller.state().start) controller.setPreciseStart(precise);
       ensureSheet().classList.add('open');
       doc.body.classList.add('destination-quest-open');
+      options.setMapInspectionMode?.(true);
       render();
       focusFirst();
       emitOpen();
@@ -1032,6 +1050,7 @@
       clearPreviewLayer();
       if (sheet) sheet.classList.remove('open');
       doc.body.classList.remove('destination-quest-open');
+      options.setMapInspectionMode?.(false);
     }
     function wireMainButton() {
       const btn = doc.getElementById('mapQuestShowBtn');

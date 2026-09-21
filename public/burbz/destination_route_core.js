@@ -592,7 +592,7 @@
 
   async function fetchWithBodyTimeout(fetchFn, endpoint, query, opts, signal) {
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    let timer = null;
+    let timer = null, timedOut = false;
     let removeAbort = null;
     if (signal && signal.aborted) throw Object.assign(new Error('provider-cancelled'), { code: 'provider-cancelled' });
     if (signal && ctrl) {
@@ -603,15 +603,15 @@
     try {
       const timeout = new Promise((_, reject) => {
         timer = setTimeout(() => {
-          if (ctrl) ctrl.abort();
+          timedOut = true;
           reject(timeoutError());
+          if (ctrl) ctrl.abort();
         }, opts.timeoutMs);
       });
       return await Promise.race([timeout, Promise.resolve().then(async () => {
         const response = await fetchFn(endpoint, {
-          method: 'POST',
-          body: 'data=' + encodeURIComponent(query),
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          method: opts.method === 'GET' ? 'GET' : 'POST',
+          ...(opts.method === 'GET' ? {} : {body:'data=' + encodeURIComponent(query),headers:{'Content-Type':'application/x-www-form-urlencoded'}}),
           signal: ctrl ? ctrl.signal : signal
         });
         if (!response || response.status === 429) throw Object.assign(new Error('provider-rate-limited'), { code: 'provider-rate-limited', status: response && response.status });
@@ -625,6 +625,7 @@
         };
       })]);
     } catch (err) {
+      if (timedOut) throw timeoutError();
       if ((signal && signal.aborted) || err.name === 'AbortError') throw Object.assign(new Error('provider-cancelled'), { code: 'provider-cancelled' });
       throw err;
     } finally {
@@ -633,6 +634,13 @@
     }
   }
 
+  const recentMapData = new Map();
+  function mapApiEndpoint(start,end,opts) {
+    const b=bboxFor(start,end,opts), mid={lat:(b.south+b.north)/2,lon:(b.west+b.east)/2};
+    const area=distance({lat:b.south,lon:mid.lon},{lat:b.north,lon:mid.lon})*distance({lat:mid.lat,lon:b.west},{lat:mid.lat,lon:b.east});
+    if(area>4000000 || b.east-b.west>1) return null;
+    return 'https://api.openstreetmap.org/api/0.6/map.json?bbox='+[b.west,b.south,b.east,b.north].map(n=>n.toFixed(6)).join(',');
+  }
   async function fetchDestinationRoute(start, end, opts) {
     const opts2 = Object.assign({}, DEFAULTS, opts || {});
     if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Start and destination must be finite latitude/longitude coordinates.');
@@ -640,13 +648,19 @@
     const airM = distance(start, end);
     if (airM > opts2.maxAirDistanceM) return fail('selection-too-wide', 'Selected endpoints are outside the supported bounded search area.', { airDistanceM: Math.round(airM), maxAirDistanceM: opts2.maxAirDistanceM });
     const query = buildDestinationOverpassQuery(start, end, opts2);
-    const endpoints = opts2.endpoints || DEFAULT_ENDPOINTS;
+    const endpoints = (opts2.endpoints || DEFAULT_ENDPOINTS).map(endpoint=>({endpoint}));
+    const mapApi = (!opts2.endpoints || opts2.mapApiFallback === true) && opts2.mapApiFallback !== false ? mapApiEndpoint(start,end,opts2) : null;
+    if(mapApi) endpoints.splice(1,0,{endpoint:mapApi,method:'GET'});
     const fetchFn = opts2.fetchFn || (root && typeof root.fetch === 'function' ? root.fetch.bind(root) : null);
     if (!fetchFn) return fail('provider-unavailable', 'No fetch implementation is available.');
-    let last = null;
-    for (const endpoint of endpoints) {
+    let last = null; const attempts=[];
+    for (let index=0;index<endpoints.length;index++) {
+      const {endpoint,method}=endpoints[index];
+      if(opts2.signal?.aborted)return fail('provider-cancelled','Route request was cancelled.');
+      try {opts2.onProgress?.({attempt:index+1,total:endpoints.length,alternative:index>0});} catch(_){}
       try {
-        const response = await fetchWithBodyTimeout(fetchFn, endpoint, query, opts2, opts2.signal);
+        const key=endpoint+'|'+query, stored=!opts2.fetchFn&&recentMapData.get(key);
+        const response = stored && Date.now()-stored.at<300000 ? stored.response : await fetchWithBodyTimeout(fetchFn, endpoint, query, {...opts2,method,timeoutMs:mapApi&&index===0?Math.min(8000,opts2.timeoutMs):opts2.timeoutMs}, opts2.signal);
         const parsed = parseProviderJson(response.text);
         if (parsed.error) {
           last = fail(parsed.error, 'Routing provider returned non-JSON data.', { provider: endpoint, status: response.status, bodyHash: bodyHash(response.text) });
@@ -655,6 +669,11 @@
         if (!parsed.json || !Array.isArray(parsed.json.elements) || parsed.json.remark) {
           last = fail('provider-partial', 'Routing provider returned partial or incomplete map data.', { provider: endpoint, status: response.status, bodyHash: bodyHash(response.text), remark: parsed.json && parsed.json.remark || null });
           continue;
+        }
+        if(method==='GET'){
+          // OSM API ways refer to explicit nodes rather than duplicating coordinates.
+          const nodes=new Map(parsed.json.elements.filter(e=>e.type==='node').map(e=>[String(e.id),e]));
+          parsed.json.elements=parsed.json.elements.map(e=>e.type==='way'&&!e.geometry&&Array.isArray(e.nodes)?{...e,geometry:e.nodes.map(id=>{const n=nodes.get(String(id));return n?{lat:n.lat,lon:n.lon}:null;})}:e);
         }
         const planned = planDestinationRoute(parsed.json, start, end, opts2);
         planned.provider = {
@@ -665,11 +684,15 @@
           cors: response.cors || null,
           sourceTimestamp: parsed.json.osm3s && parsed.json.osm3s.timestamp_osm_base || null
         };
-        if (planned.ok) planned.route.provider = planned.provider;
+        if (planned.ok) {
+          planned.route.provider = planned.provider;
+          if(!opts2.fetchFn){recentMapData.set(key,{at:Date.now(),response});while(recentMapData.size>2)recentMapData.delete(recentMapData.keys().next().value);}
+        }
         return planned;
       } catch (err) {
         const code = err && err.code || 'provider-network';
-        last = fail(code, err && err.message || code, { provider: endpoint, status: err && err.status || null });
+        attempts.push({provider:endpoint,code,status:err?.status||null});
+        last = fail(code, 'The walking-map services are busy or unavailable. Your start and destination are kept. Try Preview again in a moment.', {provider:endpoint,status:err?.status||null,attempts});
         if (code === 'provider-cancelled') return last;
       }
     }
