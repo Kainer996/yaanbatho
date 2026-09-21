@@ -11,3 +11,7 @@ After the first Overpass failure, small searches (at most4 square kilometres inc
 Provider diagnosis used fixed public Hyde Park points. The configured services reproduced network failure,429 and504 responses. A real official OSM map response produced a207m/12-point route that passed existing canonical validation. The OSM JSON map API represents way geometry through explicit node references: https://wiki.openstreetmap.org/wiki/API_v0.6#Retrieving_map_data_by_bounding_box:_GET_/api/0.6/map . Provider availability remains external; no always-online guarantee is made.
 
 Focused checks:11 route,12 state,8 UI/lifecycle,5 recovery groups; exact consuming and three-worker-list pins for all three changed modules/styles, executable inline syntax and diff whitespace. Native touch/real-provider/Begin evidence and publication result are recorded in the owner release output. Testing uses a disposable phone-emulated Chromium profile with fixed public GPS and bounded basemap tiles, not a physical outdoor walk.
+
+## Pin visibility follow-up v435b
+
+A screenshot review caught the expanded sheet covering the selected points. The follow-up keeps a compact selected-point/preview panel and fits both red markers above it, with room beside the zoom controls. Native touch, accurate geographic pin placement, both pin/label bounds above the panel, real provider recovery, Begin and save reload pass. The request/route/economy code is unchanged from v435.

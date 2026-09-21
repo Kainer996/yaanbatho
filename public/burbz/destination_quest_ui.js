@@ -6,7 +6,7 @@
   'use strict';
 
   const VERSION = 'destination-quest-ui-v431-20260921';
-  const PIN = 'destination-touch-v435-20260921';
+  const PIN = 'destination-touch-v435b-20260921';
   const DEFAULT_ROUTE_OPTIONS = {
     timeoutMs: 25000,
     minRouteM: 25,
@@ -886,16 +886,17 @@
       const error = current.error;
       const active = timelineController.activeQuest() || (typeof options.activeQuest === 'function' ? options.activeQuest() : null);
       const activeHTML = renderDestinationTimeline(active);
+      sheet.dataset.selectionReady = String(!!current.start && !!current.end && !active && !manualCoordinates);
       sheet.innerHTML = '<div class="destination-quest-panel">' +
         '<button type="button" class="destination-sheet-close" data-destination-close aria-label="Close Main Quests">x</button>' +
         '<header class="destination-sheet-head"><div><span>Main Quests</span><h2 id="destinationQuestTitle">Plan a destination walk</h2></div>' +
         '<p>' + (mapPick ? (mapPick.kind === 'start' ? '1. Tap the map to place your START.' : '2. Start set. Tap the map to place your DESTINATION.') : 'Choose your start, choose a destination, then preview the walk.') + '</p></header>' +
-        '<button type="button" class="destination-coordinate-toggle" data-destination-coordinates aria-pressed="' + manualCoordinates + '">' + (manualCoordinates ? 'Hide coordinates' : 'Enter coordinates manually') + '</button>' +
+        '<button type="button" class="destination-coordinate-toggle" data-destination-coordinates aria-pressed="' + manualCoordinates + '">' + (manualCoordinates ? 'Hide coordinates' : current.start && current.end ? 'Change points' : 'Enter coordinates manually') + '</button>' +
         activeHTML +
         '<form class="destination-coordinate-form" data-destination-form>' +
         '<fieldset><legend>1 · Start</legend><label>Latitude<input id="destinationStartLat" name="startLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lat != null ? current.start.lat : '') + '"></label><label>Longitude<input id="destinationStartLon" name="startLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lon != null ? current.start.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.start ? 'Start selected' : 'Choose a start') + '</div><div class="destination-button-row"><button type="button" data-destination-gps>Use precise GPS</button><button type="button" data-destination-pick="start">Tap start on map</button></div></fieldset>' +
         '<fieldset><legend>2 · Destination</legend><label>Latitude<input id="destinationEndLat" name="endLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lat != null ? current.end.lat : '') + '"></label><label>Longitude<input id="destinationEndLon" name="endLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lon != null ? current.end.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.end ? 'Destination selected' : 'Choose a destination') + '</div><div class="destination-button-row"><button type="button" data-destination-pick="end">Tap destination on map</button></div></fieldset>' +
-        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? (current.providerProgress?.alternative ? 'First map service unavailable. Checking another public map source...' : 'Checking the public walking network...') : error ? error.message : preview ? 'Preview ready. Begin will save the full route, quote and encounters now.' : 'Choose both points to preview.') + '</div>' +
+        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? (current.providerProgress?.alternative ? 'First map service unavailable. Checking another public map source...' : 'Checking the public walking network...') : error ? error.message : preview ? 'Route ready. Begin saves your walk and rewards.' : current.start && current.end ? 'Both red marks are set. Preview your walk.' : 'Choose both points to preview.') + '</div>' +
         routeMetricHTML(preview) +
         '<div class="destination-actions"><button type="submit" data-destination-preview ' + (planning ? 'disabled' : '') + '>' + (preview ? 'Preview Again' : 'Preview Route') + '</button><button type="button" data-destination-begin ' + (!preview || planning ? 'disabled' : '') + '>Begin</button><button type="button" data-destination-cancel>Cancel</button></div>' +
         '</form>' +
@@ -971,6 +972,7 @@
       });
     }
     function beginMapPick(kind) {
+      manualCoordinates = false;
       const map = getMap();
       if (!map || typeof map.on !== 'function') {
         showToast('Open the map, then tap to choose a point.');
@@ -991,6 +993,7 @@
         if (kind === 'start') controller.setMapStart(lat, lon);
         else controller.setMapEnd(lat, lon);
         render();
+        if(kind === 'end' && controller.state().start) options.fitRoute?.([controller.state().start,controller.state().end]);
         if(kind === 'start' && !controller.state().end) queueMicrotask(()=>{if(sheet?.classList.contains('open'))beginMapPick('end');});
       };
       mapPick = { map, handler, kind };
