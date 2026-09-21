@@ -253,7 +253,16 @@
     grid-template-columns: 1fr;
   }
 }
-/* Leave the map exposed while choosing a destination on a small phone. */
-.destination-map-picking .destination-quest-panel > :not(.destination-sheet-close) { display:none; }
-.destination-map-picking .destination-quest-panel::before { content:'Tap a point on the map. You can pan and zoom first.';display:block;padding:8px 48px 8px 0;min-height:44px; }
-.destination-sheet-close { width:44px;height:44px; }
+/* Keep both taps on the map, with immediate labelled geographic pins. */
+.destination-map-picking .destination-quest-panel > :not(.destination-sheet-close):not(.destination-sheet-head) {display:none;}
+.destination-map-picking .destination-sheet-head h2,.destination-map-picking .destination-sheet-head span {display:none;}
+.destination-map-picking .destination-sheet-head p {font-size:16px;font-weight:800;min-height:44px;display:flex;align-items:center;}
+.destination-sheet-close {width:44px;height:44px;}
+.destination-coordinate-form label {display:none;}
+.show-coordinates .destination-coordinate-form label {display:grid;}
+.destination-coordinate-toggle {min-height:44px;margin-top:8px;background:transparent;color:#efd9ad;border:1px solid #7d6139;border-radius:6px;padding:6px 10px;}
+.destination-coordinate-form {gap:8px;margin-top:8px;}
+.destination-coordinate-form fieldset {padding:6px 8px;gap:4px;}
+.destination-route-marker,.destination-route-marker.end {width:64px;height:64px;min-width:64px;min-height:64px;border:5px solid white;background:#e1262e;color:white;box-shadow:0 0 0 3px #87111b,0 4px 12px #000a;pointer-events:none;z-index:1200;display:grid;place-items:center;}
+.destination-route-marker strong {font-size:30px;line-height:1;}
+.destination-route-marker span {position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:3px 7px;border-radius:4px;background:#8b1018;color:white;border:1px solid white;font-size:12px;font-weight:900;}

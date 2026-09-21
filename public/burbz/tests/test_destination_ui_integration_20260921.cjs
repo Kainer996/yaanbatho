@@ -143,8 +143,8 @@ test('destination UI modules are registered as the Main Quest surface', () => {
     'destination_quest_ui.js',
     'destination_quest_ui.css'
   ]) {
-    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=destination-cleanup-v434-20260921').test(INDEX), file + ' index pin');
-    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=destination-cleanup-v434-20260921').test(SW), file + ' service worker pin');
+    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_route_core.js','destination_quest_ui.js','destination_quest_ui.css'].includes(file)?'destination-touch-v435-20260921':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
+    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_route_core.js','destination_quest_ui.js','destination_quest_ui.css'].includes(file)?'destination-touch-v435-20260921':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
     assert.ok(UPDATER.includes('"' + file + '"'), file + ' updater pin');
   }
   assert.ok(/id="mapQuestShowBtn"[\s\S]*Main Quests/.test(INDEX), 'map primary quest entry should say Main Quests');
@@ -480,7 +480,7 @@ test('planner lifecycle removes map picking, async work, Main button and Escape 
   const ui = require('../destination_quest_ui.js');
   class Element extends EventTarget {
     constructor() { super(); this.dataset = {}; this.attrs = {}; this.isConnected = true; this.children = new Map(); this.all = new Map(); this.classes = new Set();
-      this.classList = { add: v => this.classes.add(v), remove: v => this.classes.delete(v), contains: v => this.classes.has(v) }; }
+      this.classList = { add: v => this.classes.add(v), remove: v => this.classes.delete(v), contains: v => this.classes.has(v), toggle: (v,on) => on ? this.classes.add(v) : this.classes.delete(v) }; }
     setAttribute(k,v) { this.attrs[k] = v; } getAttribute(k) { return this.attrs[k]; }
     appendChild(node) { node.isConnected = true; } remove() { this.isConnected = false; } focus() { this.focused = true; }
     set innerHTML(value) { this.children.clear(); this.all.clear(); this.html = value;
