@@ -4589,6 +4589,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walk-shelter-controls-v427-20260920">
+<link rel="stylesheet" href="destination_quest_ui.css?v=destination-quests-v431-20260921">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
@@ -4672,7 +4673,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="camp-map-control" id="campMapButton" type="button">⛺ Camps</button>
-        <button class="map-quest-btn" id="mapQuestShowBtn" type="button" aria-label="Show all local quests on the map" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/burbz-icon-set/quests.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label">Show Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
+        <button class="map-quest-btn" id="mapQuestShowBtn" type="button" aria-label="Open Main Quests destination planner" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/burbz-icon-set/quests.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label">Main Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <button class="map-quest-btn map-side-quest-btn" id="mapSideQuestBtn" type="button" aria-label="Start a free-roaming Side Quest" aria-pressed="false"><img class="map-quest-btn-art" src="assets/ui/quest-compass-emblem.webp" alt=""><span class="map-quest-btn-copy"><span class="map-quest-btn-label" id="mapSideQuestBtnLabel">Side Quests</span></span><span class="map-quest-btn-arrow" aria-hidden="true">›</span></button>
         <div class="map-quest-hud" id="mapQuestHud" aria-live="polite"><div class="mqh-icon">🗺️</div><div class="mqh-body"><div class="mqh-name" id="mapQuestHudName"></div><div class="mqh-stats" id="mapQuestHudStats"></div></div><button class="mqh-photo-btn" id="mapQuestPhotoBtn" onclick="event.stopPropagation(); openQuestPhotoBook('active')" aria-label="Quest trail photos">📸</button></div>
         <article class="map-quest-focus-card" id="mapQuestFocusCard" aria-live="polite"><div class="map-quest-focus-head"><img class="map-quest-focus-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="map-quest-focus-distance" id="mapQuestFocusDistance"></div><div class="map-quest-focus-name" id="mapQuestFocusName"></div></div><button class="map-quest-focus-close" id="mapQuestFocusClose" aria-label="Close quest map brief">✕</button></div><div class="map-quest-focus-brief" id="mapQuestFocusBrief"></div><div class="map-quest-focus-meta" id="mapQuestFocusMeta"></div><div id="mapQuestFocusFacts"></div><div class="map-quest-focus-actions"><button class="map-quest-focus-secondary" id="mapQuestFocusDetails">Walk details</button><button class="map-quest-focus-primary" id="mapQuestFocusBegin">BEGIN THIS QUEST</button><button class="map-quest-focus-secondary" id="mapQuestFocusBoard" aria-label="Back to nearby quests">☰</button></div></article>
@@ -5730,6 +5731,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walk-shelter-controls-v427-20260920"></script>
+<script src="destination_route_core.js?v=destination-quests-v431-20260921"></script>
+<script src="destination_elevation_core.js?v=destination-quests-v431-20260921"></script>
+<script src="destination_reward_core.js?v=destination-quests-v431-20260921"></script>
+<script src="destination_state_core.js?v=destination-quests-v431-20260921"></script>
+<script src="destination_quest_ui.js?v=destination-quests-v431-20260921"></script>
 <script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="landscape_ui.js?v=landscape-v388-20260910"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
@@ -19803,12 +19809,12 @@ function openQuestBoard(opts = {}) {
   if (activeWalkingQuest()) { openActiveWalkQuestSheet(); return; }
   if (sideQuestActive()) { openSideQuestLogSheet(); return; }
   const el = walkQuestSheetEl();
-  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel wq-walk-picker"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close quest board">✕</button>' +
-    '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="wq-eyebrow">THE ALDERWING FIELD GUIDE</div><div class="quest-board-title">Find your next walk</div><div class="quest-board-intro" id="walkQuestSheetStatus" role="status">Finding connected footpaths and worthwhile walks near you…</div></div></div>' +
+  el.innerHTML = '<div class="quest-overlay-panel quest-board-panel wq-walk-picker"><button class="quest-overlay-close" onclick="closeWalkQuestSheet()" aria-label="Close Side Quests">✕</button>' +
+    '<div class="quest-board-hero"><img class="quest-board-art" src="assets/ui/quest-compass-emblem.webp" alt=""><div><div class="wq-eyebrow">SIDE QUESTS</div><div class="quest-board-title">Mapped side walks</div><div class="quest-board-intro" id="walkQuestSheetStatus" role="status">Finding connected side walks near you…</div></div></div>' +
 
-    '<div class="wq-picker-scroll" tabindex="0" role="region" aria-label="Nearby walks">' + questDetourActionsHTML() +
-    '<div id="walkQuestOfferList" aria-busy="true"><div class="quest-all-done">Loading nearby mapped walks…</div></div><button class="wq-npc-ok" id="walkQuestRetry" type="button" hidden>Retry nearby walks</button>' +
-    '<div class="quest-section-title">🎒 Side Quest</div><div id="walkQuestSideQuestSlot"></div>' +
+    '<div class="wq-picker-scroll" tabindex="0" role="region" aria-label="Nearby Side Quests">' + questDetourActionsHTML() +
+    '<div id="walkQuestOfferList" aria-busy="true"><div class="quest-all-done">Loading mapped Side Quests…</div></div><button class="wq-npc-ok" id="walkQuestRetry" type="button" hidden>Retry Side Quests</button>' +
+    '<div class="quest-section-title">🎒 Free-Roaming Side Quest</div><div id="walkQuestSideQuestSlot"></div>' +
     '<div class="wq-attribution">Real-world walks — stay aware, follow signs and respect private land.<br>Trail data © OpenStreetMap contributors</div></div></div>';
   showWalkQuestSheet(el);
   // Side Quest: no route, no markers — just explore and Burbz charts where you go.
@@ -19825,8 +19831,8 @@ function openQuestBoard(opts = {}) {
   const finish = () => { list.setAttribute('aria-busy', 'false'); };
   retry.onclick = () => openQuestBoard({ ...opts, force:true });
   if (!liveMapHasPrecisePosition || !liveMapLastPosition) {
-    status.textContent = 'Allow location from the map to find walks near you.';
-    list.innerHTML = '<div class="quest-all-done">Location is needed to rank nearby trailheads. A Side Quest is still ready below.</div>';
+    status.textContent = 'Allow location from the map to find Side Quests near you.';
+    list.innerHTML = '<div class="quest-all-done">Location is needed to rank mapped Side Quests. A free-roaming Side Quest is still ready below.</div>';
     retry.hidden = false; finish();
     return;
   }
@@ -19838,8 +19844,8 @@ function openQuestBoard(opts = {}) {
       list.textContent = ''; retry.hidden = false; return;
     }
     walkQuestOffersCache = offers;
-    status.textContent = offers.length ? offers.length + ' mapped walks. ' + (offers.some(o => o.routeMode === 'loop') ? 'Footpath loops come first; distance includes the whole walk.' : 'No suitable loop found in the available data. These walks return along the same paths.') : 'No useful connected walk found in the available map data. Try another area or explore freely below.';
-    if (navigator.onLine === false && offers.length) status.textContent += ' Offline: showing walks loaded recently in this area.';
+    status.textContent = offers.length ? offers.length + ' mapped Side Quests. ' + (offers.some(o => o.routeMode === 'loop') ? 'Footpath loops come first; distance includes the whole walk.' : 'No suitable loop found in the available data. These Side Quests return along the same paths.') : 'No useful connected Side Quest found in the available map data. Try another area or explore freely below.';
+    if (navigator.onLine === false && offers.length) status.textContent += ' Offline: showing Side Quests loaded recently in this area.';
     renderQuestOfferCards(list, offers, focusQuestOnMap);
     retry.hidden = !!offers.length;
     if (opts.showOnMap) {
@@ -19851,8 +19857,8 @@ function openQuestBoard(opts = {}) {
     console.warn('BURBZ walking quest discovery failed', err);
     if (!current()) return;
     finish();
-    status.textContent = navigator.onLine === false ? 'You are offline. Reconnect, then retry nearby walks.' : 'Nearby walks could not be loaded. Check your connection and retry.';
-    list.innerHTML = '<div class="quest-all-done">Your saved quests and progress are unchanged. You can still open Side Quest below.</div>';
+    status.textContent = navigator.onLine === false ? 'You are offline. Reconnect, then retry Side Quests.' : 'Side Quests could not be loaded. Check your connection and retry.';
+    list.innerHTML = '<div class="quest-all-done">Your saved quests and progress are unchanged. You can still open a free-roaming Side Quest below.</div>';
     retry.hidden = false;
   });
 }
@@ -21698,7 +21704,7 @@ function renderWalkingQuestSection() {
     const meta = WALK_QUEST_KIND_META[q.type] || WALK_QUEST_KIND_META.path;
     const hit = q.checkpoints.filter(c => c.reached).length;
     const pct = Math.round(100 * hit / q.checkpoints.length);
-    html += '<div class="quest-section-title">🥾 Active Adventure</div>' +
+    html += '<div class="quest-section-title">🥾 Active Side Quest</div>' +
       '<div class="quest-card" data-walk-active="1"><div class="quest-icon">' + meta.icon + '</div><div class="quest-info">' +
       '<div class="quest-name">' + escapeHtml(q.name) + '</div>' +
       '<div class="quest-desc">' + (q.distanceWalkedM / 1000).toFixed(2) + ' km walked · ' + q.birdsCaptured.length + ' birds · ' + q.chestsOpened + ' chests</div>' +
@@ -21721,9 +21727,9 @@ function renderWalkingQuestSection() {
   }
   // Footpath offers live on the map's Explore Quests board only — listing them
   // here raced the map's location fix and flickered in and out of the tab.
-  html += '<div class="quest-section-title">🏆 Completed Adventures</div>';
+  html += '<div class="quest-section-title">🏆 Completed Side Quests</div>';
   if (!wq.history.length) {
-    html += '<div class="quest-all-done">No adventures completed yet — open Show Quests on the Map and take a real walk!</div>';
+    html += '<div class="quest-all-done">No Side Quests completed yet — open Side Quests on the Map and take a real walk!</div>';
   } else {
     // Six finished walks are a memory shelf; twenty-five were a wall burying
     // the live quests below. Each card still opens its full summary sheet.
@@ -22009,7 +22015,7 @@ function updateShowQuestsButton() {
   const active = !!questOverview.on;
   showBtn.classList.toggle('active', active);
   showBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
-  showBtn.setAttribute('aria-label', active ? 'Hide local walking quests and restore map' : 'Find local walking quests');
+  showBtn.setAttribute('aria-label', active ? 'Main Quests planner is paused while Side Quests are on the map' : 'Open Main Quests destination planner');
 }
 function fitAllLocalQuestRoutes(offers = questOverview.offers) {
   if (!liveMap || !window.maplibregl || !offers || !offers.length) return;
@@ -22091,8 +22097,7 @@ function toggleQuestOverview() { SFX.tap(); setQuestOverview(!questOverview.on);
 
 function openMapSideQuest() {
   if (questOverview.on) setQuestOverview(false);
-  if (sideQuestActive()) openSideQuestLogSheet();
-  else openSideQuestIntroSheet();
+  openQuestBoard({ sideQuestMode:true });
 }
 function updateMapSideQuestButton() {
   const sideBtn = $('mapSideQuestBtn');
@@ -22103,6 +22108,137 @@ function updateMapSideQuestButton() {
   sideBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
   sideBtn.setAttribute('aria-label', active ? 'View active Side Quest' : 'Start a free-roaming Side Quest');
   label.textContent = active ? 'View Side Quest' : 'Side Quests';
+}
+
+let destinationQuestController = null;
+function destinationActiveQuest() {
+  try {
+    if (window.BurbzDestinationStateCore && gameState) return window.BurbzDestinationStateCore.readDestinationState(gameState).active || null;
+  } catch (e) {}
+  return gameState && gameState.destinationQuests && gameState.destinationQuests.active || null;
+}
+function destinationPrecisePosition() {
+  if (!liveMapHasPrecisePosition || !liveMapLastPosition) return null;
+  const at = Number(liveMapLastPosition.at);
+  if (!Number.isFinite(at) || Date.now() - at > 300000) return null;
+  const lat = Number(liveMapLastPosition.lat), lon = Number(liveMapLastPosition.lon), accuracy = Number(liveMapLastPosition.accuracy);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 80) return null;
+  return { lat, lon, accuracy, at, precise:true, source:liveMapLastPosition.source || 'Your live position' };
+}
+function destinationCataloguePool() {
+  return (Array.isArray(BURBZ_SPECIES_PROFILES) ? BURBZ_SPECIES_PROFILES : [])
+    .map(profile => ({
+      commonName: profile.name || profile.commonName || profile.species,
+      scientificName: profile.scientificName || profile.scientific || '',
+      rarity: String(profile.rarity || 'common').toLowerCase(),
+      habitats: Array.isArray(profile.habitats) ? profile.habitats.slice() : [],
+      source: 'BURBZ_SPECIES_PROFILES'
+    }))
+    .filter(row => row.commonName && row.rarity === 'common')
+    .slice(0, 120);
+}
+function destinationContentPools() {
+  return {
+    source:'native-burbz-destination-content',
+    buildings:[
+      { id:'academy-kitchen-pantry', label:'Kitchen & Pantry', meaningful:true, nativeAction:{ adapter:'destinationNative', method:'openKitchen' }, source:'academy-native-room' },
+      { id:'academy-birdhouse', label:'Birdhouse', meaningful:true, nativeAction:{ adapter:'destinationNative', method:'openBirdhouse' }, source:'canonical-birdex-birdhouse' }
+    ],
+    characters:[
+      { id:'merlin-waymark', name:'Merlin', dialogue:['A destination walk is banked before you leave. Follow the road, then bring the tale home.'], meaningful:true, nativeAction:{ adapter:'destinationNative', method:'speakMerlin' }, source:'merlin-canon' },
+      { id:'rowan-field-note', name:'Rowan', dialogue:['Choose the route with care; the map suggests, but the path signs rule.'], meaningful:true, nativeAction:{ adapter:'destinationNative', method:'speakRowan' }, source:'rowan-canon' }
+    ]
+  };
+}
+function createDestinationBrowserAdapter() {
+  if (!window.BurbzDestinationStateCore || typeof window.BurbzDestinationStateCore.createBrowserAdapter !== 'function') return null;
+  const apiRoot = { snapshotGameState, restoreGameStateSnapshot, durableSaveState, applyPlayerXpState, addCoins, rememberDiscoveredBird, getDiscoveredRecordForSpecies };
+  Object.defineProperty(apiRoot, 'gameState', { get: () => gameState });
+  return window.BurbzDestinationStateCore.createBrowserAdapter(apiRoot);
+}
+function destinationFitRoute(points) {
+  if (!liveMap || !window.maplibregl || !Array.isArray(points) || points.length < 2) return false;
+  try {
+    const bounds = new maplibregl.LngLatBounds();
+    points.forEach(point => bounds.extend([point.lon, point.lat]));
+    liveMap.fitBounds(bounds, { padding:{ top:88, right:28, bottom:300, left:28 }, maxZoom:16.2, duration:450 });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+function destinationNativeHandlers() {
+  return {
+    openKitchen: entry => {
+      switchScreen('scan');
+      openKitchenHudShortcut();
+      showToast((entry && entry.label || 'Kitchen & Pantry') + ' opened from your destination plan.');
+    },
+    openBirdhouse: entry => {
+      switchScreen('birdex');
+      showToast((entry && entry.label || 'Birdhouse') + ' opened from your destination plan.');
+    },
+    speakMerlin: entry => showQuestNpcDialog('Merlin', (entry && entry.dialogue && entry.dialogue[0]) || 'I will keep the destination tale safe until you return.'),
+    speakRowan: entry => showQuestNpcDialog('Rowan', (entry && entry.dialogue && entry.dialogue[0]) || 'The suggested route is only a guide. Follow the real signs.'),
+    meetCommonSpecies: entry => {
+      const species = entry && (entry.commonName || entry.species);
+      if (species) showSpeciesInBirdex(species);
+      showToast(species ? species + ' encounter is banked for the destination timeline.' : 'Bird encounter is banked for the destination timeline.');
+    }
+  };
+}
+function ensureDestinationQuestController() {
+  if (destinationQuestController) return destinationQuestController;
+  if (!window.BurbzDestinationQuestUI || !window.BurbzDestinationStateCore) return null;
+  destinationQuestController = window.BurbzDestinationQuestUI.attach({
+    document,
+    rootState:() => gameState,
+    profileId:state => state && (state.photoProfileId || state.profileId) || null,
+    revision:state => state && (state.saveRevision != null ? state.saveRevision : state.revision) || 0,
+    routeCore:window.BurbzDestinationRouteCore,
+    elevationCore:window.BurbzDestinationElevationCore,
+    rewardCore:window.BurbzDestinationRewardCore,
+    stateCore:window.BurbzDestinationStateCore,
+    saveAdapter:createDestinationBrowserAdapter(),
+    content:destinationContentPools,
+    catalogue:destinationCataloguePool,
+    getPrecisePosition:destinationPrecisePosition,
+    getMap:() => liveMap,
+    createMarker:createGeographicMarker,
+    setMapInspectionMode:setQuestMapInspectionMode,
+    switchScreen,
+    closeWalkQuestSheet,
+    closeGeographicPlaces:() => geographicPlaces?.close(),
+    closeQuestFocus:closeQuestMapFocus,
+    fitRoute:destinationFitRoute,
+    showToast,
+    tap:() => SFX.tap(),
+    activeQuest:destinationActiveQuest,
+    nativeHandlers:destinationNativeHandlers(),
+    onBegin:() => {
+      renderQuests();
+      updateHeader();
+      updateWalkQuestHud();
+      switchScreen('map');
+      showToast('Main Quest saved. Your destination walk is ready offline.');
+    },
+    onFinish:() => {
+      renderQuests();
+      updateHeader();
+      showToast('Destination walk finished. Your story review is ready.');
+    },
+    onEntry:() => {
+      renderQuests();
+      updateHeader();
+    },
+    onComplete:() => {
+      renderQuests();
+      updateHeader();
+      updateWalkQuestHud();
+      showToast('Destination story completed and archived.');
+    }
+  });
+  return destinationQuestController;
 }
 
 function fitSelectedQuestRoute(offer) {
@@ -22284,6 +22420,38 @@ Object.assign(window, {
   toggleAcademyView, toggleAcademyTreeLights, __academyAliveDebug: { engine: () => ACADEMY_ALIVE, engine3d: () => ACADEMY_3D, view: () => academyViewMode() },
   openSideQuestIntroSheet, openSideQuestLogSheet, startSideQuest, endSideQuest, shareSideQuestDraft, sideQuestClaimDiscovery,
   resumeOriginalQuest, resumeSavedDetour,
+  __burbzDestinationDebug: {
+    controller: () => ensureDestinationQuestController(),
+    state: () => ensureDestinationQuestController()?.state(),
+    open: () => ensureDestinationQuestController()?.openPlanner(),
+    close: () => ensureDestinationQuestController()?.closePlanner(),
+    setManual: (start, end) => ensureDestinationQuestController()?.setManualPoints(start, end),
+    preview: opts => ensureDestinationQuestController()?.preview(opts),
+    begin: () => ensureDestinationQuestController()?.begin(),
+    cancel: reason => ensureDestinationQuestController()?.cancel(reason || 'debug-cancel'),
+    finish: opts => ensureDestinationQuestController()?.finishDestinationWalk(Object.assign({ confirmed:true }, opts || {})),
+    openEntry: (entryId, choice) => ensureDestinationQuestController()?.openDestinationEntry(entryId, choice || {}),
+    complete: opts => ensureDestinationQuestController()?.completeDestinationQuest(Object.assign({ confirmed:true }, opts || {})),
+    active: () => destinationActiveQuest(),
+    timeline: () => ensureDestinationQuestController()?.timelineHandoff(),
+    archive: () => ensureDestinationQuestController()?.archiveHandoff(),
+    timelineState: () => ensureDestinationQuestController()?.timelineState(),
+    routeOptions: opts => ensureDestinationQuestController()?.setRouteOptions(opts),
+    mapPick: kind => {
+      const c = ensureDestinationQuestController();
+      if (!c) return null;
+      c.openPlanner();
+      return c.mapPickState();
+    },
+    setLocation: (lat, lon, accuracy = 8) => {
+      liveMapHasPrecisePosition = true;
+      liveMapLastPosition = { lat:Number(lat), lon:Number(lon), accuracy:Number(accuracy), at:Date.now(), source:'QA precise position' };
+      return liveMapLastPosition;
+    },
+    saveJSON: () => localStorage.getItem(STORAGE_KEY),
+    content: () => destinationContentPools(),
+    catalogueCount: () => destinationCataloguePool().length
+  },
   __burbzQuestDebug: {
     getState: () => gameState,
     getActive: () => activeWalkingQuest(),
@@ -46756,6 +46924,7 @@ function init() {
   updateHeader();
   initQuests();
   renderLiveMap();
+  ensureDestinationQuestController();
   renderBirdex();
   renderInventory();
   renderBirdExpeditions();
