@@ -74,7 +74,7 @@
    const key=g.sun+':'+g.warm;if(!styleDirty&&key===gradeKey)return false;gradeKey=key;
    for(const l of map.getStyle()?.layers||[]){if(l.type==='custom'||l.id.startsWith('burbz-trail-'))continue;
     // Quest geometry and gold remain the same; moonlight improves the surroundings.
-    const quest=/quest|player-range|habitat-zone/.test(l.id),role=l.type==='symbol'?'label':/water|river|shore/.test(l.id)?'water':/road|highway|transport|street|path|track/.test(l.id)?'road':'ground';
+    const quest=/quest|burbz-destination-|player-range|habitat-zone/.test(l.id),role=l.type==='symbol'?'label':/water|river|shore/.test(l.id)?'water':/road|highway|transport|street|path|track/.test(l.id)?'road':'ground';
     if(quest)continue;
     const keys=l.type==='background'?['background-color']:l.type==='fill'?['fill-color','fill-outline-color']:l.type==='line'?['line-color']:l.type==='symbol'?['text-color','text-halo-color']:l.type==='hillshade'?['hillshade-highlight-color','hillshade-shadow-color','hillshade-accent-color']:[];
     for(const property of keys){const id=l.id+':'+property;let base=paints.get(id);if(base===undefined){base=map.getPaintProperty(l.id,property);if(base===undefined)continue;paints.set(id,base);}const value=C.expression(base,g,property==='text-halo-color'?'halo':role);map.setPaintProperty(l.id,property,value);}
