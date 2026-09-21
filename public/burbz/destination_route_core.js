@@ -27,10 +27,12 @@
     maxNodes: 40000,
     maxElements: 47000,
     maxBodyBytes: 9000000,
-    timeoutMs: 16000
+    timeoutMs: 5000,
+    totalTimeoutMs: 12000
   });
   const PATH_CLASSES = /^(footway|path|bridleway)$/;
   const CONNECTOR_CLASSES = /^(steps|pedestrian)$/;
+  const ROAD_CLASSES = /^(residential|living_street|service|unclassified|tertiary|secondary|primary|tertiary_link|secondary_link|primary_link)$/;
   const ALLOW = /^(yes|designated|official|public|permissive)$/;
   const PUBLIC_DESIGNATION = /^(public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic)$/;
   const DENY = /^(no|private|customers|destination|delivery|agricultural|forestry|permit|military|discouraged|unknown|variable|use_sidepath)$/;
@@ -106,7 +108,8 @@
     if (!reason && text(tags.ford) && text(tags.ford) !== 'no') reason = 'ford';
 
     const network = PATH_CLASSES.test(highway) || CONNECTOR_CLASSES.test(highway);
-    const documented = network || (/^(track|cycleway)$/.test(highway) && (ALLOW.test(foot) || PUBLIC_DESIGNATION.test(designation)));
+    const road = ROAD_CLASSES.test(highway) && text(tags.motorroad) !== 'yes';
+    const documented = network || road || (/^(track|cycleway)$/.test(highway) && (ALLOW.test(foot) || PUBLIC_DESIGNATION.test(designation)));
     if (!reason && !documented) reason = 'not-walking-network';
 
     let forward = true, backward = true;
@@ -125,7 +128,7 @@
     else if (oneway === '-1') forward = false;
     else if (oneway && !/^(no|0|false)$/.test(oneway)) reason = reason || 'unclear-direction';
 
-    const connector = CONNECTOR_CLASSES.test(highway) || /^(sidewalk|crossing|link)$/.test(text(tags.footway)) || highway === 'cycleway';
+    const connector = road || CONNECTOR_CLASSES.test(highway) || /^(sidewalk|crossing|link)$/.test(text(tags.footway)) || highway === 'cycleway';
     const publicPath = !connector && (PUBLIC_DESIGNATION.test(designation) || /^(yes|designated|official|public)$/.test(foot) || access === 'public');
     return {
       eligible: !reason && (forward || backward),
@@ -300,6 +303,7 @@
     let best = null;
     for (const seg of graph.segments) {
       const hit = nearestOnSegment(seg, p);
+      if (nodeBlocked(graph.nodes.get(seg.a)?.tags) || nodeBlocked(graph.nodes.get(seg.b)?.tags)) continue;
       if (!best || hit.distanceM < best.distanceM) best = hit;
     }
     if (!best || best.distanceM > opts.maxEndpointSnapM) {
@@ -380,7 +384,7 @@
       for (const arc of node.outgoing) {
         if (!turnAllowed(graph, previousArc, id, arc)) continue;
         const nextKey = arc.to + '|' + arc.wayId;
-        const nextCost = cost + arc.len;
+        const nextCost = cost + (arc.cost == null ? arc.len : arc.cost);
         if (!costs.has(nextKey) || nextCost < costs.get(nextKey)) {
           costs.set(nextKey, nextCost);
           parent.set(nextKey, { previousKey: stateKey, arc });
@@ -483,7 +487,7 @@
     };
   }
 
-  function planDestinationRoute(json, startInput, endInput, opts) {
+  function planMappedDestinationRoute(json, startInput, endInput, opts) {
     const opts2 = Object.assign({}, DEFAULTS, opts || {});
     const start = point(startInput), end = point(endInput);
     if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Start and destination must be finite latitude/longitude coordinates.');
@@ -507,6 +511,100 @@
     return routeFromArcs(graph, arcs, startProjection, endProjection, opts2, { sourceTimestamp: json.osm3s && json.osm3s.timestamp_osm_base || null });
   }
 
+  // Guidance is a separate save schema, never invented OSM evidence. Mapped
+  // parts retain the complete v1 evidence and gaps remain explicit to the player.
+  function guidanceRoute(start, end, parts, reason) {
+    const points = [];
+    for (const part of parts) {
+      const line = part.kind === 'mapped' ? part.route.points : part.points;
+      if (!points.length) points.push(point(line[0]));
+      points.push(...line.slice(1).map(point));
+    }
+    const gaps = parts.filter(p => p.kind === 'guidance');
+    const gapM = gaps.reduce((sum, p) => sum + routeLengthM(p.points), 0);
+    const lengthM = routeLengthM(points);
+    return { ok: true, route: {
+      routeSchemaVersion: 2, routeMode: 'destination', kind: KIND,
+      networkVerified: gaps.length === 0, source: 'walking-guidance',
+      points, lengthM: Math.round(lengthM), selectedStart: point(start), selectedEnd: point(end),
+      guidanceDistanceM: Math.round(gapM),
+      pathShare: lengthM ? parts.reduce((n,p) => n + (p.route ? p.route.lengthM * p.route.pathShare : 0), 0) / lengthM : 0,
+      publicPathShare: lengthM ? parts.reduce((n,p) => n + (p.route ? p.route.lengthM * p.route.publicPathShare : 0), 0) / lengthM : 0,
+      routeFingerprint: 'dest-v2-' + hashString(JSON.stringify({start:point(start),end:point(end),parts})),
+      routeEvidence: {type:KIND,version:2,parts}, fallbackReason: reason || null,
+      routeDataNote: gaps.length ? 'Dashed gaps show direction only, not a mapped path. Choose your own accessible way; any route to your destination counts.' : 'Suggested public paths and roads. Any route to your destination counts.'
+    }};
+  }
+  function directGuidance(start, end, reason) {
+    return guidanceRoute(start, end, [{kind:'guidance',points:[point(start),point(end)]}], reason);
+  }
+  function planDestinationRoute(json, startInput, endInput, opts) {
+    if (opts && opts.requireMappedRoute) return planMappedDestinationRoute(json, startInput, endInput, opts);
+    const start = point(startInput), end = point(endInput);
+    if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Choose valid start and destination coordinates.');
+    const limits = Object.assign({}, DEFAULTS, opts || {}, {minRouteM:0,maxRouteM:Infinity,maxEndpointSnapM:Infinity,maxAirDistanceM:Infinity});
+    if (distance(start,end) > DEFAULTS.maxAirDistanceM) return directGuidance(start,end,'selection-outside-map-search');
+    const graph = buildGraph(json,limits);
+    if (graph.error) return directGuidance(start,end,graph.error);
+    const a = projectEndpoint(graph,start,'start',limits), b = projectEndpoint(graph,end,'end',limits);
+    if (a.error || b.error) return directGuidance(start,end,'no-mapped-connection');
+    const work = cloneSearchGraph(graph,a,b);
+    let arcs = shortestPath(graph,work);
+    if (!arcs) {
+      // Connect a bounded set of separate map components. Penalising guidance
+      // heavily keeps existing public paths/roads whenever they connect.
+      const parents = new Map();
+      const find = id => {let p=id;while(parents.get(p)!==p)p=parents.get(p);while(id!==p){const next=parents.get(id);parents.set(id,p);id=next;}return p;};
+      work.nodes.forEach((n,id)=>parents.set(id,id));
+      work.nodes.forEach(n=>n.outgoing.forEach(arc=>{const x=find(arc.from),y=find(arc.to);if(x!==y)parents.set(x,y);}));
+      const groups = new Map();
+      work.nodes.forEach((n,id)=>{if(nodeBlocked(graph.nodes.get(id)?.tags))return;const k=find(id);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(n);});
+      const startGroup=find(work.startNode),endGroup=find(work.endNode);
+      const ranked=[...groups.entries()].map(([id,nodes])=>({id,nodes,score:id===startGroup||id===endGroup ? -1 : nodes.reduce((best,n)=>Math.min(best,distance(start,n)+distance(n,end)),Infinity)})).sort((a,b)=>a.score-b.score).slice(0,32).map(g=>[g.id,g.nodes]);
+      const representatives=ranked.map(([id,nodes])=>{
+        const selected=[...nodes].sort((x,y)=>(distance(start,x)+distance(x,end))-(distance(start,y)+distance(y,end))).slice(0,8);
+        for(let i=0;i<8;i++)selected.push(nodes[Math.floor(i*(nodes.length-1)/7)]);
+        for(const key of [work.startNode,work.endNode])if(find(key)===id)selected.push(work.nodes.get(key));
+        return uniqueBy(selected,n=>n.id);
+      });
+      const addGap=(x,y)=>{const len=distance(x,y);x.outgoing.push({from:x.id,to:y.id,wayId:null,len,cost:len*8+25,guidance:true,pa:point(x),pb:point(y)});};
+      for(let i=0;i<representatives.length;i++)for(let j=i+1;j<representatives.length;j++){
+        let best=null;
+        for(const x of representatives[i])for(const y of representatives[j]){const d=distance(x,y);if(!best||d<best.d)best={x,y,d};}
+        if(best){addGap(best.x,best.y);addGap(best.y,best.x);}
+      }
+      arcs=shortestPath(graph,work);
+    }
+    if (!arcs || !arcs.length) return directGuidance(start,end,'no-mapped-connection');
+    const parts=[];let block=[];
+    const flush=()=>{if(!block.length)return;const r=routeFromArcs(graph,block,a,b,limits,{sourceTimestamp:json.osm3s?.timestamp_osm_base});if(r.ok)parts.push({kind:'mapped',route:r.route});block=[];};
+    if(distance(start,a.point)>0)parts.push({kind:'guidance',points:[start,a.point]});
+    for(const arc of arcs){if(arc.guidance){flush();parts.push({kind:'guidance',points:[arc.pa,arc.pb]});}else block.push(arc);}
+    flush();
+    if(distance(b.point,end)>0)parts.push({kind:'guidance',points:[b.point,end]});
+    if(parts.length===1 && parts[0].kind==='mapped')return {ok:true,route:parts[0].route};
+    const result=guidanceRoute(start,end,parts);
+    return validateDestinationRoute(result.route).valid ? result : directGuidance(start,end,'map-gap');
+  }
+  function validateGuidanceRoute(value) {
+    const invalid=reason=>({valid:false,certified:false,reason});
+    const e=value.routeEvidence;
+    if(value.routeMode!=='destination'||value.kind!==KIND||e?.type!==KIND||e.version!==2||!Array.isArray(e.parts)||!e.parts.length||e.parts.length>1000)return invalid('invalid-guidance-evidence');
+    if(!validPoint(value.selectedStart)||!validPoint(value.selectedEnd))return invalid('invalid-endpoints');
+    let last=point(value.selectedStart);
+    for(const part of e.parts){
+      if(part.kind==='mapped') {if(part.route?.routeSchemaVersion!==1||!validateDestinationRoute(part.route).valid)return invalid('invalid-mapped-part');}
+      else if(part.kind!=='guidance'||!Array.isArray(part.points)||part.points.length!==2)return invalid('invalid-guidance-part');
+      const points=part.kind==='mapped'?part.route.points:part.points;
+      if(points.some(p=>!validPoint(p))||distance(last,points[0])>0.01)return invalid('disconnected-guidance');
+      last=point(points[points.length-1]);
+    }
+    if(distance(last,value.selectedEnd)>0.01)return invalid('wrong-destination');
+    const rebuilt=guidanceRoute(value.selectedStart,value.selectedEnd,e.parts).route;
+    for(const key of ['points','lengthM','routeFingerprint','networkVerified','guidanceDistanceM'])if(JSON.stringify(value[key])!==JSON.stringify(rebuilt[key]))return invalid('guidance-'+key+'-mismatch');
+    return {valid:true,certified:rebuilt.networkVerified,reason:null,lengthM:rebuilt.lengthM,source:'walking-guidance'};
+  }
+
   function keyAt(way, index, fraction) {
     if (fraction === 0) return 'n/' + way.nodes[index];
     if (fraction === 1) return 'n/' + way.nodes[index + 1];
@@ -514,6 +612,7 @@
   }
 
   function validateDestinationRoute(value) {
+    if (value && value.routeSchemaVersion === 2) return validateGuidanceRoute(value);
     function invalid(reason) { return { valid: false, certified: false, reason }; }
     if (!value || value.routeSchemaVersion !== VERSION || value.routeMode !== 'destination' || value.kind !== KIND) return invalid('invalid-route-type');
     const evidence = value.routeEvidence;
@@ -571,7 +670,7 @@
     const b = [box.south, box.west, box.north, box.east].map(n => n.toFixed(6)).join(',');
     const timeout = Math.max(8, Math.min(25, Math.round(((opts && opts.timeoutMs) || DEFAULTS.timeoutMs) / 1000)));
     return '[out:json][timeout:' + timeout + '][maxsize:9437184];' +
-      'way[highway~"^(path|footway|bridleway|track|pedestrian|steps|cycleway)$"](' + b + ')->.paths;' +
+      'way[highway~"^(path|footway|bridleway|track|pedestrian|steps|cycleway|residential|living_street|service|unclassified|tertiary|secondary|primary|tertiary_link|secondary_link|primary_link)$"](' + b + ')->.paths;' +
       '(.paths;node(w.paths);relation(bw.paths)[type=restriction]["restriction:foot"];);out body geom;';
   }
 
@@ -646,21 +745,24 @@
     if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Start and destination must be finite latitude/longitude coordinates.');
     if (opts2.signal && opts2.signal.aborted) return fail('provider-cancelled', 'Route request was cancelled.');
     const airM = distance(start, end);
-    if (airM > opts2.maxAirDistanceM) return fail('selection-too-wide', 'Selected endpoints are outside the supported bounded search area.', { airDistanceM: Math.round(airM), maxAirDistanceM: opts2.maxAirDistanceM });
+    if (airM > opts2.maxAirDistanceM) return opts2.requireMappedRoute ? fail('selection-too-wide', 'Selected endpoints are outside the supported bounded search area.') : directGuidance(start,end,'selection-outside-map-search');
     const query = buildDestinationOverpassQuery(start, end, opts2);
     const endpoints = (opts2.endpoints || DEFAULT_ENDPOINTS).map(endpoint=>({endpoint}));
     const mapApi = (!opts2.endpoints || opts2.mapApiFallback === true) && opts2.mapApiFallback !== false ? mapApiEndpoint(start,end,opts2) : null;
     if(mapApi) endpoints.splice(1,0,{endpoint:mapApi,method:'GET'});
     const fetchFn = opts2.fetchFn || (root && typeof root.fetch === 'function' ? root.fetch.bind(root) : null);
-    if (!fetchFn) return fail('provider-unavailable', 'No fetch implementation is available.');
+    if (!fetchFn) return opts2.requireMappedRoute ? fail('provider-unavailable', 'No fetch implementation is available.') : directGuidance(start,end,'provider-unavailable');
+    if (root?.navigator?.onLine === false && !opts2.fetchFn && !opts2.requireMappedRoute) return directGuidance(start,end,'offline');
+    const deadline=Date.now()+opts2.totalTimeoutMs;
     let last = null; const attempts=[];
     for (let index=0;index<endpoints.length;index++) {
       const {endpoint,method}=endpoints[index];
+      if(Date.now()>=deadline)break;
       if(opts2.signal?.aborted)return fail('provider-cancelled','Route request was cancelled.');
       try {opts2.onProgress?.({attempt:index+1,total:endpoints.length,alternative:index>0});} catch(_){}
       try {
         const key=endpoint+'|'+query, stored=!opts2.fetchFn&&recentMapData.get(key);
-        const response = stored && Date.now()-stored.at<300000 ? stored.response : await fetchWithBodyTimeout(fetchFn, endpoint, query, {...opts2,method,timeoutMs:mapApi&&index===0?Math.min(8000,opts2.timeoutMs):opts2.timeoutMs}, opts2.signal);
+        const response = stored && Date.now()-stored.at<300000 ? stored.response : await fetchWithBodyTimeout(fetchFn, endpoint, query, {...opts2,method,timeoutMs:Math.max(1,Math.min(opts2.timeoutMs,deadline-Date.now()))}, opts2.signal);
         const parsed = parseProviderJson(response.text);
         if (parsed.error) {
           last = fail(parsed.error, 'Routing provider returned non-JSON data.', { provider: endpoint, status: response.status, bodyHash: bodyHash(response.text) });
@@ -696,7 +798,8 @@
         if (code === 'provider-cancelled') return last;
       }
     }
-    return last || fail('provider-unavailable', 'No routing provider could be reached.');
+    if (opts2.signal?.aborted) return fail('provider-cancelled','Route request was cancelled.');
+    return opts2.requireMappedRoute ? (last || fail('provider-unavailable', 'No routing provider could be reached.')) : directGuidance(start,end,last?.error?.code || 'provider-unavailable');
   }
 
   const api = {
@@ -711,6 +814,7 @@
     buildDestinationOverpassQuery,
     bboxFor,
     planDestinationRoute,
+    planMappedDestinationRoute,
     validateDestinationRoute,
     fetchDestinationRoute,
     _buildGraph: buildGraph

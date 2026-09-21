@@ -670,3 +670,22 @@ test('cancelled previews, replaced previews and stale revisions cannot activate 
   assert.equal(stale.status, 'stale-revision');
   assert.equal(root.destinationQuests.active.id, activeId);
 });
+
+test('both existing mapped v1 and new guidance v2 quests survive save and any-path completion', () => {
+  const raw=osm([way(90,[1,2],[p(0,0),p(300,0)])]);
+  const mapped=routeCore.planMappedDestinationRoute(raw,p(0,0),p(300,0)).route;
+  const guidance=routeCore.planDestinationRoute(null,p(0,0),p(300,100)).route;
+  assert.equal(mapped.routeSchemaVersion,1);assert.equal(guidance.routeSchemaVersion,2);
+  for(const route of [mapped,guidance]){
+    const root=makeRoot(),adapter=makeAdapter(root),plan=buildPlan({route});assert(plan.ok);
+    assert.equal(state.beginDestinationQuest(root,plan.record,adapter,{expectedProfileId:'profile-a',expectedRevision:7,now:1}).status,'committed');
+    root.destinationQuests=state.sanitizeDestinationState(JSON.parse(JSON.stringify(root.destinationQuests)));
+    assert.deepEqual(root.destinationQuests.active.route,route);
+    assert.equal(state.finishDestinationWalk(root,adapter,{expectedProfileId:'profile-a',expectedRevision:8,now:2,gpsTicks:0,usedSuggestedTrack:false}).status,'committed');
+    assert.equal(state.completeDestinationQuest(root,adapter,{expectedProfileId:'profile-a',expectedRevision:9,now:3}).status,'committed');
+    assert.equal(root.player.coins,10+plan.record.quote.coins);
+    const before=JSON.stringify(root);
+    assert.equal(state.completeDestinationQuest(root,adapter,{questId:plan.record.id,expectedProfileId:'profile-a',expectedRevision:10,now:4}).status,'duplicate');
+    assert.equal(JSON.stringify(root),before);
+  }
+});
