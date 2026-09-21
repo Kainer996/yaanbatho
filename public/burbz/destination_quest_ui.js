@@ -787,7 +787,7 @@
       const map = getMap();
       const route = preview && preview.route;
       const points = routePoints(route);
-      if (!map || points.length < 2 || (map.isStyleLoaded && !map.isStyleLoaded())) return;
+      if (!map || points.length < 2) return;
       if (renderedRouteKey !== route.routeFingerprint) clearPreviewLayer();
       try {
         if (!map.getSource || !map.getSource('burbz-destination-route')) {
