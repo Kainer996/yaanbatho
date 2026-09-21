@@ -1,6 +1,6 @@
 # Persistent destination pathway and pocket gathering — v437
 
-Previously, Begin closed the planner and deleted the only route overlay. The map now draws the saved active destination route independently of the planner, with an 11 px red outer line and 5 px gold centre. Both selected endpoint markers persist. Closing/reopening the planner, changing screens, loading an existing quest, resetting the map style and offline restart restore the same geometry without fetching a new route. Completion removes it. The second map selection automatically requests the route.
+Previously, Begin closed the planner and deleted the only route overlay. The map now draws the saved active destination route independently of the planner, with an 11 px red outer line and 5 px gold centre. Both selected endpoint markers persist. Closing/reopening the planner, changing screens, loading an existing quest, resetting the map style and offline restart restore the same geometry without fetching a new route. Completion removes it. Day/night colour grading preserves the bright destination colours. The second map selection automatically requests the route.
 
 Weighted routing prefers explicit public footpaths, then walking paths, then roads/pavements. Ordinary public walking roads still connect paths, while v436's explicit dashed gap guidance remains for missing data. Actual mapped evidence, access exclusions and any-path quest completion remain unchanged.
 
@@ -10,4 +10,4 @@ A small start toast explains automatic pocket loot. The saved-plan help states t
 
 Verification: path-versus-shorter-road preference, road-only fallback, hidden collection of 30 items beyond the marker cap, off-route/radius gates, stale/future/poor fixes, failed-save retry and once-only reload; existing route/state/UI/pocket regressions; installed v436→v437 and actual-public native map selection/Begin, red/gold saved-route visibility, navigation/style recovery, actual browser GPS pickup callback, offline route/loot retention and final once-only completion. Evidence: `/root/burbz-destination-v437-evidence`. Browser evidence uses phone-emulated Chromium with a disposable player and fixed public coordinates, not a physical outdoor phone walk.
 
-Build: `red-gold-pocket-v437-20260921`; changed route/UI modules pinned in the document and all three worker lists; unchanged CSS remains v436. No paid recognition, artwork or backend changes.
+Build: `red-gold-pocket-v437-20260921`; changed route/UI/day-night modules pinned in the document and all three worker lists; unchanged CSS remains v436. No paid recognition, artwork or backend changes.
