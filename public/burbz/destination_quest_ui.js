@@ -6,11 +6,11 @@
   'use strict';
 
   const VERSION = 'destination-quest-ui-v431-20260921';
-  const PIN = 'destination-touch-v435b-20260921';
+  const PIN = 'destination-anywhere-v436-20260921';
   const DEFAULT_ROUTE_OPTIONS = {
-    timeoutMs: 25000,
+    timeoutMs: 5000,
+    totalTimeoutMs: 12000,
     minRouteM: 25,
-    maxEndpointSnapM: 45,
     queryPaddingM: 280
   };
 
@@ -739,7 +739,7 @@
       });
       const map = getMap();
       if (!map) return;
-      for (const layerId of ['burbz-destination-route', 'burbz-destination-route-glow']) {
+      for (const layerId of ['burbz-destination-guidance', 'burbz-destination-route', 'burbz-destination-route-glow']) {
         try { if (map.getLayer && map.getLayer(layerId)) map.removeLayer(layerId); } catch (_) {}
       }
       try { if (map.getSource && map.getSource('burbz-destination-route')) map.removeSource('burbz-destination-route'); } catch (_) {}
@@ -747,11 +747,11 @@
     function routeGeoJSON(route) {
       return {
         type: 'FeatureCollection',
-        features: [{
+        features: (route?.routeSchemaVersion === 2 ? route.routeEvidence.parts : [{kind:'mapped',route}]).map(part => ({
           type: 'Feature',
-          properties: {},
-          geometry: { type: 'LineString', coordinates: routePoints(route).map(point => [point.lon, point.lat]) }
-        }]
+          properties: {guidance:part.kind === 'guidance'},
+          geometry: { type: 'LineString', coordinates: (part.kind === 'guidance' ? part.points : routePoints(part.route)).map(point => [point.lon, point.lat]) }
+        }))
       };
     }
     function makeMarker(point, label, className) {
@@ -787,7 +787,8 @@
         if (!map.getSource || !map.getSource('burbz-destination-route')) {
           map.addSource('burbz-destination-route', { type: 'geojson', data: routeGeoJSON(route) });
           map.addLayer({ id: 'burbz-destination-route-glow', type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#1b140b', 'line-width': 10, 'line-opacity': 0.62, 'line-blur': 1.5 } });
-          map.addLayer({ id: 'burbz-destination-route', type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#f5c466', 'line-width': 5, 'line-opacity': 0.98 } });
+          map.addLayer({ id: 'burbz-destination-route', filter:['==',['get','guidance'],false], type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#f5c466', 'line-width': 5, 'line-opacity': 0.98 } });
+          map.addLayer({id:'burbz-destination-guidance',type:'line',source:'burbz-destination-route',filter:['==',['get','guidance'],true],paint:{'line-color':'#f5c466','line-width':4,'line-dasharray':[2,2]}});
         } else {
           map.getSource('burbz-destination-route').setData(routeGeoJSON(route));
         }
@@ -821,7 +822,7 @@
         '</div>' +
         '<p>' + escapeHtml(elevationCopy) + '</p>' +
         '<p>Loot: ' + escapeHtml(loot) + '</p>' +
-        '<p>Route uses public map data and can be wrong; follow signs, conditions and local access.</p>' +
+        '<p>' + escapeHtml(preview.route.routeDataNote || 'Any route to your destination counts; follow local access and conditions.') + '</p>' +
         '</div>';
     }
     function activeSummaryHTML() {
@@ -939,7 +940,7 @@
         render();
       });
       sheet.querySelector('[data-destination-finish]')?.addEventListener('click', () => {
-        if (!confirmAction('Finish this destination walk by honor confirmation? GPS checkpoints are not required.')) return;
+        if (!confirmAction('Finish this destination walk by honor confirmation? Any route you took counts; GPS checkpoints are not required.')) return;
         const result = timelineController.finishWalk({ confirmed: true, gpsTicks: 0, usedSuggestedTrack: false });
         if (result && result.status !== 'committed') showToast('Walk finish could not save: ' + (result.status || 'failed'));
         render();

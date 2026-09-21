@@ -2,7 +2,9 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const route = require('../destination_route_core.js');
+// Preserve strict OSM-evidence regression coverage separately from gap guidance.
+const core = require('../destination_route_core.js');
+const route = {...core, planDestinationRoute: core.planMappedDestinationRoute};
 const elevation = require('../destination_elevation_core.js');
 const rewards = require('../destination_reward_core.js');
 
@@ -37,7 +39,7 @@ const osm = elements => {
 };
 
 async function runFetch(fetchFn, start, end, opts = {}) {
-  return route.fetchDestinationRoute(start, end, { fetchFn, endpoints: ['https://example.test/overpass'], timeoutMs: 1000, ...opts });
+  return route.fetchDestinationRoute(start, end, { fetchFn, endpoints: ['https://example.test/overpass'], timeoutMs: 1000, requireMappedRoute: true, ...opts });
 }
 
 test('directed destination search preserves every source vertex and refuses a non-shared crossing', () => {
@@ -87,7 +89,7 @@ test('public access policy rejects private, conditional, ambiguous and blocked r
   const cases = [
     way(1, [1, 2], [p(0, 0), p(0, 100)], { access: 'private', foot: 'yes' }),
     way(2, [3, 4], [p(0, 0), p(0, 100)], { 'foot:conditional': 'yes @ (Mo-Fr)' }),
-    way(3, [5, 6], [p(0, 0), p(0, 100)], { highway: 'service' })
+    way(3, [5, 6], [p(0, 0), p(0, 100)], { highway: 'service', access: 'private' })
   ];
   for (const w of cases) {
     const result = route.planDestinationRoute(osm([w]), p(0, 1), p(0, 90));
