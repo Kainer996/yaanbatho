@@ -285,6 +285,8 @@
       f0,
       f1,
       len: seg.len * Math.abs(f1 - f0),
+      // Prefer public footpaths; pavements/roads remain connected alternatives.
+      cost: seg.len * Math.abs(f1 - f0) * (seg.info.publicPath ? 0.8 : seg.info.path ? 1 : 1.8),
       path: seg.info.path,
       publicPath: seg.info.publicPath
     };

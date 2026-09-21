@@ -6,7 +6,7 @@
   'use strict';
 
   const VERSION = 'destination-quest-ui-v431-20260921';
-  const PIN = 'destination-anywhere-v436-20260921';
+  const PIN = 'red-gold-pocket-v437-20260921';
   const DEFAULT_ROUTE_OPTIONS = {
     timeoutMs: 5000,
     totalTimeoutMs: 12000,
@@ -661,12 +661,15 @@
         render();
       },
       onBegin: function(result, preview) {
+        controller.cancel('quest-started'); // The saved active quest now owns the map.
         closePlanner({ keepActive: true });
+        refreshMapRoute({fit:true});
         if (typeof options.onBegin === 'function') options.onBegin(result, preview);
       }
     }));
     const markers = [];
     let sheet = null;
+    let routeMap = null, renderedRouteKey = '';
     let mapPick = null;
     let nativeHandlers = null;
     let archiveViewId = null;
@@ -733,11 +736,12 @@
       if (typeof options.setMapInspectionMode === 'function') options.setMapInspectionMode(!!sheet?.classList.contains('open'));
     }
     function clearPreviewLayer() {
+      renderedRouteKey = '';
       markerKey = '';
       markers.splice(0).forEach(marker => {
         try { marker.remove(); } catch (_) {}
       });
-      const map = getMap();
+      const map = routeMap || getMap();
       if (!map) return;
       for (const layerId of ['burbz-destination-guidance', 'burbz-destination-route', 'burbz-destination-route-glow']) {
         try { if (map.getLayer && map.getLayer(layerId)) map.removeLayer(layerId); } catch (_) {}
@@ -770,30 +774,34 @@
         markers.push(marker);
       } catch (_) {}
     }
-    function syncSelectionMarkers() {
-      const s = controller.state(), key = JSON.stringify([s.start,s.end]);
+    function syncSelectionMarkers(route) {
+      const current = controller.state();
+      const s = route ? {start:route.selectedStart || route.points?.[0],end:route.selectedEnd || route.points?.at(-1)} : current;
+      const key = JSON.stringify([s.start,s.end]);
       if (key === markerKey) return;
       markers.splice(0).forEach(m=>m.remove());
       makeMarker(s.start,'Start','start'); makeMarker(s.end,'Destination','end');
       markerKey=key;
     }
-    function drawPreview(preview) {
-      clearPreviewLayer();
+    function drawPreview(preview, opts = {}) {
       const map = getMap();
       const route = preview && preview.route;
       const points = routePoints(route);
-      if (!map || points.length < 2) return;
+      if (!map || points.length < 2 || (map.isStyleLoaded && !map.isStyleLoaded())) return;
+      if (renderedRouteKey !== route.routeFingerprint) clearPreviewLayer();
       try {
         if (!map.getSource || !map.getSource('burbz-destination-route')) {
           map.addSource('burbz-destination-route', { type: 'geojson', data: routeGeoJSON(route) });
-          map.addLayer({ id: 'burbz-destination-route-glow', type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#1b140b', 'line-width': 10, 'line-opacity': 0.62, 'line-blur': 1.5 } });
-          map.addLayer({ id: 'burbz-destination-route', filter:['==',['get','guidance'],false], type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#f5c466', 'line-width': 5, 'line-opacity': 0.98 } });
-          map.addLayer({id:'burbz-destination-guidance',type:'line',source:'burbz-destination-route',filter:['==',['get','guidance'],true],paint:{'line-color':'#f5c466','line-width':4,'line-dasharray':[2,2]}});
+          map.addLayer({ id: 'burbz-destination-route-glow', type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#d51f35', 'line-width': 11, 'line-opacity': 1 } });
+          map.addLayer({ id: 'burbz-destination-route', filter:['==',['get','guidance'],false], type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#ffd86b', 'line-width': 5, 'line-opacity': 1 } });
+          map.addLayer({id:'burbz-destination-guidance',type:'line',source:'burbz-destination-route',filter:['==',['get','guidance'],true],paint:{'line-color':'#ffd86b','line-width':4,'line-dasharray':[2,2]}});
         } else {
           map.getSource('burbz-destination-route').setData(routeGeoJSON(route));
         }
       } catch (_) {}
-      syncSelectionMarkers();
+      renderedRouteKey = route.routeFingerprint;
+      syncSelectionMarkers(route);
+      if (opts.fit === false) return;
       if (typeof options.fitRoute === 'function') {
         options.fitRoute(points);
       } else if (root.maplibregl && typeof map.fitBounds === 'function') {
@@ -804,6 +812,22 @@
         } catch (_) {}
       }
     }
+    function refreshMapRoute(opts = {}) {
+      if (disposed) return;
+      const map = getMap();
+      if (map !== routeMap) {
+        clearPreviewLayer();
+        routeMap?.off?.('style.load', onMapStyleLoad);
+        routeMap = map;
+        routeMap?.on?.('style.load', onMapStyleLoad);
+      }
+      const active = timelineController.activeQuest();
+      const preview = sheet?.classList.contains('open') ? controller.state().preview : null;
+      const route = active?.route || preview?.route;
+      if (route) drawPreview({route}, {fit:opts.fit === true});
+      else { clearPreviewLayer(); if(sheet?.classList.contains('open'))syncSelectionMarkers(); }
+    }
+    function onMapStyleLoad() { renderedRouteKey = ''; refreshMapRoute(); }
     function routeMetricHTML(preview) {
       if (!preview || !preview.route || !preview.quote) return '';
       const elevation = preview.quote.elevation || preview.elevation || {};
@@ -868,7 +892,7 @@
       const loot = Array.isArray(quote.loot) && quote.loot.length ? quote.loot.map(item => escapeHtml(item.id) + ' x' + Math.max(1, Number(item.qty) || 1)).join(', ') : 'No loot';
       return '<section class="destination-active-panel" data-destination-phase="' + escapeHtml(active.phase || '') + '">' +
         '<h3>' + escapeHtml(isReview ? 'Story review' : 'Pocket walk plan') + '</h3>' +
-        '<p class="destination-guidance">' + escapeHtml(isReview ? 'Review every saved stop in route order. You can leave and come back; completion only happens when you choose it.' : 'Carry this saved route in your pocket. If you take another safe way there, finish honestly when the real walk is done.') + '</p>' +
+        '<p class="destination-guidance">' + escapeHtml(isReview ? 'Review every saved stop in route order. You can leave and come back; completion only happens when you choose it.' : 'Pocket your phone: nearby loot is gathered automatically inside your yellow circle. Keep location active; if your phone pauses it, gathering resumes when you reopen. Take any accessible way to your destination.') + '</p>' +
         '<div class="destination-preview-grid destination-payment-grid"><div><span>XP</span><b>+' + Math.round(Number(quote.xp) || 0) + '</b></div><div><span>Coins</span><b>+' + Math.round(Number(quote.coins) || 0) + '</b></div><div><span>Loot</span><b>' + escapeHtml(loot) + '</b></div></div>' +
         '<div class="destination-actions destination-timeline-actions">' +
         (isReview ? '<button type="button" data-destination-complete>Complete & claim</button>' : '<button type="button" data-destination-finish>Finish my walk</button>') +
@@ -877,10 +901,10 @@
         '</section>' + renderArchiveTimeline();
     }
     function render() {
+      refreshMapRoute();
       if (!sheet || !sheet.classList.contains('open')) return;
       const current = controller.state();
-      if (!current.preview) clearPreviewLayer();
-      syncSelectionMarkers();
+      if (!timelineController.activeQuest()) syncSelectionMarkers();
       sheet.classList.toggle('show-coordinates',manualCoordinates);
       const planning = current.phase === 'planning' || current.pending;
       const preview = current.preview;
@@ -994,7 +1018,10 @@
         if (kind === 'start') controller.setMapStart(lat, lon);
         else controller.setMapEnd(lat, lon);
         render();
-        if(kind === 'end' && controller.state().start) options.fitRoute?.([controller.state().start,controller.state().end]);
+        if(controller.state().start && controller.state().end) {
+          options.fitRoute?.([controller.state().start,controller.state().end]);
+          controller.preview().then(render);
+        }
         if(kind === 'start' && !controller.state().end) queueMicrotask(()=>{if(sheet?.classList.contains('open'))beginMapPick('end');});
       };
       mapPick = { map, handler, kind };
@@ -1051,10 +1078,10 @@
       if(!opts.keepActive)options.onClose?.();
       cleanupMapPick();
       if (!opts.keepActive) controller.cancel('planner-closed');
-      clearPreviewLayer();
       if (sheet) sheet.classList.remove('open');
       doc.body.classList.remove('destination-quest-open');
       options.setMapInspectionMode?.(false);
+      refreshMapRoute();
     }
     function wireMainButton() {
       const btn = doc.getElementById('mapQuestShowBtn');
@@ -1084,6 +1111,9 @@
       if (disposed) return;
       closePlanner();
       disposed = true;
+      clearPreviewLayer();
+      routeMap?.off?.('style.load', onMapStyleLoad);
+      routeMap = null;
       if (mainButton && mainHandler) {
         mainButton.removeEventListener('click', mainHandler, { capture: true });
         delete mainButton.dataset.destinationQuestWired;
@@ -1105,6 +1135,7 @@
       dispose,
       render,
       drawPreview,
+      refreshMapRoute,
       clearPreviewLayer,
       cleanupMapPick,
       activeHandoff: () => {

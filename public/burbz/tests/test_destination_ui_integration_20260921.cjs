@@ -143,8 +143,8 @@ test('destination UI modules are registered as the Main Quest surface', () => {
     'destination_quest_ui.js',
     'destination_quest_ui.css'
   ]) {
-    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_route_core.js','destination_quest_ui.js','destination_quest_ui.css'].includes(file)?'destination-anywhere-v436-20260921':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
-    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_route_core.js','destination_quest_ui.js','destination_quest_ui.css'].includes(file)?'destination-anywhere-v436-20260921':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
+    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_route_core.js','destination_quest_ui.js'].includes(file)?'red-gold-pocket-v437-20260921':file==='destination_quest_ui.css'?'destination-anywhere-v436-20260921':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
+    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_route_core.js','destination_quest_ui.js'].includes(file)?'red-gold-pocket-v437-20260921':file==='destination_quest_ui.css'?'destination-anywhere-v436-20260921':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
     assert.ok(UPDATER.includes('"' + file + '"'), file + ' updater pin');
   }
   assert.ok(/id="mapQuestShowBtn"[\s\S]*Main Quests/.test(INDEX), 'map primary quest entry should say Main Quests');
@@ -499,9 +499,9 @@ test('planner lifecycle removes map picking, async work, Main button and Escape 
   button.dispatchEvent(new Event('click', { cancelable: true }));
   assert.equal(sheet.classList.contains('open'), true);
   sheet.querySelectorAll('[data-destination-pick]')[0].dispatchEvent(new Event('click'));
-  assert.equal(listeners.size, 1); assert.equal(inspection, true);
+  assert.equal(listeners.size, 2); assert.equal(inspection, true); // map pick + persistent style restoration
   const esc = new Event('keydown', { cancelable: true }); Object.defineProperty(esc, 'key', { value: 'Escape' }); doc.dispatchEvent(esc);
-  assert.equal(listeners.size, 0); assert.equal(inspection, false); assert.equal(sheet.classList.contains('open'), false);
+  assert.equal(listeners.size, 1); assert.equal(inspection, false); // style restoration survives planner close assert.equal(sheet.classList.contains('open'), false);
   button.dispatchEvent(new Event('click', { cancelable: true }));
   sheet.querySelectorAll('[data-destination-pick]')[0].dispatchEvent(new Event('click'));
   const removed = sheet;
