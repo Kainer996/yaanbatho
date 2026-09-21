@@ -15,3 +15,7 @@ Focused checks:11 route,12 state,8 UI/lifecycle,5 recovery groups; exact consumi
 ## Pin visibility follow-up v435b
 
 A screenshot review caught the expanded sheet covering the selected points. The follow-up keeps a compact selected-point/preview panel and fits both red markers above it, with room beside the zoom controls. Native touch, accurate geographic pin placement, both pin/label bounds above the panel, real provider recovery, Begin and save reload pass. The request/route/economy code is unchanged from v435.
+
+## Loading overlay follow-up v435c
+
+The public phone test reproduced a separate startup race: habitat results can show the fallback layer before MapLibre finishes loading, and that layer remained above the ready map. It intercepted native touches despite enabled pan controls. The map's actual load event now removes the fallback layer; failed map initialization retains it. Two focused lifecycle checks cover both outcomes. The public native test also asserts that the loaded map has no visible fallback overlay. This change only advances the global build/cache; the three destination module pins remain v435b.
