@@ -4600,6 +4600,15 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
 <link rel="stylesheet" href="player_equipment.css?v=wilderness-birds-v395-20260913">
+<style>
+#liveMapShell.quest-overview .burbz-pickup-marker,
+#liveMapShell.quest-overview .burbz-village-marker,
+#liveMapShell.quest-overview .geographic-place-marker,
+#liveMapShell.quest-overview .burbz-map-bird-chip,
+#liveMapShell.quest-overview .camp-marker,
+#liveMapShell.quest-overview #mapBirdOverlay,
+#liveMapShell.quest-overview .map-area-birds-tab { display:none !important; }
+</style>
 </head>
 <body class="woodland-ui">
 <script>
@@ -19130,7 +19139,7 @@ function enableBurbzTerrain() {
   });
   window.BurbzGeographicSurfaces?.attach(liveMap,{isVisible:()=>currentScreen==='map'&&!geographicPlaces?.inside,getQuality:()=>geographicMap3D?.state});
   if(!geographicPlaces && window.BurbzGeographicPlaces) geographicPlaces=window.BurbzGeographicPlaces.attach(liveMap,{
-    isVisible:()=>currentScreen==='map',getPosition:()=>liveMapHasPrecisePosition?liveMapLastPosition:null,
+    isVisible:()=>currentScreen==='map'&&!questOverview.on,getPosition:()=>liveMapHasPrecisePosition?liveMapLastPosition:null,
     marker:opts=>createGeographicMarker(opts),loadWalk:ensureVillageWalkModule,character:walkingCharacterState,
     getQuestObjects:()=>{const q=activeWalkingQuest();return BurbzMapTrailCore.buildings(q,q?BurbzWalkingEncounterCore.listQuestEncounters(q):[]);},
     fetch:query=>window.BurbzQuestCore.fetchGeographicDetails(query),
@@ -19147,7 +19156,7 @@ function enableBurbzTerrain() {
 
 function ensureBurbzMapSources() { if (!liveMap) return; try { if (!liveMap.getSource('burbz-player-range')) { liveMap.addSource('burbz-player-range', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-player-range-fill', type:'fill', source:'burbz-player-range', paint:{ 'fill-color':'#f0c767', 'fill-opacity':.13 } }); liveMap.addLayer({ id:'burbz-player-range-line', type:'line', source:'burbz-player-range', paint:{ 'line-color':'#f0c767', 'line-width':2.4, 'line-opacity':.82 } }); }
   if (!liveMap.getSource('burbz-habitat-zones')) { liveMap.addSource('burbz-habitat-zones', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-habitat-zones-fill', type:'fill', source:'burbz-habitat-zones', paint:{ 'fill-color':['get','color'], 'fill-opacity':['coalesce', ['get','opacity'], .12] } }); liveMap.addLayer({ id:'burbz-habitat-zones-line', type:'line', source:'burbz-habitat-zones', paint:{ 'line-color':['get','color'], 'line-width':1.4, 'line-opacity':.64 } }); liveMapHabitatLayers = ['burbz-habitat-zones-fill','burbz-habitat-zones-line']; }
-  if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.035], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,3.2], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.15] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,1.8], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.12] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
+  if (!liveMap.getSource('burbz-quest-offers')) { liveMap.addSource('burbz-quest-offers', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addLayer({ id:'burbz-quest-offers-glow', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],10,4], 'line-opacity':['case',['boolean',['get','selected'],false],.22,.16], 'line-blur':2.5 } }); liveMap.addLayer({ id:'burbz-quest-offers-casing', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':['case',['boolean',['get','selected'],false],6.6,5], 'line-opacity':['case',['boolean',['get','selected'],false],.76,.7] } }); liveMap.addLayer({ id:'burbz-quest-offers-line', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':['case',['boolean',['get','selected'],false],4.2,3], 'line-opacity':['case',['boolean',['get','selected'],false],.98,.85] } }); liveMap.addLayer({ id:'burbz-quest-offers-hit', type:'line', source:'burbz-quest-offers', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':['get','color'], 'line-width':22, 'line-opacity':.02 } }); liveMap.on('click', 'burbz-quest-offers-hit', ev => { const f = ev.features && ev.features[0]; if (f && f.properties && f.properties.offerIdx !== undefined) focusQuestOnMap(Number(f.properties.offerIdx)); }); drawQuestOverviewLines(); }
   if (!liveMap.getSource('burbz-quest-route')) { liveMap.addSource('burbz-quest-route', { type:'geojson', data:{ type:'FeatureCollection', features:[] } }); liveMap.addSource('burbz-quest-route-edges', {type:'geojson',data:{type:'FeatureCollection',features:[]}}); liveMap.addLayer({ id:'burbz-quest-route-glow', type:'line', source:'burbz-quest-route-edges', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':5, 'line-opacity':.32, 'line-blur':1.5 } }); liveMap.addLayer({ id:'burbz-quest-route-casing', type:'line', source:'burbz-quest-route-edges', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#07100c', 'line-width':3.6, 'line-opacity':.85, 'line-dasharray':[.25, 2.5] } }); liveMap.addLayer({ id:'burbz-quest-route-line', type:'line', source:'burbz-quest-route-edges', layout:{ 'line-cap':'round', 'line-join':'round' }, paint:{ 'line-color':'#f0c767', 'line-width':2.3, 'line-opacity':1, 'line-dasharray':[.4, 4] } }); drawWalkingQuestRoute(); } } catch (err) { if (/Style is not done loading/i.test(String(err && err.message || err))) { setTimeout(ensureBurbzMapSources, 180); return; } console.warn('BURBZ map source setup failed', err); } }
 function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoom ? liveMap.getZoom() : BURBZ_START_ZOOM; const targetPitch = geographicMap3D ? geographicMap3D.getPitch(zoom, questMapInspectionMode()) : questMapInspectionMode() ? 0 : burbzPitchForZoom(zoom); try { if (Math.abs((liveMap.getPitch ? liveMap.getPitch() : targetPitch) - targetPitch) > 2.5 && !liveMap.isMoving()) liveMap.easeTo({ pitch:targetPitch, duration:340 }); } catch(e) {} const shell = $('liveMapShell'); if (shell) { shell.classList.toggle('zoomed-out', zoom < BURBZ_START_ZOOM - .08); shell.classList.toggle('zoomed-in', zoom > BURBZ_START_ZOOM + .35); } }
 // Pokémon Go / Jurassic World Alive movement model: normal play stays pinned to
@@ -21894,7 +21903,24 @@ function questOverviewGeoJSON() {
     geometry: { type: 'LineString', coordinates: (o.routeSchemaVersion === 1 ? questOfferDisplayPoints(o) : window.BurbzQuestCore.simplifyRoute(questOfferDisplayPoints(o), 120)).map(p => [p.lon, p.lat]) }
   })) };
 }
+function syncQuestOverviewVisibility() {
+  const active = !!questOverview.on;
+  $('liveMapShell')?.classList.toggle('quest-overview', active);
+  if (!liveMap) return;
+  for (const id of ['burbz-habitat-zones-fill', 'burbz-habitat-zones-line']) {
+    if (!liveMap.getLayer(id)) continue;
+    const layer = liveMap.getLayer(id);
+    if (active && layer._questVisibility === undefined) {
+      layer._questVisibility = liveMap.getLayoutProperty(id, 'visibility') || 'visible';
+      liveMap.setLayoutProperty(id, 'visibility', 'none');
+    } else if (!active && layer._questVisibility !== undefined) {
+      liveMap.setLayoutProperty(id, 'visibility', layer._questVisibility);
+      delete layer._questVisibility;
+    }
+  }
+}
 function drawQuestOverviewLines() {
+  syncQuestOverviewVisibility();
   if (!liveMap) return;
   try { const src = liveMap.getSource('burbz-quest-offers'); if (src) src.setData(questOverviewGeoJSON()); } catch (e) {}
   geographicDayNight?.refresh();
@@ -21977,12 +22003,13 @@ function restoreQuestMapFocus() {
   if (showBtn && showBtn.offsetParent !== null) showBtn.focus({ preventScroll:true });
 }
 function updateShowQuestsButton() {
+  syncQuestOverviewVisibility();
   const showBtn = $('mapQuestShowBtn');
   if (!showBtn) return;
   const active = !!questOverview.on;
   showBtn.classList.toggle('active', active);
   showBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
-  showBtn.setAttribute('aria-label', active && questOverview.offers.length ? 'Open ' + questOverview.offers.length + ' local walking quests' : 'Find local walking quests');
+  showBtn.setAttribute('aria-label', active ? 'Hide local walking quests and restore map' : 'Find local walking quests');
 }
 function fitAllLocalQuestRoutes(offers = questOverview.offers) {
   if (!liveMap || !window.maplibregl || !offers || !offers.length) return;
@@ -22046,6 +22073,7 @@ function setQuestOverview(on, opts = {}) {
 }
 function showAllLocalQuests() {
   SFX.tap();
+  if (questOverview.on) { closeWalkQuestSheet(); setQuestOverview(false); return; }
   closeWalkQuestSheet();
   switchScreen('map');
   const birdsWereOpen = areaBirdsOpenPreference();
@@ -22053,6 +22081,10 @@ function showAllLocalQuests() {
   questOverview.selectedIndex = null;
   questOverview.areaBirdsWasOpen = birdsWereOpen;
   setAreaBirdsOpen(false, false);
+  if (liveMap && questOverview.prevZoom == null) questOverview.prevZoom = liveMap.getZoom();
+  questOverview.on = true;
+  geographicPlaces?.close();
+  updateShowQuestsButton();
   openQuestBoard({ showOnMap:true });
 }
 function toggleQuestOverview() { SFX.tap(); setQuestOverview(!questOverview.on); }
@@ -44905,7 +44937,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'hands-on-world-tutorial-v429-20260920';
+const BURBZ_BUILD = 'quest-only-overview-v430-20260921';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
