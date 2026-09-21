@@ -15,7 +15,7 @@ unresolved.push({target,label:info.name,p,direction});});}}
  refreshDoors();resolveDoors(0);
  function enter(t){
   if(room||s.player.mode==='fly'||s.uiBusy||s.failed)return false;const info=valid(t);if(!info)return false;
-  const plan=core.plan(t);if(t.scope==='wayside'){plan.name=info.name;plan.action=null;}const next=root.BurbzBuildingRoomsScene.create(T,plan);
+  const plan=core.plan(t);if(info.name)plan.name=info.name;if(info.actionLabel&&plan.action)plan.action.label=info.actionLabel;if(t.scope==='wayside'){plan.name=info.name;plan.action=null;}const next=root.BurbzBuildingRoomsScene.create(T,plan);
   s.reset();s.discoveries?.closePanel();s.discoveries?.setPaused?.(true);outside={world:s.world,player:{...s.player},exposure:s.source.renderer.toneMappingExposure};s.source.renderer.toneMappingExposure=1;room=next;room.target={...t};s.room=room;s.continuity?.syncControls();s.world=room.world;s.player=room.world.spawn();life=typeof baseApi?.people==='function'||typeof s.continuity?.people==='function'?root.BurbzInteriorLife.attach(s,room,api):null;
   s.root.classList.add('vr-inside');s.root.querySelector('.vw-hint').textContent='Left thumb: walk · Drag to look · E interact';s.root.querySelector('.vw-title small').textContent=s.options.flight?'PERCHED INSIDE':'INDOORS';s.root.querySelector('.vw-title strong').textContent=room.plan.name;
   s.root.querySelector('.vw-exit').textContent=s.options.room?'← Building':'← Outside';

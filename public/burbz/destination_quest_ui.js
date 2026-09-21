@@ -6,7 +6,7 @@
   'use strict';
 
   const VERSION = 'destination-quest-ui-v431-20260921';
-  const PIN = 'destination-quests-v431-20260921';
+  const PIN = 'destination-cleanup-v434-20260921';
   const DEFAULT_ROUTE_OPTIONS = {
     timeoutMs: 25000,
     minRouteM: 25,
@@ -110,6 +110,7 @@
       error: null,
       generation: 0,
       previewId: null,
+      previewContext: null,
       routeOptions: Object.assign({}, options.routeOptions || {}),
       pending: null,
       abort: null,
@@ -169,6 +170,7 @@
       state.pending = null;
       state.preview = null;
       state.previewId = null;
+      state.previewContext = null;
       state.phase = 'idle';
       state.error = null;
       emit(reason || 'selection-changed');
@@ -192,22 +194,54 @@
       emit(kind + '-selected', { point });
       return { ok: true, point: Object.assign({}, point) };
     }
+    function contextStatus(context) {
+      if (!context) return 'stale-preview';
+      const current = rootStateFrom(options);
+      if (profileFrom(options, current) !== context.profileId) return 'stale-profile';
+      if (current !== context.rootState) return 'stale-save';
+      if (revisionFrom(options, current) !== context.revision) return 'stale-revision';
+      return null;
+    }
     function stale(generation) {
-      return generation !== state.generation || state.phase === 'cancelled';
+      if (generation !== state.generation || state.phase === 'cancelled') return true;
+      const changed = contextStatus(state.previewContext);
+      if (changed) { cancel(changed); return true; }
+      return false;
     }
     async function sampleElevation(points, generation, signal) {
+      const unavailable = reason => ({ available: false, reason, ascentM: 0, descentM: 0, multiplier: 1, provenance: { provider: 'unavailable' } });
       if (!elevationCore || typeof elevationCore.sampleRouteElevation !== 'function') {
-        return { available: false, reason: 'Elevation service unavailable in this build.', ascentM: 0, descentM: 0, multiplier: 1, provenance: { provider: 'none' } };
+        return unavailable('Elevation service unavailable in this build.');
       }
+      // DEM is optional: a slow tile must not strand a valid walking route.
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      let timer, onAbort;
+      const deadlineMs = Math.max(1, Math.min(10000, Number(options.elevationTimeoutMs) || 10000));
       try {
-        const value = await elevationCore.sampleRouteElevation(points, { signal, spacingM: options.elevationSpacingM || 90 });
+        const deadline = new Promise(resolve => {
+          timer = setTimeout(() => {
+            resolve(unavailable('Elevation timed out; rewards use distance only.'));
+            controller?.abort();
+          }, deadlineMs);
+          onAbort = () => { resolve(null); controller?.abort(); };
+          if (signal?.aborted) onAbort();
+          else signal?.addEventListener('abort', onAbort, { once: true });
+        });
+        const value = await Promise.race([
+          Promise.resolve().then(() => elevationCore.sampleRouteElevation(points, {
+            signal: controller ? controller.signal : signal, spacingM: options.elevationSpacingM || 90
+          })), deadline
+        ]);
         if (stale(generation)) return null;
         if (value && typeof value === 'object') return value;
       } catch (err) {
         if (stale(generation)) return null;
-        return { available: false, reason: err && err.message || 'Elevation could not be checked.', ascentM: 0, descentM: 0, multiplier: 1, provenance: { provider: 'error' } };
+        return unavailable(err && err.message || 'Elevation could not be checked.');
+      } finally {
+        clearTimeout(timer);
+        if (onAbort) signal?.removeEventListener('abort', onAbort);
       }
-      return { available: false, reason: 'Elevation could not be checked.', ascentM: 0, descentM: 0, multiplier: 1, provenance: { provider: 'empty' } };
+      return unavailable('Elevation could not be checked.');
     }
     function makeQuote(route, elevation) {
       return rewardCore.quoteDestinationReward({ distanceM: routeLength(route), lengthM: routeLength(route) }, elevation, { difficulty: options.difficulty || 'normal' });
@@ -249,6 +283,8 @@
       state.previewId = null;
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       state.abort = controller;
+      const owner = rootStateFrom(options);
+      state.previewContext = { rootState: owner, profileId: profileFrom(options, owner), revision: revisionFrom(options, owner) };
       emit('preview-started', { start: state.start, end: state.end });
       const routeOptions = Object.assign({}, DEFAULT_ROUTE_OPTIONS, state.routeOptions, extra && extra.routeOptions || {});
       if (controller) routeOptions.signal = controller.signal;
@@ -354,11 +390,13 @@
         emit('begin-blocked', { error });
         return { status: 'no-preview', error };
       }
-      const rootState = rootStateFrom(options);
+      const changed = contextStatus(state.previewContext);
+      if (changed) { cancel(changed); return { status: changed }; }
+      const rootState = state.previewContext.rootState;
       const result = stateCore.beginDestinationQuest(rootState, state.preview.record, options.saveAdapter || null, {
         previewId: state.previewId,
-        expectedProfileId: profileFrom(options, rootState),
-        expectedRevision: revisionFrom(options, rootState),
+        expectedProfileId: state.previewContext.profileId,
+        expectedRevision: state.previewContext.revision,
         now: nowValue(options)
       });
       if (result && result.status === 'committed') {
@@ -385,6 +423,7 @@
       state.pending = null;
       state.preview = null;
       state.previewId = null;
+      state.previewContext = null;
       state.error = null;
       state.phase = 'cancelled';
       emit('cancelled', { reason: reason || 'cancelled' });
@@ -540,6 +579,11 @@
         emit('entry-failed', { entryId, result });
         return result;
       }
+      const expectedRoot = rootState(), expectedProfile = profileFrom(options, expectedRoot), expectedQuest = activeQuest()?.id;
+      let nativePreparation;
+      const cleanupNative=()=>{if(nativePreparation?.close)nativePreparation.close();else options.nativeFailed?.(beforeEntry);};
+      const commit = () => {
+      if (rootState() !== expectedRoot || profileFrom(options, rootState()) !== expectedProfile || activeQuest()?.id !== expectedQuest) return { status: 'stale-native' };
       const result = stateCore.applyDestinationEncounter(rootState(), entryId, choice, adapter(), guard());
       const okToShow = result && (result.status === 'committed' || result.status === 'duplicate');
       if (okToShow) {
@@ -554,7 +598,17 @@
         state.error = result || { status: 'failed' };
         emit('entry-failed', { entryId, result });
       }
+      if (!okToShow) cleanupNative();
       return result || { status: 'failed' };
+      };
+      if (typeof options.prepareNative !== 'function') return commit();
+      return Promise.resolve(options.prepareNative(beforeEntry)).then(ready => {
+        nativePreparation=ready;
+        if (ready === false) return { status: 'native-unavailable' };
+        const result = commit();
+        if (result.status === 'stale-native') cleanupNative();
+        return result;
+      }).catch(() => { cleanupNative(); return { status: 'native-unavailable' }; });
     }
     function completeQuest(opts) {
       opts = opts || {};
@@ -614,6 +668,7 @@
     let mapPick = null;
     let nativeHandlers = null;
     let archiveViewId = null;
+    let disposed = false, mainButton = null, mainHandler = null;
     const timelineController = createTimelineController(Object.assign({}, options, {
       nativeHandlers: () => nativeHandlers || {},
       onStatus: function(status) {
@@ -805,7 +860,7 @@
         '<p class="destination-guidance">' + escapeHtml(isReview ? 'Review every saved stop in route order. You can leave and come back; completion only happens when you choose it.' : 'Carry this saved route in your pocket. If you take another safe way there, finish honestly when the real walk is done.') + '</p>' +
         '<div class="destination-preview-grid destination-payment-grid"><div><span>XP</span><b>+' + Math.round(Number(quote.xp) || 0) + '</b></div><div><span>Coins</span><b>+' + Math.round(Number(quote.coins) || 0) + '</b></div><div><span>Loot</span><b>' + escapeHtml(loot) + '</b></div></div>' +
         '<div class="destination-actions destination-timeline-actions">' +
-        (isReview ? '<button type="button" data-destination-complete>Complete & claim</button>' : '<button type="button" data-destination-finish>Honor Finish Walk</button>') +
+        (isReview ? '<button type="button" data-destination-complete>Complete & claim</button>' : '<button type="button" data-destination-finish>Finish my walk</button>') +
         '</div>' +
         renderActiveTimeline(active) +
         '</section>' + renderArchiveTimeline();
@@ -821,7 +876,7 @@
       sheet.innerHTML = '<div class="destination-quest-panel">' +
         '<button type="button" class="destination-sheet-close" data-destination-close aria-label="Close Main Quests">x</button>' +
         '<header class="destination-sheet-head"><div><span>Main Quests</span><h2 id="destinationQuestTitle">Plan a destination walk</h2></div>' +
-        '<p>Pick a real start and destination. Burbz will only preview public walking-network routes it can prove from provider data.</p></header>' +
+        '<p>Pick a real start and destination. Burbz suggests a route along mapped public walking paths.</p></header>' +
         activeHTML +
         '<form class="destination-coordinate-form" data-destination-form>' +
         '<fieldset><legend>Start</legend><label>Latitude<input id="destinationStartLat" name="startLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lat != null ? current.start.lat : '') + '"></label><label>Longitude<input id="destinationStartLon" name="startLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lon != null ? current.start.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(pointLabel(current.start)) + '</div><div class="destination-button-row"><button type="button" data-destination-gps>Use precise GPS</button><button type="button" data-destination-pick="start">Tap start on map</button></div></fieldset>' +
@@ -926,18 +981,20 @@
       map.on('click', handler);
       showToast('Tap the map to choose the ' + (kind === 'start' ? 'start' : 'destination') + '. You can still pan and zoom first.');
     }
-    function openNativeEntry(entryId) {
-      const result = timelineController.openEntry(entryId, { choiceId: 'open' });
+    async function openNativeEntry(entryId, choice) {
+      const result = await timelineController.openEntry(entryId, choice || { choiceId: 'open' });
       if (result && !['committed', 'duplicate'].includes(result.status)) {
         showToast('Destination stop could not save: ' + (result.status || 'failed'));
       }
       render();
+      return result;
     }
-    function openArchivedEntry(entryId) {
+    async function openArchivedEntry(entryId) {
       const archive = timelineController.archive();
       const record = archive.find(item => item.id === archiveViewId);
       const entry = record && Array.isArray(record.entries) ? record.entries.find(item => item.id === entryId) : null;
       if (!entry) return;
+      if (options.prepareNative && await options.prepareNative(entry) === false) { showToast('This saved stop could not open. Try again.'); return; }
       const action = entry.nativeAction || {};
       if (nativeHandlers && action.method && typeof nativeHandlers[action.method] === 'function') {
         nativeHandlers[action.method](entry, Object.assign({}, action.payload || {}, {
@@ -950,6 +1007,7 @@
       }
     }
     function openPlanner() {
+      if (disposed) return false;
       closeLegacyPanels();
       cleanupMapPick();
       if (typeof options.switchScreen === 'function') options.switchScreen('map');
@@ -968,6 +1026,7 @@
     }
     function closePlanner(opts) {
       opts = opts || {};
+      if(!opts.keepActive)options.onClose?.();
       cleanupMapPick();
       if (!opts.keepActive) controller.cancel('planner-closed');
       clearPreviewLayer();
@@ -981,20 +1040,46 @@
       btn.dataset.destinationQuestWired = '1';
       btn.setAttribute('aria-label', 'Open Main Quests destination planner');
       btn.setAttribute('aria-pressed', 'false');
-      btn.addEventListener('click', ev => {
+      mainButton = btn;
+      mainHandler = ev => {
         ev.preventDefault();
         if (typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
         else ev.stopPropagation();
         if (typeof options.tap === 'function') options.tap();
         openPlanner();
-      }, true);
+      };
+      btn.addEventListener('click', mainHandler, true);
+    }
+    function onKeyDown(ev) {
+      if (ev.key !== 'Escape' || !sheet?.classList.contains('open')) return;
+      ev.preventDefault();
+      closePlanner();
+      mainButton?.focus?.({ preventScroll: true });
+    }
+    function onPageHide() { closePlanner(); }
+    function dispose() {
+      if (disposed) return;
+      closePlanner();
+      disposed = true;
+      if (mainButton && mainHandler) {
+        mainButton.removeEventListener('click', mainHandler, { capture: true });
+        delete mainButton.dataset.destinationQuestWired;
+        if (mainButton.dataset.wired === 'destination-main') delete mainButton.dataset.wired;
+      }
+      doc.removeEventListener?.('keydown', onKeyDown);
+      root.removeEventListener?.('pagehide', onPageHide);
+      sheet?.remove();
+      sheet = null;
     }
     wireMainButton();
+    doc.addEventListener?.('keydown', onKeyDown);
+    root.addEventListener?.('pagehide', onPageHide);
     nativeHandlers = Object.assign({}, options.nativeHandlers || {});
 
     return Object.assign(controller, {
       openPlanner,
       closePlanner,
+      dispose,
       render,
       drawPreview,
       clearPreviewLayer,
@@ -1007,7 +1092,7 @@
         return timelineController.entries();
       },
       finishDestinationWalk: opts => timelineController.finishWalk(Object.assign({ confirmed: true }, opts || {})),
-      openDestinationEntry: (entryId, choice) => timelineController.openEntry(entryId, choice),
+      openDestinationEntry: openNativeEntry,
       completeDestinationQuest: opts => timelineController.completeQuest(Object.assign({ confirmed: true }, opts || {})),
       archiveHandoff: () => timelineController.archive(),
       timelineState: () => timelineController.state(),

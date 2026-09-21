@@ -253,3 +253,7 @@
     grid-template-columns: 1fr;
   }
 }
+/* Leave the map exposed while choosing a destination on a small phone. */
+.destination-map-picking .destination-quest-panel > :not(.destination-sheet-close) { display:none; }
+.destination-map-picking .destination-quest-panel::before { content:'Tap a point on the map. You can pan and zoom first.';display:block;padding:8px 48px 8px 0;min-height:44px; }
+.destination-sheet-close { width:44px;height:44px; }

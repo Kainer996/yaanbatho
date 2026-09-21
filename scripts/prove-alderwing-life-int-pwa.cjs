@@ -13,7 +13,7 @@ const evidenceRoot = process.env.EVIDENCE_DIR || '/root/burbz-alderwing-cleanup-
 const runDir = path.join(evidenceRoot, new Date().toISOString().replace(/[:.]/g, '-'));
 fs.mkdirSync(runDir, { recursive: true });
 
-const rev = 'alderwing-life-int-v433-20260921';
+const rev = 'destination-cleanup-v434-20260921';
 const changedModules = ['village_walk.js', 'building_rooms.js', 'village_discoveries.js'];
 const chromePath = [
   process.env.CHROME_PATH,

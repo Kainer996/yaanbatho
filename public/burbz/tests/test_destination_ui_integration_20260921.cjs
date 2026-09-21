@@ -143,8 +143,8 @@ test('destination UI modules are registered as the Main Quest surface', () => {
     'destination_quest_ui.js',
     'destination_quest_ui.css'
   ]) {
-    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=destination-quests-v431-20260921').test(INDEX), file + ' index pin');
-    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=destination-quests-v431-20260921').test(SW), file + ' service worker pin');
+    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=destination-cleanup-v434-20260921').test(INDEX), file + ' index pin');
+    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=destination-cleanup-v434-20260921').test(SW), file + ' service worker pin');
     assert.ok(UPDATER.includes('"' + file + '"'), file + ' updater pin');
   }
   assert.ok(/id="mapQuestShowBtn"[\s\S]*Main Quests/.test(INDEX), 'map primary quest entry should say Main Quests');
@@ -420,4 +420,98 @@ test('destination timeline controller shares during-walk receipts and unlocks ac
   assert.equal(adapter.attempts.unlocks.length, 1);
   assert.equal(root.destinationQuests.meetings.robin.encounterIds.length, 3);
   assert.equal(new Set(root.destinationQuests.meetings.robin.encounterIds).size, 3);
+});
+
+test('planner rejects profile/reset changes during route or elevation and stale staged revision', async () => {
+  const ui = require('../destination_quest_ui.js');
+  const route = destinationRoute(12);
+  for (const change of ['profile', 'reset', 'revision']) {
+    let current = makeTimelineRoot(), resolve;
+    const previous = current;
+    const planner = ui.createPlannerController({
+      rootState: () => current, routeCore: { ...routeCore, fetchDestinationRoute: () => new Promise(r => { resolve = r; }) },
+      elevationCore: { sampleRouteElevation: async () => ({ available: false }) }, rewardCore, stateCore,
+      content: destinationContent(), catalogue: destinationCatalogue(), saveAdapter: makeTimelineAdapter(current)
+    });
+    planner.setManualStart(51.5, -.12); planner.setManualEnd(51.502, -.12);
+    const pending = planner.preview();
+    if (change === 'profile') current = { ...makeTimelineRoot(), profileId: 'profile-b' };
+    if (change === 'reset') current = makeTimelineRoot();
+    if (change === 'revision') current.revision++;
+    resolve({ ok: true, route });
+    assert.equal((await pending).stale, true, change);
+    assert.equal(current.destinationQuests, undefined, 'late route must not write new save');
+    assert.equal(previous.destinationQuests, undefined, 'late route must not stage discarded save');
+    assert.equal(planner.state().phase, 'cancelled');
+  }
+  const current = makeTimelineRoot();
+  const planner = ui.createPlannerController({ rootState: () => current, routeCore: { ...routeCore, fetchDestinationRoute: async () => ({ ok: true, route }) },
+    elevationCore: { sampleRouteElevation: async () => ({ available: false }) }, rewardCore, stateCore,
+    content: destinationContent(), catalogue: destinationCatalogue(), saveAdapter: makeTimelineAdapter(current) });
+  planner.setManualStart(51.5, -.12); planner.setManualEnd(51.502, -.12);
+  assert.equal((await planner.preview()).ok, true);
+  current.revision++;
+  assert.equal(planner.begin().status, 'stale-revision');
+  assert.equal(current.destinationQuests.active, null);
+});
+
+test('slow DEM falls back neutrally and cancellation releases pending preview without saving', async () => {
+  const ui = require('../destination_quest_ui.js'), route = destinationRoute(13);
+  const current = makeTimelineRoot();
+  let demSignal;
+  const options = { rootState: () => current, routeCore: { ...routeCore, fetchDestinationRoute: async () => ({ ok: true, route }) },
+    elevationCore: { sampleRouteElevation: (_points, opts) => { demSignal = opts.signal; return new Promise(() => {}); } },
+    elevationTimeoutMs: 20, rewardCore, stateCore, content: destinationContent(), catalogue: destinationCatalogue(), saveAdapter: makeTimelineAdapter(current) };
+  const planner = ui.createPlannerController(options);
+  planner.setManualStart(51.5, -.12); planner.setManualEnd(51.502, -.12);
+  const preview = await planner.preview();
+  assert.equal(preview.ok, true); assert.equal(preview.quote.elevation.status, 'unavailable');
+  assert.equal(preview.quote.elevation.multiplier, 1); assert.match(preview.elevation.reason, /timed out/);
+  assert.equal(demSignal.aborted, true);
+  const second = planner.preview();
+  await new Promise(resolve => setImmediate(resolve));
+  planner.cancel('navigation');
+  const outcome = await second;
+  assert.equal(outcome.stale, true); assert.equal(demSignal.aborted, true);
+  assert.equal(planner.state().pending, false); assert.equal(current.destinationQuests.active, null);
+});
+
+test('planner lifecycle removes map picking, async work, Main button and Escape listeners', () => {
+  const ui = require('../destination_quest_ui.js');
+  class Element extends EventTarget {
+    constructor() { super(); this.dataset = {}; this.attrs = {}; this.isConnected = true; this.children = new Map(); this.all = new Map(); this.classes = new Set();
+      this.classList = { add: v => this.classes.add(v), remove: v => this.classes.delete(v), contains: v => this.classes.has(v) }; }
+    setAttribute(k,v) { this.attrs[k] = v; } getAttribute(k) { return this.attrs[k]; }
+    appendChild(node) { node.isConnected = true; } remove() { this.isConnected = false; } focus() { this.focused = true; }
+    set innerHTML(value) { this.children.clear(); this.all.clear(); this.html = value;
+      const pick = new Element(); pick.setAttribute('data-destination-pick', 'start'); this.all.set('[data-destination-pick]', [pick]); }
+    querySelector(selector) { if (!this.children.has(selector)) this.children.set(selector,new Element()); return this.children.get(selector); }
+    querySelectorAll(selector) { return this.all.get(selector) || []; }
+  }
+  const doc = new Element(), body = new Element(), button = new Element(); let sheet;
+  doc.body = body; doc.getElementById = id => id === 'mapQuestShowBtn' ? button : null;
+  doc.createElement = () => (sheet = new Element());
+  const listeners = new Set(); let inspection = false;
+  const map = { on: (_event, fn) => listeners.add(fn), off: (_event, fn) => listeners.delete(fn) };
+  const current = makeTimelineRoot();
+  const opts = { document: doc, rootState: () => current, getMap: () => map, setMapInspectionMode: v => { inspection = v; }, stateCore, routeCore, rewardCore };
+  const controller = ui.attach(opts);
+  button.dispatchEvent(new Event('click', { cancelable: true }));
+  assert.equal(sheet.classList.contains('open'), true);
+  sheet.querySelectorAll('[data-destination-pick]')[0].dispatchEvent(new Event('click'));
+  assert.equal(listeners.size, 1); assert.equal(inspection, true);
+  const esc = new Event('keydown', { cancelable: true }); Object.defineProperty(esc, 'key', { value: 'Escape' }); doc.dispatchEvent(esc);
+  assert.equal(listeners.size, 0); assert.equal(inspection, false); assert.equal(sheet.classList.contains('open'), false);
+  button.dispatchEvent(new Event('click', { cancelable: true }));
+  sheet.querySelectorAll('[data-destination-pick]')[0].dispatchEvent(new Event('click'));
+  const removed = sheet;
+  controller.dispose(); controller.dispose();
+  assert.equal(listeners.size, 0); assert.equal(removed.isConnected, false); assert.equal(button.dataset.destinationQuestWired, undefined);
+  button.dispatchEvent(new Event('click', { cancelable: true }));
+  assert.equal(sheet, removed, 'disposed Main listener must not open a replacement sheet');
+  assert.equal(controller.openPlanner(), false);
+  const replacement = ui.attach(opts);
+  button.dispatchEvent(new Event('click', { cancelable: true }));
+  assert.notEqual(sheet, removed); assert.equal(sheet.classList.contains('open'), true);
+  replacement.dispose();
 });

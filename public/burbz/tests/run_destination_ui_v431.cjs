@@ -5,13 +5,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 
-const { chromium } = require('/home/ubuntu/node_modules/playwright');
+const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '/home/ubuntu/node_modules/playwright');
 
 const BASE_URL = process.env.BURBZ_URL || 'http://localhost:8942/';
 const OUT_DIR = process.argv[2] || process.env.DESTINATION_UI_EVIDENCE || path.join(process.cwd(), 'destination-ui-evidence');
-const CHROME = '/root/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome';
-const START = { lat: 47.37645, lon: 8.54145 };
-const END = { lat: 47.37725, lon: 8.54275 };
+const CHROME = process.env.CHROME_PATH || '/usr/bin/chromium';
+const START = { lat: 51.50684, lon: -0.16490 };
+const END = { lat: 51.50788, lon: -0.16246 };
 const INTRO_SEEN_KEY = 'burbzIntroSeen:two-part-hf-20260729';
 const INTRO_PENDING_KEY = 'burbzIntroPending:two-part-hf-20260729';
 const EPOCH_KEY = 'burbz_epoch';
@@ -50,6 +50,7 @@ async function waitForApp(page) {
   await page.waitForFunction(() => !!(window.__burbzDestinationDebug && window.BurbzDestinationQuestUI && window.BurbzDestinationStateCore), null, { timeout: 45000 });
 }
 async function screenshot(page, name) {
+  console.log('SCREENSHOT',name);
   const file = path.join(OUT_DIR, name);
   await page.screenshot({ path: file, fullPage: true });
   return file;
@@ -70,19 +71,19 @@ async function waitForPreviewSettled(page) {
   }, null, { timeout: 70000 });
   return page.evaluate(() => window.__burbzDestinationDebug.state());
 }
-async function installOneShotStorageFailure(page) {
-  await page.evaluate(() => {
+async function installOneShotStorageFailure(page, entryId) {
+  await page.evaluate(entryId => {
     const original = Storage.prototype.setItem;
     let used = false;
     Storage.prototype.setItem = function(key, value) {
-      if (!used && key === 'burbz_state') {
+      if (!used && key === 'burbz_state' && (!entryId || JSON.parse(value).destinationQuests?.active?.receipts?.encounters?.[entryId])) {
         used = true;
         Storage.prototype.setItem = original;
         throw new Error('destination injected storage failure');
       }
       return original.apply(this, arguments);
     };
-  });
+  }, entryId);
 }
 async function closeOpenDialogs(page) {
   await page.evaluate(() => {
@@ -152,7 +153,7 @@ async function exposedMapPoint(page, biasX, biasY) {
 (async () => {
   mkdirp(OUT_DIR);
   const startedAt = new Date().toISOString();
-  const browser = await chromium.launch({ executablePath: CHROME, headless: true });
+  const browser = await chromium.launch({ executablePath: CHROME, headless: true, args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'] });
   const report = {
     startedAt,
     baseUrl: BASE_URL,
@@ -165,13 +166,20 @@ async function exposedMapPoint(page, biasX, biasY) {
   try {
     const context = await browser.newContext({
       viewport: { width: 390, height: 844 },
-      deviceScaleFactor: 2,
+      deviceScaleFactor: 1,
       isMobile: true,
       hasTouch: true,
       geolocation: { latitude: START.lat, longitude: START.lon, accuracy: 8 },
       permissions: ['geolocation']
     });
+    if(process.env.DESTINATION_MAP_FIXTURE){
+      await require('./connected_world_fixture_v386.cjs').routeMap(context,report);
+      await context.route(/overpass|tiles\.mapterhorn\.com/,route=>route.continue());
+      report.limits='Synthetic base-map tiles for bounded software rendering; native map taps and emulated browser GPS at fixed public Hyde Park coordinates, real configured Overpass/elevation providers. No user location.';
+    }
     const page = await context.newPage();
+    page.setDefaultTimeout(25000);page.setDefaultNavigationTimeout(60000);
+    page.on('pageerror',e=>{(report.pageErrors||=[]).push(e.message);console.log('PAGEERROR',e.message)});
     page.on('console', msg => {
       if (['error', 'warning'].includes(msg.type())) report.console.push({ type: msg.type(), text: msg.text().slice(0, 500) });
     });
@@ -212,8 +220,13 @@ async function exposedMapPoint(page, biasX, biasY) {
     }, [INTRO_SEEN_KEY, INTRO_PENDING_KEY, EPOCH_KEY, FRESH_EPOCH, TUTORIAL_STATE_KEY, TUTORIAL_CHAPTERS_KEY, TUTORIAL_VERSION]);
     await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForApp(page);
-    await page.evaluate(([lat, lon]) => window.__burbzDestinationDebug.setLocation(lat, lon, 8), [START.lat, START.lon]);
+    await page.locator('.nav-item[data-screen="map"]').click();
+    await page.waitForFunction(() => window.__burbzDestinationDebug.controller() && document.querySelector('#burbzLiveMap canvas'));
+    await page.waitForTimeout(1200);
     await clickMain(page);
+    await page.locator('[data-destination-gps]').click();
+    const gps=await page.evaluate(()=>__burbzDestinationDebug.state());
+    assert.equal(gps.start.lat,START.lat);assert.equal(gps.start.lon,START.lon);assert.notEqual(gps.startSource,'manual');report.assertions.actualBrowserGPS=gps.start;
     report.screenshots.open = await screenshot(page, 'destination-main-open.png');
 
     await page.waitForSelector('#burbzLiveMap canvas', { timeout: 30000 });
@@ -242,7 +255,8 @@ async function exposedMapPoint(page, biasX, biasY) {
     }, { startTap, endTap });
     report.screenshots.mapTaps = await screenshot(page, 'destination-map-taps.png');
 
-    await page.evaluate(({ endpoints, routeOptions }) => window.__burbzDestinationDebug.routeOptions(Object.assign({ endpoints }, routeOptions)), { endpoints: LIVE_ENDPOINTS, routeOptions: LIVE_ROUTE_OPTIONS });
+    // Ordinary configured provider list and routing bounds: no endpoint override.
+    await page.evaluate(() => window.__burbzDestinationDebug.routeOptions({maxAirDistanceM:12000}));
     await fillManual(page);
     const preview = await previewFromInputs(page);
     if (preview.phase !== 'preview') throw new Error('Live provider preview failed: ' + JSON.stringify(preview.error));
@@ -285,7 +299,8 @@ async function exposedMapPoint(page, biasX, biasY) {
     assert.equal(report.assertions.failureRecovery.beginDisabledAfterFailure, true);
     report.screenshots.failure = await screenshot(page, 'destination-failure-recovery.png');
 
-    await page.evaluate(({ endpoints, routeOptions }) => window.__burbzDestinationDebug.routeOptions(Object.assign({ endpoints }, routeOptions)), { endpoints: LIVE_ENDPOINTS, routeOptions: LIVE_ROUTE_OPTIONS });
+    // Ordinary configured provider list and routing bounds: no endpoint override.
+    await page.evaluate(() => window.__burbzDestinationDebug.routeOptions({maxAirDistanceM:12000}));
     await fillManual(page);
     const recovered = await previewFromInputs(page);
     if (recovered.phase !== 'preview') throw new Error('Recovery preview failed: ' + JSON.stringify(recovered.error));
@@ -296,6 +311,7 @@ async function exposedMapPoint(page, biasX, biasY) {
     };
     assert.equal(begin.status, 'committed');
     const activeBefore = report.assertions.begin.activeBeforeReload;
+    fs.writeFileSync(path.join(OUT_DIR,'banked-plan.json'),JSON.stringify(activeBefore,null,2));
     assert.ok(activeBefore && activeBefore.entries && activeBefore.entries.length >= 3, 'active plan has complete entries');
     report.assertions.begin.activeHash = hash(activeBefore);
     report.screenshots.active = await screenshot(page, 'destination-active-saved.png');
@@ -362,6 +378,7 @@ async function exposedMapPoint(page, biasX, biasY) {
     assert.equal(report.assertions.honorFinish.active.phase, 'review');
     report.screenshots.review = await screenshot(page, 'destination-review-ready.png');
 
+    const academyBeforeGuest=await page.evaluate(()=>JSON.stringify(__burbzQuestDebug.getState().academy));
     const timelineEntries = report.assertions.honorFinish.active.entries;
     const building = timelineEntries.find(entry => entry.kind === 'building');
     const character = timelineEntries.find(entry => entry.kind === 'character');
@@ -370,7 +387,7 @@ async function exposedMapPoint(page, biasX, biasY) {
     assert.ok(character, 'banked character exists');
     assert.equal(birds.length >= 3, true, 'three common bird meetings exist');
 
-    await installOneShotStorageFailure(page);
+    await installOneShotStorageFailure(page, building.id);
     const failedBuilding = await page.evaluate(entryId => window.__burbzDestinationDebug.openEntry(entryId, { choiceId: 'open-building-fail' }), building.id);
     report.assertions.buildingFailure = {
       result: failedBuilding,
@@ -391,7 +408,17 @@ async function exposedMapPoint(page, biasX, biasY) {
         return active.receipts.encounters[entryId];
       }, building.id)
     };
+    assert.equal(await page.locator('#villageWalk.vr-inside').count(),1);
+    assert.equal(await page.locator('#prerequisiteGuide.show').count(),0);
+    await page.waitForFunction(()=>BurbzVillageWalk.diagnostics().frames>3);
     report.screenshots.building = await screenshot(page, 'destination-building-native.png');
+    await page.locator('.vw-look').focus();await page.keyboard.down('KeyW');
+    try {await page.locator('.vr-service').waitFor({state:'visible',timeout:12000});} finally {await page.keyboard.up('KeyW');}
+    await page.locator('.vr-service').click();
+    assert.equal(await page.locator('#screen-birdex.active,#screen-academy-room.active').count(),1);
+    assert.equal(await page.locator('#prerequisiteGuide.show').count(),0);
+    report.screenshots.buildingAction=await screenshot(page,'destination-building-service.png');
+    assert.equal(await page.evaluate(()=>JSON.stringify(__burbzQuestDebug.getState().academy)),academyBeforeGuest,'Guest visit grants no Academy ownership');
 
     const spokenCharacter = await page.evaluate(entryId => window.__burbzDestinationDebug.openEntry(entryId, { choiceId: 'speak-character' }), character.id);
     assert.equal(spokenCharacter.status, 'committed');

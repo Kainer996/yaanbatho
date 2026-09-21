@@ -1,0 +1,12 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const s=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const code=s.slice(s.indexOf('let destinationRoomGeneration = 0;'),s.indexOf('function destinationNativeHandlers()'));
+let resolve,openedResolve,opens=0,closes=0,root={id:'old'};
+const ctx={gameState:{photoProfileId:'a'},document:{activeElement:{},getElementById:()=>root},walkingCharacterState(){},ensureVillageWalkModule:()=>new Promise(r=>resolve=r),destinationQuestController:{closePlanner(){}},BurbzVillageWalk:{isOpen:()=>false,open:()=>{opens++;return new Promise(r=>openedResolve=r)},close(){closes++}},showToast(){},isAcademyRoomBuilt:()=>false};ctx.window=ctx;
+vm.createContext(ctx);vm.runInContext(code+'globalThis.run=prepareDestinationNative;globalThis.cancel=()=>{destinationRoomGeneration++;};',ctx);
+(async()=>{const entry={id:'stop',kind:'building',nativeAction:{method:'openKitchen'}};
+ let pending=ctx.run(entry);ctx.cancel();resolve();assert.equal(await pending,false);assert.equal(opens,0);
+ pending=ctx.run(entry);resolve();await new Promise(setImmediate);ctx.cancel();root={id:'new'};openedResolve(true);assert.equal(await pending,false);assert.equal(closes,0);
+ console.log('PASS closing pending guest entry cannot open late or close a newer walking session');
+})();

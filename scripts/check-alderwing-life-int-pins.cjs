@@ -11,15 +11,12 @@ const evidenceRoot = process.env.EVIDENCE_DIR || '/root/burbz-alderwing-cleanup-
 const runDir = path.join(evidenceRoot, new Date().toISOString().replace(/[:.]/g, '-'));
 fs.mkdirSync(runDir, { recursive: true });
 
-const rev = 'alderwing-life-int-v433-20260921';
+const rev = 'destination-cleanup-v434-20260921';
 const priorRev = 'alderwing-qst-ui-save-v432-20260921';
-const changedRuntime = ['village_walk.js', 'building_rooms.js', 'village_discoveries.js'];
-const pinnedDependencies = ['building_rooms.js', 'village_discoveries.js'];
+const changedRuntime = ['village_walk.js','building_rooms.js','village_discoveries.js','building_work.css','village_discovery_core.js','village_discoveries.css','destination_route_core.js','destination_elevation_core.js','destination_reward_core.js','destination_state_core.js','destination_quest_ui.js','destination_quest_ui.css'];
+const pinnedDependencies = ['building_rooms.js','village_discoveries.js','building_work.css','village_discovery_core.js','village_discoveries.css'];
 const changedFiles = ['index.html', 'sw.js', ...changedRuntime];
 const unchangedPins = {
-  'building_work.css': priorRev,
-  'village_discovery_core.js': priorRev,
-  'village_discoveries.css': priorRev,
   'village_walk.css': priorRev,
   'building_rooms_core.js': 'opening-home-v416-20260914',
   'building_rooms_scene.js': 'map-pictures-v374-20260908'

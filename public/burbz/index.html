@@ -4589,7 +4589,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walk-shelter-controls-v427-20260920">
-<link rel="stylesheet" href="destination_quest_ui.css?v=destination-quests-v431-20260921">
+<link rel="stylesheet" href="destination_quest_ui.css?v=destination-cleanup-v434-20260921">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
@@ -5731,11 +5731,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walk-shelter-controls-v427-20260920"></script>
-<script src="destination_route_core.js?v=destination-quests-v431-20260921"></script>
-<script src="destination_elevation_core.js?v=destination-quests-v431-20260921"></script>
-<script src="destination_reward_core.js?v=destination-quests-v431-20260921"></script>
-<script src="destination_state_core.js?v=destination-quests-v431-20260921"></script>
-<script src="destination_quest_ui.js?v=destination-quests-v431-20260921"></script>
+<script src="destination_route_core.js?v=destination-cleanup-v434-20260921"></script>
+<script src="destination_elevation_core.js?v=destination-cleanup-v434-20260921"></script>
+<script src="destination_reward_core.js?v=destination-cleanup-v434-20260921"></script>
+<script src="destination_state_core.js?v=destination-cleanup-v434-20260921"></script>
+<script src="destination_quest_ui.js?v=destination-cleanup-v434-20260921"></script>
 <script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="landscape_ui.js?v=landscape-v388-20260910"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
@@ -22167,23 +22167,45 @@ function destinationFitRoute(points) {
     return false;
   }
 }
+let destinationRoomGeneration = 0;
+async function prepareDestinationNative(entry) {
+  if (entry.kind !== 'building') { destinationQuestController?.closePlanner({keepActive:true}); return true; }
+  if (window.BurbzVillageWalk?.isOpen()) return false;
+  const token=++destinationRoomGeneration, owner=gameState, profile=gameState.photoProfileId;
+  const kitchen=entry.nativeAction?.method==='openKitchen', buildingId=kitchen?'kitchen':'tavern';
+  const returnButton=document.activeElement;
+  const current=()=>token===destinationRoomGeneration&&gameState===owner&&gameState.photoProfileId===profile;
+  let source=null,host=null;
+  const dispose=()=>{source?.renderer?.dispose();source?.renderer?.forceContextLoss();source=null;host?.remove();host=null;};
+  try {
+    await ensureVillageWalkModule();
+    if(!current()||window.BurbzVillageWalk.isOpen())return false;
+    destinationQuestController?.closePlanner({keepActive:true});
+    const target={scope:'academy',buildingId,homeId:'destination:'+entry.id,seed:0};
+    const opening=BurbzVillageWalk.open({name:entry.label||'Wayside Birdhouse',room:target,opener:returnButton,character:walkingCharacterState,
+      source:()=>{if(!current())throw Error('This visit belongs to another save.');const T=window.THREE;
+        host=document.createElement('div');host.hidden=true;document.body.append(host);
+        const renderer=new T.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(1.25,devicePixelRatio||1));renderer.setSize(390,600);host.append(renderer.domElement);
+        return source={scene:new T.Scene(),renderer,camera:new T.PerspectiveCamera(68,390/600,.08,110),buildings:[],movers:[]};},
+      interiors:{describe:t=>current()&&t.homeId===target.homeId?{name:entry.label||'Wayside Birdhouse',actionLabel:kitchen?(isAcademyRoomBuilt('kitchen')?'Open your feeding table':'Browse the bird feeding guide'):'Browse the bird registry'}:null,
+        open:()=>{if(!current())return;if(kitchen&&isAcademyRoomBuilt('kitchen'))openKitchenHudShortcut();else switchScreen('birdex');}},
+      resume:reason=>{dispose();if(current()&&!['navigation','pagehide','building-action','save-failed'].includes(reason))destinationQuestController?.openPlanner();}
+    });
+    const ownRoot=document.getElementById('villageWalk');
+    const closeOwn=()=>{if(ownRoot&&document.getElementById('villageWalk')===ownRoot)BurbzVillageWalk.close('save-failed');dispose();};
+    const opened=await opening;
+    if(!opened||!current()){closeOwn();return false;}return {ok:true,close:closeOwn};
+  } catch(error){dispose();showToast('This saved room could not open. Please retry.');return false;}
+}
 function destinationNativeHandlers() {
   return {
-    openKitchen: entry => {
-      switchScreen('scan');
-      openKitchenHudShortcut();
-      showToast((entry && entry.label || 'Kitchen & Pantry') + ' opened from your destination plan.');
-    },
-    openBirdhouse: entry => {
-      switchScreen('birdex');
-      showToast((entry && entry.label || 'Birdhouse') + ' opened from your destination plan.');
-    },
+    openKitchen: () => {}, // The guest room was successfully entered before its receipt is saved.
+    openBirdhouse: () => {},
     speakMerlin: entry => showQuestNpcDialog('Merlin', (entry && entry.dialogue && entry.dialogue[0]) || 'I will keep the destination tale safe until you return.'),
     speakRowan: entry => showQuestNpcDialog('Rowan', (entry && entry.dialogue && entry.dialogue[0]) || 'The suggested route is only a guide. Follow the real signs.'),
     meetCommonSpecies: entry => {
       const species = entry && (entry.commonName || entry.species);
       if (species) showSpeciesInBirdex(species);
-      showToast(species ? species + ' encounter is banked for the destination timeline.' : 'Bird encounter is banked for the destination timeline.');
     }
   };
 }
@@ -22215,6 +22237,9 @@ function ensureDestinationQuestController() {
     tap:() => SFX.tap(),
     activeQuest:destinationActiveQuest,
     nativeHandlers:destinationNativeHandlers(),
+    prepareNative:prepareDestinationNative,
+    onClose:()=>{destinationRoomGeneration++;},
+    nativeFailed:entry=>{if(entry.kind==='building')BurbzVillageWalk?.close('save-failed');},
     onBegin:() => {
       renderQuests();
       updateHeader();
@@ -23905,7 +23930,7 @@ function switchScreen(name) {
   });
 
   if (name !== currentScreen && currentScreen === 'area-birds') window.BurbzAreaBirds?.leave();
-  if (name !== currentScreen) { geographicPlaces?.close(); window.BurbzVillageWalk?.close('navigation'); window.BurbzGeographicWorld?.close('navigation'); window.BurbzGeographicHomePicker?.close('navigation'); }
+  if (name !== currentScreen) { if(name!=='map'){destinationRoomGeneration++;destinationQuestController?.closePlanner();} geographicPlaces?.close(); window.BurbzVillageWalk?.close('navigation'); window.BurbzGeographicWorld?.close('navigation'); window.BurbzGeographicHomePicker?.close('navigation'); }
   if(geographicWorldVisit&&name!==(geographicWorldVisit.record.tier==='village'?'village':'town'))geographicWorldVisit=null;
   currentScreen = name;
   document.body.setAttribute('data-active-screen', name);
@@ -30710,7 +30735,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-life-int-v433-20260921';
+        script.src = 'village_walk.js?v=destination-cleanup-v434-20260921';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45105,7 +45130,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'alderwing-life-int-v433-20260921';
+const BURBZ_BUILD = 'destination-cleanup-v434-20260921';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
