@@ -6,11 +6,37 @@ let browser,page,server;const read=()=>page.evaluate(()=>BurbzVillageWalk.diagno
 async function walkTo(target){
  await page.locator('.vw-look').focus();for(let i=0;i<80;i++){const p=(await read()).player,dx=target.x-p.x,dz=target.z-p.z,d=Math.hypot(dx,dz);if(d<.23)return;const want=Math.atan2(-dx,-dz),turn=Math.atan2(Math.sin(want-p.yaw),Math.cos(want-p.yaw));if(Math.abs(turn)>.04){const key=turn>0?'ArrowLeft':'ArrowRight';await page.keyboard.down(key);await page.waitForTimeout(Math.max(18,Math.min(160,Math.abs(turn)/1.45*1000)));await page.keyboard.up(key);}else{await page.keyboard.down('KeyW');await page.waitForTimeout(Math.max(20,Math.min(180,(d-.12)/2.7*1000)));await page.keyboard.up('KeyW');}await page.waitForTimeout(35);}throw Error('Native walking did not reach the next path point');
 }
+async function installSharedDiscoveryProof(site){
+ await page.evaluate(site=>{
+  window.__burbzNativeSharedDiscoveryPoint={x:site.x+2.3,z:site.z+3.8};
+  let value=window.BurbzVillageDiscoveries;
+  function wrap(api){
+   if(!api||api.__nativeSharedProofWrapped)return api;
+   const original=api.attach;
+   api.attach=function(s,options={}){
+    const target=window.__burbzNativeSharedDiscoveryPoint,core=window.BurbzVillageDiscoveryCore,adapter=options.api||s.options?.discoveries,world=options.world||s.world;
+    if(target&&core&&adapter&&world&&!options.wayside){
+     try{
+      adapter.prepare?.();const rec=adapter.record(),story=core.quest(rec),sites=core.activities(rec);
+      const count=1+rec.loot.length+rec.lore.length+story.steps.length+sites.reduce((n,a)=>n+a.story.steps.length,0);
+      const points=core.positions(world,world.spawn(),rec.placementSeed,count),x=Number(target.x),z=Number(target.z),y=world.height(x,z);
+      if(Number.isFinite(y)&&world.allowed(x,z)){points[0]={x,y,z};options={...options,points};window.__burbzNativeSharedDiscoveryApplied={x,y,z,count};}
+     }catch(error){window.__burbzNativeSharedDiscoveryError=error.message;}
+    }
+    return original.call(this,s,options);
+   };
+   api.__nativeSharedProofWrapped=true;
+   return api;
+  }
+  Object.defineProperty(window,'BurbzVillageDiscoveries',{configurable:true,get(){return value;},set(next){value=wrap(next);}});
+  if(value)value=wrap(value);
+ },site);
+}
 (async()=>{try{
  let url=process.env.LIVE_URL;if(!url){const F=require('./connected_world_fixture_v386.cjs');server=F.createServer({root,port:8931,report,seed:false});await server.listen();url=server.url;}
- browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox','--enable-gpu']});const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,serviceWorkers:'block',storageState:{cookies:[],origins:[{origin:new URL(url).origin,localStorage:Object.entries(seed).map(([name,value])=>({name,value}))}]}});
+ browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'/usr/bin/chromium',args:['--no-sandbox','--enable-gpu']});const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,serviceWorkers:'block',storageState:{cookies:[],origins:[{origin:new URL(url).origin,localStorage:Object.entries(seed).map(([name,value])=>({name,value}))}]}});
  if(!process.env.LIVE_URL){await require('./connected_world_fixture_v386.cjs').routeMap(context,report);await context.route('**/burbz/**',async r=>{const rel=decodeURIComponent(new URL(r.request().url()).pathname).replace(/^\/burbz\//,'');if(!/^(assets|bird-art-cache|icons)\//.test(rel)||rel.includes('..'))return r.fallback();const hit=[root,process.env.HUD_ASSET_CACHE,process.env.SUPPLEMENTAL_ASSET_CACHE,process.env.ASSET_CACHE].filter(Boolean).map(p=>path.join(p,rel)).find(p=>fs.existsSync(p)&&fs.statSync(p).size>300);return hit?r.fulfill({path:hit}):r.fallback();});}
- page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.locator('#screen-scan.active').waitFor({timeout:45000});await page.locator('[data-home-action="village-'+fixture.seed+'"]').click();await page.locator('#villageWalkBtn:not([disabled])').waitFor({timeout:90000});await page.locator('#villageWalkBtn').click();await page.waitForFunction(()=>window.BurbzVillageWalk?.diagnostics()?.ready&&!BurbzVillageWalk.diagnostics().failed,null,{timeout:90000});await page.waitForTimeout(1200);report.start=await read();
+ page=await context.newPage();page.on('pageerror',e=>report.errors.push(e.message));await page.goto(url,{waitUntil:'domcontentloaded',timeout:90000});await page.locator('#screen-scan.active').waitFor({timeout:45000});const villageEntry=page.locator('[data-home-action="holding-villages-'+fixture.seed+'"],[data-home-action="village-'+fixture.seed+'"]').first();await villageEntry.waitFor({timeout:45000});await villageEntry.click();await installSharedDiscoveryProof(fixture.approach.building);await page.locator('#villageWalkBtn:not([disabled])').waitFor({timeout:90000});await page.locator('#villageWalkBtn').click();await page.waitForFunction(()=>window.BurbzVillageWalk?.diagnostics()?.ready&&!BurbzVillageWalk.diagnostics().failed,null,{timeout:90000});await page.waitForTimeout(1200);report.start=await read();report.discoveryPoint=await page.evaluate(()=>window.__burbzNativeSharedDiscoveryApplied||window.__burbzNativeSharedDiscoveryError||null);
  for(const point of fixture.path.slice(1))await walkTo(point);await page.locator('.vw-building-work:not([hidden])').waitFor({timeout:15000});assert.equal((await read()).work.target.seed,fixture.seed);await page.screenshot({path:path.join(out,'native-builder-phone.png')});check('Normal Home village entry and native walking reach the actual worksite');
  const site=fixture.approach.building;await walkTo({x:site.x+4.2,z:site.z+3.8});await walkTo({x:site.x+2.3,z:site.z+3.8});await page.locator('.vd-interact:not([hidden])').waitFor({timeout:3000});assert(await page.locator('.vw-building-work').isVisible(),'The shared quest/work approach must keep the site reachable');
  for(const size of [{width:320,height:568},{width:390,height:844},{width:667,height:375},{width:1280,height:800}]){await page.setViewportSize(size);await page.waitForTimeout(400);const layout=await page.evaluate(()=>{const selectors=['.vw-building-work','.vd-interact'],controls=[...document.querySelectorAll('.wc-hud,.wc-travel,.fp-tools,.fp-tracker,.vw-stick,.fp-look-stick,.fp-cast-stick')];const rect=el=>{const b=el.getBoundingClientRect();return{x:b.x,y:b.y,w:b.width,h:b.height,right:b.right,bottom:b.bottom};};const overlap=(a,b)=>Math.min(a.right,b.right)>Math.max(a.x,b.x)+1&&Math.min(a.bottom,b.bottom)>Math.max(a.y,b.y)+1;return selectors.map(selector=>{const el=document.querySelector(selector),b=rect(el),hit=document.elementFromPoint(b.x+b.w/2,b.y+b.h/2);return{selector,box:b,visible:el.getClientRects().length&&!el.hidden,hit:el.contains(hit),overlaps:controls.filter(c=>c.getClientRects().length&&getComputedStyle(c).visibility!=='hidden'&&overlap(b,rect(c))).map(c=>c.className)};});});assert(layout.every(b=>b.visible&&b.hit&&b.box.w>=44&&b.box.h>=44&&!b.overlaps.length),JSON.stringify({size,layout}));const[a,b]=layout.map(x=>x.box);assert(Math.min(a.right,b.right)<=Math.max(a.x,b.x)+1||Math.min(a.bottom,b.bottom)<=Math.max(a.y,b.y)+1,'Quest/help overlap');await page.screenshot({path:path.join(out,'simultaneous-actions-'+size.width+'.png')});}
