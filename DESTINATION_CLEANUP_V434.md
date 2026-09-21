@@ -28,3 +28,9 @@ Browser checks use laptop Chromium and phone-sized/touch emulation, not a physic
 The cleanup handoff's synthetic frame-time median was unstable (some 16.7 ms versus 33.3 ms runs); scene lifecycle, resource disposal, controls and geometry checks passed. This is retained as a performance measurement limit, not represented as proof of equal hardware frame rate.
 
 Publication follows a reviewed PR and merged immutable SHA through `/usr/local/bin/burbz-sync`, with its live-drift guard intact. Measured staging capacity before merge: 10.47 GB free; managed app 2.09 GB. No art, provider credentials, photo/sound policy or live files are edited directly.
+
+## Published result
+
+PR375 deployed `135b4ac8f8eaee2b89db996cd3f69a3d2bcc2124` to https://yaanbatho.com/burbz/. All14 public document/worker/runtime/style hashes and the complete server manifest match. Public native Main/Side controls, saved timeline, furnished guest-room receipt and actual installed-worker offline reload passed with zero page exceptions. Final proof is [reports/BURBZ_V434_PUBLIC_VERIFICATION.json](reports/BURBZ_V434_PUBLIC_VERIFICATION.json).
+
+The final harness explicitly awaits asynchronous installation state through `page.evaluate` polling; an async predicate passed directly to `waitForFunction` had returned too early. The corrected public and v430 upgrade/offline runs both pass. This evidence follow-up changes no runtime bytes.
