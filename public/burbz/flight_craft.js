@@ -32,6 +32,7 @@ function attach(s,opts,env){
  const C=root.BurbzFlightCraftCore,G=root.BurbzGeographicWorldCore,T=root.THREE;
  const visual=model(T,env.style),group=visual.group;s.source.scene.add(group);
  let record=C.normalize(opts.craft?.read()),receipt=record&&{...record},aboard=false,onDeck=false,closed=false,lastTime=0,lastProvision=-Infinity,float={};
+ let homeBerthPending=!!opts.homeDoor;
  const exit=document.createElement('button');exit.type='button';exit.className='cw-craft-exit';exit.textContent='Exit craft';
  exit.style.cssText='position:absolute;left:50%;transform:translateX(-50%);bottom:90px;z-index:6;min-height:44px;background:#203b2b;color:#fff3d1;border:1px solid #c9b27b;border-radius:8px;padding:10px';exit.hidden=true;s.root.append(exit);
  const local=()=>record&&env.local(record);
@@ -43,18 +44,20 @@ function attach(s,opts,env){
  function stop(){s.auto?.reset();G.reset(s.player);env.resetLift();}
  function provision(){
   if(closed)return false;
-  const recoverAtDoor=opts.homeDoor&&record&&['boarded','flying','deck'].includes(record.phase);
+  const recoverAtDoor=homeBerthPending&&record;
   if(record&&!recoverAtDoor&&!opts.craft?.shelterIntro?.())return true;
   const home=opts.getHome?.()?.anchor;if(!G.validCoordinate(home))return false;
   const p=env.local(home);if(!p)return false;
   // Repair only an unoccupied starter craft blocking the tutorial doorway.
-  // An occupied journey returning through the home door docks here; a
-  // manually parked distant craft keeps its chosen parking coordinates.
+  // Every explicit home-door return docks here. Ordinary world resumes
+  // retain the craft's chosen parking coordinates, including distant ones.
   if(record&&!recoverAtDoor){const old=local();if(record.phase!=='parked'||aboard||onDeck||!old||Math.abs(old.x-p.x)>3||old.z-p.z<3||old.z-p.z>26)return true;}
   const launchClear=(x,y,z)=>env.parkingClear(x,y,z)&&[1.5,3,4.5,6].every(up=>env.clear(x,y+up,z));
   const place=C.findHomeBerth(p,env.sample,launchClear);
   if(!place)return false;
-  return commit(C.at({...env.geo({x:place.x,y:place.height,z:place.z}),yaw:Math.atan2(-(place.x-p.x),-(place.z-p.z))},'parked',place.kind));
+  const parked=commit(C.at({...env.geo({x:place.x,y:place.height,z:place.z}),yaw:Math.atan2(-(place.x-p.x),-(place.z-p.z))},'parked',place.kind));
+  if(parked)homeBerthPending=false;
+  return parked;
  }
  function initialize(){
   provision();
@@ -92,6 +95,7 @@ function attach(s,opts,env){
    Object.assign(s.player,{y:berth.height,mode:'walk'});next=saved('boarded',berth.kind);
   }
   if(!commit(next)){Object.assign(s.player,before);aboard=oldAboard;onDeck=oldDeck;return false;}
+  homeBerthPending=false;
   stop();env.message('');sync();return true;
  }
  function leave(){
@@ -134,7 +138,7 @@ function attach(s,opts,env){
    visible:aboard||nearby,enabled:aboard||nearby,aboard,onDeck};
  }
  function update(time){
-  if(closed)return;if(!record&&time-lastProvision>1){lastProvision=time;provision();}
+  if(closed)return;if((!record||homeBerthPending)&&time-lastProvision>1){lastProvision=time;provision();}
   const p=aboard?{x:s.player.x,y:s.player.y,z:s.player.z}:local();
   group.visible=!!p&&!s.room&&Math.hypot(p.x-s.player.x,p.z-s.player.z)<140;
   if(p){

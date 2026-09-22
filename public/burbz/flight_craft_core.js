@@ -15,7 +15,9 @@ function normalize(raw){
      !finite(raw.altitude)||raw.altitude< -12000||raw.altitude>100000||
      !finite(raw.yaw)||!phases.includes(raw.phase)||!surfaces.includes(raw.surface))return null;
   return {version:VERSION,lat:raw.lat,lon:raw.lon,altitude:raw.altitude,
-    yaw:Math.atan2(Math.sin(raw.yaw),Math.cos(raw.yaw)),phase:raw.phase,surface:raw.surface};
+    // Keep canonical headings byte-stable: repeated trigonometric wrapping
+    // drifts by ulps and makes an unchanged craft fail its exact save receipt.
+    yaw:raw.yaw>=-Math.PI&&raw.yaw<=Math.PI?raw.yaw:Math.atan2(Math.sin(raw.yaw),Math.cos(raw.yaw)),phase:raw.phase,surface:raw.surface};
 }
 function at(pose,phase='parked',surface='ground'){
   return normalize({...pose,version:VERSION,phase,surface});

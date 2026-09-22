@@ -38,6 +38,16 @@ test('failed water exit save keeps player aboard and can retry without duplicati
  let allow=true;const f=fixture({kind:'freshwater',save:()=>allow});assert(f.craft.control());const before=structuredClone(f.player),record=structuredClone(f.record());allow=false;assert(!f.craft.leave());assert.deepEqual(f.player,before);assert.deepEqual(f.record(),record);assert(f.craft.aboard());allow=true;assert(f.craft.leave());assert.equal(f.player.mode,'swim');f.craft.dispose();
 });
 
-test('walking out of home does not relocate a deliberately parked distant craft',()=>{
- const f=fixture({mode:'walk',phase:'parked',altitude:0,homeDoor:true,getHome:()=>({anchor:{lat:55,lon:-3}})});assert(G.distance(f.record(),{lat:54.45,lon:-2.65})<.001);assert.equal(f.record().phase,'parked');assert(!f.craft.aboard());assert.equal(f.player.mode,'walk');f.craft.dispose();
+test('home-door return parks a distant craft outside home; ordinary exploration preserves parking',()=>{
+ for(const homeDoor of [true,false]){const anchor={lat:55,lon:-3},f=fixture({mode:'walk',phase:'parked',altitude:0,homeDoor,getHome:()=>({anchor})});assert(G.distance(f.record(),homeDoor?anchor:{lat:54.45,lon:-2.65})<(homeDoor?20:.001));assert.equal(f.record().phase,'parked');assert(!f.craft.aboard());assert.equal(f.player.mode,'walk');f.craft.dispose();}
+});
+test('failed home docking retries after storage recovers and stops docking once parked',()=>{
+ let allow=false;const anchor={lat:54.451,lon:-2.651},f=fixture({mode:'walk',phase:'parked',altitude:0,homeDoor:true,getHome:()=>({anchor}),save:()=>allow});
+ assert(G.distance(f.record(),{lat:54.45,lon:-2.65})<.001);assert.match(f.messages.at(-1),/could not be saved/);
+ allow=true;f.craft.update(10);assert(G.distance(f.record(),anchor)<20);
+ const parked=structuredClone(f.record());anchor.lat+=.01;f.craft.update(20);assert.deepEqual(f.record(),parked);f.craft.dispose();
+});
+test('boarding after failed home docking cancels the pending relocation',()=>{
+ let allow=false;const f=fixture({mode:'walk',phase:'parked',altitude:0,homeDoor:true,getHome:()=>({anchor:{lat:54.451,lon:-2.651}}),save:()=>allow});
+ allow=true;assert(f.craft.control());const boarded=structuredClone(f.record());f.craft.update(10);assert.deepEqual(f.record(),boarded);assert(f.craft.aboard());f.craft.dispose();
 });

@@ -139,11 +139,13 @@
  #villageWalk .wc-flying .cw-wings:before{mask:none;background:none;content:'↧';font:26px/1 system-ui}
  #villageWalk.wc-ready .wc-climb{right:var(--fp-right)!important;bottom:calc(168px + env(safe-area-inset-bottom))!important;min-width:44px;width:70px}
  #villageWalk.wc-ready .wc-descend{right:var(--fp-right)!important;bottom:calc(112px + env(safe-area-inset-bottom))!important;min-width:44px;width:70px}
- #villageWalk.fp-ready .fp-actions,#villageWalk.wc-ready .fp-actions,#villageWalk.fp-ready.wc-ready:has(.wc-travel) .fp-actions{left:calc(128px + env(safe-area-inset-left));right:auto;transform:none;bottom:var(--fp-bottom);width:min(230px,calc(100% - 410px - env(safe-area-inset-left) - env(safe-area-inset-right)));max-width:none;flex-direction:row;gap:6px;overflow-x:auto;overscroll-behavior:contain;pointer-events:auto;scroll-snap-type:x proximity;touch-action:pan-x}
- #villageWalk .fp-actions .fp-action{position:static!important;inset:auto!important;transform:none!important;flex:0 0 100%;min-width:0;width:100%;min-height:44px;max-height:62px;margin:0;padding:7px 9px;font-size:11px;text-align:center;scroll-snap-align:start;touch-action:pan-x}
+ #villageWalk.fp-ready .fp-actions,#villageWalk.wc-ready .fp-actions,#villageWalk.fp-ready.wc-ready:has(.wc-travel) .fp-actions{left:calc(128px + env(safe-area-inset-left));right:auto;transform:none;bottom:var(--fp-bottom);width:min(230px,calc(100% - 410px - env(safe-area-inset-left) - env(safe-area-inset-right)));max-width:none;flex-direction:column;gap:6px;overflow:visible;pointer-events:none}
  #villageWalk .wc-toast,#villageWalk .vh-status{top:auto;left:50%;right:auto;transform:translateX(-50%);bottom:calc(115px + env(safe-area-inset-bottom));max-width:calc(100% - 250px);font-size:11px}
  #villageWalk.fp-busy .wc-travel,#villageWalk.fp-busy .fp-minimap{visibility:hidden}
 }
+/* Each nearby action owns its own readable target in both orientations.
+   Modules provide inline fallback coordinates before the HUD adopts them. */
+#villageWalk .fp-actions .fp-action{position:static!important;inset:auto!important;transform:none!important;flex:0 0 auto;min-width:0;width:100%;min-height:44px;max-height:none;margin:0;padding:8px 10px;font-size:12px;line-height:1.35;text-align:center;white-space:normal;overflow-wrap:anywhere;box-sizing:border-box;touch-action:manipulation;pointer-events:auto}
 @media(orientation:landscape) and (max-height:350px){
  #villageWalk .fp-minimap{width:70px;height:70px}
  #villageWalk .fp-tracker{width:180px}
@@ -155,4 +157,11 @@
 #villageWalk .fp-map-scale:before{content:'';display:block;width:50%;height:3px;border:1px solid #ffe8b4;border-top:0;margin:0 auto 2px}
 
 #villageWalk .fp-atlas-player{z-index:8;pointer-events:none}
+/* Feedback occupies the spare right-hand lane, outside the nearby-action column. */
+#villageWalk.fp-ready .cw-status:not([hidden]),#villageWalk.fp-ready .wc-toast{left:auto;right:14px;transform:none;top:310px;bottom:auto;width:106px;max-width:106px;box-sizing:border-box;padding:8px;font-size:11px;line-height:1.35;white-space:normal;overflow-wrap:anywhere;pointer-events:none}
+#villageWalk.fp-ready .wc-toast{top:400px}
+@media(orientation:landscape){
+ #villageWalk.fp-ready .cw-status:not([hidden]),#villageWalk.fp-ready .wc-toast{left:50%;right:auto;transform:translateX(-50%);top:155px;width:220px;max-width:220px}
+ #villageWalk.fp-ready .wc-toast{top:220px}
+}
 #villageWalk .fp-borrowed-atlas #empireMapStatus{display:none}
