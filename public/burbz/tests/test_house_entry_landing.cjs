@@ -2,10 +2,10 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const G=require('../geographic_world_core.js'),C=require('../flight_craft_core.js');
 global.THREE=require('../lib/three.min.js');global.document={createElement:()=>({style:{},addEventListener(){},remove(){}})};global.matchMedia=()=>({matches:true});require('../flight_craft.js');
-function fixture({altitude=20,kind='ground',sample,clear=()=>true,parkingClear=()=>true,save=true}={}){
- const origin={lat:54.45,lon:-2.65},player={x:0,y:altitude,z:0,yaw:0,pitch:0,mode:'fly',velocity:{x:2,y:0,z:1}},pose=()=>({...G.unproject(origin,player),yaw:player.yaw,pitch:player.pitch,mode:player.mode});
- let record=C.at(pose(),'flying',kind),resets=0;const messages=[],s={player,source:{scene:new THREE.Scene()},root:{append(){}},abort:new AbortController(),auto:{reset(){resets++;}}};
- const craft=BurbzFlightCraft.attach(s,{initialPose:pose(),craft:{read:()=>record,commit(next){if(!save)return false;record=next;return true;}}},{style(){},local:p=>G.project(origin,p),geo:p=>G.unproject(origin,p),pose,sample:sample||(()=>({height:0,kind})),clear,parkingClear,resetLift(){},message:text=>messages.push(text)});
+function fixture({altitude=20,kind='ground',sample,clear=()=>true,parkingClear=()=>true,save=true,phase='flying',mode='fly',homeDoor=false,getHome}={}){
+ const origin={lat:54.45,lon:-2.65},player={x:0,y:altitude,z:0,yaw:0,pitch:0,mode,velocity:{x:2,y:0,z:1}},pose=()=>({...G.unproject(origin,player),yaw:player.yaw,pitch:player.pitch,mode:player.mode});
+ let record=C.at(pose(),phase,kind),resets=0;const messages=[],s={player,source:{scene:new THREE.Scene()},root:{append(){}},abort:new AbortController(),auto:{reset(){resets++;}}};
+ const craft=BurbzFlightCraft.attach(s,{initialPose:pose(),homeDoor,getHome,craft:{read:()=>record,commit(next){if(!(typeof save==='function'?save():save))return false;record=next;return true;}}},{style(){},local:p=>G.project(origin,p),geo:p=>G.unproject(origin,p),pose,sample:sample||(()=>({height:0,kind})),clear,parkingClear,resetLift(){},message:text=>messages.push(text)});
  craft.initialize();return{craft,s,player,messages,record:()=>record,resets:()=>resets};
 }
 test('house quest uses the Home Enter Alderwing button, retaining save and flight records',()=>{
@@ -16,7 +16,7 @@ test('house quest uses the Home Enter Alderwing button, retaining save and fligh
 });
 test('Land craft lands from low, cruising and maximum flight altitude on open ground and water',()=>{
  for(const kind of ['ground','freshwater','sea'])for(const altitude of [1,20,400]){
-  const f=fixture({altitude,kind});assert(f.craft.control(),kind+' '+altitude);assert.equal(f.player.y,0);assert.equal(f.player.mode,'walk');assert.equal(f.record().phase,'boarded');assert.equal(f.record().surface,kind);assert.deepEqual(f.player.velocity,{x:0,y:0,z:0});assert(f.resets()>0);assert(f.craft.leave());assert.equal(f.record().phase,kind==='ground'?'parked':'deck');f.craft.dispose();
+  const f=fixture({altitude,kind});assert(f.craft.control(),kind+' '+altitude);assert.equal(f.player.y,0);assert.equal(f.player.mode,'walk');assert.equal(f.record().phase,'boarded');assert.equal(f.record().surface,kind);assert.deepEqual(f.player.velocity,{x:0,y:0,z:0});assert(f.resets()>0);assert(f.craft.leave());assert.equal(f.record().phase,'parked');f.craft.dispose();
  }
 });
 test('blocked ground, missing terrain and obstacles along the full descent refuse without moving or saving',()=>{
@@ -29,4 +29,15 @@ test('landing save failure rolls back flight position, velocity and occupancy',(
 });
 test('blocked landing can be retried successfully after moving over open ground',()=>{
  const f=fixture({parkingClear:x=>x>5});assert.equal(f.craft.control(),false);f.player.x=10;assert(f.craft.control());assert.equal(f.player.x,10);assert.equal(f.player.y,0);f.craft.dispose();
+});
+
+test('water exit swims beside the parked boat, moves, saves separately, and reboards without teleporting',()=>{
+ const f=fixture({kind:'sea'});assert(f.craft.control());assert(f.craft.leave());assert.equal(f.player.mode,'swim');assert.equal(f.record().phase,'parked');const start={...f.player};f.craft.move({forward:1},.05);assert(Math.hypot(f.player.x-start.x,f.player.z-start.z)>.08);assert(f.craft.save());assert.equal(f.record().phase,'parked');assert(f.craft.control());assert.equal(f.player.mode,'walk');assert(f.craft.aboard());f.craft.dispose();
+});
+test('failed water exit save keeps player aboard and can retry without duplicating craft',()=>{
+ let allow=true;const f=fixture({kind:'freshwater',save:()=>allow});assert(f.craft.control());const before=structuredClone(f.player),record=structuredClone(f.record());allow=false;assert(!f.craft.leave());assert.deepEqual(f.player,before);assert.deepEqual(f.record(),record);assert(f.craft.aboard());allow=true;assert(f.craft.leave());assert.equal(f.player.mode,'swim');f.craft.dispose();
+});
+
+test('walking out of home does not relocate a deliberately parked distant craft',()=>{
+ const f=fixture({mode:'walk',phase:'parked',altitude:0,homeDoor:true,getHome:()=>({anchor:{lat:55,lon:-3}})});assert(G.distance(f.record(),{lat:54.45,lon:-2.65})<.001);assert.equal(f.record().phase,'parked');assert(!f.craft.aboard());assert.equal(f.player.mode,'walk');f.craft.dispose();
 });

@@ -19,11 +19,12 @@ test('boarding requires a nearby parked craft at the player height, not arbitrar
   assert(C.occupied({...craft,phase:'boarded'}));
   assert(!C.occupied({...craft,phase:'deck'}));
 });
-test('the full hull rejects missing terrain, narrow banks, steep ground and obstacles',()=>{
+test('the full hull rejects missing terrain, steep banks, steep ground and obstacles',()=>{
   const flat=()=>({height:5,kind:'ground'}),clear=()=>true;
   assert(C.berth(0,0,flat,clear));
   assert.equal(C.berth(0,0,(x,z)=>x>.5?null:flat(),clear),null);
-  assert.equal(C.berth(0,0,(x,z)=>({height:5,kind:x>.5?'freshwater':'ground'}),clear),null);
+  assert(C.berth(0,0,(x,z)=>({height:5,kind:x>.5?'freshwater':'ground'}),clear));
+  assert.equal(C.berth(0,0,(x,z)=>({height:x>.5?4:5,kind:x>.5?'freshwater':'ground'}),clear),null);
   assert.equal(C.berth(0,0,(x,z)=>({height:5+x,kind:'ground'}),clear),null);
   assert.equal(C.berth(0,0,flat,(x,y,z)=>x<.5),null);
   assert(C.berth(0,0,()=>({height:5,kind:'sea'}),clear));
