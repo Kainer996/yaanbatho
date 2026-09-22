@@ -3,7 +3,7 @@
 function attach(s){
  const T=root.THREE,core=root.BurbzBuildingRoomsCore,baseApi=s.options.interiors,api=baseApi&&{...baseApi,people:target=>s.continuity?.people?s.continuity.people(target):baseApi.people?.(target)||[]};
  const doorButton=document.createElement('button');doorButton.className='vr-door';doorButton.type='button';doorButton.hidden=true;
- const service=document.createElement('button');service.className='vr-service';service.type='button';service.hidden=true;s.root.append(doorButton,service);
+ const service=document.createElement('button');service.className='vr-service';service.type='button';service.hidden=true;const deskButton=document.createElement('button');deskButton.className='vr-service';deskButton.type='button';deskButton.hidden=true;s.root.append(doorButton,service,deskButton);
  let life=null,room=null,outside=null,nearest=null,last=-1,doorVersion=-1,nextDoors=0;const doors=[],unresolved=[];
  function valid(t){return api?.describe(t);}
  if(s.flight)doors.push(...s.flight.pads);
@@ -16,7 +16,7 @@ unresolved.push({target,label:info.name,p,direction});});}}
  function enter(t){
   if(room||s.player.mode==='fly'||s.uiBusy||s.failed)return false;const info=valid(t);if(!info)return false;
   const plan=core.plan(t);if(info.name)plan.name=info.name;if(info.actionLabel&&plan.action)plan.action.label=info.actionLabel;if(t.scope==='wayside'){plan.name=info.name;plan.action=null;}const next=root.BurbzBuildingRoomsScene.create(T,plan);
-  s.reset();s.discoveries?.closePanel();s.discoveries?.setPaused?.(true);outside={world:s.world,player:{...s.player},exposure:s.source.renderer.toneMappingExposure};s.source.renderer.toneMappingExposure=1;room=next;room.target={...t};s.room=room;s.continuity?.syncControls();s.world=room.world;s.player=room.world.spawn();life=typeof baseApi?.people==='function'||typeof s.continuity?.people==='function'?root.BurbzInteriorLife.attach(s,room,api):null;
+  s.reset();s.discoveries?.closePanel();s.discoveries?.setPaused?.(true);outside={world:s.world,player:{...s.player},geographicPose:s.continuity?.navigation?.().pose,exposure:s.source.renderer.toneMappingExposure};s.source.renderer.toneMappingExposure=1;room=next;room.target={...t};s.room=room;s.continuity?.syncControls();s.world=room.world;s.player=room.world.spawn();if(s.options.commandDeskReturn){if(!s.options.commandDeskReturn.geographicPose)outside.player={...s.options.commandDeskReturn.outsidePlayer};if(!s.options.commandDeskReturn.standalone)s.options.room=null;delete s.options.commandDeskReturn;}life=typeof baseApi?.people==='function'||typeof s.continuity?.people==='function'?root.BurbzInteriorLife.attach(s,room,api):null;
   s.root.classList.add('vr-inside');s.root.querySelector('.vw-hint').textContent='Left thumb: walk · Drag to look · E interact';s.root.querySelector('.vw-title small').textContent=s.options.flight?'PERCHED INSIDE':'INDOORS';s.root.querySelector('.vw-title strong').textContent=room.plan.name;
   s.root.querySelector('.vw-exit').textContent=s.options.room?'← Building':'← Outside';
   s.root.querySelector('.vw-look').setAttribute('aria-label',room.plan.name+'. WASD walks; drag or arrow keys look.');
@@ -26,11 +26,13 @@ unresolved.push({target,label:info.name,p,direction});});}}
  function exit(){root.BurbzVillageWalk.close('exit');}
  function use(){if(s.uiBusy||s.failed)return;if(room){if(Math.hypot(s.player.x-room.plan.exit.x,s.player.z-room.plan.exit.z)<2)exit();}else if(nearest)enter(nearest);}
  doorButton.addEventListener('click',use,{signal:s.abort.signal});service.addEventListener('click',()=>{if(!room||s.failed)return;const t=room.target,action=room.plan.action.kind;root.BurbzVillageWalk.close('building-action');api?.open(t,action);},{signal:s.abort.signal});
- function update(time){life?.update(time);if(time-last<.1)return;last=time;if(room){const p=room.plan;doorButton.hidden=s.uiBusy||Math.hypot(s.player.x-p.exit.x,s.player.z-p.exit.z)>=2;service.hidden=!p.action||Math.hypot(s.player.x-p.action.x,s.player.z-p.action.z)>2.3;service.textContent=p.action?.label||'';return;}
+ function useDesk(){if(!room||s.uiBusy||s.failed||!room.plan.deskAction||Math.hypot(s.player.x-room.plan.deskAction.x,s.player.z-room.plan.deskAction.z)>2.3)return false;const t={...room.target};if(api?.rememberDesk?.(t,{...outside.player},!!s.options.room,outside.geographicPose)===false)return false;root.BurbzVillageWalk.close('building-action');api?.open(t,'command-desk');return true;}
+ deskButton.addEventListener('click',useDesk,{signal:s.abort.signal});
+ function update(time){deskButton.hidden=true;if(room?.plan.deskAction&&!s.uiBusy){deskButton.hidden=Math.hypot(s.player.x-room.plan.deskAction.x,s.player.z-room.plan.deskAction.z)>2.3;deskButton.textContent=room.plan.deskAction.label;}life?.update(time);if(time-last<.1)return;last=time;if(room){const p=room.plan;doorButton.hidden=s.uiBusy||Math.hypot(s.player.x-p.exit.x,s.player.z-p.exit.z)>=2;service.hidden=!p.action||Math.hypot(s.player.x-p.action.x,s.player.z-p.action.z)>2.3;service.textContent=p.action?.label||'';return;}
   refreshDoors();resolveDoors(time);let distance=2.4;nearest=null;if(s.player.mode==='fly'){doorButton.hidden=true;return;}for(const d of doors){if(s.flight&&s.player.landed!==d.roomId)continue;const dx=d.x-s.player.x,dz=d.z-s.player.z,n=Math.hypot(dx,dz);if(n<distance){let clear=true;for(let k=1;k<=6;k++)if(!s.world.allowed(s.player.x+dx*k/6,s.player.z+dz*k/6)){clear=false;break;}if(clear){nearest=d;distance=n;}}}
   doorButton.hidden=!nearest||s.uiBusy;doorButton.textContent=nearest?'Enter '+nearest.label+' · F':'';
  }
- return{enter,leave,update,closePanel:()=>life?.closePanel(),key(code){if(life?.key(code))return true;if(code==='KeyF'&&!s.uiBusy&&(room||nearest)){use();return true;}return false;},diagnostics:()=>({inside:!!room,life:life?.diagnostics(),plan:room?.plan,doors,nearest}),dispose(){if(outside)s.source.renderer.toneMappingExposure=outside.exposure;s.discoveries?.setPaused?.(false);life?.dispose();life=null;room?.dispose();room=null;s.room=null;doorButton.remove();service.remove();}};
+ return{enter,leave,update,closePanel:()=>life?.closePanel(),key(code){if(code==='KeyE'&&useDesk())return true;if(life?.key(code))return true;if(code==='KeyF'&&!s.uiBusy&&(room||nearest)){use();return true;}return false;},diagnostics:()=>({inside:!!room,life:life?.diagnostics(),plan:room?.plan,doors,nearest}),dispose(){if(outside)s.source.renderer.toneMappingExposure=outside.exposure;s.discoveries?.setPaused?.(false);life?.dispose();life=null;room?.dispose();room=null;s.room=null;doorButton.remove();service.remove();deskButton.remove();}};
 }
 root.BurbzBuildingRooms={attach};
 })(typeof globalThis!=='undefined'?globalThis:this);
