@@ -697,3 +697,31 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
  #screen-scan.progressive-home[data-home-density] .scan-home-main { padding:2px;gap:2px; }
  #screen-scan.progressive-home[data-home-density] .scan-home-start { padding:1px; }
 }
+
+/* User-supplied paintings fade to transparency, exposing the exact existing
+   charcoal surface (including recording/disabled states), not a guessed colour.
+   Decorative layers cannot intercept taps or cover the real assigned bird. */
+#screen-scan.progressive-home :is(.desk-panel-heading,#scanBtn,#captureBtn) { position:relative;isolation:isolate;overflow:hidden; }
+#screen-scan.progressive-home :is(.desk-panel-heading,#scanBtn,#captureBtn)::before { content:"";display:block;position:absolute;z-index:-1;inset:0 0 0 auto;width:58%;height:100%;max-width:180px;border-radius:0;transform:none;background:var(--desk-banner) center 48%/cover no-repeat;opacity:.85;pointer-events:none;mask-image:linear-gradient(to right,transparent 0%,transparent 12%,#000 75%);-webkit-mask-image:linear-gradient(to right,transparent 0%,transparent 12%,#000 75%); }
+#screen-scan.progressive-home .desk-panel-training .desk-panel-heading { --desk-banner:url("assets/dashboard-banners/training.webp"); }
+#screen-scan.progressive-home .desk-panel-hospital .desk-panel-heading { --desk-banner:url("assets/dashboard-banners/hospital.webp"); }
+#screen-scan.progressive-home .desk-panel-kitchen .desk-panel-heading { --desk-banner:url("assets/dashboard-banners/kitchen.webp"); }
+#screen-scan.progressive-home .desk-panel-stores .desk-panel-heading { --desk-banner:url("assets/dashboard-banners/crafting.webp"); }
+#screen-scan.progressive-home .desk-panel-building .desk-panel-heading { --desk-banner:url("assets/dashboard-banners/your-empire.webp"); }
+#screen-scan.progressive-home #captureBtn { --desk-banner:url("assets/dashboard-banners/open-camera.webp"); }
+#screen-scan.progressive-home #scanBtn { --desk-banner:url("assets/dashboard-banners/start-sound-scan.webp"); }
+#screen-scan.progressive-home #captureBtn::before { background-position:center 30%; }
+#screen-scan.progressive-home .scan-home-start-buttons .scan-btn { text-align:left;padding-left:9px;text-shadow:0 1px 3px #000; }
+#screen-scan.progressive-home .desk-panel-heading small { position:relative;background:#282725dd;border-radius:3px;padding:0 2px; }
+#screen-scan.progressive-home .desk-empire-holding[data-banner="saltmere"] { isolation:isolate;overflow:hidden; }
+#screen-scan.progressive-home .desk-empire-holding[data-banner="saltmere"]::before { content:"";position:absolute;inset:0;z-index:-1;background:url("assets/dashboard-banners/saltmere.webp") center/cover no-repeat;opacity:.38;mask-image:linear-gradient(to bottom,#000 5%,#0008 55%,transparent 100%);pointer-events:none; }
+#screen-scan.progressive-home .desk-empire-holding[data-banner="saltmere"] .desk-mini-art { background:transparent; }
+#screen-scan.progressive-home .desk-empire-holding[data-banner="saltmere"] .desk-mini-art img { position:relative;z-index:1;object-fit:contain; }
+#screen-scan.progressive-home .scan-home-today { padding:1px 3px; }
+#screen-scan.progressive-home .scan-home-today .home-action { min-height:44px;padding:1px 3px; }
+#screen-scan.progressive-home .scan-home-today .desk-equipment-control { min-height:44px;padding:1px; }
+#screen-scan.progressive-home .desk-current-label { font-size:11px;line-height:14px; }
+#screen-scan.progressive-home .desk-build-options { position:relative;grid-template-rows:44px; }
+#screen-scan.progressive-home .desk-build-options .desk-build-open { padding-bottom:12px; }
+#screen-scan.progressive-home .desk-build-options .desk-mini-art { width:24px;height:28px; }
+#screen-scan.progressive-home .desk-build-options small { position:absolute;bottom:0;left:0;right:0;pointer-events:none; }
