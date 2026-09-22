@@ -62,6 +62,24 @@ function findBerth(origin,sample,clear,{minRadius=3,maxRadius=18}={}){
   }
   return null;
 }
+// The Land control checks the whole descent, not just proximity to the floor.
+// Sweep the hull at sub-body intervals so roofs/canopies cannot be skipped.
+function landingBerth(player,sample,parkingClear,clear){
+  if(!player||![player.x,player.y,player.z].every(finite))return null;
+  const target=berth(player.x,player.z,sample,parkingClear);
+  if(!target||player.y<target.height-.45)return null;
+  const steps=Math.max(1,Math.ceil(Math.abs(player.y-target.height)/.25));
+  if(steps>8192)return null; // Bounded even for malformed legacy altitudes.
+  for(let step=0;step<=steps;step++){
+    const y=player.y+(target.height-player.y)*step/steps+DECK_HEIGHT;
+    if(clear(player.x,y,player.z)!==true)return null;
+    for(let i=0;i<8;i++){
+      const angle=i*Math.PI/4;
+      if(clear(player.x+Math.cos(angle)*HULL_RADIUS,y,player.z+Math.sin(angle)*HULL_RADIUS)!==true)return null;
+    }
+  }
+  return target;
+}
 // Homes face +Z. Search only left of their doorway so the first forward view
 // stays open; no berth is preferable to unknown or obstructed ground.
 function findHomeBerth(origin,sample,clear,yaw=Math.PI){
@@ -86,5 +104,5 @@ function floatPose(previous,kind,time,dt,reducedMotion=false){
     roll:water&&!reducedMotion?Math.sin(time*1.25)*.045*strength:0,
     pitch:water&&!reducedMotion?Math.sin(time*1.9+.4)*.025*strength:0};
 }
-return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,findBerth,findHomeBerth,floatPose};
+return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,landingBerth,findBerth,findHomeBerth,floatPose};
 });

@@ -85,12 +85,12 @@ function attach(s,opts,env){
    if(!result.ok){env.message('The wings need clear space above the craft.');return false;}
    next=saved('flying',surface?.kind||record.surface);
   }else{
-   const berth=C.berth(s.player.x,s.player.z,env.sample,env.parkingClear);
-   if(!berth||s.player.y-berth.height>2.1||s.player.y<berth.height){env.message('Descend close to a clear landing place.');return false;}
+   const berth=C.landingBerth(s.player,env.sample,env.parkingClear,env.clear);
+   if(!berth){env.message("Can't land here");return false;}
    Object.assign(s.player,{y:berth.height,mode:'walk'});next=saved('boarded',berth.kind);
   }
   if(!commit(next)){Object.assign(s.player,before);aboard=oldAboard;onDeck=oldDeck;return false;}
-  stop();sync();return true;
+  stop();env.message('');sync();return true;
  }
  function leave(){
   if(closed||s.uiBusy||s.room||!aboard||s.player.mode==='fly')return false;

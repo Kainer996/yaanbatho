@@ -5773,7 +5773,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home.js?v=hands-on-world-tutorial-v429-20260920"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
-<script src="flight_craft_core.js?v=walk-shelter-controls-v427-20260920"></script>
+<script src="flight_craft_core.js?v=house-entry-landing-v438-20260922"></script>
 <script src="enemy_outposts_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
@@ -30773,7 +30773,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=destination-cleanup-v434-20260921';
+        script.src = 'village_walk.js?v=house-entry-landing-v438-20260922';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -44591,7 +44591,7 @@ function syncActivePlayerQuest() {
 }
 
 function playerQuestGo(q) {
-  if(q.id==='pq_build_home'){enterGeographicWorld().catch(error=>showToast(error.message));return;}
+  if(q.id==='pq_build_home'){switchScreen('scan');$('playerHomeStand')?.click();return;}
   if (q.id === 'pq_liberate') { startVillageLiberationBattle(currentVillage()); return; }
   academyQuestGuidanceRoom = q.focusRoom || null;
   if (q.go === 'academy' && q.focusRoom && !isAcademyBuildingBuilt(q.focusRoom)) {
@@ -45168,7 +45168,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'red-gold-pocket-v437-20260921';
+const BURBZ_BUILD = 'house-entry-landing-v438-20260922';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

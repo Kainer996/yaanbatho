@@ -77,7 +77,9 @@
 #villageWalk .fp-actions .fp-action{min-height:44px;padding:8px 10px;font-size:12px;background:#262f25f2;border:1px solid #d3af6a80;border-radius:10px}
 @media(max-width:560px){#villageWalk .fp-actions{bottom:calc(144px + env(safe-area-inset-bottom));width:calc(100% - 136px);left:14px;transform:none}#villageWalk .fp-tools{flex-direction:column}#villageWalk .fp-tracker{width:calc(100% - 84px)}#villageWalk .fp-panel h2{font-size:22px}}
 @media(max-height:520px){#villageWalk .fp-character{display:none}#villageWalk .fp-compass{top:12px;right:74px}#villageWalk .fp-tools{top:66px;right:12px;flex-direction:row}#villageWalk .fp-tracker{top:66px;width:min(260px,calc(100% - 160px))}#villageWalk .fp-quest-heading strong{font-size:13px;-webkit-line-clamp:1}#villageWalk .fp-tracker .fp-quest-heading{min-height:48px;padding:7px 10px}#villageWalk .fp-panel{top:10px;bottom:10px}#villageWalk .fp-actions{left:50%;transform:translateX(-50%);bottom:16px;width:calc(100% - 280px);max-width:310px}#villageWalk .fp-actions .fp-action{min-height:44px}#villageWalk .fp-tracker.fp-expanded .vd-guide{max-height:90px}}
-#villageWalk.fp-nearby .vw-hint{visibility:hidden}
+#villageWalk.fp-nearby .vw-hint:not(.cw-status){visibility:hidden}
+/* Action feedback stays readable above the flight controls near buildings. */
+#villageWalk.fp-ready .cw-status:not([hidden]){display:block;top:42%;bottom:auto;z-index:7;font-size:13px}
 
 /* Edge groups leave the horizon free. All coordinates include the device's
    safe area; interactive targets stay at least 44px even in short landscape. */
