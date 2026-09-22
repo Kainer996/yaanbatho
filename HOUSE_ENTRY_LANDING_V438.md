@@ -18,4 +18,4 @@ Build/cache: `house-entry-landing-v438-20260922`. Exact new pins cover flight_cr
 
 Evidence: `/root/burbz-house-entry-landing-evidence/`, with native `results.json`, `blocked-landing.png`, `house-quest-entry.png`, and installed `pwa/results.json`.
 
-These are local Chromium fixtures with synthetic geography and phone-size viewports, not physical-phone or public-deployment proof. Publication awaits approval under `/root/AGENTS.md`. The unrelated checkout-generated `videos/friend-shaped.mp4` pointer is excluded.
+These are local Chromium fixtures with synthetic geography and phone-size viewports, not physical-phone or public-deployment proof. Yaan approved publication on 22 September 2026; guarded deployment and public verification are the remaining release steps. The unrelated checkout-generated `videos/friend-shaped.mp4` pointer is excluded.
