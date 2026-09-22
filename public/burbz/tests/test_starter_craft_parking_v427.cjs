@@ -4,7 +4,7 @@ const C=require('../flight_craft_core.js'),G=require('../geographic_world_core.j
 const provision=text.slice(text.indexOf(' function provision(){'),text.indexOf(' function initialize(){'));
 const home={lat:54.45,lon:-2.65},pose=(x,z)=>({...G.unproject(home,{x,y:120,z}),altitude:120,yaw:0,pitch:0,mode:'walk'});
 function run({record=null,intro=true,ok=true,known=true}={}){
- const c={record,C,G,closed:false,aboard:false,onDeck:false,writes:[],opts:{getHome:()=>({anchor:home}),craft:{shelterIntro:()=>intro}},env:{local:p=>G.project(home,p),geo:p=>G.unproject(home,p),sample:()=>known?{height:120,kind:'ground'}:null,parkingClear:()=>true,clear:()=>true}};
+ const c={record,C,G,homeBerthPending:false,closed:false,aboard:false,onDeck:false,writes:[],opts:{getHome:()=>({anchor:home}),craft:{shelterIntro:()=>intro}},env:{local:p=>G.project(home,p),geo:p=>G.unproject(home,p),sample:()=>known?{height:120,kind:'ground'}:null,parkingClear:()=>true,clear:()=>true}};
  c.local=()=>c.record&&c.env.local(c.record);c.commit=n=>{c.writes.push(n);if(ok)c.record=n;return ok;};vm.createContext(c);vm.runInContext(provision+'result=provision();',c);return c;
 }
 test('new and obstructing tutorial craft park left of the actual home doorway',()=>{
