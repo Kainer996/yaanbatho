@@ -41,21 +41,21 @@ function upperRooms(T,home){const all=new T.Group();for(const [id,r] of Object.e
 
 function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
  if(C.indoor(area)){
- const extra=C.ROOMS[area];
- const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:s.tier?'Your woodland home':'Your temporary shelter',scope:'player-home',width:9,depth:10,height:3.6,accent:0x709486,props:s.tier?[{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}]:[],spawn:{x:0,y:0,z:3.8,yaw:0,pitch:0},exit:{x:0,z:4.3},action:null};
+ const extra=C.ROOMS[area],layout=C.roomLayout(s),deskShift=layout.deskZ+3.45;
+ const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:s.tier?'Your woodland home':'Your temporary shelter',scope:'player-home',shelter:s.tier===0,width:layout.width,depth:layout.depth,height:layout.height,accent:s.tier?0x709486:0x77736b,props:s.tier?[{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}]:[],spawn:{x:0,y:0,z:layout.spawnZ,yaw:0,pitch:0},exit:{x:0,z:layout.doorZ},action:null};
  room=root.BurbzBuildingRoomsScene.create(T,p);scene=room.scene;
  if(area==='room'&&Object.keys(s.rooms).length)for(const child of [...scene.children])if(child.isGroup&&child.position.x>4){scene.remove(child);disposeScene(child);}
  // The shared room shell's ceiling is opened only in the decorating view.
  scene.children[0]?.traverse(o=>{if(o.isMesh&&!roof)roof=o;});
  if(!extra){
- const desk=root.BurbzSettlementModels.batch(T),w=0x765139,trim=0x493329,gold=0xbf9855;
+ const desk=root.BurbzSettlementModels.batch(T),w=s.tier?0x765139:0x777168,trim=s.tier?0x493329:0x4e4a45,gold=s.tier?0xbf9855:0x969184;
  desk.box(2.7,.15,1.25,0,.92,-3.45,w);for(const x of [-1.12,1.12])for(const z of [-3.9,-3])desk.box(.14,.9,.14,x,.45,z,trim);
  desk.box(.7,.05,.32,0,1.02,-3.02,trim);for(let row=0;row<3;row++)for(let i=0;i<8;i++)desk.box(.058,.03,.06,-.29+i*.082,1.055,-3.1+row*.085,gold);
  const height=aspect<1?1.6:Math.min(1.4,2.3/aspect),width=height*aspect;screenSize={width,height,x:0,y:1.12+height/2,z:-3.42};
  desk.box(width+.22,height+.24,.17,0,screenSize.y,-3.53,trim);desk.box(width+.1,height+.12,.19,0,screenSize.y,-3.52,gold);desk.cylinder(.07,.12,.38,0,1.13,-3.55,trim);
  for(const x of [-width/2-.08,width/2+.08])for(const y of [screenSize.y-height/2-.08,screenSize.y+height/2+.08])desk.sphere(.055,x,y,-3.4,gold);
  desk.cylinder(.13,.2,.1,1,.99,-3.3,gold);desk.cylinder(.035,.035,.5,1,1.26,-3.3,0xe4d2ac);desk.sphere(.08,1,1.57,-3.3,0xffcf76,[.5,1,.5]);
- scene.add(desk.finish());const chair=ornament(T,'armchair',0x466b5c);chair.position.set(0,0,-1.85);chair.rotation.y=Math.PI;chair.userData.homeTarget='desk';scene.add(chair);targets.push(chair);
+ const deskGroup=desk.finish();deskGroup.position.z=deskShift;scene.add(deskGroup);screenSize.z+=deskShift;const chair=ornament(T,'armchair',s.tier?0x466b5c:0x66645f);chair.position.set(0,0,-1.85+deskShift);chair.rotation.y=Math.PI;chair.userData.homeTarget='desk';scene.add(chair);targets.push(chair);
  // The real app is projected beneath the WebGL canvas. This depth-tested
  // aperture exposes it only where the actual monitor is visible, including
  // furniture occlusion, side views and the exact full-viewport seated view.
@@ -100,7 +100,7 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  }
  const farm=area==='yard'?createFarm(T,s,options.farmHeight):null;if(farm)scene.add(farm);
  for(const p of s.placed.filter(p=>p.area===area)){const mesh=ornament(T,C.ITEMS[p.item].type);mesh.position.set(p.x,0,p.z);mesh.rotation.y=p.turn*Math.PI/2;mesh.userData.placementId=p.id;scene.add(mesh);decor.push(mesh);targets.push(mesh);}
- const finds=[];for(const f of C.FINDS.filter(f=>f.area===area&&!f.id.endsWith('-story'))){const b=root.BurbzSettlementModels.batch(T);if(f.id==='tiny-door'){b.cylinder(.58,.72,1.35,f.x,.675,f.z,0x71543b);b.box(.44,.68,.08,f.x,.35,f.z+.6,0x345f50);for(const x of [-.26,.26])b.box(.065,.76,.09,f.x+x,.38,f.z+.62,0xc3ab74);b.sphere(.045,f.x+.13,.36,f.z+.68,0xd9ba65);}
+ const finds=[];for(const f of C.FINDS.filter(f=>f.area===area&&!f.id.endsWith('-story')&&(s.tier>0||area!=='room'))){const b=root.BurbzSettlementModels.batch(T);if(f.id==='tiny-door'){b.cylinder(.58,.72,1.35,f.x,.675,f.z,0x71543b);b.box(.44,.68,.08,f.x,.35,f.z+.6,0x345f50);for(const x of [-.26,.26])b.box(.065,.76,.09,f.x+x,.38,f.z+.62,0xc3ab74);b.sphere(.045,f.x+.13,.36,f.z+.68,0xd9ba65);}
  else if(f.id==='moon-pool'){b.cylinder(.65,.5,.3,f.x,.15,f.z,0xb1af99);b.cylinder(.53,.53,.015,f.x,.31,f.z,0x79a6a4);for(const x of [-.18,.18])b.sphere(.07,f.x+x,.335,f.z,0xd9e3c6,[1,.1,1]);}
  else if(f.id==='lost-pot'){b.cylinder(.3,.2,.42,f.x,.21,f.z,0xc68b69);b.box(.23,.018,.27,f.x,.44,f.z,0xe3ce9e);}
  else if(f.id==='merlin-acorn'){b.sphere(.16,f.x,.18,f.z,0xa68152,[.8,1,.8]);b.sphere(.18,f.x,.32,f.z,0x685139,[1,.4,1]);for(let i=0;i<5;i++)b.add(new T.ConeGeometry(.04,.14,3),0xdac478,[f.x+Math.sin(i*1.25)*.12,.44,f.z+Math.cos(i*1.25)*.12]);}
@@ -127,12 +127,26 @@ function createFarm(T,home,height=()=>0){const group=new T.Group(),plots=home.fa
  const meshes=[];for(const [template,fruit]of [[stems.finish(),false],[tops.finish(),true]])for(const part of template.children){const mesh=new T.InstancedMesh(part.geometry,part.material,rows.length);mesh.castShadow=true;mesh.receiveShadow=true;mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);mesh.name='farm-'+id+(fruit?'-fruit':'-stems');group.add(mesh);meshes.push({mesh,fruit});}growth.push({rows,meshes});}
  group.userData.update=()=>{let changed=false;const matrix=new T.Matrix4(),scale=new T.Vector3();for(const {rows,meshes}of growth){let dirty=false;for(let i=0;i<rows.length;i++){const row=rows[i],stage=C.farmStatus(row.p).stage;if(stage===row.stage)continue;row.stage=stage;dirty=changed=true;const size=stage==='dry'?.13:stage==='sprout'?.25:stage==='growing'?.6:1;for(const {mesh,fruit}of meshes){const amount=size*(fruit?(stage==='ready'?1:stage==='flower'?.6:.01):1);matrix.makeTranslation(row.x,Number.isFinite(height(row.x,row.z))?height(row.x,row.z):0,row.z).scale(scale.setScalar(amount));mesh.setMatrixAt(i,matrix);}}if(dirty)for(const {mesh}of meshes){mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}}return changed;};group.userData.update();return group;
 }
-function createHouse(T,home){const saved=C.normalize(home),group=new T.Group();group.name='player-home-house';group.userData.homeTarget='house';group.add(root.BurbzSettlementModels.building(T,'cabin',saved.tier+1,()=>.47,{roofs:[0x557e72]}),upperRooms(T,saved));return group;}
+function createHouse(T,home){
+ const saved=C.normalize(home),group=new T.Group();group.name=saved.tier?'player-home-house':'temporary-shelter';group.userData.homeTarget='house';
+ if(saved.tier){group.add(root.BurbzSettlementModels.building(T,'cabin',saved.tier+1,()=>.47,{roofs:[0x557e72]}),upperRooms(T,saved));return group;}
+ // Rough, unpainted boards and a patched lean-to roof, just big enough for
+ // the existing desk and chair. This same home becomes the chosen cottage.
+ const b=root.BurbzSettlementModels.batch(T),wood=[0x77736a,0x68665e,0x827d72],trim=0x4e4d47;
+ b.box(3.4,.14,4.6,0,.07,0,trim);
+ for(let i=0;i<12;i++){const z=-2.12+i*.385;for(const side of [-1,1])b.box(.12,2.8-(i%3)*.025,.37,side*1.66,1.45,z,wood[i%3]);}
+ for(let i=0;i<9;i++){const x=-1.48+i*.37;b.box(.36,2.8,.12,x,1.45,-2.25,wood[(i+1)%3]);if(Math.abs(x)>.6)b.box(.36,2.8,.12,x,1.45,2.25,wood[i%3]);}
+ b.box(1.1,2.05,.1,0,1.09,2.28,0x605e56);b.box(1.22,.68,.12,0,2.52,2.25,wood[0]);
+ for(const x of [-.62,.62])b.box(.12,2.2,.18,x,1.14,2.3,trim);b.box(1.4,.13,.18,0,2.26,2.3,trim);b.sphere(.055,.38,1.1,2.36,0x939083);
+ for(let i=0;i<7;i++)b.box(.54,.12,4.92,-1.6+i*.53,2.95,0,wood[i%3],[.035,0,0]);
+ b.box(.8,.04,1.1,-.7,3.05,-.8,0x5c5d59,[.035,.12,0]);b.box(.7,.04,.8,.65,3.01,1.2,0x858175,[.035,-.08,0]);
+ group.add(b.finish());return group;
+}
 function createYardContent(T,home,options={}){const saved=C.normalize(home),now=options.now??Date.now(),view=create(T,saved,'yard',1,{}, {...options,now,contentOnly:true}),group=new T.Group();group.name='player-home-yard';for(const child of [...view.scene.children])group.add(child);group.updateMatrixWorld(true);
  const targets=[{kind:'home',id:'home-door',x:0,y:1.2,z:3.2,label:'Enter your home',range:2}];
  for(const f of C.FINDS.filter(f=>f.area==='yard'))targets.push({kind:'find',id:f.id,x:f.x,y:.6,z:f.z,label:saved.finds.includes(f.id)?'Read '+f.name:'Look closer',range:1.65});
  for(const t of C.visibleTrees(saved)){const hits=C.treeState(saved,t.id,now);if(hits<3)targets.push({kind:'tree',id:t.id,x:t.x,y:1,z:t.z,label:'Chop tree · '+hits+'/3 strikes',range:1.65});}
- const solids=saved.outlook?[{id:'outlook-rock-1',x:7,z:18,w:4.8,d:3.2,minY:0,maxY:1.8},{id:'outlook-rock-2',x:9,z:20,w:2.6,d:1.8,minY:0,maxY:1.1}]:[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',x:0,z:0,w:5.5,d:4.5,minY:0,maxY:houseBounds.max.y});
+ const solids=saved.outlook?[{id:'outlook-rock-1',x:7,z:18,w:4.8,d:3.2,minY:0,maxY:1.8},{id:'outlook-rock-2',x:9,z:20,w:2.6,d:1.8,minY:0,maxY:1.1}]:[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',...C.houseFootprint(saved),minY:0,maxY:houseBounds.max.y});
  for(const mesh of view.decor){const p=saved.placed.find(p=>p.id===mesh.userData.placementId),item=C.ITEMS[p.item];if(item.flat)continue;const box=new T.Box3().setFromObject(mesh);solids.push({id:'decoration:'+p.id,x:p.x,z:p.z,w:p.turn%2?item.d:item.w,d:p.turn%2?item.w:item.d,minY:0,maxY:box.max.y});}
  for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:0,maxY:3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:1.6,maxY:7});}
  return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};

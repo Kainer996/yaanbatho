@@ -5767,13 +5767,13 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="player_home_core.js?v=opening-home-v416-20260914"></script>
-<script src="player_home_scene.js?v=opening-home-v416-20260914"></script>
+<script src="player_home_core.js?v=gps-shelter-swimming-v439-20260922"></script>
+<script src="player_home_scene.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="alderwing_intro.js?v=hands-on-world-tutorial-v429-20260920"></script>
-<script src="player_home.js?v=hands-on-world-tutorial-v429-20260920"></script>
+<script src="player_home.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
-<script src="geographic_world_core.js?v=connected-world-v386-20260910"></script>
-<script src="flight_craft_core.js?v=house-entry-landing-v438-20260922"></script>
+<script src="geographic_world_core.js?v=gps-shelter-swimming-v439-20260922"></script>
+<script src="flight_craft_core.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="enemy_outposts_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
@@ -7491,6 +7491,7 @@ function refreshAllScreens() {
   window.BurbzGeographicWorld?.close('save-replaced');
   geographicWorldVisit=null;
   geographicAvatarMarker?.remove();geographicAvatarMarker=null;
+  geographicHomeMarker?.remove();geographicHomeMarker=null;
   window.BurbzPlayerHome?.close('save-replaced');
   loadState();
   if(window.BurbzPlayerHomeCore)gameState.playerHome=BurbzPlayerHomeCore.normalize(gameState.playerHome,localStorage.getItem(BURBZ_INTRO_SEEN_KEY)==='1'||gameState.player.level>1||gameState.flock.length>0);
@@ -30773,7 +30774,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=house-entry-landing-v438-20260922';
+        script.src = 'village_walk.js?v=gps-shelter-swimming-v439-20260922';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45168,7 +45169,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'house-entry-landing-v438-20260922';
+const BURBZ_BUILD = 'gps-shelter-swimming-v439-20260922';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46588,11 +46589,10 @@ function currentPlayerHome(){return activeCampHomeId?explorationState().camps.fi
 async function enterCampHome(id,area='room'){const camp=id&&explorationState().camps.find(c=>c.id===id);if(id&&!camp?.home)return{ok:false,error:'Visit this camp in real life, then build its house.'};BurbzVillageWalk?.close('world');BurbzPlayerHome.close('world');activeCampHomeId=id||null;return BurbzPlayerHome.open(area,{fromDesk:false,returnToWorld:true});}
 function commitCampHomeAction(action){const camp=explorationState().camps.find(c=>c.id===activeCampHomeId);if(!camp?.home)return{ok:false,error:'Reopen this home from Camps.'};if(['anchor','build-home'].includes(action.kind))return{ok:false,error:'This home stays at your visited camp.'};const farming=action?.kind?.startsWith('farm-'),p=farming?BurbzPlayerHomeCore.proposeFarm(camp.home,gameState.player,gameState.inventory,action):BurbzPlayerHomeCore.propose(camp.home,gameState.player,action);if(!p.ok)return p;const before=snapshotGameState();camp.home=p.home;gameState.player.branches=p.wallet.branches;if(farming){gameState.player.coins=p.wallet.coins;gameState.inventory=p.inventory;}if(!durableSaveState().ok){restoreGameStateSnapshot(before);return{ok:false,error:'Your home could not be saved. Nothing was spent.'};}updateHeader();return{ok:true,message:p.message};}
 
-let geographicWorldVisit = null, geographicAvatarMarker = null;
+let geographicWorldVisit = null, geographicAvatarMarker = null, geographicHomeMarker = null;
 // Placement reads the same authored settlement geometry as walking. Existing
 // homes are left intact; only a new anchor/house needs a fresh one-use permit.
 const homePlacementPermits=new WeakSet(),homeSettlementBounds=new Map();
-let initialHomePlacementPending=null;
 function homeSettlementGeometryKey(record){const members=record.settlement?townMemberRecords(record.settlement):[empireVillageRecordBySeed(record.seed)].filter(Boolean);return JSON.stringify([record.id,record.seed,record.tier,record.lat,record.lon,record.settlement,members.map(r=>({seed:r.seed,buildings:r.economy?.buildings,plots:r.economy?.buildingPlots,constructions:r.economy?.constructions,ready:r.economy?.readyToOpen,ruins:r.economy?.ruins}))]);}
 async function checkPlayerHomePlacement(point){
  const G=BurbzGeographicWorldCore;if(!G.validCoordinate(point)||!window.THREE)return{ok:false,error:'Choose a loaded place outside villages and towns.'};
@@ -46638,15 +46638,10 @@ function commitPlayerHomeAction(action) {
   try{updateHeader();refreshGeographicAvatarMarker();}catch(e){}return{ok:true,message:proposal.message};
 }
 function anchorPlayerHomeAt(lat,lon) {
-  if(!gameState?.playerHome||gameState.playerHome.anchor||!BurbzGeographicWorldCore.validCoordinate({lat,lon}))return false;
-  if(initialHomePlacementPending?.identity===gameState)return initialHomePlacementPending.promise;
-  const attempt={identity:gameState,promise:null};
-  attempt.promise=commitPlayerHomePlacement({kind:'anchor',lat,lon,source:'initial',expectedRevision:0})
-    .then(r=>{if(!r.ok&&gameState===attempt.identity)showToast(r.error);return r.ok;})
-    .catch(e=>{if(gameState===attempt.identity)showToast(e.message);return false;})
-    .finally(()=>{if(initialHomePlacementPending===attempt)initialHomePlacementPending=null;});
-  initialHomePlacementPending=attempt;return attempt.promise;
+  if(!gameState?.playerHome||gameState.playerHome.anchor||gameState.playerHome.tier!==0)return false;
+  return placeTemporaryShelter({lat,lon});
 }
+
 function savedGeographicPose() {
   const journey=gameState.worldJourney,anchor=gameState.playerHome?.anchor;
   return anchor&&journey?.anchorRevision===anchor.revision&&BurbzGeographicWorldCore.validatePose(journey.pose)?BurbzGeographicWorldCore.normalizePose(journey.pose,anchor):null;
@@ -46695,52 +46690,52 @@ function geographicSettlementRecords(bounds) {
     return {...record,buildings,residents};
   });
 }
-// The opening shelter is not the player's paid/chosen house. A missing GPS
-// fix or a settlement under that fix must not send Merlin's tour to Build.
+// Only the temporary shelter follows a fresh phone fix. Building a house
+// replaces that shelter in this single home record and permanently ends this path.
+function placeTemporaryShelter(point,isCurrent=()=>true){
+ const identity=gameState,home=identity.playerHome,G=BurbzGeographicWorldCore;
+ if(!isCurrent()||!home||home.tier!==0||!G.validCoordinate(point))return false;
+ const anchor={lat:point.lat,lon:point.lon,source:'initial',revision:(home.anchor?.revision||0)+1};
+ const journey=identity.worldJourney;identity.playerHome={...home,anchor};identity.worldJourney=null;
+ let saved=false;try{saved=durableSaveState().ok;}catch(_){}
+ if(!saved){identity.playerHome=home;identity.worldJourney=journey;return false;}
+ refreshGeographicAvatarMarker();return true;
+}
 async function prepareOpeningShelter(isCurrent) {
-  const identity=gameState,C=BurbzGeographicWorldCore;
-  const last=identity.lastKnownHome;
-  const center=last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000?last:getFallbackMapCenter();
-  const candidates=[center];
-  for(const radius of [500,1000,2000,4000])for(let i=0;i<8;i++){
-    const angle=i*Math.PI/4;
-    candidates.push(C.unproject(center,{x:Math.cos(angle)*radius,y:0,z:Math.sin(angle)*radius}));
-  }
-  for(const point of candidates){
-    if(gameState!==identity||!isCurrent())return false;
-    if(identity.playerHome?.anchor)return true;
-    const valid=await checkPlayerHomePlacement(point);
-    if(gameState!==identity||!isCurrent())return false;
-    if(identity.playerHome?.anchor)return true;
-    if(!valid.ok)continue;
-    const result=await commitPlayerHomePlacement({kind:'anchor',lat:point.lat,lon:point.lon,source:'initial',expectedRevision:0},isCurrent);
-    if(!result.ok&&gameState===identity&&isCurrent())showToast(result.error);
-    return result.ok;
-  }
-  if(gameState===identity&&isCurrent())showToast('The shelter clearing could not load. Please try the door again.');
-  return false;
+ const identity=gameState,home=identity.playerHome;
+ if(home?.tier>0)return true;
+ if(!navigator.geolocation)throw Error('Location is needed to put your shelter where you are. Enable location and try the door again.');
+ const point=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(position=>{
+  const c=position.coords,age=Date.now()-position.timestamp;
+  if(!validLivePosition(position)||!Number.isFinite(age)||age< -60000||age>60000){reject(Error('A fresh location is needed. Try the door again when your phone has a location fix.'));return;}
+  resolve({lat:c.latitude,lon:c.longitude});
+ },()=>reject(Error('Allow location to put your shelter where you are, then try the door again.')),{enableHighAccuracy:true,maximumAge:0,timeout:15000}));
+ if(gameState!==identity||identity.playerHome?.tier!==0||!isCurrent())return false;
+ // A simultaneous first GPS watch may have anchored this same temporary
+ // shelter. Preserve its other fields and use the fresh door fix; a chosen
+ // relocation or house construction cancels this older handoff.
+ if(identity.playerHome.anchor?.revision!==home.anchor?.revision&&identity.playerHome.anchor?.source!=='initial')return false;
+ if(!placeTemporaryShelter(point,isCurrent))throw Error('Your shelter location could not be saved. Please try the door again.');
+ return true;
 }
 async function enterGeographicWorld(handoff={}) {
   const entrySave=gameState,entryScreen=currentScreen;
   const C=BurbzGeographicWorldCore,craft=BurbzFlightCraftCore.normalize(gameState.flightCraft);
-  const resumeCraft=BurbzFlightCraftCore.resumeRequired(craft);
+  const homeDoor=handoff.entry==='home-door',primaryDoor=homeDoor&&!activeCampHomeId;
+  const resumeCraft=!homeDoor&&BurbzFlightCraftCore.resumeRequired(craft);
+  const entryCurrent=()=>gameState===entrySave&&currentScreen===entryScreen&&(!handoff.isCurrent||handoff.isCurrent());
+  if(primaryDoor&&gameState.playerHome?.tier===0){if(!await prepareOpeningShelter(entryCurrent))return false;}
   if(resumeCraft&&handoff.pose&&!BurbzFlightCraftCore.matchesJourney(craft,handoff.pose)){
     showToast('Land your craft and step onto shore before travelling elsewhere. Enter Alderwing resumes your craft.');return false;
   }
+  if(!entryCurrent())return false;
   if(!gameState.playerHome?.anchor){
-    if(initialHomePlacementPending?.identity===entrySave)await initialHomePlacementPending.promise;
-    else {const last=gameState.lastKnownHome;if(last&&C.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)await anchorPlayerHomeAt(last.lat,last.lon);}
-  }
-  if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
-  if(!gameState.playerHome?.anchor){
-    if(!BurbzAlderwingIntro.active())return chooseGeographicHomeLocation(handoff);
-    const isCurrent=()=>gameState===entrySave&&currentScreen===entryScreen&&(!handoff.isCurrent||handoff.isCurrent())&&BurbzAlderwingIntro.active();
-    if(!await prepareOpeningShelter(isCurrent))return false;
-    if(!isCurrent())return false;
+    if(gameState.playerHome?.tier!==0)return chooseGeographicHomeLocation(handoff);
+    if(!await prepareOpeningShelter(entryCurrent)||!entryCurrent())return false;
   }
   await ensureVillageWalkModule();
   if(gameState!==entrySave||currentScreen!==entryScreen||handoff.isCurrent&&!handoff.isCurrent())return false;
-  const anchor={...(handoff.anchor||gameState.playerHome.anchor)};
+  const anchor={...(homeDoor&&!activeCampHomeId?gameState.playerHome.anchor:handoff.anchor||gameState.playerHome.anchor)};
   const local=handoff.localPose||(!handoff.pose&&!savedGeographicPose()?{x:0,y:0,z:4,yaw:Math.PI,pitch:0}:null);
   const pose=(resumeCraft?BurbzFlightCraftCore.resumePose(craft):handoff.pose)||(local?{...C.unproject(anchor,{x:local.x,y:0,z:local.z}),yaw:local.yaw,pitch:local.pitch||0,mode:'walk'}:savedGeographicPose());
   const record=geographicSettlementRecords({center:pose||anchor})[0];
@@ -46749,7 +46744,7 @@ async function enterGeographicWorld(handoff={}) {
   // Let the old fullscreen exit finish before a new walking root requests it.
   await BurbzVillageWalk.whenClosed?.();
   if(gameState!==entrySave||currentScreen!==entryScreen)return false;
-  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=!!handoff.safeArrival&&!resumeCraft;
+  const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=(homeDoor||!!handoff.safeArrival)&&!resumeCraft;adapter.homeDoor=primaryDoor;
   let ownedSource;
   return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
     character:walkingCharacterState,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
@@ -46851,6 +46846,32 @@ async function prepareSettlementSteps(steps,context,signal,metrics,phase) {
     return result.value;
   }finally{if(!result?.done)withSettlementBuilder(context,()=>steps.return?.());}
 }
+// Reserve the temporary doorstep in each private travelling-scene copy.
+// This changes scenery only: paid buildings, materials and NPC saves are intact
+// and their ordinary appearance returns when the shelter has been replaced.
+function prepareShelterClearing(T,scene,record,buildings){
+ const home=gameState.playerHome;if(home?.tier!==0||!home.anchor)return buildings;
+ const point=BurbzGeographicWorldCore.project(record,home.anchor),terrain=scene.userData.walkTerrain;
+ if(!point||Math.hypot(point.x,point.z)>terrain.radius+24)return buildings;
+ const reach=12,box=new T.Box3(),matrix=new T.Matrix4(),instance=new T.Matrix4(),zero=new T.Matrix4().makeScale(0,0,0);
+ const touches=b=>Math.hypot(Math.max(b.min.x-point.x,0,point.x-b.max.x),Math.max(b.min.z-point.z,0,point.z-b.max.z))<reach;
+ scene.updateMatrixWorld(true);
+ for(const building of buildings)if(touches(box.setFromObject(building)))building.visible=false;
+ scene.traverseVisible(mesh=>{
+  if(!mesh.isMesh||mesh===scene.userData.walkSurface?.ground)return;
+  for(let p=mesh;p;p=p.parent)if(p.userData.sky||p.userData.resident||p.userData.npc)return;
+  const geometry=mesh.geometry;if(!geometry.boundingBox)geometry.computeBoundingBox();
+  if(mesh.isInstancedMesh){
+   for(let i=0;i<mesh.count;i++){mesh.getMatrixAt(i,instance);matrix.multiplyMatrices(mesh.matrixWorld,instance);box.copy(geometry.boundingBox).applyMatrix4(matrix);if(touches(box))mesh.setMatrixAt(i,zero);}
+   mesh.instanceMatrix.needsUpdate=true;return;
+  }
+  box.copy(geometry.boundingBox).applyMatrix4(mesh.matrixWorld);
+  // Keep the authored ground and broad terrain sheets; the retained terrain
+  // owner blends the level doorstep over them. Small props leave the clearing.
+  if(touches(box)&&box.max.x-box.min.x<24&&box.max.z-box.min.z<24)mesh.visible=false;
+ });
+ return buildings.filter(b=>b.visible);
+}
 async function createTravellingSettlement(T,record,{signal,host=false,boundsOnly=false}={}) {
   const before=captureSettlementBuilder(),context={...before},started=performance.now(),metrics={steps:[]};
   for(const [key,value] of Object.entries(context)) {
@@ -46874,9 +46895,10 @@ async function createTravellingSettlement(T,record,{signal,host=false,boundsOnly
   await prepareSettlementSteps(town?buildTownSceneSteps(record.settlement):buildVillageSceneSteps(record),context,signal,metrics,'scene');
   const scene=town?context.townScene:context.villageScene;
   scene.traverse(o=>{if(o.userData.overheadHome)o.visible=false;});
-  const buildings=(town?context.townEconBuildings:context.villageBuildings).filter(b=>!b.userData.townGround);
+  let buildings=(town?context.townEconBuildings:context.villageBuildings).filter(b=>!b.userData.townGround);
   for(const b of buildings)if(b.userData.wardSeed===undefined)b.userData.wardSeed=record.seed;
   if(boundsOnly){scene.updateMatrixWorld(true);return{radius:scene.userData.walkSurface.radius,boxes:buildings.map(b=>new T.Box3().setFromObject(b)).filter(b=>Number.isFinite(b.min.x+b.min.z+b.max.x+b.max.z)).map(b=>({minX:b.min.x,maxX:b.max.x,minZ:b.min.z,maxZ:b.max.z})),dispose};}
+  buildings=prepareShelterClearing(T,scene,record,buildings);
   const names=town?['townNpcs','townWalkers','townTraffic','townLivestock','townFlocks','townRoofBirds','townChickens','townWindmills','townCloths','townSigns']:
     ['villageNpcs','villageWalkers','villageTraffic','villageLivestock','villageFlocks','villageRoofBirds','villageChickens','villageWindmills','villageCloths','villageSigns','villageDucks','villageButterflies'];
   const movers=names.flatMap(key=>context[key]);
@@ -46936,6 +46958,12 @@ async function exploreFromSettlement(record,localPose) {
 function refreshGeographicAvatarMarker() {
   refreshCampMarkers(liveMap);
   if(!liveMap||!window.maplibregl)return;
+  const home=gameState.playerHome,anchor=home?.tier>0&&BurbzPlayerHomeCore.normalizeAnchor(home.anchor);
+  if(!anchor){geographicHomeMarker?.remove();geographicHomeMarker=null;}
+  else{
+    if(!geographicHomeMarker){const el=document.createElement('span');el.className='map-player-home';el.textContent='⌂';el.setAttribute('role','img');el.setAttribute('aria-label','Your house in Alderwing');el.title='Your house in Alderwing';el.style.cssText='display:grid;place-items:center;width:32px;height:32px;border:2px solid #d8bd81;border-radius:8px;background:#294c38;color:#fff3d1;font-size:26px;box-shadow:0 2px 6px #0007';geographicHomeMarker=new maplibregl.Marker({element:el,anchor:'bottom'}).setLngLat([anchor.lon,anchor.lat]).addTo(liveMap);}
+    geographicHomeMarker.setLngLat([anchor.lon,anchor.lat]);
+  }
   const pose=savedGeographicPose();
   if(!pose){geographicAvatarMarker?.remove();geographicAvatarMarker=null;return;}
   if(!geographicAvatarMarker){const el=document.createElement('span');el.className='map-world-position';

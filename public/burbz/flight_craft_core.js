@@ -33,12 +33,12 @@ function matchesJourney(craft,pose){
 function occupied(craft){return !!craft&&['boarded','flying'].includes(craft.phase);}
 function boardable(craft,player){
   return !!normalize(craft)&&geo.validatePose(player)&&
-    ['parked','deck'].includes(craft.phase)&&player.mode==='walk'&&
+    ['parked','deck'].includes(craft.phase)&&['walk','swim'].includes(player.mode)&&
     geo.distance(craft,player)<=BOARD_DISTANCE&&Math.abs(craft.altitude-player.altitude)<=2.2;
 }
 // Fixed-size queries keep provisioning and landing bounded. Every hull sample
-// must use known, clear terrain of the same surface class; shore edges are not
-// permission to half-bury a hull in the bank.
+// must use known, clear, flat terrain. A flat shoreline can support the hull
+// even where water and ground meet; height, not a map label, decides flatness.
 function berth(x,z,sample,clear){
   const centre=sample(x,z);
   if(!centre||!finite(centre.height)||!surfaces.includes(centre.kind))return null;
@@ -46,11 +46,33 @@ function berth(x,z,sample,clear){
   for(let i=0;i<8;i++){
     const angle=i*Math.PI/4,px=x+Math.cos(angle)*HULL_RADIUS,pz=z+Math.sin(angle)*HULL_RADIUS;
     const row=sample(px,pz);
-    if(!row||!finite(row.height)||row.kind!==centre.kind||clear(px,row.height+DECK_HEIGHT,pz)!==true)return null;
+    if(!row||!finite(row.height)||!surfaces.includes(row.kind)||clear(px,row.height+DECK_HEIGHT,pz)!==true)return null;
     low=Math.min(low,row.height);high=Math.max(high,row.height);
   }
-  if(high-low>(centre.kind==='ground'?.45:.2)||clear(x,centre.height+DECK_HEIGHT,z)!==true)return null;
+  if(high-low>.45||clear(x,centre.height+DECK_HEIGHT,z)!==true)return null;
   return {x,z,height:high,kind:centre.kind};
+}
+// A disembarked traveller uses the water surface, with swept body samples and
+// a bounded step onto a walkable bank. Unknown terrain and solids remain walls.
+function swimmerPosition(x,z,previousY,sample,clear,walkable){
+ const row=sample(x,z);if(!row||!finite(row.height)||!surfaces.includes(row.kind)||Math.abs(row.height-previousY)>.6)return null;
+ if(row.kind==='ground'&&walkable(x,z)!==true)return null;
+ for(const [dx,dz] of [[0,0],[-.27,0],[.27,0],[0,-.27],[0,.27]])
+  if(clear(x+dx,row.height+.55,z+dz)!==true)return null;
+ return{x,y:row.height,z,mode:row.kind==='ground'?'walk':'swim'};
+}
+function swimStep(player,input,dt,sample,clear,walkable){
+ if(!player||!['walk','swim'].includes(player.mode))return false;
+ const side=finite(input.side)?Math.max(-1,Math.min(1,input.side)):0,forward=finite(input.forward)?Math.max(-1,Math.min(1,input.forward)):0;
+ const scale=1.8*Math.max(0,Math.min(.08,finite(dt)?dt:0))/Math.max(1,Math.hypot(side,forward));
+ const dx=(Math.cos(player.yaw)*side-Math.sin(player.yaw)*forward)*scale,dz=(-Math.sin(player.yaw)*side-Math.cos(player.yaw)*forward)*scale;
+ if(player.mode==='walk'){const target=sample(player.x+dx,player.z+dz);if(!target||!['freshwater','sea'].includes(target.kind))return false;}
+ const steps=Math.max(1,Math.ceil(Math.hypot(dx,dz)/.08));
+ for(let i=0;i<steps;i++){
+  const next=swimmerPosition(player.x+dx/steps,player.z+dz/steps,player.y,sample,clear,walkable);
+  if(!next)break;Object.assign(player,next);if(player.mode==='walk')break;
+ }
+ return true;
 }
 function findBerth(origin,sample,clear,{minRadius=3,maxRadius=18}={}){
   if(!origin||!finite(origin.x)||!finite(origin.z))return null;
@@ -104,5 +126,5 @@ function floatPose(previous,kind,time,dt,reducedMotion=false){
     roll:water&&!reducedMotion?Math.sin(time*1.25)*.045*strength:0,
     pitch:water&&!reducedMotion?Math.sin(time*1.9+.4)*.025*strength:0};
 }
-return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,landingBerth,findBerth,findHomeBerth,floatPose};
+return {VERSION,BOARD_DISTANCE,HULL_RADIUS,DECK_HEIGHT,normalize,at,resumeRequired,resumePose,matchesJourney,occupied,boardable,berth,swimmerPosition,swimStep,landingBerth,findBerth,findHomeBerth,floatPose};
 });

@@ -43,12 +43,14 @@ function attach(s,opts,env){
  function stop(){s.auto?.reset();G.reset(s.player);env.resetLift();}
  function provision(){
   if(closed)return false;
-  if(record&&!opts.craft?.shelterIntro?.())return true;
+  const recoverAtDoor=opts.homeDoor&&record&&['boarded','flying','deck'].includes(record.phase);
+  if(record&&!recoverAtDoor&&!opts.craft?.shelterIntro?.())return true;
   const home=opts.getHome?.()?.anchor;if(!G.validCoordinate(home))return false;
   const p=env.local(home);if(!p)return false;
   // Repair only an unoccupied starter craft blocking the tutorial doorway.
-  // A travelled, airborne or manually parked distant craft keeps its save.
-  if(record){const old=local();if(record.phase!=='parked'||aboard||onDeck||!old||Math.abs(old.x-p.x)>3||old.z-p.z<3||old.z-p.z>26)return true;}
+  // An occupied journey returning through the home door docks here; a
+  // manually parked distant craft keeps its chosen parking coordinates.
+  if(record&&!recoverAtDoor){const old=local();if(record.phase!=='parked'||aboard||onDeck||!old||Math.abs(old.x-p.x)>3||old.z-p.z<3||old.z-p.z>26)return true;}
   const launchClear=(x,y,z)=>env.parkingClear(x,y,z)&&[1.5,3,4.5,6].every(up=>env.clear(x,y+up,z));
   const place=C.findHomeBerth(p,env.sample,launchClear);
   if(!place)return false;
@@ -56,9 +58,9 @@ function attach(s,opts,env){
  }
  function initialize(){
   provision();
-  if(record){const p=local(),near=p&&C.matchesJourney(record,opts.initialPose);
+  if(record){const p=local(),near=!opts.homeDoor&&p&&C.matchesJourney(record,opts.initialPose);
    if(near&&record.phase==='flying'&&s.player.mode==='fly'){aboard=true;Object.assign(s.player,{x:p.x,y:p.y,z:p.z});}
-   else if(near&&['boarded','deck'].includes(record.phase)){aboard=record.phase==='boarded';onDeck=!aboard;Object.assign(s.player,{x:p.x,y:p.y,z:p.z,mode:'walk'});}
+   else if(near&&['boarded','deck'].includes(record.phase)){aboard=true;onDeck=false;Object.assign(s.player,{x:p.x,y:p.y,z:p.z,mode:'walk'});}
    else if(record.phase==='boarded'&&record.surface==='ground')record={...record,phase:'parked'};
   }
   // Old personal-flight poses never grant new flight. Recover onto verified
@@ -95,11 +97,15 @@ function attach(s,opts,env){
  function leave(){
   if(closed||s.uiBusy||s.room||!aboard||s.player.mode==='fly')return false;
   const before={...s.player,velocity:{...s.player.velocity}},p=local();
-  const bank=C.findBerth(p,env.sample,env.parkingClear,{minRadius:1.8,maxRadius:3.3});
-  let next={...record,phase:'parked'};
-  if(bank){Object.assign(s.player,{x:bank.x,y:bank.height,z:bank.z,mode:'walk'});}
-  else if(record.surface!=='ground'){next.phase='deck';onDeck=true;Object.assign(s.player,{x:p.x,y:p.y,z:p.z,mode:'walk'});}
-  else {env.message('The exit is blocked. Move the craft to a clear landing place.');return false;}
+  // Step off beside the hull. Water is swimmable, including open sea;
+  // a nearby bank does not teleport the player out of the water.
+  let exitPose=null;
+  for(let i=0;i<16&&!exitPose;i++){
+   const angle=s.player.yaw+Math.PI/2+i*Math.PI/8;
+   exitPose=C.swimmerPosition(p.x+Math.sin(angle)*1.5,p.z+Math.cos(angle)*1.5,p.y,env.sample,env.clear,env.walkable||(()=>true));
+  }
+  if(!exitPose){env.message('The exit is blocked. Move the craft to a clear landing place.');return false;}
+  const next={...record,phase:'parked'};Object.assign(s.player,exitPose);onDeck=false;
   if(!commit(next)){Object.assign(s.player,before);onDeck=false;return false;}
   aboard=false;stop();sync();return true;
  }
@@ -108,10 +114,10 @@ function attach(s,opts,env){
   allowed3(x,y,z){for(const [dx,dz] of [[0,0],[-.65,0],[.65,0],[0,-.85],[0,.85]])if(!env.clear(x+dx,y,z+dz))return false;return true;},maxAGL:400};
  function move(input,dt){
   if(aboard&&s.player.mode==='fly'){G.step(s.player,input,dt,flightWorld,'fly');return true;}
+  if(!aboard&&!onDeck&&C.swimStep(s.player,input,dt,env.sample,env.clear,env.walkable||(()=>true)))return true;
   if(aboard||onDeck){
    const p=local();if(p)Object.assign(s.player,{x:p.x,y:p.y,z:p.z});
-   // Turning remains with the original right-stick/keyboard handler. The deck
-   // protects a disembarked player over water without adding swimming/drowning.
+   // Legacy deck saves remain boardable; new exits always disembark.
    return true;
   }
   return false;

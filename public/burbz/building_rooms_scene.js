@@ -2,7 +2,7 @@
 (function(root){'use strict';
 function create(T,p){
  const scene=new T.Scene();scene.background=new T.Color(0x30291f);scene.fog=new T.Fog(0x423627,19,34);
- const wood=0x805b3b,trim=0x483528,stone=0xafa58e,cream=0xe2d0a7,iron=0x464b49,gold=0xbf9855;
+ const wood=p.shelter?0x79756c:0x805b3b,trim=p.shelter?0x4f4e49:0x483528,stone=0xafa58e,cream=p.shelter?0x918c80:0xe2d0a7,iron=0x464b49,gold=p.shelter?0x89877e:0xbf9855;
  const batch=()=>root.BurbzSettlementModels.batch(T),b=batch(),w=p.width,d=p.depth,h=p.height;
  // Separate planks, pegs, exposed structural beams and inset framed windows.
  b.box(w,.18,d,0,-.10,0,trim);
@@ -13,13 +13,14 @@ function create(T,p){
  b.box(w,.16,d,0,h+.12,0,wood);
  for(let z=-d/2+.8;z<d/2;z+=2.2){b.box(w,.26,.23,0,h-.1,z,trim);for(const x of [-w/2+.32,w/2-.32])b.box(.17,.95,.17,x,h-.52,z,wood,[0,0,x>0?-.55:.55]);}
  function window(x,z,turn){const a=batch();a.box(1.65,1.75,.16,0,1.95,0,trim);a.add(new T.BoxGeometry(1.4,1.5,.06),0xa9c7bd,[0,1.95,.1],[0,0,0],[1,1,1],true);a.box(.07,1.5,.12,0,1.95,.15,wood);a.box(1.4,.07,.12,0,1.95,.15,wood);a.box(1.8,.12,.45,0,1.06,.13,wood);for(const xx of [-.98,.98]){a.box(.32,1.73,.1,xx,1.95,.13,p.accent);for(let yy=1.2;yy<2.8;yy+=.2)a.box(.34,.035,.12,xx,yy,.19,trim);}const g=a.finish();g.position.set(x,0,z);g.rotation.y=turn;scene.add(g);}
- for(const x of [-w/2+.12,w/2-.12])for(const z of [-d*.24,d*.2])window(x,z,x<0?Math.PI/2:-Math.PI/2);
+ if(p.shelter){b.box(.08,.8,.65,-w/2+.12,1.8,.65,trim);b.box(.09,.63,.48,-w/2+.16,1.8,.65,0x87928d);b.box(.1,.7,.035,-w/2+.2,1.8,.65,wood);}
+ else for(const x of [-w/2+.12,w/2-.12])for(const z of [-d*.24,d*.2])window(x,z,x<0?Math.PI/2:-Math.PI/2);
  // The closed exit door is a deliberate action; collision stops walking into the void.
  b.box(1.65,2.65,.22,0,1.32,d/2-.17,trim);b.box(1.4,2.4,.10,0,1.2,d/2-.31,p.accent);
  for(let x=-.6;x<.7;x+=.2)b.box(.025,2.35,.035,x,1.2,d/2-.38,trim);
  b.sphere(.07,.47,1.12,d/2-.44,gold);b.box(1.6,.08,.55,0,.04,d/2-.4,stone);
  // Hanging iron lanterns have real housings; no animated light/shadow cost.
- for(const z of [-d*.2,d*.23]){b.cylinder(.025,.025,.48,0,h-.24,z,iron);for(const x of [-.15,.15])for(const zz of [-.15,.15])b.box(.035,.42,.035,x,h-.65,z+zz,iron);b.box(.34,.05,.34,0,h-.87,z,iron);b.add(new T.BoxGeometry(.25,.30,.25),0xffd28a,[0,h-.65,z],[0,0,0],[1,1,1],true);b.box(.43,.08,.43,0,h-.4,z,gold);}
+ for(const z of p.shelter?[]:[-d*.2,d*.23]){b.cylinder(.025,.025,.48,0,h-.24,z,iron);for(const x of [-.15,.15])for(const zz of [-.15,.15])b.box(.035,.42,.035,x,h-.65,z+zz,iron);b.box(.34,.05,.34,0,h-.87,z,iron);b.add(new T.BoxGeometry(.25,.30,.25),0xffd28a,[0,h-.65,z],[0,0,0],[1,1,1],true);b.box(.43,.08,.43,0,h-.4,z,gold);}
  scene.add(b.finish());
  function furniture(o){const f=batch(),type=o.type;const box=(ww,hh,dd,x,y,z,c=wood)=>f.box(ww,hh,dd,x,y,z,c),cyl=(r1,r2,hh,x,y,z,c=wood)=>f.cylinder(r1,r2,hh,x,y,z,c),ball=(r,x,y,z,c)=>f.sphere(r,x,y,z,c);
  function legs(ww,dd,yy=.75){for(const x of [-ww/2+.12,ww/2-.12])for(const z of [-dd/2+.12,dd/2-.12])box(.12,yy,.12,x,yy/2,z,trim);}

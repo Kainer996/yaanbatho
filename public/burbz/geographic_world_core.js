@@ -41,10 +41,10 @@ function bearing(a,b){
  const rad=Math.PI/180,dlon=wrapLongitude(b.lon-a.lon)*rad,p=a.lat*rad,q=b.lat*rad;
  return(Math.atan2(Math.sin(dlon)*Math.cos(q),Math.cos(p)*Math.sin(q)-Math.sin(p)*Math.cos(q)*Math.cos(dlon))/rad+360)%360;
 }
-function validatePose(raw){return validCoordinate(raw)&&validAltitude(raw.altitude)&&finite(raw.yaw)&&finite(raw.pitch)&&['walk','fly'].includes(raw.mode);}
+function validatePose(raw){return validCoordinate(raw)&&validAltitude(raw.altitude)&&finite(raw.yaw)&&finite(raw.pitch)&&['walk','fly','swim'].includes(raw.mode);}
 function normalizePose(raw,anchor){
  const source=validCoordinate(raw)&&validAltitude(altitude(raw))?raw:normalizeAnchor(anchor);if(!source)return null;
- return{lat:source.lat,lon:wrapLongitude(source.lon),altitude:altitude(source),yaw:finite(source.yaw)?wrapYaw(source.yaw):0,pitch:finite(source.pitch)?clamp(source.pitch,-1.1,1.1):0,mode:source.mode==='fly'?'fly':'walk'};
+ return{lat:source.lat,lon:wrapLongitude(source.lon),altitude:altitude(source),yaw:finite(source.yaw)?wrapYaw(source.yaw):0,pitch:finite(source.pitch)?clamp(source.pitch,-1.1,1.1):0,mode:['fly','swim'].includes(source.mode)?source.mode:'walk'};
 }
 function savedPose(anchor,p){const geo=unproject(anchor,p);return geo?normalizePose({...geo,yaw:p.yaw,pitch:p.pitch,mode:p.mode},anchor):null;}
 function rebase(p,oldAnchor,newAnchor){const geo=unproject(oldAnchor,p),local=geo&&project(newAnchor,geo);return local?{...p,...local,velocity:p.velocity?{...p.velocity}:undefined}:null;}
