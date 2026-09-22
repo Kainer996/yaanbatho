@@ -39,6 +39,25 @@ function upperRooms(T,home){const all=new T.Group();for(const [id,r] of Object.e
  else{b.box(.86,.89,.045,x,y+.85,z+d/2+.05,0x3c5a4d);b.add(new T.BoxGeometry(.68,.72,.05),id==='library'?0xc7d4a1:0xe3bf7b,[x,y+.87,z+d/2+.08],[0,0,0],[1,1,1],true);for(const xx of [-.4,0,.4])b.box(.05,.9,.08,x+xx,y+.85,z+d/2+.12,trim);b.box(1.03,.11,.27,x,y+.35,z+d/2+.11,wood);for(const sign of [-1,1])b.box(.86,.12,d+.24,x+sign*.32,y+1.62,z,r.accent,[0,0,-sign*.42]);if(id==='workshop'){b.box(.3,.9,.36,x+.28,y+1.7,z-.3,0xa79177);b.box(.4,.1,.44,x+.28,y+2.16,z-.3,0xc5b08b);}}
  const wing=b.finish();wing.userData.homeRoom=id;all.add(wing);}return all;}
 
+function createCommandDesk(T,{tier=1,aspect=1,deskZ=-3.45,aperture=false}={}){const s={tier},deskShift=deskZ+3.45,scene=new T.Group(),targets=[];
+ const desk=root.BurbzSettlementModels.batch(T),w=s.tier?0x765139:0x777168,trim=s.tier?0x493329:0x4e4a45,gold=s.tier?0xbf9855:0x969184;
+ desk.box(2.7,.15,1.25,0,.92,-3.45,w);for(const x of [-1.12,1.12])for(const z of [-3.9,-3])desk.box(.14,.9,.14,x,.45,z,trim);
+ desk.box(.7,.05,.32,0,1.02,-3.02,trim);for(let row=0;row<3;row++)for(let i=0;i<8;i++)desk.box(.058,.03,.06,-.29+i*.082,1.055,-3.1+row*.085,gold);
+ const height=aspect<1?1.6:Math.min(1.4,2.3/aspect),width=height*aspect;const screenSize={width,height,x:0,y:1.12+height/2,z:-3.42};
+ desk.box(width+.22,height+.24,.17,0,screenSize.y,-3.53,trim);desk.box(width+.1,height+.12,.19,0,screenSize.y,-3.52,gold);desk.cylinder(.07,.12,.38,0,1.13,-3.55,trim);
+ for(const x of [-width/2-.08,width/2+.08])for(const y of [screenSize.y-height/2-.08,screenSize.y+height/2+.08])desk.sphere(.055,x,y,-3.4,gold);
+ desk.cylinder(.13,.2,.1,1,.99,-3.3,gold);desk.cylinder(.035,.035,.5,1,1.26,-3.3,0xe4d2ac);desk.sphere(.08,1,1.57,-3.3,0xffcf76,[.5,1,.5]);
+ const deskGroup=desk.finish();deskGroup.position.z=deskShift;scene.add(deskGroup);screenSize.z+=deskShift;const chair=ornament(T,'armchair',s.tier?0x466b5c:0x66645f);chair.position.set(0,0,-1.85+deskShift);chair.rotation.y=Math.PI;chair.userData.homeTarget='desk';scene.add(chair);targets.push(chair);
+ // The real app is projected beneath the WebGL canvas. This depth-tested
+ // aperture exposes it only where the actual monitor is visible, including
+ // furniture occlusion, side views and the exact full-viewport seated view.
+ const screen=new T.Mesh(new T.PlaneGeometry(width,height),(aperture?new T.ShaderMaterial({
+   vertexShader:'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+   fragmentShader:'void main(){gl_FragColor=vec4(0.0);}',
+   blending:T.NoBlending,depthTest:true,depthWrite:true
+ }):new T.MeshBasicMaterial({color:0x527d70})));screen.position.set(0,screenSize.y,screenSize.z);screen.renderOrder=5;screen.userData.homeTarget='desk';scene.add(screen);targets.push(screen);
+ scene.name='command-desk';return{group:scene,screen,screenSize,targets};
+}
 function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
  if(C.indoor(area)){
  const extra=C.ROOMS[area],layout=C.roomLayout(s),deskShift=layout.deskZ+3.45;
@@ -48,22 +67,7 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  // The shared room shell's ceiling is opened only in the decorating view.
  scene.children[0]?.traverse(o=>{if(o.isMesh&&!roof)roof=o;});
  if(!extra){
- const desk=root.BurbzSettlementModels.batch(T),w=s.tier?0x765139:0x777168,trim=s.tier?0x493329:0x4e4a45,gold=s.tier?0xbf9855:0x969184;
- desk.box(2.7,.15,1.25,0,.92,-3.45,w);for(const x of [-1.12,1.12])for(const z of [-3.9,-3])desk.box(.14,.9,.14,x,.45,z,trim);
- desk.box(.7,.05,.32,0,1.02,-3.02,trim);for(let row=0;row<3;row++)for(let i=0;i<8;i++)desk.box(.058,.03,.06,-.29+i*.082,1.055,-3.1+row*.085,gold);
- const height=aspect<1?1.6:Math.min(1.4,2.3/aspect),width=height*aspect;screenSize={width,height,x:0,y:1.12+height/2,z:-3.42};
- desk.box(width+.22,height+.24,.17,0,screenSize.y,-3.53,trim);desk.box(width+.1,height+.12,.19,0,screenSize.y,-3.52,gold);desk.cylinder(.07,.12,.38,0,1.13,-3.55,trim);
- for(const x of [-width/2-.08,width/2+.08])for(const y of [screenSize.y-height/2-.08,screenSize.y+height/2+.08])desk.sphere(.055,x,y,-3.4,gold);
- desk.cylinder(.13,.2,.1,1,.99,-3.3,gold);desk.cylinder(.035,.035,.5,1,1.26,-3.3,0xe4d2ac);desk.sphere(.08,1,1.57,-3.3,0xffcf76,[.5,1,.5]);
- const deskGroup=desk.finish();deskGroup.position.z=deskShift;scene.add(deskGroup);screenSize.z+=deskShift;const chair=ornament(T,'armchair',s.tier?0x466b5c:0x66645f);chair.position.set(0,0,-1.85+deskShift);chair.rotation.y=Math.PI;chair.userData.homeTarget='desk';scene.add(chair);targets.push(chair);
- // The real app is projected beneath the WebGL canvas. This depth-tested
- // aperture exposes it only where the actual monitor is visible, including
- // furniture occlusion, side views and the exact full-viewport seated view.
- screen=new T.Mesh(new T.PlaneGeometry(width,height),new T.ShaderMaterial({
-   vertexShader:'void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-   fragmentShader:'void main(){gl_FragColor=vec4(0.0);}',
-   blending:T.NoBlending,depthTest:true,depthWrite:true
- }));screen.position.set(0,screenSize.y,screenSize.z);screen.renderOrder=5;screen.userData.homeTarget='desk';scene.add(screen);targets.push(screen);
+ const commandDesk=createCommandDesk(T,{tier:s.tier,aspect,deskZ:layout.deskZ,aperture:true});scene.add(commandDesk.group);screen=commandDesk.screen;screenSize=commandDesk.screenSize;targets.push(...commandDesk.targets);
  }else{
  const theme=ornament(T,area==='library'?'writingdesk':area==='conservatory'?'potting':'workbench',extra.accent);theme.position.set(0,0,-2.8);theme.userData.findId=area+'-story';scene.add(theme);targets.push(theme);
  const side=ornament(T,area==='library'?'shelf':area==='conservatory'?'trellis':'logpile',extra.accent);side.position.set(-2.8,0,-1.3);side.rotation.y=Math.PI/2;scene.add(side);
@@ -151,5 +155,5 @@ function createYardContent(T,home,options={}){const saved=C.normalize(home),now=
  for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:0,maxY:3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:1.6,maxY:7});}
  return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
 }
-root.BurbzPlayerHomeScene={create,createHouse,createFarm,createYardContent,ornament,upperRooms,disposeScene};
+root.BurbzPlayerHomeScene={createCommandDesk,create,createHouse,createFarm,createYardContent,ornament,upperRooms,disposeScene};
 })(globalThis);

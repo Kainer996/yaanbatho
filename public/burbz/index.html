@@ -5768,9 +5768,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=alderwing-followups-v417-20260914"></script>
 <script src="player_home_core.js?v=gps-shelter-swimming-v439-20260922"></script>
-<script src="player_home_scene.js?v=gps-shelter-swimming-v439-20260922"></script>
+<script src="player_home_scene.js?v=village-hall-desk-v441-20260922"></script>
 <script src="alderwing_intro.js?v=hands-on-world-tutorial-v429-20260920"></script>
-<script src="player_home.js?v=gps-shelter-swimming-v439-20260922"></script>
+<script src="player_home.js?v=village-hall-desk-v441-20260922"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="flight_craft_core.js?v=craft-home-repair-v440-20260922"></script>
@@ -27216,7 +27216,7 @@ const EMPIRE_BUILDINGS = [
   { id: 'lumberhut', icon: '🪚', name: 'Lumberjack Hut', maxLevel: 3, cost: { coins: 35, branches: 12, stone: 0 }, buildMinutes: 25, branchesPerLevel: 5, workers: 3, workPriority: 6, produces: { materials: { oak_twig: 1 } }, desc: 'Up to 3 villagers fell and split here: +5 🪵 timber and 🪵1 Oak Twig per cycle per level at full crew. Half a crew cuts half the wood — build homes and the rest move in.' },
   { id: 'minehut',  icon: '🪨', name: 'Miners’ Hut', maxLevel: 3, cost: { coins: 45, branches: 16, stone: 0 }, buildMinutes: 32, stonePerLevel: 6, workers: 3, workPriority: 7, produces: { materials: { iron_grit: 1 } }, desc: 'Up to 3 villagers dig rock for building here: +6 stone and ⚙️1 Iron Grit per cycle per level at full crew. Half a crew digs half the stone — build homes and the rest move in.' },
   { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 22, stone: 0 },  buildMinutes: 40,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Alehouse',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 50,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'Cheer for 12 villagers per level.' },
+  { id: 'tavern',  icon: '🍻', name: 'Village Hall',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 50,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'The village hall and alehouse. Sit at the same command desk as your home to manage Alderwing. Cheer for 12 villagers per level.' },
   { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, tier: 'town', cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, tier: 'town', cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, tier: 'town', cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
@@ -30774,7 +30774,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=craft-home-repair-v440-20260922';
+        script.src = 'village_walk.js?v=village-hall-desk-v441-20260922';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -30895,6 +30895,7 @@ function createTravellingWayside(T,record,options) {
 }
 function buildingRoomsAdapter() {
   return {
+    rememberDesk:(target,outsidePlayer,standalone,geographicPose)=>{const before=gameState.commandDeskReturn;gameState.commandDeskReturn={target:{...target},outsidePlayer,standalone,geographicPose};try{durableSaveState({throwOnFailure:true});return true;}catch(error){gameState.commandDeskReturn=before;showToast('Could not save the desk return. Please try again.');return false;}},
     collected:(target,id)=>target.scope==='wayside'||window.BurbzInteriorLifeCore.collected(gameState,target,id),
     collect:(target,id)=>{
       if(target.scope==='wayside')return null;
@@ -30951,12 +30952,13 @@ function buildingRoomsAdapter() {
       if(target.scope==='wayside')return;
       if (!buildingRoomsAdapter().describe(target)) return;
       if(target.scope==='academy'){openAcademyRoom(target.buildingId==='dorm'?'outdoors':target.buildingId);return;}
+      if (action === 'command-desk' && target.buildingId === 'tavern'){openCommandDesk(false,true);return;}
       if (action === 'bar' && target.buildingId === 'tavern') villageOpenShop('tavern', target.seed);
       else openBuildingInterior(target.seed, target.buildingId);
     }
   };
 }
-async function walkBuildingInterior(button) {
+async function walkBuildingInterior(button,deskReturn=null) {
   const view = buildingInteriorOpenView;
   if (!view || button.disabled) return;
   const screen = currentScreen;
@@ -30974,7 +30976,7 @@ async function walkBuildingInterior(button) {
       if(roomTarget.homeId!==undefined)break;
     }
     closeBuildingInterior();
-    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,character:walkingCharacterState,seed:view.seed,room:roomTarget,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),source:()=>source,
+    window.BurbzVillageWalk.open({name:empireVillageRecordBySeed(view.seed).name,character:walkingCharacterState,seed:view.seed,room:roomTarget,commandDeskReturn:deskReturn,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),source:()=>source,
       suspend:()=>{ if(town){townRunning=false;cancelAnimationFrame(townAnimationRequest);clearTimeout(townPauseTimer);} else {villageRunning=false;cancelAnimationFrame(villageAnimationRequest);clearTimeout(villagePauseTimer);} },
       resume:(reason,failed)=>{
         if(reason==='navigation'||reason==='pagehide'||reason==='world')return;
@@ -45169,7 +45171,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'craft-home-repair-v440-20260922';
+const BURBZ_BUILD = 'village-hall-desk-v441-20260922';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46722,7 +46724,7 @@ async function enterGeographicWorld(handoff={}) {
   const entrySave=gameState,entryScreen=currentScreen;
   const C=BurbzGeographicWorldCore,craft=BurbzFlightCraftCore.normalize(gameState.flightCraft);
   const homeDoor=handoff.entry==='home-door',primaryDoor=homeDoor&&!activeCampHomeId;
-  const resumeCraft=!homeDoor&&BurbzFlightCraftCore.resumeRequired(craft);
+  const resumeCraft=!homeDoor&&!handoff.commandDeskReturn&&BurbzFlightCraftCore.resumeRequired(craft);
   const entryCurrent=()=>gameState===entrySave&&currentScreen===entryScreen&&(!handoff.isCurrent||handoff.isCurrent());
   if(primaryDoor&&gameState.playerHome?.tier===0){if(!await prepareOpeningShelter(entryCurrent))return false;}
   if(resumeCraft&&handoff.pose&&!BurbzFlightCraftCore.matchesJourney(craft,handoff.pose)){
@@ -46743,10 +46745,10 @@ async function enterGeographicWorld(handoff={}) {
   handoff.release?.();BurbzPlayerHome.close('world');geographicWorldVisit=null;
   // Let the old fullscreen exit finish before a new walking root requests it.
   await BurbzVillageWalk.whenClosed?.();
-  if(gameState!==entrySave||currentScreen!==entryScreen)return false;
+  if(gameState!==entrySave||currentScreen!==entryScreen||(handoff.commandDeskReturn&&handoff.isCurrent&&!handoff.isCurrent()))return false;
   const adapter=continuousWalkingAdapter(record);adapter.initialPose=pose;adapter.safeArrival=(homeDoor||!!handoff.safeArrival)&&!resumeCraft;adapter.homeDoor=primaryDoor;
   let ownedSource;
-  return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,
+  return BurbzVillageWalk.open({name:record.name,seed:record.seed,exitLabel:'← Field desk',continuousWorld:adapter,room:handoff.commandDeskReturn?.target,commandDeskReturn:handoff.commandDeskReturn,
     character:walkingCharacterState,work:buildingWorkAdapter(),interiors:buildingRoomsAdapter(),harvest:villageHarvestAdapter(record.seed),
     source:async signal=>{
       const content=await createTravellingSettlement(THREE,record,{signal,host:true});
@@ -46760,7 +46762,7 @@ async function enterGeographicWorld(handoff={}) {
       return ownedSource;
     },
     animate:time=>ownedSource?.update(time),
-    ready:()=>{if(gameState!==entrySave)return;const result=commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);else BurbzAlderwingIntro.outside($('villageWalk'));},
+    ready:()=>{if(gameState!==entrySave||handoff.commandDeskReturn)return;const result=commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);else BurbzAlderwingIntro.outside($('villageWalk'));},
     resume:reason=>{BurbzAlderwingIntro.clear();if(['navigation','world','pagehide'].includes(reason))return;switchScreen('scan');renderScanHome();maybeStartMerlinTutorial(650);}
   });
 }
@@ -46971,6 +46973,21 @@ function refreshGeographicAvatarMarker() {
     geographicAvatarMarker=new maplibregl.Marker({element:el,anchor:'center'}).setLngLat([pose.lon,pose.lat]).addTo(liveMap);}
   geographicAvatarMarker.setLngLat([pose.lon,pose.lat]);
 }
+function returnToVillageHallDesk(){
+  const save=gameState,saved=save.commandDeskReturn,t=saved?.target;
+  if(!t||t.buildingId!=='tavern'||!Number.isFinite(t.seed)||!buildingRoomsAdapter().describe(t))return false;
+  if(!saved.standalone){
+    if(!BurbzGeographicWorldCore.validCoordinate(saved.geographicPose)){showToast('This older desk return has no world position. Visit the Hall again from your village.');return true;}
+    enterGeographicWorld({pose:saved.geographicPose,commandDeskReturn:saved,isCurrent:()=>gameState===save&&gameState.commandDeskReturn===saved}).catch(error=>showToast(error.message));return true;
+  }
+  openEmpireVillage(t.seed);const screen=currentScreen,settlement=screen==='town'?currentTownSettlement()?.id:currentVillage()?.seed;let tries=0;
+  const wait=()=>{
+    if(gameState!==save||save.commandDeskReturn!==saved||currentScreen!==screen||(screen==='town'?currentTownSettlement()?.id:currentVillage()?.seed)!==settlement)return;
+    if(screen==='town'?(!townScene||!townRenderer):(!villageScene||!villageRenderer)){if(++tries<100)setTimeout(wait,50);else showToast('Village Hall is still loading. Try Enter Alderwing again.');return;}
+    openBuildingInterior(t.seed,t.buildingId,screen);walkBuildingInterior({disabled:false},saved);
+  };setTimeout(wait,0);return true;
+}
+function openCommandDesk(viaChair=false,fromHall=false){if(!fromHall&&gameState.commandDeskReturn){const before=gameState.commandDeskReturn;delete gameState.commandDeskReturn;try{durableSaveState({throwOnFailure:true});}catch(error){gameState.commandDeskReturn=before;showToast('Could not save your desk return.');return;}}switchScreen('scan');document.body.classList.add('player-at-desk');if(!BurbzAlderwingIntro.desk(viaChair))maybeStartMerlinTutorial(650);}
 function initializePlayerHome() {
   gameState.exploration=BurbzExplorationCore.normalize(gameState.exploration);
   BurbzExploration.bind({read:explorationState,travel:travelToCamp,map:showCampRealMap,home:enterCampHome,primary:()=>enterCampHome(null,'yard'),upgrade:upgradeCamp,fire:buildCampFire,timber:()=>gameState.player.branches});
@@ -46985,12 +47002,12 @@ function initializePlayerHome() {
     openingRoom:host=>!activeCampHomeId&&BurbzAlderwingIntro.room(host),tutorialHome:()=>!activeCampHomeId,allowExit:()=>!!activeCampHomeId||BurbzAlderwingIntro.allowExit(),allowSeat:()=>!!activeCampHomeId||BurbzAlderwingIntro.allowSeat(),
     commit:commitPlayerHomeAction,enterWorld:enterGeographicWorld,chooseHomeLocation:chooseGeographicHomeLocation,
     prepareScreen:()=>{switchScreen('scan');renderScanHome();},
-    command:viaChair=>{switchScreen('scan');document.body.classList.add('player-at-desk');if(!BurbzAlderwingIntro.desk(viaChair))maybeStartMerlinTutorial(650);},
+    command:openCommandDesk,
     onClose:()=>{BurbzAlderwingIntro.clear();activeCampHomeId=null;document.body.classList.add('player-at-desk');}
   });
   const last=gameState.lastKnownHome;
   if(last&&BurbzGeographicWorldCore.validCoordinate(last)&&Number.isFinite(last.at)&&last.at>0&&last.at<=Date.now()+60000)anchorPlayerHomeAt(last.lat,last.lon);
-  $('playerHomeStand')?.addEventListener('click',()=>{if(merlinTutCurrentStep()?.id==='alderwing-arrival-v395'&&merlinTutActive&&!BurbzAlderwingIntro.phase()&&!BurbzAlderwingIntro.begin())return;if(!commitPlayerHomeAction({kind:'arrival',event:'enter'}).ok)return;if(merlinTutActive)endMerlinTutorial(false,{pause:true});BurbzPlayerHome.open('room',{fromDesk:true});});
+  $('playerHomeStand')?.addEventListener('click',()=>{if(gameState.commandDeskReturn&&returnToVillageHallDesk())return;if(merlinTutCurrentStep()?.id==='alderwing-arrival-v395'&&merlinTutActive&&!BurbzAlderwingIntro.phase()&&!BurbzAlderwingIntro.begin())return;if(!commitPlayerHomeAction({kind:'arrival',event:'enter'}).ok)return;if(merlinTutActive)endMerlinTutorial(false,{pause:true});BurbzPlayerHome.open('room',{fromDesk:true});});
   document.body.classList.add('player-at-desk');
   // Home is the opening screen. Standing begins the tour only after a gesture.
   maybeShowIntroCutscene();
