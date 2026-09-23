@@ -220,7 +220,7 @@ class Google:
             if remaining<=0:
                 raise ProviderError('photo-provider-unavailable')
             transport=c.sock
-            transport.settimeout(min(20,remaining))
+            transport.settimeout(remaining)
             def expire():
                 # HTTPConnection clears c.sock for Connection: close while the
                 # response body still owns its makefile. Retain the real socket
@@ -290,7 +290,8 @@ class Recognizer:
                 # persistent reservation and stage recording both succeed.
                 body['generationConfig']={'temperature':1,'candidateCount':1,
                     'responseMimeType':'application/json','maxOutputTokens':OUTPUT_LIMIT,
-                    'thinkingConfig':{'thinkingLevel':('high' if stage else 'medium'),'includeThoughts':False}}
+                    # Both independent views must finish inside the shared 38s deadline.
+                    'thinkingConfig':{'thinkingLevel':'low','includeThoughts':False}}
                 if end-self.clock()<1:
                     raise ProviderError('photo-provider-unavailable')
                 self.ledger.begin_call(job,stage)

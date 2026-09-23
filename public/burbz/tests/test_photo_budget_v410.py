@@ -151,7 +151,7 @@ def test_two_verified_views_are_bounded_and_both_charged(ledger):
     p=Provider(raw);result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
     assert result['found'] and result['verified']
     paid=[b for a,b in p.calls if a=='generateContent'];assert len(paid)==2
-    assert all(b['generationConfig']['maxOutputTokens']==8192 and b['generationConfig']['thinkingConfig']['thinkingLevel'] in ('medium','high') for b in paid)
+    assert all(b['generationConfig']['maxOutputTokens']==8192 and b['generationConfig']['thinkingConfig']['thinkingLevel'] == 'low' for b in paid)
     assert result['attemptCostNanoGBP']==2*cost_for_usage(usage())
 
 def test_unknown_usage_trips_global_breaker_and_blocks_already_reserved_stage(ledger):
