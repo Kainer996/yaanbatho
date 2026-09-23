@@ -1,0 +1,99 @@
+/* Opening-only presentation. Gameplay targets and the later tour keep their layout. */
+#merlinTutorialOverlay.merlin-illustrated.show {
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+  padding:calc(62px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(var(--nav-height,128px) + 10px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  background:#0a171d; box-sizing:border-box; isolation:isolate;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialSpotlight { visibility:hidden; }
+.merlin-story-scene {
+  --story-art:linear-gradient(135deg,#173847,#0d192b);
+  position:relative; flex:1 1 0; min-height:100px; width:100%; max-width:1100px; margin:0;
+  border:1px solid #887550; border-radius:18px; overflow:hidden; pointer-events:none;
+  background:radial-gradient(ellipse at 50% 35%,#183642,#080e19); color:#fff4dc;
+  box-shadow:inset 0 0 80px #0008,0 12px 36px #0005;
+}
+.merlin-story-scene::before {
+  content:''; position:absolute; inset:0; z-index:0;
+  background-image:linear-gradient(180deg,#08101655,transparent 40%,#081016aa),var(--story-art);
+  background-position:center; background-size:cover;
+}
+.merlin-story-scene[data-scene="earth"]::before,
+.merlin-story-scene[data-scene="multiverse"]::before,
+.merlin-story-scene[data-scene="you"]::before {
+  background-image:radial-gradient(circle at 14% 23%,#fff9 0 1px,transparent 2px),radial-gradient(circle at 78% 30%,#fae4a8 0 1px,transparent 2px),radial-gradient(circle at 48% 72%,#fff9 0 1px,transparent 2px),var(--story-art);
+  background-size:113px 127px,177px 157px,131px 97px,cover;
+}
+.merlin-story-caption {
+  position:absolute; z-index:2; left:14px; top:14px; max-width:calc(100% - 28px);
+  padding:8px 12px; border-left:2px solid #d4b476; background:#0b141ced;
+  color:#f9e7c3; font:600 clamp(13px,2vw,17px)/1.35 'Inter',sans-serif; box-sizing:border-box;
+}
+.merlin-story-items { position:absolute; inset:68px 20px 24px; display:flex; align-items:center; justify-content:center; gap:9%; }
+.merlin-story-items.is-linked::before { content:''; position:absolute; top:46%; left:20%; right:20%; border-top:2px dashed #d4b476; }
+.merlin-story-item { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; flex:0 1 42%; height:100%; min-width:0; gap:12px; }
+.merlin-story-visual { position:relative; width:min(100%,260px); height:74%; min-height:48px; max-height:310px; display:flex; justify-content:center; align-items:center; }
+.merlin-story-label { flex:none; max-width:100%; padding:6px 10px; text-align:center; border:1px solid #c7ad7755; border-radius:6px; color:#fff4dc; background:#0b141ced; font:500 clamp(11px,1.6vw,14px)/1.4 'Inter',sans-serif; }
+.merlin-story-art { display:block; width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 8px 12px #0009); }
+.merlin-story-art[hidden] { display:none; }
+.story-earth,.story-alderwing { aspect-ratio:1; height:auto; max-height:none; width:100%; max-width:230px; flex:0 0 auto; border-radius:50%; box-shadow:inset -24px -12px 35px #000b,0 0 34px #79d0e644; background:radial-gradient(ellipse at 30% 30%,#a7ded9,#367e97 50%,#122f52); overflow:hidden; border:1px solid #a4d7ce88; }
+.story-earth::before,.story-alderwing::before { content:''; position:absolute; inset:12% 5% 16% 16%; background:#699873; clip-path:polygon(7% 4%,45% 0,57% 18%,41% 31%,61% 48%,40% 60%,33% 94%,18% 67%,27% 46%,0 30%,78% 10%,98% 36%,91% 62%,68% 53%,71% 30%); box-shadow:inset -15px 0 25px #0007; }
+.story-alderwing { background:radial-gradient(ellipse at 30% 25%,#c7e4a8,#508575 50%,#183949); box-shadow:inset -24px -12px 35px #000b,0 0 38px #dbbe6b66; }
+.story-alderwing::before { background:#c3b880; transform:rotate(50deg); }
+.story-portal { border:3px solid #d4b476; border-radius:50%; width:min(80%,190px); background:radial-gradient(ellipse,#16484699,#08232ac9); box-shadow:0 0 0 9px #d4b47622,inset 0 0 30px #9bddbc55,0 0 36px #b8ce7544; }
+.story-phone { width:80%; height:auto; aspect-ratio:1 / 1.8; flex:0 0 auto; max-width:135px; border:4px solid #d4b476; border-radius:20px; background:radial-gradient(circle at 50% 45%,#96dbc977,#254d6088 45%,#11202c); box-shadow:0 0 36px #c0d39b55; }
+.story-phone::before { content:'✦'; color:#f9e5ad; font-size:clamp(30px,7vw,72px); }
+.story-phone::after { content:''; position:absolute; bottom:9px; width:25%; border-bottom:3px solid #d4b476; }
+.story-camera { width:92%; height:auto; aspect-ratio:4 / 3; flex:0 0 auto; border:3px solid #e7d09b; border-radius:20px; background:#11202cbb; }
+.story-camera::before { content:''; width:40%; aspect-ratio:1; border:3px solid #e7d09b; border-radius:50%; box-shadow:0 0 0 7px #e7d09b22; background:radial-gradient(circle,#86bdbe55,#102b31); }
+.story-camera::after { content:''; position:absolute; top:-13px; right:18%; width:30%; height:12px; border:3px solid #e7d09b; border-bottom:0; border-radius:5px 5px 0 0; }
+.story-bound::after,.story-freed::after { content:''; position:absolute; inset:8% -4%; border:4px double #b9a1ef; border-radius:50%; box-shadow:0 0 18px #a078e7,inset 0 0 18px #a078e7; transform:rotate(-15deg); }
+.story-freed::after { border-color:#d8e8a8; border-style:dashed; border-left-color:transparent; border-right-color:transparent; box-shadow:none; transform:rotate(20deg) scale(1.08); }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage {
+  position:relative; flex:none; top:auto; bottom:auto; left:auto; right:auto; transform:none; width:100%; max-width:800px; margin:0; padding:0; transition:none;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble {
+  margin:0; padding:15px 16px; border:1px solid #897047; border-radius:12px; background:linear-gradient(145deg,#30271b,#15110c); color:#fff4dc;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble::after { display:none; }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-merlin {
+  z-index:1; left:auto; right:18px; top:7px; bottom:auto; width:70px; height:78px; object-fit:contain; background:transparent; border:0; border-radius:0; box-shadow:none; animation:none;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-text {
+  margin:0 82px 0 0; min-height:72px; max-height:26vh; overflow:auto; color:#fff4dc; font:500 clamp(14px,1.7vw,18px)/1.5 'Inter',sans-serif;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialTitle { display:none; }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-actions { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:8px; }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-nav { font-size:12px; min-height:44px; }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-counter { grid-row:1; grid-column:1/-1; color:#d8c6a0; }
+#merlinTutorialOverlay.merlin-illustrated .merlin-tutorial-footer { display:none; }
+@media (min-width:640px) and (orientation:landscape) {
+  #merlinTutorialOverlay.merlin-illustrated.show { padding-right:calc(var(--landscape-rail,104px) + 12px); }
+}
+@media (orientation:landscape) and (max-height:550px) {
+  #merlinTutorialOverlay.merlin-illustrated.show { flex-direction:row; gap:12px; padding-top:calc(60px + env(safe-area-inset-top)); }
+  .merlin-story-scene { height:100%; min-width:0; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage { flex:0 0 46%; max-height:100%; overflow:auto; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble { padding:10px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-text { font-size:14px; max-height:30vh; margin-right:64px; min-height:62px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-merlin { width:52px; height:64px; right:12px; }
+  .merlin-story-items { inset:58px 12px 12px; gap:8%; }
+  .story-earth,.story-alderwing { max-width:110px; }
+  .merlin-story-item { gap:6px; }
+  .merlin-story-caption { left:9px; top:9px; font-size:12px; padding:6px 8px; }
+  .merlin-story-label { font-size:10px; padding:4px 6px; }
+}
+@media (orientation:portrait) and (max-height:650px) {
+  .merlin-story-caption { top:8px; left:8px; font-size:12px; padding:6px 8px; }
+  .merlin-story-items { inset:46px 12px 8px; }
+  .merlin-story-items.is-linked .merlin-story-item { gap:6px; }
+  .merlin-story-items.is-linked .merlin-story-label { padding:4px 6px; font-size:10px; }
+  .merlin-story-items.is-linked .merlin-story-visual { height:calc(100% - 42px); width:auto; max-width:100%; min-height:0; flex:0 1 auto; aspect-ratio:1; }
+  .merlin-story-items.is-linked .story-phone { aspect-ratio:1 / 1.8; }
+  .merlin-story-items.is-linked .story-camera { aspect-ratio:4 / 3; }
+  .merlin-story-items:not(.is-linked) .merlin-story-label { display:none; }
+  .merlin-story-items:not(.is-linked) .merlin-story-visual { height:90%; }
+  .merlin-story-items:not(.is-linked) :is(.story-earth,.story-alderwing) { height:auto; max-width:100px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  #merlinTutorialOverlay.merlin-illustrated *, #merlinTutorialOverlay.merlin-illustrated *::before, #merlinTutorialOverlay.merlin-illustrated *::after { animation:none !important; transition:none !important; }
+}

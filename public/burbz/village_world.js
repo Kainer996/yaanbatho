@@ -81,9 +81,10 @@ async function attach(s,opts){
  const animateOrigin=()=>Math.hypot(s.player.x,s.player.z)<originReach+(scene.fog?.far||104)+32;
  let originCull=root.BurbzVillageWalkScene.distanceCull(T,originGroup,s.source.movers);
  const raw=(x,z)=>k.elevation(lookup,merc,x,z);
+ function unshaped(x,z){if(Math.hypot(x,z)<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw,datum});const h=raw(x,z);return h===null||datum===null?null:h-datum;}
  function joined(x,z){
   const home=places.get('home'),d=Math.hypot(x,z);
-  if(home){const r=Math.hypot(x-home.x,z-home.z),blend=opts.getHome?.()?.tier===0?20:home.content.blendRadius,flat=opts.getHome?.()?.tier===0?12:home.content.radius;if(r<blend){const base=d<=actualRadius+64?k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw,datum}):raw(x,z);if(base===null||datum===null)return null;const h=d<=actualRadius+64?base:base-datum,t=k.smooth((r-flat)/(blend-flat));return home.base*(1-t)+h*t;}}
+  if(home&&Math.hypot(x-home.x,z-home.z)<home.content.groundBlendRadius)return k.homeHeight(x,z,{x:home.x,z:home.z,base:home.base,radius:home.content.groundRadius,blendRadius:home.content.groundBlendRadius},unshaped(x,z));
   if(d<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw,datum});const h=raw(x,z);if(h===null||datum===null)return null;
   for(const p of places.values()){if(p.record.kind==='home')continue;const distance=Math.hypot(x-p.x,z-p.z),blend=p.content.blendRadius||p.content.radius+12;if(distance<blend){const t=k.smooth((distance-p.content.radius)/(blend-p.content.radius));return (p.base+(p.content.terrain?.heightAt(x-p.x,z-p.z)||0))*(1-t)+(h-datum)*t;}}return h-datum;
  }
@@ -104,15 +105,20 @@ async function attach(s,opts){
    const abort=()=>pendingPlace.abort.abort();s.abort.signal.addEventListener('abort',abort,{once:true});
    placeChain=placeChain.catch(()=>{}).then(async()=>{
     if(closed||pendingPlace.abort.signal.aborted)return;
-    const homeBase=row.record.kind==='home'?(joined(row.p.x,row.p.z)??value-datum):0;
-    const farmHeight=(x,z)=>Math.hypot(row.p.x+x,row.p.z+z)<=actualRadius+64?k.joinedHeight(row.p.x+x,row.p.z+z,{radius:actualRadius,authored:terrain.heightAt,raw,datum})-homeBase:0;
-    const content=row.record.kind==='home'?opts.createYard?.(T,home,{farmHeight}):row.record.kind==='wayside'?await opts.createWayside?.(T,row.record,{signal:pendingPlace.abort.signal,palette:opts.waysidePalette?.(scene.userData.nightPalette)}):await opts.createSettlement?.(T,row.record,{signal:pendingPlace.abort.signal});
+    const homeBase=row.record.kind==='home'?unshaped(row.p.x,row.p.z):0;
+    const profile=row.record.kind==='home'?{...root.BurbzPlayerHomeCore.groundProfile(home),...row.p,base:homeBase}:null;
+    // Do not create a flat fallback yard on missing neighbouring DEM samples.
+    // Every prop uses the exact triangles used by the retained ground/collision.
+    const shaped=(x,z)=>k.homeHeight(x,z,profile,unshaped(x,z));
+    if(profile){const reach=Math.max(root.BurbzPlayerHomeCore.YARD.ground,profile.blendRadius)+k.STEP;for(let x=Math.floor((row.p.x-reach)/k.STEP)*k.STEP;x<=row.p.x+reach;x+=k.STEP)for(let z=Math.floor((row.p.z-reach)/k.STEP)*k.STEP;z<=row.p.z+reach;z+=k.STEP)if(!Number.isFinite(shaped(x,z)))return;}
+    const groundHeight=(x,z)=>k.sampleGround(row.p.x+x,row.p.z+z,shaped)-homeBase;
+    const content=row.record.kind==='home'?opts.createYard?.(T,home,{groundHeight}):row.record.kind==='wayside'?await opts.createWayside?.(T,row.record,{signal:pendingPlace.abort.signal,palette:opts.waysidePalette?.(scene.userData.nightPalette)}):await opts.createSettlement?.(T,row.record,{signal:pendingPlace.abort.signal});
     if(!content)return;if(closed||pendingPlace.abort.signal.aborted){content.dispose();return;}
     const radius=content.radius||root.BurbzPlayerHomeCore?.YARD?.ground||28;content.radius=radius;content.blendRadius=content.blendRadius||radius+16;content.group.userData.continuousTerrain=true;content.group.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material])styleFog(m);});
-    const p={...row.p,record:row.record,content,base:row.record.kind==='home'?(joined(row.p.x,row.p.z)??value-datum):value-datum};content.group.position.set(p.x,p.base,p.z);scene.add(content.group);const cull=root.BurbzVillageWalkScene.distanceCull(T,content.group,content.movers);p.cull=cull;const disposeContent=content.dispose;content.dispose=()=>{p.cull.dispose();disposeContent();};places.set(row.record.id,p);placeVersion++;
+    const p={...row.p,record:row.record,content,base:row.record.kind==='home'?homeBase:value-datum};content.group.position.set(p.x,p.base,p.z);scene.add(content.group);const cull=root.BurbzVillageWalkScene.distanceCull(T,content.group,content.movers);p.cull=cull;const disposeContent=content.dispose;content.dispose=()=>{p.cull.dispose();disposeContent();};places.set(row.record.id,p);placeVersion++;
     // Prepared outside the visible horizon. Rebuild only its future ground so
     // no existing tree can remain inside the real village's buildings.
-    for(const chunk of [...chunks.values()])if(distanceToBounds({x0:chunk.x,x1:chunk.x+k.CHUNK,z0:chunk.z,z1:chunk.z+k.CHUNK},p)<content.blendRadius+k.STEP)retire(chunk);
+    for(const chunk of [...chunks.values()])if(distanceToBounds({x0:chunk.x,x1:chunk.x+k.CHUNK,z0:chunk.z,z1:chunk.z+k.CHUNK},p)<Math.max(content.radius,content.blendRadius)+k.STEP)retire(chunk);
     metrics.placeBuilds||=[];metrics.placeBuilds.push({id:row.record.id,buildMs:content.buildMs||0,maxStepMs:content.maxStepMs||0,prepareMs:content.prepareMs||0});if(metrics.placeBuilds.length>20)metrics.placeBuilds.shift();
    }).catch(error=>{if(error.name!=='AbortError'){errors.push('Settlement: '+error.message);pendingPlace.failed=true;pendingPlace.retryAt=performance.now()+5000;}}).finally(()=>{s.abort.signal.removeEventListener('abort',abort);if(!pendingPlace.failed)preparing.delete(row.record.id);placeCentre=null;});
   }

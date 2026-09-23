@@ -4593,8 +4593,9 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
+<link rel="stylesheet" href="merlin_story_scenes.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
-<link rel="stylesheet" href="player_home.css?v=walk-shelter-controls-v427-20260920">
+<link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
 <link rel="stylesheet" href="scan_home.css?v=quest-pulse-v442-20260922">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
@@ -5767,10 +5768,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="player_home_core.js?v=gps-shelter-swimming-v439-20260922"></script>
-<script src="player_home_scene.js?v=village-hall-desk-v441-20260922"></script>
-<script src="alderwing_intro.js?v=hands-on-world-tutorial-v429-20260920"></script>
-<script src="player_home.js?v=tavern-hall-open-v450-20260923"></script>
+<script src="player_home_core.js?v=home-ground-intro-v451-20260923"></script>
+<script src="player_home_scene.js?v=home-ground-intro-v451-20260923"></script>
+<script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
+<script src="merlin_story_scenes.js?v=home-ground-intro-v451-20260923"></script>
+<script src="player_home.js?v=home-ground-intro-v451-20260923"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="flight_craft_core.js?v=craft-home-repair-v440-20260922"></script>
@@ -30775,7 +30777,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=tavern-hall-open-v450-20260923';
+        script.src = 'village_walk.js?v=home-ground-intro-v451-20260923';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45172,7 +45174,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'tavern-hall-open-v450-20260923';
+const BURBZ_BUILD = 'home-ground-intro-v451-20260923';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45906,9 +45908,10 @@ function merlinTutShowStep(i) {
   const text = $('merlinTutorialText');
   if (!step || !text) return;
   merlinTutStep = i;
-  if(step.action?.event==='alderwing-returned'&&gameState.playerHome?.arrival==='done'&&merlinTutMode!=='full'){if(BurbzAlderwingIntro.phase()==='portrait'){endMerlinTutorial(false,{pause:true});BurbzAlderwingIntro.desk(true);return;}merlinTutShowStep(i+1);return;}
+  if(step.action?.event==='alderwing-returned'&&gameState.playerHome?.arrival==='done'&&merlinTutMode!=='full'){if(['chair','portrait'].includes(BurbzAlderwingIntro.phase())){endMerlinTutorial(false,{pause:true});BurbzAlderwingIntro.desk(true);return;}merlinTutShowStep(i+1);return;}
   merlinTutStep = i;
   $('merlinTutorialOverlay')?.classList.toggle('alderwing-cinematic',!!step.cinematic);
+  window.BurbzMerlinStoryScenes?.show($('merlinTutorialOverlay'),step.id);
   merlinTutClearAction();
   saveMerlinTutorialState('in_progress');
   if (step.screen && step.screen !== currentScreen) switchScreen(step.screen);
@@ -45986,6 +45989,7 @@ function endMerlinTutorial(completed, {pause=false}={}) {
   merlinTutStopTracking();
   if (overlay) overlay.classList.remove('show');
   if (overlay) overlay.setAttribute('aria-hidden', 'true');
+  window.BurbzMerlinStoryScenes?.clear(overlay);
   setMerlinTutorialBackgroundInert(false);
   merlinTutSpotlightTarget(null);
   positionMerlinTutorialStage(null);
@@ -46763,7 +46767,7 @@ async function enterGeographicWorld(handoff={}) {
       return ownedSource;
     },
     animate:time=>ownedSource?.update(time),
-    ready:()=>{if(gameState!==entrySave||handoff.commandDeskReturn)return;const result=commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);else BurbzAlderwingIntro.outside($('villageWalk'));},
+    ready:()=>{if(gameState!==entrySave||handoff.commandDeskReturn)return;const confirm=()=>{if(gameState!==entrySave)return false;const result=['outside','done'].includes(gameState.playerHome?.arrival)?{ok:true}:commitPlayerHomeAction({kind:'arrival',event:'outside'});if(!result.ok)showToast(result.error);return result.ok;};if(BurbzAlderwingIntro.active())BurbzAlderwingIntro.outside($('villageWalk'),confirm);else confirm();},
     resume:reason=>{BurbzAlderwingIntro.clear();if(['navigation','world','pagehide'].includes(reason))return;switchScreen('scan');renderScanHome();maybeStartMerlinTutorial(650);}
   });
 }
