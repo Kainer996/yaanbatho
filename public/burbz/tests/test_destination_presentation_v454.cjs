@@ -1,0 +1,16 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const source=fs.readFileSync(require.resolve('../destination_quest_ui.js'),'utf8');
+function harness(){
+ const layers=new Map(),sources=new Map(),pins=[];
+ const map={getLayer:k=>layers.get(k),addLayer:l=>layers.set(l.id,l),removeLayer:k=>layers.delete(k),getSource:k=>sources.get(k),addSource:(k,s)=>sources.set(k,{...s,setData(d){this.data=d}}),removeSource:k=>sources.delete(k)};
+ const c={renderedRouteKey:'',markerKey:'',encounterKey:'',markers:[],encounterMarkers:[],routeMap:map,getMap:()=>map,doc:{createElement:()=>({dataset:{},setAttribute(k,v){this[k]=v}})},root:{},options:{createMarker:cfg=>{const p={el:cfg.element,removed:false,setLngLat(x){this.coords=x;return this},addTo(){pins.push(this);return this},remove(){this.removed=true}};return p}},controller:{state:()=>({})},validCoordinate:p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon)&&Math.abs(p.lat)<=90&&Math.abs(p.lon)<=180,routePoints:r=>r?.points||[],disposed:false,sheet:null,timelineController:{activeQuest:()=>c.active},active:null};
+ vm.createContext(c);vm.runInContext(source.slice(source.indexOf('    function clearPreviewLayer()'),source.indexOf('    function routeMetricHTML(')),c);
+ return {c,layers,pins};
+}
+const route={routeFingerprint:'trail',points:[{lat:51,lon:0},{lat:51.01,lon:.01}]};
+const entries=['building','character','bird'].map((kind,i)=>({id:'entry'+i,kind,label:'Stop '+i,route:{lat:51+.002*(i+1),lon:.002*(i+1)}}));
+test('gold rounded mapped trail keeps guidance dashed without solid underlay',()=>{const {c,layers}=harness();c.drawPreview({route,record:{entries}});for(const l of layers.values()){assert.notEqual(l.paint['line-color'],'#d51f35');assert.equal(l.layout['line-cap'],'round');}assert(layers.get('burbz-destination-route-glow').filter);assert(layers.get('burbz-destination-guidance').paint['line-dasharray']);});
+test('preview uses exact banked encounter positions and labels, with no duplicate pins',()=>{const {c,pins}=harness();c.drawPreview({route,record:{entries}});const shown=pins.filter(p=>p.el.className.includes('destination-encounter-marker'));assert.equal(shown.length,3);shown.forEach((p,i)=>{assert.equal(JSON.stringify(p.coords),JSON.stringify([entries[i].route.lon,entries[i].route.lat]));assert.match(p.el['aria-label'],/Game encounter/);assert.match(p.el.title,/Stop/)});c.drawPreview({route,record:{entries}});assert.equal(pins.filter(p=>!p.removed).length,5);c.clearPreviewLayer();assert.equal(pins.filter(p=>!p.removed).length,0);});
+test('active quest retains encounter icons with planner closed and skips invalid coordinates',()=>{const {c,pins}=harness();c.active={route,entries:[...entries,{id:'bad',kind:'bird',route:{lat:NaN,lon:0}}]};c.refreshMapRoute();assert.equal(pins.filter(p=>!p.removed&&p.el.className.includes('destination-encounter-marker')).length,3);c.active=null;c.refreshMapRoute();assert.equal(pins.filter(p=>!p.removed).length,0);});
+test('selection circles are subtle 24px, not the oversized red style',()=>{const css=fs.readFileSync(require.resolve('../destination_quest_ui.css'),'utf8');assert(!css.includes('width:64px;height:64px'));assert(!css.includes('background:#e1262e'));assert.match(css,/width:24px;height:24px/);});

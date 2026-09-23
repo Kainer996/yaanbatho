@@ -6,7 +6,7 @@
   'use strict';
 
   const VERSION = 'destination-quest-ui-v431-20260921';
-  const PIN = 'red-gold-pocket-v437-20260921';
+  const PIN = 'gold-trail-raven-v454-20260923';
   const DEFAULT_ROUTE_OPTIONS = {
     timeoutMs: 5000,
     totalTimeoutMs: 12000,
@@ -668,6 +668,8 @@
       }
     }));
     const markers = [];
+    const encounterMarkers = [];
+    let encounterKey = '';
     let sheet = null;
     let routeMap = null, renderedRouteKey = '';
     let mapPick = null;
@@ -738,6 +740,8 @@
     function clearPreviewLayer() {
       renderedRouteKey = '';
       markerKey = '';
+      encounterKey = '';
+      encounterMarkers.splice(0).forEach(marker => { try { marker.remove(); } catch (_) {} });
       markers.splice(0).forEach(marker => {
         try { marker.remove(); } catch (_) {}
       });
@@ -783,6 +787,27 @@
       makeMarker(s.start,'Start','start'); makeMarker(s.end,'Destination','end');
       markerKey=key;
     }
+    function syncEncounterMarkers(entries) {
+      const items = (Array.isArray(entries) ? entries : []).filter(entry => entry && validCoordinate(entry.route));
+      const key = JSON.stringify(items.map(entry => [entry.id, entry.kind, entry.route.lat, entry.route.lon, entry.label || entry.name || entry.commonName || entry.species, !!entry.receiptId]));
+      if (key === encounterKey) return;
+      encounterMarkers.splice(0).forEach(marker => { try { marker.remove(); } catch (_) {} });
+      const map = getMap();
+      const factory = typeof options.createMarker === 'function' ? options.createMarker : (root.maplibregl?.Marker ? cfg => new root.maplibregl.Marker(cfg) : null);
+      if (!map || !factory) return;
+      for (const entry of items) {
+        const el = doc.createElement('div');
+        el.className = 'destination-encounter-marker' + (entry.receiptId ? ' is-visited' : '');
+        el.dataset.entryId = entry.id;
+        el.textContent = ({building:'🏠', character:'💬', bird:'🐦'})[entry.kind] || '✦';
+        const label = entry.label || entry.name || entry.commonName || entry.species || 'Quest stop';
+        el.title = 'Game encounter · ' + label;
+        el.setAttribute('role', 'img');
+        el.setAttribute('aria-label', el.title);
+        try { encounterMarkers.push(factory({element:el,anchor:'center'}).setLngLat([entry.route.lon,entry.route.lat]).addTo(map)); } catch (_) {}
+      }
+      encounterKey = key;
+    }
     function drawPreview(preview, opts = {}) {
       const map = getMap();
       const route = preview && preview.route;
@@ -792,15 +817,16 @@
       try {
         if (!map.getSource || !map.getSource('burbz-destination-route')) {
           map.addSource('burbz-destination-route', { type: 'geojson', data: routeGeoJSON(route) });
-          map.addLayer({ id: 'burbz-destination-route-glow', type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#d51f35', 'line-width': 11, 'line-opacity': 1 } });
-          map.addLayer({ id: 'burbz-destination-route', filter:['==',['get','guidance'],false], type: 'line', source: 'burbz-destination-route', paint: { 'line-color': '#ffd86b', 'line-width': 5, 'line-opacity': 1 } });
-          map.addLayer({id:'burbz-destination-guidance',type:'line',source:'burbz-destination-route',filter:['==',['get','guidance'],true],paint:{'line-color':'#ffd86b','line-width':4,'line-dasharray':[2,2]}});
+          map.addLayer({ id: 'burbz-destination-route-glow', filter:['==',['get','guidance'],false], type: 'line', source: 'burbz-destination-route', layout: {'line-cap':'round','line-join':'round'}, paint: { 'line-color': '#b99348', 'line-width': 13, 'line-opacity': .30, 'line-blur': 2 } });
+          map.addLayer({ id: 'burbz-destination-route', filter:['==',['get','guidance'],false], type: 'line', source: 'burbz-destination-route', layout: {'line-cap':'round','line-join':'round'}, paint: { 'line-color': '#e8c778', 'line-width': 7, 'line-opacity': .82 } });
+          map.addLayer({id:'burbz-destination-guidance',type:'line',source:'burbz-destination-route',filter:['==',['get','guidance'],true],layout:{'line-cap':'round','line-join':'round'},paint:{'line-color':'#e8c778','line-width':4,'line-opacity':.8,'line-dasharray':[2,2]}});
         } else {
           map.getSource('burbz-destination-route').setData(routeGeoJSON(route));
         }
       } catch (_) {}
       renderedRouteKey = route.routeFingerprint;
       syncSelectionMarkers(route);
+      syncEncounterMarkers(preview.record?.entries || preview.entries || []);
       if (opts.fit === false) return;
       if (typeof options.fitRoute === 'function') {
         options.fitRoute(points);
@@ -824,7 +850,7 @@
       const active = timelineController.activeQuest();
       const preview = sheet?.classList.contains('open') ? controller.state().preview : null;
       const route = active?.route || preview?.route;
-      if (route) drawPreview({route}, {fit:opts.fit === true});
+      if (route) drawPreview({route, record:active || preview?.record}, {fit:opts.fit === true});
       else { clearPreviewLayer(); if(sheet?.classList.contains('open'))syncSelectionMarkers(); }
     }
     function onMapStyleLoad() { renderedRouteKey = ''; refreshMapRoute(); }
@@ -921,7 +947,7 @@
         '<form class="destination-coordinate-form" data-destination-form>' +
         '<fieldset><legend>1 · Start</legend><label>Latitude<input id="destinationStartLat" name="startLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lat != null ? current.start.lat : '') + '"></label><label>Longitude<input id="destinationStartLon" name="startLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lon != null ? current.start.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.start ? 'Start selected' : 'Choose a start') + '</div><div class="destination-button-row"><button type="button" data-destination-gps>Use precise GPS</button><button type="button" data-destination-pick="start">Tap start on map</button></div></fieldset>' +
         '<fieldset><legend>2 · Destination</legend><label>Latitude<input id="destinationEndLat" name="endLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lat != null ? current.end.lat : '') + '"></label><label>Longitude<input id="destinationEndLon" name="endLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lon != null ? current.end.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.end ? 'Destination selected' : 'Choose a destination') + '</div><div class="destination-button-row"><button type="button" data-destination-pick="end">Tap destination on map</button></div></fieldset>' +
-        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? (current.providerProgress?.alternative ? 'First map service unavailable. Checking another public map source...' : 'Checking the public walking network...') : error ? error.message : preview ? 'Route ready. Begin saves your walk and rewards.' : current.start && current.end ? 'Both red marks are set. Preview your walk.' : 'Choose both points to preview.') + '</div>' +
+        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? (current.providerProgress?.alternative ? 'First map service unavailable. Checking another public map source...' : 'Checking the public walking network...') : error ? error.message : preview ? 'Route ready. Begin saves your walk and rewards.' : current.start && current.end ? 'Both points are set. Preview your walk.' : 'Choose both points to preview.') + '</div>' +
         routeMetricHTML(preview) +
         '<div class="destination-actions"><button type="submit" data-destination-preview ' + (planning ? 'disabled' : '') + '>' + (preview ? 'Preview Again' : 'Preview Route') + '</button><button type="button" data-destination-begin ' + (!preview || planning ? 'disabled' : '') + '>Begin</button><button type="button" data-destination-cancel>Cancel</button></div>' +
         '</form>' +

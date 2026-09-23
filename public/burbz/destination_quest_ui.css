@@ -263,9 +263,12 @@
 .destination-coordinate-toggle {min-height:44px;margin-top:8px;background:transparent;color:#efd9ad;border:1px solid #7d6139;border-radius:6px;padding:6px 10px;}
 .destination-coordinate-form {gap:8px;margin-top:8px;}
 .destination-coordinate-form fieldset {padding:6px 8px;gap:4px;}
-.destination-route-marker,.destination-route-marker.end {width:64px;height:64px;min-width:64px;min-height:64px;border:5px solid white;background:#e1262e;color:white;box-shadow:0 0 0 3px #87111b,0 4px 12px #000a;pointer-events:none;z-index:1200;display:grid;place-items:center;}
-.destination-route-marker strong {font-size:30px;line-height:1;}
-.destination-route-marker span {position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:3px 7px;border-radius:4px;background:#8b1018;color:white;border:1px solid white;font-size:12px;font-weight:900;}
+.destination-route-marker,.destination-route-marker.end {width:24px;height:24px;min-width:24px;min-height:24px;border:1.5px solid #f1dfb5;background:#967b4c;color:#fff8e8;box-shadow:0 2px 5px #0005;pointer-events:none;z-index:1200;display:grid;place-items:center;}
+.destination-route-marker.end {background:#746249;}
+.destination-route-marker strong {font-size:12px;line-height:1;}
+.destination-route-marker span {position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:#332b20cc;color:#f4e7cb;font-size:9px;font-weight:600;}
+.destination-encounter-marker {width:28px;height:28px;display:grid;place-items:center;border-radius:10px;border:1px solid #c6a966;background:#29251ee8;box-shadow:0 2px 5px #0004;font-size:18px;pointer-events:none;z-index:1100;}
+.destination-encounter-marker.is-visited {opacity:.55;}
 
 /* Selected points and the real route stay visible above a compact decision panel. */
 .destination-quest-sheet[data-selection-ready="true"]:not(.show-coordinates) .destination-coordinate-form fieldset,

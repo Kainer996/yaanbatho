@@ -42,7 +42,7 @@ def generated_art_urls():
 
 def test_all_generated_paintings_override_the_built_in_map():
     html = HTML.read_text(encoding="utf-8")
-    assert '<script src="bird_art_release_20260727.js?v=builtin-imagegen-1026"></script>' in html
+    assert '<script src="bird_art_release_20260727.js?v=raven-card-art-20260923"></script>' in html
     assert "const GENERATED_ART_COMPLETION = window.BURBZ_GENERATED_ART_COMPLETION_20260726 || {};" in html
     assert "document.documentElement.dataset.burbzGeneratedArtCount" in html
     # The claim that matters is the ORDER: these paintings must be applied after
@@ -95,7 +95,7 @@ def test_generated_ui_icons_replace_the_visible_emoji_controls_and_are_cached():
         path = ROOT / "assets" / "ui" / "burbz-icon-set" / f"{name}.webp"
         header = path.read_bytes()[:12]
         assert header[:4] == b"RIFF" and header[8:12] == b"WEBP", name
-    assert "./bird_art_release_20260727.js?v=builtin-imagegen-1026" in sw
+    assert "./bird_art_release_20260727.js?v=raven-card-art-20260923" in sw
 
 
 def test_repository_live_updater_keeps_generated_manifest_icons_and_all_paintings():
