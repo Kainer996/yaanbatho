@@ -95,10 +95,10 @@
       w=3.6;d=2.85;h=2.15;door=main(w,d,h,{stone:true,porch:true});
     }else{
       if(id==='cabin'){w=level>=2?4.1:3;d=level>=2?3.15:2.7;h=level>=3?2.15:1.75;}
-      if(['storehouse','market','entertainment'].includes(id)){w=4;d=3.1;h=2.3;}
+      if(['storehouse','market','entertainment','village_hall'].includes(id)){w=4;d=3.1;h=2.3;}
       if(id==='chapel'){w=3;d=4.1;h=2.8;}
       if(['farm','lumber','lumberjack_hut','miners_hut','quarry','foundry','forge'].includes(id)){w=2.6;d=2.5;h=1.7;}
-      door=main(w,d,h,{logs:['cabin','hut','lumberjack_hut','miners_hut'].includes(id)&&!stoneHome,stone:stoneHome||['chapel','foundry','quarry'].includes(id),porch:['tavern','hut','market'].includes(id),tower:id==='chapel'});
+      door=main(w,d,h,{logs:['cabin','hut','lumberjack_hut','miners_hut'].includes(id)&&!stoneHome,stone:stoneHome||['chapel','foundry','quarry'].includes(id),porch:['tavern','hut','market','village_hall'].includes(id),tower:id==='chapel'});
       if(id==='chapel'){b.box(.8,1.6,.8,-.7,h+1.4,-.6,p.stone);b.add(new T.ConeGeometry(.75,1.2,4),p.roof,[-.7,h+2.65,-.6],[0,Math.PI/4,0]);}
       if(['farm','hut'].includes(id)){
         const x=w/2+.9;b.box(1.2,.12,2.7,x,.06,0,p.soil);

@@ -13,13 +13,14 @@
 
   const INTERIOR_IDS = Object.freeze([
     'cabin', 'hut', 'farm', 'well', 'lumberhut', 'minehut', 'cottages',
-    'tavern', 'chapel', 'lumber', 'quarry', 'market', 'storehouse',
+    'tavern', 'village_hall', 'chapel', 'lumber', 'quarry', 'market', 'storehouse',
     'foundry', 'entertainment'
   ]);
 
   const ART_ROOT = 'assets/building-interiors-manga/';
   const INTERIOR_ART = Object.freeze(INTERIOR_IDS.reduce(function(paths, id) {
-    paths[id] = ART_ROOT + id + '.webp';
+    // The Hall uses existing civic art; its walkable room has its own plan.
+    paths[id] = ART_ROOT + (id === 'village_hall' ? 'entertainment' : id) + '.webp';
     return paths;
   }, Object.create(null)));
   const PLOT_ART = ART_ROOT + 'plot.webp';

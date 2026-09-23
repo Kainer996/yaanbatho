@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
 const core=require('../building_rooms_core.js'),walk=require('../village_walk_core.js');
-const context={console};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lib/three.min.js'),'utf8'),context);for(const f of ['settlement_models.js','building_rooms_core.js','building_rooms_scene.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../'+f),'utf8'),context);
+const context={console};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../lib/three.min.js'),'utf8'),context);for(const f of ['settlement_models.js','player_home_core.js','player_home_scene.js','building_rooms_core.js','building_rooms_scene.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../'+f),'utf8'),context);
 const plans=[...core.CABINS.map((_,variant)=>core.plan({variant})),...Object.keys(core.ROOMS).map(buildingId=>core.plan({buildingId}))];assert.equal(core.CABINS.length,20);
 assert.equal(new Set(plans.slice(0,20).map(p=>JSON.stringify([p.width,p.depth,p.props]))).size,20,'twenty different floor plans, not palette swaps');
 for(const p of plans.slice(0,20)){const focal=p.props[1],dx=focal.x-p.spawn.x,dz=focal.z-p.spawn.z;const dot=(-Math.sin(p.spawn.yaw)*dx-Math.cos(p.spawn.yaw)*dz)/Math.hypot(dx,dz);assert(dot>.999,p.name+' arrives facing its distinctive furnishing');}
@@ -13,4 +13,4 @@ for(const p of plans){const w=core.world(p);assert(w.allowed(p.spawn.x,p.spawn.z
  const player={...p.spawn};for(let i=0;i<1000;i++)walk.move(player,{forward:1},.05,w);assert(w.allowed(player.x,player.z),p.name+' swept wall collision');
  const room=context.BurbzBuildingRoomsScene.create(context.THREE,p);let triangles=0,draws=0,disposed=0,geometries=0;room.scene.traverse(o=>{if(!o.geometry)return;geometries++;o.geometry.addEventListener('dispose',()=>disposed++);for(const n of o.geometry.attributes.position.array)assert(Number.isFinite(n));triangles+=(o.geometry.index?.count||o.geometry.attributes.position.count)/3;draws++;});assert(triangles<65000,p.name+' triangle budget '+triangles);assert(draws<25,p.name+' draw budget '+draws);room.dispose();assert.equal(disposed,geometries,'all room meshes released');console.log(p.name,triangles+' triangles',draws+' draws',queue.length+' walkable samples');
 }
-console.log('PASS 20 unique cabins + 13 civic/service rooms, deterministic plans, reachability, collision, finite geometry and disposal');
+console.log(`PASS ${core.CABINS.length} unique cabins + ${Object.keys(core.ROOMS).length} civic/service rooms, deterministic plans, reachability, collision, finite geometry and disposal`);

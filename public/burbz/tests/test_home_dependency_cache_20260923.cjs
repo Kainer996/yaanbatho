@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 const origin='https://game.example/burbz/';
-const deps=['building_rooms_core.js?v=village-hall-desk-v441-20260922','building_rooms_scene.js?v=village-hall-desk-v441-20260922','village_walk_core.js?v=alderwing-followups-v417-20260914'];
+const deps=['building_rooms_core.js?v=tavern-hall-open-v450-20260923','building_rooms_scene.js?v=village-hall-desk-v441-20260922','village_walk_core.js?v=alderwing-followups-v417-20260914'];
 function harness({cached=true,network='hang',cacheFailure=false}={}){
  const handlers={},calls=[],stores=new Map();
  const self={location:new URL(origin+'sw.js'),BurbzGeographicCache:{respond:()=>false},addEventListener:(name,fn)=>handlers[name]=fn};

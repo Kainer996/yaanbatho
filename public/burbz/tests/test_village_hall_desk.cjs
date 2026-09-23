@@ -2,9 +2,13 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const base=path.join(__dirname,'..');
 const core=require('../building_rooms_core.js');
-const plan=core.plan({buildingId:'tavern',seed:17});
+const plan=core.plan({buildingId:'village_hall',seed:17});
 assert.equal(plan.name,'Village Hall');
-assert.equal(plan.action.kind,'bar','existing alehouse service retained');
+assert.equal(plan.action,null,'Hall has no tavern service');
+const tavern=core.plan({buildingId:'tavern',seed:17});
+assert.equal(tavern.name,'Tavern');
+assert.equal(tavern.action.kind,'bar');
+assert.equal(tavern.deskAction,undefined);
 assert.equal(plan.deskAction.kind,'command-desk');
 assert.equal(plan.props.filter(p=>p.type==='commanddesk').length,1);
 const world=core.world(plan);assert(world.allowed(plan.deskAction.x,plan.deskAction.z),'chair approach is accessible');
@@ -19,7 +23,10 @@ const html=fs.readFileSync(path.join(base,'index.html'),'utf8');
 assert.match(html,/command:openCommandDesk/,'home callback shared');
 assert.match(html,/action === 'command-desk'.*openCommandDesk\(false,true\)/);
 const definition=html.match(/\{ id: 'tavern',[^\n]+/)[0];
-assert.match(definition,/name: 'Village Hall'/);assert.match(definition,/coins: 45, branches: 15, stone: 0/);assert.match(definition,/unlockLevel: 6/);assert(!definition.includes("tier: 'town'"));
+assert.match(definition,/name: 'Tavern'/);assert.match(definition,/need: 'joy'/);assert.match(definition,/perLevel: 12/);
+const hallDefinition=html.match(/\{ id: 'village_hall',[^\n]+/)[0];
+assert.match(hallDefinition,/name: 'Village Hall'/);assert.match(hallDefinition,/maxLevel: 1/);assert(!hallDefinition.includes("need: 'joy'"));
+assert.match(definition,/coins: 45, branches: 15, stone: 0/);assert.match(definition,/unlockLevel: 6/);assert(!definition.includes("tier: 'town'"));
 console.log('Village Hall plan, reachable shared desk, preserved bar and build costs/gates: PASS');
 
 // Execute the shipped function, with explicit gates at both asynchronous boundaries.
@@ -40,7 +47,7 @@ async function checkEntry({boundary='close',cancel=null,homeDoor=false}={}){
   };
   vm.createContext(context);vm.runInContext(entrySource,context);
   const handoff={pose:{lat:1,lon:2,yaw:0},isCurrent:()=>current,
-    ...(homeDoor?{entry:'home-door',release:()=>{released=true;current=false;}}:{commandDeskReturn:{target:{buildingId:'tavern'}}})};
+    ...(homeDoor?{entry:'home-door',release:()=>{released=true;current=false;}}:{commandDeskReturn:{target:{buildingId:'village_hall'}}})};
   const pending=context.enterGeographicWorld(handoff);
   const invalidate=()=>{
     if(cancel==='session')current=false;
