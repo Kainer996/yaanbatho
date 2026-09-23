@@ -3846,6 +3846,12 @@ img.quest-bird-chip-art, .quest-bird-chip-art { width:44px; height:44px; border-
 .quest-bird-chip-note { font-size:9px; font-weight:800; letter-spacing:.06em; color:var(--text3); text-transform:uppercase; }
 .quest-equip-row { display:flex; flex-wrap:wrap; gap:6px; }
 .quest-duration-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:2px 0 8px;}
+.quest-duration-slider{margin:4px 0 12px;padding:10px 12px;border:1px solid rgba(214,168,79,.4);border-radius:12px;background:rgba(0,0,0,.3);color:#f4ead4;}
+.quest-duration-slider label{display:flex;justify-content:space-between;gap:12px;font-weight:700;}
+.quest-duration-slider input{display:block;width:100%;min-height:44px;margin:2px 0;accent-color:#d6a84f;cursor:pointer;}
+.quest-duration-slider input:focus-visible{outline:2px solid #ffe9ad;outline-offset:3px;}
+.quest-duration-slider small{display:block;font-size:12px;line-height:1.4;}
+.quest-send-feedback{color:#ffe9ad;font-size:13px;line-height:1.4;}
 .quest-duration-choice{min-width:0;padding:7px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.3);color:var(--text2);text-align:left;}
 .quest-duration-choice.selected{border-color:var(--accent);background:rgba(214,168,79,.18);box-shadow:0 0 12px rgba(214,168,79,.2);}
 .quest-duration-choice strong{display:block;color:#ffe9ad;font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.05;}
@@ -5673,7 +5679,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
-<script src="academy_treehouse_core.js?v=opening-home-v416-20260914"></script>
+<script src="academy_treehouse_core.js?v=expedition-duration-v455-20260923"></script>
 <script src="academy_alive_core.js?v=opening-home-v416-20260914"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="manga_render_core.js?v=continuous-world-v391-20260910"></script>
@@ -6930,9 +6936,9 @@ function academySleepStatusHTML(bird, now = Date.now()) {
 function isMerlinCompanion(bird) {
   return !!bird && bird.id === 'merlin-guide';
 }
-function merlinExpeditionSlowFactor(now = Date.now()) {
+function merlinExpeditionSlowFactor(now = Date.now(), careSnapshot) {
   const core = dietHungerCore();
-  const care = typeof getMerlinCare === 'function' ? getMerlinCare() : (gameState && gameState.merlinCare);
+  const care = careSnapshot === undefined ? (typeof getMerlinCare === 'function' ? getMerlinCare() : (gameState && gameState.merlinCare)) : careSnapshot;
   const status = core && typeof core.hungerStatusForCare === 'function'
     ? core.hungerStatusForCare(care, now)
     : { warnsWork:(Number(care && care.hunger) || 0) >= 70 };
@@ -12489,11 +12495,11 @@ function empirePostTitleFor(scope, key) {
 
 // Who holds this post, and how well they hold it. `staffed:false` means the
 // building works exactly as it always did — a posting is upside only.
-function rolePostState(scope, key) {
+function rolePostState(scope, key, rolesSnapshot) {
   const core = birdRolesCore();
   const role = roleDefFor(scope, key);
   if (!core || !role) return { role:null, bird:null, staffed:false, aptitude:0, multiplier:1, bonusPct:0, rank:null };
-  const birdId = core.assignedBirdId(ensureRolesState(), scope, key);
+  const birdId = core.assignedBirdId(rolesSnapshot === undefined ? ensureRolesState() : rolesSnapshot, scope, key);
   const bird = birdId ? (gameState.flock || []).find(b => b && b.id === birdId) : null;
   if (!bird) return { role, bird:null, staffed:false, aptitude:0, multiplier:1, bonusPct:0, rank:null };
   return { ...core.roleEffectiveness(bird, role), role, bird };
@@ -12974,9 +12980,9 @@ Object.assign(window, {
 
 // ---- Carrying, applied to expeditions ---------------------------------------
 // The Quartermaster plans the trip: better planning, heavier payout.
-function applyQuartermasterPlanning(quest) {
+function applyQuartermasterPlanning(quest, multiplier) {
   if (!quest || !quest.rewards) return quest;
-  const mult = academyRoleMultiplier('quest_roost');
+  const mult = multiplier === undefined ? academyRoleMultiplier('quest_roost') : multiplier;
   if (mult <= 1) return quest;
   quest.rewards.coins = Math.round((Number(quest.rewards.coins) || 0) * mult);
   quest.rewards.branches = Math.round((Number(quest.rewards.branches) || 0) * mult);
@@ -12988,10 +12994,10 @@ function applyQuartermasterPlanning(quest) {
 // …and the bird's own back decides how much of the plan comes home. A giant
 // hauls nearly double a mid-sized bird's load; a goldcrest manages one unit and
 // leaves the rest where it found it.
-function applyExpeditionCarryLimit(quest, bird) {
+function applyExpeditionCarryLimit(quest, bird, carryBonusSnapshot) {
   const core = birdSizeCore();
   if (!core || !quest || !quest.rewards) return quest;
-  const carryBonus = Math.max(0, Number(birdGearBonuses(bird).carryBonus) || 0);
+  const carryBonus = Math.max(0, Number(carryBonusSnapshot === undefined ? birdGearBonuses(bird).carryBonus : carryBonusSnapshot) || 0);
   const carried = core.applyCarryLimit(quest.rewards, bird, carryBonus);
   quest.rewards.branches = carried.branches;
   quest.rewards.items = carried.items;
@@ -15321,7 +15327,7 @@ function renderBirdExpeditions() {
     const locked = t.starter !== true && !roostBuilt;
     const info = QUEST_TEMPLATE_INFO[t.id] || 'A quest for a capable bird.';
     const durationOptions = t.tutorial === true ? [] : window.BurbzAcademyCore.getQuestDurationOptions(t.id);
-    const durationBadge = durationOptions.length ? '5m–24h' : questDurationLabel(t.minutes);
+    const durationBadge = durationOptions.length ? '1 min–1 day' : questDurationLabel(t.minutes);
     const branchHint = (t.branches && t.branches[1] > 0) ? ' · ~' + t.branches[0] + '–' + t.branches[1] + ' 🪵' : '';
     const stoneHint = (t.stone && t.stone[1] > 0) ? ' · ~' + t.stone[0] + '–' + t.stone[1] + ' 🪨' : '';
     // Show the food an errand actually brings home. The hunting quests exist
@@ -15335,7 +15341,7 @@ function renderBirdExpeditions() {
       if (mats.length) matHint = ' · ' + mats.slice(0, 3).map(m => m.icon + ' ' + m.label).join(', ');
     } catch (e) {}
     const rewardHint = durationOptions.length
-      ? '7 durations · includes an 8h bedtime quest · quick runs pay best per hour' + foodHint + matHint + stoneHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
+      ? 'Choose duration and bird to preview loot · longer flights offer larger hauls, limited by carrying space' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '')
       : '~' + t.coins[0] + '–' + t.coins[1] + ' 🪙' + branchHint + stoneHint + ' · +' + (t.xp || 0) + ' XP' + foodHint + matHint + (t.chaWeight ? ' · 🕊️ CHA pays' : '');
     return '<div class="quest-board-card' + (locked ? ' locked' : '') + '"' + (locked ? '' : ' onclick="openQuestSend(\'' + t.id + '\')"') + '>' +
       '<div class="quest-board-icon">' + t.icon + '</div>' +
@@ -15601,6 +15607,61 @@ function openQuestSend(templateId) {
   renderQuestSendSheet();
 }
 
+function questSendDurationLabel(minutes) {
+  if (minutes < 1) return questDurationLabel(minutes);
+  if (minutes === 1440) return '1 day';
+  if (minutes < 60) return minutes + (minutes === 1 ? ' minute' : ' minutes');
+  return (minutes / 60) + (minutes === 60 ? ' hour' : ' hours');
+}
+
+function questSendPreviewText() {
+  const t = getExpeditionTemplate(questSendState.templateId);
+  if (!t) return '';
+  if (t.tutorial === true) return questDurationLabel(t.minutes) + ' · One-time Kitchen supply delivery';
+  const now = Date.now();
+  // Rendering must not finish/save naps, reconcile roles/careers/empire, or
+  // create equipment slots. Feed detached snapshots to the shared calculations.
+  const bird = questSendState.birdId === MERLIN_GUIDE.id
+    ? { ...MERLIN_GUIDE, care:MERLIN_CORE.completeMerlinRest(gameState.merlinCare, now) }
+    : questSendState.birdId ? academyBirdById(questSendState.birdId) : null;
+  if (!bird) return 'Choose a bird to preview its coins, XP and carrying limit. Finds are random.';
+  const preview = window.BurbzAcademyCore.getBirdExpeditionPreview(bird, t.id, {
+    durationMinutes: questSendState.durationMinutes, nightBonus: nocturnalNightBonusFor(bird, now)
+  });
+  if (!preview) return '';
+  const rolesCore = birdRolesCore();
+  const roles = rolesCore ? rolesCore.pruneRoleState(gameState.birdRoles, (gameState.flock || []).map(b => b && b.id).filter(Boolean)) : {};
+  const multiplier = rolePostState('academy', 'quest_roost', roles).multiplier || 1;
+  const loadout = gameState.inventory?.equipment?.[bird.id] || {};
+  const carryBonus = Number(birdGearBonuses(bird, loadout).carryBonus) || 0;
+  // Use the dispatch wrappers on disposable bounds, never a saved job. Empty
+  // item bags give an honest timber ceiling; actual finds share that hold.
+  const bounds = [0, 1].map(i => applyExpeditionCarryLimit(applyQuartermasterPlanning({rewards:{
+    coins:preview.coins[i], branches:preview.branches[i], stone:preview.stone[i], xp:preview.xp, items:{}
+  }}, multiplier), bird, carryBonus));
+  const low = bounds[0].rewards, high = bounds[1].rewards, carry = bounds[1].carry;
+  const slow = bird.id === MERLIN_GUIDE.id ? merlinExpeditionSlowFactor(now, bird.care) : 1;
+  return questSendDurationLabel(preview.minutes) + (slow > 1 ? ' · hungry flight: ' + questSendDurationLabel(preview.minutes * slow) : '') +
+    ' · ' + low.coins + '–' + high.coins + ' coins · +' + preview.xp + ' XP' +
+    (high.branches > 0 ? ' · up to ' + high.branches + ' timber' : '') +
+    (high.stone > 0 ? ' · ' + low.stone + '–' + high.stone + ' stone' : '') +
+    ' · ' + preview.itemRolls[0] + '–' + preview.itemRolls[1] + ' random finds before carrying limits' +
+    (carry ? ' · Carry capacity ' + carry.capacity + ' units, shared by timber and finds. Sizes, rounding and shared space can change the mix; maxima are not guaranteed together.' : ' · Timber and finds share carrying space.');
+}
+
+function updateQuestSendPreview() {
+  const label = questSendDurationLabel(questSendState.durationMinutes);
+  const slider = document.getElementById('questDurationSlider');
+  if (slider) {
+    slider.value = String(window.BurbzAcademyCore.QUEST_DURATION_MINUTES.indexOf(Number(questSendState.durationMinutes)));
+    slider.setAttribute('aria-valuetext', label);
+  }
+  const output = document.getElementById('questDurationOutput');
+  if (output) output.textContent = label;
+  const preview = document.getElementById('questSendPreview');
+  if (preview) preview.textContent = questSendPreviewText();
+}
+
 function renderQuestSendSheet() {
   const t = getExpeditionTemplate(questSendState.templateId);
   if (!t) return;
@@ -15614,21 +15675,7 @@ function renderQuestSendSheet() {
   const birds = freeBirdsFirst(dispatchBirds.filter(b => b.id === MERLIN_GUIDE.id || !sleepReadinessForBird(b, Date.now()).sleeping));
   const info = QUEST_TEMPLATE_INFO[t.id] || '';
   const durationOptions = t.tutorial === true ? [] : window.BurbzAcademyCore.getQuestDurationOptions(t.id);
-  const selectedDuration = durationOptions.find(o => o.minutes === Number(questSendState.durationMinutes)) || null;
-  const durationChoices = durationOptions.map(o => {
-    const selected = selectedDuration && selectedDuration.minutes === o.minutes ? ' selected' : '';
-    const branchLine = o.branches && o.branches[1] > 0 ? ' · ' + o.branches[0] + '–' + o.branches[1] + ' 🪵' : '';
-    const stoneLine = o.stone && o.stone[1] > 0 ? ' · ' + o.stone[0] + '–' + o.stone[1] + ' 🪨' : '';
-    const findLine = o.expectedItemRolls >= 1 ? ' · ~' + (Math.round(o.expectedItemRolls * 10) / 10) + ' finds' : ' · chance of a find';
-    return '<button type="button" class="quest-duration-choice' + selected + '" onclick="selectQuestDuration(' + o.minutes + ')">' +
-      '<strong>' + questDurationLabel(o.minutes) + '</strong>' +
-      '<span>~' + o.coins[0] + '–' + o.coins[1] + ' 🪙' + branchLine + stoneLine + ' · +' + o.xp + ' XP' + findLine + '</span></button>';
-  }).join('');
-  const selectedCoins = selectedDuration ? selectedDuration.coins : t.coins;
-  const selectedBranches = selectedDuration ? selectedDuration.branches : t.branches;
-  const selectedStone = selectedDuration ? selectedDuration.stone : t.stone;
-  const selectedXp = selectedDuration ? selectedDuration.xp : (t.xp || 0);
-  const selectedMinutes = selectedDuration ? selectedDuration.minutes : t.minutes;
+
 
   const birdChips = birds.length ? birds.map(b => {
     const assignedPost = birdAssignedPost(b.id);
@@ -15660,25 +15707,35 @@ function renderQuestSendSheet() {
     '<button class="quest-overlay-close" onclick="closeQuestOverlay()">✕</button>' +
     '<div class="quest-overlay-head"><span class="quest-overlay-icon">' + t.icon + '</span>' +
       '<div><div class="quest-overlay-title">' + escapeHtml(t.label) + '</div>' +
-      '<div class="quest-overlay-sub">' + questDurationLabel(selectedMinutes) + ' · ~' + selectedCoins[0] + '–' + selectedCoins[1] + ' 🪙' + ((selectedBranches && selectedBranches[1] > 0) ? ' · ~' + selectedBranches[0] + '–' + selectedBranches[1] + ' 🪵' : '') + ((selectedStone && selectedStone[1] > 0) ? ' · ~' + selectedStone[0] + '–' + selectedStone[1] + ' 🪨' : '') + ' · +' + selectedXp + ' XP</div></div></div>' +
+      '<div class="quest-overlay-sub" id="questSendPreview" aria-live="polite" aria-atomic="true"></div></div></div>' +
     '<div class="quest-overlay-copy">' + escapeHtml(info) + (t.chaWeight ? ' <span class="quest-overlay-hint">🕊️ A diplomacy quest — birds with high Charm (CHA) talk their way into bonus coins and extra finds. A robin\'s work, not an eagle\'s.</span>' : '') +
       (isNightRightNow() ? ' <span class="quest-overlay-hint">🌙 It\'s night — any bird can fly, but a nocturnal bird (an owl, say) earns the Night Hunter bonus: TRIPLE coins and XP, double timber and two guaranteed extra finds.</span>' : '') + '</div>' +
-    (durationOptions.length ? '<div class="quest-overlay-label">Choose duration</div><div class="quest-duration-grid">' + durationChoices + '</div>' : '') +
+    (durationOptions.length ? '<div class="quest-duration-slider"><label for="questDurationSlider">Choose duration <output id="questDurationOutput" for="questDurationSlider"></output></label>' +
+      '<input id="questDurationSlider" type="range" min="0" max="' + (durationOptions.length - 1) + '" step="1" aria-describedby="questDurationHelp">' +
+      '<small id="questDurationHelp">1–15 minutes, then 30 minutes, 1, 2, 4, 8, 12 hours and 1 day. Longer flights offer more loot; carrying space still applies.</small></div>' : '') +
     '<div class="quest-overlay-label">Choose a bird</div>' +
     '<div class="quest-bird-row">' + birdChips + '</div>' +
 
+    '<div id="questSendFeedback" class="quest-send-feedback" role="status"></div>' +
     '<button type="button" class="quest-send-btn" id="questSendBtn" ' + (questSendState.birdId ? '' : 'disabled') + ' onclick="confirmQuestSend()">' +
       (questSendState.birdId ? '🧭 SEND ON QUEST' : 'PICK A BIRD FIRST') + '</button>' +
   '</div>';
   el.classList.add('open');
+  const slider = document.getElementById('questDurationSlider');
+  if (slider) slider.addEventListener('input', () => {
+    const index = Number(slider.value);
+    if (Number.isInteger(index) && durationOptions[index]) selectQuestDuration(durationOptions[index].minutes);
+  });
+  updateQuestSendPreview();
 }
 
 function selectQuestDuration(minutes) {
+  if (typeof minutes !== 'number' && typeof minutes !== 'string') return;
   const options = window.BurbzAcademyCore.getQuestDurationOptions(questSendState.templateId);
   if (!options.some(o => o.minutes === Number(minutes))) return;
-  SFX.tap();
   questSendState.durationMinutes = Number(minutes);
-  renderQuestSendSheet();
+  // Do not replace the range while it owns a pointer or keyboard focus.
+  updateQuestSendPreview();
 }
 
 function selectQuestBird(birdId) {
@@ -15691,7 +15748,17 @@ function selectQuestBird(birdId) {
 
 function confirmQuestSend() {
   if (!questSendState.birdId || !questSendState.templateId) return;
+  // The wrapped dispatcher has legacy void returns. Only a newly committed
+  // banked job proves success; blocked work and rolled-back saves keep Retry.
+  const previous = new Set((gameState.birdExpeditions || []).map(q => q.id));
   startBirdExpedition(questSendState.birdId, questSendState.templateId, { durationMinutes: questSendState.durationMinutes });
+  const sent = (gameState.birdExpeditions || []).some(q => !previous.has(q.id) &&
+    q.birdId === questSendState.birdId && q.templateId === questSendState.templateId && q.status === 'active');
+  if (!sent) {
+    const feedback = document.getElementById('questSendFeedback');
+    if (feedback) feedback.textContent = 'Not sent. Review the care or save message, then try again.';
+    return;
+  }
   closeQuestOverlay();
   renderQuests();
 }
@@ -22813,9 +22880,9 @@ function burbzForgeLevel() {
   catch (e) { return Math.max(1, Math.min(5, Math.round(Number(raw)) || 1)); }
 }
 
-function birdGearBonuses(bird) {
+function birdGearBonuses(bird, loadoutSnapshot) {
   // Gear fights at the forge's level: upgrade the forge, level up the armoury.
-  try { return lootCore().equipmentBonuses(birdLoadout(bird && bird.id), { gearLevel: burbzForgeLevel() }); }
+  try { return lootCore().equipmentBonuses(loadoutSnapshot === undefined ? birdLoadout(bird && bird.id) : loadoutSnapshot, { gearLevel: burbzForgeLevel() }); }
   catch (e) { return {}; }
 }
 
@@ -45174,7 +45241,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'gold-trail-raven-v454-20260923';
+const BURBZ_BUILD = 'expedition-duration-v455-20260923';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
