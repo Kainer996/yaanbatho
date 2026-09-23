@@ -154,7 +154,7 @@ def _confirmed_species_result(raw, path, model_name="", subject_box=None):
         if not _same_taxon(raw, alternative) and confidence-_score(alternative["confidence"]) < MIN_MARGIN - 1e-9:
             return _abstain("ambiguous-species",model_name)
     evidence=raw.get("evidence")
-    if not isinstance(evidence,dict) or evidence.get("liveBird") is not True or evidence.get("quality") not in ("clear", "blurred", "obscured") or evidence.get("diagnosticDetailsVisible") is not True:
+    if not isinstance(evidence,dict) or evidence.get("liveBird") is not True or evidence.get("quality") not in ("clear", "blurred", "obscured", "silhouette") or evidence.get("diagnosticDetailsVisible") is not True:
         return _abstain("unclear-subject",model_name)
     features=evidence.get("diagnosticFeatures")
     if not isinstance(features,list) or len([f for f in features if isinstance(f,str) and len(f.strip())>=8]) < 2:
