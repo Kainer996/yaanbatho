@@ -566,7 +566,20 @@
       }
       return result || { status: 'failed' };
     }
+    let pendingEntry = null, nativeGeneration = 0;
+    function cancelPending() { nativeGeneration++; pendingEntry = null; }
     function openEntry(entryId, choice) {
+      if (pendingEntry) return pendingEntry;
+      const result = openEntryNow(entryId, choice);
+      if (result && typeof result.then === 'function') {
+        const pending = result.finally(() => { if (pendingEntry === pending) pendingEntry = null; });
+        pendingEntry = pending;
+        return pendingEntry;
+      }
+      return result;
+    }
+    function openEntryNow(entryId, choice) {
+      const generation = nativeGeneration;
       choice = Object.assign({ choiceId: 'open' }, choice || {});
       const beforeEntry = entryById(entryId);
       if (!beforeEntry) {
@@ -581,11 +594,16 @@
         emit('entry-failed', { entryId, result });
         return result;
       }
+      const fix = options.getPrecisePosition?.() || null;
+      const observed = stateCore.observeDestinationEncounters(rootState(), fix, adapter(), guard());
+      if (!['committed', 'unchanged'].includes(observed.status)) return observed;
+      const gate = stateCore.encounterGate(rootState(), entryId, fix, nowValue(options));
+      if (!gate.ready) return { status: 'not-discovered', reason: gate.reason };
       const expectedRoot = rootState(), expectedProfile = profileFrom(options, expectedRoot), expectedQuest = activeQuest()?.id;
       let nativePreparation;
       const cleanupNative=()=>{if(nativePreparation?.close)nativePreparation.close();else options.nativeFailed?.(beforeEntry);};
       const commit = () => {
-      if (rootState() !== expectedRoot || profileFrom(options, rootState()) !== expectedProfile || activeQuest()?.id !== expectedQuest) return { status: 'stale-native' };
+      if (generation !== nativeGeneration || rootState() !== expectedRoot || profileFrom(options, rootState()) !== expectedProfile || activeQuest()?.id !== expectedQuest) return { status: 'stale-native' };
       const result = stateCore.applyDestinationEncounter(rootState(), entryId, choice, adapter(), guard());
       const okToShow = result && (result.status === 'committed' || result.status === 'duplicate');
       if (okToShow) {
@@ -643,6 +661,7 @@
       entries,
       finishWalk,
       openEntry,
+      cancelPending,
       completeQuest
     };
   }
@@ -888,7 +907,7 @@
       const entries = timelineController.entries();
       return entries.map(entry => '<button type="button" class="destination-entry-row" data-destination-entry="' + escapeHtml(entry.id) + '">' +
         '<span>' + escapeHtml(entry.kind) + '</span><b>' + escapeHtml(entry.label || entry.name || entry.commonName || entry.species || 'Destination stop') + '</b>' +
-        '<em>' + escapeHtml(entry.receipt || entry.receiptId ? 'Saved' : distanceLabel(entry.route && entry.route.distanceM)) + '</em></button>').join('') ||
+        '<em>' + escapeHtml((options.stateCore || root.BurbzDestinationStateCore).encounterGate(rootStateFrom(options),entry.id,null).ready ? (entry.receipt || entry.receiptId ? 'Saved · revisit' : 'Discovered · revisit') : 'Not reached') + '</em></button>').join('') ||
         '<p>No banked entries found. Reopen after the saved plan reloads.</p>';
     }
     function renderArchiveTimeline() {
@@ -918,7 +937,7 @@
       const loot = Array.isArray(quote.loot) && quote.loot.length ? quote.loot.map(item => escapeHtml(item.id) + ' x' + Math.max(1, Number(item.qty) || 1)).join(', ') : 'No loot';
       return '<section class="destination-active-panel" data-destination-phase="' + escapeHtml(active.phase || '') + '">' +
         '<h3>' + escapeHtml(isReview ? 'Story review' : 'Pocket walk plan') + '</h3>' +
-        '<p class="destination-guidance">' + escapeHtml(isReview ? 'Review every saved stop in route order. You can leave and come back; completion only happens when you choose it.' : 'Pocket your phone: nearby loot is gathered automatically inside your yellow circle. Keep location active; if your phone pauses it, gathering resumes when you reopen. Take any accessible way to your destination.') + '</p>' +
+        '<p class="destination-guidance">' + escapeHtml(isReview ? 'Review every saved stop in route order. You can leave and come back; completion only happens when you choose it.' : 'Pocket your phone: nearby loot is gathered automatically inside your yellow circle. Keep location active; if your phone pauses it, gathering resumes when you reopen. Discovered stops can be revisited while seated using Explore map or this list. Unseen stops still need a nearby GPS visit.') + '</p>' +
         '<div class="destination-preview-grid destination-payment-grid"><div><span>XP</span><b>+' + Math.round(Number(quote.xp) || 0) + '</b></div><div><span>Coins</span><b>+' + Math.round(Number(quote.coins) || 0) + '</b></div><div><span>Loot</span><b>' + escapeHtml(loot) + '</b></div></div>' +
         '<div class="destination-actions destination-timeline-actions">' +
         (isReview ? '<button type="button" data-destination-complete>Complete & claim</button>' : '<button type="button" data-destination-finish>Finish my walk</button>') +
@@ -1058,7 +1077,7 @@
     async function openNativeEntry(entryId, choice) {
       const result = await timelineController.openEntry(entryId, choice || { choiceId: 'open' });
       if (result && !['committed', 'duplicate'].includes(result.status)) {
-        showToast('Destination stop could not save: ' + (result.status || 'failed'));
+        showToast(result.status === 'not-discovered' ? (result.reason || 'Walk within 45 m to discover this stop first.') : 'Destination stop could not save: ' + (result.status || 'failed'));
       }
       render();
       return result;
@@ -1101,7 +1120,7 @@
     }
     function closePlanner(opts) {
       opts = opts || {};
-      if(!opts.keepActive)options.onClose?.();
+      if(!opts.keepActive) { timelineController.cancelPending(); options.onClose?.(); }
       cleanupMapPick();
       if (!opts.keepActive) controller.cancel('planner-closed');
       if (sheet) sheet.classList.remove('open');

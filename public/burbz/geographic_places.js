@@ -12,7 +12,14 @@
   function close(){if(card.hidden)return false;selected=null;card.hidden=true;pending=false;generation++;return true;}
   card.querySelector('.gp-close').addEventListener('click',close,{signal:abort.signal});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!state.inside&&close()){e.preventDefault();e.stopImmediatePropagation();}if(e.key==='Tab'&&!card.hidden&&!state.inside){const first=card.querySelector('.gp-close'),last=button.disabled?first:button;if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}},{capture:true,signal:abort.signal});
-  function paint(){if(!selected||card.hidden)return;const gate=core.arrival(selected,options.getPosition());
+  const gateFor=place=>core.entryGate(place,options.getPosition(),options.data());
+  function rememberNearby(){
+   const data=options.data()||{},fix=options.getPosition(),near=state.places.filter(p=>!core.entryGate(p,null,data).ready&&core.arrival(p,fix).ready);
+   if(!near.length)return;
+   const discovered={...data.discovered};near.forEach(p=>{discovered[p.id]={lat:p.lat,lon:p.lon,at:fix.at};});
+   try{commit({...data,discovered});}catch(error){state.error=error.message;}
+  }
+  function paint(){if(!selected||card.hidden)return;const gate=gateFor(selected);
    card.querySelector('h3').textContent=selected.name;
    card.querySelector('.gp-description').textContent=selected.type==='waterfall'?'A cascade at this mapped waterfall.':'A fictional Alderwing stop beside a mapped walking path. Explore its furnished room when you arrive.';
    status.textContent=entryError||(gate.distance==null?'':gate.distance+' m away · ')+gate.reason+(options.data()?.visited?.[selected.id]?' · Visited':'');
@@ -21,27 +28,29 @@
   function select(place){if(state.inside)return;entryError='';selected=place;card.hidden=false;paint();card.querySelector('.gp-close').focus({preventScroll:true});}
   function commit(next){if(!options.save(next))throw Error('Could not save this visit. Please try again.');}
   function disposeRoom(){if(roomSource){roomSource.renderer.dispose();roomSource.renderer.forceContextLoss();roomSource=null;}roomHost?.remove();roomHost=null;}
-  async function enter(){if(pending||!selected||!core.arrival(selected,options.getPosition()).ready||root.BurbzVillageWalk?.isOpen())return;
-   const place=selected,token=++generation;entryError='';pending=true;paint();
-   try{await options.loadWalk();if(disposed||token!==generation||selected!==place||!options.isVisible()||root.BurbzVillageWalk.isOpen())return;
-    if(!core.arrival(place,options.getPosition()).ready)throw Error('Your position changed. Move close to the door to enter.');
+  async function enter(){if(pending||!selected||!gateFor(selected).ready||root.BurbzVillageWalk?.isOpen())return;
+   const place=selected,token=++generation,owner=options.getOwner?.();
+   const current=()=>!disposed&&token===generation&&owner===options.getOwner?.();entryError='';pending=true;paint();
+   try{await options.loadWalk();if(!current()||selected!==place||!options.isVisible()||root.BurbzVillageWalk.isOpen())return;
+    if(!gateFor(place).ready)throw Error('Your position changed. Move close to the door to enter.');
     const target={scope:'geographic',buildingId:place.type,seed:place.seed,homeId:place.id};
     cameraReturn={center:map.getCenter(),zoom:map.getZoom(),pitch:map.getPitch(),bearing:map.getBearing()};
-    ownsWalk=true;root.BurbzVillageWalk.open({name:place.name,character:options.character,room:target,opener:button,
+    ownsWalk=true;await root.BurbzVillageWalk.open({name:place.name,character:options.character,room:target,opener:button,
      source:()=>{
-      if(disposed||token!==generation||!core.arrival(place,options.getPosition()).ready||!options.isVisible())throw Error('A fresh nearby GPS fix is needed to open this door.');
+      if(!current()||!gateFor(place).ready||!options.isVisible())throw Error('A fresh nearby GPS fix is needed to open this door.');
       const T=root.THREE;roomHost=document.createElement('div');roomHost.hidden=true;document.body.append(roomHost);
       const renderer=new T.WebGLRenderer({antialias:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(1.25,devicePixelRatio||1));renderer.setSize(390,600);roomHost.append(renderer.domElement);
       return roomSource={scene:new T.Scene(),renderer,camera:new T.PerspectiveCamera(68,390/600,.08,110),buildings:[],movers:[]};
      },
-     interiors:{describe:t=>t.homeId===place.id&&core.arrival(place,options.getPosition()).ready?{name:place.name}:null},
+     interiors:{describe:t=>current()&&t.homeId===place.id&&gateFor(place).ready?{name:place.name}:null},
      suspend:()=>{
+      if(!current()||!gateFor(place).ready)throw Error('This visit is no longer available.');
       const data=options.data()||{},visited={...data.visited,[place.id]:Date.now()};
       const entries=Object.entries(visited).sort((a,b)=>b[1]-a[1]).slice(0,240);commit({...data,visited:Object.fromEntries(entries)});
       state.inside=true;card.hidden=true;options.refreshMap();
      },
      resume:(reason)=>{ownsWalk=false;disposeRoom();state.inside=false;pending=false;
-      if(!disposed&&options.isVisible()&&!['navigation','pagehide'].includes(reason)){map.jumpTo(cameraReturn);selected=place;card.hidden=false;paint();}options.refreshMap();scene.refresh();}
+      if(current()&&options.isVisible()&&!['navigation','pagehide'].includes(reason)){map.jumpTo(cameraReturn);selected=place;card.hidden=false;paint();}options.refreshMap();scene.refresh();}
     });
    }catch(error){disposeRoom();entryError=state.error=error.message;status.textContent=error.message;}
    finally{pending=false;if(!root.BurbzVillageWalk?.isOpen())paint();}
@@ -75,20 +84,24 @@
     state.grass=grass.length;grassDirty=false;draw();
    }catch(error){state.error=error.message;}
   }
-  async function update(){paint();refreshQuestObjects();if(!visible())return;const p=options.getPosition();if(!core.valid(p))return;
+  function retained(){const data=options.data()||{};return (data.catalogue||[]).filter(p=>core.entryGate(p,null,data).ready).slice(0,240);}
+  async function update(){rememberNearby();paint();refreshQuestObjects();if(!visible())return;
+   const keep=retained(),ids=new Set(state.places.map(p=>p.id));if(keep.some(p=>!ids.has(p.id))){state.places=[...new Map([...state.places,...keep.filter(p=>p.type!=='waterfall')].map(p=>[p.id,p])).values()];draw();}
+   const p=options.getPosition();if(!core.valid(p))return;
    // GPS often arrives after map construction. Restore saved nearby places
    // before a provider request, including when that request is unavailable.
-   const saved=(options.data()?.catalogue||[]).filter(r=>core.valid(r)&&core.distance(r,p)<1800&&['cabin','hut','chapel','storehouse','waterfall'].includes(r.type));
-   const known=new Set([...state.places,...state.falls].map(r=>r.id));if(saved.some(r=>!known.has(r.id))){state.places=[...new Map([...state.places,...saved.filter(r=>r.type!=='waterfall')].map(r=>[r.id,r])).values()].filter(r=>core.distance(r,p)<1800).slice(0,12);state.falls=[...new Map([...state.falls,...saved.filter(r=>r.type==='waterfall')].map(r=>[r.id,r])).values()].filter(r=>core.distance(r,p)<1800).slice(0,8);draw();}
+   const saved=(options.data()?.catalogue||[]).filter(r=>core.valid(r)&&(core.entryGate(r,null,options.data()).ready||core.distance(r,p)<1800)&&['cabin','hut','chapel','storehouse','waterfall'].includes(r.type));
+   const known=new Set([...state.places,...state.falls].map(r=>r.id));if(saved.some(r=>!known.has(r.id))){state.places=[...new Map([...state.places,...saved.filter(r=>r.type!=='waterfall')].map(r=>[r.id,r])).values()].filter(r=>core.entryGate(r,null,options.data()).ready||core.distance(r,p)<1800).slice(0,240);state.falls=[...new Map([...state.falls,...saved.filter(r=>r.type==='waterfall')].map(r=>[r.id,r])).values()].filter(r=>core.distance(r,p)<1800).slice(0,8);draw();}
    if(state.loading||Date.now()<retryAt)return;
    if(lastQuery&&core.distance(p,lastQuery)<600&&Date.now()-lastQuery.at<300000)return;
    lastQuery={...p,at:Date.now()};state.loading=true;
-   try{const data=await options.fetch(core.query(p,root.BurbzWalkingRouteCore));if(disposed)return;
+   const owner=options.getOwner?.();
+   try{const data=await options.fetch(core.query(p,root.BurbzWalkingRouteCore));if(disposed||owner!==options.getOwner?.())return;
     const parsed=core.parse(data,p,root.BurbzWalkingRouteCore);if(core.distance(p,options.getPosition())>600){lastQuery=null;return;}
-    state.places=parsed.places;state.falls=parsed.falls;state.error=null;
+    state.places=[...new Map([...retained().filter(p=>p.type!=='waterfall'),...parsed.places].map(p=>[p.id,p])).values()];state.falls=parsed.falls;state.error=null;
     const old=options.data()||{},catalogue=[...parsed.places,...parsed.falls,...(old.catalogue||[])];
     const records=new Map();for(const p of catalogue)if(!records.has(p.id))records.set(p.id,p);
-    const unique=[...records.values()].slice(0,240);commit({...old,catalogue:unique});draw();
+    const unique=[...records.values()].slice(0,240);commit({...old,catalogue:unique});rememberNearby();draw();
    }catch(error){state.error=error.message;lastQuery=null;retryAt=Date.now()+15000;}finally{state.loading=false;}
   }
   function movement(){grassDirty=true;meadow();syncBuildingTargets();}
@@ -99,8 +112,8 @@
   function visibility(){if(document.hidden)pointers.clear();if(!options.isVisible())close();else{update();meadow();}}
   map.on('moveend',movement);map.on('sourcedata',source);map.on('idle',meadow);document.addEventListener('visibilitychange',visibility,{signal:abort.signal});
   const observer=new MutationObserver(visibility);observer.observe(document.getElementById('screen-map')||container,{attributes:true,attributeFilter:['class','style']});
-  const data=options.data(),p=options.getPosition(),cached=(data?.catalogue||[]).filter(r=>core.valid(r)&&core.distance(r,p)<1800&&['cabin','hut','chapel','storehouse','waterfall'].includes(r.type));
-  state.places=cached.filter(r=>r.type!=='waterfall').slice(0,12);state.falls=cached.filter(r=>r.type==='waterfall').slice(0,8);draw();
+  const data=options.data(),p=options.getPosition(),cached=(data?.catalogue||[]).filter(r=>core.valid(r)&&(core.entryGate(r,null,data).ready||core.distance(r,p)<1800)&&['cabin','hut','chapel','storehouse','waterfall'].includes(r.type));
+  state.places=cached.filter(r=>r.type!=='waterfall').slice(0,240);state.falls=cached.filter(r=>r.type==='waterfall').slice(0,8);draw();
   function dispose(){if(disposed)return;disposed=true;generation++;if(ownsWalk)root.BurbzVillageWalk.close('navigation');disposeRoom();abort.abort();observer.disconnect();map.off('moveend',movement);map.off('sourcedata',source);map.off('idle',meadow);map.off('remove',dispose);for(const m of markers.values())m.remove();markers.clear();scene.dispose();card.remove();controllers.delete(map);}
   const api={state,scene:scene.state,update,refreshQuestObjects,close,dispose,get inside(){return state.inside;}};controllers.set(map,api);map.on('remove',dispose);update();return api;
  }

@@ -143,8 +143,8 @@ test('destination UI modules are registered as the Main Quest surface', () => {
     'destination_quest_ui.js',
     'destination_quest_ui.css'
   ]) {
-    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_quest_ui.css'].includes(file)?'gold-trail-raven-v454-20260923':file==='destination_route_core.js'?'red-gold-pocket-v437-20260921':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
-    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_quest_ui.css'].includes(file)?'gold-trail-raven-v454-20260923':file==='destination_route_core.js'?'red-gold-pocket-v437-20260921':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
+    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_state_core.js'].includes(file)?'quest-revisit-v457-20260923':file==='destination_quest_ui.css'?'gold-trail-raven-v454-20260923':file==='destination_route_core.js'?'red-gold-pocket-v437-20260921':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
+    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_state_core.js'].includes(file)?'quest-revisit-v457-20260923':file==='destination_quest_ui.css'?'gold-trail-raven-v454-20260923':file==='destination_route_core.js'?'red-gold-pocket-v437-20260921':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
     assert.ok(UPDATER.includes('"' + file + '"'), file + ' updater pin');
   }
   assert.ok(/id="mapQuestShowBtn"[\s\S]*Main Quests/.test(INDEX), 'map primary quest entry should say Main Quests');
@@ -389,6 +389,8 @@ test('destination timeline controller shares during-walk receipts and unlocks ac
   });
   const firstWalkBirds = root.destinationQuests.active.entries.filter(entry => entry.kind === 'bird');
   assert.equal(firstWalkBirds.length, 2);
+  // Active interactions now require a genuine nearby fix (simulated here).
+  stateCore.observeDestinationEncounters(root, { ...firstWalkBirds[0].route, accuracy:5, at:Date.now() }, adapter);
   const duringWalk = controller.openEntry(firstWalkBirds[0].id, { choiceId: 'during-walk-meet', phase: 'active' });
   assert.equal(duringWalk.status, 'committed');
   assert.equal(duringWalk.value.phase, 'active');
@@ -413,6 +415,7 @@ test('destination timeline controller shares during-walk receipts and unlocks ac
     nativeHandlers: { meetCommonSpecies: entry => nativeCalls.push(entry.id) }
   });
   const thirdWalkBird = root.destinationQuests.active.entries.find(entry => entry.kind === 'bird');
+  stateCore.observeDestinationEncounters(root, { ...thirdWalkBird.route, accuracy:5, at:Date.now() }, adapter);
   const third = secondController.openEntry(thirdWalkBird.id, { choiceId: 'third-walk-meet', phase: 'active' });
   assert.equal(third.status, 'committed');
   assert.equal(third.value.meeting.count, 3);
