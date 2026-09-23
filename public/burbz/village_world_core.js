@@ -11,6 +11,13 @@ function chunks(x,z,rings=RINGS){const cx=Math.floor(x/CHUNK),cz=Math.floor(z/CH
 function mercator(origin){return{x:(origin.lon+180)/360,z:(1-Math.log(Math.tan(Math.PI/4+origin.lat*Math.PI/360))/Math.PI)/2,scale:EARTH*Math.cos(origin.lat*Math.PI/180)};}
 function elevation(tiles,origin,x,z){const m=origin.scale?origin:mercator(origin),mx=m.x+x/m.scale,my=m.z+z/m.scale;for(const tile of tiles){const n=2**tile.z,tx=((mx*n)%n+n)%n,ty=my*n;if(Math.floor(tx)!==tile.x||Math.floor(ty)!==tile.y)continue;const d=tile.dem,fx=(tx-tile.x)*d.dim,fy=(ty-tile.y)*d.dim,ix=Math.floor(fx),iy=Math.floor(fy),dx=fx-ix,dy=fy-iy;try{const h=d.get(ix,iy)*(1-dx)*(1-dy)+d.get(ix+1,iy)*dx*(1-dy)+d.get(ix,iy+1)*(1-dx)*dy+d.get(ix+1,iy+1)*dx*dy;if(Number.isFinite(h))return h;}catch(_){}}return null;}
 function joinedHeight(x,z,{radius,blend=64,authored,raw,datum}){const d=Math.hypot(x,z);if(d<=radius)return authored(x,z);const h=raw(x,z);if(!Number.isFinite(h)||!Number.isFinite(datum))return null;const t=smooth((d-radius)/blend);return authored(x,z)*(1-t)+(h-datum)*t;}
+// The home alters only its bounded plot; its terrain and scenery share this
+// function. Unknown ground remains unknown even beneath the flat foundation.
+function homeHeight(x,z,home,height){if(!Number.isFinite(height))return null;const d=Math.hypot(x-home.x,z-home.z);if(d>=home.blendRadius)return height;const t=smooth((d-home.radius)/(home.blendRadius-home.radius));return home.base*(1-t)+height*t;}
+// Sample the same globally aligned two-metre triangles as groundMesh/meshHeight,
+// including before those chunks are streamed in. Do not use analytic heights
+// for props on a piecewise-planar rendered surface.
+function sampleGround(x,z,height){const x0=Math.floor(x/STEP)*STEP,z0=Math.floor(z/STEP)*STEP,fx=(x-x0)/STEP,fz=(z-z0)/STEP,a=height(x0,z0),b=height(x0+STEP,z0),c=height(x0,z0+STEP),d=height(x0+STEP,z0+STEP);if(![a,b,c,d].every(Number.isFinite))return null;return fx+fz<=1?a+(b-a)*fx+(c-a)*fz:d+(c-d)*(1-fx)+(b-d)*(1-fz);}
 function trees(chunk,shift={x:0,z:0}){const rows=[],size=TREE_GRID;for(let gx=Math.floor((chunk.x+shift.x)/size);gx<=Math.floor((chunk.x+CHUNK+shift.x)/size);gx++)for(let gz=Math.floor((chunk.z+shift.z)/size);gz<=Math.floor((chunk.z+CHUNK+shift.z)/size);gz++){const x=(gx+.15+hash(gx,gz,71)*.7)*size-shift.x,z=(gz+.15+hash(gx,gz,113)*.7)*size-shift.z;if(x<chunk.x||x>=chunk.x+CHUNK||z<chunk.z||z>=chunk.z+CHUNK)continue;rows.push({id:'cw:'+gx+':'+gz,x,z,size:.75+hash(gx,gz,17)*.95,angle:hash(gx,gz,31)*Math.PI*2,kind:hash(gx,gz,47)<.6?'pines':'leafs',tone:hash(gx,gz,61)});}return rows;}
 // Sample the whole root footprint, not just the trunk's centre. Missing
 // neighbours are not permission to plant on an unverified cliff edge.
@@ -86,5 +93,5 @@ function ribbonMesh(cell,c,height,bank=false){
  }
  return {positions,uv,indices};
 }
-return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh};
+return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,homeHeight,sampleGround,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh};
 });

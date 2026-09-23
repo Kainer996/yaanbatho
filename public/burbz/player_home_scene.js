@@ -58,7 +58,7 @@ function createCommandDesk(T,{tier=1,aspect=1,deskZ=-3.45,aperture=false}={}){co
  }):new T.MeshBasicMaterial({color:0x527d70})));screen.position.set(0,screenSize.y,screenSize.z);screen.renderOrder=5;screen.userData.homeTarget='desk';scene.add(screen);targets.push(screen);
  scene.name='command-desk';return{group:scene,screen,screenSize,targets};
 }
-function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[];let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
+function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[],groundHeight=options.groundHeight||(()=>0);let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
  if(C.indoor(area)){
  const extra=C.ROOMS[area],layout=C.roomLayout(s),deskShift=layout.deskZ+3.45;
  const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:s.tier?'Your woodland home':'Your temporary shelter',scope:'player-home',shelter:s.tier===0,width:layout.width,depth:layout.depth,height:layout.height,accent:s.tier?0x709486:0x77736b,props:s.tier?[{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}]:[],spawn:{x:0,y:0,z:layout.spawnZ,yaw:0,pitch:0},exit:{x:0,z:layout.doorZ},action:null};
@@ -81,36 +81,24 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  }else{
  scene=new T.Scene();if(!options.contentOnly){scene.background=new T.Color(0xa7c3ba);scene.fog=new T.Fog(0xa7c3ba,36,65);}const b=root.BurbzSettlementModels.batch(T),front=root.BurbzSettlementModels.batch(T);
  if(!options.contentOnly){b.cylinder(C.YARD.ground,17*C.YARD_SCALE,1,0,-.55,0,0x698160,[0,0,0],64);b.cylinder(6.3,6.3,.04,0,-.015,1.8,0x7c8764,[0,0,0],48);}
- for(let z=2;z<C.YARD.walk-.3;z+=.65)for(let x=-.65;x<=.65;x+=.65)b.box(.59,.04,.56,x+(Math.floor(z)%2)*.08,.025,z,0xab9e7c,[0,Math.sin(z)*.04,0]);
- for(const [i,t] of C.visibleTrees(s).entries()){if(C.treeState(s,t.id,createdAt)>=3){b.cylinder(t.r,t.r*1.1,.28,t.x,.14,t.z,0xa58254);continue;}b.cylinder(t.r*.65,t.r,3.8,t.x,1.9,t.z,0x5b4332);for(let k=0;k<3;k++)(t.z>4?front:b).sphere(1.9,t.x+Math.sin(i+k)*.6,3.6+k*.7,t.z+Math.cos(i+k)*.6,[0x547956,0x678651,0x76915d][(i+k)%3],[1,1.05,.95]);}
- for(let i=0;i<90;i++){const a=i*2.4,r=(4+(i%12)*.7)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.3&&Math.abs(p.z-z)<1.3))continue;b.sphere(.2,x,.1,z,0x82915e,[1,.5,1]);}
+ for(const [i,t] of C.visibleTrees(s).entries()){const y=groundHeight(t.x,t.z);if(C.treeState(s,t.id,createdAt)>=3){b.cylinder(t.r,t.r*1.1,.28,t.x,y+.14,t.z,0xa58254);continue;}b.cylinder(t.r*.65,t.r,3.8,t.x,y+1.9,t.z,0x5b4332);for(let k=0;k<3;k++)(t.z>4?front:b).sphere(1.9,t.x+Math.sin(i+k)*.6,y+3.6+k*.7,t.z+Math.cos(i+k)*.6,[0x547956,0x678651,0x76915d][(i+k)%3],[1,1.05,.95]);}
+ for(let i=0;i<90;i++){const a=i*2.4,r=(4+(i%12)*.7)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.3&&Math.abs(p.z-z)<1.3))continue;b.sphere(.2,x,groundHeight(x,z)+.1,z,0x82915e,[1,.5,1]);}
  // Moss, roots and small flowers break up the clearing without claiming resources.
- for(let i=0;i<180;i++){const a=i*2.4,r=(3.8+(i%17)*.51)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1.1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.15&&Math.abs(p.z-z)<1.15))continue;const h=.1+(i%3)*.06;b.add(new T.ConeGeometry(.09,h,3),[0x587849,0x688252,0x7e8f59][i%3],[x,h/2,z]);if(i%7===0)b.sphere(.07,x,h,z,[0xe4c773,0xc78ba0,0xe5daca][i%3]);}
- if(s.outlook){
- // An authored opening beside the shelter. The world owner blends this small
- // clearing into real elevations; its pond and rocks are not resource grants.
- b.add(new T.CylinderGeometry(1,1,.16,48),0x879178,[-10,-.06,24],[0,0,0],[6.6,1,4.6]);
- b.add(new T.CylinderGeometry(1,1,.025,48),0x557f89,[-10,.035,24],[0,0,0],[6,1,4]);
- for(let i=0;i<14;i++){const a=i*2.4,x=-10+Math.sin(a)*6.3,z=24+Math.cos(a)*4.3;b.add(new T.DodecahedronGeometry(.38+(i%3)*.22),[0x899287,0xa6ac99,0x738378][i%3],[x,.12,z],[.1,a,.2],[1.3,.65,1]);}
- for(let i=0;i<12;i++){const a=i*.35,x=-14+Math.sin(a)*2,z=24+Math.cos(a)*3;for(let j=0;j<3;j++)b.cylinder(.026,.035,.55+j*.16,x+j*.12,.27+j*.08,z,0x809268,[.1,0,.05],5);}
- for(let i=0;i<4;i++){const x=-11+i*1.4,z=23+Math.sin(i)*1.4;b.cylinder(.36,.36,.015,x,.06,z,0x86a278,[0,0,0],10);b.sphere(.1,x,.12,z,0xe3d8c6,[1,.5,1]);}
- b.add(new T.DodecahedronGeometry(1.6),0x9b9f87,[7,.5,18],[.3,.7,.1],[1.5,.65,1]);
- b.add(new T.DodecahedronGeometry(.9),0x838d78,[9,.25,20],[.2,.5,.1],[1.4,.7,1]);
- }
+ for(let i=0;i<180;i++){const a=i*2.4,r=(3.8+(i%17)*.51)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1.1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.15&&Math.abs(p.z-z)<1.15))continue;const h=.1+(i%3)*.06;b.add(new T.ConeGeometry(.09,h,3),[0x587849,0x688252,0x7e8f59][i%3],[x,groundHeight(x,z)+h/2,z]);if(i%7===0)b.sphere(.07,x,groundHeight(x,z)+h,z,[0xe4c773,0xc78ba0,0xe5daca][i%3]);}
+
  scene.add(b.finish());frontLeaves=front.finish();scene.add(frontLeaves);house=createHouse(T,s);scene.add(house);targets.push(house);
  if(!options.contentOnly){const hemi=new T.HemisphereLight(0xffe7b5,0x526b70,grade.hemi),key=new T.DirectionalLight(grade.keyColor,grade.keyIntensity);key.position.set(-12,19,10);skyLight=hemi;sunLight=key;key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-25,right:25,top:25,bottom:-25,near:1,far:60});key.shadow.bias=-.001;key.shadow.normalBias=.025;scene.add(hemi,key);scene.background.set(grade.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}
- // Merlin uses the existing game portrait, perched by the door.
- if(options.portrait!==false){const tex=new T.TextureLoader().load('bird-art-cache/cutouts/merlin_burbz_manga_20260624_v2_cutout.png');tex.colorSpace=T.SRGBColorSpace;const bird=new T.Sprite(new T.SpriteMaterial({map:tex,transparent:true}));bird.scale.set(1.8,1.8,1);bird.position.set(2.2,2.1,1.4);scene.add(bird);}
+ // Merlin belongs to the companion UI/command desk, not an exterior billboard.
  }
- const farm=area==='yard'?createFarm(T,s,options.farmHeight):null;if(farm)scene.add(farm);
- for(const p of s.placed.filter(p=>p.area===area)){const mesh=ornament(T,C.ITEMS[p.item].type);mesh.position.set(p.x,0,p.z);mesh.rotation.y=p.turn*Math.PI/2;mesh.userData.placementId=p.id;scene.add(mesh);decor.push(mesh);targets.push(mesh);}
+ const farm=area==='yard'?createFarm(T,s,options.groundHeight||options.farmHeight):null;if(farm)scene.add(farm);
+ for(const p of s.placed.filter(p=>p.area===area)){const mesh=ornament(T,C.ITEMS[p.item].type);mesh.position.set(p.x,area==='yard'?groundHeight(p.x,p.z):0,p.z);mesh.rotation.y=p.turn*Math.PI/2;mesh.userData.placementId=p.id;scene.add(mesh);decor.push(mesh);targets.push(mesh);}
  const finds=[];for(const f of C.FINDS.filter(f=>f.area===area&&!f.id.endsWith('-story')&&(s.tier>0||area!=='room'))){const b=root.BurbzSettlementModels.batch(T);if(f.id==='tiny-door'){b.cylinder(.58,.72,1.35,f.x,.675,f.z,0x71543b);b.box(.44,.68,.08,f.x,.35,f.z+.6,0x345f50);for(const x of [-.26,.26])b.box(.065,.76,.09,f.x+x,.38,f.z+.62,0xc3ab74);b.sphere(.045,f.x+.13,.36,f.z+.68,0xd9ba65);}
  else if(f.id==='moon-pool'){b.cylinder(.65,.5,.3,f.x,.15,f.z,0xb1af99);b.cylinder(.53,.53,.015,f.x,.31,f.z,0x79a6a4);for(const x of [-.18,.18])b.sphere(.07,f.x+x,.335,f.z,0xd9e3c6,[1,.1,1]);}
  else if(f.id==='lost-pot'){b.cylinder(.3,.2,.42,f.x,.21,f.z,0xc68b69);b.box(.23,.018,.27,f.x,.44,f.z,0xe3ce9e);}
  else if(f.id==='merlin-acorn'){b.sphere(.16,f.x,.18,f.z,0xa68152,[.8,1,.8]);b.sphere(.18,f.x,.32,f.z,0x685139,[1,.4,1]);for(let i=0;i<5;i++)b.add(new T.ConeGeometry(.04,.14,3),0xdac478,[f.x+Math.sin(i*1.25)*.12,.44,f.z+Math.cos(i*1.25)*.12]);}
  else if(area==='yard'){b.add(new T.DodecahedronGeometry(.52),0xb4ae91,[f.x,.3,f.z],[0,.4,0],[1,.6,1]);for(let i=0;i<3;i++)b.box(.23-i*.03,.02,.035,f.x,.62,f.z+(i-1)*.09,0x8b784f);}
  else if(f.id==='floor-star'){b.add(new T.CylinderGeometry(.12,.12,.02,7),0xe5bf65,[f.x,.02,f.z]);}
- else{b.box(.24,.025,.3,f.x,.08,f.z,0xd6bb83);for(let i=0;i<3;i++)b.box(.14,.008,.015,f.x,.099,f.z+(i-1)*.06,0x7b623a);}const m=b.finish();m.userData.findId=f.id;scene.add(m);finds.push(m);targets.push(m);}
+ else{b.box(.24,.025,.3,f.x,.08,f.z,0xd6bb83);for(let i=0;i<3;i++)b.box(.14,.008,.015,f.x,.099,f.z+(i-1)*.06,0x7b623a);}const m=b.finish();if(area==='yard')m.position.y=groundHeight(f.x,f.z);m.userData.findId=f.id;scene.add(m);finds.push(m);targets.push(m);}
  root.BurbzManga?.styleScene(scene);
  return{scene,house,screen,screenSize,targets,decor,finds,farm,update:()=>farm?.userData.update?.(),world:C.world(s,area,createdAt,{connected:!!options.contentOnly}),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>disposeScene(scene)};
 }
@@ -146,14 +134,14 @@ function createHouse(T,home){
  b.box(.8,.04,1.1,-.7,3.05,-.8,0x5c5d59,[.035,.12,0]);b.box(.7,.04,.8,.65,3.01,1.2,0x858175,[.035,-.08,0]);
  group.add(b.finish());return group;
 }
-function createYardContent(T,home,options={}){const saved=C.normalize(home),now=options.now??Date.now(),view=create(T,saved,'yard',1,{}, {...options,now,contentOnly:true}),group=new T.Group();group.name='player-home-yard';for(const child of [...view.scene.children])group.add(child);group.updateMatrixWorld(true);
+function createYardContent(T,home,options={}){const saved=C.normalize(home),now=options.now??Date.now(),groundHeight=options.groundHeight||(()=>0),view=create(T,saved,'yard',1,{}, {...options,now,contentOnly:true}),group=new T.Group();group.name='player-home-yard';for(const child of [...view.scene.children])group.add(child);group.updateMatrixWorld(true);
  const targets=[{kind:'home',id:'home-door',x:0,y:1.2,z:3.2,label:'Enter your home',range:2}];
- for(const f of C.FINDS.filter(f=>f.area==='yard'))targets.push({kind:'find',id:f.id,x:f.x,y:.6,z:f.z,label:saved.finds.includes(f.id)?'Read '+f.name:'Look closer',range:1.65});
- for(const t of C.visibleTrees(saved)){const hits=C.treeState(saved,t.id,now);if(hits<3)targets.push({kind:'tree',id:t.id,x:t.x,y:1,z:t.z,label:'Chop tree · '+hits+'/3 strikes',range:1.65});}
- const solids=saved.outlook?[{id:'outlook-rock-1',x:7,z:18,w:4.8,d:3.2,minY:0,maxY:1.8},{id:'outlook-rock-2',x:9,z:20,w:2.6,d:1.8,minY:0,maxY:1.1}]:[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',...C.houseFootprint(saved),minY:0,maxY:houseBounds.max.y});
- for(const mesh of view.decor){const p=saved.placed.find(p=>p.id===mesh.userData.placementId),item=C.ITEMS[p.item];if(item.flat)continue;const box=new T.Box3().setFromObject(mesh);solids.push({id:'decoration:'+p.id,x:p.x,z:p.z,w:p.turn%2?item.d:item.w,d:p.turn%2?item.w:item.d,minY:0,maxY:box.max.y});}
- for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:0,maxY:3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:1.6,maxY:7});}
- return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
+ for(const f of C.FINDS.filter(f=>f.area==='yard'))targets.push({kind:'find',id:f.id,x:f.x,y:.6+groundHeight(f.x,f.z),z:f.z,label:saved.finds.includes(f.id)?'Read '+f.name:'Look closer',range:1.65});
+ for(const t of C.visibleTrees(saved)){const hits=C.treeState(saved,t.id,now);if(hits<3)targets.push({kind:'tree',id:t.id,x:t.x,y:1+groundHeight(t.x,t.z),z:t.z,label:'Chop tree · '+hits+'/3 strikes',range:1.65});}
+ const solids=[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',...C.houseFootprint(saved),minY:0,maxY:houseBounds.max.y});
+ for(const mesh of view.decor){const p=saved.placed.find(p=>p.id===mesh.userData.placementId),item=C.ITEMS[p.item];if(item.flat)continue;const box=new T.Box3().setFromObject(mesh);solids.push({id:'decoration:'+p.id,x:p.x,z:p.z,w:p.turn%2?item.d:item.w,d:p.turn%2?item.w:item.d,minY:groundHeight(p.x,p.z),maxY:box.max.y});}
+ for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:groundHeight(t.x,t.z),maxY:groundHeight(t.x,t.z)+3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:groundHeight(t.x,t.z)+1.6,maxY:groundHeight(t.x,t.z)+7});}
+ return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,groundRadius:C.groundProfile(saved).radius,groundBlendRadius:C.groundProfile(saved).blendRadius,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
 }
 root.BurbzPlayerHomeScene={createCommandDesk,create,createHouse,createFarm,createYardContent,ornament,upperRooms,disposeScene};
 })(globalThis);

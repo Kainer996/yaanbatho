@@ -41,6 +41,8 @@ BIRDNET_INSTALLER_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/mai
 PHOTO_SCRIPTS_URL="https://raw.githubusercontent.com/Kainer996/yaanbatho/main/scripts"
 
 FILES=(
+  "merlin_story_scenes.js"
+  "merlin_story_scenes.css"
   "alderwing_intro.js"
   "geographic_cache.js"
   "geographic_home_picker.js"

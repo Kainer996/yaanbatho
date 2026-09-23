@@ -47,4 +47,18 @@ body.player-at-desk #screen-scan{box-shadow:inset 0 0 0 3px #a99054}
 .ph-panel .ph-panel-status{padding:12px 14px;margin:12px 20px;background:#304a34;border:1px solid #b9a36b66;border-radius:8px;color:#f1e1b9;font-size:12px;line-height:1.5}
 @media(max-height:500px){.ph-build-panel .ph-build-intro{display:none}.ph-build-wallet{padding-block:9px}.ph-build-tabs{padding-block:5px}}
 
-#playerHome.ph-controls-locked :is(.ph-top,.ph-stick,.ph-bottom,.ph-reticle,.ph-tools) { visibility:hidden; }
+#playerHome.ph-controls-locked :is(.ph-stick,.ph-bottom,.ph-reticle,.ph-tools),#playerHome.ph-controls-locked .ph-top>:not([data-ph="settings"]) { visibility:hidden; }
+
+/* A small visual example, never an input surface or a practice receipt. */
+#alderwingIntroGuide .ai-turn-demo{display:flex;align-items:center;gap:10px;margin:8px 0;pointer-events:none;color:#ead5a6;font:10px/1.4 'Inter',sans-serif}
+#alderwingIntroGuide .ai-turn-demo[hidden]{display:none}
+#alderwingIntroGuide .ai-demo-screen{position:relative;display:block;flex:none;width:100px;height:48px;border:2px solid #bda675;border-radius:7px;background:#17150f;overflow:hidden}
+#alderwingIntroGuide .ai-demo-zone{position:absolute;inset:3px 3px 3px 50%;border-left:1px dashed #bda675;background:#d4b47625}
+#alderwingIntroGuide .ai-demo-arrow{position:absolute;right:6px;top:1px;font-size:24px;line-height:28px}
+#alderwingIntroGuide .ai-demo-thumb{position:absolute;right:7px;bottom:3px;width:15px;height:23px;border:2px solid #fff0cc;border-radius:9px 9px 6px 6px;background:#bb945e;transform:rotate(-16deg);animation:alderwing-thumb-swipe 2.6s ease-in-out infinite}
+@keyframes alderwing-thumb-swipe{0%,15%{transform:translateX(0) rotate(-16deg);opacity:.45}25%{opacity:1}65%{transform:translateX(-25px) rotate(-16deg);opacity:1}80%,100%{transform:translateX(-25px) rotate(-16deg);opacity:0}}
+#playerHome:has(#settingsModal.show) #alderwingIntroGuide,#villageWalk:has(#settingsModal.show) #alderwingIntroGuide,#playerHome:has(.ph-panel:not([hidden])) #alderwingIntroGuide{visibility:hidden;pointer-events:none}
+#playerHome:has(#settingsModal.show) .ai-demo-thumb,#playerHome:has(.ph-panel:not([hidden])) .ai-demo-thumb{animation-play-state:paused}
+@media(prefers-reduced-motion:reduce){#alderwingIntroGuide .ai-demo-thumb{animation:none;transform:rotate(-16deg)}}
+@media(orientation:portrait) and (max-width:420px){#playerHome #alderwingIntroGuide{top:118px}}
+@media(orientation:landscape) and (max-height:550px){#playerHome #alderwingIntroGuide{left:12px;right:auto;width:min(350px,47vw);top:66px}#alderwingIntroGuide .ai-turn-demo{margin:5px 0}#alderwingIntroGuide .ai-demo-screen{height:40px;width:90px}}
