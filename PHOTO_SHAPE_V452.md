@@ -1,0 +1,8 @@
+# Photo silhouette acceptance — 23 September 2026
+
+Yaan requested that the correctly suggested Common Raven be eligible for Birdex.
+The actual 15:32 UTC result was `unclear-subject`, after the confidence/margin gates had passed. A private screenshot-region reproduction returned Common Raven at 0.88 with a wedge-shaped tail, fingered wings and bill/head shape, `diagnosticDetailsVisible:true`, but `quality:silhouette`; v425 rejects that quality unconditionally.
+
+The narrow correction permits silhouette quality through the same evidence gate as clear/blurred/obscured photos. Confidence >=0.80, alternative margin >=0.20, two visible features, real bird, original-pixel checks, and independent agreeing second view remain mandatory. No forced raven result, manual tentative award, budget increase, prompt change, frontend/worker-cache/sound/save change. Existing compatible v425 API gates remain correct. New UI attempts already use fresh request IDs and the ledger only reuses accepted results across IDs, so old refusals are not replayed.
+
+Regression tests reproduce the refusal before correction, cover nonbird/no-details/no-features/low-score/confuser/tiny rejection and fresh retry after an old rejection. Test image pixels are synthetic; model observations come from a labelled screenshot crop, not the original camera file. The first two candidate real checks reached verification but timed out there; neither was an identification rejection. Focused Python tests pass (77 passed, 5 skipped); 14 client-gate and 5 first-photo-journal groups pass. Release/public proof will be recorded separately.
