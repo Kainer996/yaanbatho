@@ -1,7 +1,7 @@
 /* A disposable personal clearing and house; the existing Scan screen is its computer. */
 (function(root){'use strict';const C=root.BurbzPlayerHomeCore;let api,s=null,loading=null,generation=0;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function load(){if(!loading)loading=Promise.all([['building_rooms_core.js','BurbzBuildingRoomsCore','tavern-hall-open-v450-20260923'],['building_rooms_scene.js','BurbzBuildingRoomsScene','village-hall-desk-v441-20260922'],['village_walk_core.js','BurbzVillageWalkCore','alderwing-followups-v417-20260914']].map(([file,key,rev])=>root[key]?Promise.resolve():new Promise((resolve,reject)=>{const e=document.createElement('script');e.src=file+'?v='+rev;const timer=setTimeout(()=>{e.remove();reject(Error('The home could not finish loading.'));},15000);e.onload=()=>{clearTimeout(timer);root[key]?resolve():reject(Error('The home is unavailable.'));};e.onerror=()=>{clearTimeout(timer);e.remove();reject(Error('The home could not load.'));};document.head.append(e);}))).catch(e=>{loading=null;throw e;});return loading;}
+function load(){if(!loading)loading=Promise.all([['building_rooms_core.js','BurbzBuildingRoomsCore','tavern-hall-open-v450-20260923'],['building_rooms_scene.js','BurbzBuildingRoomsScene','hall-music-v458-20260923'],['village_walk_core.js','BurbzVillageWalkCore','alderwing-followups-v417-20260914']].map(([file,key,rev])=>root[key]?Promise.resolve():new Promise((resolve,reject)=>{const e=document.createElement('script');e.src=file+'?v='+rev;const timer=setTimeout(()=>{e.remove();reject(Error('The home could not finish loading.'));},15000);e.onload=()=>{clearTimeout(timer);root[key]?resolve():reject(Error('The home is unavailable.'));};e.onerror=()=>{clearTimeout(timer);e.remove();reject(Error('The home could not load.'));};document.head.append(e);}))).catch(e=>{loading=null;throw e;});return loading;}
 function state(){const raw=api.read();if(s?.homeRaw===raw&&s.homeCache)return s.homeCache;const value=C.normalize(raw);if(s){s.homeRaw=raw;s.homeCache=value;}return value;}
 function notify(message){if(!s)return;if(!s.panel.hidden){s.notice.hidden=true;let notice=s.panel.querySelector('.ph-panel-status');if(!notice&&message){notice=document.createElement('p');notice.className='ph-panel-status';notice.setAttribute('role','status');s.panel.querySelector('header')?.after(notice);}if(notice){notice.textContent=message;notice.hidden=!message;}return;}s.notice.textContent=message;s.notice.hidden=!message;}
 function commit(action){const result=api.commit(action);if(s)s.homeRaw=null;if(!result.ok)notify(result.error);return result.ok;}
@@ -14,40 +14,12 @@ function syncInputLock(){
  for(const node of s.el.querySelectorAll('.ph-look,.ph-stick,.ph-top>:not([data-ph="settings"]),.ph-bottom,.ph-tools,.ph-panel'))node.inert=locked;
  if(locked)s.el.querySelector('#alderwingIntroGuide button:not([disabled])')?.focus({preventScroll:true});
 }
-// Reparent the existing app; IDs, listeners, scanner state and scroll stay live.
-function captureScroll(app){return [app,...app.querySelectorAll('*')].filter(n=>n.scrollTop||n.scrollLeft).map(node=>({node,top:node.scrollTop,left:node.scrollLeft}));}
-function restoreScroll(positions){for(const p of positions){p.node.scrollTop=p.top;p.node.scrollLeft=p.left;}}
-function mountScreen(fromDesk){
- const app=document.getElementById('app');if(!app)throw Error('The command centre is unavailable.');
- const scroll=captureScroll(app),marker=document.createComment('player-home-app');app.before(marker);
- const surface=document.createElement('div');surface.className='ph-screen-surface';surface.setAttribute('aria-hidden','true');
- const style=getComputedStyle(app);surface.style.font=style.font;surface.style.color=style.color;
- surface.style.background=getComputedStyle(document.body).backgroundColor;
- surface.style.width=s.el.clientWidth+'px';surface.style.height=s.el.clientHeight+'px';surface.hidden=!fromDesk;
- s.el.prepend(surface);surface.append(app);restoreScroll(scroll);s.screenDOM={app,marker,surface};
-}
-function restoreScreen(old){const d=old.screenDOM;if(!d)return;const scroll=captureScroll(d.app);d.marker.replaceWith(d.app);restoreScroll(scroll);d.surface.remove();old.screenDOM=null;}
-function screenCamera(){const v=s.view.screenSize;return new root.THREE.Vector3(v.x,v.y,v.z+v.height/(2*Math.tan(s.camera.fov*Math.PI/360)));}
-function projectScreen(){
- const d=s.screenDOM,v=s.view.screenSize;if(!d)return;
- d.surface.hidden=s.failed||s.area!=='room'||s.edit;
- if(d.surface.hidden)return;
- const T=root.THREE,w=s.el.clientWidth,h=s.el.clientHeight;
- d.surface.style.width=w+'px';d.surface.style.height=h+'px';
- // CSS and WebGL use the same homogeneous projection, including perspective.
- const model=new T.Matrix4().set(v.width/w,0,0,v.x-v.width/2,0,-v.height/h,0,v.y+v.height/2,0,0,1,v.z,0,0,0,1);
- const clip=new T.Matrix4().multiplyMatrices(s.camera.projectionMatrix,s.camera.matrixWorldInverse).multiply(model),m=clip.elements;
- if(m[15]<=s.camera.near*.1||s.camera.position.z<=v.z){d.surface.hidden=true;return;}
- const out=[w/2*(m[0]+m[3]),h/2*(-m[1]+m[3]),0,m[3],w/2*(m[4]+m[7]),h/2*(-m[5]+m[7]),0,m[7],0,0,1,0,w/2*(m[12]+m[15]),h/2*(-m[13]+m[15]),0,m[15]].map(n=>n/m[15]);
- const transform='matrix3d('+out.join(',')+')';if(transform!==s.lastProjection){d.surface.style.transform=transform;s.lastProjection=transform;}
- s.projected={width:w,height:h,matrix:out};
-}
-function stand(){
- reset();s.busy=true;s.el.classList.add('ph-travelling');say('');
- const T=root.THREE,start=screenCamera(),end=new T.Vector3(s.player.x,1.38,s.player.z);
- s.camera.position.copy(start);s.camera.quaternion.identity();
- s.transition={kind:'stand',start,q:new T.Quaternion(),end,toQ:new T.Quaternion().setFromEuler(new T.Euler(s.player.pitch,s.player.yaw,0,'YXZ')),startTime:performance.now(),duration:matchMedia('(prefers-reduced-motion: reduce)').matches?0:1550};
-}
+// Home and Village Hall share the live command-screen projection and pullback.
+function mountScreen(fromDesk){s.screenDOM=root.BurbzDeskPortal.mount(s.el,fromDesk);}
+function restoreScreen(old){root.BurbzDeskPortal.restore(old.screenDOM);old.screenDOM=null;}
+function screenCamera(){return root.BurbzDeskPortal.screenCamera(s.camera,s.view.screenSize);}
+function projectScreen(){const d=s.screenDOM;if(!d)return;d.surface.hidden=s.failed||s.area!=='room'||s.edit;if(!d.surface.hidden)s.projected=root.BurbzDeskPortal.project(d,s.el,s.camera,s.view.screenSize);}
+function stand(){reset();s.busy=true;s.el.classList.add('ph-travelling');say('');s.transition=root.BurbzDeskPortal.stand(s.camera,s.view.screenSize,s.player,1.38);s.camera.position.copy(s.transition.start);s.camera.quaternion.identity();}
 function close(reason='command'){const old=s;if(!old)return false;root.BurbzLookSettings?.closeFor(old.el);old.footsteps?.dispose();s=null;generation++;cancelAnimationFrame(old.raf);old.abort.abort();old.observer?.disconnect();restoreScreen(old);old.view?.dispose();old.ghost?.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});if(old.renderer){root.BurbzManga?.dispose(old.renderer);old.renderer.dispose();old.renderer.forceContextLoss();}for(const [node,inert] of old.inert)node.inert=inert;document.body.style.overflow=old.overflow;old.el.remove();if(reason!=='pagehide'&&old.opener?.isConnected&&!old.opener.closest('[inert]')&&old.opener.getClientRects().length)old.opener.focus({preventScroll:true});api.onClose?.(reason);return true;}
 function command(viaDesk=false){if(!s)return;if(viaDesk&&state().arrival==='outside'&&!commit({kind:'arrival',event:'desk'})){s.transition=null;s.busy=false;s.el.classList.remove('ph-travelling');return;}if(state().intro!=='done'&&!commit({kind:'intro',stage:'done'})){s.transition=null;s.busy=false;s.el.classList.remove('ph-travelling');s.stick.hidden=s.mode==='overview'||s.edit;return;}const tourHome=api.tutorialHome?.()!==false;close('command');api.command(viaDesk&&tourHome);}
 function say(text){s.merlin.hidden=!text;s.hint.hidden=!!text;s.merlin.querySelector('p').textContent=text||'';}

@@ -44,6 +44,8 @@ FILES=(
   "merlin_story_scenes.js"
   "merlin_story_scenes.css"
   "alderwing_intro.js"
+  "first_village_tutorial.js"
+  "desk_portal.js"
   "geographic_cache.js"
   "geographic_home_picker.js"
   "geographic_settlement_scene.js"

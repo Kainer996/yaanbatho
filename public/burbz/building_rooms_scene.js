@@ -72,12 +72,13 @@ function create(T,p){
   else {box(.9,.08,.28,0,.96,0,cream);box(.12,.07,.6,.4,.98,0,iron);cup(-.6,1.01,0);}}
  const g=f.finish();g.position.set(o.x,0,o.z);g.rotation.y=o.rot;g.userData.furniture=type;scene.add(g);
  }
- p.props.forEach(o=>{if(o.type==='commanddesk'){const desk=root.BurbzPlayerHomeScene.createCommandDesk(T,{tier:1,aspect:root.innerWidth/root.innerHeight||1,deskZ:o.z});desk.group.position.x=o.x;scene.add(desk.group);}else if(!(p.deskAction&&o.type==='armchair'&&o.x===p.deskAction.x))furniture(o);});
+ let commandDesk=null;
+ p.props.forEach(o=>{if(o.type==='commanddesk'){const desk=root.BurbzPlayerHomeScene.createCommandDesk(T,{tier:1,aspect:root.innerWidth/root.innerHeight||1,deskZ:o.z});desk.group.position.x=o.x;desk.screenSize.x+=o.x;commandDesk=desk;scene.add(desk.group);}else if(!(p.deskAction&&o.type==='armchair'&&o.x===p.deskAction.x))furniture(o);});
  if(p.scope==='academy'){const canopy=batch();for(const z of [-d/2+.35,d/2-.35]){for(let i=0;i<9;i++){const x=(i-4)*(w-1)/8;canopy.add(new T.TorusGeometry(.24,.03,5,10),p.accent,[x,h-.42,z],[0,0,0]);}}for(const x of [-w/2+.45,w/2-.45])for(let z=-d/2+.8;z<d/2;z+=2){canopy.cylinder(.05,.07,.55,x,.28,z,wood);canopy.box(.65,.08,.15,x,.54,z,gold);}scene.add(canopy.finish());}
 
  scene.add(new T.HemisphereLight(0xffe7bd,0x697572,1.55));const key=new T.DirectionalLight(0xffdeb0,1.7);key.position.set(-3,6,4);scene.add(key);const fill=new T.DirectionalLight(0xadc8cc,.75);fill.position.set(4,3,-4);scene.add(fill);
  root.BurbzManga?.styleScene(scene);
- return{scene,plan:p,world:root.BurbzBuildingRoomsCore.world(p),dispose(){scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});scene.clear();}};
+ return{scene,commandDesk,plan:p,world:root.BurbzBuildingRoomsCore.world(p),dispose(){scene.traverse(o=>{o.geometry?.dispose();if(o.material){for(const m of Array.isArray(o.material)?o.material:[o.material])m.dispose();}});scene.clear();}};
 }
 root.BurbzBuildingRoomsScene={create};
 })(typeof globalThis!=='undefined'?globalThis:this);
