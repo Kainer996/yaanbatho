@@ -57,20 +57,20 @@
   ];
   const QUEST_CATEGORY_INDEX = Object.fromEntries(QUEST_CATEGORIES.map(c => [c.id, c]));
 
-  // Every normal Kingdom errand offers the same seven timer choices, including
+  // Every normal Kingdom errand offers the same indexed timer choices, including
   // an eight-hour bedtime option. The reward curve rises sub-linearly: longer
   // flights pay much larger totals for players who are away, while repeating
   // quick flights remains the best reward per minute for attentive play (the
   // familiar mobile-simulation trade-off).
-  const QUEST_DURATION_MINUTES = Object.freeze([5, 10, 30, 60, 120, 480, 1440]);
+  const QUEST_DURATION_MINUTES = Object.freeze([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 30, 60, 120, 240, 480, 720, 1440]);
   function questDurationMultiplier(minutes) {
-    return Math.pow(Math.max(5, Number(minutes) || 5) / 5, 0.9);
+    return Math.pow(Math.max(1, Number(minutes) || 5) / 5, 0.9);
   }
   // Physical finds grow more gently than coins/XP because birds still have a
   // believable carrying limit; a day-long errand brings a useful bundle, not
   // hundreds of nominal items that would immediately be left behind.
   function questItemMultiplier(minutes) {
-    return Math.pow(Math.max(5, Number(minutes) || 5) / 5, 0.45);
+    return Math.pow(Math.max(1, Number(minutes) || 5) / 5, 0.45);
   }
   // Training runs work the same way: the player picks how long a drill
   // lasts, from a quarter hour to a full day. A longer run pays a bigger
@@ -123,11 +123,17 @@
     const high = source[1] > 0 ? Math.max(1, Math.round(source[1] * scale)) : 0;
     return [Math.min(low, high), Math.max(low, high)];
   }
+  function selectedQuestMinutes(template, minutes) {
+    const selectable = (typeof minutes === 'number' || typeof minutes === 'string') && QUEST_DURATION_MINUTES.includes(Number(minutes));
+    return template.tutorial !== true && selectable ? Number(minutes) : template.minutes;
+  }
   function questRewardsForDuration(template, minutes) {
-    const selectedMinutes = QUEST_DURATION_MINUTES.includes(Number(minutes)) ? Number(minutes) : Math.max(5, Number(template && template.minutes) || 5);
-    const baseMultiplier = questDurationMultiplier(template && template.minutes);
+    const selectedMinutes = selectedQuestMinutes(template, minutes);
+    // Keep the historical five-minute floor on template anchors, not selections.
+    const baseMinutes = Math.max(5, Number(template && template.minutes) || 5);
+    const baseMultiplier = questDurationMultiplier(baseMinutes);
     const ratio = questDurationMultiplier(selectedMinutes) / Math.max(0.0001, baseMultiplier);
-    const physicalRatio = questItemMultiplier(selectedMinutes) / Math.max(0.0001, questItemMultiplier(template && template.minutes));
+    const physicalRatio = questItemMultiplier(selectedMinutes) / Math.max(0.0001, questItemMultiplier(baseMinutes));
     return {
       minutes: selectedMinutes,
       ratio,
@@ -322,6 +328,36 @@
     return { ...session, status, progressPct, events, templateCopy: template.copy };
   }
 
+  // Both dispatch and the read-only SEND preview use these exact rounded rules.
+  function expeditionRewardAmounts(bird, template, economy, coins, branches, stone, night) {
+    const powerBonus = Math.max(0, Math.round(Math.floor(((bird.power || 80) + (bird.int || 40) + (bird.spd || 40) + (bird.stamina || 40)) / 90) * economy.ratio));
+    const charmBonus = template.chaWeight ? Math.max(0, Math.round(Math.floor(((bird.cha || 40) * template.chaWeight) / 60) * economy.ratio)) : 0;
+    const branchBonus = branches > 0 ? Math.max(0, Math.round(Math.floor(((bird.stamina || 40) + (bird.power || 80)) / 160) * economy.physicalRatio)) : 0;
+    return {
+      coins: Math.round((coins + powerBonus + charmBonus) * nightMultiplier(night, 'coins')),
+      charmBonus,
+      branches: Math.round((branches + branchBonus) * nightMultiplier(night, 'branches')),
+      stone: Math.round(stone * nightMultiplier(night, 'branches')),
+      xp: Math.round(economy.xp * nightMultiplier(night, 'xp'))
+    };
+  }
+
+  function getBirdExpeditionPreview(bird, templateId, options={}) {
+    const template = QUEST_TEMPLATES[templateId];
+    if (!template || template.tutorial === true) return null;
+    const economy = questRewardsForDuration(template, options.durationMinutes);
+    const night = nightBonusPack(options);
+    const low = expeditionRewardAmounts(bird || {}, template, economy, economy.coins[0], economy.branches[0], economy.stone[0], night);
+    const high = expeditionRewardAmounts(bird || {}, template, economy, economy.coins[1], economy.branches[1], economy.stone[1], night);
+    const nightFinds = night ? Math.max(0, Math.round(Number(night.itemRolls) || 0)) : 0;
+    const rolls = Math.ceil(economy.expectedItemRolls);
+    return {
+      minutes: economy.minutes,
+      coins: [low.coins, high.coins], branches: [low.branches, high.branches], stone: [low.stone, high.stone], xp: low.xp,
+      itemRolls: [Math.floor(economy.expectedItemRolls) + nightFinds, rolls + (rolls > 0 ? 1 : 0) + nightFinds]
+    };
+  }
+
   // options.slowFactor stretches the timer without touching the payout. It is
   // how a hungry Merlin still flies: the Kingdom cannot deadlock on an empty
   // larder, so he works on regardless — it just takes him twice as long.
@@ -332,25 +368,19 @@
     const seed = hashString(`${bird.id || birdName}|${template.id}|${nowMs}`);
     const slowFactor = Math.max(1, Number(options && options.slowFactor) || 1);
     // Tutorial/legacy calls keep their authored timer. Normal UI dispatches may
-    // only use one of the six catalogued choices; caller-authored arbitrary
+    // only use one of the catalogued choices; caller-authored arbitrary
     // timers and rewards are deliberately ignored.
-    const requestedDuration = Number(options && options.durationMinutes);
-    const durationMinutes = template.tutorial !== true && QUEST_DURATION_MINUTES.includes(requestedDuration)
-      ? requestedDuration
-      : template.minutes;
+    const durationMinutes = selectedQuestMinutes(template, options && options.durationMinutes);
     const economy = template.tutorial === true
       ? { ratio:1, physicalRatio:1, coins:[...template.coins], branches:Array.isArray(template.branches) ? [...template.branches] : [0,0], stone:Array.isArray(template.stone) ? [...template.stone] : [0,0], xp:template.xp || 1, expectedItemRolls:1 }
       : questRewardsForDuration(template, durationMinutes);
     const durationMs = Math.round(durationMinutes * 60 * 1000 * slowFactor);
     const endMs = nowMs + durationMs;
     const baseCoins = rand(seed, economy.coins[0], economy.coins[1]);
-    const powerBonus = Math.max(0, Math.round(Math.floor(((bird.power || 80) + (bird.int || 40) + (bird.spd || 40) + (bird.stamina || 40)) / 90) * economy.ratio));
-    // Charm pays on social and diplomacy quests: charming birds haggle better prices.
-    const charmBonus = template.chaWeight ? Math.max(0, Math.round(Math.floor(((bird.cha || 40) * template.chaWeight) / 60) * economy.ratio)) : 0;
     // Branch (timber) payout: stronger, steadier birds haul a little extra.
     const branchRange = economy.branches;
     const baseBranches = rand(seed + 7, branchRange[0], branchRange[1]);
-    const branchBonus = baseBranches > 0 ? Math.max(0, Math.round(Math.floor(((bird.stamina || 40) + (bird.power || 80)) / 160) * economy.physicalRatio)) : 0;
+
     const stoneRange = economy.stone;
     const baseStone = rand(seed + 11, stoneRange[0], stoneRange[1]);
     // Item loot scales as expected rolls, including a deterministic fractional
@@ -398,11 +428,7 @@
       hungryFlight: slowFactor > 1,
       nightBonus: night ? { coins: nightMultiplier(night, 'coins'), branches: nightMultiplier(night, 'branches'), stone: nightMultiplier(night, 'branches'), xp: nightMultiplier(night, 'xp'), itemRolls: nightFinds } : null,
       rewards: {
-        coins: Math.round((baseCoins + powerBonus + charmBonus) * nightMultiplier(night, 'coins')),
-        charmBonus,
-        branches: Math.round((baseBranches + branchBonus) * nightMultiplier(night, 'branches')),
-        stone: Math.round(baseStone * nightMultiplier(night, 'branches')),
-        xp: Math.round(economy.xp * nightMultiplier(night, 'xp')),
+        ...expeditionRewardAmounts(bird, template, economy, baseCoins, baseBranches, baseStone, night),
         items: rewardItems,
         itemRolls
       },
@@ -418,7 +444,7 @@
     const progressPct = Math.round((elapsed / total) * 100);
     const status = ['claimed', 'cancelled', 'failed'].includes(expedition.status)
       ? expedition.status
-      : (progressPct >= 100 ? 'complete' : 'active');
+      : (nowMs >= expedition.endMs ? 'complete' : 'active');
     const visibleCount = clamp(Math.floor((progressPct / 100) * template.beats.length) + 1, 1, template.beats.length);
     const events = template.beats.slice(0, visibleCount).map((text, i) => ({
       atMs: expedition.startMs + Math.round((total / Math.max(1, template.beats.length - 1)) * i),
@@ -427,5 +453,5 @@
     return { ...expedition, status, progressPct, events };
   }
 
-  return { QUEST_DURATION_MINUTES, questDurationMultiplier, getQuestDurationOptions, TRAINING_DURATION_MINUTES, trainingXpMultiplier, trainingStatMultiplier, trainingRewardsForDuration, getTrainingDurationOptions, getAcademyRooms, getQuestTemplates, getQuestCategories, questCategory, getTrainingTemplates, getMerlinClues, createTrainingSession, advanceTrainingSession, createBirdExpedition, advanceBirdExpedition };
+  return { QUEST_DURATION_MINUTES, questDurationMultiplier, getQuestDurationOptions, getBirdExpeditionPreview, TRAINING_DURATION_MINUTES, trainingXpMultiplier, trainingStatMultiplier, trainingRewardsForDuration, getTrainingDurationOptions, getAcademyRooms, getQuestTemplates, getQuestCategories, questCategory, getTrainingTemplates, getMerlinClues, createTrainingSession, advanceTrainingSession, createBirdExpedition, advanceBirdExpedition };
 });
