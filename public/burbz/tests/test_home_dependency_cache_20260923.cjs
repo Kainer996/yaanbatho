@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),source=fs.readFileSync(path.join(root,'sw.js'),'utf8');
 const origin='https://game.example/burbz/';
-const deps=['building_rooms_core.js?v=tavern-hall-open-v450-20260923','building_rooms_scene.js?v=village-hall-desk-v441-20260922','village_walk_core.js?v=alderwing-followups-v417-20260914'];
+const deps=['building_rooms_core.js?v=tavern-hall-open-v450-20260923','building_rooms_scene.js?v=hall-music-v458-20260923','village_walk_core.js?v=alderwing-followups-v417-20260914'];
 function harness({cached=true,network='hang',cacheFailure=false}={}){
  const handlers={},calls=[],stores=new Map();
  const self={location:new URL(origin+'sw.js'),BurbzGeographicCache:{respond:()=>false},addEventListener:(name,fn)=>handlers[name]=fn};
@@ -21,7 +21,7 @@ async function bounded(p){let t;try{return await Promise.race([p,new Promise((_,
 (async()=>{
  for(const dep of deps){const h=harness();const r=await bounded(h.dispatch(dep));assert.equal(await r.text(),'current '+dep);assert.deepEqual(h.calls,[]);}
  console.log('PASS exact current cached dependencies bypass hung network');
- for(const rel of ['building_rooms_core.js?v=wrong','building_rooms_core.js','index.html','player_home.js?v=other','https://other.example/building_rooms_core.js?v=village-hall-desk-v441-20260922']){const h=harness({network:'ok'});assert.equal(await(await h.dispatch(rel)).text(),'network');assert.equal(h.calls.length,1);}
+ for(const rel of ['building_rooms_core.js?v=wrong','building_rooms_core.js','index.html','player_home.js?v=hall-music-v458-20260923','https://other.example/building_rooms_core.js?v=village-hall-desk-v441-20260922']){const h=harness({network:'ok'});assert.equal(await(await h.dispatch(rel)).text(),'network');assert.equal(h.calls.length,1);}
  console.log('PASS nonmatching versions, unversioned files, navigation assets and foreign origins retain network path');
  for(const opts of [{cached:false,network:'ok'},{cached:true,network:'ok',cacheFailure:true}]){const h=harness(opts);assert.equal(await(await h.dispatch(deps[0])).text(),'network');}
  console.log('PASS absent or unavailable cache still uses network');

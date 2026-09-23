@@ -441,14 +441,31 @@
     var wanted = false;
     var tracks = [];
     var activeIndex = 0;
+    // Milliseconds; zero keeps legacy callers immediate. The master envelope
+    // multiplies the two seam weights, never changes their relative balance.
+    function durationOption(name) {
+      var value = Number(options[name]);
+      return Number.isFinite(value) ? Math.max(0, value) : 0;
+    }
+    var fadeInMs = durationOption('fadeInMs');
+    var fadeOutMs = durationOption('fadeOutMs');
+    var volumeRampMs = durationOption('volumeRampMs');
     var fadeTimer = null;
-    var fading = false;
-    var fadeStartedAt = 0;
-    var fadeProgress = 0;
+    var timerTicket = null;
+    var gain = 0;
+    var ramp = null;
+    var seam = null;
+    var playing = [false, false];
+    var pending = [null, null];
+    var primed = [false, false];
+    var listeners = [];
+    var epoch = 0;
+    var resumePromise = null;
+    var destroyed = false;
     var suppressed = Object.create(null);
 
     function isEnabled() {
-      if (!localEnabled) return false;
+      if (destroyed || !localEnabled) return false;
       if (typeof options.getEnabled === 'function') {
         try { return !!options.getEnabled(); } catch (_) { return false; }
       }
@@ -487,6 +504,7 @@
       tracks = second ? [first, second] : [first];
       tracks.forEach(function(track, index) {
         var inspect = function() { maybeCrossfade(index); };
+        listeners[index] = inspect;
         try {
           if (typeof track.addEventListener === 'function') {
             track.addEventListener('timeupdate', inspect);
@@ -494,7 +512,6 @@
           }
         } catch (_) {}
       });
-      try { tracks[activeIndex].volume = targetVolume(); } catch (_) {}
       return tracks;
     }
 
@@ -503,145 +520,218 @@
       try { track.pause(); } catch (_) {}
     }
 
+    function clock() {
+      try { var value = Number(now()); return Number.isFinite(value) ? value : 0; }
+      catch (_) { return 0; }
+    }
+
+    function shouldPlay() { return !destroyed && wanted && isEnabled() && !isSuppressed(); }
+
+    function silenceTrack(track) {
+      // Muting as well as pausing protects against a late browser play resolve.
+      try { track.volume = 0; track.muted = true; } catch (_) {}
+      safePause(track);
+    }
+
     function clearFadeTimer() {
+      timerTicket = null;
       if (fadeTimer !== null && cancelSchedule) {
         try { cancelSchedule(fadeTimer); } catch (_) {}
       }
       fadeTimer = null;
     }
 
-    function resetStandby() {
+    function renderGain() {
       tracks.forEach(function(track, index) {
-        if (index === activeIndex) {
-          try { track.muted = false; track.volume = targetVolume(); } catch (_) {}
-          return;
-        }
-        safePause(track);
-        try { track.currentTime = 0; track.muted = false; track.volume = 0; } catch (_) {}
+        var weight = seam ? (index === seam.from ? 1 - seam.progress : seam.progress)
+          : (index === activeIndex ? 1 : 0);
+        try {
+          track.volume = playing[index] ? gain * weight : 0;
+          track.muted = !playing[index];
+        } catch (_) {}
       });
     }
 
-    function settleFade() {
-      if (!fading) return;
-      if (fadeProgress >= 0.5 && tracks.length > 1) activeIndex = activeIndex === 0 ? 1 : 0;
-      fading = false;
-      fadeProgress = 0;
+    function silenceAll() {
       clearFadeTimer();
-      resetStandby();
+      if (seam && seam.progress >= 0.5) activeIndex = seam.to;
+      seam = null;
+      ramp = null;
+      gain = 0;
+      tracks.forEach(function(track, index) {
+        silenceTrack(track);
+        playing[index] = false;
+        if (index !== activeIndex) { try { track.currentTime = 0; } catch (_) {} }
+      });
     }
 
-    function runFadeStep(fromIndex, toIndex) {
-      if (!fading || !schedule || !wanted || !isEnabled() || isSuppressed()) return;
-      var elapsed;
-      try { elapsed = Math.max(0, Number(now()) - fadeStartedAt); }
-      catch (_) { elapsed = 0; }
-      fadeProgress = Math.max(0, Math.min(1, elapsed / (crossfadeSeconds * 1000)));
-      var level = targetVolume();
-      try { tracks[fromIndex].volume = level * (1 - fadeProgress); } catch (_) {}
-      try { tracks[toIndex].volume = level * fadeProgress; } catch (_) {}
-      if (fadeProgress >= 1) {
-        safePause(tracks[fromIndex]);
-        try { tracks[fromIndex].currentTime = 0; tracks[fromIndex].volume = 0; } catch (_) {}
-        activeIndex = toIndex;
-        fading = false;
-        fadeProgress = 0;
-        fadeTimer = null;
-        return;
+    function sample() {
+      var timestamp = clock();
+      if (ramp) {
+        var progress = Math.max(0, Math.min(1, (timestamp - ramp.at) / ramp.ms));
+        gain = ramp.from + (ramp.to - ramp.from) * progress;
+        if (progress >= 1) { gain = ramp.to; ramp = null; }
       }
-      fadeTimer = schedule(function() { runFadeStep(fromIndex, toIndex); }, fadeStepMs);
+      if (seam) {
+        seam.progress = Math.max(0, Math.min(1, (timestamp - seam.at) / (crossfadeSeconds * 1000)));
+        if (seam.progress >= 1) {
+          silenceTrack(tracks[seam.from]);
+          playing[seam.from] = false;
+          try { tracks[seam.from].currentTime = 0; } catch (_) {}
+          activeIndex = seam.to;
+          seam = null;
+        }
+      }
+      renderGain();
+      if (!ramp && gain === 0 && !shouldPlay()) silenceAll();
     }
 
-    function startCrossfade() {
-      if (fading || tracks.length < 2 || !schedule) return false;
-      var fromIndex = activeIndex;
-      var toIndex = fromIndex === 0 ? 1 : 0;
-      var incoming = tracks[toIndex];
-      try {
-        incoming.currentTime = 0;
-        incoming.muted = false;
-        incoming.volume = 0;
-      } catch (_) {}
-      var playResult;
-      try { playResult = incoming.play(); }
-      catch (_) { return false; }
-      Promise.resolve(playResult).then(function() {
-        if (!wanted || !isEnabled() || isSuppressed()) {
-          safePause(incoming);
-          return;
+    function scheduleStep() {
+      if (fadeTimer !== null || !schedule || (!ramp && !seam)) return;
+      var ticket = {};
+      timerTicket = ticket;
+      fadeTimer = schedule(function() {
+        if (timerTicket !== ticket) return;
+        fadeTimer = null;
+        timerTicket = null;
+        if (destroyed || isSuppressed()) { stopPlayback(true); return; }
+        if (!shouldPlay() && (!ramp || ramp.to !== 0)) { stopPlayback(false); return; }
+        sample();
+        scheduleStep();
+      }, fadeStepMs);
+    }
+
+    function rampTo(target, ms) {
+      sample();
+      if (ramp && ramp.to === target) return;
+      if (gain === target) { ramp = null; }
+      else if (ms > 0 && schedule) ramp = {from: gain, to: target, at: clock(), ms: ms};
+      else { gain = target; ramp = null; }
+      renderGain();
+      if (!ramp && gain === 0 && !shouldPlay()) silenceAll();
+      if (!ramp && !seam) clearFadeTimer();
+      scheduleStep();
+    }
+
+    function stopPlayback(immediate) {
+      epoch++;
+      resumePromise = null;
+      pending.forEach(function(job, index) {
+        if (!job) return;
+        job.valid = false;
+        silenceTrack(job.track);
+        playing[index] = false;
+      });
+      if (immediate || !playing.some(Boolean)) silenceAll();
+      else rampTo(0, fadeOutMs);
+    }
+
+    // One unresolved play per deck. Cancelled requests retain their reservation
+    // until settlement, so an old promise can never pause a newer use of a deck.
+    function playDeck(index, kind) {
+      if (pending[index]) return pending[index].promise;
+      var track = tracks[index];
+      if (!track || typeof track.play !== 'function') return Promise.resolve(false);
+      var job = {track: track, kind: kind, valid: true, promise: null};
+      pending[index] = job;
+      try { track.volume = 0; track.muted = kind === 'prime'; } catch (_) {}
+      var result;
+      try { result = track.play(); }
+      catch (_) { result = Promise.reject(_); }
+      job.promise = Promise.resolve(result).then(function() {
+        pending[index] = null;
+        if (!job.valid || destroyed || isSuppressed() || !isEnabled()) {
+          silenceTrack(track);
+          return false;
         }
-        fading = true;
-        fadeProgress = 0;
-        try { fadeStartedAt = Number(now()); } catch (_) { fadeStartedAt = 0; }
-        runFadeStep(fromIndex, toIndex);
-      }, function() { safePause(incoming); });
-      return true;
+        primed[index] = true;
+        if (job.kind === 'prime' && !(shouldPlay() && index === activeIndex)) {
+          silenceTrack(track);
+          try { track.currentTime = 0; } catch (_) {}
+          return true;
+        }
+        if (!shouldPlay()) { silenceTrack(track); return false; }
+        playing[index] = true;
+        if (job.kind === 'seam') {
+          seam = {from: activeIndex, to: index, at: clock(), progress: 0};
+          renderGain();
+          scheduleStep();
+        } else rampTo(targetVolume(), fadeInMs);
+        return true;
+      }, function() {
+        pending[index] = null;
+        silenceTrack(track);
+        return false;
+      });
+      return job.promise;
     }
 
     function maybeCrossfade(index) {
-      if (index !== activeIndex || fading || tracks.length < 2 ||
-          !wanted || !isEnabled() || isSuppressed()) return false;
+      var toIndex = activeIndex === 0 ? 1 : 0;
+      if (index !== activeIndex || !playing[index] || seam || pending[toIndex] ||
+          tracks.length < 2 || !schedule || !shouldPlay()) return false;
       var track = tracks[index];
       var duration = Number(track && track.duration);
       var currentTime = Number(track && track.currentTime);
       if (!Number.isFinite(duration) || duration <= crossfadeSeconds ||
-          !Number.isFinite(currentTime)) return false;
-      if (duration - currentTime > crossfadeSeconds) return false;
-      return startCrossfade();
+          !Number.isFinite(currentTime) || duration - currentTime > crossfadeSeconds) return false;
+      try { tracks[toIndex].currentTime = 0; } catch (_) {}
+      playDeck(toIndex, 'seam');
+      return true;
     }
 
     function sync() {
-      if (!wanted || !isEnabled() || isSuppressed()) {
-        settleFade();
-        tracks.forEach(safePause);
+      if (!shouldPlay()) {
+        stopPlayback(destroyed || isSuppressed());
         return Promise.resolve(false);
       }
-      var available = makeTracks();
-      var track = available[activeIndex];
-      if (!track || typeof track.play !== 'function') return Promise.resolve(false);
-      resetStandby();
-      var result;
-      try { result = track.play(); }
-      catch (_) { return Promise.resolve(false); }
-      return Promise.resolve(result).then(function() { return true; }, function() { return false; });
+      makeTracks();
+      if (!tracks[activeIndex]) return Promise.resolve(false);
+      if (playing[activeIndex]) {
+        rampTo(targetVolume(), fadeInMs);
+        return Promise.resolve(true);
+      }
+      var job = pending[activeIndex];
+      if (job && !job.valid) {
+        if (!resumePromise) {
+          var ticket = epoch;
+          resumePromise = job.promise.then(function() {
+            if (ticket !== epoch || !shouldPlay()) return false;
+            resumePromise = null;
+            return sync();
+          });
+        }
+        return resumePromise;
+      }
+      return playDeck(activeIndex, 'start');
     }
 
     function start() {
+      if (destroyed) return Promise.resolve(false);
       wanted = true;
       return sync();
     }
 
-    function pause() {
+    // Normal pauses use the exit envelope; safety callers can opt out explicitly.
+    function pause(pauseOptions) {
       wanted = false;
-      settleFade();
-      tracks.forEach(safePause);
+      stopPlayback(destroyed || isSuppressed() || !!(pauseOptions && pauseOptions.immediate));
       return false;
     }
 
-    // Prime both decks inside the first real gesture. This makes the later
-    // crossfade and Empire ambience reliable on stricter mobile browsers.
+    // Call in a real gesture. Pending primes can be adopted by start(), and a
+    // later prime never mutes or pauses decks already owned by live playback.
     function prime() {
+      if (destroyed || isSuppressed() || !isEnabled()) return Promise.resolve(false);
       var available = makeTracks();
-      if (!available.length) return Promise.resolve(false);
-      return Promise.all(available.map(function(track) {
-        var wasMuted = !!track.muted;
-        var oldVolume = Number(track.volume);
-        try { track.muted = true; track.volume = 0; } catch (_) {}
-        var result;
-        try { result = track.play(); }
-        catch (_) { return Promise.resolve(false); }
-        return Promise.resolve(result).then(function() {
-          safePause(track);
-          try {
-            track.currentTime = 0;
-            track.muted = wasMuted;
-            track.volume = Number.isFinite(oldVolume) ? oldVolume : 0;
-          } catch (_) {}
-          return true;
-        }, function() {
-          safePause(track);
-          return false;
-        });
-      })).then(function(results) { resetStandby(); return results.some(Boolean); });
+      var ticket = epoch;
+      return Promise.all(available.map(function(track, index) {
+        if (pending[index]) return pending[index].promise;
+        if (playing[index] || primed[index]) return Promise.resolve(true);
+        return playDeck(index, 'prime');
+      })).then(function(results) {
+        return ticket === epoch && !destroyed && !isSuppressed() && isEnabled() && results.length === 2 && results.every(Boolean);
+      });
     }
 
     function setEnabled(value) {
@@ -659,15 +749,23 @@
     function setVolume(value) {
       var next = Number(value);
       if (Number.isFinite(next)) volume = Math.max(0, Math.min(1, next));
-      if (!fading) resetStandby();
+      if (shouldPlay() && playing[activeIndex]) rampTo(targetVolume(), volumeRampMs);
       return volume;
     }
 
     function destroy() {
       wanted = false;
-      settleFade();
-      tracks.forEach(safePause);
+      destroyed = true;
+      stopPlayback(true);
+      tracks.forEach(function(track, index) {
+        if (typeof track.removeEventListener !== 'function') return;
+        try {
+          track.removeEventListener('timeupdate', listeners[index]);
+          track.removeEventListener('loadedmetadata', listeners[index]);
+        } catch (_) {}
+      });
       tracks = [];
+      listeners = [];
       suppressed = Object.create(null);
     }
 

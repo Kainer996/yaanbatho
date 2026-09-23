@@ -2,7 +2,7 @@
 (function(root){
   'use strict';
   const REV='homestead-v385-20260910';
-  const PIN={'open_land_core.js':'alderwing-flight-shores-v418-20260915','shore_water.js':'alderwing-flight-shores-v418-20260915','flight_craft.js':'craft-home-repair-v440-20260922','wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'craft-home-repair-v440-20260922','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'destination-cleanup-v434-20260921','first_person_map.js':'alderwing-flight-shores-v418-20260915','village_world_core.js':'home-ground-intro-v451-20260923','village_world.js':'home-ground-intro-v451-20260923','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'destination-cleanup-v434-20260921','village_discoveries.css':'destination-cleanup-v434-20260921','village_walk.css':'alderwing-qst-ui-save-v432-20260921','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'tavern-hall-open-v450-20260923','building_rooms_scene.js':'village-hall-desk-v441-20260922','building_rooms.js':'village-hall-desk-v441-20260922','village_walk_core.js':'alderwing-followups-v417-20260914','first_person_hud.js':'hands-on-world-tutorial-v429-20260920','first_person_hud.css':'craft-home-repair-v440-20260922','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
+  const PIN={'open_land_core.js':'alderwing-flight-shores-v418-20260915','shore_water.js':'alderwing-flight-shores-v418-20260915','flight_craft.js':'craft-home-repair-v440-20260922','wilderness_places_core.js':'wilderness-discoveries-v406-20260914','wilderness_places.js':'wilderness-discoveries-v406-20260914','wilderness_places.css':'wilderness-discoveries-v406-20260914','building_work_core.js':'builder-help-v404-20260914','building_work.js':'building-opening-v405-20260914','building_work.css':'craft-home-repair-v440-20260922','world_sky.js':'distant-sky-v401-20260913','village_discovery_core.js':'destination-cleanup-v434-20260921','first_person_map.js':'alderwing-flight-shores-v418-20260915','village_world_core.js':'home-ground-intro-v451-20260923','village_world.js':'home-ground-intro-v451-20260923','village_harvest.js':'continuous-world-v391-20260910','village_discoveries.js':'destination-cleanup-v434-20260921','village_discoveries.css':'destination-cleanup-v434-20260921','village_walk.css':'alderwing-qst-ui-save-v432-20260921','village_harvest_core.js':'map-pictures-v374-20260908','interior_life_core.js':'map-pictures-v374-20260908','interior_life.js':'wilderness-discoveries-v406-20260914','academy_flight_core.js':'connected-world-v386-20260910','academy_flight.js':'map-pictures-v374-20260908','building_rooms_core.js':'tavern-hall-open-v450-20260923','building_rooms_scene.js':'hall-music-v458-20260923','building_rooms.js':'hall-music-v458-20260923','village_walk_core.js':'alderwing-followups-v417-20260914','first_person_hud.js':'hands-on-world-tutorial-v429-20260920','first_person_hud.css':'craft-home-repair-v440-20260922','village_walk_scene.js':'wilderness-discoveries-v406-20260914'};
   let session=null,dependencies=null,closingFullscreen=Promise.resolve();
   function script(file,global){
     if(root[global])return Promise.resolve();
@@ -59,7 +59,7 @@
     if(document.fullscreenElement===s.root)closingFullscreen=Promise.resolve(document.exitFullscreen?.()).catch(()=>{});
     if(document.webkitFullscreenElement===s.root)document.webkitExitFullscreen?.();
     if(s.canvas&&s.parent){s.parent.insertBefore(s.canvas,s.next?.parentNode===s.parent?s.next:null);s.canvas.style.cssText=s.canvasStyle;}
-    s.work?.dispose();s.combat?.dispose();s.harvest?.dispose();s.rooms?.dispose();s.flight?.dispose();s.discoveries?.dispose();s.hud?.dispose();s.unbatch?.();
+    s.tutorial?.dispose();s.work?.dispose();s.combat?.dispose();s.harvest?.dispose();s.rooms?.dispose();s.flight?.dispose();s.discoveries?.dispose();s.hud?.dispose();s.unbatch?.();
     s.overviewHomes?.forEach(row=>row.object.visible=row.visible);
     if(s.snapshot){
       const {camera,renderer}=s.source,save=s.snapshot;
@@ -89,10 +89,12 @@
     for(const node of document.body.children)if(node!==el&&node.tagName!=='SCRIPT'&&node.tagName!=='STYLE'){s.inert.push([node,node.inert]);node.inert=true;}
     const on=(node,event,fn,opts={})=>node.addEventListener(event,fn,{...opts,signal:s.abort.signal});
     const exit=el.querySelector('.vw-exit'),look=el.querySelector('.vw-look'),stick=el.querySelector('.vw-stick'),knob=el.querySelector('.vw-knob'),hint=el.querySelector('.vw-hint'),full=el.querySelector('.vw-fullscreen');
+    function tutorialLocked(){return !!s.portal||s.tutorial?.locked()===true;}
     function fullscreen(){
       try{const request=el.requestFullscreen||el.webkitRequestFullscreen;if(!request)return;Promise.resolve(request.call(el)).then(()=>{if(s.closed&&(document.fullscreenElement===el))document.exitFullscreen?.();}).catch(()=>{});}catch(_){}
     }
     for(const event of ['pointerdown','click'])on(el,event,e=>{
+      if(tutorialLocked()&&!e.target.closest('.first-village-guide,.vw-exit,.vw-error')){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy&&!e.target.closest('.fp-panel:not([hidden]),.vd-panel:not([hidden]),.il-panel:not([hidden]),dialog[open],.vw-exit,.vw-error,#settingsModal')){e.preventDefault();e.stopImmediatePropagation();}
     },{capture:true});
     on(exit,'click',()=>close(s.uiBusy?'back':'exit'));on(el.querySelector('.vw-error button'),'click',()=>close());on(full,'click',fullscreen);
@@ -132,6 +134,7 @@
         if(!buttons.length){e.preventDefault();scope.focus?.({preventScroll:true});return;}
         const i=buttons.indexOf(document.activeElement);e.preventDefault();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus();return;
       }
+      if(tutorialLocked())return;
       if(s.flight&&e.target.tagName==='INPUT')return;
       if(!e.repeat&&s.hud?.key(e.code)){e.preventDefault();e.stopImmediatePropagation();return;}
       if(s.uiBusy)return;
@@ -150,7 +153,7 @@
       if(e.cancelable&&!e.target.closest('#settingsModal,.exploration-sheet,.fp-panel,.vd-panel,.il-panel,input,button:not(.vw-stick)'))e.preventDefault();
     },{passive:false});
     function pointerDown(e){
-      if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy||!auto)return;
+      if(e.button!==0)return;e.preventDefault();e.stopPropagation();if(s.failed||s.uiBusy||tutorialLocked()||!auto)return;
       if(e.pointerType==='touch')el.classList.add('vw-touch');
       const node=e.currentTarget,type=node===stick?'move':'look';
       if([...pointers.values()].some(p=>p.type===type))return;
@@ -160,6 +163,7 @@
       if(type==='move'){autoSync();auto.start(e.pointerId);pointerMove(e);}
     }
     function pointerMove(e){
+      if(tutorialLocked()){s.reset();return;}
       const p=pointers.get(e.pointerId);if(!p)return;e.preventDefault();e.stopPropagation();
       if(p.type==='move'){
         let dx=e.clientX-p.cx,dy=e.clientY-p.cy;auto.drag(e.pointerId,dx,dy,stick.clientHeight/2+62);autoSync();const distance=Math.hypot(dx,dy),limit=34,k=distance>limit?limit/distance:1;dx*=k;dy*=k;
@@ -188,23 +192,26 @@
         const core=root.BurbzVillageWalkCore,dt=s.last?(ts-s.last)/1000:0;
         if(s.last&&dt>0){s.intervals.push(dt*1000);s.samples.push(dt*1000);if(s.samples.length>600)s.samples.shift();}
         s.last=ts;s.frames++;
+        if(options.isCurrent?.()===false){close('navigation');return;}
+        s.tutorial?.update();if(tutorialLocked())s.reset();
         autoSync();const before={x:s.player.x,z:s.player.z},movement={side:input.side+(keys.has('KeyD')?1:0)-(keys.has('KeyA')?1:0),forward:input.forward+auto.forward()+(keys.has('KeyW')?1:0)-(keys.has('KeyS')?1:0),lift:(keys.has('Space')?1:0)-(keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0)};
         if(!s.continuity&&!s.room&&!s.flight&&!s.uiBusy&&options.boundaryExit&&core.outwardBoundary(s.player,movement,s.world))leaveForWorld();
         if(s.flight&&!s.room)s.flight.update(dt);
-        else if(!s.uiBusy){if(s.continuity&&!s.room)s.continuity.move(movement,dt);else core.move(s.player,movement,dt,s.world);}
+        else if(!s.uiBusy&&!tutorialLocked()){if(s.continuity&&!s.room)s.continuity.move(movement,dt);else core.move(s.player,movement,dt,s.world);}
         if(!s.uiBusy&&s.player.mode!=='fly'&&s.player.mode!=='swim'&&(!s.flight||s.room))s.footsteps?.update(before,s.player,dt,s.room?'wood':s.world.surface?.(s.player.x,s.player.z));else s.footsteps?.reset();
         if(!s.uiBusy&&!s.room&&s.player.mode!=='fly'&&s.player.mode!=='swim'){
           const intro=root.BurbzAlderwingIntro,dx=s.player.x-before.x,dz=s.player.z-before.z;
           for(const [id,p] of pointers)if(p.type==='move')intro?.inputMove(el,id,input.side,input.forward,dt,dx,dz,s.player.yaw);
           if(![...pointers.values()].some(p=>p.type==='move'))for(const key of keys)if(['KeyW','KeyA','KeyS','KeyD'].includes(key))intro?.inputMove(el,key,key==='KeyD'?movement.side:key==='KeyA'?movement.side:0,key==='KeyW'?movement.forward:key==='KeyS'?movement.forward:0,dt,dx,dz,s.player.yaw);
         }
-        const turn=Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
+        const turn=tutorialLocked()?0:Math.min(.05,dt)*1.45;s.player.yaw+=((keys.has('ArrowLeft')?1:0)-(keys.has('ArrowRight')?1:0))*turn;
         s.player.pitch=Math.max(-1.10,Math.min(1.10,s.player.pitch+(root.BurbzLookSettings?.vertical((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0))??((keys.has('ArrowUp')?1:0)-(keys.has('ArrowDown')?1:0)))*turn));
         const {camera,renderer,scene}=s.source;
         if(!s.room){if(!s.continuity||s.continuity.animateOrigin())s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}else s.flight?.update(0);
         s.work?.update(ts/1000);s.combat?.update(dt);s.rooms?.update(ts/1000);s.harvest?.update(ts/1000);s.hud?.update(ts/1000);s.continuity?.update(ts/1000);
         const motion=s.flight?.camera(dt)||s.continuity?.camera(dt)||{bob:0,pitch:0,roll:0};
         camera.position.set(s.player.x,s.player.y+(s.player.mode==='swim' ? .35 : options.flight ? .45 : core.EYE)+motion.bob,s.player.z);camera.rotation.set(s.player.pitch+motion.pitch,s.player.yaw,motion.roll,'YXZ');camera.updateMatrixWorld();
+        s.rooms?.portalFrame?.(performance.now());
         if(root.BurbzManga)root.BurbzManga.render(root.THREE,renderer,s.room?.scene||scene,camera);else renderer.render(s.room?.scene||scene,camera);
         if(s.intervals.length>=60||(s.intervals.length>=12&&s.intervals.reduce((a,b)=>a+b,0)>1600)){
           const q=core.quality(s.dpr,s.maxDpr,s.intervals,s.fastStreak);s.fastStreak=q.fastStreak;s.intervals=[];
@@ -215,7 +222,7 @@
     }
     return load().then(async()=>{
       if(s.closed)return false;auto=root.BurbzVillageWalkCore.autoFlight();s.auto=auto;const source=await options.source(s.abort.signal);
-      if(s.closed){source?.dispose?.();return false;}
+      if(s.closed||options.isCurrent?.()===false){source?.dispose?.();if(!s.closed)close('navigation');return false;}
       if(!root.THREE||!source?.scene||!source.renderer||source.renderer.getContext().isContextLost())throw Error('This browser cannot render the 3D village.');
       s.source=source;const {renderer,camera,scene}=source,canvas=renderer.domElement,size=renderer.getSize(new root.THREE.Vector2());
       s.snapshot={position:camera.position.clone(),quaternion:camera.quaternion.clone(),lens:{fov:camera.fov,near:camera.near,far:camera.far,aspect:camera.aspect},dpr:renderer.getPixelRatio(),width:size.x,height:size.y};
@@ -233,20 +240,22 @@
       s.harvest=root.BurbzVillageHarvest.attach(s);
       s.hud=root.BurbzFirstPersonHud.attach(s);
       s.combat=root.BurbzWildernessCombat?.attach(s);
-      if(options.room&&!s.rooms.enter(options.room))throw Error("This building is not ready to enter.");
+      if((options.room||s.options.startRoom)&&!s.rooms.enter(options.room||s.options.startRoom))throw Error("This building is not ready to enter.");
       s.canvas=canvas;s.parent=canvas.parentNode;s.next=canvas.nextSibling;s.canvasStyle=canvas.style.cssText;el.prepend(canvas);
       Object.assign(camera,{fov:68,near:.08,far:s.continuity?650:110});
       on(canvas,'webglcontextlost',e=>{e.preventDefault();fail(Error('The graphics connection was interrupted.'));});
       resize();s.resizeObserver=new ResizeObserver(resize);s.resizeObserver.observe(el);
       if(options.flight&&!s.room){el.querySelector('.vw-title small').textContent='BIRD FLIGHT';el.querySelector('.vw-exit').textContent='← Academy';stick.setAttribute('aria-label','Fly: forward, backward and strafe');}
       hint.textContent=s.room?'Left thumb: walk · Drag to look · E interact':options.flight?(touch?'Left stick: move · Right thumb: look · Slider: height':'WASD move · Drag/arrows look · Space/Shift height · F land') : touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
+      s.rooms.startPortal?.();
+      if(options.firstVillageTutorial)s.tutorial=root.BurbzFirstVillageTutorial.attachRoom(options.firstVillageTutorial,s);
       look.focus({preventScroll:true});resume();options.ready?.();return true;
     }).catch(error=>{fail(error);return false;});
   }
   function diagnostics(){
     const s=session;if(!s)return {open:false};
     const sorted=s.samples.slice().sort((a,b)=>a-b),mean=sorted.reduce((a,b)=>a+b,0)/(sorted.length||1);
-    return {open:true,auto:s.auto?.state(),work:s.work?.diagnostics?.(),combat:s.combat?.diagnostics(),continuity:s.continuity?.diagnostics(),hud:s.hud?.diagnostics(),harvest:s.harvest?.diagnostics(),flight:s.flight?.diagnostics(),interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player&&!!s.canvas,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,medianMs:sorted[Math.floor(sorted.length*.5)]||0,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
+    return {open:true,tutorialLocked:!!s.portal||s.tutorial?.locked()===true,portal:!!s.portal,auto:s.auto?.state(),work:s.work?.diagnostics?.(),combat:s.combat?.diagnostics(),continuity:s.continuity?.diagnostics(),hud:s.hud?.diagnostics(),harvest:s.harvest?.diagnostics(),flight:s.flight?.diagnostics(),interiors:s.rooms?.diagnostics(),discoveries:s.discoveries?.diagnostics?.(),ready:!!s.player&&!!s.canvas,failed:s.failed,frames:s.frames,running:!!s.raf,player:s.player?{...s.player}:null,dpr:s.dpr,sampleCount:sorted.length,medianMs:sorted[Math.floor(sorted.length*.5)]||0,meanMs:mean,p95Ms:sorted[Math.floor(sorted.length*.95)]||0,fps:mean?1000/mean:0,draws:s.source?.renderer.info.render.calls,triangles:s.source?.renderer.info.render.triangles,segments:s.world?.segments.length,buildings:s.source?.buildings.map(b=>({id:b.userData.buildingId,level:b.userData.modelLevel,construction:!!b.userData.construction,x:b.position.x,z:b.position.z})),memory:s.source?{...s.source.renderer.info.memory}:null};
   }
   root.BurbzVillageWalk={open,close,isOpen,diagnostics,whenClosed:()=>closingFullscreen,continueWorld(mode){const s=session;if(!s?.continuity||s.room)return false;s.hud?.closePanel?.();return mode==='fly'?s.continuity.toggleFlight('fly'):true;}};
   if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname))root.__burbzVillageWalkDebug={state:diagnostics,nature:()=>session?.continuity?.diagnostics(true),world:()=>session?.world,place:(p)=>{if(session&&(p.mode==='fly'?session.world.allowed3?.(p.x,p.y,p.z):session.world.allowed(p.x,p.z))){Object.assign(session.player,p,{y:(session.flight||p.mode==='fly')&&!session.room?p.y??session.player.y:session.world.height(p.x,p.z)});if(p.mode)session.continuity?.toggleFlight(p.mode);return true;}return false;},resetSamples:()=>{if(session){session.samples=[];session.intervals=[];}}};
