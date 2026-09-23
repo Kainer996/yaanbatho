@@ -5706,7 +5706,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="town_strategy_core.js?v=building-opening-v405-20260914"></script>
 <script src="empire_grid_core.js?v=empire-grid-v322-20260825"></script>
 <script src="village_manager_core.js?v=manager-builds-the-village-v324-20260825"></script>
-<script src="building_interior_core.js?v=generated-building-interiors-v344-20260902"></script>
+<script src="building_interior_core.js?v=tavern-hall-open-v450-20260923"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="geographic_forest_core.js?v=continuous-world-v391-20260910"></script>
@@ -5748,7 +5748,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="peep_needs_core.js?v=academy-flight-v370-20260908"></script>
 <script src="settlement_life_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="settlement_models.js?v=unified-alderwing-v400-20260913"></script>
+<script src="settlement_models.js?v=tavern-hall-open-v450-20260923"></script>
 <script src="settlement_lighting.js?v=unified-alderwing-v400-20260913"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -5770,7 +5770,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home_core.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="player_home_scene.js?v=village-hall-desk-v441-20260922"></script>
 <script src="alderwing_intro.js?v=hands-on-world-tutorial-v429-20260920"></script>
-<script src="player_home.js?v=home-load-repair-v449-20260923"></script>
+<script src="player_home.js?v=tavern-hall-open-v450-20260923"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="flight_craft_core.js?v=craft-home-repair-v440-20260922"></script>
@@ -27216,7 +27216,8 @@ const EMPIRE_BUILDINGS = [
   { id: 'lumberhut', icon: '🪚', name: 'Lumberjack Hut', maxLevel: 3, cost: { coins: 35, branches: 12, stone: 0 }, buildMinutes: 25, branchesPerLevel: 5, workers: 3, workPriority: 6, produces: { materials: { oak_twig: 1 } }, desc: 'Up to 3 villagers fell and split here: +5 🪵 timber and 🪵1 Oak Twig per cycle per level at full crew. Half a crew cuts half the wood — build homes and the rest move in.' },
   { id: 'minehut',  icon: '🪨', name: 'Miners’ Hut', maxLevel: 3, cost: { coins: 45, branches: 16, stone: 0 }, buildMinutes: 32, stonePerLevel: 6, workers: 3, workPriority: 7, produces: { materials: { iron_grit: 1 } }, desc: 'Up to 3 villagers dig rock for building here: +6 stone and ⚙️1 Iron Grit per cycle per level at full crew. Half a crew digs half the stone — build homes and the rest move in.' },
   { id: 'cottages',icon: '🏘️', name: 'Cottage Row',  maxLevel: 3, cost: { coins: 55, branches: 22, stone: 0 },  buildMinutes: 40,  need: 'shelter', perLevel: 12, unlockLevel: 5, desc: 'Houses 12 villagers per level — grows your population cap.' },
-  { id: 'tavern',  icon: '🍻', name: 'Village Hall',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 50,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'The village hall and alehouse. Sit at the same command desk as your home to manage Alderwing. Cheer for 12 villagers per level.' },
+  { id: 'tavern',  icon: '🍻', name: 'Tavern',     maxLevel: 3, cost: { coins: 45, branches: 15, stone: 0 },  buildMinutes: 50,  need: 'joy',     perLevel: 12, unlockLevel: 6, desc: 'A welcoming tavern serving cheer for 12 villagers per level.' },
+  { id: 'village_hall', icon: '🏛️', name: 'Village Hall', maxLevel: 1, cost: { coins: 45, branches: 15, stone: 0 }, buildMinutes: 50, unlockLevel: 1, desc: 'A separate civic hall with the same computer desk as your house. Sit down to manage Alderwing.' },
   { id: 'chapel',  icon: '⛪', name: 'Chapel',       maxLevel: 2, tier: 'town', cost: { coins: 60, branches: 14, stone: 10 }, buildMinutes: 90, need: 'joy',     perLevel: 8,  coinsPerLevel: 2, workers: 1, workPriority: 5, unlockLevel: 8, desc: 'Comfort for 8 villagers and +2 🪙 taxes per level. Needs 1 villager to keep it.' },
   { id: 'lumber',  icon: '🪓', name: 'Lumber Camp',  maxLevel: 3, tier: 'town', cost: { coins: 35, branches: 6,  stone: 4 },  buildMinutes: 120,  branchesPerLevel: 3, workers: 1, workPriority: 2, produces: { materials: { oak_twig: 2, down_tuft: 1 } }, desc: 'Fells and splits: +3 🪵 timber, 🪵2 Oak Twig and 🪶1 Down Tuft per cycle per level. Needs 1 villager to run.' },
   { id: 'quarry',  icon: '⛏️', name: 'Quarry',       maxLevel: 2, tier: 'town', cost: { coins: 70, branches: 20, stone: 6 },  buildMinutes: 150, coinsPerLevel: 4, branchesPerLevel: 1, stonePerLevel: 10, workers: 1, workPriority: 3, produces: { materials: { iron_grit: 2, storm_glass: 1 } }, desc: 'Cuts 10 stone every 8 hours per level, plus +4 🪙, +1 🪵, ⚙️2 Iron Grit and 🌩️1 Storm Glass. Needs 1 villager to run.' },
@@ -30774,7 +30775,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=village-hall-desk-v441-20260922';
+        script.src = 'village_walk.js?v=tavern-hall-open-v450-20260923';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -30952,7 +30953,7 @@ function buildingRoomsAdapter() {
       if(target.scope==='wayside')return;
       if (!buildingRoomsAdapter().describe(target)) return;
       if(target.scope==='academy'){openAcademyRoom(target.buildingId==='dorm'?'outdoors':target.buildingId);return;}
-      if (action === 'command-desk' && target.buildingId === 'tavern'){openCommandDesk(false,true);return;}
+      if (action === 'command-desk' && target.buildingId === 'village_hall'){openCommandDesk(false,true);return;}
       if (action === 'bar' && target.buildingId === 'tavern') villageOpenShop('tavern', target.seed);
       else openBuildingInterior(target.seed, target.buildingId);
     }
@@ -45171,7 +45172,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-load-repair-v449-20260923';
+const BURBZ_BUILD = 'tavern-hall-open-v450-20260923';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46975,7 +46976,8 @@ function refreshGeographicAvatarMarker() {
 }
 function returnToVillageHallDesk(){
   const save=gameState,saved=save.commandDeskReturn,t=saved?.target;
-  if(!t||t.buildingId!=='tavern'||!Number.isFinite(t.seed)||!buildingRoomsAdapter().describe(t))return false;
+  // Old v441 tavern desk returns fall back to the house; never grant a Hall.
+  if(!t||t.buildingId!=='village_hall'||!Number.isFinite(t.seed)||!buildingRoomsAdapter().describe(t))return false;
   if(!saved.standalone){
     if(!BurbzGeographicWorldCore.validCoordinate(saved.geographicPose)){showToast('This older desk return has no world position. Visit the Hall again from your village.');return true;}
     enterGeographicWorld({pose:saved.geographicPose,commandDeskReturn:saved,isCurrent:()=>gameState===save&&gameState.commandDeskReturn===saved}).catch(error=>showToast(error.message));return true;
