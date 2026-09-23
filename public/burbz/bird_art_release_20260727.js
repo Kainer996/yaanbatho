@@ -1,5 +1,9 @@
 /* Built-in ImageGen replacement paintings for the 20260727 live-art release. */
 window.BURBZ_GENERATED_ART_COMPLETION_20260726 = {
+  // User-supplied painting, losslessly encoded without cropping or resizing.
+  // Cards snapshot this map before the warrior pass restores existing sprites.
+  "Raven": "/burbz/bird-art-cache/raven_burbz_cloaked_mountain_20260923.webp",
+  "Common Raven": "/burbz/bird-art-cache/raven_burbz_cloaked_mountain_20260923.webp",
   "Abbott's Booby": "/burbz/bird-art-cache/completion-20260726/abbott_s_booby_burbz_manga_rpg_20260726.webp",
   "Acadian Flycatcher": "/burbz/bird-art-cache/completion-20260726/acadian_flycatcher_burbz_manga_rpg_20260726.webp",
   "Albert's Lyrebird": "/burbz/bird-art-cache/completion-20260726/albert_s_lyrebird_burbz_manga_rpg_20260726.webp",

@@ -351,6 +351,7 @@ FILES=(
   "au_bird_expansion_2.js"
   "national_bird_completion_20260715.js"
   "bird_art_release_20260727.js"
+  "bird-art-cache/raven_burbz_cloaked_mountain_20260923.webp"
   "bird_art_release_20260803.js"
   "bird_art_release_20260901.js"
   "spain_boundary_20260715.js"
