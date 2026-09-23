@@ -75,26 +75,26 @@ const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve
 function fixture(config={}){
  const doc=new Events();doc.hidden=false;doc.createElement=()=>new Element(doc);doc.body=new Element(doc);doc.getElementById=()=>null;
  const map=new Events(),container=new Element(doc);Object.assign(map,{getContainer:()=>container,getCanvasContainer:()=>container,getZoom:()=>16,getCenter:()=>({lng:here.lon,lat:here.lat}),getPitch:()=>32,getBearing:()=>-24,isMoving:()=>false,isStyleLoaded:()=>true,getStyle:()=>({layers:[]}),jumpTo:camera=>jumps.push(camera)});
- const pending=deferred(),markers=[],saves=[],opens=[],jumps=[],renderers=[],renders={set:[],disposed:0,refreshes:0};let clock=at,data=config.data||{catalogue:parse().places},position=Object.hasOwn(config,'position')?config.position:{...here,accuracy:10,at},visible=true,isOpen=false;
+ const pending=deferred(),markers=[],saves=[],opens=[],jumps=[],renderers=[],renders={set:[],disposed:0,refreshes:0};let clock=at,data=config.data||{catalogue:parse().places},position=Object.hasOwn(config,'position')?config.position:{...here,accuracy:10,at},visible=true,isOpen=false,owner={};
  const scene={state:{},set:r=>renders.set.push(r),refresh:()=>renders.refreshes++,dispose:()=>renders.disposed++};
  const walk={isOpen:()=>isOpen,open:opts=>{opens.push(opts);isOpen=true;},close:reason=>{isOpen=false;opens.at(-1)?.resume(reason);}};
  class Clock extends Date{static now(){return clock;}}
  class Renderer{constructor(){this.domElement=new Element(doc);this.disposed=0;this.lost=0;renderers.push(this);}setPixelRatio(){}setSize(){}dispose(){this.disposed++;}forceContextLoss(){this.lost++;}}
- const ctx={document:doc,Date:Clock,devicePixelRatio:2,THREE:{WebGLRenderer:Renderer,Scene:class{},PerspectiveCamera:class{}},AbortController,MutationObserver:class{observe(){}disconnect(){this.disconnected=true;}},BurbzGeographicPlacesCore:{...core,arrival:(p,f)=>core.arrival(p,f,clock)},BurbzWalkingRouteCore:network,BurbzVillageWalk:walk,BurbzGeographicDetailsScene:{create:(map,options)=>{renders.options=options;return scene;}},console};
+ const ctx={document:doc,Date:Clock,devicePixelRatio:2,THREE:{WebGLRenderer:Renderer,Scene:class{},PerspectiveCamera:class{}},AbortController,MutationObserver:class{observe(){}disconnect(){this.disconnected=true;}},BurbzGeographicPlacesCore:{...core,arrival:(p,f)=>core.arrival(p,f,clock),entryGate:(p,f,d)=>core.entryGate(p,f,d,clock)},BurbzWalkingRouteCore:network,BurbzVillageWalk:walk,BurbzGeographicDetailsScene:{create:(map,options)=>{renders.options=options;return scene;}},console};
  vm.runInNewContext(fs.readFileSync(require.resolve('../geographic_places.js'),'utf8'),ctx);
- const options={isVisible:()=>visible,getPosition:()=>position,data:()=>data,save:next=>{saves.push(next);if(config.saveFails)return false;data=next;return true;},fetch:config.fetch||(()=>pending.promise),loadWalk:config.loadWalk||(()=>Promise.resolve()),refreshMap:()=>{},marker:({element})=>{const marker={element,getElement:()=>element,setLngLat(p){this.point=p;return this;},addTo(){markers.push(this);return this;},remove(){this.removed=true;}};return marker;}};
+ const options={getOwner:()=>owner,isVisible:()=>visible,getPosition:()=>position,data:()=>data,save:next=>{saves.push(next);if(config.saveFails)return false;data=next;return true;},fetch:config.fetch||(()=>pending.promise),loadWalk:config.loadWalk||(()=>Promise.resolve()),refreshMap:()=>{},marker:({element})=>{const marker={element,getElement:()=>element,setLngLat(p){this.point=p;return this;},addTo(){markers.push(this);return this;},remove(){this.removed=true;}};return marker;}};
  const api=ctx.BurbzGeographicPlaces.attach(map,options),card=doc.body.children[0];
- return{api,ctx,map,doc,card,options,markers,saves,opens,jumps,renders,renderers,pending,advance:ms=>clock+=ms,select:()=>markers[0].element.emit('click'),enter:()=>card.querySelector('.gp-enter').emit('click'),setPosition:p=>position=p,setVisible:v=>visible=v};
+ return{api,ctx,map,doc,card,options,markers,saves,opens,jumps,renders,renderers,pending,advance:ms=>clock+=ms,select:()=>markers[0].element.emit('click'),enter:()=>card.querySelector('.gp-enter').emit('click'),setPosition:p=>position=p,setVisible:v=>visible=v,setOwner:v=>owner=v};
 }
 test('place controller is idempotent and close cancels delayed entry without opening a room',async()=>{
  const load=deferred(),f=fixture({loadWalk:()=>load.promise});assert.equal(f.ctx.BurbzGeographicPlaces.attach(f.map,f.options),f.api);
  await f.select();assert.equal(f.card.hidden,false);const entering=f.enter();assert.equal(f.card.querySelector('.gp-enter').disabled,true);f.api.close();load.resolve();await entering;assert.equal(f.opens.length,0);assert.equal(f.card.hidden,true);f.api.dispose();assert.equal(f.renders.disposed,1);assert.ok(f.markers.every(m=>m.removed));
 });
-test('position or navigation changes during dependency loading reject entry',async()=>{
- for(const change of ['position','navigation','dispose']){const load=deferred(),f=fixture({loadWalk:()=>load.promise});await f.select();const entering=f.enter();if(change==='position')f.setPosition({...here,accuracy:10,at,lon:here.lon+.01});else if(change==='navigation')f.setVisible(false);else f.api.dispose();load.resolve();await entering;assert.equal(f.opens.length,0,change);f.api.dispose();}
+test('discovery permits moving away during loading; navigation and disposal still reject entry',async()=>{
+ for(const change of ['position','navigation','dispose']){const load=deferred(),f=fixture({loadWalk:()=>load.promise});await f.select();const entering=f.enter();if(change==='position')f.setPosition({...here,accuracy:10,at,lon:here.lon+.01});else if(change==='navigation')f.setVisible(false);else f.api.dispose();load.resolve();await entering;assert.equal(f.opens.length,change==='position'?1:0,change);f.api.dispose();}
 });
 test('late network results after disposal cannot persist or create markers',async()=>{
- const f=fixture();f.api.dispose();const count=f.markers.length;f.pending.resolve(validData());await new Promise(r=>setImmediate(r));assert.equal(f.saves.length,0);assert.equal(f.markers.length,count);assert.equal(f.renders.disposed,1);
+ const f=fixture();const saved=f.saves.length;f.api.dispose();const count=f.markers.length;f.pending.resolve(validData());await new Promise(r=>setImmediate(r));assert.equal(f.saves.length,saved);assert.equal(f.markers.length,count);assert.equal(f.renders.disposed,1);
 });
 test('fresh mapped coordinates replace stale cached identities and survive saved reload within the catalogue cap',async()=>{
  const original=parse().places[0],stale={...original,lat:here.lat-.003,lon:here.lon-.004};
@@ -122,13 +122,14 @@ test('failed dependency opening keeps its actionable error visible and allows a 
  let calls=0;const f=fixture({loadWalk:async()=>{calls++;if(calls===1)throw Error('Connection lost; retry opening');}});await f.select();await f.enter();assert.match(f.card.querySelector('.gp-distance').textContent,/Connection lost; retry opening/);assert.equal(f.card.querySelector('.gp-enter').disabled,false);await f.enter();assert.equal(f.opens.length,1);f.api.dispose();
 });
 test('a failed nearby fetch retries after bounded backoff rather than caching failure for five minutes',async()=>{
- let calls=0;const f=fixture({fetch:async()=>{calls++;if(calls===1)throw Error('Connection lost');return validData();}});await new Promise(r=>setImmediate(r));assert.match(f.api.state.error,/Connection lost/);await f.api.update();assert.equal(calls,1);f.advance(14999);await f.api.update();assert.equal(calls,1);f.advance(1);await f.api.update();assert.equal(calls,2);assert.equal(f.api.state.error,null);assert.equal(f.saves.length,1);f.api.dispose();
+ let calls=0;const f=fixture({fetch:async()=>{calls++;if(calls===1)throw Error('Connection lost');return validData();}});await new Promise(r=>setImmediate(r));assert.match(f.api.state.error,/Connection lost/);await f.api.update();assert.equal(calls,1);f.advance(14999);await f.api.update();assert.equal(calls,1);f.advance(1);await f.api.update();assert.equal(calls,2);assert.equal(f.api.state.error,null);assert.equal(f.saves.length,2); // GPS discovery plus refreshed catalogue
+f.api.dispose();
 });
-test('GPS must still be fresh and nearby when lazy walking dependencies request the room renderer',async()=>{
- for(const change of ['distant','stale','poor']){const f=fixture();await f.select();await f.enter();assert.equal(f.opens.length,1);if(change==='distant')f.setPosition({...here,lon:here.lon+.01,accuracy:10,at});else if(change==='poor')f.setPosition({...here,accuracy:51,at});else f.advance(120001);assert.throws(()=>f.opens[0].source(),/GPS|door|position/i);assert.equal(f.renderers.length,0);assert.equal(f.saves.length,0);f.api.dispose();}
+test('failed discovery persistence cannot authorize stale or distant lazy room rendering',async()=>{
+ for(const change of ['distant','stale','poor']){const f=fixture({saveFails:true});await f.select();await f.enter();assert.equal(f.opens.length,1);if(change==='distant')f.setPosition({...here,lon:here.lon+.01,accuracy:10,at});else if(change==='poor')f.setPosition({...here,accuracy:51,at});else f.advance(120001);assert.throws(()=>f.opens[0].source(),/GPS|door|position/i);assert.equal(f.renderers.length,0);assert.equal(f.saves.length,1);f.api.dispose();}
 });
 test('disposal after walking opens but before lazy dependencies finish cannot allocate a room',async()=>{
- const f=fixture();await f.select();await f.enter();assert.equal(f.opens.length,1);f.api.dispose();assert.throws(()=>f.opens[0].source(),/closed|cancel|GPS|door|position|disposed/i);assert.equal(f.renderers.length,0);assert.equal(f.saves.length,0);
+ const f=fixture();await f.select();await f.enter();assert.equal(f.opens.length,1);f.api.dispose();assert.throws(()=>f.opens[0].source(),/closed|cancel|GPS|door|position|disposed/i);assert.equal(f.renderers.length,0);assert.equal(f.saves.length,1);
 });
 test('failed visit persistence leaves no visit and room failure exit releases its temporary renderer',async()=>{
  const f=fixture({saveFails:true});await f.select();await f.enter();const visit=f.opens[0];visit.source();assert.equal(f.renderers.length,1);assert.throws(()=>visit.suspend(),/save/);assert.equal(f.api.inside,false);assert.equal(f.options.data().visited,undefined);visit.resume('failure');assert.equal(f.renderers[0].disposed,1);assert.equal(f.renderers[0].lost,1);assert.equal(f.doc.body.children.length,1,'hidden temporary room host removed');f.api.dispose();assert.equal(f.renderers[0].disposed,1);
@@ -137,6 +138,15 @@ test('successful visit returns to the exact map camera and retains its independe
  const f=fixture();await f.select();await f.enter();const visit=f.opens[0];assert.equal(visit.room.scope,'geographic');assert.equal(visit.room.homeId,'wayside:node:2');visit.source();visit.suspend();assert.equal(f.api.inside,true);assert.equal(f.card.hidden,true);assert.equal(f.options.data().visited['wayside:node:2'],at);assert.equal(f.options.data().empire,undefined);visit.resume('exit');assert.equal(f.api.inside,false);assert.equal(f.card.hidden,false);assert.deepEqual(JSON.parse(JSON.stringify(f.jumps[0])),{center:{lng:here.lon,lat:here.lat},zoom:16,pitch:32,bearing:-24});assert.equal(f.renderers[0].disposed,1);f.api.dispose();
 });
 
+test('durable discovery restores remote markers without GPS and opens only this profile',async()=>{
+ const first=fixture();const data=JSON.parse(JSON.stringify(first.options.data()));assert(data.discovered['wayside:node:2']);first.api.dispose();
+ const remote=fixture({data,position:null});await remote.select();assert.equal(remote.card.querySelector('.gp-enter').disabled,false);await remote.enter();assert.equal(remote.opens.length,1);remote.api.dispose();
+ const unseen=fixture({data:{catalogue:data.catalogue},position:null});assert.equal(unseen.markers.length,0);assert.equal(unseen.opens.length,0);unseen.api.dispose();
+ const load=deferred(),switched=fixture({data,loadWalk:()=>load.promise});await switched.select();const pending=switched.enter();switched.setOwner({profile:'new'});load.resolve();await pending;assert.equal(switched.opens.length,0);switched.api.dispose();
+});
+test('provider result from an old profile cannot discover or persist for a new profile',async()=>{
+ const f=fixture(),saved=f.saves.length;f.setOwner({profile:'new'});f.pending.resolve(validData());await new Promise(r=>setImmediate(r));assert.equal(f.saves.length,saved);f.api.dispose();
+});
 test('all geographic place, grass and cascade models produce finite stable triangles using settlement geometry',()=>{
  const ctx={console};vm.createContext(ctx);for(const file of ['lib/three.min.js','settlement_models.js','geographic_details_scene.js'])vm.runInContext(fs.readFileSync(require.resolve('../'+file),'utf8'),ctx);
  for(const type of ['cabin','hut','chapel','storehouse','grass','waterfall']){const data=ctx.BurbzGeographicDetailsScene.geometry(type,1234);assert.ok(data.length>81&&data.length%27===0,type+' triangles');assert.ok(data.length/9<60000,type+' bounded model');assert.ok(data.every(Number.isFinite));assert.deepEqual(Array.from(ctx.BurbzGeographicDetailsScene.geometry(type,1234)),Array.from(data));for(let i=0;i<data.length;i+=9){assert.ok(Math.abs(Math.hypot(data[i+3],data[i+4],data[i+5])-1)<1e-5,type+' normalized normal');for(let j=6;j<9;j++)assert.ok(data[i+j]>=0&&data[i+j]<=1,type+' normalized color');}}

@@ -9,6 +9,15 @@
     if(!Number.isFinite(fix.accuracy)||fix.accuracy<0||fix.accuracy>60)return {ready:false,reason:'Waiting for GPS accuracy within 60 m.'};
     const d=distance(p,fix);return {ready:d<=PICKUP_RADIUS_M,distance:d,reason:d<=PICKUP_RADIUS_M?'Ready to gather':'Walk inside your yellow circle to gather this item.'};
   }
+  // Side finds are born at a recorded GPS vertex, not on a planned route.
+  // Match the saved birth fix exactly; never bridge missing GPS segments.
+  function sideDiscoveryPassed(quest, discovery) {
+    if (!quest?.discoveries?.includes(discovery) || !valid(discovery)) return false;
+    const seen=discovery.gpsDiscovery;
+    if(seen&&seen.lat===discovery.lat&&seen.lon===discovery.lon&&Number.isFinite(seen.at)&&seen.at>0)return true;
+    const at = Date.parse(discovery.foundAt);
+    return Number.isFinite(at) && (quest.path || []).some(p => Number.isFinite(p[2]) && Math.abs(p[2]-at)<10000 && distance(discovery,{lat:p[0],lon:p[1]})<1);
+  }
   function circle(p){const coordinates=[];for(let i=0;i<=120;i++){const q=destination(p,i/120*Math.PI*2,PICKUP_RADIUS_M);coordinates.push([q.lon,q.lat]);}return {type:'Feature',properties:{kind:'scan-range'},geometry:{type:'Polygon',coordinates:[coordinates]}};}
   function corridor(route){
     const points=[];for(const p of route||[]){const q={lat:p?.[0],lon:p?.[1]};if(!valid(q))return [];if(!points.length||distance(q,points[points.length-1])>.01)points.push(q);}if(points.length<2)return [];
@@ -30,5 +39,5 @@
     return rows.filter(valid).slice(0,24);
   }
   function hash(s){let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;}
-  return Object.freeze({PICKUP_RADIUS_M,HALF_WIDTH_M,distance,destination,gathering,circle,corridor,buildings});
+  return Object.freeze({PICKUP_RADIUS_M,HALF_WIDTH_M,distance,destination,gathering,sideDiscoveryPassed,circle,corridor,buildings});
 });

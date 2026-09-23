@@ -721,6 +721,40 @@
       unlock
     };
   }
+  // A planned pin is not a visit. Bank only stops inside an actual fresh GPS
+  // arrival circle; never infer passage from route progress or a camera pan.
+  function hasMatchingDiscovery(quest, entry) {
+    const discovery = quest.receipts.discoveries && quest.receipts.discoveries[entry.id];
+    return !!(discovery && discovery.entryId === entry.id && discovery.lat === entry.route.lat && discovery.lon === entry.route.lon && Number.isFinite(discovery.at) && discovery.at > 0);
+  }
+  function encounterGate(rootState, entryId, fix, now) {
+    const found = findActiveEntry(rootState, entryId, false);
+    if (!found) return { ready: false, reason: 'Stop no longer available' };
+    const { quest, entry } = found;
+    if (quest.phase === PHASES.REVIEW) return { ready: true, reason: 'Walk review' };
+    if (hasMatchingDiscovery(quest, entry))
+      return { ready: true, reason: 'Discovered on your walk · revisit anywhere' };
+    const core = root && root.BurbzGeographicPlacesCore || tryRequire('./geographic_places_core.js');
+    return core ? core.arrival(entry.route, fix, now) : { ready: false, reason: 'Waiting for location' };
+  }
+  function observeDestinationEncounters(rootState, fix, adapter, opts) {
+    opts = opts || {};
+    const stale = checkGuard(rootState, adapter, opts);
+    if (stale) return { status: stale };
+    const q = readDestinationState(rootState).active;
+    if (!q || q.phase !== PHASES.ACTIVE) return { status: 'unchanged' };
+    const core = root && root.BurbzGeographicPlacesCore || tryRequire('./geographic_places_core.js');
+    const eligible = e => !hasMatchingDiscovery(q, e) && core?.arrival(e.route, fix, opts.now).ready;
+    if (!q.entries.some(eligible)) return { status: 'unchanged' };
+    return runTransaction(rootState, adapter, opts, function() {
+      const current = ensureDestinationState(rootState).active;
+      if (!current || current.id !== q.id || current.phase !== PHASES.ACTIVE) throw new Error('Destination changed before discovery.');
+      const nearby = current.entries.filter(e => !hasMatchingDiscovery(current, e) && core?.arrival(e.route, fix, opts.now).ready);
+      current.receipts.discoveries = current.receipts.discoveries || {};
+      nearby.forEach(e => { current.receipts.discoveries[e.id] = { entryId:e.id, lat:e.route.lat, lon:e.route.lon, at:fix.at }; });
+      return { entries: nearby.map(e => e.id) };
+    });
+  }
   function applyDestinationEncounter(rootState, entryId, choice, adapter, opts) {
     opts = opts || {};
     choice = choice || {};
@@ -880,6 +914,8 @@
     beginDestinationQuest,
     finishDestinationWalk,
     reviewEntries,
+    encounterGate,
+    observeDestinationEncounters,
     applyDestinationEncounter,
     completeDestinationQuest,
     advanceTime,

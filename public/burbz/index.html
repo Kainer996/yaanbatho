@@ -1449,6 +1449,8 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .live-map-shell.clean-cloud-map .map-area-bird-rarity { font-size:9px; }
 .live-map-shell.clean-cloud-map .map-player-ring { display:none; }
 
+.map-revisit-btn { position:absolute; right:12px; bottom:calc(292px + var(--safe-bottom)); z-index:48; min-height:44px; padding:8px 10px; border:1px solid rgba(240,199,103,.35); border-radius:12px; background:rgba(3,10,9,.86); color:#fff7d9; font:700 12px sans-serif; }
+.live-map-shell.clean-cloud-map .map-locate-btn { display:block !important; right:12px; left:auto; bottom:calc(238px + var(--safe-bottom)); width:48px; height:44px; z-index:48; }
 .live-map-shell.clean-cloud-map .map-zoom-controls { position:absolute; right:12px; bottom:calc(130px + var(--safe-bottom)); z-index:48; display:grid; gap:8px; pointer-events:auto; }
 .map-zoom-btn { width:48px; height:48px; border-radius:16px; border:1px solid rgba(240,199,103,.28); background:rgba(3,10,9,.72); color:#fff7d9; font-family:'Russo One',sans-serif; font-size:26px; line-height:1; box-shadow:0 10px 22px rgba(0,0,0,.36); backdrop-filter:blur(9px); }
 .map-zoom-btn:active { transform:scale(.96); background:rgba(240,199,103,.24); }
@@ -4677,6 +4679,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div id="burbzLiveMap" aria-label="Live Burbz habitat map"></div><div class="map-fallback-grid" id="mapFallbackGrid" aria-hidden="true"></div>
         <div class="map-sky-haze"></div><div class="map-playfield-vignette"></div>
         <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Live conditions</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
+        <button class="map-revisit-btn" id="mapRevisitBtn" aria-pressed="false" title="Pan back to discovered stops; your real position stays unchanged">↔ Explore map</button>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="camp-map-control" id="campMapButton" type="button">⛺ Camps</button>
@@ -5722,7 +5725,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_map_3d.js?v=map-camera-v403-20260914"></script>
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
-<script src="geographic_places_core.js?v=map-pictures-v374-20260908"></script>
+<script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
 <script src="scan_home_core.js?v=home-b-charcoal-v422-20260917"></script>
 <script src="scan_home.js?v=dashboard-banners-v443-20260922"></script>
 <script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
@@ -5731,9 +5734,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
 <script src="geographic_daynight_core.js?v=night-quests-v376-20260908"></script>
 <script src="geographic_daynight.js?v=red-gold-pocket-v437-20260921"></script>
-<script src="map_trail_core.js?v=map-trails-v381-20260909"></script>
+<script src="map_trail_core.js?v=quest-revisit-v457-20260923"></script>
 <script src="geographic_details_scene.js?v=quest-buildings-v402-20260913"></script>
-<script src="geographic_places.js?v=quest-buildings-v402-20260913"></script>
+<script src="geographic_places.js?v=quest-revisit-v457-20260923"></script>
 
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
@@ -5741,8 +5744,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="destination_route_core.js?v=red-gold-pocket-v437-20260921"></script>
 <script src="destination_elevation_core.js?v=destination-cleanup-v434-20260921"></script>
 <script src="destination_reward_core.js?v=destination-cleanup-v434-20260921"></script>
-<script src="destination_state_core.js?v=destination-cleanup-v434-20260921"></script>
-<script src="destination_quest_ui.js?v=gold-trail-raven-v454-20260923"></script>
+<script src="destination_state_core.js?v=quest-revisit-v457-20260923"></script>
+<script src="destination_quest_ui.js?v=quest-revisit-v457-20260923"></script>
 <script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="landscape_ui.js?v=landscape-v388-20260910"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
@@ -19220,6 +19223,7 @@ function enableBurbzTerrain() {
     getQuestObjects:()=>{const q=activeWalkingQuest();return BurbzMapTrailCore.buildings(q,q?BurbzWalkingEncounterCore.listQuestEncounters(q):[]);},
     fetch:query=>window.BurbzQuestCore.fetchGeographicDetails(query),
     data:()=>gameState.geographicPlaces,
+    getOwner:()=>gameState,
     save:next=>{const old=gameState.geographicPlaces;gameState.geographicPlaces=next;const result=saveState();if(!result?.ok){gameState.geographicPlaces=old;return false;}return true;},
     refreshMap:()=>{geographicMap3D?.refresh();window.BurbzGeographicSurfaces?.attach(liveMap).refresh();geographicDayNight?.refresh();}
   });
@@ -19238,10 +19242,18 @@ function tuneCameraForZoom() { if (!liveMap) return; const zoom = liveMap.getZoo
 // Pokémon Go / Jurassic World Alive movement model: normal play stays pinned to
 // real GPS and a one-finger swipe rotates the view. A selected quest temporarily
 // enables drag-pan so the player can inspect the route behind the briefing card.
+let questRevisitMap = false;
+function setQuestRevisitMap(enabled) {
+  questRevisitMap = !!enabled;
+  const button = $('mapRevisitBtn');
+  if (button) { button.setAttribute('aria-pressed', String(questRevisitMap)); button.textContent = questRevisitMap ? '↔ Exploring' : '↔ Explore map'; }
+  setQuestMapInspectionMode(questMapInspectionMode());
+}
 function questMapInspectionMode() {
-  return document.body.classList.contains('destination-quest-open') || !!$('liveMapShell')?.classList.contains('quest-focused') || !!document.querySelector('#walkQuestSheet.open.is-walk-picker');
+  return questRevisitMap || document.body.classList.contains('destination-quest-open') || !!$('liveMapShell')?.classList.contains('quest-focused') || !!document.querySelector('#walkQuestSheet.open.is-walk-picker');
 }
 function setQuestMapInspectionMode(enabled) {
+  enabled = enabled || questRevisitMap;
   if (!liveMap) return;
   try {
     if (enabled) { liveMap.dragPan.enable(); liveMap.keyboard?.enable(); }
@@ -19834,14 +19846,16 @@ function previewWalkingEncounters(offer) {
 function openWalkingEncounter(id) {
   const quest = activeWalkingQuest();
   const encounter = quest && window.BurbzWalkingEncounterCore.listQuestEncounters(quest).find(e => e.id === id);
-  if (!encounter) return;
+  if (!encounter || !encounter.discovered) { showToast('Reach this story stop on your walk first.'); return; }
   const el = walkQuestSheetEl();
   el.innerHTML = '<div class="quest-overlay-panel wq-expedition"><button class="quest-overlay-close" aria-label="Close encounter" onclick="closeWalkQuestSheet()">✕</button>' +
     window.BurbzWalkingQuestUI.encounterDialog(encounter, {embedded:true}) + '<button class="wq-npc-ok" id="wqEncounterBack">Back to journal</button></div>';
   el.querySelector('#wqEncounterBack').onclick = openActiveWalkQuestSheet;
   el.querySelectorAll('[data-encounter-choice]').forEach(button => button.addEventListener('click', () => {
+    if (activeWalkingQuest() !== quest) return;
+    const before = snapshotGameState();
     const result = window.BurbzWalkingEncounterCore.chooseEncounter(quest, id, button.dataset.encounterChoice, {now:Date.now()});
-    if (result.status === 'chosen') saveState();
+    if (result.status === 'chosen') { try { durableSaveState({throwOnFailure:true}); } catch(error) { restoreGameStateSnapshot(before); showToast('Could not save your story choice. Please retry.'); } }
     openWalkingEncounter(id);
   }));
   showWalkQuestSheet(el);
@@ -20427,7 +20441,8 @@ function drawWalkingQuestOnMap() {
   const encounterStops = window.BurbzWalkingEncounterCore.listQuestEncounters(quest);
   quest.checkpoints.forEach((cp, idx) => {
     if (cp.kind === 'finish' && !window.BurbzQuestCore.questFinishIsReady(quest)) return;
-    if (cp.reached && cp.kind !== 'finish') return;
+    const savedEncounter = encounterStops.find(e => e.checkpointIndex === idx && e.discovered);
+    if (cp.reached && cp.kind !== 'finish' && !savedEncounter) return;
     // Outer pin belongs to MapLibre (inline transform positioning); all visuals,
     // transitions and bounce animations live on the inner .quest-marker child.
     const el = document.createElement('button');
@@ -20450,6 +20465,7 @@ function drawWalkingQuestOnMap() {
     el.appendChild(face);
     el.addEventListener('click', ev => {
       ev.stopPropagation(); // keep the tap off the map's quest-offers hit layer underneath
+      if (savedEncounter) { openWalkingEncounter(savedEncounter.id); return; }
       const fix=liveMapHasPrecisePosition?liveMapLastPosition:null;
       if(cp.kind==='chest'){
         const gate=mapGatheringGate(cp);
@@ -21224,6 +21240,7 @@ function spawnSideQuestDiscovery(active, lat, lon) {
     const rarity = String((typeof realWorldRarityLabel === 'function' && realWorldRarityLabel(d.species)) || 'common').toLowerCase();
     d.rarity = ['common', 'uncommon', 'rare', 'epic', 'legendary'].includes(rarity) ? rarity : 'common';
   }
+  if(mapGatheringGate(d).ready)d.gpsDiscovery={lat:d.lat,lon:d.lon,at:liveMapLastPosition.at};
   active.discoveries.push(d);
   active.nextFindAtM = active.distanceM + SIDE_QUEST_FIND_GAP_M[0] + Math.floor(Math.random() * (SIDE_QUEST_FIND_GAP_M[1] - SIDE_QUEST_FIND_GAP_M[0]));
   saveState();
@@ -21262,8 +21279,11 @@ function drawSideQuestOnMap() {
   const active = sideQuestActive();
   if (!active || !liveMap || !window.maplibregl) return;
   active.discoveries.forEach(d => {
-    if (d.claimed) return;
-    const el = document.createElement('div');
+    if (d.claimed && d.kind !== 'lore') return;
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.dataset.sideDiscovery = d.id;
+    el.setAttribute('aria-label', (d.claimed ? 'Read ' : 'Collect ') + (d.tale?.title || d.kind));
     el.className = 'quest-marker-pin';
     const face = document.createElement('div');
     face.className = 'quest-marker ' + (d.kind === 'questgiver' ? 'qm-npc' : 'qm-chest');
@@ -21272,7 +21292,7 @@ function drawSideQuestOnMap() {
     else if (d.kind === 'lore') face.textContent = '📜';
     else face.innerHTML = '<img src="' + WALK_QUEST_NPC_ART + '" alt="Quest giver">';
     el.appendChild(face);
-    el.addEventListener('click', ev => { ev.stopPropagation(); sideQuestClaimDiscovery(d.id); });
+    el.addEventListener('click', ev => { ev.stopPropagation(); if(sideQuestActive()!==active)return; if(d.claimed&&d.tale)showQuestNpcDialog(d.tale.title,d.tale.text);else sideQuestClaimDiscovery(d.id); });
     sideQuestMapMarkers.push(createGeographicMarker({ element: el, anchor: 'center' }).setLngLat([d.lon, d.lat]).addTo(liveMap));
   });
 }
@@ -21325,7 +21345,7 @@ async function sideQuestClaimDiscovery(id, opts) {
   const active = sideQuestActive();
   const d = active && active.discoveries.find(x => x.id === id);
   if (!d || d.claimed) return false;
-  if(['chest','weapon'].includes(d.kind)){const gate=mapGatheringGate(d);if(!gate.ready){showToast(gate.reason);return false;}}
+  if(!BurbzMapTrailCore.sideDiscoveryPassed(active,d)){const gate=mapGatheringGate(d);if(!gate.ready){showToast(gate.reason);return false;}}
   if (d.kind === 'chest') {
     const claimKey = 'side:' + active.id + ':discovery:' + d.id;
     const rawLoot = window.BurbzQuestCore.normaliseChestLoot(d.loot || sideQuestChestLoot(d.id, d.coins), claimKey); // preserve saved food; deterministically complete legacy bundles
@@ -21449,7 +21469,7 @@ async function endSideQuest() {
       const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
       if (sq.active !== active) return;
       if (!claimed && !d.claimed) {
-        showToast('Collect each item inside your yellow circle before ending this Side Quest. Unsaved finds stay on your map.');
+        showToast('Visit each new find first, then collect it here or from Explore map. Unsaved finds stay on your map.');
         return;
       }
     } // nothing found is ever lost
@@ -22582,12 +22602,13 @@ Object.assign(window, {
   }
 });
 
-function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
+function wireMapControls() { const locateBtn = $('mapLocateBtn'); if (locateBtn && !locateBtn.dataset.wired) { locateBtn.dataset.wired = '1'; locateBtn.addEventListener('click', () => { SFX.tap(); setQuestRevisitMap(false); liveMapUserMoved = false; if (navigator.geolocation) navigator.geolocation.getCurrentPosition(pos => handleLivePosition(pos, true), () => setMapLabels('Location needed', 'Burbz can only show your own local map after this device allows location.'), { enableHighAccuracy:true, timeout:12000, maximumAge:0 }); if (liveMapHasPrecisePosition && liveMapLastPosition && liveMap) liveMap.flyTo({ center:[liveMapLastPosition.lon, liveMapLastPosition.lat], zoom:Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM), pitch:burbzPitchForZoom(Math.max(liveMap.getZoom() || BURBZ_START_ZOOM, BURBZ_START_ZOOM)), bearing:liveMap.getBearing() || -24, duration:650 }); }); }
   function zoomLiveMapBy(delta, ev) { if (ev) { ev.preventDefault(); ev.stopPropagation(); } SFX.tap(); liveMapUserMoved = true; if (!liveMap) return; const from = liveMap.getZoom() || BURBZ_START_ZOOM; const z = Math.max(BURBZ_MIN_ZOOM, Math.min(liveMapZoomCeiling(), from + delta)); if (delta > 0 && z <= from + 0.001) { tellQuestZoomLockOnce(); return; } liveMap.easeTo({ zoom:z, pitch:burbzPitchForZoom(z), duration:280 }); }
   const zoomInBtn = $('mapZoomInBtn'); if (zoomInBtn && !zoomInBtn.dataset.wired) { zoomInBtn.dataset.wired = '1'; zoomInBtn.addEventListener('click', ev => zoomLiveMapBy(.75, ev)); zoomInBtn.addEventListener('touchstart', ev => zoomLiveMapBy(.75, ev), { passive:false }); }
   const zoomOutBtn = $('mapZoomOutBtn'); if (zoomOutBtn && !zoomOutBtn.dataset.wired) { zoomOutBtn.dataset.wired = '1'; zoomOutBtn.addEventListener('click', ev => zoomLiveMapBy(-.75, ev)); zoomOutBtn.addEventListener('touchstart', ev => zoomLiveMapBy(-.75, ev), { passive:false }); }
   const likelyBtn = $('mapLikelyBtn'); if (likelyBtn && !likelyBtn.dataset.wired) { likelyBtn.dataset.wired = '1'; likelyBtn.addEventListener('click', () => { SFX.tap(); toggleLikelyBirdOverlay(); }); } const scanBtn = $('mapScanBtn'); if (scanBtn && !scanBtn.dataset.wired) { scanBtn.dataset.wired = '1'; scanBtn.addEventListener('click', () => switchScreen('scan')); }
   const showBtn = $('mapQuestShowBtn'); if (showBtn && !showBtn.dataset.wired) { showBtn.dataset.wired = '1'; showBtn.addEventListener('click', showAllLocalQuests); updateShowQuestsButton(); }
+  const revisitBtn = $('mapRevisitBtn'); if(revisitBtn && !revisitBtn.dataset.wired){revisitBtn.dataset.wired='1';revisitBtn.addEventListener('click',()=>setQuestRevisitMap(!questRevisitMap));}
   const sideBtn = $('mapSideQuestBtn'); if (sideBtn && !sideBtn.dataset.wired) { sideBtn.dataset.wired = '1'; sideBtn.addEventListener('click', openMapSideQuest); updateMapSideQuestButton(); }
   const questHud = $('mapQuestHud'); if (questHud && !questHud.dataset.wired) { questHud.dataset.wired = '1'; questHud.addEventListener('click', () => { SFX.tap(); openActiveWalkQuestSheet(); }); }
   const areaBirdsToggle = $('mapAreaBirdsToggle'); if (areaBirdsToggle && !areaBirdsToggle.dataset.wired) { areaBirdsToggle.dataset.wired = '1'; areaBirdsToggle.addEventListener('click', () => { SFX.tap(); switchScreen('area-birds'); }); }
@@ -22628,6 +22649,7 @@ function handleLivePosition(pos, fly) {
   updateLiveMapPosition(lat, lon, 'Your live position', { fly:fly && !liveMapUserMoved, precise:true, accuracy, at:Number(pos.timestamp) });
   // A cached GPS position may draw the map, but cannot award trail rewards.
   if (mapGatheringGate({lat,lon}).ready) {
+    window.BurbzDestinationStateCore?.observeDestinationEncounters(gameState,liveMapLastPosition,createDestinationBrowserAdapter());
     autoCollectDestinationPickups();
     try { questOnPositionFix(lat, lon, accuracy, Number(pos.timestamp)); } catch (err) { console.warn('BURBZ quest fix failed', err); }
     try { sideQuestOnPositionFix(lat, lon, accuracy); } catch (err) { console.warn('BURBZ side quest fix failed', err); }
@@ -45241,7 +45263,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'expedition-duration-v455-20260923';
+const BURBZ_BUILD = 'quest-revisit-v457-20260923';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

@@ -35,5 +35,10 @@
   if(!Number.isFinite(fix.accuracy)||fix.accuracy<0||fix.accuracy>50)return{ready:false,reason:'Waiting for GPS accuracy within 50 m',distance:null};
   const d=distance(place,fix);return{ready:d<=45,distance:Math.round(d),reason:d<=45?'You have arrived':'Walk within 45 m to enter'};
  }
- return {hash,distance,query,parse,arrival,valid};
+ function entryGate(place,fix,data,now=Date.now()){
+  const visited=data?.visited?.[place?.id],found=data?.discovered?.[place?.id];
+  if(valid(place)&&((Number.isFinite(visited)&&visited>0)||(found&&found.lat===place.lat&&found.lon===place.lon&&Number.isFinite(found.at)&&found.at>0)))return {ready:true,distance:valid(fix)?Math.round(distance(place,fix)):null,reason:'Discovered on your walk · revisit anywhere',revisit:true};
+  return arrival(place,fix,now);
+ }
+ return {hash,distance,query,parse,arrival,entryGate,valid};
 });
