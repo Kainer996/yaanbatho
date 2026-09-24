@@ -38,7 +38,7 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: #000; colo
   --green: var(--hp-green);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --nav-height: 100px;
+  --nav-height: 54px;
   --dock-row: 50px;
 }
 input, button, textarea { font-family: inherit; border: none; outline: none; background: none; color: inherit; }
@@ -588,6 +588,11 @@ svg.academy-room-bg { display:block; filter:none; }
 }
 .dock-row { display: flex; align-items: stretch; height: var(--dock-row); }
 .dock-row-top { justify-content: space-around; }
+.dock-row-slim { justify-content: space-evenly; padding: 0 6px; }
+/* The Burbz logo is the way Home now that Home holds the room shortcuts. */
+button.header-logo { background:none; border:0; padding:0; margin:0; min-height:44px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+button.header-logo:active img { transform:scale(.96); }
+button.header-logo:focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:8px; }
 /* The adventure row: Map and Quests port-side, Battle and the codex to
    starboard, the island holding the centre between them. */
 .dock-row-low { justify-content: space-between; padding: 0 8px; }
@@ -4615,7 +4620,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=separate-home-v461-20260924">
+<link rel="stylesheet" href="scan_home.css?v=home-academy-dock-v463-20260924">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4642,7 +4647,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
   <!-- Header -->
   <header class="header distributed-hud-header">
-    <div class="header-logo"><img src="assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></div>
+    <button type="button" class="header-logo" id="headerHomeBtn" data-game-route data-screen="scan" aria-label="Home" title="Home"><img src="assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></button>
     <div class="header-hud">
       <div class="hud-top">
         <span class="hud-level-badge" title="Trainer level"><span class="hud-lv-label">LV</span><span class="hud-lv-num" id="hudLevelNum">1</span></span>
@@ -4755,6 +4760,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-training" aria-labelledby="desk-training-title"><button type="button" class="desk-panel-heading" data-home-action="panel-training"><span id="desk-training-title">Training</span><small id="desk-training-count"></small><span aria-hidden="true">↗</span></button><div id="desk-training-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Drills & rewards; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-hospital" aria-labelledby="desk-hospital-title"><button type="button" class="desk-panel-heading" data-home-action="panel-hospital"><span id="desk-hospital-title">Hospital</span><small id="desk-hospital-count"></small><span aria-hidden="true">↗</span></button><div id="desk-hospital-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Birds needing care; open the room for all entries"></div></section>
+        <section class="desk-panel desk-panel-academy" aria-labelledby="desk-academy-title"><button type="button" class="desk-panel-heading" data-home-action="panel-academy"><span id="desk-academy-title">Academy</span><small id="desk-academy-count"></small><span aria-hidden="true">↗</span></button><div id="desk-academy-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Academy buildings; open a room or plan a build"></div></section>
         <section class="desk-panel desk-panel-completed" aria-labelledby="desk-completed-title"><button type="button" class="desk-panel-heading" data-home-action="panel-completed"><span id="desk-completed-title">Completed</span><small id="desk-completed-count"></small><span aria-hidden="true">↗</span></button><div id="desk-completed-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Not yet checked; open the room for all entries"></div></section>
         <section class="desk-panel desk-panel-building" aria-labelledby="desk-building-title"><button type="button" class="desk-panel-heading" data-home-action="panel-building"><span id="desk-building-title">Your Empire</span><small id="desk-building-count"></small><span aria-hidden="true">↗</span></button><div id="desk-building-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Your Empire: villages, towns and regions"></div></section>
       </div>
@@ -5214,46 +5220,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
   <!-- The Adventure Dock: every destination stands fixed and symmetrical.
        Six management rooms ride the top deck; the adventure row below
        flanks the solid Empire · Scan · Academy island. Nothing scrolls. -->
+  <!-- The slim dock: Home holds Kitchen, Training, Forge, Hospital, Quests,
+       Empire and the Academy, so the bar keeps only the places Home does not.
+       Tap the Burbz logo to come back Home. -->
   <div class="bottom-dock" id="bottomDock">
-  <nav class="bottom-nav" id="bottomNav" aria-label="More destinations">
-  <div class="dock-row dock-row-top">
-    <button class="nav-item" type="button" data-quick-destination="kitchen" aria-label="Kitchen & Pantry">
-      <div class="nav-icon"><img src="assets/academy-buildings-manga/kitchen.png" alt="" draggable="false"></div>
-      <div class="nav-label">Kitchen</div>
-    </button>
-    <button class="nav-item" data-game-route data-screen="inventory" aria-label="Royal Stores">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/inventory.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Stores</div>
-    </button>
-    <button class="nav-item" type="button" data-quick-destination="training" aria-label="Training overview">
-      <div class="nav-icon"><img src="assets/academy-buildings-manga/training-hall.png" alt="" draggable="false"></div>
-      <div class="nav-label">Training</div>
-    </button>
-    <button class="nav-item" type="button" data-quick-destination="hospital" aria-label="Bird Hospital">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/hospital.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Hospital</div>
-    </button>
-    <button class="nav-item" data-game-route data-screen="forge" aria-label="Blacksmith's forge">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/forge.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Forge</div>
-    </button>
-    <button class="nav-item" data-game-route data-screen="leaderboards" aria-label="Ranks">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/leaderboards.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Ranks</div>
-    </button>
-  </div>
-  <div class="dock-row dock-row-low">
-  <div class="dock-pair">
+  <nav class="bottom-nav" id="bottomNav" aria-label="Destinations">
+  <div class="dock-row dock-row-slim">
     <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/map.webp" alt="" draggable="false"></div>
       <div class="nav-label">Map</div>
     </button>
-    <button class="nav-item" data-game-route data-screen="quests" aria-label="Quests">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/quests.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Quests</div>
-    </button>
-  </div>
-  <div class="dock-pair">
     <button class="nav-item" data-game-route data-screen="battle" aria-label="Battle">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/battle.webp" alt="" draggable="false"></div>
       <div class="nav-label">Battle</div>
@@ -5262,23 +5238,16 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/birdex.webp" alt="" draggable="false"></div>
       <div class="nav-label">Birds</div>
     </button>
-  </div>
+    <button class="nav-item" data-game-route data-screen="inventory" aria-label="Royal Stores">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/inventory.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Stores</div>
+    </button>
+    <button class="nav-item" data-game-route data-screen="leaderboards" aria-label="Ranks">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/leaderboards.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Ranks</div>
+    </button>
   </div>
   </nav>
-  <div class="bottom-dock-anchor" id="bottomDockAnchor" aria-label="Main destinations">
-    <button class="nav-item" data-game-route data-screen="village" aria-label="Empire">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/empire.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Empire</div>
-    </button>
-    <button class="nav-item nav-scan" data-game-route data-screen="scan" aria-label="Home — scan a bird">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/scan.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Home</div>
-    </button>
-    <button class="nav-item" data-game-route data-screen="academy" aria-label="Academy">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/academy.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Academy</div>
-    </button>
-  </div>
   </div>
 
   <!-- Capture Celebration Overlay -->
@@ -5738,8 +5707,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
-<script src="scan_home_core.js?v=separate-home-v461-20260924"></script>
-<script src="scan_home.js?v=separate-home-v461-20260924"></script>
+<script src="scan_home_core.js?v=home-academy-dock-v463-20260924"></script>
+<script src="scan_home.js?v=home-academy-dock-v463-20260924"></script>
 <script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -23806,6 +23775,26 @@ function activateHomeCurrentGoal() {
   $('captureBtn')?.focus({preventScroll:true});
   showToast('Choose Camera or Sound to discover your next bird.');
 }
+// Home's condensed Academy: a read-only view of the same buildings the
+// Academy screen shows. Taps open the real room or the real build card.
+function scanHomeAcademySnapshot() {
+  ensureAcademyBuildings(false);
+  const level=gameState.player.level||1,coins=gameState.player.coins||0,branches=playerBranches();
+  const residents={};
+  (gameState.flock||[]).forEach(b=>{if(!b||birdHasActiveExpedition(b.id))return;const r=b.academy&&ACADEMY_ROOMS[b.academy.room]&&isAcademyRoomBuilt(b.academy.room)?b.academy.room:FREE_BIRD_ROOM;residents[r]=(residents[r]||0)+1;});
+  const ids=ACADEMY_BUILDING_ORDER.filter(id=>id!==FREE_BIRD_ROOM&&ACADEMY_BUILDINGS[id]&&(id!=='kitchen'||isAcademyBuildingBuilt(id)||openingProgress().kitchenIntroduced));
+  const rows=ids.map(id=>{
+    const b=ACADEMY_BUILDINGS[id],built=isAcademyBuildingBuilt(id),lock=built?null:academyBuildingProgressLock(id),levelLocked=!built&&level<b.unlockLevel;
+    const afford=coins>=b.cost&&branches>=(b.branches||0),birds=residents[id]||0;
+    const name=(ACADEMY_ROOMS[id]?.label||b.label).toLowerCase().replace(/(^|[\s'&-])\S/g,c=>c.toUpperCase());
+    const detail=built?(birds?birds+(birds===1?' bird':' birds')+' · Open':'Open'):lock?lock.message:levelLocked?'Unlocks at level '+b.unlockLevel:(afford?'Ready to build · ':'Build for ')+b.cost+' coins'+(b.branches?' · '+b.branches+' timber':'');
+    return {id,name,art:b.asset,icon:b.icon,state:built?'built':lock||levelLocked?'locked':afford?'ready':'short',detail,target:built?{kind:'academy-room',room:id}:{kind:'academy-plan',id}};
+  });
+  rows.sort((a,b)=>({ready:0,built:1,short:2,locked:3}[a.state]-{ready:0,built:1,short:2,locked:3}[b.state]));
+  const free=residents[FREE_BIRD_ROOM]||0;
+  if(free)rows.unshift({id:FREE_BIRD_ROOM,name:'Free birds',art:null,icon:'🕊️',state:'built',detail:free+(free===1?' bird waiting for a job':' birds waiting for jobs'),target:{kind:'academy-room',room:FREE_BIRD_ROOM}});
+  return {rows,built:ids.filter(isAcademyBuildingBuilt).length,total:ids.length,ready:rows.filter(r=>r.state==='ready').length};
+}
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
   if (!scanHomeBound) {
@@ -23827,14 +23816,14 @@ function renderScanHome(snapshot, counts) {
     const waiting=(sideWalk.discoveries||[]).filter(d=>!d.claimed).length;
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
-  BurbzScanHome.render({...scanHomeDeskSnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:scanHomeCurrentGoal(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  BurbzScanHome.render({...scanHomeDeskSnapshot(),academy:scanHomeAcademySnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:scanHomeCurrentGoal(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
   if(typeof refreshPrerequisiteGoalBanner==='function')refreshPrerequisiteGoalBanner();
 }
 function openScanHomeTarget(target) {
   if (!target) return;
   const routes=['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','profile'];
   if(target.kind==='route'&&!routes.includes(target.screen))return;
-  const gate=target.kind==='notice'&&target.scope==='academy'?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',town:'village',region:'village',villages:'village',notice:'village','build-opportunity':'village','academy-build':'academy','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
+  const gate=target.kind==='notice'&&target.scope==='academy'||['academy','academy-room','academy-plan'].includes(target.kind)?'academy':target.kind==='route'?target.screen:({kitchen:'kitchen',hospital:'hospital',training:'training',forge:'forge',village:'village',town:'village',region:'village',villages:'village',notice:'village','build-opportunity':'village','academy-build':'academy','stores-gear':'inventory','feed-bird':'kitchen',quest:'quests',walk:'map'})[target.kind];
   if (gate&&!featureGateOpen(gate)) { if(!prerequisiteGuideGoal({type:'feature',args:[gate]}))showToast(featureUnlockHint(gate));return; }
   SFX.tap();
   if(target.kind==='home-goal'){activateHomeCurrentGoal();return;}
@@ -23864,6 +23853,9 @@ function openScanHomeTarget(target) {
   else if(target.kind==='villages'){empireLedgerOnlyMode=false;showEmpirePage('villages',{silent:true});switchScreen('village');}
   else if(target.kind==='walk')switchScreen('map');
   else if(target.kind==='route')switchScreen(target.screen);
+  else if(target.kind==='academy')activateGameHudDestination('academy');
+  else if(target.kind==='academy-room'){openAcademyRoom(target.room);if(typeof burbzTutorialAction==='function')burbzTutorialAction('tab:academy');}
+  else if(target.kind==='academy-plan'){focusAcademyBuildCard(target.id);if(typeof burbzTutorialAction==='function')burbzTutorialAction('tab:academy');}
   else if(target.kind==='settings')$('settingsBtn')?.click();
 }
 
@@ -45402,7 +45394,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-story-art-20260924';
+const BURBZ_BUILD = 'home-academy-dock-v463-20260924';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45453,11 +45445,11 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your portal', screen:'scan', target:null, text:'This is your main hub and your direct portal to Alderwing.', id:'alderwing-hub-v420' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Click here and I’ll show you what I mean.', action:{event:'alderwing-returned',mode:'free',hint:'Click here and I’ll show you what I mean.'}, id:'alderwing-arrival-v395' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
-  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'.nav-item[data-screen="academy"]', alertNav:'academy', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
+  { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'#screen-scan .desk-panel-academy .desk-panel-heading', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
   { chapterId:'academy', chapter:'Academy', title:'Your first building', screen:'academy', target:'#academyBuildPanel', text:'The Birdhouse lets you recruit discovered birds as companions. Merlin’s gift covers this first building.', id:'lesson-19' },
   { chapterId:'academy', chapter:'Academy', title:'Build the Birdhouse', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Build the Birdhouse, then place it on the tree. It is ready immediately.', action:{ event:'barracks-built', mode:'free', hint:'Build the Birdhouse and place it' }, id:'lesson-21' },
   { chapterId:'academy_tour', chapter:'Discovery', title:'A home for companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Your Birdhouse is ready. Every real species you discover can become a companion with its own diet and abilities.', id:'lesson-22' },
-  { chapterId:'academy_tour', chapter:'Discovery', title:'Find a bird', screen:'academy', target:'.nav-item[data-screen="scan"]', text:'Return Home to discover a bird. A clear saved bird photo works too; you can keep learning with Merlin if discovery is unavailable.', action:{event:'tab:scan',hint:'Return Home to discover a bird'}, id:'lesson-25' },
+  { chapterId:'academy_tour', chapter:'Discovery', title:'Find a bird', screen:'academy', target:'#headerHomeBtn', text:'Tap the Burbz logo to return Home and discover a bird. A clear saved bird photo works too; you can keep learning with Merlin if discovery is unavailable.', action:{event:'tab:scan',hint:'Return Home to discover a bird'}, id:'lesson-25' },
   { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera or Sound, then open your identified bird’s card. Its real diet and abilities explain how it can help.', id:'lesson-29' },
   { chapterId:'scan', chapter:'Discovery', title:'Try a discovery', screen:'scan', target:'#scanHomeActions', text:'Try a bird photo or birdsong and open the result. No connection or permissions? Continue with Merlin; real discovery stays a goal.', action:{event:'opening-discovery-reviewed',mode:'free',hint:'Discover a bird and open its card',deferLabel:'Continue with Merlin'}, id:'lesson-31' },
   { chapterId:'birdex', chapter:'Companions', title:'A useful companion', screen:'birdex', target:'#birdGrid', text:'Read a discovered bird’s diet and abilities. Recruit it when you can afford it. Merlin is already your companion and can fetch supplies.', id:'lesson-32' },
