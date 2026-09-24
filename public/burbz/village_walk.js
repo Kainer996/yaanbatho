@@ -210,7 +210,7 @@
         if(!s.room){if(!s.continuity||s.continuity.animateOrigin())s.options.animate?.(ts/1000);s.discoveries?.update(ts/1000);}else s.flight?.update(0);
         s.work?.update(ts/1000);s.combat?.update(dt);s.rooms?.update(ts/1000);s.harvest?.update(ts/1000);s.hud?.update(ts/1000);s.continuity?.update(ts/1000);
         const motion=s.flight?.camera(dt)||s.continuity?.camera(dt)||{bob:0,pitch:0,roll:0};
-        camera.position.set(s.player.x,s.player.y+(s.player.mode==='swim' ? .35 : options.flight ? .45 : core.EYE)+motion.bob,s.player.z);camera.rotation.set(s.player.pitch+motion.pitch,s.player.yaw,motion.roll,'YXZ');camera.updateMatrixWorld();
+        camera.position.set(s.player.x,s.player.y+(s.player.mode==='swim' ? .35 : options.flight ? .45 : s.seated ? .86 : core.EYE)+motion.bob,s.player.z);camera.rotation.set(s.player.pitch+motion.pitch,s.player.yaw,motion.roll,'YXZ');camera.updateMatrixWorld();
         s.rooms?.portalFrame?.(performance.now());
         if(root.BurbzManga)root.BurbzManga.render(root.THREE,renderer,s.room?.scene||scene,camera);else renderer.render(s.room?.scene||scene,camera);
         if(s.intervals.length>=60||(s.intervals.length>=12&&s.intervals.reduce((a,b)=>a+b,0)>1600)){

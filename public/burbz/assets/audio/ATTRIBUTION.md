@@ -165,6 +165,7 @@ give quiet moments a soft, close, ASMR feel: calm footsteps on grass, wood and
 stone, a crackling campfire loop, a hatchet chop, a brush dusting, and gentle
 eating. A gritty gravel step set plays at the same level when danger is near.
 Each take was trimmed, softened and levelled; the campfire keeps its seamless
-loop. Prompts, hashes and processing are in each folder's `manifest.json`.
+loop. A rain loop, a light wind loop (`weather/`) and a stool sound followed the
+same day. Prompts, hashes and processing are in each folder's `manifest.json`.
 Their use remains subject to the project owner's ElevenLabs account and
 applicable service terms.
