@@ -116,7 +116,8 @@ for (const list of ['BURBZ_ASSETS', 'BURBZ_CORE', 'BURBZ_INSTALL_REQUIRED']) {
   for (const f of ['bird_home_range_core.js', 'bird_patch_map.js', 'bird_patch_map.css']) assert.equal(body.split(`'./${f}?v=${PIN}'`).length - 1, 1, list + ' ' + f);
 }
 assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].split('-' + PIN).length === 2);
-assert.equal(html.match(/const BURBZ_BUILD = '([^']+)'/)[1], PIN);
+// Later releases move BURBZ_BUILD on; it always names the newest cache segment.
+assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-' + html.match(/const BURBZ_BUILD = '([^']+)'/)[1]));
 for (const f of ['bird_home_range_core.js', 'bird_patch_map.js', 'bird_patch_map.css']) assert(updater.includes(`"${f}"`), 'updater ' + f);
 for (const id of ['birdPatchPanel', 'birdPatchMap', 'birdPatchLegend', 'birdPatchLesson', 'birdPatchOpenMap']) assert(html.includes(`id="${id}"`), id);
 assert(html.includes("if (typeof birdPatchMeet === 'function') birdPatchMeet(surfaced, opts.source);\n  return surfaced;"), 'confirmed birds reach the patch map');
