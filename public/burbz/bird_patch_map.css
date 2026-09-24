@@ -1,0 +1,25 @@
+/* Bird Patch Map v466 — the real map around you, with the home patch of the
+   bird you just heard. The circle pulses while the bird is singing. */
+.bird-patch-panel { position:fixed; left:50%; transform:translateX(-50%); bottom:var(--bird-patch-bottom, 140px); z-index:1500; width:min(calc(100vw - 24px), 460px); box-sizing:border-box; padding:10px; border:1px solid rgba(240,199,103,.34); border-radius:14px; background:linear-gradient(160deg, rgba(38,30,15,.97), rgba(14,12,8,.97)); box-shadow:0 10px 30px rgba(0,0,0,.5); animation:birdPatchIn .28s ease; }
+@keyframes birdPatchIn { from { opacity:0; transform:translate(-50%, 14px); } to { opacity:1; transform:translate(-50%, 0); } }
+.bird-patch-panel[hidden] { display:none; }
+.bird-patch-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; font-size:12px; letter-spacing:.04em; color:#f0c767; }
+.bird-patch-head span { flex:1; }
+.bird-patch-head button { flex:none; min-height:32px; padding:4px 10px; border:1px solid rgba(240,199,103,.45); border-radius:999px; background:transparent; color:#f0c767; font:inherit; font-size:11px; cursor:pointer; }
+.bird-patch-close { width:32px; padding:0 !important; }
+.bird-patch-map { position:relative; height:min(190px, 26vh); border-radius:10px; overflow:hidden; background:#1c2a20; }
+.bird-patch-map-wrap { position:relative; }
+.bird-patch-credit { position:absolute; right:4px; bottom:3px; padding:1px 5px; border-radius:6px; background:rgba(255,255,255,.72); color:#333; font-size:8.5px; line-height:1.3; pointer-events:none; }
+.bird-patch-panel.no-map .bird-patch-map-wrap { display:none; }
+.bird-patch-legend { list-style:none; margin:8px 0 0; padding:0; display:grid; gap:4px; }
+.bird-patch-legend li { display:flex; align-items:center; gap:7px; font-size:12px; color:#efe6cf; min-width:0; }
+.bird-patch-legend li i { flex:none; width:12px; height:12px; border-radius:50%; box-shadow:0 0 0 2px rgba(0,0,0,.4); }
+.bird-patch-legend li.singing i { animation:birdPatchBlink 1.1s ease-in-out infinite; }
+.bird-patch-legend li b { font-weight:700; white-space:nowrap; }
+.bird-patch-legend li span { color:#bfb59c; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.bird-patch-lesson { margin-top:8px; padding:8px 10px; border-left:4px solid var(--patch-color, #f0c767); border-radius:8px; background:rgba(255,255,255,.05); display:grid; gap:2px; font-size:13px; line-height:1.35; color:#efe6cf; }
+.bird-patch-lesson[hidden] { display:none; }
+.bird-patch-lesson strong { color:#fff5d8; }
+.bird-patch-lesson[data-kind="same-bird"] { background:rgba(240,199,103,.12); }
+@keyframes birdPatchBlink { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.35); opacity:.55; } }
+@media (prefers-reduced-motion: reduce) { .bird-patch-legend li.singing i, .bird-patch-panel { animation:none; } }
