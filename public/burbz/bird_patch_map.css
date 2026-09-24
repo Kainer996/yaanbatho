@@ -1,4 +1,4 @@
-/* Bird Patch Map v464 — the real map around you, with the home patch of the
+/* Bird Patch Map v465 — the real map around you, with the home patch of the
    bird you just heard. The circle pulses while the bird is singing. */
 .bird-patch-panel { position:fixed; left:50%; transform:translateX(-50%); bottom:var(--bird-patch-bottom, 140px); z-index:1500; width:min(calc(100vw - 24px), 460px); box-sizing:border-box; padding:10px; border:1px solid rgba(240,199,103,.34); border-radius:14px; background:linear-gradient(160deg, rgba(38,30,15,.97), rgba(14,12,8,.97)); box-shadow:0 10px 30px rgba(0,0,0,.5); animation:birdPatchIn .28s ease; }
 @keyframes birdPatchIn { from { opacity:0; transform:translate(-50%, 14px); } to { opacity:1; transform:translate(-50%, 0); } }

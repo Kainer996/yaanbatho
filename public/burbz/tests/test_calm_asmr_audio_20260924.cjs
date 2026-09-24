@@ -30,3 +30,11 @@ test('camp sounds rotate variants and rest between repeats',async()=>{
  const {m,tick}=manager();assert(await m.play('campChop'));const a=Audio.instances.at(-1).src;assert.equal(await m.play('campChop'),false);tick(300);assert(await m.play('campChop'));assert.notEqual(Audio.instances.at(-1).src,a);
  assert(await m.play('campEat'));assert(await m.play('campDust'));
 });
+test('rain and wind beds fade independently and a light breeze never shouts',async()=>{
+ const {m,flush}=manager();m.ambience(0,.2);flush();const wind=Audio.instances.at(-1);assert.match(wind.src,/wind-loop/);assert(wind.volume>0&&wind.volume<=.05);
+ assert.equal(m.loopLevel('rain'),0);m.ambience(1,.2);flush();const rain=Audio.instances.at(-1);assert.match(rain.src,/rain-loop/);assert.equal(rain.volume,.42);
+ m.setMood('tense');flush();assert(!rain.paused,'weather keeps falling in danger');
+ m.ambience(0,0);flush();assert(rain.paused&&wind.paused);
+ m.ambience(1,1);m.stopAll();assert(Audio.instances.slice(-2).every(a=>a.paused));
+ assert(await m.play('campStool'));
+});

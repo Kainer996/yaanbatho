@@ -17,7 +17,7 @@
   const Core = root.BurbzBirdHomeRangeCore;
   if (!Core) return;
 
-  const VERSION = 'bird-patch-map-v464-20260924';
+  const VERSION = 'bird-patch-map-v465-20260924';
   // One BirdNET window is five seconds and hops every 2.5 s. A bird that
   // keeps singing lands in the next window before this runs out.
   const SONG_MS = 5200;
