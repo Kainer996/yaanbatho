@@ -76,6 +76,7 @@ FILES=(
   "scan_home.css"
   "scan_home_core.js"
   "scan_home.js"
+  "academy_home_intro.js"
   "assets/home-v378/woodland-lookout.webp"
   "assets/home-v384/enchanted-study.webp"
   "assets/home-v395/living-field-desk.webp"

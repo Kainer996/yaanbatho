@@ -691,7 +691,7 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 }
 
 @media (orientation:portrait) and (max-height:650px) {
- #screen-scan.progressive-home[data-home-density] .desk-introduction { height:44px;min-height:44px; }
+ #screen-scan.progressive-home[data-home-density] .desk-introduction { height:46px;min-height:46px; }
  #screen-scan.progressive-home .scan-home-command-bar { bottom:0;min-height:44px;padding:0; }
  #screen-scan.progressive-home .scan-home-command-bar :is(#playerHomeStand,#savedPhotosButton,#campHomeButton) { height:44px;min-height:44px;padding:2px;font-size:11px; }
  #screen-scan.progressive-home[data-home-density] .scan-home-main { padding:2px;gap:2px; }
@@ -725,6 +725,188 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 #screen-scan.progressive-home .desk-build-options .desk-build-open { padding-bottom:12px; }
 #screen-scan.progressive-home .desk-build-options .desk-mini-art { width:24px;height:28px; }
 #screen-scan.progressive-home .desk-build-options small { position:absolute;bottom:0;left:0;right:0;pointer-events:none; }
+
+/* Unified Academy Home: adaptive tree cutaway replaces the fixed-B room panels. */
+#screen-scan.progressive-home.academy-home-active{--academy-home-rail-width:10px}
+#screen-scan .academy-home-screen-rail{display:none}
+#screen-scan.progressive-home.academy-home-active>.academy-home-screen-rail{display:block;position:absolute;top:0;bottom:0;width:var(--academy-home-rail-width);z-index:6;pointer-events:none;background:linear-gradient(90deg,#21120b 0%,#5c3820 32%,#8a5d36 54%,#2c190f 100%);box-shadow:inset 0 0 0 1px #d3a66a33,0 0 11px #0008}
+#screen-scan.progressive-home.academy-home-active>.academy-home-screen-rail-left{left:0}
+#screen-scan.progressive-home.academy-home-active>.academy-home-screen-rail-right{right:0;transform:scaleX(-1)}
+#screen-scan.progressive-home.academy-home-active .scan-home-main{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto minmax(0,1fr) auto;gap:4px;padding:4px;min-height:0;overflow:hidden}
+#screen-scan.progressive-home.academy-home-active .scan-home-start{grid-row:1}
+#screen-scan.progressive-home.academy-home-active .scan-home-today{grid-row:2}
+#screen-scan.progressive-home.academy-home-active .academy-home-tree{grid-row:3;min-height:0}
+#screen-scan.progressive-home.academy-home-active #scanHomeDeskPanels{grid-column:1;grid-row:4;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(78px,max-content);align-content:start;align-items:stretch;gap:4px;min-height:0;max-height:clamp(84px,13dvh,118px);overflow:hidden}
+#screen-scan.progressive-home.academy-home-active #scanHomeDeskPanels :is(.desk-panel-kitchen,.desk-panel-training,.desk-panel-hospital,.desk-panel-completed){display:none}
+#screen-scan.progressive-home.academy-home-active :is(.desk-panel-stores,.desk-panel-building){min-height:78px}
+#screen-scan.progressive-home.academy-home-active :is(.desk-panel-stores,.desk-panel-building) .desk-panel-heading{min-height:44px;height:44px}
+
+#screen-scan .academy-home-tree{position:relative;display:flex;flex-direction:column;overflow:hidden;border:1px solid #7b6b4c;background:#15130f;color:#eadfcb;box-shadow:inset 0 0 0 1px #0008}
+#screen-scan .academy-home-header{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 16px 6px 18px;border-bottom:1px solid #806f4f;background:#25231f}
+#screen-scan .academy-home-header h2{margin:0;font:700 16px/18px Inter,sans-serif;color:#f0d89c;letter-spacing:0}
+#screen-scan .academy-home-header p{margin:1px 0 0;font:500 11px/14px Inter,sans-serif;color:#c9baa0;white-space:normal}
+#screen-scan .academy-home-tools{display:flex;gap:5px;flex:none}
+#screen-scan .academy-home-tools button,#screen-scan .academy-home-room-open{min-width:44px;min-height:44px;border:1px solid #8a774f;border-radius:3px;background:#242522;color:#f1dfb6;font:700 12px/14px Inter,sans-serif;cursor:pointer}
+#screen-scan .academy-home-tools button{padding:0 8px}
+#screen-scan .academy-home-rooms{position:relative;z-index:2;display:grid;grid-auto-rows:max-content;gap:6px;align-content:start;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;scroll-padding-block:8px;padding:8px 16px 12px 18px}
+#screen-scan .academy-home-room{display:flex;flex-direction:column;min-height:192px;overflow:visible;border:1px solid #766748;background:#20201e;box-shadow:inset 0 1px #fff1,0 2px 5px #0005}
+#screen-scan .academy-home-few .academy-home-rooms{gap:8px}
+#screen-scan .academy-home-few .academy-home-room{min-height:clamp(320px,52dvh,430px)}
+#screen-scan .academy-home-many .academy-home-room{min-height:178px}
+#screen-scan .academy-home-room.quest-guided{outline:2px solid #e9ca79;outline-offset:-2px}
+#screen-scan .academy-home-room-banner{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex:0 0 auto;min-height:76px;min-block-size:max-content;padding:8px;overflow:hidden;background:#10110f var(--room-art) center/cover no-repeat;border-bottom:1px solid #756647;isolation:isolate}
+#screen-scan .academy-home-room-banner::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(12,12,10,.92) 0%,rgba(12,12,10,.68) 52%,rgba(12,12,10,.24) 100%)}
+#screen-scan .academy-home-room-copy{min-width:0;display:flex;flex-direction:column;justify-content:flex-end}
+#screen-scan .academy-home-room-copy h3{margin:0;color:#f0deb8;font:800 15px/18px Inter,sans-serif;letter-spacing:0;white-space:normal;overflow-wrap:anywhere}
+#screen-scan .academy-home-room-copy p{margin:3px 0 5px;color:#c9c1af;font:500 12px/15px Inter,sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#screen-scan .academy-home-few .academy-home-room-banner{min-height:clamp(118px,17dvh,158px)}
+#screen-scan .academy-home-few .academy-home-room-copy h3{font-size:17px;line-height:20px}
+#screen-scan .academy-home-few .academy-home-room-copy p{-webkit-line-clamp:3;font-size:13px;line-height:16px}
+#screen-scan .academy-home-room-meta{display:flex;flex-wrap:wrap;gap:4px}
+#screen-scan .academy-home-chip{border:1px solid #806f4f;background:#181816;color:#d8c8a6;padding:2px 5px;font:700 10px/12px Inter,sans-serif}
+#screen-scan .academy-home-room-open{flex:none;align-self:flex-end;padding:0 8px;background:#303020;color:#ffe0a3}
+#screen-scan .academy-home-room-native{display:block;flex:0 0 auto;padding:7px;min-height:max-content;overflow:visible;color:#eadfcb}
+#screen-scan .academy-home-native-panel{display:grid;gap:7px;min-width:0;overflow:visible}
+#screen-scan .academy-home-room-native :is(.academy-room-head,.academy-room-desc){display:none}
+#screen-scan .academy-home-room-native :is(.academy-bird-row,.room-add-panel,.training-hall-panel,.stores-panel,.chef-board,.kitchen-roster-panel){margin:0;border-radius:3px}
+#screen-scan .academy-home-room-native .academy-bird-row{display:grid;grid-template-columns:52px minmax(0,1fr);gap:7px;padding:7px;border:1px solid #66593f;background:#181917}
+#screen-scan .academy-home-room-native .academy-bird-art{width:52px;height:52px}
+#screen-scan .academy-home-room-native .academy-bird-main{min-width:0}
+#screen-scan .academy-home-room-native .academy-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:6px}
+#screen-scan .academy-home-room-native .academy-actions .academy-btn{min-height:44px;white-space:normal}
+#screen-scan .academy-home-room-native .academy-move-disclosure{grid-column:1/-1;min-width:0}
+#screen-scan .academy-home-room-native .academy-move-disclosure summary{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px dashed #806f4f;border-radius:3px;background:#20211d;color:#f1dfb6;font:800 12px/14px Inter,sans-serif;cursor:pointer;list-style:none}
+#screen-scan .academy-home-room-native .academy-move-disclosure summary::-webkit-details-marker{display:none}
+#screen-scan .academy-home-room-native .academy-move-disclosure[open] summary{border-style:solid;background:#2a2b20;color:#ffe0a3}
+#screen-scan .academy-home-room-native .academy-move{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(142px,1fr));gap:6px;overflow:visible;padding-bottom:0}
+#screen-scan .academy-home-room-native .academy-move-disclosure .academy-move{margin-top:6px}
+#screen-scan .academy-home-room-native .academy-move-btn{min-height:44px;white-space:normal}
+#screen-scan .academy-home-room-native .room-add-panel{padding:7px;background:#181917;border:1px solid #66593f}
+#screen-scan .academy-home-room-native .role-post-row{margin:0;padding:8px 9px;border-radius:3px}
+#screen-scan .academy-home-room-native .barracks-recruit-launch{width:100%;min-height:44px;margin:6px 0 0;border-radius:3px}
+#screen-scan .academy-home-room-native .room-bird-list{display:grid;gap:6px;max-height:190px;overflow:auto;overscroll-behavior:contain}
+#screen-scan .academy-home-room-native .room-bird-option{min-height:52px}
+#screen-scan .academy-home-room-native .room-bird-add-btn{min-height:44px;min-width:52px}
+#screen-scan .academy-home-room-native .training-duration-chip,#screen-scan .academy-home-room-native .training-bird-btn,#screen-scan .academy-home-room-native .kitchen-roster-feed-btn,#screen-scan .academy-home-room-native .chef-board-serve,#screen-scan .academy-home-room-native .chef-feed-all{min-width:44px;min-height:44px;white-space:normal}
+#screen-scan .academy-home-room-native :is(.magpie-btn,.manager-btn,.market-tab,.role-post-row){min-width:44px;min-height:44px}
+#screen-scan .academy-home-room-native .training-hall-panel{max-height:430px;overflow:auto;padding:7px;border:1px solid #66593f;background:#181917;overscroll-behavior:contain}
+#screen-scan .academy-home-room-native .training-template-grid{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+#screen-scan .academy-home-room-native :is(.stores-panel,.magpie-panel,.manager-office-panel){max-height:360px;overflow:auto;padding:7px;border:1px solid #66593f;background:#181917;overscroll-behavior:contain}
+#screen-scan .academy-home-room-native .kitchen-roster{max-height:380px;overflow:auto;overscroll-behavior:contain}
+#screen-scan .academy-home-quest-board{padding:7px;border:1px solid #66593f;background:#181917}
+#screen-scan .academy-home-quest-board h4{margin:0 0 4px;color:#f0deb8;font:800 13px/16px Inter,sans-serif;letter-spacing:0}
+#screen-scan .academy-home-quest-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;min-height:48px;border-top:1px solid #4c4638;padding-top:6px;margin-top:6px}
+#screen-scan .academy-home-quest-row strong{display:block;color:#f0deb8;font:800 12px/15px Inter,sans-serif}
+#screen-scan .academy-home-quest-row small{display:block;color:#c9baa0;font:500 11px/14px Inter,sans-serif}
+#screen-scan .academy-home-quest-row button,#screen-scan .academy-home-quest-open{min-height:44px;border:1px solid #8a774f;border-radius:3px;background:#303020;color:#ffe0a3;font:800 11px/13px Inter,sans-serif}
+#screen-scan .academy-home-quest-open{width:100%;margin-top:6px}
+html[data-appearance="comic"] #screen-scan .academy-home-tree,html[data-appearance="comic"] #screen-scan .academy-home-room{border-width:2px;box-shadow:2px 3px 0 #0d0d0d}
+html[data-appearance="comic"] #screen-scan .academy-home-room-native{color:#eadfcb}
+html[data-appearance="comic"] #screen-scan .academy-home-room-native :is(.academy-bird-name,.academy-btn,.academy-home-quest-board h4,.academy-home-quest-row strong){color:#fff0c9}
+html[data-appearance="comic"] #screen-scan .academy-home-room-native :is(.academy-bird-meta,.academy-meter-label,.academy-empty,.diet-disclosure,.diet-disclosure-compatible,.diet-disclosure-source,.academy-home-quest-row small){color:#cfc3a6}
+html[data-appearance="comic"] #screen-scan .academy-home-room-native :is(.diet-disclosure-row b,.academy-diet){color:#f2d483}
+
+#academyBuildPicker{margin:0;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;border:0;background:transparent;color:#eadfcb}
+#academyBuildPicker::backdrop{background:rgba(0,0,0,.58)}
+#academyBuildPicker .academy-build-picker-card{box-sizing:border-box;display:flex;flex-direction:column;width:min(760px,calc(100vw - 18px));height:min(720px,calc(100dvh - 18px));margin:9px auto;border:1px solid #8b7650;background:#151513;box-shadow:0 18px 50px #000b}
+#academyBuildPicker header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid #776746;background:#25231f}
+#academyBuildPicker h2{margin:0;color:#f0d89c;font:800 20px/24px Inter,sans-serif;letter-spacing:0}
+#academyBuildPicker p{margin:2px 0 0;color:#c9baa0;font:500 12px/16px Inter,sans-serif}
+#academyBuildPicker button{min-height:44px;border:1px solid #8a774f;border-radius:3px;background:#252622;color:#f3dfb4;font:800 12px/14px Inter,sans-serif;cursor:pointer}
+#academyBuildPicker button:disabled{opacity:.45;cursor:not-allowed}
+#academyBuildPicker .academy-build-picker-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;min-height:0;overflow:auto;overscroll-behavior:contain;padding:10px;touch-action:pan-y}
+#academyBuildPicker .academy-building-card{display:grid;grid-template-columns:70px minmax(0,1fr);grid-template-rows:minmax(86px,auto) auto;gap:7px;border:1px solid #756647;background:#1e1f1d;padding:6px}
+#academyBuildPicker .academy-building-card.available{border-color:#b79857}
+#academyBuildPicker .academy-building-card.built{border-color:#78956d;background:#1b2420}
+#academyBuildPicker .academy-building-art{width:70px;height:86px;object-fit:cover;background:#0f0f0e}
+#academyBuildPicker .academy-building-body{min-width:0}
+#academyBuildPicker .academy-building-body h3{margin:0;color:#f0deb8;font:800 14px/17px Inter,sans-serif;letter-spacing:0}
+#academyBuildPicker .academy-building-body p{margin:3px 0;color:#c8bfaa;font:500 12px/15px Inter,sans-serif;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#academyBuildPicker .academy-building-meta{display:flex;flex-wrap:wrap;gap:4px;color:#d9c69e;font:700 10px/13px Inter,sans-serif}
+#academyBuildPicker .academy-building-chip{border:1px solid #7d6b48;padding:2px 4px;background:#151513}
+#academyBuildPicker .academy-building-actions{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#academyBuildPicker .academy-building-actions button:first-child{background:#32331f;color:#ffe2a4}
+
+@media (orientation:landscape) and (max-height:550px){
+ #screen-scan.progressive-home.academy-home-active .scan-home-main{grid-template-columns:174px minmax(0,1fr) 218px;grid-template-rows:66px minmax(0,1fr);gap:4px}
+ #screen-scan.progressive-home.academy-home-active .scan-home-start{grid-column:1;grid-row:1;overflow:hidden}
+ #screen-scan.progressive-home.academy-home-active .scan-home-today{grid-column:2 / 4;grid-row:1}
+ #screen-scan.progressive-home.academy-home-active .academy-home-tree{grid-column:1 / 3;grid-row:2}
+ #screen-scan.progressive-home.academy-home-active #scanHomeDeskPanels{grid-column:3;grid-row:2;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(2,minmax(44px,1fr));height:100%;max-height:none}
+ #screen-scan.progressive-home.academy-home-active #scanHomeDeskPanels :is(.desk-panel-stores,.desk-panel-building){min-height:0}
+ #screen-scan .academy-home-room-copy p{-webkit-line-clamp:2}
+ #screen-scan .academy-home-room-banner{min-height:76px}
+ #screen-scan .academy-home-room-native .training-hall-panel{max-height:300px}
+}
+@media (orientation:portrait) and (max-height:620px){
+ #screen-scan.progressive-home.academy-home-active .scan-home-main{grid-template-rows:44px 48px minmax(0,1fr) 46px;gap:2px;padding:2px}
+ #screen-scan.progressive-home.academy-home-active #scanHomeDeskPanels{grid-template-rows:none;grid-auto-rows:minmax(46px,max-content);max-height:46px;gap:3px}
+ #screen-scan.progressive-home.academy-home-active :is(.desk-panel-stores,.desk-panel-building){min-height:46px}
+ #screen-scan.progressive-home.academy-home-active :is(.desk-panel-stores,.desk-panel-building) .desk-panel-heading{height:44px;min-height:44px}
+ #screen-scan.progressive-home.academy-home-active #scanHomeDeskPanels .desk-panel-summary{display:none}
+ #screen-scan.progressive-home.academy-home-active .scan-home-start{padding:0}
+ #screen-scan.progressive-home.academy-home-active .scan-home-start-heading,#screen-scan.progressive-home.academy-home-active .scan-home-start .merlin-listener-line{display:none}
+ #screen-scan.progressive-home.academy-home-active .scan-home-start-buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+ #screen-scan.progressive-home.academy-home-active .scan-home-start-buttons .scan-btn{min-height:44px;height:44px;padding:2px 4px;font-size:11px;line-height:1.08;text-align:center}
+ #screen-scan.progressive-home.academy-home-active .scan-home-today{min-height:50px;padding:0 2px;overflow:visible}
+ #screen-scan.progressive-home.academy-home-active .scan-home-actions{min-height:46px;height:46px;overflow:visible}
+ #screen-scan.progressive-home.academy-home-active .home-action{min-height:46px}
+ #screen-scan .academy-home-header{align-items:center;height:44px;min-height:44px;padding:0 10px 0 14px;gap:5px}
+ #screen-scan .academy-home-header h2{font-size:14px;line-height:16px}
+ #screen-scan .academy-home-header p{display:none}
+ #screen-scan .academy-home-tools{flex-wrap:nowrap;gap:4px}
+ #screen-scan .academy-home-tools button{min-height:44px;padding:0 6px;font-size:11px;white-space:nowrap}
+ #screen-scan .academy-home-room-banner{min-height:68px}
+}
+@media (max-width:380px){
+ #screen-scan .academy-home-header{padding-inline:14px 10px;align-items:center}
+ #screen-scan .academy-home-tools{flex-flow:row nowrap;justify-content:flex-end}
+ #screen-scan .academy-home-room-banner{align-items:stretch;flex-direction:column}
+ #screen-scan .academy-home-room-open{align-self:stretch}
+ #screen-scan .academy-home-room-copy p{-webkit-line-clamp:2}
+ #academyBuildPicker .academy-build-picker-list{grid-template-columns:minmax(0,1fr)}
+}
+
+/* Whole-tree Academy Home intro: presentation only, skippable from frame one. */
+.academy-home-intro{position:fixed;inset:0;z-index:10150;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 35%,#29351d 0,#151713 42%,#090908 100%);color:#f4e2b4}
+.academy-home-intro-skip{position:absolute;z-index:4;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));min-width:76px;min-height:48px;border:1px solid #d1b06d;background:#1f211d;color:#ffe6ac;font:800 14px/1.2 Inter,sans-serif;box-shadow:0 8px 22px #0007;cursor:pointer}
+.academy-home-intro-skip:focus-visible{outline:3px solid #ffe5a0;outline-offset:3px}
+.academy-home-intro-stage{position:relative;width:min(100vw,840px);height:min(100dvh,780px);min-height:430px;isolation:isolate}
+.academy-home-intro-whole,.academy-home-intro-interior{position:absolute;inset:0;display:grid;place-items:center;transition:transform 900ms cubic-bezier(.18,.76,.18,1),opacity 420ms ease,filter 900ms ease}
+.academy-home-intro-whole{transform:translateY(0) scale(1);opacity:1;filter:drop-shadow(0 28px 42px #000b)}
+.academy-home-intro-interior{transform:translateY(12px) scale(.82);opacity:0;filter:drop-shadow(0 18px 28px #0009)}
+.academy-home-intro-svg{width:min(78vw,390px);height:min(78dvh,560px);overflow:visible}
+.intro-canopy{fill:#395332;stroke:#172411;stroke-width:4}
+.intro-canopy.c2{fill:#456538}.intro-canopy.c3{fill:#314a2e}.intro-canopy.c4{fill:#4d6b3b}
+.intro-trunk{fill:#55321f;stroke:#b58a56;stroke-width:4}
+.intro-root,.intro-branch{fill:none;stroke:#8c5d36;stroke-width:12;stroke-linecap:round}
+.intro-cut-rooms rect{fill:#211d18;stroke:#e2c37a;stroke-width:2}
+.academy-home-intro-cutaway-svg{width:min(82vw,440px);height:min(76dvh,610px);overflow:visible}
+.intro-bark{fill:none;stroke:#754827;stroke-width:24;stroke-linecap:round}
+.intro-bark.left{filter:drop-shadow(8px 0 0 #29170d)}.intro-bark.right{filter:drop-shadow(-8px 0 0 #29170d)}
+.intro-final-rooms rect{fill:#20201e;stroke:#d6ba72;stroke-width:2}
+.intro-final-rooms line{stroke:#8f774c;stroke-width:1.5}
+.academy-home-intro[data-phase="zoom"] .academy-home-intro-whole{transform:translateY(46px) scale(2.35);opacity:.44;filter:blur(.2px) drop-shadow(0 20px 34px #000b)}
+.academy-home-intro[data-phase="zoom"] .academy-home-intro-interior{transform:translateY(2px) scale(.96);opacity:.92}
+.academy-home-intro[data-phase="interior"] .academy-home-intro-whole{transform:translateY(70px) scale(2.55);opacity:0}
+.academy-home-intro[data-phase="interior"] .academy-home-intro-interior{transform:translateY(0) scale(1);opacity:1}
+.academy-home-intro[data-phase="reduced"]{background:#11120f}
+.academy-home-intro[data-phase="reduced"] .academy-home-intro-stage{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;width:min(94vw,720px);gap:14px}
+.academy-home-intro[data-phase="reduced"] .academy-home-intro-whole,.academy-home-intro[data-phase="reduced"] .academy-home-intro-interior{position:relative;inset:auto;opacity:1;transform:none;transition:none;filter:drop-shadow(0 14px 22px #0008)}
+.academy-home-intro[data-phase="reduced"] .academy-home-intro-svg,.academy-home-intro[data-phase="reduced"] .academy-home-intro-cutaway-svg{width:100%;height:auto;max-height:70dvh}
+body.academy-home-intro-active{overflow:hidden}
+body.academy-home-intro-active :is(#hudCoinsChip,#globalMoneyHud){display:none!important}
+@media (prefers-reduced-motion:reduce){
+ .academy-home-intro-whole,.academy-home-intro-interior{transition:none}
+}
+@media (max-width:520px){
+ .academy-home-intro-stage{min-height:420px}
+ .academy-home-intro-svg{width:86vw;height:70dvh}
+ .academy-home-intro-cutaway-svg{width:88vw}
+ .academy-home-intro[data-phase="reduced"] .academy-home-intro-stage{grid-template-columns:minmax(0,1fr);gap:4px}
+ .academy-home-intro[data-phase="reduced"] .academy-home-intro-svg{max-height:38dvh}
+ .academy-home-intro[data-phase="reduced"] .academy-home-intro-cutaway-svg{max-height:44dvh}
+}
 
 /* Current quest: keep the text and hit area still; inset glow survives the strip's clipping. */
 #screen-scan.progressive-home #scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled) {

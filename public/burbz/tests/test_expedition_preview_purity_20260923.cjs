@@ -28,7 +28,7 @@ const functions = ['dietHungerCore','birdSleepCore','birdRolesCore','birdSizeCor
   'birdLoadout','birdGearBonuses','burbzForgeLevel','nocturnalNightBonusFor',
   'getExpeditionTemplate','isStarterExpeditionTemplate','applyQuartermasterPlanning',
   'applyExpeditionCarryLimit','questDurationLabel','questSendDurationLabel','questSendPreviewText',
-  'ensureBirdExpeditions','birdHasActiveExpedition','startBirdExpedition'];
+  'ensureBirdExpeditions','birdHasActiveExpedition','refreshAcademyHomeIfVisible','startBirdExpedition'];
 function fresh() {
   return {
     player:{coins:150,branches:4},
@@ -46,7 +46,7 @@ function runtime(state = fresh(), id = 'b') {
     MERLIN_GUIDE:{id:'merlin-guide',species:'Merlin',commonName:'Merlin',level:1,power:80,int:55,spd:85,stamina:48,cha:72,sizeScore:35},
     window:{BurbzAcademyCore:academy,BurbzBirdRolesCore:roles,BurbzBirdSizeCore:size,BurbzLootCore:loot,BurbzDietHungerCore:hunger,BurbzBirdSleepCore:sleep},
     questSendState:{templateId:'branch_run',durationMinutes:5,birdId:id},
-    saves:0,events:[],notes:[],domReads:0,
+    currentScreen:'quests',saves:0,events:[],notes:[],domReads:0,
     saveState(){ c.saves++; },durableSaveState(){ c.saves++; },
     burbzTutorialAction(event){ c.events.push(event); },
     $(){ c.domReads++; return null; },
