@@ -5697,7 +5697,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="first_village_tutorial.js?v=hall-music-v458-20260923"></script>
 <script src="desk_portal.js?v=hall-music-v458-20260923"></script>
-<script src="manga_render_core.js?v=continuous-world-v391-20260910"></script>
+<script src="manga_render_core.js?v=alderwing-nature-v462-20260924"></script>
 <script src="academy_3d_core.js?v=opening-home-v416-20260914"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5719,7 +5719,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="zombie_progression_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="wilderness_combat_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="wilderness_birds.js?v=alderwing-flight-shores-v418-20260915"></script>
-<script src="wilderness_combat.js?v=hands-on-world-tutorial-v429-20260920"></script>
+<script src="wilderness_combat.js?v=alderwing-nature-v462-20260924"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
 <link rel="stylesheet" href="wilderness_combat.css?v=alderwing-flight-shores-v418-20260915">
 <script src="empire_map_core.js?v=alderwing-followups-v417-20260914"></script>
@@ -30983,7 +30983,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=hall-music-v458-20260923';
+        script.src = 'village_walk.js?v=alderwing-nature-v462-20260924';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45400,7 +45400,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-story-art-20260924';
+const BURBZ_BUILD = 'alderwing-nature-v462-20260924';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

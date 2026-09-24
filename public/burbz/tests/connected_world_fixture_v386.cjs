@@ -28,9 +28,12 @@ function vi(n){const out=[];n=Math.round(n);while(n>127){out.push((n%128)|128);n
 const packed=values=>Buffer.concat(values.map(vi)),field=(id,b)=>Buffer.concat([vi(id*8+2),vi(b.length),b]),integer=(id,n)=>Buffer.concat([vi(id*8),vi(n)]);
 function vectorTile(z,x,y,extraFeatures=[]){
  const scale=2**z,extent=4096,layers=[];
- for(const name of ['landcover','transportation','water','building']){
+ // A waterway layer appears only when a caller supplies stream lines, so
+ // every existing fixture tile keeps its exact bytes.
+ const all=[...data.features,...extraFeatures],names=['landcover','transportation','water','building',...(all.some(f=>f.properties.class==='stream')?['waterway']:[])];
+ for(const name of names){
   const keys=[],values=[],features=[];
-  for(const f of [...data.features,...extraFeatures]){const kind=f.properties.class,layer=kind==='grass'||kind==='wood'?'landcover':kind==='path'?'transportation':kind;if(layer!==name)continue;
+  for(const f of all){const kind=f.properties.class,layer=kind==='grass'||kind==='wood'?'landcover':kind==='path'?'transportation':kind==='stream'?'waterway':kind;if(layer!==name)continue;
    const coords=f.geometry.type==='Polygon'?f.geometry.coordinates[0].slice(0,-1):f.geometry.coordinates;let points=coords.map(([lon,lat])=>[(lon+180)/360,(1-Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))/Math.PI)/2]).map(([mx,my])=>[Math.round((mx*scale-x)*extent),Math.round((my*scale-y)*extent)]);
    if(Math.max(...points.map(p=>p[0]))<0||Math.min(...points.map(p=>p[0]))>extent||Math.max(...points.map(p=>p[1]))<0||Math.min(...points.map(p=>p[1]))>extent)continue;
    // Every fixture polygon is an axis-aligned rectangle and every path is an

@@ -50,6 +50,7 @@ FILES=(
   "geographic_home_picker.js"
   "geographic_settlement_scene.js"
   "geographic_world_core.js" "flight_craft_core.js" "flight_craft.js" "shore_water.js" "open_land_core.js"
+  "world_nature_core.js" "world_nature.js" "world_horizon.js" "world_water_core.js" "world_water.js"
   "geographic_world.js"
   "geographic_world.css"
   "index.html"
