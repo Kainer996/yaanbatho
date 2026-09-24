@@ -21,7 +21,8 @@
   update('desk-kitchen-list',{rows:m.kitchen,open:m.gates.kitchen},()=>m.kitchen.map(b=>{const full=100-b.hunger;return row('feed-'+b.id,b.name,(b.away?'Away · ':b.label+' · ')+Math.round(full)+'% full',picture(b.art),bar(full,'Fullness',b.level),b.away);}).join('')||empty(m.gates.kitchen?'Your birds are well fed.':'Kitchen unlocks as you progress.'));
   update('desk-training-list',{rows:m.training,open:m.gates.training},()=>m.training.map(s=>row('train-'+s.id,s.name,s.ready?'Finished · collect reward':s.detail+' · '+Math.max(1,Math.ceil(s.remaining/60000))+'m',null,bar(s.ready?100:s.progress,'Training progress'))).join('')||empty(m.gates.training?'No active drills. Choose a bird to train.':'Training unlocks as you progress.'));
   update('desk-hospital-list',{rows:m.hospital,open:m.gates.hospital},()=>m.hospital.map(b=>row('patient-'+b.id,b.name,Math.round(b.hp)+' / '+Math.round(b.maxHp)+' HP · '+(b.admitted?'Recovering':'Needs care'),picture(b.art),bar(b.hp/b.maxHp*100,'Health'))).join('')||empty(m.gates.hospital?'No injured birds.':'Hospital unlocks as you progress.'));
-  update('desk-academy-list',{rows:academy.rows.map(r=>[r.id,r.state,r.detail]),open:academyOpen},()=>academyOpen?academy.rows.map(r=>row('academy-'+r.id,r.name,r.detail,picture(r.art,r.icon),'',false).replace('class="desk-mini-row"','class="desk-mini-row academy-'+r.state+'"')).join('')||empty('Your Academy is waiting.'):empty('The Academy unlocks as you follow your Quests.'));
+  targets.set('academy-free',{kind:'academy-room',room:'outdoors'});
+  update('desk-academy-list',{rows:academy.rows.map(r=>[r.id,r.state,r.x,r.y,r.detail]),free:academy.free,open:academyOpen},()=>academyTree(academy,academyOpen));
   update('desk-completed-list',m.completed,()=>m.completed.map(n=>row('complete-'+n.id,n.name,n.detail,picture(null,n.icon))).join('')||empty('No unchecked buildings.'));
   for(const column of m.empire)for(const holding of column.rows)targets.set('holding-'+column.id+'-'+holding.id,holding.target);
   targets.set('building-notices',{kind:'home-notices'});
@@ -32,6 +33,15 @@
 
   for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,academy:academy.rows.filter(r=>r.state==='ready'),completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
   if(focused&&document.activeElement?.dataset?.homeAction!==focused)Array.from(boundSection.querySelectorAll('[data-home-action]')).find(el=>el.dataset.homeAction===focused)?.focus({preventScroll:true});queueLayout();return m;
+ }
+ // The Academy box is a small living copy of the real tree: built rooms
+ // stand in full colour, the rest wait as faint outlines on their branches.
+ function academyTree(academy,open){
+  const label={built:'Open',ready:'Ready to build',short:'Plan',locked:'Locked'};
+  const houses=academy.rows.map((r,i)=>`<button type="button" class="home-tree-house is-${r.state}" data-home-action="academy-${escape(r.id)}" style="left:${Number(r.x)||50}%;top:${Number(r.y)||50}%;--bob:${(3.2+i%4*.7).toFixed(1)}s;--lag:${(-i*.9).toFixed(1)}s" title="${escape(r.name+' · '+r.detail)}" aria-label="${escape(r.name+', '+label[r.state]+'. '+r.detail)}"${open?'':' disabled'}><img src="${escape(r.art||'')}" alt="" loading="lazy" decoding="async"></button>`).join('');
+  const free=academy.free?`<button type="button" class="home-tree-free" data-home-action="academy-free" aria-label="${academy.free} free ${academy.free===1?'bird':'birds'} waiting for a job">🕊️ ${academy.free}</button>`:'';
+  const leaves=[0,1,2,3].map(i=>`<i class="home-tree-leaf" style="--x:${18+i*21}%;--fall:${9+i*2.5}s;--wait:${-i*3.1}s"></i>`).join('');
+  return `<div class="home-tree${open?'':' is-closed'}" data-home-action="panel-academy" role="group" aria-label="Your Academy tree"><div class="home-tree-sway"><div class="home-tree-art" aria-hidden="true"></div>${houses}</div><div class="home-tree-light" aria-hidden="true"></div>${leaves}${free}${open?'':'<p class="home-tree-note">Opens as you follow your Quests</p>'}</div>`;
  }
  function applyProgression(m,academy,academyOpen){
   const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages',academy:academyOpen?academy.built+' of '+academy.total+' built'+(academy.ready?' · '+academy.ready+' ready':''):'Not open yet'};
@@ -75,6 +85,7 @@
   for(const id of ids){
    const el=panelElement(id),h=el.clientHeight;
    el.classList.toggle('home-panel-detail',h>=188&&el.clientWidth>=180);
+   el.classList.toggle('home-panel-tight',h<54);
    // Keep a complete, independently scrollable list when one whole action
    // fits below the heading/summary. Smaller panels retain their full-size
    // room heading and count rather than exposing a clipped half-button.

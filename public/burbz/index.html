@@ -23788,12 +23788,11 @@ function scanHomeAcademySnapshot() {
     const afford=coins>=b.cost&&branches>=(b.branches||0),birds=residents[id]||0;
     const name=(ACADEMY_ROOMS[id]?.label||b.label).toLowerCase().replace(/(^|[\s'&-])\S/g,c=>c.toUpperCase());
     const detail=built?(birds?birds+(birds===1?' bird':' birds')+' · Open':'Open'):lock?lock.message:levelLocked?'Unlocks at level '+b.unlockLevel:(afford?'Ready to build · ':'Build for ')+b.cost+' coins'+(b.branches?' · '+b.branches+' timber':'');
-    return {id,name,art:b.asset,icon:b.icon,state:built?'built':lock||levelLocked?'locked':afford?'ready':'short',detail,target:built?{kind:'academy-room',room:id}:{kind:'academy-plan',id}};
+    const pos=academyRoomPosition(id,b);
+    return {id,name,art:b.asset,icon:b.icon,x:pos.x,y:pos.y,state:built?'built':lock||levelLocked?'locked':afford?'ready':'short',detail,target:built?{kind:'academy-room',room:id}:{kind:'academy-plan',id}};
   });
-  rows.sort((a,b)=>({ready:0,built:1,short:2,locked:3}[a.state]-{ready:0,built:1,short:2,locked:3}[b.state]));
   const free=residents[FREE_BIRD_ROOM]||0;
-  if(free)rows.unshift({id:FREE_BIRD_ROOM,name:'Free birds',art:null,icon:'🕊️',state:'built',detail:free+(free===1?' bird waiting for a job':' birds waiting for jobs'),target:{kind:'academy-room',room:FREE_BIRD_ROOM}});
-  return {rows,built:ids.filter(isAcademyBuildingBuilt).length,total:ids.length,ready:rows.filter(r=>r.state==='ready').length};
+  return {rows,free,built:ids.filter(isAcademyBuildingBuilt).length,total:ids.length,ready:rows.filter(r=>r.state==='ready').length};
 }
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
