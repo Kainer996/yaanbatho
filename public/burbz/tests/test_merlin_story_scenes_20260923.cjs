@@ -21,7 +21,7 @@ for (const id of [null, '', 'lesson-12', 'alderwing-arrival-v395', 'alderwing-de
 }
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const steps = html.match(/const MERLIN_TUTORIAL_STEPS = (\[.*?\n\]);/s)[1];
-assert.equal(crypto.createHash('sha256').update(steps).digest('hex'), '99b39c9d09bebe3622940b5be493a7bc804f1817e587c41097fca47ee9db6041', 'All lesson text, IDs, order and actions remain byte-identical (v463 moved lesson-12 to the Home Academy box; v467 paced the lessons after Alderwing and cut the Play step)');
+assert.equal(crypto.createHash('sha256').update(steps).digest('hex'), '688228d31e771f4dc9fbd75a4cc7e41031748c9704346878393c777992508716', 'All lesson text, IDs, order and actions remain byte-identical (v463 moved lesson-12 to the Home Academy box; v467 paced the lessons after Alderwing and cut the Play step)');
 assert(html.includes('BurbzMerlinStoryScenes?.show('));
 assert(html.includes('BurbzMerlinStoryScenes?.clear('));
 assert(!fs.readFileSync(source, 'utf8').match(/localStorage|requestAnimationFrame|setInterval|fetch\(/), 'Presentation has no persistence, loop or external requests');

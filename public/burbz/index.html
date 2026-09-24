@@ -45533,7 +45533,7 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
   { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'#screen-scan .desk-panel-academy .desk-panel-heading', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
   { chapterId:'academy', chapter:'Academy', title:'Build the Birdhouse', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Build the Birdhouse, then tap the tree to place it. Merlin’s gift covers the cost.', action:{ event:'barracks-built', mode:'free', hint:'Build the Birdhouse and place it' }, id:'lesson-21' },
-  { chapterId:'scan', chapter:'Discovery', title:'Discover a real bird', screen:'scan', target:'#scanHomeActions', text:'Your Birdhouse is ready. Point Camera or Sound at a real bird, then open its card. No bird nearby? Continue with Merlin.', action:{event:'opening-discovery-reviewed',mode:'free',hint:'Discover a bird and open its card',deferLabel:'Continue with Merlin'}, id:'lesson-31' },
+  { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'#scanHomeActions', text:'Your Birdhouse is ready. Point Camera or Sound at a real bird, then open its card. No bird nearby? Continue with Merlin.', action:{event:'opening-discovery-reviewed',mode:'free',hint:'Discover a bird and open its card',deferLabel:'Continue with Merlin'}, id:'lesson-31' },
   { chapterId:'birdex', chapter:'Companions', title:'A useful companion', screen:'birdex', target:'#birdGrid', text:'Read a discovered bird’s diet and abilities. Recruit it when you can afford it. Merlin is already your companion and can fetch supplies.', id:'lesson-32' },
   { chapterId:'companion', chapter:'Companions', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin to see his food, energy and bond. Good care grows your friendship.', action:{event:'merlin-care-opened',hint:'Tap Merlin'}, id:'lesson-3' },
   { chapterId:'kitchen_need', chapter:'Care', title:'Food for your companions', screen:'scan', target:'#merlinCareMenu', text:'Every bird needs its own kind of food. Let’s build the Kitchen & Pantry.', id:'opening-kitchen-need' },
@@ -45846,8 +45846,11 @@ function merlinTutorialResumePosition(saved, mode, sequence) {
     if (direct >= 0) return direct;
   }
   const availableChapters = new Set(sequence.map(index => MERLIN_TUTORIAL_STEPS[index].chapterId));
+  // A retired chapter (academy_tour, v467) still held places in the old full
+  // list, so it keeps them here and its saves move on to the next lesson.
+  const liveChapters = new Set(MERLIN_TUTORIAL_STEPS.map(step => step.chapterId));
   const legacy = MERLIN_LEGACY_STEP_CHAPTERS.map((chapter, index) => ({ chapter, index }))
-    .filter(step => mode === 'full' ? availableChapters.has(step.chapter) : step.chapter === mode);
+    .filter(step => mode === 'full' ? availableChapters.has(step.chapter) || !liveChapters.has(step.chapter) : step.chapter === mode);
   let position = Math.max(0, Number(saved.currentStep) || 0);
   if (!saved.careLessonVersion && ['story', 'full'].includes(mode) && position >= 8) position += 3;
   const oldIndex = typeof saved.stepId === 'string' && /^lesson-\d+$/.test(saved.stepId)

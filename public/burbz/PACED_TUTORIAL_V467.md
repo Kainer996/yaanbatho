@@ -50,9 +50,11 @@ The play sky sits below the care menu, and the old Play lesson held the menu ope
 
 - `node tests/test_paced_tutorial_v467.cjs` — lesson list, pacing rules, wiring and flight fixes.
 - `node tests/run_paced_tutorial_v467.cjs` — real Chromium, phone size: 10 checks from the Home terminal to the Kitchen errand.
-- Re-pinned on purpose: the lesson hash in `test_merlin_story_scenes_20260923.cjs`, the logo lesson in `test_separate_home_20260924.cjs`, and the build tag in `test_bird_patch_map_v466.cjs`.
+- Re-pinned on purpose: the lesson hash in `test_merlin_story_scenes_20260923.cjs`, the logo lesson in `test_separate_home_20260924.cjs`, the build tag in `test_bird_patch_map_v466.cjs`, the Home goal stubs in `test_home_goal_v422.cjs` (the goal now ends the rest), and the retired `academy_tour` mode in `test_concise_onboarding_20260906.py`.
+- Full suite against main: no new failures. Main already fails 313 pytest tests, 20 collection errors and 32 node tests; the sets are identical.
+- One real fix fell out: a very old positional save replayed from Settings mapped its place against a list that skipped the retired chapter. `merlinTutorialResumePosition` now counts retired chapters' old places.
 
 ## Heads-up
 
 - Yaan's local opening evidence scripts (`run_opening_v4xx.cjs`, `run_hands_on_tutorial_v429.cjs`) walk the old chained order. They will now meet rests.
-- Branch `claude/burbz-tutorial-dialogue-ui-qt8onp` (the five-beat story, not merged) edits the story beats before Alderwing. It should merge cleanly with this one, apart from the lesson hash pin, which will need one more re-pin.
+- Branch `claude/burbz-tutorial-dialogue-ui-qt8onp` (the five-beat story, not merged) edits the story beats before Alderwing. A trial merge shows its lessons merge cleanly with these. The only clashes are version bookkeeping: the build tag, the cache name, the top of AGENTS.md and the lesson hash pin. It already clashes with main on those, because main took v466 too.
