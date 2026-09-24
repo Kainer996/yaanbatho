@@ -16,7 +16,7 @@ function attach(s,room,api){
  root.BurbzManga?.styleScene(group);
  function use(){if(!nearby||s.uiBusy||s.failed)return;const item=nearby;
   if(item.person){if(typeof api.talk!=='function')return;const answer=api.talk(target,item.person);if(!answer?.handled)show(item.person.name,answer);return;}
-  try{const result=api.collect(target,item.id);if(result){item.mesh.visible=false;show('In your bag',result);}else item.mesh.visible=false;}catch(error){show('Could not save','Your item is still here. '+error.message);}
+  try{const result=api.collect(target,item.id);if(result){item.mesh.visible=false;root.BurbzCalmAudio?.dust();show('In your bag',result);}else item.mesh.visible=false;}catch(error){show('Could not save','Your item is still here. '+error.message);}
  }
  on(useButton,'click',use);
  function refresh(time){

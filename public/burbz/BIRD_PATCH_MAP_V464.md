@@ -1,6 +1,6 @@
-# Bird patch map (v463)
+# Bird patch map (v464)
 
-Release: `bird-patch-map-v463-20260924`.
+Release: `bird-patch-map-v464-20260924`.
 
 ## Yaan's ask
 
@@ -24,6 +24,6 @@ Yaan hears the same two tawny owls at work every night. He only learned they wer
 
 ## Checks
 
-- `node tests/test_bird_patch_map_v463.cjs`
+- `node tests/test_bird_patch_map_v464.cjs`
 - `node tests/run_bird_patch_map_evidence.js` (real Chromium; 12 checks)
 - The pytest suite fails the same 311 tests as clean main. None are new.
