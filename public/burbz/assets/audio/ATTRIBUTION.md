@@ -156,3 +156,16 @@ W.carter, licensed under CC BY 4.0; excerpted and audio-processed for Burbz.
   identify the licence, link to the licence, and indicate that changes were made.
 - Keep this file with redistributed copies of the pack so the CC BY attribution
   and modification notices travel with the audio.
+
+## Calm walking and camp sounds (24 September 2026)
+
+The files in `footsteps/` and `camp/` were generated for Burbz with ElevenLabs
+Sound Effects v2 on 24 September 2026, in the project owner's account. They
+give quiet moments a soft, close, ASMR feel: calm footsteps on grass, wood and
+stone, a crackling campfire loop, a hatchet chop, a brush dusting, and gentle
+eating. A gritty gravel step set plays at the same level when danger is near.
+Each take was trimmed, softened and levelled; the campfire keeps its seamless
+loop. A rain loop, a light wind loop (`weather/`) and a stool sound followed the
+same day. Prompts, hashes and processing are in each folder's `manifest.json`.
+Their use remains subject to the project owner's ElevenLabs account and
+applicable service terms.

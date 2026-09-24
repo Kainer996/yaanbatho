@@ -43,9 +43,20 @@
     coins: 'assets/audio/ui-coins.mp3',
     build: 'assets/audio/sfx-build.mp3',
     error: 'assets/audio/sfx-defeat-error.mp3',
-    footstepGround: Object.freeze(['assets/audio/footsteps/footstep-soft-ground-01.mp3','assets/audio/footsteps/footstep-soft-ground-02.mp3']),
-    footstepWood: Object.freeze(['assets/audio/footsteps/footstep-wood-01.mp3','assets/audio/footsteps/footstep-wood-02.mp3']),
-    footstepStone: Object.freeze(['assets/audio/footsteps/footstep-stone-01.mp3','assets/audio/footsteps/footstep-stone-02.mp3']),
+    // Calm steps are soft, close and level with each other, so no step clanks.
+    // The gravel set is the same loudness, only grittier: it plays when danger is near.
+    footstepGround: Object.freeze(['assets/audio/footsteps/calm-grass-01.mp3','assets/audio/footsteps/calm-grass-02.mp3','assets/audio/footsteps/calm-grass-03.mp3']),
+    footstepWood: Object.freeze(['assets/audio/footsteps/calm-wood-01.mp3','assets/audio/footsteps/calm-wood-02.mp3','assets/audio/footsteps/calm-wood-03.mp3']),
+    footstepStone: Object.freeze(['assets/audio/footsteps/calm-stone-01.mp3','assets/audio/footsteps/calm-stone-02.mp3']),
+    footstepTense: Object.freeze(['assets/audio/footsteps/tense-gravel-01.mp3','assets/audio/footsteps/tense-gravel-02.mp3','assets/audio/footsteps/tense-gravel-03.mp3','assets/audio/footsteps/tense-gravel-04.mp3']),
+    // Gentle camp sounds for quiet moments.
+    campChop: Object.freeze(['assets/audio/camp/chop-01.mp3','assets/audio/camp/chop-02.mp3']),
+    campDust: Object.freeze(['assets/audio/camp/dust-01.mp3','assets/audio/camp/dust-02.mp3']),
+    campEat: Object.freeze(['assets/audio/camp/eat-01.mp3','assets/audio/camp/eat-02.mp3','assets/audio/camp/eat-03.mp3']),
+    campfire: 'assets/audio/camp/campfire-loop.mp3',
+    campStool: 'assets/audio/camp/stool.mp3',
+    rain: 'assets/audio/weather/rain-loop.mp3',
+    wind: 'assets/audio/weather/wind-loop.mp3',
     residentChatter: Object.freeze(Array.from({length:16}, function(_, i) {
       return 'assets/audio/little-folk/mumble-' + String(i + 1).padStart(2, '0') + '.mp3';
     }))
@@ -71,7 +82,16 @@
     unlock: 0.5,
     coins: 0.45,
     build: 0.55,
-    error: 0.45
+    error: 0.45,
+    campChop: 0.42,
+    campDust: 0.34,
+    campEat: 0.4,
+    // The fire's level when the player stands right beside it.
+    campfire: 0.5,
+    campStool: 0.42,
+    // Weather beds sit under everything else.
+    rain: 0.42,
+    wind: 0.22
   });
 
   // A button that returns the identical pitch on every press reads as a machine.
@@ -87,7 +107,10 @@
     unlock: 0.04,
     coins: 0.05,
     build: 0.045,
-    error: 0.03
+    error: 0.03,
+    campChop: 0.04,
+    campDust: 0.03,
+    campEat: 0.03
   });
 
   // A tap is over inside 200 ms now, so it can answer the finger sooner without
@@ -109,7 +132,10 @@
     unlock: 250,
     coins: 100,
     build: 180,
-    error: 180
+    error: 180,
+    campChop: 250,
+    campDust: 900,
+    campEat: 1200
   });
 
   // No entry here plays a real bird. Burbz identifies wild birds by ear, so a
@@ -180,7 +206,70 @@
         safePause(entry.audio);
         removeActive(entry);
       });
+      Object.keys(loops).forEach(stopLoop);
     }
+
+    // Calm is the default. Tense swaps in the gritty steps and hushes the fire.
+    var mood = 'calm';
+    function setMood(value) {
+      mood = value === 'tense' ? 'tense' : 'calm';
+      if (mood === 'tense') campfire(0);
+      return mood;
+    }
+
+    // Looping beds: the campfire and the weather. Each fades to its target.
+    var loops = Object.create(null);
+    function stopLoop(name) {
+      var loop = loops[name];
+      if (!loop) return;
+      if (loop.audio) safePause(loop.audio);
+      delete loops[name];
+    }
+    function stopCampfire() { stopLoop('campfire'); }
+    function rampLoop(name) {
+      var loop = loops[name];
+      if (!loop || loop.timer) return;
+      var step = function() {
+        loop.timer = false;
+        if (loops[name] !== loop) return;
+        var diff = loop.target - loop.volume;
+        loop.volume = Math.abs(diff) <= 0.02 ? loop.target : loop.volume + (diff > 0 ? 0.02 : -0.02);
+        try { loop.audio.volume = loop.volume; } catch (_) {}
+        if (loop.volume <= 0 && loop.target <= 0) { stopLoop(name); return; }
+        if (loop.volume !== loop.target && schedule) { loop.timer = true; schedule(step, 60); }
+      };
+      step();
+    }
+    function loopTo(name, level, loopOptions) {
+      var value = Math.max(0, Math.min(1, Number(level) || 0));
+      if (!isEnabled()) value = 0;
+      if (loopOptions && loopOptions.immediate && value === 0) { stopLoop(name); return false; }
+      var target = value * (Number(volumes[name]) || 0);
+      if (target > 0 && !loops[name]) {
+        var src = chooseSource(name), audio = src ? makeAudio(src) : null;
+        if (!audio) return false;
+        try { audio.loop = true; audio.volume = 0; audio.preload = 'auto'; } catch (_) {}
+        var loop = loops[name] = { audio: audio, volume: 0, target: 0, timer: false };
+        try {
+          Promise.resolve(typeof audio.play === 'function' ? audio.play() : null).catch(function() {
+            if (loops[name] === loop) stopLoop(name);
+          });
+        } catch (_) { stopLoop(name); return false; }
+      }
+      if (!loops[name]) return false;
+      loops[name].target = target;
+      rampLoop(name);
+      return target > 0;
+    }
+    function campfire(level, fireOptions) {
+      return loopTo('campfire', mood === 'tense' ? 0 : level, fireOptions);
+    }
+    // Rain follows the real sky; a light wind always moves a little.
+    function ambience(rain, wind, ambienceOptions) {
+      loopTo('rain', rain, ambienceOptions);
+      loopTo('wind', wind, ambienceOptions);
+    }
+    function loopLevel(name) { return loops[name] ? loops[name].target : 0; }
     function stopFootsteps() {
       active.slice().filter(function(entry){return entry.name.indexOf('footstep')===0;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
     }
@@ -200,7 +289,7 @@
     function chooseSource(name) {
       var candidate = manifest[name];
       if (Array.isArray(candidate)) {
-        if ((name === 'residentChatter' || name.indexOf('footstep')===0) && candidate.length > 1) {
+        if (candidate.length > 1) {
           candidate = candidate.filter(function(src) { return src !== lastSource[name]; });
         }
         if (!candidate.length) return null;
@@ -350,9 +439,15 @@
       stopAll: stopAll,
       stop: stop,
       stopFootsteps: stopFootsteps,
+      setMood: setMood,
+      mood: function() { return mood; },
+      campfire: campfire,
+      stopCampfire: stopCampfire,
+      ambience: ambience,
+      loopLevel: loopLevel,
       footstep: function(surface) {
         if(active.some(function(entry){return entry.name.indexOf('footstep')===0;}))return Promise.resolve(false);
-        var name={wood:'footstepWood',stone:'footstepStone'}[surface]||'footstepGround';
+        var name=mood==='tense'&&surface!=='wood'?'footstepTense':({wood:'footstepWood',stone:'footstepStone'}[surface]||'footstepGround');
         return play(name,{volume:0.26,maxPolyphony:1,cooldown:280,playbackRate:1+(random()*2-1)*0.035});
       },
       createFootsteps: function(){return createFootstepController({enabled:isEnabled,play:function(surface){return manager.footstep(surface);},stop:stopFootsteps});},

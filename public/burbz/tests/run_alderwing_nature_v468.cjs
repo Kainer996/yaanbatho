@@ -1,9 +1,9 @@
-/* Alderwing nature v462 in the actual retained renderer with explicitly
+/* Alderwing nature v468 in the actual retained renderer with explicitly
  * synthetic, offline map input: a meadow valley under a 30m crag that a
  * mapped stream falls over, a lake and a wood. Evidence, not a unit test. */
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'/root/src/gstack/node_modules/playwright'),F=require('./connected_world_fixture_v386.cjs');
-const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-alderwing-nature-v462',report={served:{},missing:[],checks:[],errors:[],limits:['Actual retained renderer and loader with explicitly synthetic DEM/vector input.','Software WebGL at a phone viewport: frame times are a relative proxy, not phone FPS.','Real Lake District and Pendle checks were run separately against live providers.']};
+const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-alderwing-nature-v468',report={served:{},missing:[],checks:[],errors:[],limits:['Actual retained renderer and loader with explicitly synthetic DEM/vector input.','Software WebGL at a phone viewport: frame times are a relative proxy, not phone FPS.','Real Lake District and Pendle checks were run separately against live providers.']};
 fs.mkdirSync(out,{recursive:true});const server=F.createServer({root,port:8969,report});let browser,page;
 const run=code=>page.evaluate(code=>__testEval(code),code),read=()=>page.evaluate(()=>__burbzVillageWalkDebug.state()),nature=()=>page.evaluate(()=>__burbzVillageWalkDebug.nature()),pass=name=>{report.checks.push(name);console.log('PASS',name);};
 const G=require('../geographic_world_core.js'),coord=(x,z)=>{const g=G.unproject(F.ANCHOR,{x,y:0,z});return[g.lon,g.lat];},ring=(x,z,w,d)=>[[x-w/2,z-d/2],[x+w/2,z-d/2],[x+w/2,z+d/2],[x-w/2,z+d/2],[x-w/2,z-d/2]].map(([a,b])=>coord(a,b));

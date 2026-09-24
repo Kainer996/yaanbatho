@@ -3,7 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=f=>fs.readFileSync(__dirname+'/../'+f,'utf8');
 const html=read('index.html'),home=read('scan_home.js'),sw=read('sw.js');
-const rev='separate-home-v461-20260924';
+const rev='home-academy-tree-v465-20260924';
 const fn=name=>{const m=html.match(new RegExp('function '+name+'\\([^]*?\\n}'));assert(m,name);return m[0];};
 test('Academy navigation selects its independent screen and starts the tree, then Home returns to its desk',()=>{
  const calls=[],noop=()=>{},classes={add:noop,remove:noop};
@@ -13,11 +13,21 @@ test('Academy navigation selects its independent screen and starts the tree, the
  vm.runInContext('switchScreen("scan");',c);assert.equal(c.currentScreen,'scan');assert.deepEqual(calls,['wire','tree','view','desk','pause']);
 });
 test('Home keeps Empire first and all original care panels even for locked saves',()=>{
- assert.match(home,/ids=\['building','discover','today','stores','kitchen','training','hospital'\]/);
+ assert.match(home,/ids=\['building','discover','today','stores','kitchen','training','hospital','academy'\]/);
  assert.match(home,/featured='building'/);
  assert.match(home,/if\(fullEmpire\)\{panelElement\('building'\)\.style\.gridArea/);
  for(const id of ['kitchen','training','hospital'])assert.ok(html.includes('desk-'+id+'-list'));
  assert.doesNotMatch(home,/academyHomeRooms|academyHomeTree/);
+});
+test('Home stacks the four rooms left, puts a condensed Academy right, and the dock keeps only what Home lacks',()=>{
+ assert.ok(html.includes('id="desk-academy-list"'));
+ assert.match(home,/panelElement\('academy'\)\.style\.gridArea=`\$\{row\} \/ \$\{careColumns\+1\} \/ \$\{row\+careRows\} \/ \$\{columns\+1\}`/);
+ const dock=html.slice(html.indexOf('id="bottomDock"'),html.indexOf('<!-- Capture Celebration Overlay -->'));
+ assert.deepEqual([...dock.matchAll(/data-screen="([^"]+)"/g)].map(m=>m[1]),['map','battle','birdex','inventory','leaderboards']);
+ assert.doesNotMatch(dock,/data-quick-destination/);
+ assert.match(html,/id="headerHomeBtn" data-game-route data-screen="scan"/);
+ assert.match(html,/target:'#screen-scan \.desk-panel-academy \.desk-panel-heading'/);
+ assert.match(html,/target:'#headerHomeBtn'/);
 });
 test('Academy tree and construction remain independent without merged intro takeover',()=>{
  assert.ok(html.includes('id="screen-academy"'));
@@ -27,8 +37,9 @@ test('Academy tree and construction remain independent without merged intro take
  assert.doesNotMatch(sw,/academy_home_intro\.js/);
 });
 test('Restored Home uses a new coherent shell and exact cache pins',()=>{
- assert.equal(html.match(/const BURBZ_BUILD = '([^']+)'/)[1],rev);
- assert.match(sw,new RegExp(rev+"';"));
+ // Later releases append to the cache name, so check membership, not the tail.
+ assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes(rev));
+ assert.match(sw,new RegExp(html.match(/const BURBZ_BUILD = '([^']+)'/)[1]+"';"));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
   const pin=file+'?v='+rev;assert.ok(html.includes(pin),pin);
   assert.equal(sw.split('./'+pin).length-1,3,pin+' in every worker list');

@@ -294,14 +294,7 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
  #screen-scan .desk-mini-copy strong{font-size:11px}
  #screen-scan .desk-mini-copy small{font-size:9px}
 }
-/* On short phones the same 44px destinations use one scrollable row. This
-   makes room for the full-size companion without compressing the desk trays. */
-@media(orientation:portrait) and (max-height:730px){
- body[data-active-screen="scan"]{--nav-height:50px}
- body[data-active-screen="scan"] .bottom-nav{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding-left:154px;scroll-padding-left:154px;overscroll-behavior-x:contain;touch-action:pan-x;scrollbar-width:none}
- body[data-active-screen="scan"] .dock-row{flex:none;justify-content:flex-start}
- body[data-active-screen="scan"] .bottom-dock-anchor{left:0;transform:none;border-radius:0 12px 0 0;padding-left:2px;padding-right:2px;width:148px;justify-content:space-around}
- body[data-active-screen="scan"] .bottom-dock-anchor .nav-item{min-width:44px;flex:0 0 44px}
+/* The slim dock already fits short phones, so no scrolling row is needed. */
 }
 
 #screen-scan .desk-village{padding:4px;border-bottom:1px solid #c6aa653b}
@@ -676,18 +669,10 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 #screen-scan.progressive-home #scanHomeActions { background:#202123; }
 #screen-scan.progressive-home #scanHomeActions .home-action { background:transparent;color:#e5dfd0; }
 
-/* The released Home arrangement gains only the requested two-row dock.
+/* Home holds the room shortcuts, so the dock is one short row everywhere.
    Short landscape retains its existing side rail so the desk still fits. */
 @media (orientation:portrait) {
- body:has(#screen-scan.active) { --nav-height:calc(128px + var(--tutorial-action-row,0px)); }
- body:has(#screen-scan.active):not(.guided-opening) { --nav-height:128px; }
- body:has(#screen-scan.active) #bottomDock { display:grid;grid-template-rows:repeat(2,60px);grid-auto-flow:column;grid-auto-columns:minmax(44px,1fr);align-content:end;align-items:stretch;justify-content:stretch;gap:0;height:calc(var(--nav-height) + var(--safe-bottom));padding:4px 4px calc(4px + var(--safe-bottom));background:#111214;border-top:1px solid #756647;overflow-x:auto; }
- body:has(#screen-scan.active) :is(#bottomNav,#bottomDockAnchor,#bottomNav .dock-row,#bottomNav .dock-pair) { display:contents; }
- body:has(#screen-scan.active) #bottomDock .nav-item { width:auto;min-width:44px;min-height:60px;height:60px;padding:2px;flex:none; }
- body:has(#screen-scan.active) #bottomDock .nav-icon,
- body:has(#screen-scan.active) #bottomDock .nav-icon img { width:42px;height:42px; }
- body:has(#screen-scan.active) #bottomDock .nav-label { font-size:10px;line-height:12px; }
- body:has(#screen-scan.active) #bottomDock > #tutorialNavPointer { bottom:calc(128px + var(--safe-bottom)); }
+ body:has(#screen-scan.active):not(.guided-opening) { --nav-height:54px; }
 }
 
 @media (orientation:portrait) and (max-height:650px) {
@@ -725,6 +710,57 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 #screen-scan.progressive-home .desk-build-options .desk-build-open { padding-bottom:12px; }
 #screen-scan.progressive-home .desk-build-options .desk-mini-art { width:24px;height:28px; }
 #screen-scan.progressive-home .desk-build-options small { position:absolute;bottom:0;left:0;right:0;pointer-events:none; }
+
+/* Condensed Academy: every building in one scrolling box on the right.
+   Built rooms open directly; unbuilt ones lead to their real build card. */
+#screen-scan.progressive-home .desk-panel-academy .desk-panel-heading { --desk-banner:url("assets/academy-tree-manga-20260806.webp"); }
+#screen-scan.progressive-home .desk-panel-academy .desk-panel-heading::before { background-position:center 30%; }
+#screen-scan.progressive-home .desk-panel-academy #desk-academy-list { display:block;flex:1;min-height:0;padding:0;overflow:hidden; }
+#screen-scan .home-tree { position:relative;height:100%;min-height:96px;overflow:hidden;cursor:pointer;background:#27331c;border-radius:0 0 10px 10px;container-type:size;isolation:isolate; }
+#screen-scan .home-tree::before { content:"";position:absolute;inset:-12px;z-index:-1;background:url("assets/academy-home-tree-20260924.webp") center/cover;filter:blur(10px) brightness(.55) saturate(.9); }
+#screen-scan .home-tree-sway { position:absolute;inset:-2% -2% 0;transform-origin:50% 100%;animation:homeTreeSway 9s ease-in-out infinite alternate; }
+/* The stage keeps the painting's own 3:4 shape and shows the whole tree, so
+   every house is visible and each tap spot stays on it at every size. A
+   blurred copy fills any spare edge. */
+#screen-scan .home-tree-stage { position:absolute;left:50%;top:50%;width:min(100cqw,75cqh);aspect-ratio:1086/1448;transform:translate(-50%,-50%); }
+#screen-scan .home-tree-art { position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none; }
+#screen-scan .home-tree-house { position:absolute;width:22%;aspect-ratio:1.1;padding:0;border:0;border-radius:40%;background:none;transform:translate(-50%,-50%);cursor:pointer; }
+#screen-scan .home-tree-house:is(.is-short,.is-locked) { background:radial-gradient(ellipse at 50% 50%,rgba(10,12,8,.72) 38%,rgba(10,12,8,0) 70%);-webkit-backdrop-filter:grayscale(1);backdrop-filter:grayscale(1);-webkit-mask:radial-gradient(ellipse,#000 45%,transparent 71%);mask:radial-gradient(ellipse,#000 45%,transparent 71%); }
+#screen-scan .home-tree-house.is-ready::after { content:"+";position:absolute;right:4%;top:2%;width:15px;height:15px;border-radius:50%;background:#ffd76a;color:#1b1408;font:900 13px/15px Inter,sans-serif;text-align:center;box-shadow:0 0 0 2px #1b1408aa;animation:homeTreeReady 2.4s ease-in-out infinite; }
+#screen-scan .home-tree-house:focus-visible { outline:2px solid #ffd76a;outline-offset:1px; }
+#screen-scan .home-tree-smoke { position:absolute;left:47%;top:37%;width:7%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(235,235,230,.55),transparent 70%);pointer-events:none;animation:homeTreeSmoke 5s ease-out infinite; }
+#screen-scan .home-tree-light { position:absolute;inset:-10%;pointer-events:none;mix-blend-mode:screen;background:linear-gradient(112deg,transparent 30%,rgba(255,236,190,.14) 42%,transparent 54%);animation:homeTreeLight 14s ease-in-out infinite alternate; }
+#screen-scan .home-tree-leaf { position:absolute;top:-8%;left:var(--x);width:6px;height:4px;border-radius:60% 0;background:#b8c46a;opacity:.8;pointer-events:none;animation:homeTreeLeaf var(--fall,10s) linear var(--wait,0s) infinite; }
+#screen-scan .home-tree-free { position:absolute;left:6px;bottom:6px;min-height:28px;padding:2px 8px;border:1px solid #c8b27b66;border-radius:14px;background:#171512d9;color:#f0ddaf;font:700 12px/1 Rajdhani,sans-serif; }
+#screen-scan .home-tree.is-closed .home-tree-sway { filter:grayscale(.6) brightness(.6); }
+#screen-scan .home-tree-note { position:absolute;left:8px;right:8px;bottom:8px;margin:0;color:#e5dfce;font:500 12px/1.3 Inter,sans-serif;text-align:center;text-shadow:0 1px 3px #000; }
+@keyframes homeTreeSway { from { transform:rotate(-.5deg); } to { transform:rotate(.5deg); } }
+@keyframes homeTreeReady { 0%,100% { transform:scale(.9);box-shadow:0 0 0 2px #1b1408aa,0 0 4px rgba(255,215,106,.4); } 50% { transform:scale(1.08);box-shadow:0 0 0 2px #1b1408aa,0 0 12px rgba(255,215,106,.95); } }
+@keyframes homeTreeSmoke { 0% { transform:translate(0,0) scale(.6);opacity:0; } 20% { opacity:.8; } 100% { transform:translate(8px,-38px) scale(2.2);opacity:0; } }
+@keyframes homeTreeLight { from { transform:translateX(-18%); } to { transform:translateX(18%); } }
+@keyframes homeTreeLeaf { 0% { transform:translate(0,0) rotate(0); opacity:0; } 10% { opacity:.8; } 100% { transform:translate(22px,120%) rotate(540deg); opacity:0; } }
+@media (prefers-reduced-motion:reduce) { #screen-scan :is(.home-tree-sway,.home-tree-house,.home-tree-house::after,.home-tree-light,.home-tree-leaf,.home-tree-smoke) { animation:none; } #screen-scan :is(.home-tree-leaf,.home-tree-smoke) { display:none; } }
+
+/* One tidy text system for every Home box: headings, counts and summaries
+   share the same left edge, size and colour. */
+#screen-scan.progressive-home .desk-panel-heading { padding:0 10px;font:700 16px/1.1 Rajdhani,sans-serif;letter-spacing:.01em; }
+#screen-scan.progressive-home .desk-panel-heading > span:first-child { flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px #000; }
+#screen-scan.progressive-home .desk-panel-heading > span[aria-hidden] { display:none; }
+#screen-scan.progressive-home .desk-panel-heading small:not(:empty) { min-width:20px;padding:1px 6px;border-radius:10px;background:#d6a84f;color:#17130c;font:800 12px/16px Inter,sans-serif;text-align:center; }
+#screen-scan.progressive-home .desk-panel-summary { margin:0;padding:5px 10px;color:#d9d0bc;font:500 12px/1.3 Inter,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+#screen-scan.progressive-home .desk-empire-holdings .desk-empty { padding:6px 4px;text-align:center;color:#a99d85;font:500 12px/1.3 Inter,sans-serif; }
+#screen-scan.progressive-home .desk-empire-column h3 { font:700 13px/18px Rajdhani,sans-serif;letter-spacing:.03em;text-transform:uppercase; }
+#screen-scan.progressive-home .desk-current-label { font:700 12px/1 Rajdhani,sans-serif;letter-spacing:.04em;text-transform:uppercase; }
+#screen-scan.progressive-home :is(#scanBtn,#captureBtn) { font:700 13px/1.1 Rajdhani,sans-serif;letter-spacing:.04em; }
+#screen-scan.progressive-home .desk-mini-copy strong { font:700 14px/1.15 Rajdhani,sans-serif; }
+#screen-scan.progressive-home .desk-mini-copy small { font:500 11px/1.3 Inter,sans-serif;color:#cfc4ac; }
+
+#screen-scan.progressive-home .home-panel-tight .desk-panel-summary { display:none; }
+#screen-scan.progressive-home .home-panel-tight { display:flex;flex-direction:column; }
+#screen-scan.progressive-home .home-panel-tight .desk-panel-heading { flex:1;height:auto;border-bottom:0; }
+/* Stacked rooms on the left keep a slim heading so the summary still shows. */
+#screen-scan.progressive-home .home-panel-stacked .desk-panel-heading { height:32px;min-height:32px;font-size:15px; }
+#screen-scan.progressive-home .home-panel-stacked .desk-panel-summary { line-height:15px;padding:3px 10px 0; }
 
 /* Current quest: keep the text and hit area still; inset glow survives the strip's clipping. */
 #screen-scan.progressive-home #scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled) {

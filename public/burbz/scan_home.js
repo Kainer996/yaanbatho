@@ -9,9 +9,10 @@
  function bar(value,label,tone=''){const pct=Math.round(Math.max(0,Math.min(100,value)));return `<span class="desk-mini-meter ${tone}" role="progressbar" aria-label="${escape(label)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><span style="width:${pct}%"></span></span>`;}
  function render(snapshot){if(!options?.visible())return;const m=C.derive(snapshot),focused=document.activeElement?.dataset?.homeAction;targets=new Map();
   targets.set('player-equipment',{kind:'player-equipment'});
-  applyProgression(m);
-  const headings={stores:{kind:'forge'},kitchen:{kind:'kitchen'},training:{kind:'training'},hospital:{kind:'hospital'},completed:{kind:'villages'},building:{kind:'villages'}};for(const [id,target]of Object.entries(headings))targets.set('panel-'+id,target);
-  const register=(prefix,rows)=>rows.forEach(r=>targets.set(prefix+r.id,r.target));register('store-',m.stores);m.equipment.forEach(i=>targets.set('equip-'+i.slot,i.target));register('feed-',m.kitchen);register('train-',m.training);register('patient-',m.hospital);register('complete-',m.completed);register('',m.builds);
+  const academy=snapshot?.academy||{rows:[],built:0,total:0,ready:0},academyOpen=snapshot?.gates?.academy!==false;
+  applyProgression(m,academy,academyOpen);
+  const headings={academy:{kind:'academy'},stores:{kind:'forge'},kitchen:{kind:'kitchen'},training:{kind:'training'},hospital:{kind:'hospital'},completed:{kind:'villages'},building:{kind:'villages'}};for(const [id,target]of Object.entries(headings))targets.set('panel-'+id,target);
+  const register=(prefix,rows)=>rows.forEach(r=>targets.set(prefix+r.id,r.target));register('store-',m.stores);m.equipment.forEach(i=>targets.set('equip-'+i.slot,i.target));register('feed-',m.kitchen);register('train-',m.training);register('patient-',m.hospital);register('complete-',m.completed);register('academy-',academy.rows);register('',m.builds);
   const brief=m.actions.filter(a=>a.id==='next-quest').slice(0,1);brief.forEach(a=>targets.set(a.id,a.target));
   update('scanHomeActions',brief,()=>brief.map(a=>`<button type="button" class="home-action" data-home-action="${escape(a.id)}" title="${escape(a.title)}">${icon(a.icon)}<span><strong>${escape(a.title)}</strong><small>${escape(a.detail)}</small></span><span class="home-action-chevron" aria-hidden="true">›</span></button>`).join('')||'<p class="desk-empty">No active player goal.</p>');
   buildOptions=m.availableBuilds;renderBuildOption();
@@ -20,6 +21,8 @@
   update('desk-kitchen-list',{rows:m.kitchen,open:m.gates.kitchen},()=>m.kitchen.map(b=>{const full=100-b.hunger;return row('feed-'+b.id,b.name,(b.away?'Away · ':b.label+' · ')+Math.round(full)+'% full',picture(b.art),bar(full,'Fullness',b.level),b.away);}).join('')||empty(m.gates.kitchen?'Your birds are well fed.':'Kitchen unlocks as you progress.'));
   update('desk-training-list',{rows:m.training,open:m.gates.training},()=>m.training.map(s=>row('train-'+s.id,s.name,s.ready?'Finished · collect reward':s.detail+' · '+Math.max(1,Math.ceil(s.remaining/60000))+'m',null,bar(s.ready?100:s.progress,'Training progress'))).join('')||empty(m.gates.training?'No active drills. Choose a bird to train.':'Training unlocks as you progress.'));
   update('desk-hospital-list',{rows:m.hospital,open:m.gates.hospital},()=>m.hospital.map(b=>row('patient-'+b.id,b.name,Math.round(b.hp)+' / '+Math.round(b.maxHp)+' HP · '+(b.admitted?'Recovering':'Needs care'),picture(b.art),bar(b.hp/b.maxHp*100,'Health'))).join('')||empty(m.gates.hospital?'No injured birds.':'Hospital unlocks as you progress.'));
+  targets.set('academy-free',{kind:'academy-room',room:'outdoors'});
+  update('desk-academy-list',{rows:academy.rows.map(r=>[r.id,r.state,r.x,r.y,r.detail]),free:academy.free,open:academyOpen},()=>academyTree(academy,academyOpen));
   update('desk-completed-list',m.completed,()=>m.completed.map(n=>row('complete-'+n.id,n.name,n.detail,picture(null,n.icon))).join('')||empty('No unchecked buildings.'));
   for(const column of m.empire)for(const holding of column.rows)targets.set('holding-'+column.id+'-'+holding.id,holding.target);
   targets.set('building-notices',{kind:'home-notices'});
@@ -28,20 +31,30 @@
   noticeButton.hidden=!m.completed.length;noticeButton.textContent=m.completed.length+' completed · check';
   update('desk-building-list',m.empire,()=>m.empire.map(column=>`<section class="desk-empire-column" aria-labelledby="desk-empire-${column.id}"><h3 id="desk-empire-${column.id}">${column.title}</h3><div class="desk-empire-holdings" tabindex="0" role="region" aria-label="${column.title}">${column.rows.map(h=>`<button type="button" class="desk-empire-holding is-${h.tone}" data-banner="${column.id==='villages'?'saltmere':''}" data-work="${h.waiting?'✓'+h.waiting:h.buildCount?'🔨'+h.buildCount:h.underway?'⌛'+h.underway:''}" data-home-action="holding-${column.id}-${escape(h.id)}" title="${escape([h.name,h.status,h.governor?.name,h.work,...h.buildNames].filter(Boolean).join(' · '))}" aria-label="${escape(h.name+', '+h.status+(h.governor?', '+h.role+': '+h.governor.name:'')+(h.work?', '+h.work:''))}"><span class="desk-empire-name">${picture(h.governor?.art,h.assigned?'🪶':'!')}<strong>${escape(h.name)}</strong></span><small>${escape(h.status)}</small>${h.work?`<small class="desk-empire-work">${h.buildCount?'🔨 ':h.waiting?'✓ ':''}${escape(h.work)}</small>`:''}</button>`).join('')||empty('None yet')}</div></section>`).join(''));
 
-  for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
+  for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,academy:academy.rows.filter(r=>r.state==='ready'),completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
   if(focused&&document.activeElement?.dataset?.homeAction!==focused)Array.from(boundSection.querySelectorAll('[data-home-action]')).find(el=>el.dataset.homeAction===focused)?.focus({preventScroll:true});queueLayout();return m;
  }
- function applyProgression(m){
-  const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages'};
+ // The Academy box shows Yaan's painted tree. Each house in the painting
+ // gets a tap spot; unbuilt houses sit in shadow, ready ones glow gold.
+ const TREE_SPOTS={nursery:[26.7,8.5],observatory:[80,8],workshop:[22,19.5],library:[66,20.5],manager_office:[22,31],crowbar:[81,31],hospital:[18.5,50.5],kitchen:[50,51],training:[84.5,52.5],magpie_market:[19.5,73],quest_roost:[51.5,77],tavern:[82,76.5]};
+ function academyTree(academy,open){
+  const label={built:'Open',ready:'Ready to build',short:'Plan',locked:'Locked'};
+  const houses=academy.rows.filter(r=>TREE_SPOTS[r.id]).map(r=>{const [x,y]=TREE_SPOTS[r.id];return `<button type="button" class="home-tree-house is-${r.state}" data-home-action="academy-${escape(r.id)}" style="left:${x}%;top:${y}%" title="${escape(r.name+' · '+r.detail)}" aria-label="${escape(r.name+', '+label[r.state]+'. '+r.detail)}"${open?'':' disabled'}></button>`;}).join('');
+  const free=academy.free?`<button type="button" class="home-tree-free" data-home-action="academy-free" aria-label="${academy.free} free ${academy.free===1?'bird':'birds'} waiting for a job">🕊️ ${academy.free}</button>`:'';
+  const leaves=[0,1,2,3].map(i=>`<i class="home-tree-leaf" style="--x:${18+i*21}%;--fall:${9+i*2.5}s;--wait:${-i*3.1}s"></i>`).join('');
+  return `<div class="home-tree${open?'':' is-closed'}" data-home-action="panel-academy" role="group" aria-label="Your Academy tree"><div class="home-tree-sway"><div class="home-tree-stage"><img class="home-tree-art" src="assets/academy-home-tree-20260924.webp" alt="" decoding="async"><i class="home-tree-smoke" aria-hidden="true"></i>${houses}</div></div><div class="home-tree-light" aria-hidden="true"></div>${leaves}${free}${open?'':'<p class="home-tree-note">Opens as you follow your Quests</p>'}</div>`;
+ }
+ function applyProgression(m,academy,academyOpen){
+  const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages',academy:academyOpen?academy.built+' of '+academy.total+' built'+(academy.ready?' · '+academy.ready+' ready':''):'Not open yet'};
   // Layout B is stable even before its features unlock. Native actions still
   // enforce real gates; empty/locked panels never imply ownership or progress.
-  const ids=['building','discover','today','stores','kitchen','training','hospital'],featured='building',main=boundSection.querySelector('.scan-home-main');
+  const ids=['building','discover','today','stores','kitchen','training','hospital','academy'],featured='building',main=boundSection.querySelector('.scan-home-main');
   for(const id of ['kitchen','training','hospital'])if(!m.gates[id])summaries[id]='Not built yet';
   if(!m.gates.forge)summaries.stores='Follow your Quests';
   boundSection.classList.add('progressive-home');main.dataset.panelCount=ids.length;boundSection.dataset.homeDensity=ids.length>4?'full':ids.length>2?'growing':'early';
   document.getElementById('desk-building-title').textContent='Your Empire';document.getElementById('desk-stores-title').textContent='Crafting';
   document.getElementById('homeNoticesVillages').hidden=!m.villageDesk.length;
-  for(const id of ['discover','today','stores','kitchen','training','hospital','building']){
+  for(const id of ['discover','today','stores','kitchen','training','hospital','academy','building']){
    const el=panelElement(id);if(!el)continue;el.hidden=!ids.includes(id);el.dataset.homePanel=id;el.classList.toggle('home-panel-featured',id===featured);
    if(summaries[id]){let summary=el.querySelector('.desk-panel-summary');if(!summary){summary=document.createElement('p');summary.className='desk-panel-summary';el.querySelector('.desk-panel-heading').after(summary);}summary.textContent=summaries[id];}
   }
@@ -54,9 +67,9 @@
   const main=boundSection.querySelector('.scan-home-main'),width=main.clientWidth,{ids,featured}=layoutModel;
   const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=false,kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
   if(kit.parentElement!==kitHost)kitHost.append(kit);boundSection.dataset.equipmentInHeader=String(compactKit);
-  const fullEmpire=ids.includes('building'),others=ids.filter(id=>!['building','discover','today'].includes(id)),columns=shortLandscape||width>=760?4:2;
+  const fullEmpire=ids.includes('building'),others=ids.filter(id=>!['building','discover','today','academy'].includes(id)),columns=shortLandscape||width>=760?4:2,careColumns=columns/2;
   const key=[width,main.clientHeight,columns,...ids,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
-  const dense=main.clientHeight<440,tinyPortrait=matchMedia('(orientation:portrait) and (max-height:650px)').matches,scanHeight=tinyPortrait?48:dense?56:68,goalHeight=50,careRows=Math.ceil(others.length/columns),otherMin=dense?44:88;
+  const dense=main.clientHeight<440,tinyPortrait=matchMedia('(orientation:portrait) and (max-height:650px)').matches,scanHeight=tinyPortrait?48:dense?56:68,goalHeight=50,careRows=Math.ceil(others.length/careColumns),otherMin=dense?44:careColumns>1?88:54;
   const fitStyle=getComputedStyle(main),fitGap=parseFloat(fitStyle.rowGap)||0,fitPadding=(parseFloat(fitStyle.paddingTop)||0)+(parseFloat(fitStyle.paddingBottom)||0),trackCount=(fullEmpire?3:2)+careRows;
   const tile=Math.max(44,Math.min(width<760?104:128,Math.floor((width-36)/3),Math.floor(main.clientHeight-scanHeight-goalHeight-careRows*otherMin-(trackCount-1)*fitGap-fitPadding-70)));
   const tracks=[];let row=1;
@@ -64,16 +77,20 @@
   if(fullEmpire){panelElement('building').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push((tile+70)+'px');row++;}
   panelElement('discover').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(scanHeight+'px');row++;
   panelElement('today').style.gridArea=`${row} / 1 / ${row+1} / ${columns+1}`;tracks.push(goalHeight+'px');row++;
-  others.forEach((id,i)=>{const r=row+Math.floor(i/columns),col=1+i%columns;panelElement(id).style.gridArea=`${r} / ${col} / ${r+1} / ${i===others.length-1?columns+1:col+1}`;});
+  // Rooms stack down the left; the condensed Academy fills the right.
+  others.forEach((id,i)=>{const r=row+Math.floor(i/careColumns),col=1+i%careColumns;panelElement(id).style.gridArea=`${r} / ${col} / ${r+1} / ${col+1}`;});
+  for(const id of others)panelElement(id).classList.toggle('home-panel-stacked',careColumns===1);
+  panelElement('academy').style.gridArea=`${row} / ${careColumns+1} / ${row+careRows} / ${columns+1}`;
   for(let i=0;i<careRows;i++)tracks.push(`minmax(${otherMin}px,1fr)`);
   const rows=tracks.length;main.style.setProperty('--home-rows',rows);main.style.setProperty('--home-tracks',tracks.join(' '));
   for(const id of ids){
    const el=panelElement(id),h=el.clientHeight;
    el.classList.toggle('home-panel-detail',h>=188&&el.clientWidth>=180);
+   el.classList.toggle('home-panel-tight',el.classList.contains('home-panel-stacked')&&h<48);
    // Keep a complete, independently scrollable list when one whole action
    // fits below the heading/summary. Smaller panels retain their full-size
    // room heading and count rather than exposing a clipped half-button.
-   const minimum=id==='building'?88:100;
+   const minimum=id==='building'?88:id==='academy'?96:100;
    el.classList.toggle('home-panel-list',!!el.querySelector('.desk-panel-scroll button')&&h>=minimum&&el.clientWidth>=140);
   }
   const style=getComputedStyle(main),gap=parseFloat(style.rowGap)||0,padding=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);

@@ -17,6 +17,7 @@
    catch(error){status.textContent='Your '+(n.kind==='wood'?'timber':'stone')+' is saved. Return to the settlement to refresh its scenery.';console.warn('Burbz harvest scenery:',error);}
   }
   else{hits.set(n.id,count);status.textContent=(n.kind==='wood'?'Chop':'Chip')+' '+count+' / 3';}
+  if(n.kind==='wood')root.BurbzCalmAudio?.chop();
   struck=performance.now();noticeUntil=struck+3000;hitPoint={x:n.x,y:n.y+(n.kind==='wood'?1:.35),z:n.z};mat.color.setHex(n.kind==='wood'?0xcda56e:0xaab8ad);return true;
  }
  button.addEventListener('click',strike,{signal:s.abort.signal});
