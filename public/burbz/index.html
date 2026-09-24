@@ -4617,7 +4617,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
-<link rel="stylesheet" href="merlin_story_scenes.css?v=merlin-story-art-20260924">
+<link rel="stylesheet" href="merlin_story_scenes.css?v=merlin-opening-v467-20260924">
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
@@ -5770,7 +5770,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="player_home_core.js?v=home-ground-intro-v451-20260923"></script>
 <script src="player_home_scene.js?v=home-ground-intro-v451-20260923"></script>
 <script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
-<script src="merlin_story_scenes.js?v=merlin-story-art-20260924"></script>
+<script src="merlin_story_scenes.js?v=merlin-opening-v467-20260924"></script>
 <script src="player_home.js?v=calm-asmr-v462-20260924"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=gps-shelter-swimming-v439-20260922"></script>
@@ -45479,7 +45479,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'paced-tutorial-v467-20260924';
+const BURBZ_BUILD = 'paced-tutorial-v469-20260924';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45518,17 +45518,11 @@ const MERLIN_TUTORIAL_CHAPTERS = [
 // Stable lesson IDs preserve saved progress when copy and steps change.
 const MERLIN_LEGACY_STEP_CHAPTERS = ["story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "story", "quests", "quests", "quests", "quests", "errand", "errand", "academy", "academy", "academy", "academy_tour", "academy_tour", "academy_tour", "academy_tour", "explore", "explore", "explore", "scan", "scan", "scan", "birdex", "birdex", "birdex", "battle", "battle", "battle", "village", "village", "village", "empire_villages", "empire_villages", "empire_towns", "empire_towns", "town", "town", "diary", "forge", "forge", "inventory", "leaderboards", "profile"];
 const MERLIN_TUTORIAL_STEPS = [
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"Greetings, Earthling.", id:"lesson-0" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"I am Merlin and I come to you from across the multiverse.", id:"alderwing-story-v420-1" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"I’m from the planet Alderwing.", id:"alderwing-story-v420-2" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"On Alderwing, birds are the dominant species.", id:"alderwing-story-v420-3" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"An evil zombie civilization, the evil Burbz, has imprisoned our best fighters under a dark spell.", id:"alderwing-story-v420-4" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"This is where you come in.", id:"alderwing-story-v420-5" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"The app you’re looking at is a spell of mine, sent to Earth.", id:"alderwing-story-v420-6" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"Every bird you capture on Earth frees one of Alderwing’s bird warriors from the evil Burbz.", id:"alderwing-story-v420-7" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"But we’ll get to that later.", id:"alderwing-story-v420-8" },
-  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"First, let me show you around.", id:"alderwing-story-v420-9" },
-  { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your portal', screen:'scan', target:null, text:'This is your main hub and your direct portal to Alderwing.', id:'alderwing-hub-v420' },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"Greetings, Earthling! I’m Merlin. I’ve crossed the multiverse from Alderwing, a world where birds rule.", id:"lesson-0" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"But the evil Burbz, a horde of zombie birds, have trapped our best warriors under a dark spell.", id:"alderwing-story-v420-4" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"So I sent a spell to Earth to find a hero. It’s this app — and it found you.", id:"alderwing-story-v420-5" },
+  { chapterId:'story', progressGroup:'story', cinematic:true, chapter:'A message from Alderwing', title:'Merlin', screen:'scan', target:null, text:"Every bird you find on Earth frees one of our warriors. First, let me show you around.", id:"alderwing-story-v420-7" },
+  { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your portal', screen:'scan', target:null, text:'This is your hub, and your own portal to Alderwing.', id:'alderwing-hub-v420' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Click here and I’ll show you what I mean.', action:{event:'alderwing-returned',mode:'free',hint:'Click here and I’ll show you what I mean.'}, id:'alderwing-arrival-v395' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
   { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'#screen-scan .desk-panel-academy .desk-panel-heading', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
@@ -45842,11 +45836,19 @@ function merlinTutPositionShields(rect) {
 function merlinTutorialResumePosition(saved, mode, sequence) {
   if (!saved || saved.status !== 'in_progress' || saved.mode !== mode || !sequence.length) return 0;
   if (typeof saved.stepId === 'string') {
-    const direct = sequence.findIndex(index => MERLIN_TUTORIAL_STEPS[index].id === saved.stepId);
+    // The opening story shrank from ten beats to four (v467). A save paused on
+    // a retired beat resumes at the surviving beat that tells the same part.
+    const retired = {
+      'alderwing-story-v420-1':'lesson-0', 'alderwing-story-v420-2':'lesson-0', 'alderwing-story-v420-3':'lesson-0',
+      'alderwing-story-v420-6':'alderwing-story-v420-5',
+      'alderwing-story-v420-8':'alderwing-hub-v420', 'alderwing-story-v420-9':'alderwing-hub-v420',
+    };
+    const stepId = Object.hasOwn(retired, saved.stepId) ? retired[saved.stepId] : saved.stepId;
+    const direct = sequence.findIndex(index => MERLIN_TUTORIAL_STEPS[index].id === stepId);
     if (direct >= 0) return direct;
   }
   const availableChapters = new Set(sequence.map(index => MERLIN_TUTORIAL_STEPS[index].chapterId));
-  // A retired chapter (academy_tour, v467) still held places in the old full
+  // A retired chapter (academy_tour, v469) still held places in the old full
   // list, so it keeps them here and its saves move on to the next lesson.
   const liveChapters = new Set(MERLIN_TUTORIAL_STEPS.map(step => step.chapterId));
   const legacy = MERLIN_LEGACY_STEP_CHAPTERS.map((chapter, index) => ({ chapter, index }))
@@ -46380,7 +46382,7 @@ function nextOpeningChapter() {
   return null;
 }
 
-// ---- Pacing: learn, practise, rest (v467) ---------------------------------
+// ---- Pacing: learn, practise, rest (v469) ---------------------------------
 // Raph Koster's Theory of Fun: fun is the brain learning a pattern, and too
 // many new patterns at once read as noise. So after Alderwing each lesson
 // teaches one thing, then Merlin rests while the player practises it. A

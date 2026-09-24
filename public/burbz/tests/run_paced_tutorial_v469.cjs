@@ -1,8 +1,8 @@
 'use strict';
-// Browser evidence for the paced apprenticeship (v467): after Alderwing each
+// Browser evidence for the paced apprenticeship (v469): after Alderwing each
 // lesson teaches one thing, then Merlin rests. Also proves Merlin's play
 // flight never runs behind his care menu or under a lesson.
-// Run: node tests/run_paced_tutorial_v467.cjs  (EVIDENCE_DIR to keep shots)
+// Run: node tests/run_paced_tutorial_v469.cjs  (EVIDENCE_DIR to keep shots)
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 function loadPlaywright() {
   for (const id of ['playwright', '/opt/node22/lib/node_modules/playwright', '/home/yaan/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright']) {
@@ -12,7 +12,7 @@ function loadPlaywright() {
 }
 const { chromium } = loadPlaywright();
 const F = require('./connected_world_fixture_v386.cjs');
-const root = path.resolve(__dirname, '..'), out = process.env.EVIDENCE_DIR || '/tmp/burbz-paced-tutorial-v467';
+const root = path.resolve(__dirname, '..'), out = process.env.EVIDENCE_DIR || '/tmp/burbz-paced-tutorial-v469';
 const report = { served:{}, missing:[], errors:[], checks:[], bubbles:[] };
 const fixture = F.createServer({ root, port:8967, report, seed:false });
 fs.mkdirSync(out, { recursive:true });

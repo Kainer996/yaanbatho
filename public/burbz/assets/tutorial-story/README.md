@@ -10,7 +10,7 @@ The existing `assets/merlin-tutorial.png` supplied Merlin's identity/costume ref
 - `warrior-freed-20260924.webp`: discovering an Earth bird frees its counterpart.
 - `shelter-invitation-20260924.webp`: shelter invitation and Home/desk introduction.
 
-`merlin_story_scenes.js` maps all eleven existing illustrated lesson IDs to these paintings. The generated images replace CSS planet/phone/camera stand-ins and unrelated reused scenery. Ordinary bird anatomy, species markings, bright manga ink and coherent luminous environments follow the project art direction.
+`merlin_story_scenes.js` maps the five opening beats to these paintings, one each (v467 cut the story from eleven bubbles to five). The generated images replace CSS planet/phone/camera stand-ins and unrelated reused scenery. Ordinary bird anatomy, species markings, bright manga ink and coherent luminous environments follow the project art direction.
 
 The latest scope is artwork only. All dialogue strings, ten cinematic bubbles, lesson IDs, ordering, actions and save behavior remain byte-identical to main `d727d2a9`. Earlier unfinished first-village and dialogue-reduction work remains isolated in the previous `work/tutorial` checkout and is not part of this change. World/craft/camera work was canceled before edits.
 

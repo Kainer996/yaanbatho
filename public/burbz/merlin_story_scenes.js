@@ -8,18 +8,14 @@
   else root.BurbzMerlinStoryScenes = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
+  // Five beats, one painting each. `focus` keeps the subject in frame when a
+  // tall phone screen crops the wide painting.
   const scenes = {
-    'lesson-0':{key:'earth',image:'assets/tutorial-story/merlin-arrival-20260924.webp',description:'Merlin welcomes you through a glowing portal from Alderwing.'},
-    'alderwing-story-v420-1':{key:'multiverse',image:'assets/tutorial-story/merlin-arrival-20260924.webp',description:'Merlin beside a portal connecting worlds.'},
-    'alderwing-story-v420-2':{key:'alderwing',image:'assets/tutorial-story/merlin-arrival-20260924.webp',description:'Alderwing’s green valleys and soaring bird kingdom.'},
-    'alderwing-story-v420-3':{key:'birds',image:'assets/tutorial-story/merlin-arrival-20260924.webp',description:'Birds fly above the towers of Alderwing.'},
-    'alderwing-story-v420-4':{key:'spellbound',image:'assets/tutorial-story/alderwing-spell-20260924.webp',description:'Bird warriors imprisoned in violet spell cages beneath zombie bird guards.'},
-    'alderwing-story-v420-5':{key:'you',image:'assets/tutorial-story/message-to-earth-20260924.webp',description:'Merlin sends a golden spell through a portal to a phone on Earth.'},
-    'alderwing-story-v420-6':{key:'app',image:'assets/tutorial-story/message-to-earth-20260924.webp',description:'The app is Merlin’s magical connection to Earth.'},
-    'alderwing-story-v420-7':{key:'freedom',image:'assets/tutorial-story/warrior-freed-20260924.webp',description:'Discovering a robin on Earth frees its warrior counterpart in Alderwing.'},
-    'alderwing-story-v420-8':{key:'later',image:'assets/tutorial-story/shelter-invitation-20260924.webp',description:'Merlin waits by the welcoming doorway of a temporary shelter.'},
-    'alderwing-story-v420-9':{key:'tour',image:'assets/tutorial-story/shelter-invitation-20260924.webp',description:'Merlin invites you to begin the shelter tour.'},
-    'alderwing-hub-v420':{key:'hub',image:'assets/tutorial-story/shelter-invitation-20260924.webp',description:'A warm field desk inside the shelter is your connection to Alderwing.'},
+    'lesson-0':{key:'arrival',image:'assets/tutorial-story/merlin-arrival-20260924.webp',focus:'32% 40%',description:'Merlin arrives through a glowing portal above the towers of Alderwing.'},
+    'alderwing-story-v420-4':{key:'spellbound',image:'assets/tutorial-story/alderwing-spell-20260924.webp',focus:'38% 50%',description:'Bird warriors trapped in violet spell cages beneath zombie bird guards.'},
+    'alderwing-story-v420-5':{key:'message',image:'assets/tutorial-story/message-to-earth-20260924.webp',focus:'50% 50%',description:'Merlin sends a golden spell through a portal to a phone on Earth.'},
+    'alderwing-story-v420-7':{key:'freedom',image:'assets/tutorial-story/warrior-freed-20260924.webp',focus:'40% 50%',description:'Finding a robin on Earth frees its warrior twin in Alderwing.'},
+    'alderwing-hub-v420':{key:'hub',image:'assets/tutorial-story/shelter-invitation-20260924.webp',focus:'30% 60%',description:'Merlin waits at the open door of your shelter, your hub and portal to Alderwing.'},
   };
   function sceneFor(id) {
     return Object.prototype.hasOwnProperty.call(scenes, id) ? scenes[id] : null;
@@ -46,6 +42,8 @@
     };
     const view = element('figure', 'merlin-story-scene');
     view.dataset.scene = scene.key;
+    view.style.setProperty('--scene-image', `url("${scene.image}")`);
+    view.style.setProperty('--scene-focus', scene.focus);
     view.setAttribute('role', 'img');
     view.setAttribute('aria-label', scene.description);
     const image = element('img', 'merlin-story-painting');

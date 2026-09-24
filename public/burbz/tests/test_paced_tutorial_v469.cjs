@@ -1,5 +1,5 @@
 'use strict';
-// Paced apprenticeship (v467). After Alderwing each lesson teaches one thing,
+// Paced apprenticeship (v469). After Alderwing each lesson teaches one thing,
 // then Merlin rests while the player practises it (Koster, A Theory of Fun).
 // Also pins the Merlin play-flight fixes: no Play lesson, the flight never
 // runs behind the care menu, and no lesson talks over it.
@@ -105,4 +105,4 @@ assert.match(source('petFlyOutAndReturn'), /onTakeoff: \(\) => \{[\s\S]*?closeMe
 assert.match(source('openMerlinCareMenu'), /if \(merlinFlightSession\?\.active\) merlinFlightSession\.stop\('care', \{ immediate:true \}\);/, 'Care lands Merlin before the menu opens');
 assert.match(source('careForMerlin'), /if \(action === 'play' && merlinTutActive\)/, 'Play waits while a lesson is on screen');
 assert.match(source('startMerlinTutorial'), /if \(merlinPlayFlightActive\(\)\) merlinFlightSession\.stop\('lesson', \{ immediate:true \}\);/);
-console.log('paced tutorial v467: ok');
+console.log('paced tutorial v469: ok');
