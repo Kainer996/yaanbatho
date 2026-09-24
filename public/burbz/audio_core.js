@@ -54,6 +54,9 @@
     campDust: Object.freeze(['assets/audio/camp/dust-01.mp3','assets/audio/camp/dust-02.mp3']),
     campEat: Object.freeze(['assets/audio/camp/eat-01.mp3','assets/audio/camp/eat-02.mp3','assets/audio/camp/eat-03.mp3']),
     campfire: 'assets/audio/camp/campfire-loop.mp3',
+    campStool: 'assets/audio/camp/stool.mp3',
+    rain: 'assets/audio/weather/rain-loop.mp3',
+    wind: 'assets/audio/weather/wind-loop.mp3',
     residentChatter: Object.freeze(Array.from({length:16}, function(_, i) {
       return 'assets/audio/little-folk/mumble-' + String(i + 1).padStart(2, '0') + '.mp3';
     }))
@@ -84,7 +87,11 @@
     campDust: 0.34,
     campEat: 0.4,
     // The fire's level when the player stands right beside it.
-    campfire: 0.5
+    campfire: 0.5,
+    campStool: 0.42,
+    // Weather beds sit under everything else.
+    rain: 0.42,
+    wind: 0.22
   });
 
   // A button that returns the identical pitch on every press reads as a machine.
@@ -199,7 +206,7 @@
         safePause(entry.audio);
         removeActive(entry);
       });
-      stopCampfire();
+      Object.keys(loops).forEach(stopLoop);
     }
 
     // Calm is the default. Tense swaps in the gritty steps and hushes the fire.
@@ -210,47 +217,59 @@
       return mood;
     }
 
-    // One looping campfire bed. Its volume follows how close the player stands.
-    var fire = { audio: null, volume: 0, target: 0, timer: false };
-    function stopCampfire() {
-      fire.target = 0;
-      fire.volume = 0;
-      if (fire.audio) safePause(fire.audio);
-      fire.audio = null;
+    // Looping beds: the campfire and the weather. Each fades to its target.
+    var loops = Object.create(null);
+    function stopLoop(name) {
+      var loop = loops[name];
+      if (!loop) return;
+      if (loop.audio) safePause(loop.audio);
+      delete loops[name];
     }
-    function rampCampfire() {
-      if (fire.timer || !fire.audio) return;
+    function stopCampfire() { stopLoop('campfire'); }
+    function rampLoop(name) {
+      var loop = loops[name];
+      if (!loop || loop.timer) return;
       var step = function() {
-        fire.timer = false;
-        if (!fire.audio) return;
-        var diff = fire.target - fire.volume;
-        fire.volume = Math.abs(diff) <= 0.02 ? fire.target : fire.volume + (diff > 0 ? 0.02 : -0.02);
-        try { fire.audio.volume = fire.volume; } catch (_) {}
-        if (fire.volume <= 0 && fire.target <= 0) { stopCampfire(); return; }
-        if (fire.volume !== fire.target && schedule) { fire.timer = true; schedule(step, 60); }
+        loop.timer = false;
+        if (loops[name] !== loop) return;
+        var diff = loop.target - loop.volume;
+        loop.volume = Math.abs(diff) <= 0.02 ? loop.target : loop.volume + (diff > 0 ? 0.02 : -0.02);
+        try { loop.audio.volume = loop.volume; } catch (_) {}
+        if (loop.volume <= 0 && loop.target <= 0) { stopLoop(name); return; }
+        if (loop.volume !== loop.target && schedule) { loop.timer = true; schedule(step, 60); }
       };
       step();
     }
-    function campfire(level, fireOptions) {
+    function loopTo(name, level, loopOptions) {
       var value = Math.max(0, Math.min(1, Number(level) || 0));
-      if (mood === 'tense' || !isEnabled()) value = 0;
-      if (fireOptions && fireOptions.immediate && value === 0) { stopCampfire(); return false; }
-      fire.target = value * (Number(volumes.campfire) || 0);
-      if (fire.target > 0 && !fire.audio) {
-        var src = chooseSource('campfire'), audio = src ? makeAudio(src) : null;
+      if (!isEnabled()) value = 0;
+      if (loopOptions && loopOptions.immediate && value === 0) { stopLoop(name); return false; }
+      var target = value * (Number(volumes[name]) || 0);
+      if (target > 0 && !loops[name]) {
+        var src = chooseSource(name), audio = src ? makeAudio(src) : null;
         if (!audio) return false;
         try { audio.loop = true; audio.volume = 0; audio.preload = 'auto'; } catch (_) {}
-        fire.audio = audio;
-        fire.volume = 0;
+        var loop = loops[name] = { audio: audio, volume: 0, target: 0, timer: false };
         try {
           Promise.resolve(typeof audio.play === 'function' ? audio.play() : null).catch(function() {
-            if (fire.audio === audio) stopCampfire();
+            if (loops[name] === loop) stopLoop(name);
           });
-        } catch (_) { stopCampfire(); return false; }
+        } catch (_) { stopLoop(name); return false; }
       }
-      rampCampfire();
-      return fire.target > 0;
+      if (!loops[name]) return false;
+      loops[name].target = target;
+      rampLoop(name);
+      return target > 0;
     }
+    function campfire(level, fireOptions) {
+      return loopTo('campfire', mood === 'tense' ? 0 : level, fireOptions);
+    }
+    // Rain follows the real sky; a light wind always moves a little.
+    function ambience(rain, wind, ambienceOptions) {
+      loopTo('rain', rain, ambienceOptions);
+      loopTo('wind', wind, ambienceOptions);
+    }
+    function loopLevel(name) { return loops[name] ? loops[name].target : 0; }
     function stopFootsteps() {
       active.slice().filter(function(entry){return entry.name.indexOf('footstep')===0;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
     }
@@ -424,6 +443,8 @@
       mood: function() { return mood; },
       campfire: campfire,
       stopCampfire: stopCampfire,
+      ambience: ambience,
+      loopLevel: loopLevel,
       footstep: function(surface) {
         if(active.some(function(entry){return entry.name.indexOf('footstep')===0;}))return Promise.resolve(false);
         var name=mood==='tense'&&surface!=='wood'?'footstepTense':({wood:'footstepWood',stone:'footstepStone'}[surface]||'footstepGround');

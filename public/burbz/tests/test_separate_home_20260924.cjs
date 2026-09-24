@@ -37,8 +37,9 @@ test('Academy tree and construction remain independent without merged intro take
  assert.doesNotMatch(sw,/academy_home_intro\.js/);
 });
 test('Restored Home uses a new coherent shell and exact cache pins',()=>{
- assert.equal(html.match(/const BURBZ_BUILD = '([^']+)'/)[1],rev);
- assert.match(sw,new RegExp(rev+"';"));
+ // Later releases append to the cache name, so check membership, not the tail.
+ assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes(rev));
+ assert.match(sw,new RegExp(html.match(/const BURBZ_BUILD = '([^']+)'/)[1]+"';"));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
   const pin=file+'?v='+rev;assert.ok(html.includes(pin),pin);
   assert.equal(sw.split('./'+pin).length-1,3,pin+' in every worker list');
