@@ -147,3 +147,9 @@ test('all stable tutorial IDs resume; concise opening story and later five-beat 
     if(!['full','story'].includes(mode) && seq.length>5)throw Error(mode+' too long');
   }`);
 });
+
+test('saves paused on a retired opening beat resume at the beat that tells the same part',()=>{
+  const c=runtime();use(c,`const seq=MERLIN_TUTORIAL_STEPS.map((s,i)=>s.chapterId==='story'?i:-1).filter(i=>i>=0),at=id=>MERLIN_TUTORIAL_STEPS[seq[merlinTutorialResumePosition({status:'in_progress',mode:'story',stepId:id},'story',seq)]].id;
+    const expected={'alderwing-story-v420-1':'lesson-0','alderwing-story-v420-3':'lesson-0','alderwing-story-v420-6':'alderwing-story-v420-5','alderwing-story-v420-9':'alderwing-hub-v420'};
+    for(const [from,to] of Object.entries(expected))if(at(from)!==to)throw Error(from+' resumed at '+at(from));`);
+});
