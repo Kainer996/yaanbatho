@@ -87,6 +87,7 @@ FILES=(
   "assets/dashboard-banners/start-sound-scan.webp"
   "assets/dashboard-banners/your-empire.webp"
   "assets/dashboard-banners/saltmere.webp"
+  "assets/academy-home-tree-20260924.webp"
   "assets/bird-cards-v411/blue_tit-manga-20260914.webp"
   "assets/bird-cards-v411/great_tit-manga-20260914.webp"
   "assets/bird-cards-v411/long_tailed_tit-manga-20260914.webp"
