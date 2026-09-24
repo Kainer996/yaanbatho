@@ -34,14 +34,15 @@
   for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,academy:academy.rows.filter(r=>r.state==='ready'),completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
   if(focused&&document.activeElement?.dataset?.homeAction!==focused)Array.from(boundSection.querySelectorAll('[data-home-action]')).find(el=>el.dataset.homeAction===focused)?.focus({preventScroll:true});queueLayout();return m;
  }
- // The Academy box is a small living copy of the real tree: built rooms
- // stand in full colour, the rest wait as faint outlines on their branches.
+ // The Academy box shows Yaan's painted tree. Each house in the painting
+ // gets a tap spot; unbuilt houses sit in shadow, ready ones glow gold.
+ const TREE_SPOTS={nursery:[26.7,8.5],observatory:[80,8],workshop:[22,19.5],library:[66,20.5],manager_office:[22,31],crowbar:[81,31],hospital:[18.5,50.5],kitchen:[50,51],training:[84.5,52.5],magpie_market:[19.5,73],quest_roost:[51.5,77],tavern:[82,76.5]};
  function academyTree(academy,open){
   const label={built:'Open',ready:'Ready to build',short:'Plan',locked:'Locked'};
-  const houses=academy.rows.map((r,i)=>`<button type="button" class="home-tree-house is-${r.state}" data-home-action="academy-${escape(r.id)}" style="left:${Number(r.x)||50}%;top:${Number(r.y)||50}%;--bob:${(3.2+i%4*.7).toFixed(1)}s;--lag:${(-i*.9).toFixed(1)}s" title="${escape(r.name+' · '+r.detail)}" aria-label="${escape(r.name+', '+label[r.state]+'. '+r.detail)}"${open?'':' disabled'}><img src="${escape(r.art||'')}" alt="" loading="lazy" decoding="async"></button>`).join('');
+  const houses=academy.rows.filter(r=>TREE_SPOTS[r.id]).map(r=>{const [x,y]=TREE_SPOTS[r.id];return `<button type="button" class="home-tree-house is-${r.state}" data-home-action="academy-${escape(r.id)}" style="left:${x}%;top:${y}%" title="${escape(r.name+' · '+r.detail)}" aria-label="${escape(r.name+', '+label[r.state]+'. '+r.detail)}"${open?'':' disabled'}></button>`;}).join('');
   const free=academy.free?`<button type="button" class="home-tree-free" data-home-action="academy-free" aria-label="${academy.free} free ${academy.free===1?'bird':'birds'} waiting for a job">🕊️ ${academy.free}</button>`:'';
   const leaves=[0,1,2,3].map(i=>`<i class="home-tree-leaf" style="--x:${18+i*21}%;--fall:${9+i*2.5}s;--wait:${-i*3.1}s"></i>`).join('');
-  return `<div class="home-tree${open?'':' is-closed'}" data-home-action="panel-academy" role="group" aria-label="Your Academy tree"><div class="home-tree-sway"><div class="home-tree-art" aria-hidden="true"></div>${houses}</div><div class="home-tree-light" aria-hidden="true"></div>${leaves}${free}${open?'':'<p class="home-tree-note">Opens as you follow your Quests</p>'}</div>`;
+  return `<div class="home-tree${open?'':' is-closed'}" data-home-action="panel-academy" role="group" aria-label="Your Academy tree"><div class="home-tree-sway"><div class="home-tree-stage"><img class="home-tree-art" src="assets/academy-home-tree-20260924.webp" alt="" decoding="async"><i class="home-tree-smoke" aria-hidden="true"></i>${houses}</div></div><div class="home-tree-light" aria-hidden="true"></div>${leaves}${free}${open?'':'<p class="home-tree-note">Opens as you follow your Quests</p>'}</div>`;
  }
  function applyProgression(m,academy,academyOpen){
   const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages',academy:academyOpen?academy.built+' of '+academy.total+' built'+(academy.ready?' · '+academy.ready+' ready':''):'Not open yet'};
@@ -85,7 +86,7 @@
   for(const id of ids){
    const el=panelElement(id),h=el.clientHeight;
    el.classList.toggle('home-panel-detail',h>=188&&el.clientWidth>=180);
-   el.classList.toggle('home-panel-tight',h<54);
+   el.classList.toggle('home-panel-tight',el.classList.contains('home-panel-stacked')&&h<48);
    // Keep a complete, independently scrollable list when one whole action
    // fits below the heading/summary. Smaller panels retain their full-size
    // room heading and count rather than exposing a clipped half-button.

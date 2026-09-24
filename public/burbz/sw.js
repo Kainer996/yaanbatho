@@ -320,6 +320,7 @@ const BURBZ_ASSETS = [
   './assets/merlin/merlin-wing.webp',
   './assets/merlin/merlin-head.webp',
   './assets/academy-tree-manga-20260806.webp',
+  './assets/academy-home-tree-20260924.webp',
   './assets/academy-branches/branch-a.webp',
   './assets/academy-branches/branch-b.webp',
   './assets/academy-branches/branch-c.webp',
