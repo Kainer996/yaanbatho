@@ -1,45 +1,132 @@
-/* Opening-only presentation. Gameplay targets and the later tour keep their layout. */
+/* Opening story only. The painting fills the screen and Merlin speaks from a
+ * card laid over it. Gameplay targets and the later tour keep their layout. */
 #merlinTutorialOverlay.merlin-illustrated.show {
-  display:flex; flex-direction:column; align-items:center; gap:12px;
-  padding:calc(62px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) calc(var(--nav-height,128px) + 10px + env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-  background:#0a171d; box-sizing:border-box; isolation:isolate;
+  display:block; background:#070d12; isolation:isolate;
+  --story-gold:#e9c77e; --story-ink:#fff6e3; --story-muted:#d9c7a0;
+  --story-bottom:calc(var(--nav-height,64px) + 14px + env(safe-area-inset-bottom));
 }
-#merlinTutorialOverlay.merlin-illustrated #merlinTutorialSpotlight { visibility:hidden; }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialSpotlight,
+#merlinTutorialOverlay.merlin-illustrated .merlin-tutorial-footer,
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialTitle { display:none; }
+
+/* The scene: a soft, blurred wash of the painting fills any empty space, and
+ * the sharp painting sits on top. Nothing is ever letterboxed. */
 .merlin-story-scene {
-  position:relative; flex:1 1 0; min-height:100px; width:100%; max-width:1100px; margin:0;
-  border:1px solid #887550; border-radius:18px; overflow:hidden; pointer-events:none;
-  background:radial-gradient(ellipse at 50% 35%,#183642,#080e19); color:#fff4dc;
-  box-shadow:inset 0 0 80px #0008,0 12px 36px #0005;
+  position:absolute; inset:0; z-index:0; margin:0; overflow:hidden; pointer-events:none;
+  background:#070d12;
 }
-.merlin-story-painting { display:block; width:100%; height:100%; object-fit:contain; object-position:center; }
+.merlin-story-scene::before {
+  content:''; position:absolute; inset:-40px;
+  background:var(--scene-image) center/cover no-repeat;
+  filter:blur(28px) saturate(1.15) brightness(.45);
+}
+.merlin-story-scene::after {
+  content:''; position:absolute; inset:0;
+  background:
+    linear-gradient(180deg,#070d12b3 0,#070d1200 18%),
+    linear-gradient(0deg,#070d12f2 0,#070d12cc 22%,#070d1200 52%);
+}
+.merlin-story-painting {
+  position:absolute; inset:0; display:block; width:100%; height:100%;
+  object-fit:cover; object-position:var(--scene-focus,50% 50%);
+  animation:merlinStoryIn .9s ease-out both, merlinStoryDrift 16s ease-out both;
+}
+@keyframes merlinStoryIn { from { opacity:0; } to { opacity:1; } }
+@keyframes merlinStoryDrift { from { transform:scale(1.07); } to { transform:scale(1); } }
+
+/* Tall screens: the painting takes the top of the screen and melts into its
+ * own blurred wash, so the card below never hides the story. */
+@media (max-aspect-ratio:4/5) {
+  .merlin-story-painting {
+    top:max(calc(20px + env(safe-area-inset-top)),calc((100% - 100vw * 1.02 - 250px - var(--story-bottom)) / 2)); height:min(56%,calc(100vw * 1.02));
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 78%,transparent);
+    mask-image:linear-gradient(180deg,transparent 0,#000 9%,#000 78%,transparent);
+  }
+}
+
+/* Merlin's card */
 #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage {
-  position:relative; flex:none; top:auto; bottom:auto; left:auto; right:auto; transform:none; width:100%; max-width:800px; margin:0; padding:0; transition:none;
+  position:absolute; z-index:2; left:0; right:0; top:auto; bottom:var(--story-bottom);
+  width:auto; max-width:620px; margin:0 auto; padding:0 max(14px,env(safe-area-inset-left)) 0 max(14px,env(safe-area-inset-right));
+  transform:none; transition:none;
 }
 #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble {
-  margin:0; padding:15px 16px; border:1px solid #897047; border-radius:12px; background:linear-gradient(145deg,#30271b,#15110c); color:#fff4dc;
+  position:relative; margin:0; padding:30px 18px 14px;
+  border:1px solid #e9c77e66; border-radius:20px; color:var(--story-ink);
+  background:linear-gradient(180deg,#221a10d9,#110d08ee);
+  -webkit-backdrop-filter:blur(14px) saturate(1.2); backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 18px 50px #000a, inset 0 1px 0 #ffe9b233;
+  animation:merlinCardIn .5s ease-out both;
 }
 #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble::after { display:none; }
+@keyframes merlinCardIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+
+/* Merlin's portrait sits in a gold ring on the card's top edge. */
 #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-merlin {
-  z-index:1; left:auto; right:18px; top:7px; bottom:auto; width:70px; height:78px; object-fit:contain; background:transparent; border:0; border-radius:0; box-shadow:none; animation:none;
+  z-index:3; left:30px; right:auto; top:-30px; bottom:auto; width:62px; height:62px;
+  object-fit:cover; object-position:50% 20%; border-radius:50%;
+  border:2px solid var(--story-gold); background:#1c150d;
+  box-shadow:0 0 0 4px #110d08, 0 0 22px #e9c77e55; animation:none;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-speaker {
+  display:block; position:absolute; left:106px; top:10px; right:16px;
+  color:var(--story-gold); font:700 11px/1 'Rajdhani',sans-serif; letter-spacing:.16em; text-transform:uppercase;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-text {
-  margin:0 82px 0 0; min-height:72px; max-height:26vh; overflow:auto; color:#fff4dc; font:500 clamp(14px,1.7vw,18px)/1.5 'Inter',sans-serif;
+  margin:8px 0 0; min-height:0; max-height:30vh; overflow:auto; color:var(--story-ink);
+  font:400 clamp(17px,2.1vw,21px)/1.5 Georgia,'Iowan Old Style','Noto Serif',serif;
+  text-wrap:pretty; text-shadow:0 1px 2px #0008;
 }
-#merlinTutorialOverlay.merlin-illustrated #merlinTutorialTitle { display:none; }
-#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-actions { grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; margin-top:8px; }
-#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-nav { font-size:12px; min-height:44px; }
-#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-counter { grid-row:1; grid-column:1/-1; color:#d8c6a0; }
-#merlinTutorialOverlay.merlin-illustrated .merlin-tutorial-footer { display:none; }
+
+/* Back · Pause · progress · Next */
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-actions {
+  display:grid; grid-template-columns:auto auto 1fr minmax(120px,auto); align-items:center; gap:8px; margin-top:14px;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-counter {
+  grid-row:1; grid-column:3; text-align:center; color:var(--story-muted); opacity:.8;
+  font:700 12px/1 'Rajdhani',sans-serif; letter-spacing:.14em; white-space:nowrap;
+}
+/* The hub starts the next part of the tour, so the story count stops here. */
+#merlinTutorialOverlay.merlin-illustrated:has(.merlin-story-scene[data-scene="hub"]) #merlinTutorialStage .merlin-tutorial-counter { visibility:hidden; }
+@media (max-width:359px) {
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-actions { grid-template-columns:auto auto 0 1fr; gap:6px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-counter { visibility:hidden; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-speaker { letter-spacing:.1em; }
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-nav {
+  min-height:44px; min-width:0; padding:0 12px; border-radius:12px;
+  border:1px solid #e9c77e40; background:#ffffff0d; color:var(--story-muted);
+  font:700 12px/1 'Rajdhani',sans-serif; letter-spacing:.12em;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-nav:disabled { visibility:hidden; }
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-nav.primary {
+  grid-column:4; padding:0 22px; border:0; color:#241906; font-size:14px;
+  background:linear-gradient(180deg,#f6dc9c,#c9993f); box-shadow:0 6px 18px #c9993f55, inset 0 1px 0 #fff6;
+}
+#merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-nav:focus-visible { outline:3px solid var(--story-gold); outline-offset:2px; }
+
+/* Wide screens: the painting fills everything and the card floats low. */
+@media (min-aspect-ratio:4/5) {
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage { max-width:680px; }
+}
 @media (min-width:640px) and (orientation:landscape) {
-  #merlinTutorialOverlay.merlin-illustrated.show { padding-right:calc(var(--landscape-rail,104px) + 12px); }
+  #merlinTutorialOverlay.merlin-illustrated.show { --story-rail:calc(var(--landscape-rail,104px)); }
+  .merlin-story-scene { right:var(--story-rail,0); }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage { right:var(--story-rail,0); --story-bottom:calc(22px + env(safe-area-inset-bottom)); }
 }
+/* Short landscape phones: a slimmer card in the lower left keeps the picture open. */
 @media (orientation:landscape) and (max-height:550px) {
-  #merlinTutorialOverlay.merlin-illustrated.show { flex-direction:row; gap:12px; padding-top:calc(60px + env(safe-area-inset-top)); }
-  .merlin-story-scene { height:100%; min-width:0; }
-  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage { flex:0 0 46%; max-height:100%; overflow:auto; }
-  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble { padding:10px; }
-  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-text { font-size:14px; max-height:30vh; margin-right:64px; min-height:62px; }
-  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-merlin { width:52px; height:64px; right:12px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage {
+    left:0; right:auto; width:min(470px,58vw); margin:0; bottom:calc(12px + env(safe-area-inset-bottom));
+    padding-left:max(14px,env(safe-area-inset-left)); padding-right:0;
+  }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-bubble { padding:24px 14px 10px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-merlin { width:48px; height:48px; top:-24px; left:18px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-speaker { left:80px; top:8px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-text { font-size:16px; max-height:36vh; margin-top:4px; }
+  #merlinTutorialOverlay.merlin-illustrated #merlinTutorialStage .merlin-tutorial-actions { margin-top:8px; }
+  .merlin-story-scene::after { background:linear-gradient(180deg,#070d12a0 0,#070d1200 20%),linear-gradient(90deg,#070d12d9 0,#070d1266 45%,#070d1200 70%); }
 }
 @media (prefers-reduced-motion:reduce) {
   #merlinTutorialOverlay.merlin-illustrated *, #merlinTutorialOverlay.merlin-illustrated *::before, #merlinTutorialOverlay.merlin-illustrated *::after { animation:none !important; transition:none !important; }
