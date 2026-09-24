@@ -12,14 +12,9 @@ const selected = ids.map(id => scenes.sceneFor(id));
 assert(selected.every(Boolean), 'Each of the eleven opening beats has a supporting scene');
 assert.equal(new Set(selected.map(scene => scene.key)).size, ids.length);
 for (const scene of selected) {
-  assert(scene.label && scene.description, 'Art remains understandable without images');
-  for (const item of scene.items) {
-    assert(item.label);
-    if (item.image) {
-      assert(!item.image.includes('..') && !item.image.includes('://'));
-      assert(fs.existsSync(path.join(root, item.image)), 'Reuse only existing same-origin artwork');
-    }
-  }
+  assert(scene.description, 'Art remains understandable without images');
+  assert(scene.image && !scene.image.includes('..') && !scene.image.includes('://'));
+  assert(fs.existsSync(path.join(root, scene.image)), 'Every finished painting is same-origin');
 }
 for (const id of [null, '', 'lesson-12', 'alderwing-arrival-v395', 'alderwing-desk-v395', '__proto__', 'constructor']) {
   assert.equal(scenes.sceneFor(id), null, `Never cover gameplay or later lessons: ${id}`);
@@ -30,4 +25,4 @@ assert.equal(crypto.createHash('sha256').update(steps).digest('hex'), '94db5948b
 assert(html.includes('BurbzMerlinStoryScenes?.show('));
 assert(html.includes('BurbzMerlinStoryScenes?.clear('));
 assert(!fs.readFileSync(source, 'utf8').match(/localStorage|requestAnimationFrame|setInterval|fetch\(/), 'Presentation has no persistence, loop or external requests');
-console.log('PASS eleven scene mappings, unknown/action exclusion, existing artwork, immutable lesson contract and read-only presenter');
+console.log('PASS eleven scene mappings, unknown/action exclusion, finished artwork, immutable lesson contract and read-only presenter');
