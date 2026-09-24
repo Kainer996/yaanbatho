@@ -43,9 +43,17 @@
     coins: 'assets/audio/ui-coins.mp3',
     build: 'assets/audio/sfx-build.mp3',
     error: 'assets/audio/sfx-defeat-error.mp3',
-    footstepGround: Object.freeze(['assets/audio/footsteps/footstep-soft-ground-01.mp3','assets/audio/footsteps/footstep-soft-ground-02.mp3']),
-    footstepWood: Object.freeze(['assets/audio/footsteps/footstep-wood-01.mp3','assets/audio/footsteps/footstep-wood-02.mp3']),
-    footstepStone: Object.freeze(['assets/audio/footsteps/footstep-stone-01.mp3','assets/audio/footsteps/footstep-stone-02.mp3']),
+    // Calm steps are soft, close and level with each other, so no step clanks.
+    // The gravel set is the same loudness, only grittier: it plays when danger is near.
+    footstepGround: Object.freeze(['assets/audio/footsteps/calm-grass-01.mp3','assets/audio/footsteps/calm-grass-02.mp3','assets/audio/footsteps/calm-grass-03.mp3']),
+    footstepWood: Object.freeze(['assets/audio/footsteps/calm-wood-01.mp3','assets/audio/footsteps/calm-wood-02.mp3','assets/audio/footsteps/calm-wood-03.mp3']),
+    footstepStone: Object.freeze(['assets/audio/footsteps/calm-stone-01.mp3','assets/audio/footsteps/calm-stone-02.mp3']),
+    footstepTense: Object.freeze(['assets/audio/footsteps/tense-gravel-01.mp3','assets/audio/footsteps/tense-gravel-02.mp3','assets/audio/footsteps/tense-gravel-03.mp3','assets/audio/footsteps/tense-gravel-04.mp3']),
+    // Gentle camp sounds for quiet moments.
+    campChop: Object.freeze(['assets/audio/camp/chop-01.mp3','assets/audio/camp/chop-02.mp3']),
+    campDust: Object.freeze(['assets/audio/camp/dust-01.mp3','assets/audio/camp/dust-02.mp3']),
+    campEat: Object.freeze(['assets/audio/camp/eat-01.mp3','assets/audio/camp/eat-02.mp3','assets/audio/camp/eat-03.mp3']),
+    campfire: 'assets/audio/camp/campfire-loop.mp3',
     residentChatter: Object.freeze(Array.from({length:16}, function(_, i) {
       return 'assets/audio/little-folk/mumble-' + String(i + 1).padStart(2, '0') + '.mp3';
     }))
@@ -71,7 +79,12 @@
     unlock: 0.5,
     coins: 0.45,
     build: 0.55,
-    error: 0.45
+    error: 0.45,
+    campChop: 0.42,
+    campDust: 0.34,
+    campEat: 0.4,
+    // The fire's level when the player stands right beside it.
+    campfire: 0.5
   });
 
   // A button that returns the identical pitch on every press reads as a machine.
@@ -87,7 +100,10 @@
     unlock: 0.04,
     coins: 0.05,
     build: 0.045,
-    error: 0.03
+    error: 0.03,
+    campChop: 0.04,
+    campDust: 0.03,
+    campEat: 0.03
   });
 
   // A tap is over inside 200 ms now, so it can answer the finger sooner without
@@ -109,7 +125,10 @@
     unlock: 250,
     coins: 100,
     build: 180,
-    error: 180
+    error: 180,
+    campChop: 250,
+    campDust: 900,
+    campEat: 1200
   });
 
   // No entry here plays a real bird. Burbz identifies wild birds by ear, so a
@@ -180,6 +199,57 @@
         safePause(entry.audio);
         removeActive(entry);
       });
+      stopCampfire();
+    }
+
+    // Calm is the default. Tense swaps in the gritty steps and hushes the fire.
+    var mood = 'calm';
+    function setMood(value) {
+      mood = value === 'tense' ? 'tense' : 'calm';
+      if (mood === 'tense') campfire(0);
+      return mood;
+    }
+
+    // One looping campfire bed. Its volume follows how close the player stands.
+    var fire = { audio: null, volume: 0, target: 0, timer: false };
+    function stopCampfire() {
+      fire.target = 0;
+      fire.volume = 0;
+      if (fire.audio) safePause(fire.audio);
+      fire.audio = null;
+    }
+    function rampCampfire() {
+      if (fire.timer || !fire.audio) return;
+      var step = function() {
+        fire.timer = false;
+        if (!fire.audio) return;
+        var diff = fire.target - fire.volume;
+        fire.volume = Math.abs(diff) <= 0.02 ? fire.target : fire.volume + (diff > 0 ? 0.02 : -0.02);
+        try { fire.audio.volume = fire.volume; } catch (_) {}
+        if (fire.volume <= 0 && fire.target <= 0) { stopCampfire(); return; }
+        if (fire.volume !== fire.target && schedule) { fire.timer = true; schedule(step, 60); }
+      };
+      step();
+    }
+    function campfire(level, fireOptions) {
+      var value = Math.max(0, Math.min(1, Number(level) || 0));
+      if (mood === 'tense' || !isEnabled()) value = 0;
+      if (fireOptions && fireOptions.immediate && value === 0) { stopCampfire(); return false; }
+      fire.target = value * (Number(volumes.campfire) || 0);
+      if (fire.target > 0 && !fire.audio) {
+        var src = chooseSource('campfire'), audio = src ? makeAudio(src) : null;
+        if (!audio) return false;
+        try { audio.loop = true; audio.volume = 0; audio.preload = 'auto'; } catch (_) {}
+        fire.audio = audio;
+        fire.volume = 0;
+        try {
+          Promise.resolve(typeof audio.play === 'function' ? audio.play() : null).catch(function() {
+            if (fire.audio === audio) stopCampfire();
+          });
+        } catch (_) { stopCampfire(); return false; }
+      }
+      rampCampfire();
+      return fire.target > 0;
     }
     function stopFootsteps() {
       active.slice().filter(function(entry){return entry.name.indexOf('footstep')===0;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
@@ -200,7 +270,7 @@
     function chooseSource(name) {
       var candidate = manifest[name];
       if (Array.isArray(candidate)) {
-        if ((name === 'residentChatter' || name.indexOf('footstep')===0) && candidate.length > 1) {
+        if (candidate.length > 1) {
           candidate = candidate.filter(function(src) { return src !== lastSource[name]; });
         }
         if (!candidate.length) return null;
@@ -350,9 +420,13 @@
       stopAll: stopAll,
       stop: stop,
       stopFootsteps: stopFootsteps,
+      setMood: setMood,
+      mood: function() { return mood; },
+      campfire: campfire,
+      stopCampfire: stopCampfire,
       footstep: function(surface) {
         if(active.some(function(entry){return entry.name.indexOf('footstep')===0;}))return Promise.resolve(false);
-        var name={wood:'footstepWood',stone:'footstepStone'}[surface]||'footstepGround';
+        var name=mood==='tense'&&surface!=='wood'?'footstepTense':({wood:'footstepWood',stone:'footstepStone'}[surface]||'footstepGround');
         return play(name,{volume:0.26,maxPolyphony:1,cooldown:280,playbackRate:1+(random()*2-1)*0.035});
       },
       createFootsteps: function(){return createFootstepController({enabled:isEnabled,play:function(surface){return manager.footstep(surface);},stop:stopFootsteps});},

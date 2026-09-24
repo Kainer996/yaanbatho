@@ -5719,7 +5719,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="zombie_progression_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="wilderness_combat_core.js?v=alderwing-flight-shores-v418-20260915"></script>
 <script src="wilderness_birds.js?v=alderwing-flight-shores-v418-20260915"></script>
-<script src="wilderness_combat.js?v=hands-on-world-tutorial-v429-20260920"></script>
+<script src="wilderness_combat.js?v=calm-asmr-v462-20260924"></script>
 <link rel="stylesheet" href="first_person_cast_controls.css?v=continuous-world-v391-20260910">
 <link rel="stylesheet" href="wilderness_combat.css?v=alderwing-flight-shores-v418-20260915">
 <script src="empire_map_core.js?v=alderwing-followups-v417-20260914"></script>
@@ -5788,12 +5788,12 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=hall-music-v458-20260923"></script>
+<script src="audio_core.js?v=calm-asmr-v462-20260924"></script>
 <script src="player_home_core.js?v=home-ground-intro-v451-20260923"></script>
 <script src="player_home_scene.js?v=home-ground-intro-v451-20260923"></script>
 <script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
 <script src="merlin_story_scenes.js?v=merlin-story-art-20260924"></script>
-<script src="player_home.js?v=hall-music-v458-20260923"></script>
+<script src="player_home.js?v=calm-asmr-v462-20260924"></script>
 <script src="academy_flight_core.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_world_core.js?v=gps-shelter-swimming-v439-20260922"></script>
 <script src="flight_craft_core.js?v=craft-home-repair-v440-20260922"></script>
@@ -5801,7 +5801,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
 <script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="exploration.js?v=alderwing-followups-v417-20260914"></script>
+<script src="exploration.js?v=calm-asmr-v462-20260924"></script>
 <link rel="stylesheet" href="exploration.css?v=alderwing-followups-v417-20260914">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
@@ -6766,6 +6766,7 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   : oscillatorSfxFallback;
 window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
 window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
+window.BurbzCalmAudio={setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat')};
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
@@ -17031,6 +17032,7 @@ function feedFlyBirdToFood(sourceEl, targetEl, done) {
 
 // The dopamine hit: a short burst of food glyphs and the XP that was won.
 function playFeedDopamineBurst(details) {
+  SFX.play?.('campEat');
   document.getElementById('feedDopamineBurst')?.remove();
   const el = document.createElement('div');
   el.id = 'feedDopamineBurst';
@@ -30983,7 +30985,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=hall-music-v458-20260923';
+        script.src = 'village_walk.js?v=calm-asmr-v462-20260924';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
