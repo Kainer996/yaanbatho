@@ -5788,7 +5788,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=calm-asmr-v462-20260924"></script>
+<script src="audio_core.js?v=calm-camp-v463-20260924"></script>
 <script src="player_home_core.js?v=home-ground-intro-v451-20260923"></script>
 <script src="player_home_scene.js?v=home-ground-intro-v451-20260923"></script>
 <script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
@@ -5801,8 +5801,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
 <script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="exploration.js?v=calm-asmr-v462-20260924"></script>
-<link rel="stylesheet" href="exploration.css?v=alderwing-followups-v417-20260914">
+<script src="exploration.js?v=calm-camp-v463-20260924"></script>
+<link rel="stylesheet" href="exploration.css?v=calm-camp-v463-20260924">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="geographic_world.js?v=hands-on-world-tutorial-v429-20260920"></script>
@@ -6766,7 +6766,7 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   : oscillatorSfxFallback;
 window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
 window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
-window.BurbzCalmAudio={setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat')};
+window.BurbzCalmAudio={setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool')};
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
@@ -25938,7 +25938,8 @@ function empireTerritoryLight() {
   for(const c of BurbzEnemyOutpostsCore.receipts(gameState.enemyOutposts))circles.push({id:c.id,kind:'outpost',lat:c.lat,lon:c.lon,radius:c.radius});
   // The camp owner supplies persisted circles; tent placement/rewards stay in
   // its transaction. Legacy saved camps retain their existing 80 m refuge.
-  for(const c of gameState.exploration?.camps||[])circles.push({id:c.id,kind:'camp',lat:c.lat,lon:c.lon,radius:c.lightRadiusM??80});
+  // A lit campfire pushes the protected circle out by a further 40 m.
+  for(const c of gameState.exploration?.camps||[])circles.push({id:c.id,kind:'camp',lat:c.lat,lon:c.lon,radius:(c.lightRadiusM??80)+(c.fire?40:0)});
   const signature=JSON.stringify(circles);
   const light=empireTerritoryLightCache?.identity===gameState&&empireTerritoryLightCache.signature===signature?empireTerritoryLightCache.light:M.createTerritoryLight(circles);
   empireTerritoryLightCache={identity:gameState,signature,light,dirty:false};return light;
@@ -30985,7 +30986,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=calm-asmr-v462-20260924';
+        script.src = 'village_walk.js?v=calm-camp-v463-20260924';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45402,7 +45403,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-story-art-20260924';
+const BURBZ_BUILD = 'calm-camp-v463-20260924';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46816,7 +46817,7 @@ function processCampGPS(fix){
 }
 function buildCampFire(id,pose){const camp=explorationState().camps.find(c=>c.id===id);if(!camp||camp.fire)return{ok:false,error:'This campfire is already built.'};if(!BurbzGeographicWorldCore.validCoordinate(pose)||BurbzGeographicWorldCore.distance(camp,pose)>12)return{ok:false,error:'Fast travel to this camp and build the fire beside your tent.'};
  if(!Number.isSafeInteger(gameState.player.branches)||gameState.player.branches<5)return{ok:false,error:'Campfire needs 5 timber. Chop trees in your home clearing or village, then return here.'};
- const before=gameState.player.branches;gameState.player.branches-=5;const result=commitExploration({ok:true,state:{...explorationState(),camps:explorationState().camps.map(c=>c===camp?{...c,fire:true}:c)},message:'Campfire built · 5 timber used.'});if(!result.ok)gameState.player.branches=before;else updateHeader();return result;
+ const before=gameState.player.branches;gameState.player.branches-=5;const result=commitExploration({ok:true,state:{...explorationState(),camps:explorationState().camps.map(c=>c===camp?{...c,fire:true}:c)},message:'Campfire built · 5 timber used. Its light keeps you safe 40 m further out, and your tripod stool is ready.'});if(!result.ok)gameState.player.branches=before;else updateHeader();return result;
 }
 async function travelToCamp(id){const camp=explorationState().camps.find(c=>c.id===id);if(!camp)return{ok:false,error:'That camp is no longer in this save.'};const p=BurbzGeographicWorldCore.unproject(camp,{x:0,y:0,z:4.5});try{const opened=await enterGeographicWorld({pose:{...p,yaw:0,pitch:0,mode:'walk'},safeArrival:true,release:()=>BurbzVillageWalk?.close('world')});if(opened!==true)throw Error('The camp could not open. Retry when its terrain is available.');return{ok:true};}catch(e){showToast('Camp is saved. '+e.message);return{ok:false,error:e.message};}}
 async function showCampRealMap(id){const camp=explorationState().camps.find(c=>c.id===id);if(!camp)return;BurbzVillageWalk?.close('navigation');BurbzPlayerHome.close('navigation');switchScreen('map');if(!liveMap)await initLiveMap();if(liveMap){liveMapUserMoved=true;liveMap.jumpTo({center:[camp.lon,camp.lat],zoom:17});refreshCampMarkers(liveMap);}showToast(camp.name+' · Visit within 45 m in real life with location enabled.');}
