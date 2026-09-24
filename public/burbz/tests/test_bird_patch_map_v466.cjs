@@ -1,12 +1,12 @@
 'use strict';
-// bird-patch-map-v465: a bird's home patch on the real map, and "same bird".
+// bird-patch-map-v466: a bird's home patch on the real map, and "same bird".
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const C = require('../bird_home_range_core.js');
 const dir = path.join(__dirname, '..');
 const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
-const PIN = 'bird-patch-map-v465-20260924';
+const PIN = 'bird-patch-map-v466-20260924';
 
 // Names in the catalogue resolve to one patch key.
 assert.equal(C.keyOf('European Robin'), 'robin');

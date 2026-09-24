@@ -4612,7 +4612,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walk-shelter-controls-v427-20260920">
-<link rel="stylesheet" href="bird_patch_map.css?v=bird-patch-map-v465-20260924">
+<link rel="stylesheet" href="bird_patch_map.css?v=bird-patch-map-v466-20260924">
 <link rel="stylesheet" href="destination_quest_ui.css?v=gold-trail-raven-v454-20260923">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
@@ -4621,7 +4621,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=home-academy-dock-v463-20260924">
+<link rel="stylesheet" href="scan_home.css?v=home-academy-tree-v465-20260924">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -5714,8 +5714,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
-<script src="scan_home_core.js?v=home-academy-dock-v463-20260924"></script>
-<script src="scan_home.js?v=home-academy-dock-v463-20260924"></script>
+<script src="scan_home_core.js?v=home-academy-tree-v465-20260924"></script>
+<script src="scan_home.js?v=home-academy-tree-v465-20260924"></script>
 <script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -5750,8 +5750,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="settlement_lighting.js?v=unified-alderwing-v400-20260913"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
-<script src="bird_home_range_core.js?v=bird-patch-map-v465-20260924"></script>
-<script src="bird_patch_map.js?v=bird-patch-map-v465-20260924"></script>
+<script src="bird_home_range_core.js?v=bird-patch-map-v466-20260924"></script>
+<script src="bird_patch_map.js?v=bird-patch-map-v466-20260924"></script>
 <script src="uk_bird_expansion_50.js?v=uk50-source-backed-20260713"></script>
 <script src="uk_bird_expansion_2.js?v=uk26-source-backed-20260713"></script>
 <script src="au_bird_expansion.js?v=au-source-backed-20260713"></script>
@@ -23815,12 +23815,11 @@ function scanHomeAcademySnapshot() {
     const afford=coins>=b.cost&&branches>=(b.branches||0),birds=residents[id]||0;
     const name=(ACADEMY_ROOMS[id]?.label||b.label).toLowerCase().replace(/(^|[\s'&-])\S/g,c=>c.toUpperCase());
     const detail=built?(birds?birds+(birds===1?' bird':' birds')+' · Open':'Open'):lock?lock.message:levelLocked?'Unlocks at level '+b.unlockLevel:(afford?'Ready to build · ':'Build for ')+b.cost+' coins'+(b.branches?' · '+b.branches+' timber':'');
-    return {id,name,art:b.asset,icon:b.icon,state:built?'built':lock||levelLocked?'locked':afford?'ready':'short',detail,target:built?{kind:'academy-room',room:id}:{kind:'academy-plan',id}};
+    const pos=academyRoomPosition(id,b);
+    return {id,name,art:b.asset,icon:b.icon,x:pos.x,y:pos.y,state:built?'built':lock||levelLocked?'locked':afford?'ready':'short',detail,target:built?{kind:'academy-room',room:id}:{kind:'academy-plan',id}};
   });
-  rows.sort((a,b)=>({ready:0,built:1,short:2,locked:3}[a.state]-{ready:0,built:1,short:2,locked:3}[b.state]));
   const free=residents[FREE_BIRD_ROOM]||0;
-  if(free)rows.unshift({id:FREE_BIRD_ROOM,name:'Free birds',art:null,icon:'🕊️',state:'built',detail:free+(free===1?' bird waiting for a job':' birds waiting for jobs'),target:{kind:'academy-room',room:FREE_BIRD_ROOM}});
-  return {rows,built:ids.filter(isAcademyBuildingBuilt).length,total:ids.length,ready:rows.filter(r=>r.state==='ready').length};
+  return {rows,free,built:ids.filter(isAcademyBuildingBuilt).length,total:ids.length,ready:rows.filter(r=>r.state==='ready').length};
 }
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
@@ -45462,7 +45461,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'bird-patch-map-v465-20260924';
+const BURBZ_BUILD = 'bird-patch-map-v466-20260924';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

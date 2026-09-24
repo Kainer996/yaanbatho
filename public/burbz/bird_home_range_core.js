@@ -25,7 +25,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const VERSION = 'bird-home-range-v465-20260924';
+  const VERSION = 'bird-home-range-v466-20260924';
   const STORAGE_KEY = 'burbz.birdPatches.v1';
   const MAX_ENCOUNTERS = 800;
   // Two hearings closer than this in time are one visit, not two. A tawny
