@@ -27,12 +27,10 @@ let full=C.normalize({...home,owned:{...home.owned,rug:100},placed:[]});
 for(const area of ['room','library','conservatory'])for(let n=0;n<32;n++){const r=C.propose(full,wallet,{kind:'place',item:'rug',area,x:0,z:0});assert(r.ok);full=r.home;}
 assert.equal(full.placed.length,96);assert(!C.propose(full,wallet,{kind:'place',item:'rug',area:'workshop',x:0,z:0}).ok);assert(!C.propose(full,wallet,{kind:'place',id:full.placed[0].id,item:'rug',area:'library',x:0,z:0}).ok);
 assert(C.propose(full,wallet,{kind:'place',id:full.placed[0].id,item:'rug',area:'room',x:.5,z:0}).ok);
-// Three saved physical strikes, one atomic yield, and no duplicate payout.
+// v485 took the ring of trees away from the plot: nothing there can be chopped,
+// and the old tree spots are open ground.
 const tree=C.TREES[0],action={kind:'chop',id:tree.id,area:'yard',x:tree.x+1,z:tree.z};let forest=C.normalize({...home,trees:{}}),purse={branches:10};
-assert(!C.propose(forest,purse,{...action,area:'room'}).ok);assert(!C.propose(forest,purse,{...action,x:0,z:0}).ok);assert(!C.world(forest,'yard').allowed(tree.x,tree.z));
-for(let hit=1;hit<=3;hit++){const before=JSON.stringify(forest),cash=purse.branches,r=C.propose(forest,purse,action);assert(r.ok);assert.equal(JSON.stringify(forest),before);assert.equal(purse.branches,cash);forest=C.normalize(JSON.parse(JSON.stringify(r.home)));purse=r.wallet;assert.equal(C.treeState(forest,tree.id),hit);assert.equal(purse.branches,hit<3?10:13);}
-assert(C.world(forest,'yard').allowed(tree.x,tree.z));assert(!C.propose(forest,purse,action).ok);assert.equal(purse.branches,13);
-const snapshotTime=Date.now(),oldWorld=C.world(forest,'yard',snapshotTime),tomorrow=snapshotTime+86400000;assert(oldWorld.allowed(tree.x,tree.z));const nextWorld=C.world(forest,'yard',tomorrow);assert(!nextWorld.allowed(tree.x,tree.z));const oldPoint={x:tree.x,z:tree.z,y:0,yaw:1.2,pitch:.13},safe=C.safePosition(nextWorld,oldPoint);assert(nextWorld.allowed(safe.x,safe.z));assert(Math.hypot(safe.x-oldPoint.x,safe.z-oldPoint.z)<=1);assert.equal(safe.yaw,1.2);assert.equal(safe.pitch,.13);assert.equal(C.treeState(forest,tree.id,tomorrow),0);forest.trees[tree.id].day='2001-01-01';assert(C.propose(forest,purse,action).ok);
+assert(!C.propose(forest,purse,action).ok);assert.equal(purse.branches,10);assert(C.world(forest,'yard').allowed(tree.x,tree.z));
 const malformed=C.normalize({version:2,rooms:{fake:true,library:'yes'},trees:{'tree-0':{day:C.dayKey(),hits:99}},owned:{rug:Infinity},placed:[{id:1,item:'rug',area:'library',x:0,z:0}],finds:['invented']});assert.deepEqual(malformed.rooms,{});assert.deepEqual(malformed.trees,{});assert.deepEqual(malformed.placed,[]);
 console.log('Homestead state: v1 migration, doubled area, room gates/costs, safe passages, independent placements, caps and once-daily physical timber transactions pass');
 // Real THREE geometry proves each catalogue design is distinct and bounded.
