@@ -445,7 +445,52 @@
 
   // ---- the great tree ------------------------------------------------------
 
-  function buildTree(mats, rng) {
+  // A lumpy leaf mass, as the Alderwing woodland draws its crowns: a jittered
+  // icosahedron, shaded flat, one instanced draw for the whole canopy.
+  function leafMasses(clusters, mats, rng, dummy, col) {
+    var ico = new T.IcosahedronGeometry(1, 0), p = ico.attributes.position, shared = {}, pos = [], index = [];
+    for (var i = 0; i < p.count; i++) {
+      var key = p.getX(i).toFixed(3) + ',' + p.getY(i).toFixed(3) + ',' + p.getZ(i).toFixed(3);
+      if (shared[key] === undefined) {
+        var k = 1 + rng() * 0.2;
+        shared[key] = pos.length / 3;
+        pos.push(p.getX(i) * k, p.getY(i) * k, p.getZ(i) * k);
+      }
+      index.push(shared[key]);
+    }
+    ico.dispose();
+    var geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3));
+    geo.setIndex(index);
+    geo.computeVertexNormals();
+    var tones = [0x4d6d34, 0x557636, 0x5b7d3a, 0x62843e, 0x6c8f45];
+    mats.crown = mats.crown || new T.MeshLambertMaterial({ color: 0xffffff });
+    var mesh = new T.InstancedMesh(geo, mats.crown, clusters.length);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    clusters.forEach(function(cl, idx) {
+      var s = cl.s * 1.05;
+      dummy.position.set(cl.x, cl.y, cl.z);
+      dummy.rotation.set(rng() * 3, rng() * 3, rng() * 3);
+      dummy.scale.set(s * (0.9 + rng() * 0.3), s * (0.72 + rng() * 0.22), s * (0.9 + rng() * 0.3));
+      dummy.updateMatrix();
+      mesh.setMatrixAt(idx, dummy.matrix);
+      // Darker underneath, brighter where the crown meets the sun.
+      var lift = Math.max(0, Math.min(1, (cl.y - 9.5) / 6.5)) * 0.65 + cl.tone * 0.35;
+      mesh.setColorAt(idx, col.setHex(tones[Math.min(tones.length - 1, Math.floor(lift * tones.length))]));
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.name = 'home-tree-crowns';
+    return mesh;
+  }
+
+  // `opts.crowns` swaps the leaf cards for lumpy, flat-shaded leaf masses in
+  // the Alderwing woodland's colours, so the tree by the player's house
+  // matches the trees around it.
+  function buildTree(mats, rng, opts) {
+    var crowns = !!(opts && opts.crowns);
+    // Seen small in the garden, thin twigs read as ink whiskers; thicken them.
+    var L = crowns ? function(a, b, r0, r1, m, bend) { return limb(a, b, r0 * 1.5, r1 * 1.9, m, bend); } : limb;
     var g = new T.Group();
     var V = T.Vector3;
 
@@ -481,7 +526,7 @@
     for (var rIdx = 0; rIdx < 9; rIdx++) {
       var ra = (rIdx / 9) * Math.PI * 2 + rng() * 0.3;
       var reach = 2.4 + rng() * 1.9;
-      var root = limb(
+      var root = L(
         new V(Math.sin(ra) * 0.5, 1.5 + rng() * 0.7, Math.cos(ra) * 0.5),
         new V(Math.sin(ra) * reach, -0.18, Math.cos(ra) * reach),
         0.62, 0.16, mats.bark, -0.5
@@ -502,13 +547,13 @@
       // out through the middle of a house looked wrong. The deck rests on it.
       var start = new V(sa * 0.5, a.y - 0.85, ca * 0.5);
       var deckUnder = new V(sa * (a.cfg.reach - 0.15), a.y - 0.44, ca * (a.cfg.reach - 0.15));
-      g.add(limb(start, deckUnder, 0.36, 0.20, mats.bark, 0.5));
+      g.add(L(start, deckUnder, 0.36, 0.20, mats.bark, 0.5));
       // A forked crutch under the far corners, so the house is visibly carried.
       [-1, 1].forEach(function(sgn) {
         var forkFrom = new V(sa * (a.cfg.reach * 0.52), a.y - 0.72, ca * (a.cfg.reach * 0.52));
         var fa = a.angle + sgn * 0.30;
         var forkTo = new V(Math.sin(fa) * (a.cfg.reach + halfW * 0.30), a.y - 0.30, Math.cos(fa) * (a.cfg.reach + halfW * 0.30));
-        g.add(limb(forkFrom, forkTo, 0.15, 0.07, mats.bark, 0.35));
+        g.add(L(forkFrom, forkTo, 0.15, 0.07, mats.bark, 0.35));
       });
       // The limb carries on past the house — but it branches away BEFORE the
       // wall and clears it to the side, so nothing pierces the building.
@@ -516,7 +561,7 @@
       var sideFrom = new V(sa * (a.cfg.reach * 0.62), a.y - 0.58, ca * (a.cfg.reach * 0.62));
       var clear = a.cfg.reach + halfW + 1.5 + rng();
       var beyond = new V(Math.sin(offA) * clear, a.y + 1.6 + rng() * 0.9, Math.cos(offA) * clear);
-      g.add(limb(sideFrom, beyond, 0.17, 0.05, mats.bark, 0.7));
+      g.add(L(sideFrom, beyond, 0.17, 0.05, mats.bark, 0.7));
       tips.push({ p: beyond, small: true });
     });
 
@@ -528,11 +573,11 @@
       var brh = 2.6 + rng() * 4.2;
       var s0 = new V(Math.sin(ba) * 0.4, by, Math.cos(ba) * 0.4);
       var e0 = new V(Math.sin(ba) * brh, by + 1.4 + rng() * 2.4, Math.cos(ba) * brh);
-      g.add(limb(s0, e0, 0.24, 0.07, mats.bark, 0.8));
+      g.add(L(s0, e0, 0.24, 0.07, mats.bark, 0.8));
       tips.push({ p: e0, big: rng() < 0.7 });
       if (rng() < 0.6) {
         var e1 = new V(e0.x * 1.3 + (rng() - 0.5), e0.y + 0.9 + rng(), e0.z * 1.3 + (rng() - 0.5));
-        g.add(limb(e0, e1, 0.07, 0.03, mats.bark, 0.6));
+        g.add(L(e0, e1, 0.07, 0.03, mats.bark, 0.6));
         tips.push({ p: e1, big: false });
       }
     }
@@ -541,7 +586,7 @@
     for (var c = 0; c < 6; c++) {
       var ca = (c / 6) * Math.PI * 2 + rng() * 0.4;
       var top = new V(Math.sin(ca) * (1.6 + rng()), 11.6 + rng() * 1.6, Math.cos(ca) * (1.6 + rng()));
-      g.add(limb(new V(-0.1, 10.6, 0), top, 0.2, 0.05, mats.bark, 0.5));
+      g.add(L(new V(-0.1, 10.6, 0), top, 0.2, 0.05, mats.bark, 0.5));
       tips.push({ p: top, big: true });
     }
 
@@ -582,6 +627,19 @@
       var t = Math.max(0, Math.min(1, (y - 9.5) / 6.5)) * 0.62 + tone * 0.38;
       return t < 0.5 ? col.copy(leafDeep).lerp(leafMid, t * 2)
                      : col.copy(leafMid).lerp(leafSun, (t - 0.5) * 2);
+    }
+
+    if (crowns) {
+      canopy.add(leafMasses(clusters, mats, rng, dummy, col));
+      g.add(canopy);
+      // Plain warm bark, like the woodland's trunks, rather than the Academy
+      // screen's dark painted texture.
+      mergeStatic(g, {
+        name: 'tree-bark',
+        only: function(o, m) { return m === mats.bark; },
+        material: new T.MeshLambertMaterial({ color: 0x8a6a4c, vertexColors: true })
+      });
+      return { group: g, leaves: canopy, tips: tips };
     }
 
     var coreGeo = new T.IcosahedronGeometry(0.46, 0);
@@ -645,6 +703,22 @@
       material: new T.MeshLambertMaterial({ map: mats.barkTex, color: 0xc0a884, vertexColors: true })
     });
     return { group: g, leaves: leaves, tips: tips };
+  }
+
+  function makeTreeMaterials() {
+    var bark = barkTexture();
+    bark.repeat.set(2, 1.4);
+    var leafTex = leafCardTexture();
+    leafTex.repeat.set(0.5, 0.5); // one of the four leaves on the sheet
+    return {
+      bark: new T.MeshLambertMaterial({ map: bark, color: 0xc0a884 }),
+      leaf: new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }),
+      // alphaTest (not transparency) keeps the cards depth-sorted for free.
+      leafCard: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
+      leafLitter: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
+      plank: new T.MeshLambertMaterial({ color: 0x8a6236 }),
+      barkTex: bark, leafTex: leafTex
+    };
   }
 
   // ---- one treehouse -------------------------------------------------------
@@ -1504,6 +1578,174 @@
 
   // ---- scene ---------------------------------------------------------------
 
+  // ---- the Academy beside the player's house --------------------------------
+  // The same great tree and the same treehouses, grown to stand in the garden
+  // a little taller than the woodland round it. Only the buildings the player
+  // has built hang on its boughs; the other boughs wait, bare, as they do on
+  // the Academy screen. Windows and the lantern string glow after dusk, the
+  // Kitchen chimney smokes, and the canopy moves with the wind.
+  //
+  // It also lists perches — deck rails, rooftops and chimneys, bare bough
+  // ends, twig tips and the treetop — so the garden birds can land on it.
+  // Presentation only: the host says which buildings stand.
+  var HOME_TREE_SCALE = 0.56;
+
+  function highestPoint(node, root) {
+    var best = null, v = new T.Vector3();
+    root.updateMatrixWorld(true);
+    var inv = new T.Matrix4().copy(root.matrixWorld).invert();
+    node.traverse(function(o) {
+      if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return;
+      if (o.material && o.material.transparent) return;
+      var pos = o.geometry.attributes.position;
+      for (var i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld).applyMatrix4(inv);
+        if (!best || v.y > best.y) best = v.clone();
+      }
+    });
+    return best;
+  }
+
+  function buildHomeTree(three, built, opts) {
+    opts = opts || {};
+    T = three || T;
+    if (!T) return null;
+    var k = Number(opts.scale) > 0 ? Number(opts.scale) : HOME_TREE_SCALE;
+    var rng = mulberry32(20260730);
+    var mats = makeTreeMaterials();
+    var root = new T.Group();
+    root.name = 'home-academy-tree';
+    var inner = new T.Group();
+    inner.scale.setScalar(k);
+    root.add(inner);
+    var tree = buildTree(mats, rng, { crowns: true });
+    inner.add(tree.group);
+
+    var list = Array.isArray(built) ? built : [];
+    var glows = [], perches = [], houses = [], smokes = [];
+    Object.keys(ANCHORS).forEach(function(id) {
+      var a = anchorPosition(id);
+      if (list.indexOf(id) < 0) {
+        perches.push({ x: a.x * 0.94 * k, y: (a.y - 0.40) * k, z: a.z * 0.94 * k, kind: 'bough' });
+        return;
+      }
+      var node = buildTreehouse(id, mats, rng);
+      if (!node) return;
+      node.position.set(a.x, a.y, a.z);
+      node.rotation.y = a.angle; // face outward, away from the trunk
+      node.scale.setScalar(a.cfg.scale);
+      inner.add(node);
+      houses.push(id);
+      (node.userData.glows || []).forEach(function(g) { glows.push(g); });
+      if (node.userData.chimney) {
+        smokes.push({ origin: node.userData.chimney.clone().applyEuler(new T.Euler(0, a.angle, 0))
+          .multiplyScalar(a.cfg.scale).add(new T.Vector3(a.x, a.y, a.z)).multiplyScalar(k), sprites: [] });
+      }
+      var edge = ((STYLES[id].d + 0.55) / 2) * a.cfg.scale;
+      perches.push({ x: (a.x + Math.sin(a.angle) * edge) * k, y: (a.y + 0.06) * k, z: (a.z + Math.cos(a.angle) * edge) * k, kind: 'deck' });
+      var top = highestPoint(node, root);
+      if (top) perches.push({ x: top.x, y: top.y, z: top.z, kind: 'roof' });
+    });
+    tree.tips.forEach(function(tip, idx) {
+      var crown = idx >= tree.tips.length - 6;
+      if (tip.small || crown) perches.push({ x: tip.p.x * k, y: tip.p.y * k, z: tip.p.z * k, kind: crown ? 'top' : 'twig' });
+    });
+
+    // Lantern string wound up the trunk, lit after dusk.
+    var soft = softSpriteTexture('255,200,130');
+    var bulbGroup = new T.Group(), haloMats = [];
+    for (var ln = 0; ln < 16; ln++) {
+      var lt = ln / 16, la = lt * Math.PI * 5.2;
+      var lr = 1.45 * Math.pow(1 - lt * 0.75, 0.6) + 0.34;
+      var lp = new T.Vector3(Math.sin(la) * lr, 1.5 + lt * 8.2, Math.cos(la) * lr);
+      var bulb = new T.Mesh(new T.SphereGeometry(0.085, 6, 5), new T.MeshLambertMaterial({ color: 0xffc878 }));
+      bulb.position.copy(lp);
+      bulbGroup.add(bulb);
+      if (ln % 2 === 0) {
+        var halo = new T.Sprite(new T.SpriteMaterial({ map: soft, transparent: true, opacity: 0, depthWrite: false, blending: T.AdditiveBlending }));
+        halo.scale.set(0.62, 0.62, 1);
+        halo.position.copy(lp);
+        inner.add(halo);
+        haloMats.push(halo.material);
+      }
+    }
+    inner.add(bulbGroup);
+    var bulbMesh = mergeStatic(bulbGroup, { name: 'home-lantern-string' });
+    if (bulbMesh) {
+      bulbMesh.material = new T.MeshBasicMaterial({ color: 0xffc878, vertexColors: true, transparent: true, opacity: 0.2 });
+      bulbMesh.castShadow = false;
+      glows.push({ mat: bulbMesh.material, halos: haloMats, warm: true, base: 0.92, lantern: true });
+    }
+
+    // Kitchen smoke, a few soft puffs.
+    var smokeTex = smokes.length ? softSpriteTexture('232,228,220') : null;
+    smokes.forEach(function(sm) {
+      for (var sp = 0; sp < 6; sp++) {
+        var puff = new T.Sprite(new T.SpriteMaterial({ map: smokeTex, transparent: true, opacity: 0, depthWrite: false }));
+        puff.position.copy(sm.origin);
+        puff.userData = { phase: sp / 6, speed: 0.22 + rng() * 0.1 };
+        root.add(puff);
+        sm.sprites.push(puff);
+      }
+    });
+
+    root.updateMatrixWorld(true);
+    var height = new T.Box3().setFromObject(tree.group).max.y;
+    var leafMats = [mats.crown || mats.leaf];
+    glows.forEach(function(g, i) { g.phase = rng() * 20; g.speed = 4 + rng() * 6; });
+
+    // lamp: 0 by day, 1 at night (academy_daynight's lamp curve).
+    // wind: 0 still to 1 a gale. dir: where the wind blows towards.
+    function update(t, dt, lamp, wind, dir) {
+      lamp = Math.max(0, Math.min(1, Number(lamp) || 0));
+      var w = Math.max(0, Math.min(1, Number(wind) || 0));
+      var ease = Math.min(1, (dt || 0.016) * 4);
+      for (var i = 0; i < glows.length; i++) {
+        var g = glows[i];
+        var flick = g.lantern ? (0.78 + 0.22 * Math.sin(t * g.speed + g.phase) * Math.sin(t * g.speed * 0.4 + g.phase))
+          : (0.90 + 0.10 * Math.sin(t * g.speed * 0.5 + g.phase));
+        if (g.pulse) flick = 0.62 + 0.38 * Math.sin(t * 1.7 + g.phase);
+        var day = g.always ? 0.85 : (g.lantern ? 0.2 : 0.42);
+        var target = (day + (g.base - day) * lamp) * flick;
+        g.mat.opacity += (target - g.mat.opacity) * ease;
+        var haloAmt = g.mat.opacity * (0.06 + lamp * 0.42);
+        if (g.halo) g.halo.opacity = haloAmt;
+        if (g.halos) for (var hh = 0; hh < g.halos.length; hh++) g.halos[hh].opacity = haloAmt;
+      }
+      // The crown leans a touch downwind and shivers in the gusts; the trunk
+      // and the houses stay put, as a real oak's do.
+      var dx = dir ? dir.x : 1, dz = dir ? dir.z : 0;
+      var gust = 0.5 + 0.5 * Math.sin(t * 0.37) * Math.sin(t * 0.61 + 1.1);
+      var lean = w * w * 0.012 * (0.6 + 0.4 * gust);
+      var shiver = (0.002 + w * 0.006) * Math.sin(t * (1.1 + w * 1.6));
+      tree.leaves.rotation.x = dz * lean + shiver;
+      tree.leaves.rotation.z = -dx * lean + shiver * 0.7;
+      smokes.forEach(function(sm) {
+        sm.sprites.forEach(function(sp) {
+          var u = sp.userData;
+          u.phase += (dt || 0) * u.speed;
+          if (u.phase > 1) u.phase -= 1;
+          var p = u.phase, drift = p * (0.3 + w * 1.4);
+          sp.position.set(sm.origin.x + dx * drift + Math.sin(t * 0.5 + u.speed * 9) * p * 0.3,
+            sm.origin.y + p * 1.6 * (1 - w * 0.4), sm.origin.z + dz * drift);
+          var sc = 0.22 + p * 0.9;
+          sp.scale.set(sc, sc, 1);
+          sp.material.opacity = 0.35 * Math.sin(Math.PI * Math.min(1, p * 1.05));
+        });
+      });
+    }
+
+    // The build view looks down through the canopy.
+    function setCanopyFade(value) {
+      var v = Math.max(0.05, Math.min(1, Number(value)));
+      leafMats.forEach(function(m) {
+        m.transparent = v < 1; m.opacity = v; m.depthWrite = v >= 1; m.needsUpdate = true;
+      });
+    }
+
+    return { group: root, houses: houses, perches: perches, height: height, update: update, setCanopyFade: setCanopyFade };
+  }
+
   function createAcademy3D(adapter) {
     if (!adapter || typeof adapter.container !== 'function') return null;
     T = adapter.three || (typeof window !== 'undefined' ? window.THREE : null);
@@ -1656,21 +1898,7 @@
     }
 
     // ---- build ----
-    function makeMaterials() {
-      var bark = barkTexture();
-      bark.repeat.set(2, 1.4);
-      var leafTex = leafCardTexture();
-      leafTex.repeat.set(0.5, 0.5); // one of the four leaves on the sheet
-      return {
-        bark: new T.MeshLambertMaterial({ map: bark, color: 0xc0a884 }),
-        leaf: new T.MeshLambertMaterial({ color: 0xffffff, flatShading: true }),
-        // alphaTest (not transparency) keeps the cards depth-sorted for free.
-        leafCard: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
-        leafLitter: new T.MeshLambertMaterial({ map: leafTex, color: 0xffffff, alphaTest: 0.42, side: T.DoubleSide }),
-        plank: new T.MeshLambertMaterial({ color: 0x8a6236 }),
-        barkTex: bark, leafTex: leafTex
-      };
-    }
+    function makeMaterials() { return makeTreeMaterials(); }
 
     function buildScene() {
       var scene = new T.Scene();
@@ -2353,6 +2581,8 @@
     qualityProfileFor: qualityProfileFor,
     anchorPosition: anchorPosition,
     mulberry32: mulberry32,
-    createAcademy3D: createAcademy3D
+    createAcademy3D: createAcademy3D,
+    buildHomeTree: buildHomeTree,
+    HOME_TREE_SCALE: HOME_TREE_SCALE
   };
 });

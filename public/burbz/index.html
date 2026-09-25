@@ -5738,7 +5738,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="first_village_tutorial.js?v=hall-music-v458-20260923"></script>
 <script src="desk_portal.js?v=hall-music-v458-20260923"></script>
 <script src="manga_render_core.js?v=alderwing-nature-v470-20260925"></script>
-<script src="academy_3d_core.js?v=academy-day-night-v483-20260925"></script>
+<script src="academy_3d_core.js?v=academy-garden-birds-v486-20260925"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5832,11 +5832,12 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=calm-camp-v463-20260924"></script>
-<script src="player_home_core.js?v=home-ground-intro-v451-20260923"></script>
-<script src="player_home_scene.js?v=desk-screen-v484-20260925"></script>
+<script src="garden_birds.js?v=academy-garden-birds-v486-20260925"></script>
+<script src="player_home_core.js?v=academy-garden-birds-v486-20260925"></script>
+<script src="player_home_scene.js?v=academy-garden-birds-v486-20260925"></script>
 <script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
 <script src="merlin_story_scenes.js?v=merlin-opening-v467-20260924"></script>
-<script src="player_home.js?v=calm-asmr-v462-20260924"></script>
+<script src="player_home.js?v=academy-garden-birds-v486-20260925"></script>
 <script src="academy_flight_core.js?v=glide-release-v481-20260925"></script>
 <script src="geographic_world_core.js?v=realistic-flight-v478-20260925"></script>
 <script src="flight_craft_core.js?v=craft-home-repair-v440-20260922"></script>
@@ -6829,7 +6830,10 @@ function burbzWeatherAt(){
   burbzWeather.wind=.2+.3*storm+.08*Math.sin(minutes/4.3);
   return burbzWeather;
 }
-window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool')};
+window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool'),
+  // Garden birds sing only with sounds on, the page in view and the
+  // microphone closed: Merlin's wand must never hear the game's own birds.
+  birds:()=>sfxEnabled&&!burbzMicListening&&!mediaStream&&!document.hidden};
 
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
@@ -6843,7 +6847,12 @@ const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicM
     })
   : null;
 
+let burbzMicListening = false;
 function setBurbzMusicSuppressed(reason, value) {
+  if (reason === 'sound-scan') {
+    burbzMicListening = !!value;
+    if (value) window.BurbzGardenBirds?.silence?.();
+  }
   if (MUSIC && typeof MUSIC.setSuppressed === 'function') MUSIC.setSuppressed(reason, value);
 }
 
@@ -14786,6 +14795,8 @@ function academySupports3D() {
   } catch (e) { return false; }
 }
 
+// The garden Academy tree by the player's house hangs these same buildings.
+window.BurbzAcademyBuiltRooms = () => academyBuiltRoomIds();
 function academyBuiltRoomIds() {
   try {
     return Object.keys(window.BurbzAcademy3D.ANCHORS).filter(id => isAcademyBuildingBuilt(id));
@@ -31090,7 +31101,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-seamless-v482-20260925';
+        script.src = 'village_walk.js?v=academy-garden-birds-v486-20260925';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45559,7 +45570,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'desk-screen-v484-20260925';
+const BURBZ_BUILD = 'academy-garden-birds-v486-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

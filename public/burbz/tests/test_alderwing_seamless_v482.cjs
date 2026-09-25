@@ -168,16 +168,17 @@ test('the game makes its own weather, made to look good: fair skies and passing 
 
 test('v482 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
- // Later releases ship on top under their own marker; v482 stays in the cache chain.
- const LATER=['academy-day-night-v483-20260925','desk-screen-v484-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ // Later releases ship on top under their own marker and may move a module's
+ // pin on; v482 stays in the cache chain and each list still pins it once.
+ const LATER=['academy-day-night-v483-20260925','desk-screen-v484-20260925','academy-garden-birds-v486-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));assert(cache.includes('-'+BUILD+'-')||cache.endsWith('-'+BUILD));assert(shipped.some(b=>cache.endsWith('-'+b)));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
  const lazy=['world_nature.js','world_horizon.js','village_world.js','village_world_core.js','world_sky.js'],direct=['village_walk.js','exploration.js'];
- for(const [name,urls] of Object.entries(lists))for(const file of [...lazy,...direct])assert.equal(urls.filter(u=>u==='./'+file+'?v='+BUILD).length,1,name+': '+file);
- for(const file of lazy)assert(walk.includes("'"+file+"':'"+BUILD+"'"),'loader pin '+file);
- for(const file of direct)assert(html.includes(file+'?v='+BUILD),'consumer '+file);
+ for(const [name,urls] of Object.entries(lists))for(const file of [...lazy,...direct])assert.equal(urls.filter(u=>shipped.some(b=>u==='./'+file+'?v='+b)).length,1,name+': '+file);
+ for(const file of lazy)assert(shipped.some(b=>walk.includes("'"+file+"':'"+b+"'")),'loader pin '+file);
+ for(const file of direct)assert(shipped.some(b=>html.includes(file+'?v='+b)),'consumer '+file);
  for(const file of [...lazy,...direct])assert(updater.includes('"'+file+'"'),'updater '+file);
- for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of [...lazy,...direct]){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert.equal(m[1],BUILD,file+': stale '+mod);}}
+ for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of [...lazy,...direct]){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert(shipped.includes(m[1]),file+': stale '+mod);}}
 });

@@ -58,7 +58,7 @@ function createCommandDesk(T,{tier=1,aspect=1,deskZ=-3.45,aperture=false}={}){co
  }):new T.MeshBasicMaterial({color:0x527d70})));screen.position.set(0,screenSize.y,screenSize.z);screen.renderOrder=5;screen.userData.homeTarget='desk';scene.add(screen);targets.push(screen);
  scene.name='command-desk';return{group:scene,screen,screenSize,targets};
 }
-function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[],groundHeight=options.groundHeight||(()=>0);let roof=null,frontLeaves=null,skyLight=null,sunLight=null;
+function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),createdAt=options.now??Date.now();let scene,room=null,house=null,screen=null,screenSize=null;const targets=[],decor=[],groundHeight=options.groundHeight||(()=>0);let roof=null,frontLeaves=null,skyLight=null,sunLight=null,academy=null,birds=null,lastUpdate=null;
  if(C.indoor(area)){
  const extra=C.ROOMS[area],layout=C.roomLayout(s),deskShift=layout.deskZ+3.45;
  const p=extra?{name:extra.name,scope:'player-home',width:8,depth:8,height:3.6,accent:extra.accent,props:[],spawn:{x:0,y:0,z:2.8,yaw:0,pitch:0},exit:{x:0,z:3.5},action:null}:{name:s.tier?'Your woodland home':'Your temporary shelter',scope:'player-home',shelter:s.tier===0,width:layout.width,depth:layout.depth,height:layout.height,accent:s.tier?0x709486:0x77736b,props:s.tier?[{type:'fireplace',x:-3.5,z:-1,rot:Math.PI/2,w:1,d:1.8,solid:true}]:[],spawn:{x:0,y:0,z:layout.spawnZ,yaw:0,pitch:0},exit:{x:0,z:layout.doorZ},action:null};
@@ -87,6 +87,7 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  for(let i=0;i<180;i++){const a=i*2.4,r=(3.8+(i%17)*.51)*C.YARD_SCALE,x=Math.sin(a)*r,z=Math.cos(a)*r;if(Math.abs(x)<2.9&&Math.abs(z)<2.5||Math.abs(x)<1.1&&z>0||s.farm.plots.some(p=>Math.abs(p.x-x)<1.15&&Math.abs(p.z-z)<1.15))continue;const h=.1+(i%3)*.06;b.add(new T.ConeGeometry(.09,h,3),[0x587849,0x688252,0x7e8f59][i%3],[x,groundHeight(x,z)+h/2,z]);if(i%7===0)b.sphere(.07,x,groundHeight(x,z)+h,z,[0xe4c773,0xc78ba0,0xe5daca][i%3]);}
 
  scene.add(b.finish());frontLeaves=front.finish();scene.add(frontLeaves);house=createHouse(T,s);scene.add(house);targets.push(house);
+ academy=createAcademyTree(T,s,groundHeight);if(academy)scene.add(academy.group);
  if(!options.contentOnly){const hemi=new T.HemisphereLight(0xffe7b5,0x526b70,grade.hemi),key=new T.DirectionalLight(grade.keyColor,grade.keyIntensity);key.position.set(-12,19,10);skyLight=hemi;sunLight=key;key.castShadow=true;key.shadow.mapSize.set(1024,1024);Object.assign(key.shadow.camera,{left:-25,right:25,top:25,bottom:-25,near:1,far:60});key.shadow.bias=-.001;key.shadow.normalBias=.025;scene.add(hemi,key);scene.background.set(grade.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}
  // Merlin belongs to the companion UI/command desk, not an exterior billboard.
  }
@@ -99,9 +100,32 @@ function create(T,home,area,aspect,grade,options={}){const s=C.normalize(home),c
  else if(area==='yard'){b.add(new T.DodecahedronGeometry(.52),0xb4ae91,[f.x,.3,f.z],[0,.4,0],[1,.6,1]);for(let i=0;i<3;i++)b.box(.23-i*.03,.02,.035,f.x,.62,f.z+(i-1)*.09,0x8b784f);}
  else if(f.id==='floor-star'){b.add(new T.CylinderGeometry(.12,.12,.02,7),0xe5bf65,[f.x,.02,f.z]);}
  else{b.box(.24,.025,.3,f.x,.08,f.z,0xd6bb83);for(let i=0;i<3;i++)b.box(.14,.008,.015,f.x,.099,f.z+(i-1)*.06,0x7b623a);}const m=b.finish();if(area==='yard')m.position.y=groundHeight(f.x,f.z);m.userData.findId=f.id;scene.add(m);finds.push(m);targets.push(m);}
+ if(area==='yard')birds=createBirds(T,s,{scene,house,academy,decor,groundHeight,createdAt,connected:!!options.contentOnly});
  root.BurbzManga?.styleScene(scene);
- return{scene,house,screen,screenSize,targets,decor,finds,farm,update:()=>farm?.userData.update?.(),world:C.world(s,area,createdAt,{connected:!!options.contentOnly}),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>disposeScene(scene)};
+ // time in seconds; ctx.listener is the player's ear in this scene's space.
+ const update=(time,ctx={})=>{const changed=farm?.userData.update?.(),t=Number.isFinite(time)?time:performance.now()/1000,dt=lastUpdate===null?0:Math.min(.1,Math.max(0,t-lastUpdate));lastUpdate=t;if(academy||birds){const env=root.BurbzGardenBirds?.environment?.()||{lamp:0,wind:{speed:.25,x:-.93,z:-.37}};academy?.update(t,dt,env.lamp,env.wind.speed,env.wind);birds?.update(t,{...ctx,environment:env});}return changed;};
+ return{scene,house,screen,screenSize,targets,decor,finds,farm,academy,birds,update,world:C.world(s,area,createdAt,{connected:!!options.contentOnly}),light(g){if(skyLight){skyLight.intensity=g.hemi;sunLight.intensity=g.keyIntensity;sunLight.color.set(g.keyColor);scene.background.set(g.sun>.3?0xabc9be:0x172c3a);scene.fog.color.copy(scene.background);}},overhead(value){academy?.setCanopyFade(value?.22:1);if(area==='yard'&&scene.fog){scene.fog.near=value?100:36;scene.fog.far=value?200:65;}frontLeaves?.traverse(o=>{if(o.material){o.material.transparent=true;o.material.opacity=value?.13:1;o.material.depthWrite=!value;}});},dispose:()=>{birds?.dispose();disposeScene(scene);}};
 }
+// The Academy stands beside a built house as a tree a little taller than the
+// woodland, carrying the buildings the player has built in the Academy. It
+// turns its best side to the front of the house, where the player arrives.
+function createAcademyTree(T,home,groundHeight=()=>0){const spot=C.academyTree(home);if(!spot||!root.BurbzAcademy3D?.buildHomeTree)return null;let built=[];try{built=root.BurbzAcademyBuiltRooms?.()||[];}catch(_){}
+ const tree=root.BurbzAcademy3D.buildHomeTree(T,built);if(!tree)return null;let base=groundHeight(spot.x,spot.z);for(let i=0;i<8;i++){const a=i*Math.PI/4,y=groundHeight(spot.x+Math.sin(a)*1.5,spot.z+Math.cos(a)*1.5);if(Number.isFinite(y))base=Math.min(base,y);}
+ tree.group.position.set(spot.x,(Number.isFinite(base)?base:0)-.05,spot.z);tree.group.rotation.y=Math.atan2(-spot.x,8-spot.z);tree.group.userData.homeTarget='academy';tree.group.updateMatrixWorld(true);tree.spot=spot;return tree;}
+// Garden birds: their perches are the Academy tree, the house roof, the
+// woodland and anything in the garden a real bird would land on.
+const BIRD_PERCH={bench:'rail',teatable:'rail',picnic:'rail',trellis:'rail',rose:'rail',lantern:'post',well:'post',arch:'post',sundial:'post',beehive:'post',logpile:'post',birdbath:'bath',feeder:'feeder'};
+function createBirds(T,home,{scene,house,academy,decor,groundHeight,createdAt,connected}){const G=root.BurbzGardenBirds;if(!G)return null;const perches=[];
+ if(academy){const m=academy.group.matrix;for(const p of academy.perches){const v=new T.Vector3(p.x,p.y,p.z).applyMatrix4(m);perches.push({x:v.x,y:v.y,z:v.z,kind:p.kind});}}
+ if(house)perches.push(...G.topPerches(T,house,scene,4,'ridge'));
+ for(const mesh of decor){const p=home.placed.find(q=>q.id===mesh.userData.placementId),kind=p&&BIRD_PERCH[C.ITEMS[p.item]?.type];if(!kind)continue;if(kind==='feeder'){const a=p.turn*Math.PI/2;perches.push({x:p.x+Math.cos(a)*.4,y:groundHeight(p.x,p.z)+1.5,z:p.z-Math.sin(a)*.4,kind});}else perches.push(...G.topPerches(T,mesh,scene,kind==='rail'?2:1,kind));}
+ for(const f of C.FINDS.filter(f=>f.id==='tiny-door'||f.id==='welcome-stone'))perches.push({x:f.x,y:groundHeight(f.x,f.z)+(f.id==='tiny-door'?1.35:.62),z:f.z,kind:'post'});
+ for(const t of C.visibleTrees(home))if(C.treeState(home,t.id,createdAt)<3){const r=Math.hypot(t.x,t.z)||1;perches.push({x:t.x-t.x/r*1.4,y:groundHeight(t.x,t.z)+3.3,z:t.z-t.z/r*1.4,kind:'twig'});}
+ const fp=C.houseFootprint(home),houseTop=house?new T.Box3().setFromObject(house).max.y:4,obstacles=[{x:fp.x,z:fp.z,r:Math.hypot(fp.w,fp.d)/2+.3,top:houseTop}];
+ if(academy)obstacles.push({x:academy.spot.x,z:academy.spot.z,r:1.1,top:academy.group.position.y+academy.height*.42});
+ const world=C.world(home,'yard',createdAt,{connected});
+ const flock=G.create(T,{perches,obstacles,ground:(x,z)=>groundHeight(x,z),walkable:(x,z)=>Math.hypot(x,z)<C.YARD.walk-.5&&world.allowed(x,z),radius:C.YARD.decorate,seed:Math.round(Math.abs(home.anchor?.lat||51.87)*1e4)});
+ scene.add(flock.group);return flock;}
 // The exact owned yard, expressed in local metres for the continuous world.
 // Its owner supplies geographic placement, terrain, lighting and one renderer.
 function createFarm(T,home,height=()=>0){const group=new T.Group(),plots=home.farm?.plots||[],soil=root.BurbzSettlementModels.batch(T),growth=[];group.name='player-home-farm';group.userData.plotCount=plots.length;
@@ -141,7 +165,8 @@ function createYardContent(T,home,options={}){const saved=C.normalize(home),now=
  const solids=[],houseBounds=new T.Box3();for(const mesh of view.targets.filter(m=>m.userData.homeTarget==='house'))houseBounds.union(new T.Box3().setFromObject(mesh));solids.push({id:'house',...C.houseFootprint(saved),minY:0,maxY:houseBounds.max.y});
  for(const mesh of view.decor){const p=saved.placed.find(p=>p.id===mesh.userData.placementId),item=C.ITEMS[p.item];if(item.flat)continue;const box=new T.Box3().setFromObject(mesh);solids.push({id:'decoration:'+p.id,x:p.x,z:p.z,w:p.turn%2?item.d:item.w,d:p.turn%2?item.w:item.d,minY:groundHeight(p.x,p.z),maxY:box.max.y});}
  for(const t of C.visibleTrees(saved))if(C.treeState(saved,t.id,now)<3){solids.push({id:t.id,x:t.x,z:t.z,w:t.r*2,d:t.r*2,minY:groundHeight(t.x,t.z),maxY:groundHeight(t.x,t.z)+3.8});solids.push({id:t.id+':canopy',x:t.x,z:t.z,w:4.9,d:4.9,minY:groundHeight(t.x,t.z)+1.6,maxY:groundHeight(t.x,t.z)+7});}
- return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,groundRadius:C.groundProfile(saved).radius,groundBlendRadius:C.groundProfile(saved).blendRadius,solids,day:view.world.day,dispose(){group.removeFromParent();disposeScene(group);}};
+ const tree=C.academyTree(saved);if(view.academy&&tree){const y=view.academy.group.position.y;solids.push({id:'academy-tree',x:tree.x,z:tree.z,w:C.ACADEMY_TREE.walk*2,d:C.ACADEMY_TREE.walk*2,minY:y,maxY:y+view.academy.height});}
+ return{group,farmPlots:saved.farm.plots.length,world:view.world,update:view.update,academy:view.academy,birds:view.birds,allowed:(x,z)=>view.world.allowed(x,z),targets,entrance:view.world.spawn(),radius:saved.outlook?36:C.YARD.ground,blendRadius:saved.outlook?60:C.YARD.ground+8,groundRadius:C.groundProfile(saved).radius,groundBlendRadius:C.groundProfile(saved).blendRadius,solids,day:view.world.day,dispose(){view.birds?.dispose();group.removeFromParent();disposeScene(group);}};
 }
 root.BurbzPlayerHomeScene={createCommandDesk,create,createHouse,createFarm,createYardContent,ornament,upperRooms,disposeScene};
 })(globalThis);
