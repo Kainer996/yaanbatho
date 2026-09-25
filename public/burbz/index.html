@@ -33697,8 +33697,9 @@ function villageMakePen(r, pal, count) {
   for (let i = 0; i < animalCount; i++) {
     const critter = villageMakeLivestock(r, pal, kinds[i % kinds.length]);
     critter.scale.setScalar(i === 0 && animalCount < 3 ? 0.9 : 0.72 + r() * 0.16);
-    // Each animal roams its own pen, inside the rails, clear of its mates.
-    const margin = 0.28 + 0.42 * critter.scale.x;
+    // Each animal roams its own pen, clear of its mates, and keeps its nose
+    // and tail inside the rails however it turns.
+    const margin = 0.12 + (critter.userData.reach || 0.7) * critter.scale.x;
     critter.userData.pen = { hw:Math.max(0.1, w / 2 - margin), hd:Math.max(0.1, d / 2 - margin) };
     critter.userData.penMates = mates;
     critter.position.set(Math.max(-critter.userData.pen.hw, Math.min(critter.userData.pen.hw, (r() - 0.5) * (w - 0.7))), 0, Math.max(-critter.userData.pen.hd, Math.min(critter.userData.pen.hd, (r() - 0.5) * (d - 0.7))));
@@ -33755,9 +33756,11 @@ function villageMakeTrafficCart(r, pal, horseDrawn) {
     horse.scale.setScalar(0.88); horse.position.set(1.35, 0, 0); g.add(horse);
     cart.userData.handles.forEach(handle => { handle.visible = false; });
     const shaftMat = new THREE.MeshLambertMaterial({ color:pal.timber });
-    for (const sz of [-0.3, 0.3]) {
+    // They rise from the front of the cart bed to the horse's shoulder, just
+    // clear of its barrel and legs.
+    for (const sz of [-0.27, 0.27]) {
       const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.05, 0.05), shaftMat);
-      shaft.position.set(0.72, 0.5, sz); shaft.rotation.z = 0.08; g.add(shaft);
+      shaft.position.set(0.88, 0.56, sz); shaft.rotation.z = 0.12; g.add(shaft);
     }
   } else {
     pusher = villageMakeVillager(r, pal, 'commoner');
@@ -34741,7 +34744,7 @@ function villageMakeChicken(r, pal) {
   g.userData.phase = r() * 6.28;
   g.userData.baseRot = r() * Math.PI * 2;
   villageChickens.push(g);
-  villageNpcRegister(g, r, 'chicken', kind === 'rooster' ? 'a proud rooster' : 'a busy hen');
+  villageNpcRegister(g, r, 'chicken', g.userData.animalName || (kind === 'rooster' ? 'a proud rooster' : 'a busy hen'));
   return g;
 }
 

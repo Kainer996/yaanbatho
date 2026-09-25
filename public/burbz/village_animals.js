@@ -33,7 +33,7 @@
   const dark=(c,k)=>mix(c,0x1a110b,k),light=(c,k)=>mix(c,0xfff7ea,k);
   // Smooth 3D mottle in about -1..1: cow patches, dapples, merle and calico.
   const mottle=(x,y,z,f,s)=>(Math.sin(x*f+s)+Math.sin(y*f*1.31+s*2.1)+Math.sin(z*f*1.17+s*3.7)+Math.sin((x+z)*f*.83+s*5.3)+Math.sin((x-y)*f*.71+s*1.3))*.4;
-  // A scatter of pale flecks, fixed to the spot: speckled feathers.
+  // A steady scatter in 0..1, fixed to the spot: speckled feathers, shaggy hair.
   const fleck=(x,y,z)=>{const v=Math.sin(x*431.7+y*197.3+z*311.1)*43758.5;return v-Math.floor(v);};
 
   // ---- Shapes ---------------------------------------------------------------
@@ -85,7 +85,8 @@
   }
   // A storybook eye set into the head: a glossy iris, an optional pupil and
   // a bright catch-light up and forward. `fwd` is the way the animal faces.
-  // An upper lid in the coat colour gives a calm, gentle look.
+  // An upper lid in the coat colour gives a calm, gentle look; on its own
+  // lid bone it can blink.
   function eye(r,bone,c,out,rad,o){
     const T=r.T,n=new T.Vector3(out[0],out[1],out[2]).normalize(),fw=new T.Vector3(o.fwd[0],o.fwd[1],o.fwd[2]);
     const f=fw.addScaledVector(n,-n.dot(fw)).normalize(),u=new T.Vector3().crossVectors(n,f);if(u.y<0)u.negate();
@@ -95,7 +96,8 @@
     r.sphere(rad,c,o.iris,bone,[1,1,.72],rot,w,h);
     if(o.pupil)r.sphere(rad*.6,at(.46,0,.04),0x0d0806,bone,o.pupil,rot,6,3);
     r.sphere(rad*.28,at(.6,.36,.26),0xffffff,bone,[1,1,.5],rot,4,3);
-    if(o.lid)r.add(new T.SphereGeometry(rad*1.1,w,2,0,TURN,0,PI*o.lid),o.lidColor,c,rot,[1,1,.82],bone);
+    if(o.lidBone)r.bone(o.lidBone,bone,c);
+    if(o.lid)r.add(new T.SphereGeometry(rad*1.1,w,2,0,TURN,0,PI*o.lid),o.lidColor,c,rot,[1,1,.82],o.lidBone||bone);
   }
   // A flat leaf along a path: ears, feathers, wings. `face` is the way the
   // flat side looks; `inner` paints that side (the inside of an ear).
@@ -134,14 +136,15 @@
   }
   // Plant or swing one leg. cyc is the gait in cycles, w how much gait is on
   // (it eases in and out as the animal starts and stops). Late in the stance
-  // the heel lifts and a hoof rolls over its toe before it leaves the ground.
+  // the heel lifts and a hoof rolls over its toe, and it stays tipped as the
+  // leg starts to fold.
   function stepLeg(h,cyc,w,G,bob,rest){
     const L=h.userData.leg;
     let p=cyc-L.td;p-=Math.floor(p);
     let dx=0,dy=0,sw=0,roll=0;
     if(w>0){
       if(p<G.duty){const s=p/G.duty;dx=G.sweep*(.5-s);if(G.toe)roll=smooth(.78,1,s);}
-      else{const k=(p-G.duty)/(1-G.duty);dx=G.sweep*(ease(k)-.5);sw=Math.sin(PI*Math.pow(k,L.front?.75:.9));dy=G.lift*sw;}
+      else{const k=(p-G.duty)/(1-G.duty);dx=G.sweep*(ease(k)-.5);sw=Math.sin(PI*Math.pow(k,L.front?.75:.9));dy=G.lift*sw;if(G.toe)roll=1-smooth(0,.3,k);}
       dx*=w;dy*=w;sw*=w;roll*=w;
     }
     if(roll)dy+=roll*G.toe;
@@ -200,7 +203,7 @@
     r.bone('earL','head',[s.ear[0],s.ear[1],-s.ear[2]]);r.bone('earR','head',s.ear);
     r.bone('tail','body',s.tail);if(s.tail2)r.bone('tail2','tail',s.tail2);
   }
-  const plainEye=(fwd,iris,lidColor,lid=.34)=>({fwd,iris,lid,lidColor});
+  const plainEye=(side,fwd,iris,lidColor,lid=.34)=>({fwd,iris,lid,lidColor,lidBone:side<0?'lidL':'lidR'});
   // Graze, look about, flick ears and swish the tail; walk with the lateral
   // four-beat, the body rolling over each stance and the neck nodding.
   function poseHoofed(g,state,time,motion){
@@ -223,6 +226,9 @@
     // Grazers tear at the grass; a resting cud-chewer grinds side to side.
     const cud=R.cud?idle*(1-graze)*smooth(-.2,.3,Math.sin(time*.17+ph*1.3)):0;
     R.jaw.rotation.set(0,cud*.08*Math.sin(time*2.6+ph),-(bite*.1+cud*(.035+.03*Math.sin(time*5.2+ph))));
+    // A slow, sleepy blink every few seconds.
+    const blink=twitch(time*1.6+ph*2.3,300)*1.25*motion;
+    R.lids[0].rotation.x=-blink;R.lids[1].rotation.x=blink;
     for(let i=0;i<2;i++){
       const flick=twitch(time*1.3+ph*3+i*2.1,24);
       R.ears[i].rotation.set((i?1:-1)*(flick*.35+Math.sin(time*.9+i)*.05)*motion,0,flick*.25*motion-graze*.25);
@@ -239,7 +245,7 @@
   const SHEEP=[
     {w:3,breed:'whiteface',wool:0xeee7d6,face:0xe8d6bf,legs:0xdcc8ac,nose:0xc98c8a,inner:0xe0a8a2,topknot:true,name:'a woolly white-faced ewe'},
     {w:2.2,breed:'suffolk',wool:0xe9e1cf,face:0x2e2826,legs:0x2e2826,nose:0x1d1816,inner:0x5a3e3a,droop:true,name:'a black-faced Suffolk ewe'},
-    {w:1,breed:'jacob',wool:0xebe4d6,face:0x2a2422,legs:0xe2dace,nose:0x1d1816,inner:0x5a3e3a,spots:0x4e3628,blaze:true,horns:true,name:'a spotty Jacob sheep'},
+    {w:1,breed:'jacob',wool:0xebe4d6,face:0x2a2422,legs:0xe2dace,nose:0x1d1816,inner:0x5a3e3a,spots:0x3e2a20,blaze:true,horns:true,name:'a spotty Jacob sheep'},
     {w:1,breed:'welsh',wool:0x3e332d,face:0x221c1a,legs:0x221c1a,nose:0x171311,inner:0x4a3632,name:'a black Welsh Mountain sheep'},
     {w:.8,breed:'shetland',wool:0x6e4e36,face:0x3a2d27,legs:0x3a2d27,nose:0x201814,inner:0x6a4a40,topknot:true,name:'a brown Shetland sheep'},
     {w:.8,breed:'cream',wool:0xe3d5b6,face:0x9c7450,legs:0x8a6444,nose:0x5a3a2e,inner:0xd0907e,topknot:true,name:'a cream sheep with a toffee face'},
@@ -265,7 +271,7 @@
     r.sphere(.026,[.45,.4,0],C.face,'jaw',[1.1,.5,.95],[0,0,-.5],6,4);
     if(C.topknot)r.sphere(.055,[.33,.54,0],wool,'head',[1,.72,1.05],[0,0,-.25],7,4);
     for(const s of [-1,1]){
-      eye(r,'head',[.375,.5,s*.047],[.35,.3,s],.018,plainEye([1,0,0],0x2b1d15,C.face,.36));
+      eye(r,'head',[.375,.5,s*.047],[.35,.3,s],.018,plainEye(s,[1,0,0],0x2b1d15,C.face,.36));
       const ear=C.droop?[[.335,.495,s*.045],[.35,.47,s*.085],[.37,.44,s*.11]]:[[.335,.495,s*.045],[.34,.48,s*.088],[.348,.462,s*.13]];
       leaf(r,s<0?'earL':'earR',ear,[.022,.034,.014],.009,C.droop?[.5,.4,s]:[.8,.6,0],C.face,C.inner,4);
       // Jacob rams' horns curl back and round past the cheek.
@@ -276,7 +282,7 @@
       hind:{x:-.15,z:.08,hip:.3,junction:[[-.01,.34,.7,.055],[.01,.2,.045]],upper:[[.01,.22,.04],[-.005,.18,.031],[-.03,.14,.026]],lower:[[-.03,.14,.026],[-.022,.09,.02],[-.015,.045,.022],[-.007,.03,.021]],fet:2,hoof:[.02,.024,.032,-.005],hoofColor:0x2e2622,n:[6,6]},
     },(x,y,z)=>y>.2?wool(x,y,z):C.legs);
     put(r,sweep(T,[[-.25,.41,0],[-.295,.37,0],[-.31,.32,0]],[.042,.04,.028],{n:6,seg:2,bump:curls}),wool,'tail');
-    return {name:C.name,breed:C.breed,legs,gait:{sweep:.5*.62,duty:.62,lift:.045,toe:.012,flex:.9,bob:.008,roll:.035,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.38,grazeHead:-.5,grazePitch:-.08},extra:{cud:true}};
+    return {name:C.name,breed:C.breed,legs,reach:.5,gait:{sweep:.5*.62,duty:.62,lift:.045,toe:.012,flex:.9,bob:.008,roll:.035,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.38,grazeHead:-.5,grazePitch:-.08},extra:{cud:true}};
   }
 
   // ---- Goat -----------------------------------------------------------------------
@@ -310,7 +316,7 @@
     if(horned)for(const s of [-1,1])
       put(r,sweep(T,[G(.27,.65,s*.024),G(.255,.71,s*.032),G(.215,.745,s*.042),G(.175,.738,s*.05),G(.152,.705,s*.053)],[.02,.016,.012,.008,.003],{n:6,seg:5}),(x,y,z)=>mix(0x8a7c66,0x3e362e,clamp((.3-x)*6,0,1)),'head');
     for(const s of [-1,1]){
-      eye(r,'head',G(.305,.6,s*.041),[.3,.3,s],.019,{fwd:[1,0,0],iris:0xc89a3c,pupil:[1.45,.45,.6],lid:.3,lidColor:paint(...G(.305,.615,s*.041))});
+      eye(r,'head',G(.305,.6,s*.041),[.3,.3,s],.019,{fwd:[1,0,0],iris:0xc89a3c,pupil:[1.45,.45,.6],lid:.3,lidColor:paint(...G(.305,.615,s*.041)),lidBone:s<0?'lidL':'lidR'});
       leaf(r,s<0?'earL':'earR',[G(.275,.602,s*.038),G(.285,.585,s*.078),G(.298,.555,s*.108),G(.305,.535,s*.115)],[.018,.028,.026,.01],.008,[.7,.5,s*.5],paint,light(base,.12),5);
     }
     const legs=hoofedLegs(r,{
@@ -318,7 +324,7 @@
       hind:{x:-.17,z:.07,hip:.36,junction:[[-.01,.4,.7,.065],[.015,.25,.05]],upper:[[.015,.27,.045],[-.005,.21,.032],[-.035,.17,.027]],lower:[[-.035,.17,.027],[-.025,.1,.02],[-.015,.05,.023],[-.008,.035,.022]],fet:2,hoof:[.02,.024,.038,-.005],hoofColor:0x3a3029,n:[7,6]},
     },paint);
     put(r,sweep(T,[[-.26,.47,0],[-.28,.51,0],[-.285,.55,0]],[.02,.016,.004],{n:5,seg:2}),paint,'tail');
-    return {name:C.name,breed:coat,legs,gait:{sweep:.5*.62,duty:.62,lift:.05,toe:.012,flex:.9,bob:.009,roll:.025,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.55,grazeHead:-.65,grazePitch:-.07},extra:{cud:true}};
+    return {name:C.name,breed:coat,legs,reach:.49,gait:{sweep:.5*.62,duty:.62,lift:.05,toe:.012,flex:.9,bob:.009,roll:.025,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.55,grazeHead:-.65,grazePitch:-.07},extra:{cud:true}};
   }
 
   // ---- Pig --------------------------------------------------------------------------
@@ -352,7 +358,7 @@
     r.sphere(.034,[.38,.222,0],paint,'jaw',[1.25,.45,1],[0,0,-.3],6,4);
     for(const s of [-1,1]){
       r.sphere(.01,[.44,.268,s*.019],0x5a3230,'head',[.5,1.3,1],[0,0,0],4,3);
-      eye(r,'head',[.345,.338,s*.071],[.45,.35,s],.018,plainEye([1,0,0],0x2a1c16,paint(.345,.355,s*.071),.14));
+      eye(r,'head',[.345,.338,s*.071],[.45,.35,s],.018,plainEye(s,[1,0,0],0x2a1c16,paint(.345,.355,s*.071),.14));
       // Lop ears flop over the eyes; a Tamworth's prick ears tip forward.
       const ear=lop?[[.285,.395,s*.052],[.32,.405,s*.07],[.355,.39,s*.08],[.372,.372,s*.078]]:[[.29,.392,s*.055],[.318,.428,s*.072],[.356,.452,s*.084]];
       leaf(r,s<0?'earL':'earR',ear,lop?[.034,.052,.05,.022]:[.038,.042,.012],.009,lop?[.3,.8,s*.5]:[.8,.5,s*.4],paint,lop?null:dark(pink,.14),5);
@@ -365,7 +371,7 @@
     // A proper corkscrew tail.
     const curl=[];for(let i=0;i<=8;i++){const a=i/8*TURN*1.25;curl.push([-.255-.03*i/8-Math.sin(a)*.018,.33+Math.cos(a)*.018-.01*i/8,Math.sin(a*.5)*.012]);}
     put(r,sweep(T,curl,curl.map((_,i)=>.01-.004*i/8),{n:4,seg:8}),paint,'tail');
-    return {name:C.name,breed,legs,
+    return {name:C.name,breed,legs,reach:.45,
       gait:{sweep:.42*.64,duty:.64,lift:.035,toe:.01,flex:.7,bob:.006,roll:.045,pitch:.01,nod:.035,nodPhase:.4,grazeNeck:.75,grazeHead:.45,grazePitch:-.06}};
   }
 
@@ -379,7 +385,7 @@
   ];
   function cattle(r,h,rnd){
     const T=r.T,C=pickW(rnd,CATTLE),breed=C.breed,hl=breed==='highland',hf=breed==='hereford',fr=breed==='friesian',je=breed==='jersey';
-    const base=hl?pick(rnd,[0x7a3416,0x7a3416,0x8e4a20,0x5c2612,0x2e2420]):fr?0x262222:hf?0x6a2a14:0x8c5e36;
+    const base=hl?pick(rnd,[0x6a3218,0x6a3218,0x7a4624,0x8a6a42,0x2e2420]):fr?0x262222:hf?0x6a2a14:0x8c5e36;
     const white=0xf0e8dc;
     // Herefords: white face, crest, brisket, belly and socks; Friesians in
     // bold patches; Jerseys shade darker at the shoulder and haunch.
@@ -392,8 +398,8 @@
     hoofedBones(r,{body:[0,.6,0],neck:[.36,.64,0],head:[.68,.74,0],jaw:[.82,.62,0],muzzle:[.91,.58,0],ear:[.685,.775,.085],tail:[-.66,.84,0],tail2:[-.7,.6,0]});
     // Highland coats hang long and shaggy, longest under the belly: every
     // other point of the surface pokes out, so the outline bristles.
-    const shag=(seg,n,k)=>hl?(t,a)=>1+k*((Math.round(t*seg)+Math.round(a/TURN*n))%2?.5:-.5)*(.6+.8*fleck(t,a,seg))+k*2*Math.pow(Math.max(0,-Math.cos(a)),1.5):null;
-    put(r,sweep(T,[[-.62,.71,0],[-.55,.69,0],[-.34,.655,0],[-.05,.625,0],[.2,.625,0],[.38,.635,0],[.49,.63,0]],[[.11,.1],[.2,.19],[.235,.215],[.26,.23],[.25,.215],[.215,.185],[.12,.1]],{n:16,seg:12,square:.12,bump:shag(12,16,.11)}),paint,'body');
+    const shag=(seg,n,k)=>hl?(t,a)=>1+k*((Math.round(t*seg)+Math.round(a/TURN*n))%2?.5:-.5)*(.6+.8*fleck(t,a,seg))+k*2.4*Math.pow(Math.max(0,-Math.cos(a)),1.5):null;
+    put(r,sweep(T,[[-.62,.71,0],[-.55,.69,0],[-.34,.655,0],[-.05,.625,0],[.2,.625,0],[.38,.635,0],[.49,.63,0]],[[.11,.1],[.2,.19],[.235,.215],[.26,.23],[.25,.215],[.215,.185],[.12,.1]],{n:16,seg:12,square:.12,bump:shag(12,16,.15)}),paint,'body');
     if(!hl){
       // A soft udder tucked between the hind legs.
       r.sphere(.07,[-.33,.41,0],0xe0a89c,'body',[1.1,.7,1],[0,0,0],8,5);
@@ -415,13 +421,13 @@
     r.sphere(.042,[.87,.56,0],muzzle,'jaw',[1.15,.45,1.1],[0,0,-.4],6,4);
     for(const s of [-1,1]){
       r.sphere(.013,[.904,.618,s*.033],0x2a1c1a,'head',[.5,1,1],[0,0,0],5,3);
-      eye(r,'head',[.75,.77,s*.082],[.3,.22,s],.027,plainEye([1,0,0],0x2a1a14,hf?white:paint(.75,.79,s*.082),.36));
+      eye(r,'head',[.75,.77,s*.082],[.3,.22,s],.027,plainEye(s,[1,0,0],0x2a1a14,hf?white:paint(.75,.79,s*.082),.36));
       leaf(r,s<0?'earL':'earR',[[.685,.775,s*.085],[.68,.768,s*.14],[.675,.752,s*.195]],[.03,.042,.016],.011,[.8,.6,0],hf?base:paint,0xe0b0a0);
       if(hl)put(r,sweep(T,[[.68,.81,s*.06],[.68,.825,s*.16],[.69,.87,s*.26],[.72,.94,s*.31],[.75,.98,s*.32]],[.03,.026,.02,.013,.004],{n:5,seg:6}),(x,y,z)=>mix(0xe0d4b8,0x3a3028,clamp((Math.abs(z)-.22)*9,0,1)),'head');
       else if(!je)put(r,sweep(T,[[.68,.81,s*.06],[.685,.825,s*.1],[.7,.855,s*.12]],[.019,.014,.004],{n:5,seg:3}),0xddcfb0,'head');
     }
     // A Highland's fringe tumbles over its brow and half hides its eyes.
-    if(hl)put(r,sweep(T,[[.7,.9,0],[.78,.885,0],[.84,.83,0],[.865,.745,0]],[[.02,.08],[.04,.118],[.038,.11],[.014,.075]],{n:8,seg:5,bump:shag(5,8,.34)}),light(base,.12),'head');
+    if(hl)put(r,sweep(T,[[.72,.925,0],[.805,.91,0],[.87,.85,0],[.9,.765,0]],[[.02,.08],[.035,.12],[.035,.11],[.012,.075]],{n:8,seg:5,bump:shag(5,8,.4)}),light(base,.16),'head');
     const hoof=0x2e2622;
     const legs=hoofedLegs(r,{
       front:{x:.33,z:.125,hip:.58,junction:[[0,.62,.7,.1],[0,.4,.092]],upper:[[0,.42,[.09,.08]],[.004,.33,[.074,.066]],[0,.25,.06]],lower:[[0,.25,.06],[0,.16,.048],[0,.08,.052],[.012,.055,.052]],fet:2,hoof:[.048,.056,.058,.018],hoofColor:hoof,cleft:1,n:[9,7],bump:shag(3,9,.1)},
@@ -429,7 +435,7 @@
     },paint);
     put(r,sweep(T,[[-.66,.84,0],[-.7,.76,0],[-.71,.66,0],[-.71,.59,0]],[.025,.018,.015,.014],{n:6,seg:4}),paint,'tail',{bone:'tail2',from:[-.7,.68,0],to:[-.71,.6,0]});
     put(r,sweep(T,[[-.71,.61,0],[-.71,.5,0],[-.705,.41,0]],[.014,.035,.012],{n:7,seg:4,bump:(t,a)=>1+.15*Math.sin(a*5+t*9)}),hl?light(base,.1):fr||hf?white:dark(base,.4),'tail2');
-    return {name:C.name,breed,legs,
+    return {name:C.name,breed,legs,reach:.95,
       gait:{sweep:.78*.63,duty:.63,lift:.065,toe:.02,flex:.8,bob:.01,roll:.03,pitch:.01,nod:.05,nodPhase:.4,grazeNeck:1.45,grazeHead:-.8,grazePitch:-.06},extra:{tailHangs:true,restHoof:true,cud:true}};
   }
 
@@ -476,7 +482,7 @@
     r.sphere(.034,[.772,.97,0],muzzle,'jaw',[1.2,.5,1.05],[0,0,-.6],6,4);
     for(const s of [-1,1]){
       r.sphere(.013,[.806,1.02,s*.034],0x1c1412,'head',[.6,1.3,.8],[0,0,.5],5,3);
-      eye(r,'head',[.64,1.232,s*.07],[.2,.25,s],.026,plainEye([.6,-.8,0],0x2a1a14,coat(.64,1.26,s*.07)));
+      eye(r,'head',[.64,1.232,s*.07],[.2,.25,s],.026,plainEye(s,[.6,-.8,0],0x2a1a14,coat(.64,1.26,s*.07)));
       put(r,sweep(T,[[.57,1.34,s*.045],[.567,1.39,s*.051],[.574,1.44,s*.054]],[[.02,.026],[.021,.023],[.001,.002]],{n:6,seg:3,up:[1,0,0]}),(x,y,z)=>x>.574&&y<1.41?dark(C.coat,.45):coat(x,y,z),s<0?'earL':'earR');
     }
     // Mane falls along the crest in chunky locks; forelock over the brow.
@@ -493,7 +499,7 @@
     // Cobs and duns grow soft feathering over the hoof.
     if(cob)for(const [x,z,i] of [[.3,-.105,0],[.3,.105,1],[-.43,-.115,2],[-.43,.115,3]])
       r.sphere(.05,[x+.008,.075,z],light(C.dun?0x8a7a68:C.mane,.3),'foot'+i,[1,.75,1],[0,0,0],6,3);
-    return {name:C.name,breed:C.breed,legs,
+    return {name:C.name,breed:C.breed,legs,reach:.85,
       gait:{sweep:.95*.62,duty:.62,lift:.1,toe:.022,flex:1.1,bob:.014,roll:.025,pitch:.012,nod:.07,nodPhase:.9,grazeNeck:1.6,grazeHead:-.9,grazePitch:-.07},extra:{tailHangs:true,restHoof:true}};
   }
 
@@ -661,7 +667,7 @@
   const CATS=[
     {w:1.4,coat:'orange',base:0xc0732e,stripe:0x8a4a1c,name:'a ginger tom'},
     {w:1.3,coat:'tabby',base:0x8c6c48,stripe:0x4a3624,name:'a brown tabby'},
-    {w:1,coat:'silver',base:0x92918e,stripe:0x2e2e32,name:'a silver tabby'},
+    {w:1,coat:'silver',base:0x828284,stripe:0x2a2a2e,name:'a silver tabby'},
     {w:.9,coat:'grey',base:0x646368,stripe:0x3a3a3e,name:'a grey tabby'},
     {w:1,coat:'tuxedo',base:0x2a2828,name:'a tuxedo cat'},
     {w:1,coat:'calico',base:0xf2ebe0,name:'a calico cat'},
@@ -679,6 +685,7 @@
       if(coat==='calico'){const m=mottle(x,y,z,20,h%61);if(m>.4)return 0xc8762e;if(m<-.5)return 0x2e2826;return white;}
       if(stripe&&(bib(x,y,z)||z>.085&&y<.225))return light(base,.45);
       if(stripe&&y<.045&&(x>.02||z<-.07)&&Math.sin((x-z)*62)>.1)return stripe;
+      if(stripe&&Math.abs(x)>.04&&y<.2&&Math.sin(y*40+z*16)>.25)return mix(base,stripe,.85);
       if(stripe)return mix(base,stripe,clamp(-z*6+(y>.2?.3:0),0,.75));
       return base;
     };
@@ -739,13 +746,13 @@
   const ROOSTERS=[
     {w:2,breed:'red',body:0x95391c,wing:0x692a16,tail:0x1d2e2a,hackle:0xd88a2a,saddle:0xc0702a,legs:0xdca040,sheen:0x2e6a5a,name:'a red rooster'},
     {w:1.6,breed:'golden',body:0x2a2422,wing:0x8a5a22,tail:0x1d2e2a,hackle:0xdca848,saddle:0xd0943a,legs:0x8a8a86,sheen:0x2e6a5a,name:'a golden rooster'},
-    {w:1,breed:'white',body:0xefe9dc,wing:0xe2d9c6,tail:0xf2ede2,hackle:0xe8cc84,saddle:0xe4c67c,legs:0xe0aa40,sheen:0xfaf6ee,name:'a white rooster with a straw cape'},
+    {w:1,breed:'white',body:0xefe9dc,wing:0xe2d9c6,tail:0x1d2622,hackle:0xefe6d4,collar:0x2a2624,saddle:0xe8dcc0,legs:0xe0c890,sheen:0x2e6a5a,name:'a white rooster with a black-laced cape'},
     {w:.9,breed:'black',body:0x221f22,wing:0x2a2a2e,tail:0x1a2622,hackle:0xa65a28,saddle:0x8e4c22,legs:0x55555a,sheen:0x2e6a5a,name:'a black rooster with a copper cape'},
   ];
   function poultry(r,h,rnd,rooster){
     const T=r.T,C=pickW(rnd,rooster?ROOSTERS:HENS);
     const plain=(x,y,z)=>mix(C.body,light(C.body,.12),clamp((.15-y)*6,0,1));
-    const paint=C.speckle?(x,y,z)=>fleck(x,y,z)>.84?mix(C.body,C.speckle,.7):plain(x,y,z):plain;
+    const paint=C.speckle?(x,y,z)=>fleck(x,y,z)>.78?mix(C.body,C.speckle,.5):plain(x,y,z):plain;
     // The rooster stands taller and prouder on longer legs.
     const lift=rooster?.035:0,Y=y=>y+lift;
     const hy=Y(.285),hz=.095;
@@ -786,7 +793,7 @@
     // Wings folded flush along the sides.
     for(const s of [-1,1])
       leaf(r,s<0?'wingL':'wingR',[[s*.07,Y(.18),.045],[s*.088,Y(.165),0],[s*.084,Y(.155),-.06],[s*.058,Y(.165),-.11]],[.028,.046,.04,.012],.013,[s,0,0],
-        (x,y,z)=>C.collar&&z<-.095?C.collar:Math.sin(z*90)>.6?dark(C.wing,.18):C.speckle&&fleck(x,y,z)>.84?mix(C.wing,C.speckle,.7):C.wing,null);
+        (x,y,z)=>C.collar&&z<-.095?C.collar:Math.sin(z*90)>.6?dark(C.wing,.18):C.speckle&&fleck(x,y,z)>.78?mix(C.wing,C.speckle,.5):C.wing,null);
     // Tail: a perky fan for hens; long arching sickles for the rooster.
     if(rooster){
       for(const [s,up,len] of [[-.012,1,1],[.012,.9,.95],[-.032,.6,.75],[.032,.6,.75]])
@@ -881,9 +888,11 @@
     }
     if(HOOFED[kind]){
       const s=HOOFED[kind](r,h,rnd),f=r.finish({name:'village-'+kind,pad:.22}),b=f.bones;g.add(f.mesh);
-      const R=Object.assign({type:'hoofed',body:b.body,bodyY:b.body.position.y,neck:b.neck,head:b.head,jaw:b.jaw,ears:[b.earL,b.earR],tail:b.tail,tail2:b.tail2||null,legs:s.legs,gait:s.gait},s.extra);
+      const R=Object.assign({type:'hoofed',body:b.body,bodyY:b.body.position.y,neck:b.neck,head:b.head,jaw:b.jaw,ears:[b.earL,b.earR],lids:[b.lidL,b.lidR],tail:b.tail,tail2:b.tail2||null,legs:s.legs,gait:s.gait},s.extra);
+      // reach: how far nose or tail stands out from the middle, so a pen can
+      // keep the whole animal inside its rails.
       Object.assign(g.userData,{rig:R,livestockKind:kind,animalKind:kind,animalName:s.name,breed:s.breed,neck:R.neck,head:R.head,muzzle:b.muzzle,jaw:b.jaw,legs:s.legs,
-        knees:s.legs.map(l=>l.userData.leg.knee),ears:R.ears,tail:R.tail,body:R.body,phase,baseRotationY:0});
+        knees:s.legs.map(l=>l.userData.leg.knee),ears:R.ears,tail:R.tail,body:R.body,reach:s.reach,phase,baseRotationY:0});
       poseHoofed(g,STILL,0,0);return g;
     }
     if(kind==='cat'){
