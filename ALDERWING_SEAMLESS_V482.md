@@ -1,7 +1,7 @@
-# Alderwing seamless v481
+# Alderwing seamless v482
 
-Build: `alderwing-seamless-v481-20260925`.
-Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, built on main after v479 and the Earth dock's v480. Not yet merged to main or published. Main shipped v474–v480 while this was made, so it takes the next number, v481.
+Build: `alderwing-seamless-v482-20260925`.
+Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, built on main at v481. Not yet merged to main or published. Main shipped v474–v481 while this was made, so it takes the next number, v482.
 
 ## What Yaan asked for
 
@@ -88,7 +88,7 @@ Yaan said the weather need not match the real sky, as long as it looks good. So 
 
 Pops per frame, as changed pixels at the 548×253 drawing size, flying 360 m at 36 m/s and 50 m up:
 
-| Flight | v472 worst frame | v481 worst frame | v472 frames over 1,000 | v481 frames over 1,000 |
+| Flight | v472 worst frame | v482 worst frame | v472 frames over 1,000 | v482 frames over 1,000 |
 | --- | --- | --- | --- | --- |
 | Pendle Hill | 2,732 | 604 | 22 | 0 |
 | Grizedale Forest | 3,544 | 1,041 | 26 | 1 |
@@ -99,7 +99,7 @@ The same probe runs in the real renderer on synthetic land with a dense wood. Ma
 
 ## Phone performance
 
-Measured in software WebGL at 390×844, same places and poses, main at v473 against this build before the merge. v474–v480 changed how the craft flies and the dock looks, not how the land and trees are drawn. The adaptive resolution settled at 0.65 in both. This is a relative proxy, not phone FPS.
+Measured in software WebGL at 390×844, same places and poses, main at v473 against this build before the merge. v474–v481 changed how the craft flies and the dock looks, not how the land and trees are drawn. The adaptive resolution settled at 0.65 in both. This is a relative proxy, not phone FPS.
 
 | Place and view | Main frame | New frame | Change | Main triangles | New triangles |
 | --- | --- | --- | --- | --- | --- |
@@ -118,16 +118,16 @@ Measured in software WebGL at 390×844, same places and poses, main at v473 agai
 
 ## Verification
 
-- `tests/test_alderwing_seamless_v481.cjs`: 12 tests. The distances fit together; trees are whole or nothing and end by distance; crowns and trees hand over across one band; pools share shapes and carry drops; crowns are cheap; the ground bends by distance and eases new data; the distant land keeps its best tile; a moved distant land draws the same; shadows snap to whole texels and fade before trees end; crowns build ahead and the pools reach the GPU after every change; rain brings clouds, grey light and haze; the game's own weather is mostly fair with passing showers, smooth, the same on every screen and never leaves the phone; release integrity.
-- `tests/run_alderwing_seamless_v481.cjs` proves rain, crowns and the flight in the real renderer with synthetic offline input, using the same pop probe.
-- `tests/test_alderwing_steady_v472.cjs` and `tests/test_alderwing_nature_v470.cjs` accept the v481 re-ship of their modules.
+- `tests/test_alderwing_seamless_v482.cjs`: 12 tests. The distances fit together; trees are whole or nothing and end by distance; crowns and trees hand over across one band; pools share shapes and carry drops; crowns are cheap; the ground bends by distance and eases new data; the distant land keeps its best tile; a moved distant land draws the same; shadows snap to whole texels and fade before trees end; crowns build ahead and the pools reach the GPU after every change; rain brings clouds, grey light and haze; the game's own weather is mostly fair with passing showers, smooth, the same on every screen and never leaves the phone; release integrity.
+- `tests/run_alderwing_seamless_v482.cjs` proves rain, crowns and the flight in the real renderer with synthetic offline input, using the same pop probe.
+- `tests/test_alderwing_steady_v472.cjs` and `tests/test_alderwing_nature_v470.cjs` accept the v482 re-ship of their modules.
 - Live-provider flights at Pendle Hill and Grizedale Forest, and a low flight 10 m over Grizedale Forest.
-- After merging main (v479 and the Earth dock's v480): Python suite 325 failures, all pre-existing and identical to main; Node suite 133 pass, 33 fail, the 33 matching main, and the new test passes. The v478 flight tests still pass.
+- After merging main (through the glide release, v481): Python suite 325 failures, all pre-existing and identical to main; Node suite 133 pass, 33 fail, the 33 matching main, and the new test passes. The v478 flight tests still pass.
 
 ## Release integrity
 
 - Changed modules: `world_nature.js`, `world_horizon.js`, `village_world.js`, `village_world_core.js`, `world_sky.js`, `village_walk.js` (its loader pins), `exploration.js` and `index.html`.
-- All seven modules use `?v=alderwing-seamless-v481-20260925` in their consumers and in all three worker lists. `BURBZ_CACHE` and `BURBZ_BUILD` carry the new marker. The updater already lists every file.
+- All seven modules use `?v=alderwing-seamless-v482-20260925` in their consumers and in all three worker lists. `BURBZ_CACHE` and `BURBZ_BUILD` carry the new marker. The updater already lists every file.
 
 ## Limits
 

@@ -1,7 +1,7 @@
 # Alderwing steady v472
 
 Build: `alderwing-steady-v472-20260925`.
-Status: merged to main as PR #410 and live on yaanbatho.com. Replaced in part by [v481](ALDERWING_SEAMLESS_V481.md): trees now end by distance, the ground bends by distance, and canopy crowns carry the woods on.
+Status: merged to main as PR #410 and live on yaanbatho.com. Replaced in part by [v482](ALDERWING_SEAMLESS_V482.md): trees now end by distance, the ground bends by distance, and canopy crowns carry the woods on.
 
 ## What Yaan asked for
 
