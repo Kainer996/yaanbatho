@@ -423,3 +423,66 @@ def test_real_geomodel_ranks_the_lancashire_raven_first(monkeypatch):
     assert result['candidates'][0]['scientificName'] == 'Corvus corax'
     jackdaw = decide(worker_reading([('Western Jackdaw', 'Corvus monedula', .9)], other=.1, quality='clear'), where, tax)
     assert jackdaw['found'] and jackdaw['scientificName'] == 'Coloeus monedula'
+
+
+# ---------------------------------------------------------------- release proof, end to end
+
+def load_proof():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('photo_proof_v486', ROOT.parents[1] / 'scripts/verify-photo-id.py')
+    proof = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(proof)
+    return proof
+
+
+@pytest.mark.parametrize('name,species,model_json,with_place', [
+    ('robin-clear', 'Erithacus rubecula', {'liveBird': True, 'quality': 'clear', 'subjectBox': [20, 20, 980, 980],
+        'fieldMarks': ['Orange face and breast', 'Rounded olive-brown back'],
+        'candidates': [{'species': 'European Robin', 'scientificName': 'Erithacus rubecula', 'probability': .97}]}, True),
+    ('robin-clear', 'Erithacus rubecula', {'liveBird': True, 'quality': 'clear', 'subjectBox': [20, 20, 980, 980],
+        'fieldMarks': ['Orange face and breast', 'Rounded olive-brown back'],
+        'candidates': [{'species': 'European Robin', 'scientificName': 'Erithacus rubecula', 'probability': .97}]}, False),
+    ('carrion-crow', 'Corvus corone', {'liveBird': True, 'quality': 'clear', 'subjectBox': [20, 20, 980, 980],
+        'fieldMarks': ['All-black glossy plumage', 'Stout bill with feathered base'],
+        'candidates': [{'species': 'Rook', 'scientificName': 'Corvus frugilegus', 'probability': .5},
+                       {'species': 'Carrion Crow', 'scientificName': 'Corvus corone', 'probability': .45}]}, True),
+    ('empty-scene', None, {'liveBird': False, 'candidates': []}, True),
+])
+def test_release_proof_passes_through_worker_ledger_adapter_and_route(ledger, monkeypatch, tmp_path,
+                                                                      name, species, model_json, with_place):
+    proof = load_proof()
+    book, _ = ledger
+    recognizer = photo_gemini.Recognizer(book, Provider(model_json))
+    image = tmp_path / 'fixture.jpg'
+    image.write_bytes(jpeg())
+
+    class InProcess:
+        def request(self, method, path, body, headers):
+            sent = json.loads(body)
+            self.result = recognizer.identify(base64.b64decode(sent['image']), sent['owner'], sent['requestId'],
+                                              sent['caller'], sent.get('context'))
+
+        def getresponse(self):
+            outer = self
+
+            class Response:
+                status = 200
+
+                def read(self, _):
+                    return json.dumps(outer.result).encode()
+            return Response()
+
+        def close(self):
+            pass
+    tax = photo_id.Taxonomy(ROWS)
+    monkeypatch.setattr(photo_id, '_taxonomy_or_none', lambda: tax)
+    monkeypatch.setattr(photo_id, '_geo_provider', lambda: GeoProvider() if with_place else None)
+    monkeypatch.setattr(photo_id, '_LocalConnection', InProcess)
+    form = {'photoOwner': proof.VALIDATION_OWNER, 'photoRequestId': proof.request_identity(image),
+            'photoContract': proof.CONTRACT, 'captureSource': 'camera', **proof.PROOF_PLACE}
+    with Flask(__name__).test_request_context('/burbz/api/identify/image', method='POST', data=form,
+                                              environ_base={'REMOTE_ADDR': '127.0.0.1'}):
+        result = photo_id.identify_bird_from_image(str(image))
+    status = 200 if result.get('found') is True else 422   # what the live route does
+    assert proof.passes_merlin_case(name, species, status, result), result
+    assert result['placeUsed'] is with_place
