@@ -1,7 +1,7 @@
 # Alderwing steady v472
 
 Build: `alderwing-steady-v472-20260925`.
-Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, built on main at v471. Not yet merged to main or published.
+Status: merged to main as PR #410 and live on yaanbatho.com. Replaced in part by [v482](ALDERWING_SEAMLESS_V482.md): trees now end by distance, the ground bends by distance, and canopy crowns carry the woods on.
 
 ## What Yaan asked for
 
