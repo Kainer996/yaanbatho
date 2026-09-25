@@ -124,7 +124,9 @@
     pass.material.uniforms.nearClip.value = camera.near;
     pass.material.uniforms.farClip.value = camera.far;
     var horizontal=scene.userData.continuousFog&&scene.fog;
-    pass.material.uniforms.horizonFog.value.set(horizontal?scene.fog.near:0,horizontal?scene.fog.far:0);
+    // A long aerial haze keeps its ink to a shorter range of its own.
+    var ink=horizontal&&scene.userData.inkFog;
+    pass.material.uniforms.horizonFog.value.set(horizontal?(ink?ink[0]:scene.fog.near):0,horizontal?(ink?ink[1]:scene.fog.far):0);
     if(horizontal){var m=camera.matrixWorld.elements,p=camera.projectionMatrix.elements;
       pass.material.uniforms.horizonX.value.set(m[0]/p[0],m[2]/p[0]);
       pass.material.uniforms.horizonY.value.set(m[4]/p[5],m[6]/p[5]);
