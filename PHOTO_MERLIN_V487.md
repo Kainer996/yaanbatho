@@ -31,7 +31,7 @@ A match counts as strong (HTTP 200, `found`) only when all hold: the ranked scor
 
 ## Contract
 
-Policy `photo-gemini-v487`, page contract `merlin-v487`. Pages older than v487 get "Close and reopen Burbz to update photo identification" and cost nothing. The place stays out of the photo's ledger digest: a stored reading is what Gemini saw, and the adapter re-weighs it by the place of each request. So the stable proof id never meets `request-conflict` if the range model is up on one deploy and down on the next. The release proof posts robin, crow and an empty scene from London in week 20. The robin must lead its ranking; the crow must be among the matches and never be confirmed as another species; the empty scene names no bird. A stored transient failure is retried once under a second stable id, after the three-per-minute window.
+Policy `photo-gemini-v487`, page contract `merlin-v487`. Pages older than v487 get "Close and reopen Burbz to update photo identification" and cost nothing. The place stays out of the photo's ledger digest: a stored reading is what Gemini saw, and the adapter re-weighs it by the place of each request. So the stable proof id never meets `request-conflict` if the range model is up on one deploy and down on the next. The release proof posts robin, crow and an empty scene from London in week 20. The robin must lead its ranking; the crow must be among the matches and never be confirmed as another species; the empty scene names no bird. A fixture that fails gets one fresh attempt per UTC day under a dated owner and id, after the three-per-minute window. The ledger replays stored answers for ever, so without this one service hiccup or one unlucky reading would block every later deploy.
 
 ## Evidence and limits
 
