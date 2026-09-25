@@ -77,7 +77,7 @@ A new probe flies the craft 50 m up at 36 m/s. After each frame it draws the sce
 Yaan said the weather need not match the real sky, as long as it looks good. So Alderwing now makes its own.
 
 - Fair skies with drifting cloud most of the time: blue sky and big white clouds with grey-blue bellies.
-- Now and then a passing shower: cloud gathers into grey masses for three minutes, rain falls from it for three to six, then it clears. About two showers an hour; it rains about an eighth of the time.
+- Now and then a passing shower: cloud gathers into grey masses for three minutes, rain falls from it for three to six, then it clears. About one shower an hour (26 a day); it rains about an eighth of the time.
 - The weather follows the clock, so every screen agrees. It needs no weather service, so no position leaves the phone for it any more.
 - The sky draws a layer of cloud as thick as the weather's cover. Cloud gathers into broad masses with sky between them; thick cloud is grey underneath and thin cloud glows. It drifts with the wind and thins toward the horizon.
 - Blue shows between clouds until the cover is nearly whole. Then the sky and haze turn grey, the sun hides and the light softens. Rain darkens them further and always brings a covered sky.
