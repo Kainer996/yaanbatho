@@ -18,8 +18,8 @@ test('take-off starts with one wingbeat; without more flapping the craft settles
  const p=grounded();assert(p.wing.beating,'take-off begins a downstroke');let top=p.y;fly(p,{},3,q=>top=Math.max(top,q.y));
  assert(top>.9,'the first wingbeat lifts the craft');assert(Math.abs(p.y-G.MIN_AGL)<.01,'it settles without more flapping');assert.equal(p.wing.mode,'grounded');
 });
-test('holding Flap climbs off the ground, labouring',()=>{
- const p=fly(grounded(),{lift:1},6);assert(p.y>8,'flapping lifts the craft clear');assert(p.y<30,'the climb is hard work');
+test('holding Flap climbs off the ground in a labouring hover',()=>{
+ const p=fly(grounded(),{lift:1},6);assert(p.y>8,'flapping lifts the craft clear');assert(p.y<25,'a hover climbs slowly');assert(Math.hypot(p.x,p.z)<3,'a hover holds its place');
 });
 test('flapping with the stick forward runs, lifts off and climbs away',()=>{
  const p=grounded();let air=null;fly(p,{lift:1,forward:1},10,(q,i)=>{if(air===null&&q.y>1.5)air=i/60;});

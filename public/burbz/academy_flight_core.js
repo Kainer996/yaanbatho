@@ -46,10 +46,9 @@ function accelerate(p,w,k,c,h){
  const aim=flap*.25*moving-(w.beating?0:GLIDE+SETTLE*Math.max(0,1-x));
  w.aim=Number.isFinite(w.aim)?w.aim+(aim-w.aim)*(1-Math.exp(-h*3)):aim;
  const d=view(p.yaw,clamp(p.pitch+w.aim,-1.4,1.4));
- // Downstrokes drive the bird along its view, and at low speed turn downward
- // to hold it up. Hovering climbs slowly; it is hard work. Holding back while
- // flapping stops the drive and hovers in place.
- const thrust=pulse*g*.9*Math.max(ahead,flap*Math.max(moving,.5)*(1-c.brake))*Math.max(0,1-x/1.25);
+ // Downstrokes drive the bird forward, and at low speed turn downward to hold
+ // it up: a hover. Hovering climbs slowly; it is hard work.
+ const thrust=pulse*g*.9*Math.max(ahead,flap*moving)*Math.max(0,1-x/1.25);
  const hover=pulse*g*(1.75*flap+.7*ahead)*slow*clamp(1-v.y/k.climb,0,1.5);
  // A stall is the wing failing a pull-up, not the drop from a hover just left.
  const failing=!w.grounded&&flap<.3&&w.rest>CALM;
@@ -72,9 +71,10 @@ function accelerate(p,w,k,c,h){
   const drag=g*(x*x*(PARASITE*(1-.45*c.tuck)+SKID*skid*spread+.35*c.brake)+INDUCED*lifted*lifted/Math.max(x*x,.01));
   ax+=lx-ux*drag;ay+=ly-uy*drag;az+=lz-uz*drag;
  }
- // A bird hovering on the brake holds its place; a grounded one does not
- // slide far.
- const hold=flap*c.brake*slow*1.5+(w.grounded?2.5*(1-.8*ahead):0);
+ // A hovering bird holds its place, but only below stall speed: flapping at
+ // flying speed climbs on instead of braking to a hover. A grounded bird
+ // does not slide far.
+ const hold=flap*(1-ahead)*Math.max(0,1-across/k.stall)*1.5+(w.grounded?2.5*(1-.8*ahead):0);
  ax-=v.x*hold;az-=v.z*hold;
  v.x+=ax*h;v.y+=ay*h;v.z+=az*h;
  const top=Math.hypot(v.x,v.y,v.z);if(top>k.top){const s=k.top/top;v.x*=s;v.y*=s;v.z*=s;}
