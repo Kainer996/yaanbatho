@@ -122,7 +122,7 @@ def test_tree_and_branches_sway():
     # the engine draws swaying foreground branch tufts on the front canvas.
     assert 'class="academy-tree-swaybg"' in HTML, "the sway div must exist in the treehouse markup"
     rule = re.search(r"\.academy-tree-swaybg[^{]*\{([^}]*)\}", HTML)
-    assert rule and "treeSway" in rule.group(1) and "academy-tree-manga" in rule.group(1)
+    assert rule and "treeSway" in rule.group(1) and "academy-manga-20260925/tree.webp" in rule.group(1)
     assert "@keyframes treeSway" in HTML
     assert ".academy-tree-swaybg { animation:none; }" in HTML, "sway must respect reduced motion"
     assert "buildFoliage" in CORE and "drawFoliage" in CORE

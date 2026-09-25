@@ -16,100 +16,109 @@
   // The engine is fed through a small adapter (see createAcademyAlive) so the
   // page owns all knowledge of gameState, art caches and screen routing.
   //
-  // Anchor coordinates are FRACTIONS of the 112×112 building sprite box, read
-  // off the real manga paintings: the Kitchen's chimney stack really is at
-  // (0.585, 0.13) of its sprite, the Crowbar's two lanterns really hang at
-  // (0.22, 0.47) and (0.69, 0.50). If a sprite is ever repainted, retune here.
+  // Anchor coordinates are FRACTIONS of the square building sprite box, read
+  // off the v475 manga houses (assets/academy-manga-20260925/): the Kitchen's
+  // chimney really is at (0.40, 0.10) of its sprite, the Crowbar's lanterns
+  // really hang at (0.17, 0.45) and (0.62, 0.40). If a sprite is ever
+  // repainted, retune here.
   // ==========================================================================
 
   var ANCHORS = {
     kitchen: [
-      { fx: 0.585, fy: 0.125, type: 'smoke', power: 1.25 },
-      { fx: 0.44, fy: 0.30, type: 'glow', glow: 'window', r: 24 },
-      { fx: 0.70, fy: 0.46, type: 'glow', glow: 'window', r: 22 },
-      { fx: 0.46, fy: 0.60, type: 'glow', glow: 'hearth', r: 30 }
+      { fx: 0.40, fy: 0.10, type: 'smoke', power: 1.25 },
+      { fx: 0.14, fy: 0.49, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.86, fy: 0.49, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.73, fy: 0.50, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.52, fy: 0.54, type: 'glow', glow: 'hearth', r: 30 }
     ],
     dorm: [
       { fx: 0.52, fy: 0.14, type: 'smoke', power: 0.35 },
       { fx: 0.565, fy: 0.375, type: 'glow', glow: 'window', r: 24 },
       { fx: 0.245, fy: 0.62, type: 'glow', glow: 'lantern', r: 20 }
     ],
-    // The planning office reuses the retired Roost painting: its round desk
-    // window and porch lamp make the little paperwork house feel occupied.
+    // The planning office: clipboard sign, two porch lanterns, a lit desk
+    // window and a thin thread of smoke from the chimney.
     manager_office: [
-      { fx: 0.565, fy: 0.375, type: 'glow', glow: 'window', r: 24 },
-      { fx: 0.245, fy: 0.62, type: 'glow', glow: 'lantern', r: 20 }
+      { fx: 0.59, fy: 0.09, type: 'smoke', power: 0.35 },
+      { fx: 0.16, fy: 0.44, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.84, fy: 0.46, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.70, fy: 0.50, type: 'glow', glow: 'window', r: 22 },
+      { fx: 0.40, fy: 0.40, type: 'glow', glow: 'sign', r: 26 }
     ],
     crowbar: [
-      // The crooked stovepipe at the roof's apex vents the pub hearth.
-      { fx: 0.44, fy: 0.075, type: 'smoke', power: 0.6 },
-      { fx: 0.22, fy: 0.47, type: 'glow', glow: 'lantern', r: 20 },
-      { fx: 0.69, fy: 0.50, type: 'glow', glow: 'lantern', r: 20 },
-      { fx: 0.50, fy: 0.47, type: 'glow', glow: 'hearth', r: 34 },
-      { fx: 0.79, fy: 0.47, type: 'glow', glow: 'sign', r: 26 },
-      { fx: 0.50, fy: 0.38, type: 'notes' }
+      // The right-hand chimney vents the pub hearth.
+      { fx: 0.63, fy: 0.11, type: 'smoke', power: 0.6 },
+      { fx: 0.17, fy: 0.45, type: 'glow', glow: 'lantern', r: 20 },
+      { fx: 0.62, fy: 0.40, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.62, fy: 0.27, type: 'glow', glow: 'window', r: 18 },
+      { fx: 0.42, fy: 0.50, type: 'glow', glow: 'hearth', r: 34 },
+      { fx: 0.84, fy: 0.44, type: 'glow', glow: 'sign', r: 26 },
+      { fx: 0.50, fy: 0.36, type: 'notes' }
     ],
     hospital: [
-      // The ward keeps a stove going for its patients — a thin thread of
-      // smoke off the little roof crown.
-      { fx: 0.47, fy: 0.09, type: 'smoke', power: 0.4 },
-      { fx: 0.43, fy: 0.28, type: 'glow', glow: 'pulse', r: 26 },
-      { fx: 0.44, fy: 0.48, type: 'glow', glow: 'window', r: 24 },
-      { fx: 0.63, fy: 0.45, type: 'glow', glow: 'window', r: 22 },
-      { fx: 0.22, fy: 0.41, type: 'glow', glow: 'lantern', r: 18 },
-      { fx: 0.80, fy: 0.44, type: 'glow', glow: 'lantern', r: 16 }
+      // The ward keeps a stove going for its patients: a thin thread of
+      // smoke off the roof peak.
+      { fx: 0.52, fy: 0.06, type: 'smoke', power: 0.4 },
+      { fx: 0.52, fy: 0.19, type: 'glow', glow: 'pulse', r: 26 },
+      { fx: 0.25, fy: 0.44, type: 'glow', glow: 'window', r: 22 },
+      { fx: 0.47, fy: 0.47, type: 'glow', glow: 'window', r: 24 },
+      { fx: 0.80, fy: 0.45, type: 'glow', glow: 'lantern', r: 18 }
     ],
     observatory: [
-      { fx: 0.65, fy: 0.29, type: 'glow', glow: 'cool', r: 22 },
-      { fx: 0.30, fy: 0.41, type: 'glow', glow: 'coollantern', r: 18 },
-      { fx: 0.56, fy: 0.42, type: 'glow', glow: 'coollantern', r: 20 },
-      { fx: 0.50, fy: 0.09, type: 'glow', glow: 'moon', r: 24 },
-      { fx: 0.50, fy: 0.16, type: 'twinkle' }
+      { fx: 0.84, fy: 0.18, type: 'glow', glow: 'cool', r: 20 },
+      { fx: 0.36, fy: 0.47, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.84, fy: 0.47, type: 'glow', glow: 'coollantern', r: 18 },
+      { fx: 0.62, fy: 0.50, type: 'glow', glow: 'moon', r: 24 },
+      { fx: 0.47, fy: 0.10, type: 'twinkle' }
     ],
     workshop: [
-      { fx: 0.50, fy: 0.395, type: 'glow', glow: 'window', r: 20 },
-      { fx: 0.50, fy: 0.53, type: 'glow', glow: 'window', r: 24 },
-      { fx: 0.47, fy: 0.55, type: 'sparks' }
+      { fx: 0.87, fy: 0.52, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.37, fy: 0.41, type: 'glow', glow: 'lantern', r: 14 },
+      { fx: 0.62, fy: 0.46, type: 'glow', glow: 'window', r: 22 },
+      { fx: 0.50, fy: 0.55, type: 'sparks' }
     ],
     nursery: [
-      { fx: 0.50, fy: 0.45, type: 'glow', glow: 'breath', r: 34 },
-      { fx: 0.72, fy: 0.44, type: 'glow', glow: 'window', r: 18 },
-      { fx: 0.51, fy: 0.30, type: 'glow', glow: 'lantern', r: 16 }
+      { fx: 0.51, fy: 0.50, type: 'glow', glow: 'breath', r: 32 },
+      { fx: 0.30, fy: 0.46, type: 'glow', glow: 'window', r: 18 },
+      { fx: 0.70, fy: 0.47, type: 'glow', glow: 'window', r: 18 }
     ],
     training: [
-      { fx: 0.50, fy: 0.46, type: 'thwack' }
+      { fx: 0.16, fy: 0.40, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.55, fy: 0.35, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.64, fy: 0.46, type: 'thwack' }
     ],
-    // The Birdhouse currently shares the training-hall painting, so it shares
-    // the training-hall anchor sheet until it gets art of its own.
+    // The Birdhouse has its own cottage now: three lit windows, a porch
+    // lantern, the feather sign and a wisp from the chimney.
     tavern: [
-      { fx: 0.50, fy: 0.46, type: 'thwack' }
+      { fx: 0.33, fy: 0.05, type: 'smoke', power: 0.35 },
+      { fx: 0.22, fy: 0.44, type: 'glow', glow: 'window', r: 18 },
+      { fx: 0.45, fy: 0.42, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.61, fy: 0.44, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.72, fy: 0.44, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.85, fy: 0.42, type: 'glow', glow: 'sign', r: 24 }
     ],
-    // The market painting (assets/academy-buildings-manga/market.png): a round
-    // attic window over a striped awning, a lantern hung on each side of it,
-    // and the goods on the counter catching the stall's own light.
+    // The market stall: scales sign, a lamp under the striped awning, a side
+    // lantern and the goods on the counter catching the stall's own light.
     magpie_market: [
-      { fx: 0.555, fy: 0.205, type: 'glow', glow: 'window', r: 18 },
-      { fx: 0.355, fy: 0.215, type: 'glow', glow: 'lantern', r: 16 },
-      { fx: 0.298, fy: 0.425, type: 'glow', glow: 'lantern', r: 18 },
-      { fx: 0.723, fy: 0.425, type: 'glow', glow: 'lantern', r: 18 },
-      { fx: 0.812, fy: 0.415, type: 'glow', glow: 'lantern', r: 16 },
-      { fx: 0.500, fy: 0.520, type: 'glow', glow: 'hearth', r: 28 }
+      { fx: 0.13, fy: 0.40, type: 'glow', glow: 'sign', r: 22 },
+      { fx: 0.70, fy: 0.34, type: 'glow', glow: 'window', r: 18 },
+      { fx: 0.87, fy: 0.39, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.50, fy: 0.47, type: 'glow', glow: 'hearth', r: 26 }
     ],
     quest_roost: [
-      { fx: 0.335, fy: 0.475, type: 'glow', glow: 'lantern', r: 18 },
-      { fx: 0.80, fy: 0.46, type: 'glow', glow: 'lantern', r: 20 },
-      { fx: 0.52, fy: 0.50, type: 'glow', glow: 'window', r: 24 }
+      { fx: 0.24, fy: 0.44, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.84, fy: 0.45, type: 'glow', glow: 'lantern', r: 18 },
+      { fx: 0.35, fy: 0.30, type: 'glow', glow: 'lantern', r: 14 },
+      { fx: 0.56, fy: 0.33, type: 'glow', glow: 'sign', r: 26 }
     ],
-    // The Library sprite is the hand-drawn SVG (assets/academy-buildings/
-    // library.svg), so these fractions are read off its own geometry: the
-    // attic rose window, the twin reading windows, the book-arch hearth glow
-    // and the eave lantern.
+    // The Library: a lit reading window, the round attic window, twin eave
+    // lanterns and lamplight on the bookshelves.
     library: [
-      { fx: 0.50, fy: 0.34, type: 'glow', glow: 'window', r: 18 },
-      { fx: 0.383, fy: 0.492, type: 'glow', glow: 'window', r: 20 },
-      { fx: 0.617, fy: 0.492, type: 'glow', glow: 'window', r: 20 },
-      { fx: 0.50, fy: 0.656, type: 'glow', glow: 'hearth', r: 26 },
-      { fx: 0.293, fy: 0.52, type: 'glow', glow: 'lantern', r: 16 }
+      { fx: 0.34, fy: 0.53, type: 'glow', glow: 'window', r: 20 },
+      { fx: 0.62, fy: 0.32, type: 'glow', glow: 'window', r: 16 },
+      { fx: 0.19, fy: 0.54, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.83, fy: 0.53, type: 'glow', glow: 'lantern', r: 16 },
+      { fx: 0.62, fy: 0.48, type: 'glow', glow: 'hearth', r: 26 }
     ]
   };
 
