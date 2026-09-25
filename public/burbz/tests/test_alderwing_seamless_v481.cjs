@@ -126,7 +126,7 @@ test('the far ground builds ahead of a fast flight, and crowns 40m before they c
  assert(world.includes('f=horizon.sampleAt(x,z,crownSample)')&&world.includes('CROWN_GRID=6.4'),'on a fixed jittered grid, from the distant land\'s record of each wood');
 });
 
-test('rain brings clouds: the sky, light and haze follow the real weather',()=>{
+test('rain brings clouds: the sky, light and haze follow the weather',()=>{
  const scene=new T.Scene();scene.background=new T.Color(0x123456);scene.fog=new T.Fog(0x234567,40,104);const hemi=new T.HemisphereLight(0xabcdef,0x124578,2),key=new T.DirectionalLight(0xffccbb,1.7);key.castShadow=true;scene.add(hemi,key);
  const renderer={toneMappingExposure:1.35,getPixelRatio:()=>1},blue=new T.Color(0x7fb2e4);
  const sky=Sky.attach(T,scene,{renderer,palette:{sky:0x172838,ground:0x223344,hemiSky:0x334455,hemiGround:0x445566},moonTexture:()=>new T.Texture(),grade:()=>global.BurbzDaylightCore.daylightGradeForHour(12),colors:()=>({top:blue.clone().multiplyScalar(.5),mid:blue.clone(),hor:blue.clone().lerp(new T.Color(0xffffff),.3)})});
@@ -146,12 +146,24 @@ test('rain brings clouds: the sky, light and haze follow the real weather',()=>{
  const fresh=Sky.attach(T,new T.Scene(),{renderer:{toneMappingExposure:1,getPixelRatio:()=>1},palette:{sky:0x172838,ground:0x223344,hemiSky:0x334455,hemiGround:0x445566},moonTexture:()=>new T.Texture(),grade:()=>global.BurbzDaylightCore.daylightGradeForHour(12),colors:()=>({top:blue,mid:blue,hor:blue})});
  fresh.update(0);assert(fresh.group.children[0].material.uniforms.cover.value>.2);fresh.dispose();
  sky.dispose();assert.equal(key.intensity,1.7);assert.equal(hemi.intensity,2);assert.equal(renderer.toneMappingExposure,1.35);
- const html=read('index.html');assert(html.includes('current=precipitation,rain,showers,wind_speed_10m,cloud_cover&'),'the weather asks for cloud cover');
- assert(html.includes('burbzWeather.cloud=Number.isFinite(cover)?Math.max(0,Math.min(1,cover/100)):null;'));
  assert(world.includes('skyDriver?.update(time,weatherAt(time));'),'the world passes the weather where the player stands');
  assert(world.includes('scene.fog.near=HAZE[0]*(1-.55*rain);scene.fog.far=HAZE[1]*(1-.12*grey-.5*rain);'),'rain thickens the haze');
  const explore=read('exploration.js');assert(explore.includes('showRain(time,sky?.rain||0);'),'rain falls in flight too');
  assert(explore.includes('const dx=(wind-vx)*dt,dy=(speed+vy)*dt,dz=-vz*dt;'),'streaming past at the craft\'s own speed');
+});
+
+test('the game makes its own weather, made to look good: fair skies and passing showers',()=>{
+ const html=read('index.html'),src=html.slice(html.indexOf('const burbzWeather='),html.indexOf('window.BurbzCalmAudio='));
+ assert(!/fetch\(|XMLHttpRequest|open-meteo/i.test(src),'nothing leaves the phone');assert(!read('audio-credits.html').includes('open-meteo'),'and no weather service is credited');
+ let now=0;const ctx={Date:{now:()=>now},Math};vm.createContext(ctx);vm.runInContext(src+';globalThis.weather=burbzWeatherAt;',ctx);
+ const start=Date.parse('2026-09-25T00:00:00Z');let n=0,wet=0,fair=0,showers=0,was=false,last=null;
+ for(let s=0;s<3*86400;s+=10){now=start+s*1000;const w={...ctx.weather(53.9,-2.3)};n++;
+  if(w.rain>0){wet++;if(!was)showers++;assert(w.cloud>.7,'rain always falls from grey cloud: '+w.cloud.toFixed(2));}was=w.rain>0;if(w.cloud<.55)fair++;
+  if(last){assert(Math.abs(w.cloud-last.cloud)<.08,'cloud builds and clears over minutes');assert(Math.abs(w.rain-last.rain)<.3,'rain comes and goes gently');}last=w;
+  assert(w.cloud>=.2&&w.cloud<=.95&&w.rain>=0&&w.rain<=1&&w.wind>0&&w.wind<1);}
+ assert(fair/n>.75,'mostly fair skies: '+(fair/n).toFixed(2));assert(wet/n>.05&&wet/n<.2,'showers now and then: '+(wet/n).toFixed(2));assert(showers/3>10,'several a day: '+showers/3);
+ // The same moment gives the same weather on every screen.
+ now=start+123456789;const a={...ctx.weather()},b={...ctx.weather(0,0)};assert.deepEqual(a,b);
 });
 
 test('v481 ships together: build marker, cache, three worker lists, loader and consumers',()=>{

@@ -6770,22 +6770,24 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   : oscillatorSfxFallback;
 window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
 window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
-// Real weather where the player stands, from Open-Meteo (Yaan chose live
-// weather). Only a rounded position (about 10 km) leaves the phone, at most
-// once every 15 minutes. It sets the rain, the cloud and the wind; no game
-// rule depends on it.
-const burbzWeather={rain:0,wind:.2,cloud:null,at:0,key:'',pending:false};
-function burbzWeatherAt(lat,lon){
-  if(!Number.isFinite(lat)||!Number.isFinite(lon)||typeof fetch!=='function')return burbzWeather;
-  const la=lat.toFixed(1),lo=lon.toFixed(1),key=la+','+lo;
-  if(burbzWeather.pending||(key===burbzWeather.key&&Date.now()-burbzWeather.at<15*60*1000))return burbzWeather;
-  burbzWeather.pending=true;burbzWeather.key=key;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=precipitation,rain,showers,wind_speed_10m,cloud_cover&wind_speed_unit=kmh',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'})
-    .then(r=>r.ok?r.json():Promise.reject(Error('weather '+r.status)))
-    .then(d=>{const c=d?.current||{},mm=Math.max(Number(c.precipitation)||0,(Number(c.rain)||0)+(Number(c.showers)||0)),kmh=Number(c.wind_speed_10m);
-      burbzWeather.rain=mm>0?Math.min(1,.45+mm/3):0;burbzWeather.wind=Number.isFinite(kmh)?Math.max(.15,Math.min(1,kmh/45)):.2;const cover=Number(c.cloud_cover);burbzWeather.cloud=Number.isFinite(cover)?Math.max(0,Math.min(1,cover/100)):null;})
-    .catch(()=>{})
-    .finally(()=>{burbzWeather.pending=false;burbzWeather.at=Date.now();});
+// The game's own weather, made to look good rather than copy the sky outside
+// (Yaan's choice). Fair skies with drifting cloud most of the time; now and
+// then a passing shower builds under grey cloud, rains a few minutes and
+// clears. It follows the clock, so every screen agrees, and nothing leaves
+// the phone. It sets the rain, the cloud and the wind; no game rule depends
+// on it.
+const burbzWeather={rain:0,wind:.25,cloud:.35};
+function burbzWeatherAt(){
+  const minutes=Date.now()/60000,CYCLE=36,cycle=Math.floor(minutes/CYCLE),t=minutes-cycle*CYCLE;
+  const draw=n=>{const x=Math.sin(cycle*12.9898+n*78.233)*43758.5453;return x-Math.floor(x);},ease=x=>{const k=Math.max(0,Math.min(1,x));return k*k*(3-2*k);};
+  // Fair-weather cloud drifts between a few puffs and a broken sky.
+  const fair=.2+.3*(.5+.5*Math.sin(minutes/9.1));
+  // Two cycles in three bring one shower: cloud builds for three minutes,
+  // rain falls from it for three to six, then it clears, within the cycle.
+  let storm=0;if(draw(1)<.66){const u=t-(5+draw(2)*18),fall=3+draw(3)*3;storm=u<0?0:u<3?ease(u/3):u<3+fall?1:ease(1-(u-3-fall)/3);}
+  burbzWeather.cloud=fair+(.94-fair)*storm;
+  burbzWeather.rain=storm>.7?(.5+.4*draw(4))*ease((storm-.7)/.3):0;
+  burbzWeather.wind=.2+.3*storm+.08*Math.sin(minutes/4.3);
   return burbzWeather;
 }
 window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool')};

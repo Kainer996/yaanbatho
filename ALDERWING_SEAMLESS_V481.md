@@ -6,7 +6,7 @@ Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, built on main 
 ## What Yaan asked for
 
 - Trees and terrain still pop in. Fix it.
-- It rains, but the sky has no clouds. Fix that too.
+- It rains, but the sky has no clouds. Fix that too. (Later: the weather need not match the real sky, as long as it looks good.)
 - Check how similar games stop or hide pop-in.
 
 ## How other games hide pop-in
@@ -72,13 +72,16 @@ A new probe flies the craft 50 m up at 36 m/s. After each frame it draws the sce
 
 - New chunks build nearest to where the viewer will be a second from now.
 
-### Rain brings clouds
+### Rain brings clouds, and the weather is made to look good
 
-- The weather request now asks for cloud cover as well as rain and wind.
-- The sky draws a layer of cloud as thick as the real cover. It drifts with the wind and thins toward the horizon.
-- Rain always brings a covered sky. Overcast skies turn the sky and haze grey, hide the sun and soften the light. Rain darkens them further.
+Yaan said the weather need not match the real sky, as long as it looks good. So Alderwing now makes its own.
+
+- Fair skies with drifting cloud most of the time: blue sky and big white clouds with grey-blue bellies.
+- Now and then a passing shower: cloud gathers into grey masses for three minutes, rain falls from it for three to six, then it clears. About two showers an hour; it rains about an eighth of the time.
+- The weather follows the clock, so every screen agrees. It needs no weather service, so no position leaves the phone for it any more.
+- The sky draws a layer of cloud as thick as the weather's cover. Cloud gathers into broad masses with sky between them; thick cloud is grey underneath and thin cloud glows. It drifts with the wind and thins toward the horizon.
+- Blue shows between clouds until the cover is nearly whole. Then the sky and haze turn grey, the sun hides and the light softens. Rain darkens them further and always brings a covered sky.
 - Rain thickens the haze, so the far land greys away as it does on a wet day.
-- The first report arrives at once. Later ones roll in over about 20 seconds. With no report yet, a few fair-weather clouds drift over.
 - Rain now falls in flight too, and streams past the cockpit at the craft's own speed.
 
 ## Results
@@ -115,7 +118,7 @@ Measured in software WebGL at 390×844, same places and poses, main at v473 agai
 
 ## Verification
 
-- `tests/test_alderwing_seamless_v481.cjs`: 11 tests. The distances fit together; trees are whole or nothing and end by distance; crowns and trees hand over across one band; pools share shapes and carry drops; crowns are cheap; the ground bends by distance and eases new data; the distant land keeps its best tile; a moved distant land draws the same; shadows snap to whole texels and fade before trees end; crowns build ahead and the pools reach the GPU after every change; rain brings clouds, grey light and haze; release integrity.
+- `tests/test_alderwing_seamless_v481.cjs`: 12 tests. The distances fit together; trees are whole or nothing and end by distance; crowns and trees hand over across one band; pools share shapes and carry drops; crowns are cheap; the ground bends by distance and eases new data; the distant land keeps its best tile; a moved distant land draws the same; shadows snap to whole texels and fade before trees end; crowns build ahead and the pools reach the GPU after every change; rain brings clouds, grey light and haze; the game's own weather is mostly fair with passing showers, smooth, the same on every screen and never leaves the phone; release integrity.
 - `tests/run_alderwing_seamless_v481.cjs` proves rain, crowns and the flight in the real renderer with synthetic offline input, using the same pop probe.
 - `tests/test_alderwing_steady_v472.cjs` and `tests/test_alderwing_nature_v470.cjs` accept the v481 re-ship of their modules.
 - Live-provider flights at Pendle Hill and Grizedale Forest, and a low flight 10 m over Grizedale Forest.

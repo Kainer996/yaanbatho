@@ -16,8 +16,11 @@
  void main(){float h=vDir.y;vec3 c=h>.11?mix(mid,top,smoothstep(.11,.8,h)):mix(hor,mid,smoothstep(-.04,.11,h));
   if(cover>.002&&h>-.02){vec2 p=vDir.xz/(max(h,0.)+.18)*1.35+drift;
    float n=skyNoise(p)*.5+skyNoise(p*2.03+vec2(7.1,2.9))*.25+skyNoise(p*4.1+vec2(3.7,8.3))*.14+skyNoise(p*8.3+vec2(1.3,5.1))*.07;
-   float edge=mix(.8,.16,cover),d=smoothstep(edge-.06,edge+.2,n)*smoothstep(-.02,.1,h);
-   vec3 cc=mix(lit,shade,clamp((n-edge)*2.2,0.,1.)*.7+gloom*.3);c=mix(c,mix(cc,hor,1.-smoothstep(0.,.3,h)),d);}
+   // Cloud gathers into broad masses with sky between them. Thick cloud is
+   // grey underneath and thin cloud glows, so even a shower's sky has shape.
+   float mass=skyNoise(p*.33+vec2(4.2,1.7)),m=n+(mass-.5)*.3*cover,edge=mix(.8,.18,pow(cover,1.25)),d=smoothstep(edge-.06,edge+.18,m)*smoothstep(-.02,.1,h),thick=clamp((m-edge)*2.2,0.,1.);
+   vec3 cc=mix(lit,shade,clamp(thick*.95+mass*gloom*.5+gloom*.12,0.,1.));cc*=1.+.16*(1.-thick)*cover;
+   c=mix(c,mix(cc,hor,1.-smoothstep(0.,.3,h)),d);}
   float noise=fract(sin(dot(gl_FragCoord.xy,vec2(127.1,311.7)))*43758.5453);gl_FragColor=vec4(c+(noise-.5)*.009,1.0);
   #include <colorspace_fragment>
  }`;
@@ -50,12 +53,13 @@
     if(!sky.known){sky.cover=cover;sky.rain=rain;sky.known=true;}else{const k=1-Math.exp(-dt/7);sky.cover+=(cover-sky.cover)*k;sky.rain+=(rain-sky.rain)*k;}}
    if(weather&&Number.isFinite(weather.wind))sky.wind=weather.wind;
    const d=cloudy.drift.value;d.x=(d.x+dt*(.004+.03*sky.wind))%1024;d.y=(d.y+dt*(.002+.012*sky.wind))%1024;cloudy.cover.value=sky.cover;cloudy.gloom.value=sky.rain;}
-  // Overcast greys the whole sky and the haze, hides the sun and softens the
-  // light; rain darkens it further. Applied every frame, so it never steps.
-  function weatherLight(){if(!grade)return;const day=grade.sun,heavy=settle((sky.cover-.45)/.55),clear=1-settle((sky.cover-.5)/.4);
+  // A closing sky greys the whole sky and the haze, hides the sun and softens
+  // the light; rain darkens it further. Blue shows between clouds until the
+  // cover is nearly whole. Applied every frame, so it never steps.
+  function weatherLight(){if(!grade)return;const day=grade.sun,heavy=Math.max(settle((sky.cover-.68)/.32),sky.rain),clear=(1-settle((sky.cover-.62)/.3))*(1-settle(sky.rain/.3));
    grey.setRGB(.63,.67,.72).multiplyScalar((.2+.8*day)*(1-.32*sky.rain));haze.copy(grey).multiplyScalar(1.08);
    top.copy(base.top).lerp(grey,heavy*.82);mid.copy(base.mid).lerp(grey,heavy*.86);hor.copy(base.hor).lerp(haze,heavy*.8);scene.background?.copy(hor);scene.fog?.color.copy(hor);
-   lit.setRGB(.95,.95,.96).multiplyScalar((.16+.84*day)*(1-.28*sky.rain)).lerp(warm,grade.warm*.35);shade.setRGB(.55,.59,.65).multiplyScalar((.14+.86*day)*(1-.42*sky.rain));
+   lit.setRGB(.95,.95,.96).multiplyScalar((.16+.84*day)*(1-.2*sky.rain)).lerp(warm,grade.warm*.35);shade.setRGB(.5,.55,.63).multiplyScalar((.14+.86*day)*(1-.5*sky.rain));
    sun.material.uniforms.opacity.value=moon.material.uniforms.opacity.value=clear;sunGlow.material.uniforms.opacity.value=.28*clear;moonGlow.material.uniforms.opacity.value=.18*clear;starMat.uniforms.opacity.value=grade.stars*.85*(1-sky.cover);
    for(const l of lights){if(l.isHemisphereLight)l.intensity=hemiBase*(1+.18*heavy);else if(l.isDirectionalLight&&l.castShadow)l.intensity=keyBase*(1-.58*heavy);}
    options.renderer.toneMappingExposure=exposureBase*(1-.08*sky.rain);}
