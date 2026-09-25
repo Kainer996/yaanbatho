@@ -34,15 +34,25 @@
   for(const [id,rows]of Object.entries({stores:Array.from({length:m.forgeReady}),kitchen:m.kitchen,training:m.training,hospital:m.hospital,academy:academy.rows.filter(r=>r.state==='ready'),completed:m.completed,building:m.empire.flatMap(c=>c.rows)})){const label=document.getElementById('desk-'+id+'-count');if(label)label.textContent=rows.length?number(rows.length):'';}
   if(focused&&document.activeElement?.dataset?.homeAction!==focused)Array.from(boundSection.querySelectorAll('[data-home-action]')).find(el=>el.dataset.homeAction===focused)?.focus({preventScroll:true});queueLayout();return m;
  }
- // The Academy box shows Yaan's painted tree. Each house in the painting
- // gets a tap spot; unbuilt houses sit in shadow, ready ones glow gold.
- const TREE_SPOTS={nursery:[26.7,8.5],observatory:[80,8],workshop:[22,19.5],library:[66,20.5],manager_office:[22,31],crowbar:[81,31],hospital:[18.5,50.5],kitchen:[50,51],training:[84.5,52.5],magpie_market:[19.5,73],quest_roost:[51.5,77],tavern:[82,76.5]};
+ // The Academy box is a living painted tree. Only the houses the player has
+ // built stand on it, each where they placed it on the Academy screen. The
+ // boughs sway, houses rock gently, leaves fall and birds pass by.
+ const TREE_ART='assets/academy-living-tree-20260925/';
+ const TREE_HOUSES=new Set(['nursery','observatory','workshop','library','manager_office','crowbar','hospital','kitchen','training','magpie_market','quest_roost','tavern']);
+ // Academy placements run x 10–90 and y 8–92; fit them onto the painted boughs.
+ const treeSpot=r=>{const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number.isFinite(+v)?+v:50));return [clamp(50+(clamp(r.x,10,90)-50)*1.3,13,87).toFixed(1),(12+(clamp(r.y,8,92)-8)*0.88).toFixed(1)];};
  function academyTree(academy,open){
-  const label={built:'Open',ready:'Ready to build',short:'Plan',locked:'Locked'};
-  const houses=academy.rows.filter(r=>TREE_SPOTS[r.id]).map(r=>{const [x,y]=TREE_SPOTS[r.id];return `<button type="button" class="home-tree-house is-${r.state}" data-home-action="academy-${escape(r.id)}" style="left:${x}%;top:${y}%" title="${escape(r.name+' · '+r.detail)}" aria-label="${escape(r.name+', '+label[r.state]+'. '+r.detail)}"${open?'':' disabled'}></button>`;}).join('');
+  const built=academy.rows.filter(r=>r.state==='built'&&TREE_HOUSES.has(r.id)).map(r=>({r,spot:treeSpot(r)})).sort((a,b)=>a.spot[1]-b.spot[1]);
+  const houses=built.map(({r,spot:[x,y]},i)=>`<button type="button" class="home-tree-house" data-home-action="academy-${escape(r.id)}" style="--x:${x}%;--y:${y}%;z-index:${2+i};--bob:${(i%4)*-1.3}s" title="${escape(r.name+' · '+r.detail)}" aria-label="${escape(r.name+'. '+r.detail)}"${open?'':' disabled'}><img src="${TREE_ART}${escape(r.id)}.webp" alt="" decoding="async">${r.id==='kitchen'?'<i class="home-tree-smoke" aria-hidden="true"></i>':''}</button>`).join('');
+  const ready=academy.rows.filter(r=>r.state==='ready');
+  const readyChip=open&&ready.length?`<button type="button" class="home-tree-ready" data-home-action="academy-${escape(ready[0].id)}" aria-label="${ready.length} ${ready.length===1?'house':'houses'} ready to build">🔨 ${ready.length} ready</button>`:'';
   const free=academy.free?`<button type="button" class="home-tree-free" data-home-action="academy-free" aria-label="${academy.free} free ${academy.free===1?'bird':'birds'} waiting for a job">🕊️ ${academy.free}</button>`:'';
-  const leaves=[0,1,2,3].map(i=>`<i class="home-tree-leaf" style="--x:${18+i*21}%;--fall:${9+i*2.5}s;--wait:${-i*3.1}s"></i>`).join('');
-  return `<div class="home-tree${open?'':' is-closed'}" data-home-action="panel-academy" role="group" aria-label="Your Academy tree"><div class="home-tree-sway"><div class="home-tree-stage"><img class="home-tree-art" src="assets/academy-home-tree-20260924.webp" alt="" decoding="async"><i class="home-tree-smoke" aria-hidden="true"></i>${houses}</div></div><div class="home-tree-light" aria-hidden="true"></div>${leaves}${free}${open?'':'<p class="home-tree-note">Opens as you follow your Quests</p>'}</div>`;
+  const boughs=['nw','ne','w','e'].map(k=>`<i class="home-tree-bough is-${k}" aria-hidden="true"></i>`).join('');
+  const leaves=[0,1,2,3,4].map(i=>`<i class="home-tree-leaf" style="--x:${12+i*18}%;--fall:${9+i*2.3}s;--wait:${-i*2.7}s"></i>`).join('');
+  const motes=[0,1,2,3,4,5].map(i=>`<i class="home-tree-mote" style="--x:${15+i*13}%;--y:${30+(i*23)%50}%;--drift:${6+i*1.4}s;--wait:${-i*1.9}s"></i>`).join('');
+  const birds='<i class="home-tree-bird" aria-hidden="true"></i><i class="home-tree-bird is-late" aria-hidden="true"></i>';
+  const note=!open?'Opens as you follow your Quests':built.length?'':'Build your first house in the Academy';
+  return `<div class="home-tree${open?'':' is-closed'}" data-home-action="panel-academy" role="group" aria-label="Your Academy tree, ${built.length} ${built.length===1?'house':'houses'} built"><div class="home-tree-sway"><div class="home-tree-stage"><img class="home-tree-art" src="${TREE_ART}tree.webp" alt="" decoding="async"><img class="home-tree-art is-wide" src="${TREE_ART}tree-wide.webp" alt="" decoding="async">${boughs}${houses}</div></div>${birds}<div class="home-tree-light" aria-hidden="true"></div>${motes}${leaves}${readyChip}${free}${note?`<p class="home-tree-note">${note}</p>`:''}</div>`;
  }
  function applyProgression(m,academy,academyOpen){
   const summaries={stores:m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells',kitchen:m.kitchen.length?m.kitchen.length+' to feed':'All well fed',training:m.training.length?(m.training.some(s=>s.ready)?m.training.filter(s=>s.ready).length+' ready to claim':m.training.length+' active drills'):'No active drills',hospital:m.hospital.length?m.hospital.length+' need care':'All healthy',completed:m.completed.length+' buildings to check',building:m.completed.length?m.completed.length+' completed':m.villageDesk.length+' villages',academy:academyOpen?academy.built+' of '+academy.total+' built'+(academy.ready?' · '+academy.ready+' ready':''):'Not open yet'};
