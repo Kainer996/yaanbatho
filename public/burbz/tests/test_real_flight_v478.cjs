@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict');
 const G=require('../geographic_world_core.js'),F=require('../academy_flight_core.js');
-// Real flight (v477): gravity always pulls, wings lift only with airspeed,
+// Real flight (v478): gravity always pulls, wings lift only with airspeed,
 // wingbeats pay for height, dives gather speed and climbs spend it.
 let count=0;function test(name,fn){fn();count++;console.log('PASS '+name);}
 const flat={height:()=>0,allowed:()=>true,allowed3:()=>true,clear:()=>true};

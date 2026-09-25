@@ -1,9 +1,9 @@
-/* Real flight v477 in the actual retained renderer with explicitly synthetic,
+/* Real flight v478 in the actual retained renderer with explicitly synthetic,
  * offline map input. Boards the craft, then flaps, stalls, dives and pulls up
  * with the real controls. Evidence, not a unit test. */
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),F=require('./connected_world_fixture_v386.cjs');
-const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-real-flight-v477',report={served:{},missing:[],checks:[],samples:{},errors:[],limits:['Actual retained renderer and loader with explicitly synthetic DEM/vector input.','Software WebGL at a phone viewport, not phone hardware.']};
+const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-real-flight-v478',report={served:{},missing:[],checks:[],samples:{},errors:[],limits:['Actual retained renderer and loader with explicitly synthetic DEM/vector input.','Software WebGL at a phone viewport, not phone hardware.']};
 fs.mkdirSync(out,{recursive:true});const server=F.createServer({root,port:8985,report});let browser,page;
 const run=code=>page.evaluate(code=>__testEval(code),code),read=()=>page.evaluate(()=>__burbzVillageWalkDebug.state()),pass=name=>{report.checks.push(name);console.log('PASS',name);};
 const agl=()=>page.evaluate(()=>{const d=__burbzVillageWalkDebug.state();return d.player.y-__burbzVillageWalkDebug.world().height(d.player.x,d.player.z);});

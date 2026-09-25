@@ -1,7 +1,7 @@
-# Real flight v477
+# Real flight v478
 
-Build: `realistic-flight-v477-20260925`.
-Status: pushed on `claude/burbz-realistic-flight-77nufl`, built on main at v475 (Academy manga). The Earth dock branch holds v476, so this takes v477. Not yet merged or published.
+Build: `realistic-flight-v478-20260925`.
+Status: pushed on `claude/burbz-realistic-flight-77nufl`, built on main after Academy manga v475 and the Earth dock (whose cache names used v476 and v477), so this takes v478. Not yet merged or published.
 
 ## What Yaan asked for
 
@@ -63,11 +63,11 @@ All the numbers live in one line at the top of `public/burbz/academy_flight_core
 
 ## Checks
 
-- New `tests/test_real_flight_v477.cjs`: 14 groups. Take-off, hover, tap-one-beat, stall, dive, pull-up, recovery, tuck, energy never appears from nowhere, floors and walls, resume, camera.
+- New `tests/test_real_flight_v478.cjs`: 14 groups. Take-off, hover, tap-one-beat, stall, dive, pull-up, recovery, tuck, energy never appears from nowhere, floors and walls, resume, camera.
 - `tests/test_flight_controls_v371.cjs`, `tests/test_geographic_world_v386.cjs` and the flight lines in `tests/test_academy_flight_v370.cjs` now check real flight instead of the old free hover.
-- The v470 and v472 release tests accept v477 pins, as earlier releases did.
+- The v470 and v472 release tests accept v478 pins, as earlier releases did.
 - Node suites: same results as main, plus the new test. Pytest: the same 312 failures as main, none new.
-- Browser, real renderer, synthetic map: new `tests/run_real_flight_v477.cjs` passes 6/6. Take-off settles without flapping; Flap climbs; letting go stalls and lights Flap; a dive goes 18 → 22 m/s; a pull-up climbs then stalls; W holds height at cruise. `run_craft_controls_v427` (now using Flap and Dive) passes 9/9. `run_alderwing_steady_v472` and `run_alderwing_nature_v470` pass.
+- Browser, real renderer, synthetic map: new `tests/run_real_flight_v478.cjs` passes 6/6. Take-off settles without flapping; Flap climbs; letting go stalls and lights Flap; a dive goes 18 → 22 m/s; a pull-up climbs then stalls; W holds height at cruise. `run_craft_controls_v427` (now using Flap and Dive) passes 9/9. `run_alderwing_steady_v472` and `run_alderwing_nature_v470` pass.
 - Academy "Fly around" in the browser: glides, stalls with the status line, Space hovers it up, it lands on the Library deck and takes off with a wingbeat. No page errors.
 
 ## Open
