@@ -144,7 +144,8 @@ def _photo_id_prompt(context=None):
             "A range model built from bird records lists these species as regularly present near there at this "
             "time of year, most likely first. Prefer them when the evidence fits them as well as anything else. "
             "A species not on the list can still be right (a vagrant, an escape or a gap in the list), but it needs "
-            "clear evidence: " + "; ".join(common + " (" + scientific + ")" for common, scientific in context["checklist"]) + ".")
+            "clear evidence. For a species on the list, use exactly its listed English and scientific names: "
+            + "; ".join(common + " (" + scientific + ")" for common, scientific in context["checklist"]) + ".")
     else:
         place.append("The location is unknown, so weigh geographically separated lookalikes.")
     return (
@@ -206,9 +207,11 @@ def reading(raw, path):
         if not isinstance(c, dict):
             continue
         name, scientific, p = _text(c.get("species"), 1, 100), _binomial(c.get("scientificName")), _score(c.get("probability"))
-        if not name or not scientific or p is None or scientific in seen:
+        # Two species can share an old binomial ("Hooded Crow, Corvus corone
+        # cornix"): keep both, and let the adapter's taxonomy tell them apart.
+        if not name or not scientific or p is None or (scientific, name.casefold()) in seen:
             continue
-        seen.add(scientific)
+        seen.add((scientific, name.casefold()))
         entry = {"species": name, "scientificName": scientific, "probability": p}
         plumage = _plumage(c.get("plumage"))
         if plumage:
@@ -320,7 +323,10 @@ class Recognizer:
             # the place of the current request. A stable proof id therefore never
             # meets request-conflict when the range model is up on one deploy
             # and down on the next.
-            job,cached=self.ledger.acquire(owner,request_id,hashlib.sha256(POLICY.encode()+b"\0"+data).hexdigest(),caller)
+            # A stored reading made without the local list is not reused for a
+            # request that has one: that is when a raven turns into an Anhinga.
+            reuse=(lambda stored:stored.get('context') is True) if context else None
+            job,cached=self.ledger.acquire(owner,request_id,hashlib.sha256(POLICY.encode()+b"\0"+data).hexdigest(),caller,reuse)
             if cached is not None:
                 return cached
             # The reservation covers two counted requests; one is used. There

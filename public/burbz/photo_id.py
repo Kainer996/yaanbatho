@@ -32,15 +32,20 @@ MODEL_FLOOR = .50
 # BirdNET Geomodel occurrence for the place and week. At or above LIKELY the
 # bird is expected there (Merlin's "likely" list); below it the weight falls
 # away linearly to a floor, so a vagrant stays pickable but cannot win on a
-# model's guess alone.
+# model's guess alone. A weight only ever lowers a score: what the range takes
+# away goes to "something else", never onto the birds that remain.
 LIKELY = .05
 RARE = .005
-FLOOR = .02
+FLOOR = .15
 UNKNOWN_RANGE_WEIGHT = .5
-OTHER_WEIGHT = .5
 CHECKLIST_MIN = .03
 CHECKLIST_SIZE = 300
 MIN_SHOWN = .02
+SHOWN_BY_MODEL = .10
+# Kept and domestic birds turn up anywhere: a range map says nothing of them.
+DOMESTIC = {"gallus gallus", "anser cygnoides", "numida meleagris", "melopsittacus undulatus",
+            "nymphicus hollandicus", "cairina moschata", "pavo cristatus", "serinus canaria",
+            "meleagris gallopavo", "coturnix japonica"}
 MAX_SHOWN = 5
 INCONCLUSIVE = "Bird not found. We couldn’t confirm the species. Try a closer, clearer view of the bird."
 PICK = "Bird detected. Pick your bird from the matches, or try another angle showing its head, wings and tail."
@@ -135,6 +140,14 @@ SPLITS = {
     "certhia familiaris": ("Certhia familiaris", "Certhia americana"),
     "lanius excubitor": ("Lanius excubitor", "Lanius borealis"),
     "tyto alba": ("Tyto alba", "Tyto furcata", "Tyto javanica"),
+    "gallinula chloropus": ("Gallinula chloropus", "Gallinula galeata"),
+    "aphelocoma californica": ("Aphelocoma californica", "Aphelocoma woodhouseii"),
+    "cyanopica cyanus": ("Cyanopica cyanus", "Cyanopica cooki"),
+}
+# Species since merged into another: they take the parent's name and range.
+MERGED = {
+    "corvus caurinus": "Corvus brachyrhynchos",
+    "gallus domesticus": "Gallus gallus",
 }
 # Species the range model folds into another. They keep their own name (Burbz
 # lists Lesser Redpoll) but borrow the parent's range.
@@ -151,21 +164,23 @@ LABEL_FIXES = {"Tyto alba": "Western Barn Owl"}
 class Taxonomy:
     """Map any model name onto one label, never by fuzzy guessing.
 
-    Order: the exact label when the model named it in full (Scopoli's
-    Shearwater, Calonectris diomedea); a known split when it used the old,
-    shared name (Herring Gull, Larus argentatus: the place picks the daughter);
-    exact scientific name; exact common name (Grey = Gray, hyphens and
-    apostrophes ignored); then a genus move: the same species epithet plus the
-    same bird word (Corvus monedula "Western Jackdaw" -> Coloeus monedula
-    "Eurasian Jackdaw"). A lumped species borrows its parent's range but keeps
-    its own name. Anything else keeps its own name.
-    Returns (position, scientific, common, split) where split is True only when
-    the place chose a different species than the model's own binomial.
+    The model's common name is the surer half: models keep up with English
+    names better than with Latin ones, so "Rainbow Lorikeet, Trichoglossus
+    haematodus" is the Rainbow Lorikeet (T. moluccanus), not the Coconut
+    Lorikeet that now carries that binomial. Otherwise: exact scientific name,
+    a genus move (same species epithet plus the same bird word: Corvus monedula
+    "Western Jackdaw" -> Coloeus monedula), then merged and lumped species.
+    When the place says the named bird does not live there (below RARE) and a
+    sister species of the same split does (at or above LIKELY), the sister is
+    taken: Herring Gull in Maine, Stonechat in Lancashire, Cattle Egret in
+    Sydney. Sisters come from the shared eBird code stem (categr1/categr2) and
+    from SPLITS. Returns (position, scientific, common, split), where split is
+    True when the place chose another species than the model named.
     """
 
     def __init__(self, rows):
         self.rows = []
-        self.by_scientific, self.by_common, self.by_stem = {}, {}, {}
+        self.by_scientific, self.by_common, self.by_stem, self.family = {}, {}, {}, {}
         # Most non-birds carry numeric GBIF ids, but so do 21 birds; a numeric
         # row is a bird when its genus is also an eBird-coded bird genus.
         bird_genera = {s.split()[0] for code, s, _ in rows if code and not code.isdigit() and len(s.split()) == 2}
@@ -180,32 +195,43 @@ class Taxonomy:
             self.by_scientific.setdefault(scientific.lower(), entry)
             self.by_common.setdefault(_common_key(common), entry)
             self.by_stem.setdefault(_stem(scientific.split()[1]), []).append(entry)
+            if not code.isdigit():
+                self.family.setdefault(re.sub(r"\d+$", "", code), []).append(entry)
+        self.stems = {e[0]: s for s, members in self.family.items() for e in members}
+
+    def _sisters(self, entry, key):
+        genus = entry[1].split()[0]
+        stem = self.stems.get(entry[0])
+        sisters = [e for e in self.family.get(stem, []) if e[1].split()[0] == genus] if stem else []
+        return sisters + [self.by_scientific[n.lower()] for n in SPLITS.get(key, ()) if n.lower() in self.by_scientific]
 
     def match(self, scientific, common, place=None):
         key = (scientific or "").lower()
-        found = self.by_scientific.get(key)
-        if found and common and _common_key(common) == _common_key(found[2]):
-            return found
-        options = [self.by_scientific[n.lower()] for n in SPLITS.get(key, ()) if n.lower() in self.by_scientific]
-        if options:
-            if place is None:
-                return found or options[0]
-            best = max(options, key=lambda e: place.occurrence(e[0]) or 0.0)
-            return best[:3] + (best[1].lower() != key,)
-        if found:
-            return found
-        found = self.by_common.get(_common_key(common or ""))
-        if found:
-            return found
-        words = (scientific or "").split()
-        if len(words) == 2 and common:
-            same = [e for e in self.by_stem.get(_stem(words[1]), []) if _head(e[2]) == _head(common)]
-            if len(same) == 1:
-                return same[0]
-        parent = self.by_scientific.get(LUMPS.get(key, "").lower())
-        if parent:
-            return (parent[0], scientific, common, False)
-        return None
+        by_scientific = self.by_scientific.get(key)
+        by_common = self.by_common.get(_common_key(common)) if common else None
+        base = by_common or by_scientific
+        if base is None:
+            words = (scientific or "").split()
+            if len(words) == 2 and common:
+                same = [e for e in self.by_stem.get(_stem(words[1]), []) if _head(e[2]) == _head(common)]
+                if len(same) == 1:
+                    base = same[0]
+        if base is None and key in MERGED:
+            parent = self.by_scientific.get(MERGED[key].lower())
+            return parent[:3] + (True,) if parent else None
+        if base is None:
+            parent = self.by_scientific.get(LUMPS.get(key, "").lower())
+            return (parent[0], scientific, common, False) if parent else None
+        if place is None:
+            return base
+        occurrence = lambda e: place.occurrence(e[0]) or 0.0
+        if occurrence(base) >= RARE:
+            return base
+        options = self._sisters(base, key) + ([by_scientific] if by_scientific else [])
+        best = max(options, key=occurrence, default=base)
+        if best[0] != base[0] and occurrence(best) >= LIKELY:
+            return best[:3] + (True,)
+        return base
 
 
 _taxonomy = None
@@ -341,10 +367,13 @@ def _local(occurrence):
 
 
 def rank(reading, place=None, taxonomy=None):
-    """Merge synonyms, apply the range prior and renormalise.
+    """Merge synonyms and weigh each bird by its range.
 
-    Returns ranked candidates [{species, scientificName, score, local?, plumage?,
-    _model}], where _model is the model's own merged probability.
+    score = the model's probability x the range weight (1 for a bird expected
+    here). Weights only lower a score: the mass they remove goes to "something
+    else", so ruling out an Anhinga never inflates the heron beside it.
+    Returns ranked candidates [{species, scientificName, score, modelSpecies?,
+    local?, plumage?, _model}], where _model is the model's own probability.
     """
     merged, order = {}, []
     for c in reading.get("candidates", []):
@@ -352,35 +381,33 @@ def rank(reading, place=None, taxonomy=None):
         scientific = match[1] if match else c["scientificName"]
         key = scientific.lower()
         if key not in merged:
-            # A place-chosen daughter takes its own name (Herring Gull in Maine
+            # A place-chosen sister takes its own name (Herring Gull in Maine
             # -> American Herring Gull); synonyms keep the model's familiar one.
             name = match[2] if match and match[3] else c["species"]
-            entry = {"species": name, "scientificName": scientific, "p": 0.0,
+            entry = {"species": name, "scientificName": scientific, "p": 0.0, "model": c["species"],
                      "position": match[0] if match else None}
             if c.get("plumage"):
                 entry["plumage"] = c["plumage"]
             merged[key] = entry
             order.append(key)
         merged[key]["p"] += c["probability"]
-    other = reading.get("otherProbability", 0.0)
     ranked = []
     for key in order:
         entry = merged[key]
-        occurrence = place.occurrence(entry["position"]) if place else None
-        weight = _weight(occurrence) if place else 1.0
-        ranked.append((entry, entry["p"] * weight, occurrence))
-    other_mass = other * (OTHER_WEIGHT if place else 1.0)
-    total = sum(mass for _, mass, _ in ranked) + other_mass
-    out = []
-    for entry, mass, occurrence in sorted(ranked, key=lambda item: -item[1]):
+        occurrence = place.occurrence(entry["position"]) if place and entry["position"] is not None else None
+        domestic = key in DOMESTIC
+        weight = 1.0 if not place or domestic else _weight(occurrence)
         candidate = {"species": entry["species"], "scientificName": entry["scientificName"],
-                     "score": round(mass / total, 3) if total > 0 else 0.0, "_model": entry["p"]}
+                     "score": round(min(1.0, entry["p"]) * weight, 3), "_model": entry["p"]}
+        if entry["model"] != entry["species"]:
+            candidate["modelSpecies"] = entry["model"]
         if place:
-            candidate["local"] = _local(occurrence)
+            candidate["local"] = "unknown" if domestic else _local(occurrence)
         if entry.get("plumage"):
             candidate["plumage"] = entry["plumage"]
-        out.append(candidate)
-    return out
+        ranked.append(candidate)
+    ranked.sort(key=lambda c: (-c["score"], -c["_model"]))
+    return ranked
 
 
 def decide(reading, place=None, taxonomy=None):
@@ -392,18 +419,19 @@ def decide(reading, place=None, taxonomy=None):
                       reason=reading.get("reason", "no-species"), message=reading.get("message") or INCONCLUSIVE)
         return result
     ranked = rank(reading, place, taxonomy)
-    model_top = ranked[0].get("_model", 0.0)
+    model_top = ranked[0]["_model"]
+    # A bird the model gave a fair chance stays pickable however far from home.
+    shown = [c for i, c in enumerate(ranked) if i == 0 or c["score"] >= MIN_SHOWN or c["_model"] >= SHOWN_BY_MODEL][:MAX_SHOWN]
     for candidate in ranked:
         candidate.pop("_model", None)
-    shown = [c for i, c in enumerate(ranked) if i == 0 or c["score"] >= MIN_SHOWN][:MAX_SHOWN]
     top = shown[0]
     second = ranked[1]["score"] if len(ranked) > 1 else 0.0
-    # The range prior may reorder the model's list, but "found" also needs the
-    # model's own conviction: ruling out two impossible birds is not seeing a third.
+    # "Found" needs the model's own conviction, a clear subject and, where the
+    # place is known, a bird that lives there.
     strong = (top["score"] >= MIN_CONFIDENCE and top["score"] - second >= MIN_MARGIN - 1e-9
               and model_top >= MODEL_FLOOR
               and reading.get("subjectClear") is True and len(reading.get("fieldMarks", [])) >= 2
-              and top.get("local", "likely") in ("likely", "unknown"))
+              and top.get("local", "likely") == "likely")
     if strong:
         return dict(base, found=True, accepted=True, verified=True, species=top["species"],
                     scientificName=top["scientificName"], confidence=top["score"], candidates=shown)

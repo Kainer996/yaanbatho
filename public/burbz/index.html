@@ -42871,6 +42871,7 @@ function photoMatchesFrom(result) {
     c.species.trim() && c.species.trim().length <= 100 && /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(c.scientificName || '') &&
     Number.isFinite(c.score) && c.score >= 0 && c.score <= 1)
     .map(c => ({ species: c.species.trim(), scientificName: c.scientificName, score: c.score,
+      modelSpecies: typeof c.modelSpecies === 'string' && c.modelSpecies.trim().length <= 100 ? c.modelSpecies.trim() : '',
       local: ['likely', 'rare', 'unexpected'].includes(c.local) ? c.local : '',
       plumage: typeof c.plumage === 'string' && /^[a-z ]{3,30}$/.test(c.plumage) ? c.plumage : '' }));
   if (strong && matches[0]?.scientificName !== result.scientificName) return [];
@@ -42879,10 +42880,22 @@ function photoMatchesFrom(result) {
 function photoResultMessage(result) {
   return typeof result?.message === 'string' ? result.message : '';
 }
+// The server names birds in the range model's (US) spelling and may rename a
+// split species; Burbz's catalogue uses UK names and older splits. Try every
+// name the answer carries before calling a bird "not in Burbz".
+function photoMatchProfile(match) {
+  if (typeof findSpeciesProfile !== 'function') return null;
+  const names = [match.species, match.modelSpecies].filter(Boolean);
+  for (const name of [...names, ...names.map(name => name.replace(/\bGray\b/g, 'Grey').replace(/-/g, ' ')), match.scientificName]) {
+    const profile = findSpeciesProfile(name);
+    if (profile) return profile;
+  }
+  return null;
+}
 const PHOTO_MATCH_LOCAL = { likely: ['Likely here', 'is-local'], rare: ['Rare here', 'is-far'], unexpected: ['Not expected here', 'is-far'] };
 function photoMatchCardHTML(match, index, strong) {
   const esc = value => String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  const profile = typeof findSpeciesProfile === 'function' ? (findSpeciesProfile(match.species) || findSpeciesProfile(match.scientificName)) : null;
+  const profile = photoMatchProfile(match);
   const name = profile?.name || match.species;
   const art = typeof resolveBuiltInBirdArt === 'function' ? resolveBuiltInBirdArt(name, match.species) : null;
   const tags = [[strong && index === 0 ? 'Strong match' : match.score >= .5 ? 'Good match' : 'Possible match', '']];
@@ -42933,7 +42946,9 @@ function pickPhotoMatch(index) {
     // Recorded first, so the discovery's own save carries the receipt.
     gameState.photoReceipts = { ...(gameState.photoReceipts || {}), [state.receiptId]: { at: Date.now(), species: match.species } };
   }
-  const birds = handleBirdCandidates({ species: match.species, scientificName: match.scientificName, confidence: match.score }, [], { source: 'photo', confirmedByPlayer: true });
+  const profile = photoMatchProfile(match);
+  const birds = handleBirdCandidates({ species: profile?.name || match.species, scientificName: profile?.scientificName || match.scientificName,
+    confidence: match.score }, [], { source: 'photo', confirmedByPlayer: true });
   if (!(Array.isArray(birds) && birds.length) && gameState?.photoReceipts) {
     delete gameState.photoReceipts[state.receiptId];  // nothing was added, so nothing is spent
   }

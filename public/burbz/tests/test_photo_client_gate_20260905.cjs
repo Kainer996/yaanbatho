@@ -286,6 +286,19 @@ test('a pick-your-bird answer lists local matches first and the player chooses o
   for(const change of [{receiptId:''},{policy:'photo-gemini-v425'},{retryable:true},{reason:'no-bird'}])
     assert.equal(h.ctx.photoMatchesFrom({...result,...change}).length,0);
 });
+test('a renamed or US-spelled bird still finds the Burbz bird',async()=>{
+  const profiles={'Barn Owl':{name:'Barn Owl',scientificName:'Tyto alba'},'Grey Heron':{name:'Grey Heron',scientificName:'Ardea cinerea'}};
+  const h=photoHarness(async()=>({ok:false,json:async()=>pickable([
+    {species:'Eastern Barn Owl',modelSpecies:'Barn Owl',scientificName:'Tyto javanica',score:.6,local:'likely'},
+    {species:'Gray Heron',scientificName:'Ardea cinerea',score:.2,local:'likely'}])}));
+  h.ctx.findSpeciesProfile=name=>profiles[name]||null;
+  await h.ctx.identifyImage({});
+  const cards=h.elements.birdCropMatches.innerHTML;
+  assert(!cards.includes('Not in Burbz yet'));assert.match(cards,/Barn Owl[\s\S]*Grey Heron/);
+  assert.equal(h.ctx.pickPhotoMatch(0),true);
+  assert.equal(JSON.stringify(h.awards[0][0]),JSON.stringify({species:'Barn Owl',scientificName:'Tyto alba',confidence:.6}));
+  assert.equal(h.awards[0][2].confirmedByPlayer,true);
+});
 test('card text is escaped and birds outside Burbz cannot be chosen',async()=>{
   const r=await invoke(pickable([{species:'<img src=x onerror=alert(1)>',scientificName:'Corvus corax',score:.5}]));
   assert(!r.elements.birdCropMatches.innerHTML.includes('<img src=x'));

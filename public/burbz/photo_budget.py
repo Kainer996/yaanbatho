@@ -119,7 +119,12 @@ class Ledger:
                     'availableNanoGBP':max(0,MONTH_LIMIT-spent),'resetAt':next_month(now),
                     'pricingValid':now < float(meta['pricing_expires']), 'disabled':bool(meta['disabled'])}
 
-    def acquire(self, owner, request_id, digest, caller):
+    def acquire(self, owner, request_id, digest, caller, reuse=None):
+        """Reserve one attempt, or return a stored result.
+
+        `reuse(result)` may decline a stored answer found by owner and image
+        for a new request id; the same request id always replays its own.
+        """
         now=self.clock()
         with self.connection() as c:
             c.execute('BEGIN IMMEDIATE')
@@ -139,7 +144,7 @@ class Ledger:
                     raise BudgetError('request-interrupted')
                 raise BudgetError('photo-busy',now+15)
             cached=c.execute("SELECT result FROM jobs WHERE owner=? AND digest=? AND state='accepted' ORDER BY started DESC LIMIT 1",(who,digest)).fetchone()
-            if cached:
+            if cached and (reuse is None or reuse(json.loads(cached['result']))):
                 return job,json.loads(cached['result'])
             if meta.get('disabled') or now >= float(meta['pricing_expires']):
                 raise BudgetError('pricing-review-required')

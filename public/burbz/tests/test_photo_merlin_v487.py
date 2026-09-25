@@ -39,6 +39,15 @@ ROWS = [
     ('redpol1', 'Acanthis flammea', 'Redpoll'),
     ('brnowl', 'Tyto alba', 'American Barn Owl'),
     ('1578502', 'Tyto furcata', 'American Barn Owl'),
+    ('railor4', 'Trichoglossus haematodus', 'Coconut Lorikeet'),
+    ('railor5', 'Trichoglossus moluccanus', 'Rainbow Lorikeet'),
+    ('categr2', 'Ardea coromanda', 'Eastern Cattle-Egret'),
+    ('azwmag2', 'Cyanopica cyanus', 'Azure-winged Magpie'),
+    ('azwmag3', 'Cyanopica cooki', 'Iberian Magpie'),
+    ('eurmag1', 'Pica pica', 'Eurasian Magpie'),
+    ('amecro', 'Corvus brachyrhynchos', 'American Crow'),
+    ('redjun', 'Gallus gallus', 'Red Junglefowl'),
+    ('rinphe', 'Phasianus colchicus', 'Ring-necked Pheasant'),
     ('25250', 'Pseudophryne raveni', 'Copper-backed Brood Frog'),
 ]
 # BirdNET Geomodel V3.0.2 at Clitheroe (53.9, -2.4), week 36, rounded.
@@ -59,8 +68,15 @@ def taxonomy():
     return photo_id.Taxonomy(ROWS)
 
 
+CLITHEROE.update({'Eurasian Magpie': 0, 'Pica pica': .992, 'Gallus gallus': .0016, 'Phasianus colchicus': .994})
+SYDNEY = {'Trichoglossus haematodus': .0013, 'Trichoglossus moluccanus': .99, 'Ardea ibis': 0.0,
+          'Ardea coromanda': .7, 'Tyto alba': 0.0}
+MADRID = {'Cyanopica cyanus': 0.0, 'Cyanopica cooki': .9, 'Pica pica': .99}
+SEATTLE = {'Corvus brachyrhynchos': .97}
+
+
 def place(taxonomy, table=CLITHEROE, lat=53.9, lon=-2.4, week=36):
-    return photo_id.Place(lat, lon, week, [table[s] for _, s, _ in ROWS], taxonomy)
+    return photo_id.Place(lat, lon, week, [table.get(s, 0.0) for _, s, _ in ROWS], taxonomy)
 
 
 def worker_reading(candidates, other=0.0, **updates):
@@ -107,15 +123,23 @@ def test_old_names_for_split_species_follow_the_place(taxonomy):
     assert taxonomy.match('Saxicola torquatus', 'Stonechat')[1] == 'Saxicola torquatus'
 
 
-def test_a_full_current_name_is_never_rewritten_by_the_place(taxonomy):
+def test_a_named_bird_that_lives_here_is_never_rewritten(taxonomy):
+    # Taiga v Tundra Bean Goose, Scopoli's v Cory's: a full name that is
+    # plausible here stays, and two rivals are never merged into one.
+    raw = worker_reading([('European Herring Gull', 'Larus argentatus', .45),
+                          ('American Herring Gull', 'Larus smithsonianus', .40)], other=.15, quality='clear')
+    result = decide(raw, place(taxonomy), taxonomy)
+    names = [c['scientificName'] for c in result['candidates']]
+    assert names == ['Larus argentatus', 'Larus smithsonianus'] and result['found'] is False
+    assert result['candidates'][1]['local'] == 'rare' or result['candidates'][1]['local'] == 'unexpected'
+
+
+def test_a_named_bird_absent_here_gives_way_to_its_sister(taxonomy):
     maine = place(taxonomy, MAINE, 44.0, -69.0)
-    assert taxonomy.match('Larus argentatus', 'European Herring Gull', maine)[1] == 'Larus argentatus'
     raw = worker_reading([('European Herring Gull', 'Larus argentatus', .45),
                           ('American Herring Gull', 'Larus smithsonianus', .40)], other=.15, quality='clear')
     result = decide(raw, maine, taxonomy)
-    names = [c['scientificName'] for c in result['candidates']]
-    assert names == ['Larus smithsonianus', 'Larus argentatus'], names   # two rivals, never merged
-    assert result['found'] is False                                      # the model was only 40% sure
+    assert [c['scientificName'] for c in result['candidates']] == ['Larus smithsonianus']
 
 
 def test_a_place_chosen_daughter_takes_its_own_name(taxonomy):
@@ -125,6 +149,81 @@ def test_a_place_chosen_daughter_takes_its_own_name(taxonomy):
     assert result['candidates'][0]['scientificName'] == 'Larus smithsonianus'
     jackdaw = decide(worker_reading([('Western Jackdaw', 'Corvus monedula', .9)], other=.1), place(taxonomy), taxonomy)
     assert jackdaw['candidates'][0]['species'] == 'Western Jackdaw'       # a synonym keeps the familiar name
+
+
+def test_the_english_name_beats_a_stale_binomial(taxonomy):
+    # Sydney: "Rainbow Lorikeet, Trichoglossus haematodus" is not the Coconut Lorikeet.
+    raw = worker_reading([('Rainbow Lorikeet', 'Trichoglossus haematodus', .85)], other=.15, quality='clear')
+    result = decide(raw, place(taxonomy, SYDNEY, -33.9, 151.2), taxonomy)
+    assert result['found'] and result['scientificName'] == 'Trichoglossus moluccanus'
+    assert result['species'] == 'Rainbow Lorikeet'
+
+
+def test_split_sisters_come_from_the_shared_code_and_the_place(taxonomy):
+    sydney = place(taxonomy, SYDNEY, -33.9, 151.2)
+    egret = decide(worker_reading([('Cattle Egret', 'Bubulcus ibis', .9)], other=.1, quality='clear'), sydney, taxonomy)
+    assert egret['scientificName'] == 'Ardea coromanda' and egret['candidates'][0]['species'] == 'Eastern Cattle-Egret'
+    assert egret['candidates'][0]['modelSpecies'] == 'Cattle Egret'
+    magpie = decide(worker_reading([('Azure-winged Magpie', 'Cyanopica cyanus', .9)], other=.1, quality='clear'),
+                    place(taxonomy, MADRID, 40.4, -3.7), taxonomy)
+    assert magpie['scientificName'] == 'Cyanopica cooki'
+
+
+def test_merged_species_take_the_parent(taxonomy):
+    crow = decide(worker_reading([('Northwestern Crow', 'Corvus caurinus', .9)], other=.1, quality='clear'),
+                  place(taxonomy, SEATTLE, 47.6, -122.3), taxonomy)
+    assert crow['found'] and crow['scientificName'] == 'Corvus brachyrhynchos' and crow['species'] == 'American Crow'
+    assert crow['candidates'][0]['modelSpecies'] == 'Northwestern Crow'
+
+
+def test_kept_and_domestic_birds_are_not_punished_by_range(taxonomy):
+    raw = worker_reading([('Domestic Chicken', 'Gallus gallus', .9), ('Ring-necked Pheasant', 'Phasianus colchicus', .05)],
+                         other=.05, quality='clear')
+    result = decide(raw, place(taxonomy), taxonomy)
+    assert result['candidates'][0]['scientificName'] == 'Gallus gallus'
+    assert result['candidates'][0]['local'] == 'unknown' and result['found'] is False   # the player confirms
+
+
+def test_the_range_only_lowers_scores_and_never_inflates_a_survivor(taxonomy):
+    # The reading Yaan actually got on 25 September: no raven in it at all.
+    raw = worker_reading([('Anhinga', 'Anhinga anhinga', .5), ('Great Blue Heron', 'Ardea herodias', .3),
+                          ('Grey Heron', 'Ardea cinerea', .15)], other=.05)
+    result = decide(raw, place(taxonomy), taxonomy)
+    top = result['candidates'][0]
+    assert top['scientificName'] == 'Ardea cinerea' and top['score'] == .15 and result['found'] is False
+    for c in result['candidates']:
+        assert c['score'] <= next(x[2] for x in [('Anhinga', 'Anhinga anhinga', .5), ('Great Blue Heron', 'Ardea herodias', .3),
+                                                  ('Grey Heron', 'Ardea cinerea', .15)] if x[1] == c['scientificName'])
+
+
+def test_a_bird_the_model_rates_stays_pickable_far_from_home(taxonomy):
+    raw = worker_reading([('Rainbow Lorikeet', 'Trichoglossus moluccanus', .4), ('Common Raven', 'Corvus corax', .45),
+                          ('Eurasian Jackdaw', 'Coloeus monedula', .1)], other=.05)
+    names = [c['scientificName'] for c in decide(raw, place(taxonomy), taxonomy)['candidates']]
+    assert 'Trichoglossus moluccanus' in names                # 0.4 x floor, still offered
+
+
+def test_a_reading_made_without_the_local_list_is_not_reused_with_one(ledger):
+    book, _ = ledger
+    data = jpeg()
+    provider = Provider(RAVEN_JSON)
+    recognizer = photo_gemini.Recognizer(book, provider)
+    recognizer.identify(data, 'owner_012345678901', 'request_aaaaaaaaaaaa', 'caller')          # cold GPS
+    context = place(photo_id.Taxonomy(ROWS)).context()
+    recognizer.identify(data, 'owner_012345678901', 'request_bbbbbbbbbbbb', 'caller', context)
+    assert len([a for a, _ in provider.calls if a == 'generateContent']) == 2
+    recognizer.identify(data, 'owner_012345678901', 'request_cccccccccccc', 'caller', context)
+    assert len([a for a, _ in provider.calls if a == 'generateContent']) == 2        # now reused
+
+
+def test_two_species_sharing_an_old_binomial_both_survive():
+    raw = {'liveBird': True, 'candidates': [
+        {'species': 'Carrion Crow', 'scientificName': 'Corvus corone', 'probability': .5},
+        {'species': 'Hooded Crow', 'scientificName': 'Corvus corone cornix', 'probability': .4}]}
+    worker = photo_gemini.reading(raw, io.BytesIO(jpeg()))
+    assert [c['species'] for c in worker['candidates']] == ['Carrion Crow', 'Hooded Crow']
+    tax = photo_id.Taxonomy(ROWS + [('hoocro1', 'Corvus cornix', 'Hooded Crow')])
+    assert tax.match('Corvus corone', 'Hooded Crow')[1] == 'Corvus cornix'
 
 
 def test_lumped_species_keep_their_name_and_borrow_the_range(taxonomy):
@@ -241,7 +340,7 @@ def test_place_context_is_coarse_and_lists_local_birds_most_likely_first(taxonom
 
 
 def test_gemini_list_reveals_only_the_region_and_season_it_is_sent_with(taxonomy):
-    fine = [CLITHEROE[s] for _, s, _ in ROWS]
+    fine = [CLITHEROE.get(s, 0.0) for _, s, _ in ROWS]
     coarse = [0.0 if s == 'Corvus corax' else p for (_, s, _), p in zip(ROWS, fine)]
     where = photo_id.Place(53.9, -2.4, 36, fine, taxonomy, coarse)
     names = [s for _, s in where.context()['checklist']]
@@ -271,7 +370,7 @@ class GeoProvider:
 
     def _geo_probabilities(self, lat, lon, week):
         self.asked.append((lat, lon, week))
-        return [CLITHEROE[s] for _, s, _ in ROWS]
+        return [CLITHEROE.get(s, 0.0) for _, s, _ in ROWS]
 
 
 def connection(calls, body):
@@ -349,7 +448,7 @@ RAVEN_JSON = {'liveBird': True, 'quality': 'silhouette', 'subjectBox': [20, 20, 
                               'plumage': 'adult'},
                              {'species': 'Carrion Crow', 'scientificName': 'Corvus corone', 'probability': .2,
                               'plumage': 'unknown'},
-                             {'species': 'Common Raven again', 'scientificName': 'Corvus corax', 'probability': .05},
+                             {'species': 'Common Raven', 'scientificName': 'Corvus corax', 'probability': .05},
                              {'species': 'Bad', 'scientificName': 'lowercase name', 'probability': .05}],
               'otherProbability': .05}
 
