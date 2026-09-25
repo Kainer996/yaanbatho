@@ -3674,7 +3674,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .academy-alive-sky { z-index:4; }
 .academy-alive-front { z-index:9; }
 .academy-alive-shade { position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg, rgba(10,16,42,.60), rgba(7,9,30,.38) 55%, rgba(4,5,18,.58)); opacity:0; transition:opacity 2.5s ease; }
-/* The moonlit night art (v482) carries the dark now; the shade is only a
+/* The moonlit night art (v483) carries the dark now; the shade is only a
    soft vignette that frames it. */
 .academy-treehouse.alive-night .academy-alive-shade { opacity:.2; }
 .academy-alive-light { position:absolute; inset:-4%; z-index:6; pointer-events:none; mix-blend-mode:screen; opacity:.8; background:linear-gradient(112deg, transparent 22%, rgba(255,240,196,.15) 30%, transparent 37%, transparent 47%, rgba(255,240,196,.09) 55%, transparent 62%); animation:aliveRays 17s ease-in-out infinite alternate; }
@@ -3689,7 +3689,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
    never enough to read as the photograph warping. */
 @keyframes treeSway { from { transform:rotate(-.15deg) translate(-1.4px,.6px); } to { transform:rotate(.15deg) translate(1.4px,-.6px); } }
 
-/* ---- Day and night (v482) ------------------------------------------------ */
+/* ---- Day and night (v483) ------------------------------------------------ */
 /* The Academy keeps the game's clock (academy_daynight.js sets the --dn-*
    variables). Under the day painting wait a live night sky and a moonlit
    copy of the same tree with its sky cut away; the day painting fades out
@@ -3726,7 +3726,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .academy-branch.ab-flip > img { transform:scaleX(-1); }
 /* Front boughs sit near the camera: a touch darker and softly out of focus. */
 .academy-branches-front .academy-branch { filter:brightness(.9) blur(.6px) drop-shadow(0 12px 14px rgba(12,24,8,.4)); }
-/* Night: each bough fades to its own moonlit copy (v482), so the filter
+/* Night: each bough fades to its own moonlit copy (v483), so the filter
    only adds depth, and the near boughs fall a shade darker. */
 .academy-branch > img.ab-night { position:absolute; left:0; top:0; opacity:var(--dn-night,0); }
 .academy-branch > img.ab-night:not([src]) { display:none; }
@@ -4671,8 +4671,8 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=academy-day-night-v482-20260925">
-<link rel="stylesheet" href="academy_daynight.css?v=academy-day-night-v482-20260925">
+<link rel="stylesheet" href="scan_home.css?v=academy-day-night-v483-20260925">
+<link rel="stylesheet" href="academy_daynight.css?v=academy-day-night-v483-20260925">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4972,7 +4972,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
            if 3D cannot start on this device we fall back to 2D by itself. -->
       <div class="academy-stage-wrap" id="academyStageWrap">
         <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
-          <!-- Day and night (v482): the live night sky and the moonlit tree
+          <!-- Day and night (v483): the live night sky and the moonlit tree
                wait under the day painting, which fades out as the real sun
                sets. academy_daynight.js keeps the clock. -->
           <div class="academy-night-sky" data-dn-sky aria-hidden="true"></div>
@@ -5733,12 +5733,12 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=expedition-duration-v455-20260923"></script>
-<script src="academy_alive_core.js?v=academy-day-night-v482-20260925"></script>
+<script src="academy_alive_core.js?v=academy-day-night-v483-20260925"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="first_village_tutorial.js?v=hall-music-v458-20260923"></script>
 <script src="desk_portal.js?v=hall-music-v458-20260923"></script>
 <script src="manga_render_core.js?v=alderwing-nature-v470-20260925"></script>
-<script src="academy_3d_core.js?v=academy-day-night-v482-20260925"></script>
+<script src="academy_3d_core.js?v=academy-day-night-v483-20260925"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5771,7 +5771,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_interior_core.js?v=tavern-hall-open-v450-20260923"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
-<script src="academy_daynight.js?v=academy-day-night-v482-20260925"></script>
+<script src="academy_daynight.js?v=academy-day-night-v483-20260925"></script>
 <script src="geographic_forest_core.js?v=continuous-world-v391-20260910"></script>
 <script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
@@ -5780,7 +5780,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
 <script src="scan_home_core.js?v=academy-manga-v475-20260925"></script>
-<script src="scan_home.js?v=academy-day-night-v482-20260925"></script>
+<script src="scan_home.js?v=academy-day-night-v483-20260925"></script>
 <script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -14892,7 +14892,7 @@ function crowbarCrowHTML() {
     '</g></svg></span>';
 }
 
-// Every manga house has a lit-up night picture of the same size (v482).
+// Every manga house has a lit-up night picture of the same size (v483).
 function academyNightAsset(asset) {
   return /^assets\/academy-manga-20260925\/(?!aviary|tree|bough)/.test(asset || '') ? asset.replace('academy-manga-20260925/', 'academy-night-20260925/manga/') : '';
 }
@@ -45556,7 +45556,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-day-night-v482-20260925';
+const BURBZ_BUILD = 'academy-day-night-v483-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

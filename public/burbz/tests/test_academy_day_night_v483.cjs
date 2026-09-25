@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
-// Academy day and night (v482): both Academy trees keep the game's clock.
+// Academy day and night (v483): both Academy trees keep the game's clock.
 // The day painting fades out as the sun sets over a moonlit copy of the tree
 // and a live night sky; every house fades to a lit-up night picture, and warm
 // lamplight pools on the bark. Night art loads only from dusk.
@@ -103,9 +103,9 @@ test('the night sky respects reduced motion',()=>{
  assert(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*\.dn-twinkle \{ animation:none;[\s\S]*\.dn-shooting-star \{ animation:none; display:none; \}/.test(css));
  assert(/\.academy-tree-night, \.academy-night-pools \{ animation:none; \}/.test(read('index.html')));
 });
-test('v482 ships together: build marker, cache, three worker lists, updater and night art',()=>{
- const BUILD='academy-day-night-v482-20260925',html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
- // Later releases ship on top under their own marker; v482 stays in the cache chain.
+test('v483 ships together: build marker, cache, three worker lists, updater and night art',()=>{
+ const BUILD='academy-day-night-v483-20260925',html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
+ // Later releases ship on top under their own marker; v483 stays in the cache chain.
  const LATER=[],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));assert(cache.includes('-'+BUILD)&&shipped.some(b=>cache.endsWith('-'+b)));
  for(const file of ['academy_daynight.js','academy_daynight.css','academy_alive_core.js','academy_3d_core.js','scan_home.js','scan_home.css']){

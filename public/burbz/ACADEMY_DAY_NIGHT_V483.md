@@ -1,6 +1,6 @@
-# Academy day and night v482
+# Academy day and night v483
 
-Build: `academy-day-night-v482-20260925`
+Build: `academy-day-night-v483-20260925`
 
 Yaan asked for the Academy screen and Home's little Academy to have day and night, the same as the rest of the game, and to be lit up and cosy at night.
 
@@ -34,6 +34,6 @@ Rerun it from `public/burbz` if a painting changes. It needs Pillow, numpy and s
 - Pins in `index.html`, all three worker lists in `sw.js`, and `scripts/update-live-burbz.sh`.
 
 ## Checks
-- `node tests/test_academy_day_night_v482.cjs`: 11 groups.
-- Browser: `node tests/run_academy_day_night_v482.cjs`: 7 checks, phone and laptop, day, dusk and night, reduced motion, and a night painting that fails to load.
+- `node tests/test_academy_day_night_v483.cjs`: 11 groups.
+- Browser: `node tests/run_academy_day_night_v483.cjs`: 7 checks, phone and laptop, day, dusk and night, reduced motion, and a night painting that fails to load.
 - Full node and pytest suites match main, apart from the new test.

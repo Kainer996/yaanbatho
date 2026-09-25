@@ -1,8 +1,8 @@
 'use strict';
-// Browser evidence for Academy day and night (v482): both Academy trees keep
+// Browser evidence for Academy day and night (v483): both Academy trees keep
 // the game's clock. By day no night art is fetched; from dusk the moonlit
 // tree, the lit houses, the star field and the lamplight pools all arrive.
-// Run: node tests/run_academy_day_night_v482.cjs  (EVIDENCE_DIR to keep shots)
+// Run: node tests/run_academy_day_night_v483.cjs  (EVIDENCE_DIR to keep shots)
 const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
 function loadPlaywright() {
   for (const id of ['playwright', '/opt/node22/lib/node_modules/playwright', '/home/yaan/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright']) {
@@ -12,7 +12,7 @@ function loadPlaywright() {
 }
 const { chromium } = loadPlaywright();
 const F = require('./connected_world_fixture_v386.cjs');
-const root = path.resolve(__dirname, '..'), out = process.env.EVIDENCE_DIR || '/tmp/burbz-academy-day-night-v482';
+const root = path.resolve(__dirname, '..'), out = process.env.EVIDENCE_DIR || '/tmp/burbz-academy-day-night-v483';
 const report = { served:{}, missing:[], errors:[], checks:[], night:[] };
 const fixture = F.createServer({ root, port:8969, report });
 fs.mkdirSync(out, { recursive:true });
