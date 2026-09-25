@@ -42883,9 +42883,14 @@ function photoResultMessage(result) {
 // The server names birds in the range model's (US) spelling and may rename a
 // split species; Burbz's catalogue uses UK names and older splits. Try every
 // name the answer carries before calling a bird "not in Burbz".
+// Range-model names for birds Burbz knows by another name.
+const PHOTO_LABEL_NAMES = { 'Maned Duck': 'Australian Wood Duck', 'Eastern Barn Owl': 'Barn Owl',
+  'American Barn Owl': 'Barn Owl', 'Western Barn Owl': 'Barn Owl', 'Australian Pipit': 'Australasian Pipit',
+  'Torresian Kingfisher': 'Collared Kingfisher', 'Black-backed Bittern': 'Australian Little Bittern' };
 function photoMatchProfile(match) {
   if (typeof findSpeciesProfile !== 'function') return null;
   const names = [match.species, match.modelSpecies].filter(Boolean);
+  names.push(...names.map(name => PHOTO_LABEL_NAMES[name]).filter(Boolean));
   for (const name of [...names, ...names.map(name => name.replace(/\bGray\b/g, 'Grey').replace(/-/g, ' ')), match.scientificName]) {
     const profile = findSpeciesProfile(name);
     if (profile) return profile;

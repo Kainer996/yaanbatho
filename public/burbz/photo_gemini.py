@@ -144,7 +144,7 @@ def _photo_id_prompt(context=None):
             "A range model built from bird records lists these species as regularly present near there at this "
             "time of year, most likely first. Prefer them when the evidence fits them as well as anything else. "
             "A species not on the list can still be right (a vagrant, an escape or a gap in the list), but it needs "
-            "clear evidence. For a species on the list, use exactly its listed English and scientific names: "
+            "clear evidence: "
             + "; ".join(common + " (" + scientific + ")" for common, scientific in context["checklist"]) + ".")
     else:
         place.append("The location is unknown, so weigh geographically separated lookalikes.")

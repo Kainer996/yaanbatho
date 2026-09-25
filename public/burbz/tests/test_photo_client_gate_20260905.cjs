@@ -287,7 +287,9 @@ test('a pick-your-bird answer lists local matches first and the player chooses o
     assert.equal(h.ctx.photoMatchesFrom({...result,...change}).length,0);
 });
 test('a renamed or US-spelled bird still finds the Burbz bird',async()=>{
-  const profiles={'Barn Owl':{name:'Barn Owl',scientificName:'Tyto alba'},'Grey Heron':{name:'Grey Heron',scientificName:'Ardea cinerea'}};
+  const profiles={'Barn Owl':{name:'Barn Owl',scientificName:'Tyto alba'},'Grey Heron':{name:'Grey Heron',scientificName:'Ardea cinerea'},
+    'Australian Wood Duck':{name:'Australian Wood Duck',scientificName:''}};
+  assert.equal(vm.runInContext('(profiles=>{findSpeciesProfile=n=>profiles[n]||null;return photoMatchProfile({species:"Maned Duck",scientificName:"Chenonetta jubata"})?.name})',photoHarness(async()=>({})).ctx)(profiles),'Australian Wood Duck');
   const h=photoHarness(async()=>({ok:false,json:async()=>pickable([
     {species:'Eastern Barn Owl',modelSpecies:'Barn Owl',scientificName:'Tyto javanica',score:.6,local:'likely'},
     {species:'Gray Heron',scientificName:'Ardea cinerea',score:.2,local:'likely'}])}));

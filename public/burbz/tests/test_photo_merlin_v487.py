@@ -469,6 +469,9 @@ def test_worker_makes_one_medium_thinking_call_with_place_in_the_prompt(ledger):
     prompt = parts[1]['text']
     assert 'near 54.0°N, 2.5°W' in prompt and 'late September' in prompt and 'Common Raven (Corvus corax)' in prompt
     assert 'Anhinga' not in prompt and 'wedge-shaped' in prompt
+    # Gemini keeps its own everyday names; forcing the list's names turned
+    # Australian Wood Duck into "Maned Duck", a name Burbz does not know.
+    assert 'use exactly its listed' not in prompt
     assert result['found'] is True and result['accepted'] is False and len(result['receiptId']) == 64
     assert [c['scientificName'] for c in result['candidates']] == ['Corvus corax', 'Corvus corone']
     assert result['candidates'][0]['plumage'] == 'adult' and 'plumage' not in result['candidates'][1]
