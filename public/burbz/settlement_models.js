@@ -796,7 +796,7 @@
         // theirs at the sides and back.
         if(style==='tonsure'||style==='bald'){
           const bald=style==='bald';
-          r.add(new T.SphereGeometry(.139*hs,16,3,bald?PI*.875:0,bald?PI*1.25:TAU,bald?1.05:.8,bald?.8:.95),paint,[0,P.hy,-.004*hs],[-.32,0,0],[1,1.04,.99],'head');
+          r.add(new T.SphereGeometry(.139*hs,16,3,bald?PI*.875:0,bald?PI*1.25:TAU,bald?1.0:.8,.95),paint,[0,P.hy,-.004*hs],[bald?-.55:-.32,0,0],[1,1.04,.99],'head');
           return;
         }
         // Hairline as a polar angle from the crown, by direction round the head
@@ -1085,8 +1085,9 @@
       const f=g.userData.folk;if(!f)return;
       state=state||{};time=time||0;
       const m=motion==null?1:clamp(motion,0,1),b=f.b,L=f.look,H=f.holds,G=f.gait,ph=L.phase,act=state.activity||'';
+      const walking=!!state.moving&&m>0,working=WORK.test(act),pushing=PUSHING.test(act);
       // An unhappy villager hangs their head; a tired one droops half as much.
-      const walking=!!state.moving&&m>0,droop=state.mood==='Unhappy'?1:state.mood==='Tired'?.5:0,working=WORK.test(act),pushing=PUSHING.test(act);
+      const droop=state.mood==='Unhappy'?1:state.mood==='Tired'?.5:0;
       const pel=b.pelvis,ch=b.chest,stoop=L.stoop+.1*droop,lean=pushing?.26:0;
       let headX=.22*droop-lean*.8,headY=0,headZ=0,low=-1;
       if(walking){
@@ -1098,8 +1099,8 @@
           const p=s+(i?PI:0),sp=Math.sin(p),cp=Math.cos(p),side=i?-1:1;
           gaitLeg(G,p);
           // The foot lands heel first, stays flat while it carries weight, then
-          // lifts its heel and rolls off the toe.
-          // The thigh angle is in the world, so the hip undoes the pelvis tilt.
+          // lifts its heel and rolls off the toe. Thigh and foot angles are
+          // measured in the world, so the hip undoes the pelvis tilt.
           const th=LEG[0],kn=LEG[1],pitch=pel.rotation.x-(sp>0?.3*sp*(1-smooth(-.3,.3,-cp)):.4*sp*smooth(-.7,.1,cp));
           b.legs[i].rotation.set(th-pel.rotation.x,0,-pel.rotation.z);
           b.shins[i].rotation.set(kn,0,0);
@@ -1175,11 +1176,11 @@
     }
     // A real hammer stroke: a slow lift with the elbow out and the wrist cocked
     // back, a quick fall onto the work, a moment's rest, eyes on the nail. The
-    // hammer peaks at shoulder height, out to the side, well clear of the face.
+    // upper arm turns out on the lift, so the hammer rises beside the shoulder,
+    // clear of the face.
     function hammer(b,t,m){
       const c=t-Math.floor(t),up=c<.5?smooth(0,.5,c):c<.62?1-((c-.5)/.12)**2:0;
       b.swings[1].rotation.x-=(.55+.2*up)*m;
-      // The upper arm turns out, so the hammer rises beside the shoulder.
       b.arms[1].rotation.y-=.4*up*m;
       b.arms[1].rotation.z-=.3*up*m;
       b.fores[1].rotation.x-=(.45+.5*up)*m;
@@ -1191,7 +1192,7 @@
     // in the right hand and one in the left.
     function juggle(f,b,time,m){
       const J=f.juggle;
-      if(m<=0){
+      if(!m){
         b.balls[0].position.set(J.R.x-.03,J.R.y+.03,J.R.z+.05);
         b.balls[1].position.set(J.R.x+.03,J.R.y+.03,J.R.z+.05);
         b.balls[2].position.set(J.L.x,J.L.y+.03,J.L.z+.05);
