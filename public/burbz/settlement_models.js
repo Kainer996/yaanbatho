@@ -23,6 +23,100 @@
     }return group;}
     return {add,box,cylinder,sphere,finish};
   }
+  // A rigged batch. Parts are laid out in their rest pose, in model space, and
+  // each is bound to a named bone (or eased between two). finish() merges them
+  // into ONE skinned mesh: a whole villager or animal costs one draw call, and
+  // the animators turn real joints instead of loose blobs.
+  function rig(T){
+    const bones=[],named={},parts=[],colour=new T.Color();
+    function bone(name,parent,at){
+      const b=new T.Bone(),p=parent?named[parent]:null;
+      if(parent&&!p)throw Error('Unknown parent bone '+parent);
+      b.name=name;b.userData.at=at.slice();
+      if(p){b.position.set(at[0]-p.userData.at[0],at[1]-p.userData.at[1],at[2]-p.userData.at[2]);p.add(b);}
+      else b.position.set(at[0],at[1],at[2]);
+      b.userData.boneIndex=bones.length;bones.push(b);named[name]=b;return b;
+    }
+    // color: a hex/Color, or fn(x,y,z) returning one, to paint patterns in
+    // model space. blend: {bone,from,to} eases weight onto a second bone along
+    // from→to, so sleeves and trouser legs bend at the joint without a crack.
+    function add(geo,color,pos=[0,0,0],rot=[0,0,0],scale=[1,1,1],boneName,blend){
+      const b=named[boneName];if(!b)throw Error('Unknown bone '+boneName);
+      if(blend&&!named[blend.bone])throw Error('Unknown blend bone '+blend.bone);
+      if(!geo.attributes.normal)geo.computeVertexNormals();
+      geo.applyMatrix4(new T.Matrix4().compose(new T.Vector3(...pos),new T.Quaternion().setFromEuler(new T.Euler(...rot)),new T.Vector3(...scale)));
+      parts.push({geo,color,bone:b.userData.boneIndex,blend:blend&&{...blend,bone:named[blend.bone].userData.boneIndex}});
+      return geo;
+    }
+    const seg=(n,lo)=>Math.max(lo,Math.round(n));
+    function sphere(r,pos,color,boneName,scale=[1,1,1],rot=[0,0,0],w=12,h=9){return add(new T.SphereGeometry(r,seg(w,4),seg(h,3)),color,pos,rot,scale,boneName);}
+    function box(size,pos,color,boneName,rot=[0,0,0]){return add(new T.BoxGeometry(size[0],size[1],size[2]),color,pos,rot,[1,1,1],boneName);}
+    function cylinder(r1,r2,h,pos,color,boneName,rot=[0,0,0],n=10,open=false){return add(new T.CylinderGeometry(r1,r2,h,seg(n,3),1,open),color,pos,rot,[1,1,1],boneName);}
+    function cone(r,h,pos,color,boneName,rot=[0,0,0],n=10){return add(new T.ConeGeometry(r,h,seg(n,3)),color,pos,rot,[1,1,1],boneName);}
+    function capsule(r,length,pos,color,boneName,rot=[0,0,0],scale=[1,1,1],n=10){return add(new T.CapsuleGeometry(r,length,3,seg(n,4)),color,pos,rot,scale,boneName);}
+    function torus(r,tube,pos,color,boneName,rot=[0,0,0],scale=[1,1,1],arc=Math.PI*2){return add(new T.TorusGeometry(r,tube,6,16,arc),color,pos,rot,scale,boneName);}
+    // A turned profile [[radius,y],...] around the Y axis: skirts, tunics, bodies.
+    function lathe(profile,pos,color,boneName,scale=[1,1,1],rot=[0,0,0],n=14,blend){return add(new T.LatheGeometry(profile.map(([r,y])=>new T.Vector2(Math.max(r,.0001),y)),seg(n,3)),color,pos,rot,scale,boneName,blend);}
+    // A tapered rod between two rest-pose points: limbs, shafts, horns.
+    function limb(from,to,r1,r2,color,boneName,blend,n=9){
+      const a=new T.Vector3(...from),bEnd=new T.Vector3(...to),dir=bEnd.clone().sub(a),len=dir.length();
+      const geo=new T.CylinderGeometry(r2,r1,len,seg(n,3),1,false);
+      const q=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),dir.normalize());
+      geo.applyMatrix4(new T.Matrix4().compose(a.clone().add(bEnd).multiplyScalar(.5),q,new T.Vector3(1,1,1)));
+      const b=named[boneName];if(!b)throw Error('Unknown bone '+boneName);
+      parts.push({geo,color,bone:b.userData.boneIndex,blend:blend&&{...blend,bone:named[blend.bone].userData.boneIndex}});
+      return geo;
+    }
+    // A smooth bent tube through rest-pose points: tails, horns, rods, handles.
+    function tube(points,radius,color,boneName,n=6,tubular=12){
+      const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(...p)));
+      return add(new T.TubeGeometry(curve,seg(tubular,2),radius,seg(n,3),false),color,[0,0,0],[0,0,0],[1,1,1],boneName);
+    }
+    function finish(options={}){
+      let vertices=0,indices=0;
+      for(const p of parts){const count=p.geo.attributes.position.count;vertices+=count;indices+=p.geo.index?p.geo.index.count:count;}
+      const position=new Float32Array(vertices*3),normal=new Float32Array(vertices*3),color=new Float32Array(vertices*3);
+      const skinIndex=new Uint16Array(vertices*4),skinWeight=new Float32Array(vertices*4);
+      const index=new (vertices>65535?Uint32Array:Uint16Array)(indices);
+      let v=0,i=0;
+      for(const p of parts){
+        const pos=p.geo.attributes.position,nor=p.geo.attributes.normal,count=pos.count,paint=typeof p.color==='function';
+        if(!paint)colour.set(p.color);
+        let ax=0,ay=0,az=0,dx=0,dy=0,dz=0,dd=1;
+        if(p.blend){[ax,ay,az]=p.blend.from;dx=p.blend.to[0]-ax;dy=p.blend.to[1]-ay;dz=p.blend.to[2]-az;dd=dx*dx+dy*dy+dz*dz||1;}
+        for(let k=0;k<count;k++){
+          const x=pos.getX(k),y=pos.getY(k),z=pos.getZ(k),o=(v+k)*3,s=(v+k)*4;
+          position[o]=x;position[o+1]=y;position[o+2]=z;
+          normal[o]=nor.getX(k);normal[o+1]=nor.getY(k);normal[o+2]=nor.getZ(k);
+          if(paint)colour.set(p.color(x,y,z));
+          color[o]=colour.r;color[o+1]=colour.g;color[o+2]=colour.b;
+          let w=0;
+          if(p.blend){const t=Math.min(1,Math.max(0,((x-ax)*dx+(y-ay)*dy+(z-az)*dz)/dd));w=t*t*(3-2*t);}
+          skinIndex[s]=p.bone;skinIndex[s+1]=p.blend?p.blend.bone:0;skinWeight[s]=1-w;skinWeight[s+1]=w;
+        }
+        if(p.geo.index){const src=p.geo.index.array;for(let k=0;k<src.length;k++)index[i++]=v+src[k];}
+        else for(let k=0;k<count;k++)index[i++]=v+k;
+        v+=count;p.geo.dispose();
+      }
+      const geo=new T.BufferGeometry();
+      geo.setAttribute('position',new T.BufferAttribute(position,3));geo.setAttribute('normal',new T.BufferAttribute(normal,3));
+      geo.setAttribute('color',new T.BufferAttribute(color,3));
+      geo.setAttribute('skinIndex',new T.Uint16BufferAttribute(skinIndex,4));geo.setAttribute('skinWeight',new T.BufferAttribute(skinWeight,4));
+      geo.setIndex(new T.BufferAttribute(index,1));geo.computeBoundingBox();geo.computeBoundingSphere();
+      const material=new T.MeshStandardMaterial({vertexColors:true,roughness:options.roughness??.86,metalness:0});
+      const mesh=new T.SkinnedMesh(geo,material);mesh.name=options.name||'rigged-model';
+      for(const b of bones)if(!b.parent)mesh.add(b);
+      mesh.updateMatrixWorld(true);mesh.bind(new T.Skeleton(bones));
+      // Rest-pose bounds, padded for swinging limbs, keep culling and taps
+      // independent of whatever pose the first frame happens to catch.
+      const pad=options.pad??.18;
+      mesh.boundingBox=geo.boundingBox.clone().expandByScalar(pad);
+      mesh.boundingSphere=geo.boundingSphere.clone();mesh.boundingSphere.radius+=pad;
+      mesh.castShadow=true;mesh.receiveShadow=true;
+      return {mesh,bones:named,triangles:indices/3};
+    }
+    return {bone,add,sphere,box,cylinder,cone,capsule,torus,lathe,limb,tube,finish,bones:named};
+  }
   function building(T,id,level,random,palette={}){
     const buildingId=id;id=({lumberhut:'lumberjack_hut',minehut:'miners_hut'})[id]||id;
     const b=batch(T),r=random||(()=>.5),p={...COLOURS},stoneHome=id==='cabin'&&level>=3;
@@ -182,5 +276,5 @@
     rig.head.rotation.x=state.mood&&state.mood!=='Content'?.24:0;
     rig.body.rotation.z=state.mood==='Unhappy'?Math.sin(time*.7+rig.phase)*.025*motion:0;
   }
-  root.BurbzSettlementModels={batch,building,bird,animateBird,resident,animateResident};
+  root.BurbzSettlementModels={batch,rig,building,bird,animateBird,resident,animateResident};
 })(typeof globalThis!=='undefined'?globalThis:this);
