@@ -146,7 +146,7 @@ test('the flight clamp still lets the pilot look straight down',()=>{
 test('v472 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
  // Later releases ship on top under their own marker; v472 stays in the cache chain.
- const LATER=['academy-living-tree-v473-20260925','home-dock-back-v474-20260925','academy-manga-v475-20260925','realistic-flight-v478-20260925','merlin-flight-v479-20260925','glide-release-v481-20260925','alderwing-seamless-v482-20260925','academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ const LATER=['academy-living-tree-v473-20260925','home-dock-back-v474-20260925','academy-manga-v475-20260925','realistic-flight-v478-20260925','merlin-flight-v479-20260925','glide-release-v481-20260925','alderwing-seamless-v482-20260925','academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925','fold-fullscreen-v489-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(build=>html.includes("const BURBZ_BUILD = '"+build+"';")));
  assert(cache.includes('-'+BUILD)&&shipped.some(build=>cache.endsWith('-'+build)));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
