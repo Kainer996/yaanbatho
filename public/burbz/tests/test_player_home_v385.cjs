@@ -27,7 +27,7 @@ let full=C.normalize({...home,owned:{...home.owned,rug:100},placed:[]});
 for(const area of ['room','library','conservatory'])for(let n=0;n<32;n++){const r=C.propose(full,wallet,{kind:'place',item:'rug',area,x:0,z:0});assert(r.ok);full=r.home;}
 assert.equal(full.placed.length,96);assert(!C.propose(full,wallet,{kind:'place',item:'rug',area:'workshop',x:0,z:0}).ok);assert(!C.propose(full,wallet,{kind:'place',id:full.placed[0].id,item:'rug',area:'library',x:0,z:0}).ok);
 assert(C.propose(full,wallet,{kind:'place',id:full.placed[0].id,item:'rug',area:'room',x:.5,z:0}).ok);
-// v483 took the ring of trees away from the plot: nothing there can be chopped,
+// v485 took the ring of trees away from the plot: nothing there can be chopped,
 // and the old tree spots are open ground.
 const tree=C.TREES[0],action={kind:'chop',id:tree.id,area:'yard',x:tree.x+1,z:tree.z};let forest=C.normalize({...home,trees:{}}),purse={branches:10};
 assert(!C.propose(forest,purse,action).ok);assert.equal(purse.branches,10);assert(C.world(forest,'yard').allowed(tree.x,tree.z));

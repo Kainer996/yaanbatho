@@ -3567,7 +3567,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 
 .academy-treehouse { position:relative; margin:0 10px 14px; min-height:680px; border:1px solid rgba(214,168,79,.24); border-radius:22px; overflow:hidden; background:#7cc3ea; box-shadow:inset 0 -60px 80px rgba(0,0,0,.18), 0 18px 44px rgba(0,0,0,.42); touch-action:manipulation; }
 .academy-treehouse.placing { outline:2px solid rgba(214,168,79,.78); box-shadow:0 0 0 4px rgba(214,168,79,.14), inset 0 -60px 80px rgba(0,0,0,.18); cursor:crosshair; }
-.academy-treehouse::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 18%,rgba(255,236,170,.14),transparent 30%), linear-gradient(180deg,rgba(255,255,255,.04),transparent 34%,rgba(0,0,0,.12)); pointer-events:none; }
+.academy-treehouse::after { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 18%,rgba(255,236,170,.14),transparent 30%), linear-gradient(180deg,rgba(255,255,255,.04),transparent 34%,rgba(0,0,0,.12)); pointer-events:none; opacity:calc(.35 + .65 * var(--dn-sun,1)); }
 .treehouse-branch { display:none; }
 /* Built rooms sit frameless on the tree so the paintings read as one scene;
    the box chrome only returns while placing (dashed target) or when active. */
@@ -3674,19 +3674,43 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .academy-alive-sky { z-index:4; }
 .academy-alive-front { z-index:9; }
 .academy-alive-shade { position:absolute; inset:0; z-index:1; pointer-events:none; background:linear-gradient(180deg, rgba(10,16,42,.60), rgba(7,9,30,.38) 55%, rgba(4,5,18,.58)); opacity:0; transition:opacity 2.5s ease; }
-/* The manga tree is bright by day, so night pulls the shade in a little deeper. */
-.academy-treehouse.alive-night .academy-alive-shade { opacity:.66; }
+/* The moonlit night art (v483) carries the dark now; the shade is only a
+   soft vignette that frames it. */
+.academy-treehouse.alive-night .academy-alive-shade { opacity:.2; }
 .academy-alive-light { position:absolute; inset:-4%; z-index:6; pointer-events:none; mix-blend-mode:screen; opacity:.8; background:linear-gradient(112deg, transparent 22%, rgba(255,240,196,.15) 30%, transparent 37%, transparent 47%, rgba(255,240,196,.09) 55%, transparent 62%); animation:aliveRays 17s ease-in-out infinite alternate; }
 .academy-treehouse.alive-night .academy-alive-light { background:linear-gradient(112deg, transparent 30%, rgba(190,214,255,.10) 40%, transparent 50%); animation-duration:23s; }
 @keyframes aliveRays { from { transform:translateX(-2%); opacity:.55; } to { transform:translateX(2%); opacity:.95; } }
 .th-alive-glow { position:absolute; pointer-events:none; mix-blend-mode:screen; opacity:0; }
 /* The tree painting itself breathes: the background image lives on this div
    (not the container) so a slow wind-sway can rock the whole canopy. */
-.academy-tree-swaybg { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(255,250,235,0) 60%,rgba(24,40,16,.16)), url('assets/academy-manga-20260925/tree.webp') center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
+.academy-tree-swaybg { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(255,250,235,0) 60%,rgba(24,40,16,.16)), url('assets/academy-manga-20260925/tree.webp') center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; opacity:var(--dn-sun,1); }
 /* A breath, not a lean: with the painted branch layers carrying the visible
    movement, the trunk itself only drifts a hair — enough to feel alive,
    never enough to read as the photograph warping. */
 @keyframes treeSway { from { transform:rotate(-.15deg) translate(-1.4px,.6px); } to { transform:rotate(.15deg) translate(1.4px,-.6px); } }
+
+/* ---- Day and night (v483) ------------------------------------------------ */
+/* The Academy keeps the game's clock (academy_daynight.js sets the --dn-*
+   variables). Under the day painting wait a live night sky and a moonlit
+   copy of the same tree with its sky cut away; the day painting fades out
+   as the sun sets. Night art loads only from dusk (.dn-awake). */
+.academy-night-sky { position:absolute; inset:0; z-index:0; pointer-events:none; --dn-moon-x:84%; --dn-moon-y:9%; --dn-moon-size:40px; }
+.academy-tree-night { position:absolute; inset:-2%; z-index:0; pointer-events:none; background:center bottom / cover no-repeat; transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
+.academy-treehouse.dn-awake .academy-tree-night { background-image:url('assets/academy-night-20260925/manga/tree.webp'); }
+/* Lamplight pools on the bark: screened over the tree, following the lamps. */
+.academy-night-pools { position:absolute; inset:0; z-index:3; pointer-events:none; mix-blend-mode:screen; opacity:var(--dn-lamps,0); transform-origin:50% 100%; animation:treeSway 13s ease-in-out infinite alternate; }
+.academy-treehouse:not(.dn-awake) .academy-night-pools { display:none; }
+.academy-night-pool { position:absolute; width:150px; height:118px; transform:translate(-50%,-44%); border-radius:50%; background:radial-gradient(closest-side, rgba(255,170,88,.44), rgba(255,132,54,.15) 50%, rgba(255,120,40,0) 100%); }
+/* Each house fades to its lit-up night picture, windows and lanterns burning. */
+.treehouse-building-sprite.treehouse-building-night { position:absolute; left:0; top:0; opacity:var(--dn-night,0); filter:none; }
+.treehouse-building-night:not([src]) { display:none; }
+/* Golden hour: a warm wash over the whole scene through dusk and dawn. */
+.academy-dusk { position:absolute; inset:0; z-index:8; pointer-events:none; mix-blend-mode:soft-light; opacity:var(--dn-warm,0); background:linear-gradient(180deg, rgba(196,120,220,.42), rgba(255,150,110,.46) 45%, rgba(255,176,90,.5)); }
+.academy-treehouse:not(.dn-awake) .academy-dusk { display:none; }
+/* No night painting (offline and never cached): keep the day painting up
+   under the old moonlit shade. */
+.academy-treehouse.dn-no-night .academy-tree-swaybg { opacity:1; }
+.academy-treehouse.dn-no-night.alive-night .academy-alive-shade { opacity:.66; }
 
 /* ---- Painted canopy layers: branches that genuinely move ----------------- */
 /* Manga boughs (assets/academy-manga-20260925/bough-*.webp, cut to transparency):
@@ -3702,9 +3726,12 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .academy-branch.ab-flip > img { transform:scaleX(-1); }
 /* Front boughs sit near the camera: a touch darker and softly out of focus. */
 .academy-branches-front .academy-branch { filter:brightness(.9) blur(.6px) drop-shadow(0 12px 14px rgba(12,24,8,.4)); }
-/* Night: the canopy dims with the rest of the scene. */
-.academy-treehouse.alive-night .academy-branch { filter:saturate(.46) brightness(.42) drop-shadow(0 10px 12px rgba(2,4,8,.55)); }
-.academy-treehouse.alive-night .academy-branches-front .academy-branch { filter:saturate(.4) brightness(.34) blur(1.1px) drop-shadow(0 14px 16px rgba(2,4,8,.6)); }
+/* Night: each bough fades to its own moonlit copy (v483), so the filter
+   only adds depth, and the near boughs fall a shade darker. */
+.academy-branch > img.ab-night { position:absolute; left:0; top:0; opacity:var(--dn-night,0); }
+.academy-branch > img.ab-night:not([src]) { display:none; }
+.academy-treehouse.alive-night .academy-branch { filter:brightness(1) drop-shadow(0 10px 12px rgba(2,4,8,.55)); }
+.academy-treehouse.alive-night .academy-branches-front .academy-branch { filter:brightness(.6) blur(1.1px) drop-shadow(0 14px 16px rgba(2,4,8,.6)); }
 /* Back boughs reach in from alternate sides. Origins sit on the bark end of
    each sprite (flipped sprites carry their bark on the right). */
 .ab-1 { right:-9%; top:5%; width:50%; transform-origin:97% 50%; animation:abSwayA 9.5s ease-in-out -1.2s infinite; }
@@ -3719,6 +3746,8 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 .academy-treehouse { container-type:inline-size; }
 @container (min-width:600px) {
   .academy-tree-swaybg { background-image:linear-gradient(180deg,rgba(255,250,235,0) 60%,rgba(24,40,16,.16)), url('assets/academy-manga-20260925/tree-wide.webp'); background-position:center 72%; }
+  .academy-treehouse.dn-awake .academy-tree-night { background-image:url('assets/academy-night-20260925/manga/tree-wide.webp'); background-position:center 72%; }
+  .academy-night-sky { --dn-moon-x:88%; --dn-moon-y:9%; }
   .academy-branch { max-width:300px; }
 }
 /* Three sway characters so no two boughs keep time: a full lean-and-return,
@@ -3727,7 +3756,7 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 @keyframes abSwayA { 0%,100% { transform:rotate(-1.4deg) translateY(-2px); } 55% { transform:rotate(1.7deg) translateY(1.6px); } }
 @keyframes abSwayB { 0%,100% { transform:rotate(-1.1deg) translateY(-1.2px); } 30% { transform:rotate(.6deg) translateY(.8px); } 62% { transform:rotate(1.6deg) translateY(2px); } 82% { transform:rotate(.2deg) translateY(.3px); } }
 @keyframes abSwayC { 0%,100% { transform:rotate(-.9deg); } 40% { transform:rotate(1.3deg) translateY(1.4px); } 70% { transform:rotate(.3deg) translateY(.4px); } }
-@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } .academy-tree-sway { animation:none; } .treehouse-building-sprite { animation:none; } .crowbar-crow,.cb-crow-body,.cb-crow-head,.cb-crow-tail { animation:none; } .academy-branch { animation:none; } }
+@media (prefers-reduced-motion: reduce) { .academy-alive-light { animation:none; } .academy-tree-swaybg { animation:none; } .academy-tree-night, .academy-night-pools { animation:none; } .academy-tree-sway { animation:none; } .treehouse-building-sprite { animation:none; } .crowbar-crow,.cb-crow-body,.cb-crow-head,.cb-crow-tail { animation:none; } .academy-branch { animation:none; } }
 
 /* ---- The 3D Academy: the same tree, modelled ---------------------------- */
 .academy-stage-wrap { position:relative; }
@@ -4642,7 +4671,8 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=merlin-flight-v479-20260925">
+<link rel="stylesheet" href="scan_home.css?v=desk-screen-v484-20260925">
+<link rel="stylesheet" href="academy_daynight.css?v=academy-day-night-v483-20260925">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -4942,6 +4972,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
            if 3D cannot start on this device we fall back to 2D by itself. -->
       <div class="academy-stage-wrap" id="academyStageWrap">
         <div class="academy-treehouse" id="academyTreehouse" aria-label="Manga treehouse Academy" onclick="academyHandleTreeTap(event)">
+          <!-- Day and night (v483): the live night sky and the moonlit tree
+               wait under the day painting, which fades out as the real sun
+               sets. academy_daynight.js keeps the clock. -->
+          <div class="academy-night-sky" data-dn-sky aria-hidden="true"></div>
+          <div class="academy-tree-night" data-dn-art aria-hidden="true"></div>
           <div class="academy-tree-swaybg" aria-hidden="true"></div>
           <!-- Manga boughs (v475), cut to transparency: they reach in from
                the edges of the frame, so their sawn ends stay out of sight.
@@ -4949,11 +4984,13 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
                overhangs them. Each bough rotates about its base on its own
                tempo, so the canopy moves while the trunk stands still. -->
           <div class="academy-branches academy-branches-back" aria-hidden="true">
-            <div class="academy-branch ab-1 ab-flip"><img src="assets/academy-manga-20260925/bough-a.webp" alt="" loading="lazy"></div>
-            <div class="academy-branch ab-2"><img src="assets/academy-manga-20260925/bough-c.webp" alt="" loading="lazy"></div>
-            <div class="academy-branch ab-3 ab-flip"><img src="assets/academy-manga-20260925/bough-d.webp" alt="" loading="lazy"></div>
-            <div class="academy-branch ab-4"><img src="assets/academy-manga-20260925/bough-a.webp" alt="" loading="lazy"></div>
+            <div class="academy-branch ab-1 ab-flip"><img src="assets/academy-manga-20260925/bough-a.webp" alt="" loading="lazy"><img class="ab-night" data-night-src="assets/academy-night-20260925/manga/bough-a.webp" alt=""></div>
+            <div class="academy-branch ab-2"><img src="assets/academy-manga-20260925/bough-c.webp" alt="" loading="lazy"><img class="ab-night" data-night-src="assets/academy-night-20260925/manga/bough-c.webp" alt=""></div>
+            <div class="academy-branch ab-3 ab-flip"><img src="assets/academy-manga-20260925/bough-d.webp" alt="" loading="lazy"><img class="ab-night" data-night-src="assets/academy-night-20260925/manga/bough-d.webp" alt=""></div>
+            <div class="academy-branch ab-4"><img src="assets/academy-manga-20260925/bough-a.webp" alt="" loading="lazy"><img class="ab-night" data-night-src="assets/academy-night-20260925/manga/bough-a.webp" alt=""></div>
           </div>
+          <!-- Warm lamplight on the bark around every house after dark. -->
+          <div class="academy-night-pools" id="academyNightPools" aria-hidden="true"></div>
           <!-- The buildings ride the same treeSway animation as the painting
                behind them, so the whole tree — bark, boughs and treehouses —
                leans together in the one wind (the Merlin's-Perch treatment,
@@ -4965,9 +5002,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
             <div class="treehouse-bird-layer" id="treehouseBirdLayer"></div>
           </div>
           <div class="academy-branches academy-branches-front" aria-hidden="true">
-            <div class="academy-branch ab-5"><img src="assets/academy-manga-20260925/bough-b.webp" alt="" loading="lazy"></div>
-            <div class="academy-branch ab-6 ab-flip"><img src="assets/academy-manga-20260925/bough-c.webp" alt="" loading="lazy"></div>
+            <div class="academy-branch ab-5"><img src="assets/academy-manga-20260925/bough-b.webp" alt="" loading="lazy"><img class="ab-night" data-night-src="assets/academy-night-20260925/manga/bough-b.webp" alt=""></div>
+            <div class="academy-branch ab-6 ab-flip"><img src="assets/academy-manga-20260925/bough-c.webp" alt="" loading="lazy"><img class="ab-night" data-night-src="assets/academy-night-20260925/manga/bough-c.webp" alt=""></div>
           </div>
+          <div class="academy-dusk" aria-hidden="true"></div>
 
         </div>
         <div class="academy-stage-3d" id="academyStage3D" role="application" aria-label="3D Academy tree — hold, then drag to look around, tap a building to go inside" hidden></div>
@@ -5695,12 +5733,12 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="lib/three.min.js?v=0.158.0"></script>
 <script>if(!window.THREE){document.write('<script src="https:\/\/cdnjs.cloudflare.com\/ajax\/libs\/three.js\/0.158.0\/three.min.js" crossorigin="anonymous"><\/script>');}</script>
 <script src="academy_treehouse_core.js?v=expedition-duration-v455-20260923"></script>
-<script src="academy_alive_core.js?v=academy-manga-v475-20260925"></script>
+<script src="academy_alive_core.js?v=academy-day-night-v483-20260925"></script>
 <script src="touch_steer_core.js?v=hold-to-steer-v251-20260811"></script>
 <script src="first_village_tutorial.js?v=hall-music-v458-20260923"></script>
 <script src="desk_portal.js?v=hall-music-v458-20260923"></script>
 <script src="manga_render_core.js?v=alderwing-nature-v470-20260925"></script>
-<script src="academy_3d_core.js?v=opening-home-v416-20260914"></script>
+<script src="academy_3d_core.js?v=academy-day-night-v483-20260925"></script>
 <script src="kitchen_pantry_core.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="data/bird-diet-records.js?v=mallard-true-diet-v237-20260809"></script>
 <script src="bird_diet_hunger_core.js?v=mallard-true-diet-v237-20260809"></script>
@@ -5733,6 +5771,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="building_interior_core.js?v=tavern-hall-open-v450-20260923"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
 <script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
+<script src="academy_daynight.js?v=academy-day-night-v483-20260925"></script>
 <script src="geographic_forest_core.js?v=continuous-world-v391-20260910"></script>
 <script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>
 <script src="geographic_marker_layer.js?v=map-pictures-v374-20260908"></script>
@@ -5741,7 +5780,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
 <script src="scan_home_core.js?v=academy-manga-v475-20260925"></script>
-<script src="scan_home.js?v=academy-manga-v475-20260925"></script>
+<script src="scan_home.js?v=academy-day-night-v483-20260925"></script>
 <script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -5761,7 +5800,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="destination_state_core.js?v=quest-revisit-v457-20260923"></script>
 <script src="destination_quest_ui.js?v=quest-revisit-v457-20260923"></script>
 <script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
-<script src="landscape_ui.js?v=landscape-v388-20260910"></script>
+<script src="landscape_ui.js?v=desk-screen-v484-20260925"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
 <script src="walking_story_core.js?v=opening-home-v416-20260914"></script>
 <script src="side_trail_core.js?v=pocket-detours-v382-20260910"></script>
@@ -5793,11 +5832,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
 <script src="audio_core.js?v=calm-camp-v463-20260924"></script>
-<script src="player_home_core.js?v=smooth-sky-plain-plot-v483-20260925"></script>
-<script src="player_home_scene.js?v=home-ground-intro-v451-20260923"></script>
+<script src="player_home_core.js?v=smooth-sky-plain-plot-v485-20260925"></script>
+<script src="player_home_scene.js?v=desk-screen-v484-20260925"></script>
 <script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
 <script src="merlin_story_scenes.js?v=merlin-opening-v467-20260924"></script>
-<script src="player_home.js?v=smooth-sky-plain-plot-v483-20260925"></script>
+<script src="player_home.js?v=smooth-sky-plain-plot-v485-20260925"></script>
 <script src="academy_flight_core.js?v=glide-release-v481-20260925"></script>
 <script src="geographic_world_core.js?v=realistic-flight-v478-20260925"></script>
 <script src="flight_craft_core.js?v=craft-home-repair-v440-20260922"></script>
@@ -14856,6 +14895,11 @@ function crowbarCrowHTML() {
     '</g></svg></span>';
 }
 
+// Every manga house has a lit-up night picture of the same size (v483).
+function academyNightAsset(asset) {
+  return /^assets\/academy-manga-20260925\/(?!aviary|tree|bough)/.test(asset || '') ? asset.replace('academy-manga-20260925/', 'academy-night-20260925/manga/') : '';
+}
+
 function renderAcademyTreehouse(byRoom) {
   const tree = $('academyTreehouse');
   const layer = $('treehouseRoomLayer');
@@ -14875,9 +14919,14 @@ function renderAcademyTreehouse(byRoom) {
     const nodeClass = guided ? 'treehouse-room-node quest-guided' : 'treehouse-room-node';
     const guide = guided ? '<span class="treehouse-quest-guide" aria-hidden="true">Tap ' + escapeHtml(r.label) + ' ↓</span>' : '';
     const crow = r.id === 'crowbar' ? crowbarCrowHTML() : '';
+    const night = academyNightAsset(ACADEMY_BUILDINGS[r.id].asset);
     return '<button class="' + nodeClass + ' built' + (academySelectedRoom === r.id ? ' active' : '') + '" data-room="' + r.id + '" style="left:' + pos.x + '%;top:' + pos.y + '%" onclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')" ondblclick="event.stopPropagation();openAcademyRoom(\'' + r.id + '\')">' + guide +
-      '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building">' + crow + '<div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
+      '<img class="treehouse-building-sprite" src="' + escapeHtml(ACADEMY_BUILDINGS[r.id].asset) + '" alt="' + escapeHtml(r.label) + ' building">' +
+      (night ? '<img class="treehouse-building-sprite treehouse-building-night" data-night-src="' + escapeHtml(night) + '" alt="" aria-hidden="true">' : '') + crow + '<div class="treehouse-room-count">' + countLabel + '</div><div class="treehouse-room-name">' + escapeHtml(r.label) + '</div><div class="treehouse-room-meta">' + escapeHtml(meta) + '</div></button>';
   }).join('');
+  // After dark each house throws warm lamplight onto the bark around it.
+  const pools = $('academyNightPools');
+  if (pools) pools.innerHTML = placedRooms.map(r => { const pos = academyRoomPosition(r.id, r); return '<i class="academy-night-pool" style="left:' + pos.x + '%;top:' + pos.y + '%"></i>'; }).join('');
   // Companion sprites no longer perch on the tree — the Academy reads as a
   // place, not a bird cage. Each room's badge still shows how many live there.
   const birdHtml = '';
@@ -31041,7 +31090,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=smooth-sky-plain-plot-v483-20260925';
+        script.src = 'village_walk.js?v=smooth-sky-plain-plot-v485-20260925';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45510,7 +45559,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'smooth-sky-plain-plot-v483-20260925';
+const BURBZ_BUILD = 'smooth-sky-plain-plot-v485-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -47421,6 +47470,8 @@ function landOnSoundScanScreen() {
 
 function init() {
   loadState();
+  // Both Academy trees keep the game's clock: sun by day, lamps by night.
+  if (window.BurbzAcademyDayNight) { try { BurbzAcademyDayNight.attach($('academyTreehouse')); BurbzAcademyDayNight.attach($('desk-academy-list')); } catch (e) {} }
   trailPocketVisibilityChanged();
   applyFeatureGates(); // mark locked dock destinations to what this save has met, before first paint
   armBurbzBackGuard(); // back never quits the game — see the ANDROID BACK section

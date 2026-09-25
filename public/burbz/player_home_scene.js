@@ -45,8 +45,8 @@ function createCommandDesk(T,{tier=1,aspect=1,deskZ=-3.45,aperture=false}={}){co
  desk.box(.7,.05,.32,0,1.02,-3.02,trim);for(let row=0;row<3;row++)for(let i=0;i<8;i++)desk.box(.058,.03,.06,-.29+i*.082,1.055,-3.1+row*.085,gold);
  const height=aspect<1?1.6:Math.min(1.4,2.3/aspect),width=height*aspect;const screenSize={width,height,x:0,y:1.12+height/2,z:-3.42};
  desk.box(width+.22,height+.24,.17,0,screenSize.y,-3.53,trim);desk.box(width+.1,height+.12,.19,0,screenSize.y,-3.52,gold);desk.cylinder(.07,.12,.38,0,1.13,-3.55,trim);
- for(const x of [-width/2-.08,width/2+.08])for(const y of [screenSize.y-height/2-.08,screenSize.y+height/2+.08])desk.sphere(.055,x,y,-3.4,gold);
- desk.cylinder(.13,.2,.1,1,.99,-3.3,gold);desk.cylinder(.035,.035,.5,1,1.26,-3.3,0xe4d2ac);desk.sphere(.08,1,1.57,-3.3,0xffcf76,[.5,1,.5]);
+ // Nothing stands in front of the monitor: the seated view shows only the
+ // screen, so anything overlapping it would vanish as the player sits.
  const deskGroup=desk.finish();deskGroup.position.z=deskShift;scene.add(deskGroup);screenSize.z+=deskShift;const chair=ornament(T,'armchair',s.tier?0x466b5c:0x66645f);chair.position.set(0,0,-1.85+deskShift);chair.rotation.y=Math.PI;chair.userData.homeTarget='desk';scene.add(chair);targets.push(chair);
  // The real app is projected beneath the WebGL canvas. This depth-tested
  // aperture exposes it only where the actual monitor is visible, including

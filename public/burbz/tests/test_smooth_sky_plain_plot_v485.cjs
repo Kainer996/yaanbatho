@@ -1,9 +1,9 @@
 'use strict';
-// Smooth sky, plain plot v483: the clouds show no straight seams, and the
+// Smooth sky, plain plot v485: the clouds show no straight seams, and the
 // shelter or house plot has no ring of trees round it.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const BUILD='smooth-sky-plain-plot-v483-20260925';
+const BUILD='smooth-sky-plain-plot-v485-20260925';
 
 test('the cloud shader has no seams',()=>{
  const sky=read('world_sky.js'),clouds=sky.slice(sky.indexOf('const CLOUDS='),sky.indexOf('function attach('));
@@ -20,7 +20,7 @@ test('the plot has no trees round it',()=>{
  assert(!read('player_home.js').includes('C.TREES'),'no hidden tree can still be chopped');
 });
 
-test('v483 ships together: build marker, cache, worker lists and loader',()=>{
+test('v485 ships together: build marker, cache, worker lists and loader',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
  assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));

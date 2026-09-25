@@ -13,9 +13,9 @@ function bind(api){
  }
  function update(){
   frame=0;
-  // Home projects the same app into a 3D monitor. Its original composition
-  // remains intact; the body-level immersive canvases are never resized here.
-  const wide=media.matches&&!app.closest('.ph-screen-surface');
+  // Home projects the same app into a 3D monitor at the full viewport size,
+  // so it keeps the same layout the player sees once seated.
+  const wide=media.matches;
   app.classList.toggle('landscape-ui',wide);
   for(const slot of slots){
    const {kind,stage,screen,controls}=slot;
