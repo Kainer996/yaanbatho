@@ -83,7 +83,8 @@ def test_quiet_study_sessions_run_and_reward_int():
 def test_library_is_wired_into_the_page():
     html = HTML.read_text(encoding="utf-8")
     # Buildable sprite on the tree, room config, and passive INT growth.
-    assert "library:'assets/academy-buildings/library.svg'" in html
+    # v475 draws the Library in the bird-card manga style like every other house.
+    assert "library:'assets/academy-manga-20260925/library.webp'" in html
     assert "library: { label:'THE LIBRARY', icon:'📚', buildingId:'library'" in html
     assert "library:     { stat:'int',     label:'INT' }" in html
     # The finished room painting replaces the placeholder; keep a safe fallback.

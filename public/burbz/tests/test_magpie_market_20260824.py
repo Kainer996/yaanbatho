@@ -400,10 +400,9 @@ def test_the_market_has_a_bird_who_runs_it():
 
 def test_the_room_is_built_into_the_tree_the_3d_scene_and_the_ambience():
     html = html_text()
-    # It reuses the market painting that has sat unused in the repo (and in the
-    # service worker's precache) since the Recruitment Roost retired.
-    assert "%s:'assets/academy-buildings-manga/market.png'" % ROOM_ID in html
-    assert "./assets/academy-buildings-manga/market.png" in SW.read_text(encoding="utf-8")
+    # v475 repainted every Academy house in the bird-card manga style.
+    assert "%s:'assets/academy-manga-20260925/magpie_market.webp'" % ROOM_ID in html
+    assert "./assets/academy-manga-20260925/magpie_market.webp" in SW.read_text(encoding="utf-8")
     assert '.treehouse-room-node[data-room="%s"]' % ROOM_ID in html, "its own lean on its own bough"
     # Its finished room painting replaces the inline placeholder; fallback stays.
     assert "magpie_market() {" in html
