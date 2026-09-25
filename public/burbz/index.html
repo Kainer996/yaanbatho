@@ -5779,7 +5779,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
 <script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="exploration.js?v=calm-weather-v464-20260924"></script>
+<script src="exploration.js?v=alderwing-seamless-v474-20260925"></script>
 <link rel="stylesheet" href="exploration.css?v=calm-camp-v463-20260924">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
@@ -6746,17 +6746,18 @@ window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
 window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
 // Real weather where the player stands, from Open-Meteo (Yaan chose live
 // weather). Only a rounded position (about 10 km) leaves the phone, at most
-// once every 15 minutes. It sets the rain and wind; no game rule depends on it.
-const burbzWeather={rain:0,wind:.2,at:0,key:'',pending:false};
+// once every 15 minutes. It sets the rain, the cloud and the wind; no game
+// rule depends on it.
+const burbzWeather={rain:0,wind:.2,cloud:null,at:0,key:'',pending:false};
 function burbzWeatherAt(lat,lon){
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||typeof fetch!=='function')return burbzWeather;
   const la=lat.toFixed(1),lo=lon.toFixed(1),key=la+','+lo;
   if(burbzWeather.pending||(key===burbzWeather.key&&Date.now()-burbzWeather.at<15*60*1000))return burbzWeather;
   burbzWeather.pending=true;burbzWeather.key=key;
-  fetch('https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=precipitation,rain,showers,wind_speed_10m&wind_speed_unit=kmh',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'})
+  fetch('https://api.open-meteo.com/v1/forecast?latitude='+la+'&longitude='+lo+'&current=precipitation,rain,showers,wind_speed_10m,cloud_cover&wind_speed_unit=kmh',{cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'})
     .then(r=>r.ok?r.json():Promise.reject(Error('weather '+r.status)))
     .then(d=>{const c=d?.current||{},mm=Math.max(Number(c.precipitation)||0,(Number(c.rain)||0)+(Number(c.showers)||0)),kmh=Number(c.wind_speed_10m);
-      burbzWeather.rain=mm>0?Math.min(1,.45+mm/3):0;burbzWeather.wind=Number.isFinite(kmh)?Math.max(.15,Math.min(1,kmh/45)):.2;})
+      burbzWeather.rain=mm>0?Math.min(1,.45+mm/3):0;burbzWeather.wind=Number.isFinite(kmh)?Math.max(.15,Math.min(1,kmh/45)):.2;const cover=Number(c.cloud_cover);burbzWeather.cloud=Number.isFinite(cover)?Math.max(0,Math.min(1,cover/100)):null;})
     .catch(()=>{})
     .finally(()=>{burbzWeather.pending=false;burbzWeather.at=Date.now();});
   return burbzWeather;
@@ -31010,7 +31011,7 @@ async function ensureVillageWalkModule() {
     if (!window.BurbzVillageWalk) {
       if (!villageWalkLoad) villageWalkLoad = new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = 'village_walk.js?v=alderwing-steady-v472-20260925';
+        script.src = 'village_walk.js?v=alderwing-seamless-v474-20260925';
         const timer = setTimeout(() => { script.remove(); reject(Error('Walking controls did not load. Please try again.')); }, 15000);
         script.onload = () => { clearTimeout(timer); window.BurbzVillageWalk ? resolve() : reject(Error('Walking controls are unavailable.')); };
         script.onerror = () => { clearTimeout(timer); script.remove(); reject(Error('Walking controls did not load. Please try again.')); };
@@ -45479,7 +45480,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-living-tree-v473-20260925';
+const BURBZ_BUILD = 'alderwing-seamless-v474-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

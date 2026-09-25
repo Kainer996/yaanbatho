@@ -3,7 +3,7 @@
  * MapLibre is a bounded, offscreen tile decoder, never a second visible view. */
 (function(root){'use strict';
 const K=()=>root.BurbzVillageWorldCore,C=()=>root.BurbzGeographicWorldCore,N=()=>root.BurbzWorldNatureCore;
-const DEM='continuous-walk-dem',MAX_TILES=32,MAX_FEATURES=1800,COVER_CELL=64,KEEP={cover:900,water:200,stream:300,road:400},LAYER_LIMIT={landcover:900,landuse:240,water:200,waterway:300,transportation:400},DETAIL=104,HAZE=[140,4300];
+const DEM='continuous-walk-dem',MAX_TILES=32,MAX_FEATURES=1800,COVER_CELL=64,KEEP={cover:900,water:200,stream:300,road:400},LAYER_LIMIT={landcover:900,landuse:240,water:200,waterway:300,transportation:400},DETAIL=104,HAZE=[140,4300],SHADE=[70,100];
 const sleep=()=>new Promise(resolve=>requestAnimationFrame(resolve));
 function homeActions(s,opts,pose,covered){
  const button=document.createElement('button');button.type='button';button.className='cw-build-home';button.setAttribute('data-walk-action','home');button.textContent='Quest: Build your house';button.hidden=true;s.root.append(button);
@@ -45,35 +45,48 @@ async function attach(s,opts){
  #endif
  cwFogWorld=modelMatrix*cwFogWorld;
  vFogDepth=length(cwFogWorld.xz-cameraPosition.xz);
- #endif`);};material.customProgramCacheKey=function(){return key.call(this)+':continuous-horizon-v391';};material.needsUpdate=true;}
+ #endif`);
+  // Sun shadows fade out before the far trees end, so no shadow ever appears
+  // or moves where trees come and go, and none shimmers in the distance.
+  shader.fragmentShader=shader.fragmentShader.replace('#include <lights_fragment_begin>',`#ifdef USE_FOG
+ float cwShadowFade=smoothstep(${SHADE[0]}.,${SHADE[1]}.,vFogDepth);
+ #else
+ float cwShadowFade=0.;
+ #endif
+`+T.ShaderChunk.lights_fragment_begin.split('vDirectionalShadowCoord[ i ] ) : 1.0;').join('vDirectionalShadowCoord[ i ] )*(1.0-cwShadowFade)+cwShadowFade : 1.0;'));};material.customProgramCacheKey=function(){return key.call(this)+':continuous-horizon-v474';};material.needsUpdate=true;}
  scene.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material])styleFog(m);});styleFog(groundMaterial);
  // Real-world ground colour lives in the vertices. The shared grass map adds
  // luminance detail only, and a second, broader sample breaks up its tiling.
  const seasons=N().season(new Date(),origin.lat),detailUniform={value:.55};let detailRGB=[.5,.56,.36],detailVersion=-1;
  function refreshDetail(){const map=groundMaterial.map,image=map?.image;detailVersion=map?map.version:0;try{if(image?.width){const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');x.drawImage(image,0,0,16,16);const d=x.getImageData(0,0,16,16).data;let r=0,g=0,b=0;for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}const n=d.length/4*255;detailRGB=[r/n,g/n,b/n];}}catch(_){}detailUniform.value=Math.max(.05,.2126*detailRGB[0]+.7152*detailRGB[1]+.0722*detailRGB[2]);}
- // At the edge of the shown square the ground becomes the distant land: its
- // height, canopy, colour and light bend onto the horizon's own surface, so
- // the two meet with no crack, seam or step.
- const groundHole={value:new T.Vector4(-1e6,-1e6,1e6,1e6)};
+ // With distance the ground becomes the distant land, as CDLOD terrain does:
+ // its height, canopy, colour and light bend onto the horizon's own surface
+ // between MORPH square metres from the eye, always inside the shown square,
+ // so the two meet with no crack, seam or step, and nothing pops as the
+ // square moves. Its own edge always bends fully, in case it is ever nearer.
+ const groundHole={value:new T.Vector4(-1e6,-1e6,1e6,1e6)},MORPH=root.BurbzWorldNature.MORPH;
  function styleGround(material){const previous=material.onBeforeCompile,key=material.customProgramCacheKey;material.vertexColors=true;material.color.setRGB(1,1,1);
-  material.onBeforeCompile=function(shader,renderer){previous.call(this,shader,renderer);shader.uniforms.detailLuma=detailUniform;shader.uniforms.groundHole=groundHole;
-  shader.vertexShader='attribute vec2 groundFar;\nattribute vec3 groundFarColor;\nattribute vec3 groundFarNormal;\nuniform vec4 groundHole;\nvarying vec3 groundWorld;\nvarying float groundWood;\n'+shader.vertexShader.replace('#include <beginnormal_vertex>',`vec4 groundAt=modelMatrix*vec4(position,1.0);
+  material.onBeforeCompile=function(shader,renderer){previous.call(this,shader,renderer);shader.uniforms.detailLuma=detailUniform;shader.uniforms.groundHole=groundHole;shader.uniforms.groundEye=natureEye;shader.uniforms.groundClock=groundClock;
+  shader.vertexShader='attribute vec2 groundFar;\nattribute vec3 groundFarColor;\nattribute vec3 groundFarNormal;\nattribute vec3 groundFarPrev;\nattribute vec3 groundFarPrevColor;\nuniform vec4 groundHole;\nuniform vec3 groundEye;\nuniform float groundClock;\nvarying vec3 groundWorld;\nvarying float groundWood;\nvarying float groundBent;\n'+shader.vertexShader.replace('#include <beginnormal_vertex>',`vec4 groundAt=modelMatrix*vec4(position,1.0);
  float groundInset=min(min(groundAt.x-groundHole.x,groundHole.z-groundAt.x),min(groundAt.z-groundHole.y,groundHole.w-groundAt.z));
- float groundBend=1.0-smoothstep(0.0,12.0,groundInset);
- groundWorld=groundAt.xyz;groundWood=clamp(groundFar.y/4.6,0.,1.)*groundBend;
+ vec2 groundOff=abs(groundAt.xz-groundEye.xz);
+ float groundBend=max(1.0-smoothstep(0.0,12.0,groundInset),smoothstep(${MORPH[0]}.,${MORPH[1]}.,max(groundOff.x,groundOff.y)));
+ float groundEase=clamp((groundClock-groundFarPrev.z)/${FAR_EASE},0.,1.);vec2 groundFarNow=mix(groundFarPrev.xy,groundFar,groundEase);
+ groundWorld=groundAt.xyz;groundWood=clamp(groundFarNow.y/4.6,0.,1.)*groundBend;groundBent=groundBend;
  #ifdef USE_COLOR
- vColor.rgb=mix(vColor.rgb,groundFarColor,groundBend);
+ vColor.rgb=mix(vColor.rgb,mix(groundFarPrevColor,groundFarColor,groundEase),groundBend);
  #endif
  #include <beginnormal_vertex>
  objectNormal=normalize(mix(objectNormal,groundFarNormal,groundBend));`).replace('#include <begin_vertex>',`#include <begin_vertex>
- transformed.y=mix(transformed.y,groundFar.x,groundBend);`);shader.fragmentShader='uniform float detailLuma;\nvarying vec3 groundWorld;\nvarying float groundWood;\n'+(root.BurbzWorldHorizon?.CANOPY||'float canopyCrowns(vec2 p,float far){return 1.0;}')+'\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+ transformed.y=mix(transformed.y,groundFarNow.x,groundBend);`);shader.fragmentShader='uniform float detailLuma;\nvarying vec3 groundWorld;\nvarying float groundWood;\nvarying float groundBent;\n'+(root.BurbzWorldHorizon?.CANOPY||'float canopyCrowns(vec2 p,float far){return 1.0;}')+'\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
  // Where the ground becomes the distant land, its woods wear the same treetops.
  if(groundWood>.01)diffuseColor.rgb*=mix(1.0,canopyCrowns(groundWorld.xz,smoothstep(260.,800.,distance(cameraPosition,groundWorld))),groundWood);`).replace('#include <map_fragment>',`#ifdef USE_MAP
  float groundDetail=dot(texture2D(map,vMapUv).rgb,vec3(.2126,.7152,.0722))/detailLuma;
  float groundBroad=dot(texture2D(map,vMapUv*.137+.31).rgb,vec3(.2126,.7152,.0722))/detailLuma;
- diffuseColor.rgb*=clamp(groundDetail,.55,1.5)*mix(.84,1.16,clamp(groundBroad*.5,0.,1.));
+ // The grass detail fades as the ground becomes the untextured distant land.
+ diffuseColor.rgb*=mix(clamp(groundDetail,.55,1.5)*mix(.84,1.16,clamp(groundBroad*.5,0.,1.)),1.0,groundBent);
  #endif`);};
-  material.customProgramCacheKey=function(){return key.call(this)+':alderwing-ground-v3';};material.needsUpdate=true;}
+  material.customProgramCacheKey=function(){return key.call(this)+':alderwing-ground-v4';};material.needsUpdate=true;}
  const settlementGround=new T.Color(surface.palette?.ground??0x6c9a44).multiplyScalar(1.85);
  styleGround(groundMaterial);refreshDetail();
  scene.userData.continuousFog=true;if(scene.fog){scene.fog.far=Math.min(104,scene.fog.far);scene.fog.near=Math.min(scene.fog.near,scene.fog.far*.5);}
@@ -94,7 +107,12 @@ async function attach(s,opts){
  cascadeMaterial.customProgramCacheKey=()=> 'alderwing-cascade-v408';styleFog(cascadeMaterial);
  const foamMaterial=new T.MeshLambertMaterial({color:0xdceee1,emissive:0x172d29,side:T.DoubleSide,transparent:true,opacity:.78,depthWrite:false});styleFog(foamMaterial);
  const shadowLights=[];for(const light of scene.children)if(light.isDirectionalLight&&light.castShadow){const camera=light.shadow.camera;shadowLights.push({light,position:light.position.clone(),target:light.target.position.clone(),camera:{left:camera.left,right:camera.right,top:camera.top,bottom:camera.bottom,near:camera.near,far:camera.far},centre:null});Object.assign(camera,{left:-160,right:160,top:160,bottom:-160,near:1,far:600});camera.updateProjectionMatrix();scene.add(light.target);}
- function shadows(){for(const row of shadowLights){const x=Math.round(s.player.x/32)*32,z=Math.round(s.player.z/32)*32;const epoch=skyDriver?.shadowEpoch();if(row.centre?.x===x&&row.centre?.z===z&&row.epoch===epoch)continue;row.epoch=epoch;row.centre={x,z};const direction=(skyDriver?new T.Vector3().copy(skyDriver.direction()):row.position.clone().sub(row.target)).normalize().multiplyScalar(230);row.light.target.position.set(x,0,z);row.light.position.copy(row.light.target.position).add(direction);row.light.target.updateMatrixWorld();s.source.renderer.shadowMap.needsUpdate=true;}}
+ // The sun's shadow map follows the viewer in 16m steps, each a whole number
+ // of shadow texels across the light, so every shadow edge keeps its place
+ // when the map is redrawn and trees that joined since gain their shadows.
+ function shadows(){for(const row of shadowLights){const x=Math.round(s.player.x/16)*16,z=Math.round(s.player.z/16)*16;const epoch=skyDriver?.shadowEpoch();if(row.centre?.x===x&&row.centre?.z===z&&row.epoch===epoch)continue;row.epoch=epoch;row.centre={x,z};
+  const direction=(skyDriver?new T.Vector3().copy(skyDriver.direction()):row.position.clone().sub(row.target)).normalize(),camera=row.light.shadow.camera,centre=k.shadowCentre(x,z,direction,(camera.right-camera.left)/row.light.shadow.mapSize.x);
+  row.light.target.position.set(centre.x,centre.y,centre.z);row.light.position.copy(row.light.target.position).addScaledVector(direction,230);row.light.target.updateMatrixWorld();s.source.renderer.shadowMap.needsUpdate=true;}}
  // Every tree, shrub, stone and flower shares one instanced pool per kind.
  const natureEye={value:new T.Vector3()},natureEdge={value:new T.Vector4(-1e6,-1e6,1e6,1e6)},nature=root.BurbzWorldNature.create(T,scene,{style:styleFog,time:waterTime,eye:natureEye,edge:natureEdge});let lastNature=-Infinity;
  // Distant land from real elevation fills the view beyond the detailed ground.
@@ -104,13 +122,17 @@ async function attach(s,opts){
  // authored Alderwing woodland fills the gaps. Read per 256m cell and cached.
  const biasCells=new Map();
  function openBiasAt(x,z){const key=Math.floor(x/256)+','+Math.floor(z/256);let bias=biasCells.get(key);if(bias===undefined){const p={x:(Math.floor(x/256)+.5)*256,z:(Math.floor(z/256)+.5)*256};let mapped=0;for(const e of features.values())if(e.rings&&e.kind!=='water'&&distanceToBounds(e.bounds,p)<1600&&++mapped>=8)break;bias=Math.min(1,mapped/8);if(features.size)biasCells.set(key,bias);}return bias;}
+ // It also records each wood's density, its share of conifers and its crown
+ // colour, from which the canopy crowns are drawn.
  function farNature(x,z,altitude,slope,flat){
-  if(masks('water',x,z)||flat&&altitude>-30)return{ground:farWater,canopy:0,water:true};
-  const c=coverAt(x,z),b=N().sample({altitude,slope,cover:c.kind,wet:0,lat:origin.lat,seasons,openBias:openBiasAt(x,z),x:x+shift.x,z:z+shift.z,field:c.field}),wood=Math.min(1,b.trees*1.25);
+  if(masks('water',x,z)||flat&&altitude>-30)return{ground:farWater,canopy:0,water:true,wood:0,conifer:0,crown:farWater};
+  const c=coverAt(x,z),b=N().sample({altitude,slope,cover:c.kind,wet:0,lat:origin.lat,seasons,openBias:openBiasAt(x,z),x:x+shift.x,z:z+shift.z,field:c.field}),wood=Math.min(1,b.trees*1.25),sp=b.species,all=Object.values(sp).reduce((a,v)=>a+v,0);
   // From afar a wood is its crowns in their own shade, mottled crown by crown.
-  const shade=.6+.32*N().noise(x+shift.x,z+shift.z,26,271),crown=N().canopyColor(b.species,seasons).map(v=>v*shade);return{ground:b.ground.map((v,i)=>v+(crown[i]-v)*wood),canopy:4.6*wood*N().smooth((wood-.3)/.35),water:false};}
+  const colour=N().canopyColor(sp,seasons),shade=.6+.32*N().noise(x+shift.x,z+shift.z,26,271),crown=colour.map(v=>v*shade);return{ground:b.ground.map((v,i)=>v+(crown[i]-v)*wood),canopy:4.6*wood*N().smooth((wood-.3)/.35),water:false,wood:Math.min(1,b.trees*1.6),conifer:all?(sp.pine+sp.spruce)/all:0,crown:colour};}
  const streamMaterial=root.BurbzWorldWater.streamMaterial(T,{time:waterTime,style:styleFog}),spray=root.BurbzWorldWater.createSpray(T,scene,{time:waterTime});
- const horizon=root.BurbzWorldHorizon?.create(T,scene,{origin,merc,style:styleFog,height:(x,z)=>raw(x,z),nature:farNature,signal:s.abort.signal});let hazeOn=false;
+ // The distant land samples the same ground the chunks are built from, so
+ // yards and settlements sit on it too; beyond the map, its own elevation.
+ const horizon=root.BurbzWorldHorizon?.create(T,scene,{origin,merc,style:styleFog,height:(x,z)=>{const h=datum===null?null:joined(x,z,steadyRaw);return h===null?null:h+datum;},nature:farNature,signal:s.abort.signal,eye:natureEye});let hazeOn=false;
  const anchor=opts.anchor||origin,shift=C().project(anchor,origin)||{x:0,z:0};
  const host=document.createElement('div');host.className='cw-tile-provider';host.setAttribute('aria-hidden','true');host.inert=true;
  host.style.cssText='position:absolute;left:-10000px;top:0;width:512px;height:512px;visibility:hidden;pointer-events:none';s.root.append(host);
@@ -128,11 +150,16 @@ async function attach(s,opts){
  const animateOrigin=()=>Math.hypot(s.player.x,s.player.z)<originReach+DETAIL+32;
  let originCull=root.BurbzVillageWalkScene.distanceCull(T,originGroup,s.source.movers);
  const raw=(x,z)=>k.elevation(lookup,merc,x,z);
- function unshaped(x,z){if(Math.hypot(x,z)<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw,datum});const h=raw(x,z);return h===null||datum===null?null:h-datum;}
- function joined(x,z){
+ // The distant land keeps the most detailed height it has ever read at each
+ // of its points, so a map tile leaving the cache never changes it back.
+ const steadyHeights=new Map();
+ function steadyRaw(x,z){const key=Math.round(x)+','+Math.round(z),r=k.elevationSample(lookup,merc,x,z);let c=steadyHeights.get(key);if(r&&(!c||r.z>c.z)){c=r;steadyHeights.set(key,c);}return c?c.h:null;}
+ function pruneSteady(){if(steadyHeights.size<60000)return;for(const key of steadyHeights.keys()){const [x,z]=key.split(',').map(Number);if(Math.hypot(x-s.player.x,z-s.player.z)>1400)steadyHeights.delete(key);}}
+ function unshaped(x,z,rawAt=raw){if(Math.hypot(x,z)<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw:rawAt,datum});const h=rawAt(x,z);return h===null||datum===null?null:h-datum;}
+ function joined(x,z,rawAt=raw){
   const home=places.get('home'),d=Math.hypot(x,z);
-  if(home&&Math.hypot(x-home.x,z-home.z)<home.content.groundBlendRadius)return k.homeHeight(x,z,{x:home.x,z:home.z,base:home.base,radius:home.content.groundRadius,blendRadius:home.content.groundBlendRadius},unshaped(x,z));
-  if(d<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw,datum});const h=raw(x,z);if(h===null||datum===null)return null;
+  if(home&&Math.hypot(x-home.x,z-home.z)<home.content.groundBlendRadius)return k.homeHeight(x,z,{x:home.x,z:home.z,base:home.base,radius:home.content.groundRadius,blendRadius:home.content.groundBlendRadius},unshaped(x,z,rawAt));
+  if(d<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw:rawAt,datum});const h=rawAt(x,z);if(h===null||datum===null)return null;
   for(const p of places.values()){if(p.record.kind==='home')continue;const distance=Math.hypot(x-p.x,z-p.z),blend=p.content.blendRadius||p.content.radius+12;if(distance<blend){const t=k.smooth((distance-p.content.radius)/(blend-p.content.radius));return (p.base+(p.content.terrain?.heightAt(x-p.x,z-p.z)||0))*(1-t)+(h-datum)*t;}}return h-datum;
  }
  function shelterGround(x,z){const h=places.get('home');return opts.getHome?.()?.tier===0&&h&&Math.hypot(x-h.x,z-h.z)<12;}
@@ -166,6 +193,8 @@ async function attach(s,opts){
     // Rebuild the ground it touches, in place: each old chunk stays until its
     // replacement is ready, so no hole opens and no tree stays in a building.
     for(const chunk of [...chunks.values()])if(distanceToBounds({x0:chunk.x,x1:chunk.x+k.CHUNK,z0:chunk.z,z1:chunk.z+k.CHUNK},p)<Math.max(content.radius,content.blendRadius)+k.STEP)stale.add(chunk.id);
+    // The distant land takes the new ground too, easing in.
+    horizon?.refresh();
     metrics.placeBuilds||=[];metrics.placeBuilds.push({id:row.record.id,buildMs:content.buildMs||0,maxStepMs:content.maxStepMs||0,prepareMs:content.prepareMs||0});if(metrics.placeBuilds.length>20)metrics.placeBuilds.shift();
    }).catch(error=>{if(error.name!=='AbortError'){errors.push('Settlement: '+error.message);pendingPlace.failed=true;pendingPlace.retryAt=performance.now()+5000;}}).finally(()=>{s.abort.signal.removeEventListener('abort',abort);if(!pendingPlace.failed)preparing.delete(row.record.id);placeCentre=null;});
   }
@@ -377,8 +406,18 @@ async function attach(s,opts){
     for(let j=0;j<3;j++){color[i*3+j]=a.color[j]*wa+b.color[j]*wb+c.color[j]*wc;normal[i*3+j]=a.normal[j]*wa+b.normal[j]*wb+c.normal[j]*wc;}}
    else{far[i*2]=pos[i*3+1];for(let j=0;j<3;j++){color[i*3+j]=own[i*3+j];normal[i*3+j]=nor[i*3+j];}}}
   return{far,color,normal};}
- function setFar(geometry,cell){const f=farAttributes(geometry,cell);
-  for(const [name,array,size] of [['groundFar',f.far,2],['groundFarColor',f.color,3],['groundFarNormal',f.normal,3]]){const old=geometry.attributes[name];if(old&&old.array.length===array.length){old.array.set(array);old.needsUpdate=true;}else geometry.setAttribute(name,new T.BufferAttribute(array,size));}}
+ // How far the ground under each far tree and boulder moves as it bends onto
+ // the distant land: the distant land's height less the chunk's own, there.
+ const farSample={crown:[0,0,0]};
+ function drops(chunk){for(const items of Object.values(chunk.big))for(const item of items){const f=horizon?.sampleAt(item.x,item.z,farSample),g=k.meshHeight(chunk,chunk.data,item.x,item.z);item.drop=f&&Number.isFinite(g)?f.h-g:0;}}
+ // New map data eases in with the distant land, from what each vertex drew.
+ const groundClock={value:0},FAR_EASE=(root.BurbzWorldHorizon?.BLEND||1200)/1000;
+ function setFar(geometry,cell){const f=farAttributes(geometry,cell),count=f.far.length/2,now=groundClock.value,was=geometry.attributes.groundFar,wasPrev=geometry.attributes.groundFarPrev,wasColor=geometry.attributes.groundFarColor,wasPrevColor=geometry.attributes.groundFarPrevColor;
+  const prev=new Float32Array(count*3),prevColor=new Float32Array(count*3);
+  for(let i=0;i<count;i++){if(!was){prev[i*3]=f.far[i*2];prev[i*3+1]=f.far[i*2+1];prevColor.set(f.color.subarray(i*3,i*3+3),i*3);continue;}
+   const t=Math.max(0,Math.min(1,(now-wasPrev.array[i*3+2])/FAR_EASE));prev[i*3]=wasPrev.array[i*3]+(was.array[i*2]-wasPrev.array[i*3])*t;prev[i*3+1]=wasPrev.array[i*3+1]+(was.array[i*2+1]-wasPrev.array[i*3+1])*t;prev[i*3+2]=now;
+   for(let c=0;c<3;c++)prevColor[i*3+c]=wasPrevColor.array[i*3+c]+(wasColor.array[i*3+c]-wasPrevColor.array[i*3+c])*t;}
+  for(const [name,array,size] of [['groundFar',f.far,2],['groundFarColor',f.color,3],['groundFarNormal',f.normal,3],['groundFarPrev',prev,3],['groundFarPrevColor',prevColor,3]]){const old=geometry.attributes[name];if(old&&old.array.length===array.length){old.array.set(array);old.needsUpdate=true;}else geometry.setAttribute(name,new T.BufferAttribute(array,size));}}
  function makeChunk(cell){const t0=performance.now(),mark={};const data=k.groundMesh(cell,joined,actualRadius);if(!data)return false;
   if(groundMaterial.map&&groundMaterial.map.version!==detailVersion)refreshDetail();
   const group=new T.Group();group.position.set(cell.x,0,cell.z);group.userData.continuousTerrain=true;
@@ -422,7 +461,7 @@ async function attach(s,opts){
   mark.big=performance.now();
   const stream=root.BurbzWorldWater.streamMesh(T,flowing,streamMaterial);if(stream)group.add(stream);chunk.spray=flowing.mist;chunk.streamTriangles=flowing.indices.length/3;
   for(const corridor of corridors)for(const bank of corridor.bankMaterial?[false,true]:[false]){const data=k.ribbonMesh(cell,corridor,(x,z)=>k.meshHeight(cell,chunk.data,x,z),bank);if(!data?.indices.length)continue;const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(data.positions,3));geo.setAttribute('uv',new T.Float32BufferAttribute(data.uv,2));geo.setIndex(data.indices);geo.computeVertexNormals();const ribbon=new T.Mesh(geo,bank?corridor.bankMaterial:corridor.material);ribbon.receiveShadow=true;group.add(ribbon);}
-  mark.rest=performance.now();const prof=metrics.chunkParts||={};let last=t0;for(const [key,at] of Object.entries(mark)){prof[key]=(prof[key]||0)+(at-last);last=at;}prof.total=(prof.total||0)+(performance.now()-t0);prof.count=(prof.count||0)+1;
+  drops(chunk);mark.rest=performance.now();const prof=metrics.chunkParts||={};let last=t0;for(const [key,at] of Object.entries(mark)){prof[key]=(prof[key]||0)+(at-last);last=at;}prof.total=(prof.total||0)+(performance.now()-t0);prof.count=(prof.count||0)+1;
   return chunk;
  }
  // A built chunk joins the scene with every tree and boulder in the pools;
@@ -459,13 +498,42 @@ async function attach(s,opts){
  // edge chunks first, within 3ms a frame.
  function refreshFar(){const epoch=horizon?.epoch;if(epoch===undefined)return;let late=null;for(const c of chunks.values())if(c.farEpoch!==epoch)(late||=[]).push(c);if(!late)return;
   const inset=c=>Math.min(c.x-shown.x0,shown.x1-c.x-k.CHUNK,c.z-shown.z0,shown.z1-c.z-k.CHUNK);late.sort((a,b)=>inset(a)-inset(b));
-  const until=performance.now()+3;for(const c of late){setFar(c.ground.geometry,c);c.farEpoch=epoch;if(performance.now()>until)break;}}
+  const until=performance.now()+3;for(const c of late){setFar(c.ground.geometry,c);drops(c);for(const [kind,items] of Object.entries(c.big))nature.redrop(kind,items);c.farEpoch=epoch;if(performance.now()>until)break;}}
+ // Canopy crowns carry each wood on beyond the far trees, out to where the
+ // distant canopy rises: one crown for a few trees, on a jittered 6.4m grid
+ // fixed in the world, read from the distant land's record of the wood. They
+ // stand on its surface, where the ground has already bent onto it. Cells of
+ // 64m join 40m before any crown in them can show: missing cells first, then
+ // cells whose record changed, nearest first, 1.5-3ms a frame.
+ const crownCells=new Map(),crownSample={crown:[0,0,0]},CROWN=64,CROWN_GRID=6.4;let crownEpoch=-1,lastCrowns=-Infinity,crownQueue=[];
+ function crowns(time){if(!horizon?.ready||!hazeOn)return;const W=root.BurbzWorldNature;
+  if(time-lastCrowns>=.2){lastCrowns=time;const reach=W.CROWNS[0]+W.CROWNS[1]+40,inner=W.END[0]-8,p=s.player,epoch=horizon.epoch,want=new Map();
+   if(epoch!==crownEpoch){crownEpoch=epoch;for(const cell of crownCells.values())cell.stale=true;}
+   for(let cx=Math.floor((p.x-reach)/CROWN);cx<=Math.floor((p.x+reach)/CROWN);cx++)for(let cz=Math.floor((p.z-reach)/CROWN);cz<=Math.floor((p.z+reach)/CROWN);cz++){const x0=cx*CROWN,z0=cz*CROWN,near=Math.hypot(Math.max(x0-p.x,0,p.x-x0-CROWN),Math.max(z0-p.z,0,p.z-z0-CROWN)),far=Math.hypot(Math.max(Math.abs(p.x-x0),Math.abs(p.x-x0-CROWN)),Math.max(Math.abs(p.z-z0),Math.abs(p.z-z0-CROWN)));if(near<reach&&far>inner)want.set(cx+','+cz,near);}
+   for(const key of [...crownCells.keys()])if(!want.has(key)){nature.remove('crown:'+key);crownCells.delete(key);}
+   crownQueue=[...want].filter(([key])=>!crownCells.has(key)||crownCells.get(key).stale).map(([key,near])=>[key,near+(crownCells.has(key)?1e4:0)]).sort((a,b)=>a[1]-b[1]).map(([key])=>key);}
+  // Missing cells get twice the time, so a new journey's crowns are soon ready.
+  const until=performance.now()+(crownQueue.length&&!crownCells.has(crownQueue[0])?3:1.5);while(crownQueue.length&&performance.now()<until)buildCrowns(crownQueue.shift());}
+ function buildCrowns(key){const [cx,cz]=key.split(',').map(Number),n=Math.round(CROWN/CROWN_GRID),items={crownBroad:[],crownConifer:[]},H=N().hash;let complete=true;
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++){const ix=cx*n+i,iz=cz*n+j,x=(ix+.15+.7*H(ix,iz,463))*CROWN_GRID,z=(iz+.15+.7*H(ix,iz,521))*CROWN_GRID,f=horizon.sampleAt(x,z,crownSample);if(!f){complete=false;continue;}if(H(ix,iz,389)>=f.wood)continue;
+   const tone=.9+.2*H(ix,iz,613);items[H(ix,iz,587)<f.conifer?'crownConifer':'crownBroad'].push({x,y:f.h-.08,z,angle:H(ix,iz,647)*Math.PI*2,scale:.85+.3*H(ix,iz,683),color:[f.crown[0]*tone,f.crown[1]*tone,f.crown[2]*tone]});}
+  nature.remove('crown:'+key);for(const [kind,list] of Object.entries(items))nature.add('crown:'+key,kind,list);crownCells.set(key,{stale:!complete,count:items.crownBroad.length+items.crownConifer.length});}
+ // The real weather where the player stands clouds the sky. Rain thickens the
+ // haze, so the far land greys away as it does on a wet day.
+ let weatherTime=-Infinity,weatherNow=null;
+ function weatherAt(time){if(time-weatherTime>=1){weatherTime=time;const p=pose();if(p)weatherNow=root.BurbzCalmAudio?.weather?.(p.lat,p.lon)||weatherNow;}return weatherNow;}
+ function weatherHaze(){if(!hazeOn||!scene.fog)return;const w=skyDriver?.weather?.(),rain=w?.rain||0,grey=w?Math.max(0,Math.min(1,(w.cover-.6)/.4)):0;scene.fog.near=HAZE[0]*(1-.55*rain);scene.fog.far=HAZE[1]*(1-.12*grey-.5*rain);}
  function haze(on){if(on===hazeOn||!scene.fog)return;hazeOn=on;
   if(on){scene.fog.near=HAZE[0];scene.fog.far=HAZE[1];scene.userData.inkFog=[110,520];s.source.camera.far=6500;}
   else{scene.fog.far=Math.min(DETAIL,originalFog?.far??DETAIL);scene.fog.near=Math.min(originalFog?.near??52,scene.fog.far*.5);delete scene.userData.inkFog;s.source.camera.far=650;}
   s.source.camera.updateProjectionMatrix();}
  // Chunks the shown square still covers stay until it has eased past them.
+ // New chunks build nearest first to where the viewer will be a second from
+ // now, so the ground ahead of a fast flight is ready first.
+ const ahead={x:0,z:0};let aheadFrom=null;
+ function lead(time){if(aheadFrom&&time>aheadFrom.t){const dt=time-aheadFrom.t,k2=Math.min(1,dt*3);ahead.x+=((s.player.x-aheadFrom.x)/dt-ahead.x)*k2;ahead.z+=((s.player.z-aheadFrom.z)/dt-ahead.z)*k2;}aheadFrom={x:s.player.x,z:s.player.z,t:time};}
  function queue(){const wanted=k.chunks(s.player.x,s.player.z),ids=new Set(wanted.map(c=>c.id));pending.length=0;for(const c of wanted)if(!chunks.has(c.id))pending.push(c);
+  const to={x:s.player.x+Math.max(-48,Math.min(48,ahead.x)),z:s.player.z+Math.max(-48,Math.min(48,ahead.z))},C2=k.CHUNK/2,far=c=>Math.max(Math.abs(c.x+C2-to.x),Math.abs(c.z+C2-to.z));pending.sort((a,b)=>far(a)-far(b));
   for(const c of [...chunks.values()])if(!ids.has(c.id)&&!(shown.ready&&c.x<cut.x1&&c.x+k.CHUNK>cut.x0&&c.z<cut.z1&&c.z+k.CHUNK>cut.z0))retire(c);}
  // New chunks first, nearest first. Then chunks whose map data changed are
  // rebuilt in place: the old one stays until its replacement is ready.
@@ -484,19 +552,21 @@ async function attach(s,opts){
  function pose(){return datum===null?null:{...C().unproject(origin,{x:s.player.x,y:s.player.y+datum,z:s.player.z}),yaw:s.player.yaw,pitch:s.player.pitch,mode:['fly','swim'].includes(s.player.mode)?s.player.mode:'walk'};}
  async function save(){if(closed||s.room||datum===null)return true;try{if(await (craftRuntime?craftRuntime.save():opts.savePose?.(pose()))===false)throw Error("save");return true;}catch(_){message('Your position could not be saved. Please try again before leaving.');return false;}}
  function syncControls(){const craft=craftRuntime?.sync();if(!s.room){const title=s.root.querySelector('.vw-title small'),label=s.player.mode==='swim'?'SWIMMING':s.player.mode==='fly'?'CRAFT FLIGHT':craft?.aboard?'ABOARD CRAFT':'ON FOOT';if(title&&title.textContent!==label)title.textContent=label;}if(craft){wing.textContent=craft.label;wing.setAttribute('aria-disabled',String(!craft.enabled));}wing.hidden=!!s.room||s.uiBusy||!craft?.visible;rise.hidden=descend.hidden=wing.hidden||s.player.mode!=='fly';if(s.room)visit.hidden=true;}
- function update(time){homeUI.update();craftRuntime?.update(time);campRuntime?.update(time);syncControls();const homePlace=places.get('home');build.hidden=closed||!!s.room||s.uiBusy||s.player.mode!=='walk'||!opts.openBuild||!homePlace||opts.getHome?.()?.tier<1||Math.hypot(s.player.x-homePlace.x,s.player.z-homePlace.z)>root.BurbzPlayerHomeCore.YARD.walk;if(closed||s.room)return;skyDriver?.update(time);waterTime.value=matchMedia('(prefers-reduced-motion: reduce)').matches?0:time;shadows();natureEye.value.set(s.player.x,s.player.y+1.38,s.player.z);registerNature(time);nature.flush();spray.update(s.source.renderer,scene.fog);
+ function update(time){homeUI.update();craftRuntime?.update(time);campRuntime?.update(time);syncControls();const homePlace=places.get('home');build.hidden=closed||!!s.room||s.uiBusy||s.player.mode!=='walk'||!opts.openBuild||!homePlace||opts.getHome?.()?.tier<1||Math.hypot(s.player.x-homePlace.x,s.player.z-homePlace.z)>root.BurbzPlayerHomeCore.YARD.walk;if(closed||s.room)return;skyDriver?.update(time,weatherAt(time));waterTime.value=matchMedia('(prefers-reduced-motion: reduce)').matches?0:time;shadows();natureEye.value.set(s.player.x,s.player.y+1.38,s.player.z);groundClock.value=time;registerNature(time);spray.update(s.source.renderer,scene.fog);
   // Water mirrors the real sky: the sun or moon, and the colour overhead.
   const waterSky=root.BurbzShoreWater.sky;if(skyDriver&&waterSky.sun.value){waterSky.sun.value.copy(skyDriver.direction());const top=skyDriver.group?.children[0]?.material?.uniforms?.top?.value;if(top)waterSky.zenith.value.copy(top);}for(const object of sky){const p=initialSky.get(object);object.position.set(p.x+s.player.x,p.y+s.player.y,p.z+s.player.z);}
   const next=safeAt(s.player.x,s.player.z)?'settlement':'wilderness';if(next!==zone){zone=next;metrics.transitions++;}s.root.dataset.walkZone=zone;
   if(time-lastPlaces>.75){lastPlaces=time;refreshPlaces();selectDiscoveries();visitTarget=inPlace(s.player.x,s.player.z)||null;visit.hidden=!visitTarget||visitTarget.record.kind==='wayside'||s.uiBusy||s.player.mode!=='walk';visit.textContent=visitTarget?(visitTarget.record.kind==='home'?'Enter '+visitTarget.record.name:(visitTarget.record.owned?'Manage ':'Visit ')+visitTarget.record.name):'';}
-  if(time-lastStream>.18){lastStream=time;queue();stream();const p=geo(s.player.x,s.player.z);if(p&&(!lastCentre||C().distance(p,lastCentre)>180)){lastCentre=p;map.jumpTo({center:[p.lon,p.lat],zoom:14,pitch:0});}}
+  lead(time);if(time-lastStream>.18){lastStream=time;queue();stream();pruneSteady();const p=geo(s.player.x,s.player.z);if(p&&(!lastCentre||C().distance(p,lastCentre)>180)){lastCentre=p;map.jumpTo({center:[p.lon,p.lat],zoom:14,pitch:0});}}
   else stream();
   // The shown square and the distant land meet with no seam. Without the
   // distant land, opaque fog hides whole chunks and far trees beyond it.
-  const view=showSquare(time);horizon?.update(s.player,view,time);haze(!!horizon?.ready);
+  const view=showSquare(time);horizon?.update(s.player,view,time);haze(!!horizon?.ready);weatherHaze();
   if(hazeOn){if(shown.ready)groundHole.value.set(shown.x0,shown.z0,shown.x1,shown.z1);else groundHole.value.set(0,0,0,0);natureEdge.value.copy(groundHole.value);}
   else{const r=DETAIL+7;groundHole.value.set(-1e6,-1e6,1e6,1e6);natureEdge.value.set(s.player.x-r,s.player.z-r,s.player.x+r,s.player.z+r);}
-  nature.update();refreshFar();
+  // Every change to the pools this frame reaches the GPU before it draws,
+  // so no plant is ever drawn a frame from stale data.
+  nature.update();refreshFar();crowns(time);nature.flush();
   for(const chunk of chunks.values())chunk.group.visible=hazeOn?chunk.x>=cut.x0&&chunk.x<cut.x1&&chunk.z>=cut.z0&&chunk.z<cut.z1:distanceToBounds({x0:chunk.x,x1:chunk.x+k.CHUNK,z0:chunk.z,z1:chunk.z+k.CHUNK},s.player)<DETAIL+7;
   // Keep distant prepared settlements cached but outside the render graph.
   // Visibility alone still makes Three traverse their entire matrix trees.
@@ -539,7 +609,7 @@ async function attach(s,opts){
     placeVersion++;s.source.renderer.shadowMap.needsUpdate=true;
    }};
  }
- const api={world,closePanel:()=>campRuntime?.closePanel(),buildingFrame,people(target){const p=[...places.values()].find(p=>target.scope==='wayside'?p.record.id===target.placeId:(p.content.buildings||[]).some(b=>Number(b.userData.wardSeed)===Number(target.seed)));return p?.content.people?p.content.people(target):s.source.people?s.source.people(target):s.options.interiors?.people?.(target)||[];},buildings:()=>[...s.source.buildings,...[...places.values()].flatMap(p=>p.content.buildings||[])],get placeVersion(){return placeVersion;},navigation:()=>({origin,pose:pose(),player:s.player,exploration:opts.exploration?.read(),light:opts.territoryLight?.().circles||[],camps:campRuntime?.markers()||[],craft:craftRuntime?.marker(),polygons:world.polygons,corridors,features:[...features.values()].filter(f=>['water','wood','road','stream'].includes(f.kind)),places:[{record:opts.record,x:0,z:0,radius:actualRadius},...places.values()].map(p=>({name:p.record.name,x:p.x,z:p.z,radius:p.radius||p.content.radius}))}),update,animateOrigin,move,save,dispose,safeAt,syncControls,toggleFlight,craftAboard:()=>craftRuntime?.aboard()===true,canClose:()=>craftRuntime?.save()!==false,reset(){lift=0;C().reset(s.player);},camera(dt){eyeShift*=Math.exp(-Math.min(.08,dt)*8);const m=s.player.mode==='fly'?root.BurbzAcademyFlightCore.cameraMotion(motion,s.player,dt,matchMedia('(prefers-reduced-motion: reduce)').matches):{bob:0,pitch:0,roll:0};return{...m,bob:m.bob+eyeShift};},replaceBase(next){baseWorld=next;return world;},diagnostics(full=false){return{craft:craftRuntime?.diagnostics(),camps:campRuntime?.diagnostics(),sky:skyDriver?.diagnostics(),origin,datum,zone,authoredRadius:actualRadius,originReach,pose:pose(),shoreTextures:[...chunks.values()].filter(c=>c.shoreTexture).length,shoreBytes:[...chunks.values()].filter(c=>c.shoreTexture).length*128*128*4,chunks:chunks.size,chunkIds:[...chunks.values()].map(c=>({id:c.id,uuid:c.group.uuid})),pending:pending.length,preparingPlaces:[...preparing.values()].map(p=>({id:p.record.id,failed:!!p.failed})),rocks:[...chunks.values()].reduce((n,c)=>n+c.rocks.length,0),cascades:[...chunks.values()].flatMap(c=>c.cascades.map(r=>({id:r.id,x:r.x,z:r.z,drop:r.drop,top:r.points[0],foot:r.points[r.points.length-1]}))),treeSamples:full?[...chunks.values()].flatMap(c=>c.trees.map(t=>({x:t.x,y:t.y,z:t.z,size:t.size}))):undefined,trees:[...chunks.values()].reduce((n,c)=>n+c.trees.length,0),nature:nature.diagnostics(),spray:spray.count(),streams:streamCache.size,featureKinds:full?[...features.values()].reduce((m,e)=>(m[e.kind]=(m[e.kind]||0)+1,m),{}):undefined,waterBounds:full?[...features.values()].filter(e=>e.kind==='water').map(e=>[Math.round(e.bounds.x0),Math.round(e.bounds.z0),Math.round(e.bounds.x1),Math.round(e.bounds.z1),e.waterClass]):undefined,streamTriangles:[...chunks.values()].reduce((n,c)=>n+(c.streamTriangles||0),0),falls:full?[...streamCache.values()].flatMap(p=>p.falls.map(f=>({x:Math.round(f.foot.x),z:Math.round(f.foot.z),topX:Math.round(f.top.x),topZ:Math.round(f.top.z),drop:Math.round(f.drop*10)/10,width:f.width}))):undefined,openBias:openBiasAt(s.player.x,s.player.z),horizon:horizon?.diagnostics(),haze:hazeOn,shown:{...shown},cut:{...cut},stale:stale.size,treeIds:full?[...chunks.values()].flatMap(c=>c.trees.map(t=>t.id)):undefined,tileCount:tiles.size,featureCount:features.size,visibleCoverage:visibleCoverage(s.player.x,s.player.z),errors:errors.slice(),metrics:{...metrics},places:[...places.values()].map(p=>({id:p.record.id,kind:p.record.kind,name:p.record.name,x:p.x,z:p.z,radius:p.content.radius,farmPlots:p.content.farmPlots,buildings:p.content.buildings?.filter(b=>b.userData.buildingId).map(b=>({id:b.userData.buildingId,seed:b.userData.wardSeed,x:b.position.x,z:b.position.z,construction:!!b.userData.construction,level:b.userData.modelLevel}))})),corridors:corridors.map(c=>({kind:c.kind,x:c.x,z:c.z,ux:c.ux,uz:c.uz,width:c.width,start:c.start,end:c.end})),record:opts.record};}};
+ const api={world,closePanel:()=>campRuntime?.closePanel(),buildingFrame,people(target){const p=[...places.values()].find(p=>target.scope==='wayside'?p.record.id===target.placeId:(p.content.buildings||[]).some(b=>Number(b.userData.wardSeed)===Number(target.seed)));return p?.content.people?p.content.people(target):s.source.people?s.source.people(target):s.options.interiors?.people?.(target)||[];},buildings:()=>[...s.source.buildings,...[...places.values()].flatMap(p=>p.content.buildings||[])],get placeVersion(){return placeVersion;},navigation:()=>({origin,pose:pose(),player:s.player,exploration:opts.exploration?.read(),light:opts.territoryLight?.().circles||[],camps:campRuntime?.markers()||[],craft:craftRuntime?.marker(),polygons:world.polygons,corridors,features:[...features.values()].filter(f=>['water','wood','road','stream'].includes(f.kind)),places:[{record:opts.record,x:0,z:0,radius:actualRadius},...places.values()].map(p=>({name:p.record.name,x:p.x,z:p.z,radius:p.radius||p.content.radius}))}),update,animateOrigin,move,save,dispose,safeAt,syncControls,toggleFlight,craftAboard:()=>craftRuntime?.aboard()===true,canClose:()=>craftRuntime?.save()!==false,reset(){lift=0;C().reset(s.player);},camera(dt){eyeShift*=Math.exp(-Math.min(.08,dt)*8);const m=s.player.mode==='fly'?root.BurbzAcademyFlightCore.cameraMotion(motion,s.player,dt,matchMedia('(prefers-reduced-motion: reduce)').matches):{bob:0,pitch:0,roll:0};return{...m,bob:m.bob+eyeShift};},replaceBase(next){baseWorld=next;return world;},diagnostics(full=false){return{craft:craftRuntime?.diagnostics(),camps:campRuntime?.diagnostics(),sky:skyDriver?.diagnostics(),origin,datum,zone,authoredRadius:actualRadius,originReach,pose:pose(),shoreTextures:[...chunks.values()].filter(c=>c.shoreTexture).length,shoreBytes:[...chunks.values()].filter(c=>c.shoreTexture).length*128*128*4,chunks:chunks.size,chunkIds:[...chunks.values()].map(c=>({id:c.id,uuid:c.group.uuid})),pending:pending.length,preparingPlaces:[...preparing.values()].map(p=>({id:p.record.id,failed:!!p.failed})),rocks:[...chunks.values()].reduce((n,c)=>n+c.rocks.length,0),cascades:[...chunks.values()].flatMap(c=>c.cascades.map(r=>({id:r.id,x:r.x,z:r.z,drop:r.drop,top:r.points[0],foot:r.points[r.points.length-1]}))),treeSamples:full?[...chunks.values()].flatMap(c=>c.trees.map(t=>({x:t.x,y:t.y,z:t.z,size:t.size}))):undefined,trees:[...chunks.values()].reduce((n,c)=>n+c.trees.length,0),crowns:{cells:crownCells.size,count:[...crownCells.values()].reduce((n,c)=>n+c.count,0),stale:[...crownCells.values()].filter(c=>c.stale).length},weather:skyDriver?.weather?.(),fog:scene.fog&&[Math.round(scene.fog.near),Math.round(scene.fog.far)],nature:nature.diagnostics(),spray:spray.count(),streams:streamCache.size,featureKinds:full?[...features.values()].reduce((m,e)=>(m[e.kind]=(m[e.kind]||0)+1,m),{}):undefined,waterBounds:full?[...features.values()].filter(e=>e.kind==='water').map(e=>[Math.round(e.bounds.x0),Math.round(e.bounds.z0),Math.round(e.bounds.x1),Math.round(e.bounds.z1),e.waterClass]):undefined,streamTriangles:[...chunks.values()].reduce((n,c)=>n+(c.streamTriangles||0),0),falls:full?[...streamCache.values()].flatMap(p=>p.falls.map(f=>({x:Math.round(f.foot.x),z:Math.round(f.foot.z),topX:Math.round(f.top.x),topZ:Math.round(f.top.z),drop:Math.round(f.drop*10)/10,width:f.width}))):undefined,openBias:openBiasAt(s.player.x,s.player.z),horizon:horizon?.diagnostics(),haze:hazeOn,shown:{...shown},cut:{...cut},stale:stale.size,treeIds:full?[...chunks.values()].flatMap(c=>c.trees.map(t=>t.id)):undefined,tileCount:tiles.size,featureCount:features.size,visibleCoverage:visibleCoverage(s.player.x,s.player.z),errors:errors.slice(),metrics:{...metrics},places:[...places.values()].map(p=>({id:p.record.id,kind:p.record.kind,name:p.record.name,x:p.x,z:p.z,radius:p.content.radius,farmPlots:p.content.farmPlots,buildings:p.content.buildings?.filter(b=>b.userData.buildingId).map(b=>({id:b.userData.buildingId,seed:b.userData.wardSeed,x:b.position.x,z:b.position.z,construction:!!b.userData.construction,level:b.userData.modelLevel}))})),corridors:corridors.map(c=>({kind:c.kind,x:c.x,z:c.z,ux:c.ux,uz:c.uz,width:c.width,start:c.start,end:c.end})),record:opts.record};}};
  s.continuity=api;s.abort.signal.addEventListener('abort',dispose,{once:true});
  try{await createMap();if(closed||s.closed){dispose();return null;}if(initial){const y=height(s.player.x,s.player.z);if(y===null)throw Error('Your saved place has not loaded. Please try again.');s.player.y=s.player.mode==='fly'?Math.max(y+1,(opts.initialPose.altitude||0)-datum):y;}if(opts.safeArrival){let arrival=null;const x=s.player.x,z=s.player.z;for(let ring=0;ring<=8&&!arrival;ring++)for(let i=0;i<(ring?24:1);i++){const px=x+Math.sin(i*Math.PI/12)*ring*.5,pz=z+Math.cos(i*Math.PI/12)*ring*.5,y=height(px,pz);if(Number.isFinite(y)&&visibleCoverage(px,pz)&&allowed(px,pz)&&allowed3(px,y+1,pz)){arrival={x:px,z:pz,y};break;}}if(!arrival)throw Error(opts.homeDoor?'The ground outside your door is blocked. Please try again once it finishes loading.':'Your camp arrival ground is blocked. Return to the map and choose another destination.');Object.assign(s.player,arrival,{mode:'walk',velocity:{x:0,y:0,z:0}});}craftRuntime=root.BurbzFlightCraft.attach(s,opts,{pose,style:styleFog,sample:craftSurface,
   message:text=>message(text,true),clear:(x,y,z)=>allowed3(x,y,z,false,true)&&localCoverage(x,z),

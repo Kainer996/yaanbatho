@@ -4,7 +4,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const N=require('../world_nature_core.js'),K=require('../village_world_core.js');
-const BUILD='alderwing-steady-v472-20260925';
+const BUILD='alderwing-steady-v472-20260925',LATER=['academy-living-tree-v473-20260925','alderwing-seamless-v474-20260925'],shipped=[BUILD,...LATER];
 global.THREE=require('../lib/three.min.js');const T=global.THREE;
 global.document={createElement:()=>({style:{},addEventListener(){},remove(){}})};global.matchMedia=()=>({matches:false});
 require('../world_nature.js');require('../world_horizon.js');require('../flight_craft.js');
@@ -18,10 +18,11 @@ test('trees never change size: each is drawn whole or not at all',()=>{
  for(const [kind,spec] of Object.entries(W.KINDS))if(!spec.lod)assert(spec.range[0]>=12&&(spec.tier==='small'||spec.range[0]>=70),kind+' shrinks only where it is a few pixels tall');
  const text=read('world_nature.js'),shader=text.slice(text.indexOf('const VERTEX='),text.indexOf('function patch('));
  assert(shader.includes('natureShow=natureMode<1.5?step(natureDistance,natureSwap):(natureMode<2.5?step(natureSwap,natureDistance):1.)*step('),'a tree swaps forms and ends at the edge by a hard step');
- assert.equal((shader.match(/smoothstep/g)||[]).length,1,'the one smooth fade is for shrubs and ground plants');
+ assert.equal((shader.match(/natureShow=[^;]*smoothstep/g)||[]).length,1,'the one smooth fade is for shrubs and ground plants');
  assert(W.SWAP[0]>=24&&W.SWAP[1]>0,'each tree swaps at its own distance, never in one ring');
  const walk=read('village_world.js');assert(walk.includes('<44,\'t\')')&&44>=W.SWAP[0]+W.SWAP[1]+6,'detailed trees join the pools before they are due to show');
- assert(W.EDGE[0]>=12,'far trees end before the ground bends onto the distant land');
+ // v474 replaced the fixed margin: far trees now ride the ground as it bends.
+ assert(shader.includes('transformed.y+=natureDrop*smoothstep('),'far trees stay on the ground where it bends onto the distant land');
 });
 
 test('the simple form of every tree has the size and outline of its detailed form',()=>{
@@ -145,15 +146,16 @@ test('the flight clamp still lets the pilot look straight down',()=>{
 test('v472 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
  // Later releases ship on top under their own marker; v472 stays in the cache chain.
- const LATER=['academy-living-tree-v473-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(build=>html.includes("const BURBZ_BUILD = '"+build+"';")));
  assert(cache.includes('-'+BUILD)&&shipped.some(build=>cache.endsWith('-'+build)));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
  const lazy=['world_nature_core.js','world_nature.js','world_horizon.js','flight_craft.js','village_world.js','village_world_core.js'];
- for(const [name,urls] of Object.entries(lists))for(const file of lazy)assert.equal(urls.filter(u=>u==='./'+file+'?v='+BUILD).length,1,name+': '+file);
- for(const file of lazy)assert(walk.includes("'"+file+"':'"+BUILD+"'"),'loader pin '+file);
- for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of lazy){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert.equal(m[1],BUILD,file+': stale '+mod);}}
+ // Modules a later release changed again carry its pin instead.
+ for(const [name,urls] of Object.entries(lists))for(const file of lazy)assert.equal(urls.filter(u=>shipped.some(b=>u==='./'+file+'?v='+b)).length,1,name+': '+file);
+ for(const file of lazy)assert(shipped.some(b=>walk.includes("'"+file+"':'"+b+"'")),'loader pin '+file);
+ for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of lazy){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert(shipped.includes(m[1]),file+': stale '+mod);}}
  assert(fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8').includes('"world_horizon.js"'));
 });
