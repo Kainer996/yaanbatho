@@ -31,7 +31,9 @@
  ];
  const TREES=Array.from({length:28},(_,i)=>{const a=i*2.399963,r=(10.8+(i%4)*1.1)*YARD_SCALE;return{id:'tree-'+i,x:Math.sin(a)*r,z:Math.cos(a)*r,r:.38+(i%3)*.07};});
  for(const [id,r] of Object.entries(ROOMS))FINDS.push({id:id+'-story',area:id,x:0,z:-2.8,name:r.activity,text:r.lore});
- const visibleTrees=s=>s.outlook?TREES.filter(t=>!(t.z>7&&Math.abs(t.x)<11)):TREES;
+ // The clearing keeps no trees round the plot. TREES stays so old saves still
+ // load their felled-tree records; timber comes from village woodland.
+ const visibleTrees=()=>[];
  // The Academy grows as a tree beside the built house: a little taller than
  // the woodland, with the player's own Academy buildings on its boughs.
  // `clear` keeps its roots and low treehouses free of furniture and plots;

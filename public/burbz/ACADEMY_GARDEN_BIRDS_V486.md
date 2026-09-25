@@ -1,7 +1,7 @@
 # Academy tree and garden birds v486
 
 Build: `academy-garden-birds-v486-20260925`.
-Status: pushed on `claude/burbz-academy-tree-birds-0z4meh`, built on main at v484. Not merged. v485 belongs to smooth-sky-plain-plot on its own branch, so this takes v486.
+Status: pushed on `claude/burbz-academy-tree-birds-0z4meh`, built on main at v484 and merged with main at v485 (smooth sky, plain plot). Not merged to main yet.
 
 ## What Yaan asked for
 

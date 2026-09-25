@@ -11,14 +11,21 @@
  // weather covers. Thin toward the horizon, drifting with the wind; grey and
  // heavy when it rains. Four octaves of value noise, sky pixels only.
  const CLOUDS=`uniform vec3 top;uniform vec3 mid;uniform vec3 hor;uniform float cover;uniform float gloom;uniform vec2 drift;uniform vec3 lit;uniform vec3 shade;varying vec3 vDir;
- float skyHash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
- float skyNoise(vec2 p){vec2 i=floor(p),f=p-i;f=f*f*(3.-2.*f);return mix(mix(skyHash(i),skyHash(i+vec2(1.,0.)),f.x),mix(skyHash(i+vec2(0.,1.)),skyHash(i+vec2(1.,1.)),f.x),f.y);}
- void main(){float h=vDir.y;vec3 c=h>.11?mix(mid,top,smoothstep(.11,.8,h)):mix(hor,mid,smoothstep(-.04,.11,h));
-  if(cover>.002&&h>-.02){vec2 p=vDir.xz/(max(h,0.)+.18)*1.35+drift;
-   float n=skyNoise(p)*.5+skyNoise(p*2.03+vec2(7.1,2.9))*.25+skyNoise(p*4.1+vec2(3.7,8.3))*.14+skyNoise(p*8.3+vec2(1.3,5.1))*.07;
+ // A sine-free hash and quintic blend: sin() hashes lose precision on phone
+ // GPUs and draw straight seams, and a cubic blend shows the lattice grid.
+ float skyHash(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
+ float skyNoise(vec2 p){vec2 i=floor(p),f=p-i;f=f*f*f*(f*(f*6.-15.)+10.);return mix(mix(skyHash(i),skyHash(i+vec2(1.,0.)),f.x),mix(skyHash(i+vec2(0.,1.)),skyHash(i+vec2(1.,1.)),f.x),f.y);}
+ // Each octave turns a little, so no two grids line up into a visible edge.
+ const mat2 skyTurn=mat2(.8,-.6,.6,.8);
+ // Re-normalise per pixel. The dome's triangles interpolate vDir linearly, and
+ // unnormalised it paints each triangle as a flat facet with straight edges.
+ void main(){vec3 dir=normalize(vDir);float h=dir.y;vec3 c=h>.11?mix(mid,top,smoothstep(.11,.8,h)):mix(hor,mid,smoothstep(-.04,.11,h));
+  if(cover>.002&&h>-.02){vec2 p=dir.xz/(max(h,0.)+.18)*1.35+drift;
+   vec2 q=skyTurn*p*2.03+vec2(7.1,2.9),r=skyTurn*q*2.02+vec2(3.7,8.3),t=skyTurn*r*2.01+vec2(1.3,5.1);
+   float n=skyNoise(p)*.5+skyNoise(q)*.25+skyNoise(r)*.14+skyNoise(t)*.07;
    // Cloud gathers into broad masses with sky between them. Thick cloud is
    // grey underneath and thin cloud glows, so even a shower's sky has shape.
-   float mass=skyNoise(p*.33+vec2(4.2,1.7)),m=n+(mass-.5)*.3*cover,edge=mix(.8,.18,pow(cover,1.25)),d=smoothstep(edge-.06,edge+.18,m)*smoothstep(-.02,.1,h),thick=clamp((m-edge)*2.2,0.,1.);
+   float mass=skyNoise(skyTurn*p*.33+vec2(4.2,1.7)),m=n+(mass-.5)*.3*cover,edge=mix(.8,.18,pow(cover,1.25)),d=smoothstep(edge-.06,edge+.18,m)*smoothstep(-.02,.1,h),thick=clamp((m-edge)*2.2,0.,1.);
    vec3 cc=mix(lit,shade,clamp(thick*.95+mass*gloom*.5+gloom*.12,0.,1.));cc*=1.+.16*(1.-thick)*cover;
    c=mix(c,mix(cc,hor,1.-smoothstep(0.,.3,h)),d);}
   float noise=fract(sin(dot(gl_FragCoord.xy,vec2(127.1,311.7)))*43758.5453);gl_FragColor=vec4(c+(noise-.5)*.009,1.0);
