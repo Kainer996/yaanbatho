@@ -870,3 +870,39 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 @media (prefers-reduced-motion:reduce) {
  #screen-scan.progressive-home :is(.scan-home-today .desk-current-label,#scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled)) { animation:none; }
 }
+
+/* Home hub (v491): every box is one big button that opens its own screen.
+   Rows and tiles inside keep their own actions. */
+#screen-scan.progressive-home .desk-panel[data-home-panel] { cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,transform .12s ease; }
+@media (hover:hover) { #screen-scan.progressive-home .desk-panel[data-home-panel]:hover { border-color:#b9a16b; } }
+#screen-scan.progressive-home :is(.desk-panel-stores,.desk-panel-kitchen,.desk-panel-training,.desk-panel-hospital)[data-home-panel]:active { transform:scale(.97); }
+/* A box that wants the player now wears a warm gold edge. */
+#screen-scan.progressive-home .desk-panel[data-home-attention="true"] { border-color:#d6a84f;box-shadow:0 0 0 1px #d6a84f40,0 0 12px #d6a84f33,0 3px 8px #0003; }
+
+/* Villages, Towns and Regions: each title is a button with its count. */
+#screen-scan.progressive-home .desk-empire-column h3 { padding:0 0 3px; }
+#screen-scan .desk-empire-open { box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:5px;width:100%;min-height:22px;margin:0;padding:1px 6px;border:1px solid #75664780;border-radius:11px;background:#262422;color:#e9d7a6;font:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer; }
+#screen-scan .desk-empire-open>span { min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+#screen-scan .desk-empire-open b { flex:none;min-width:18px;padding:0 5px;border-radius:9px;background:#3b3323;color:#f1d48e;font:800 11px/16px Inter,sans-serif;letter-spacing:0; }
+#screen-scan .desk-empire-open i { flex:none;font-style:normal;font-size:16px;line-height:1;color:#d6a84f; }
+#screen-scan .desk-empire-open:active { background:#3a3226; }
+#screen-scan .desk-empire-open:focus-visible { outline:2px solid #ffefc9;outline-offset:1px; }
+#screen-scan .desk-empire-column { cursor:pointer; }
+
+/* Short landscape: wide Empire tiles, picture on the left, name and status beside it. */
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-holding { display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:6px;row-gap:1px;width:100%;height:var(--empire-tile-size,48px);min-height:44px;aspect-ratio:auto;margin:0 0 5px;padding:3px 6px;text-align:left; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-name { display:contents; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-name .desk-mini-art { grid-row:1 / 3;width:30px;height:32px;align-self:center; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-name strong { align-self:end;max-width:100%;font-size:13px;line-height:15px; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-holding small { align-self:start;font-size:10px;line-height:12px; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-holding::after { position:absolute;bottom:4px;right:5px;top:auto;font-size:10px;line-height:12px; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-holding[data-work]:not([data-work=""]) small { padding-right:28px; }
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .desk-empire-column h3 { font-size:12px;line-height:16px; }
+@media (prefers-reduced-motion:reduce) { #screen-scan.progressive-home .desk-panel[data-home-panel] { transition:none; } #screen-scan.progressive-home .desk-panel[data-home-panel]:active { transform:none; } }
+/* Short screens: a slim Empire title and column buttons leave room for a whole tile. */
+#screen-scan.progressive-home .scan-home-main[data-home-compact="true"] .desk-panel-building .desk-panel-heading { height:32px;min-height:32px;font-size:15px; }
+#screen-scan.progressive-home .scan-home-main[data-home-compact="true"] .desk-empire-column h3 { padding-bottom:2px; }
+#screen-scan.progressive-home .scan-home-main[data-home-compact="true"] .desk-empire-open { min-height:20px;padding:0 5px; }
+/* Merlin perches over the top right of the Academy tree here, so its
+   "ready" chip moves to the left where he never covers it. */
+#screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .home-tree-ready { right:auto;left:6px; }
