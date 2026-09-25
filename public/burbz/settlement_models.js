@@ -382,7 +382,7 @@
         :pick(r,child?['crop','fringe','curly','shaggy']:elder?['bald','crop','bald','shaggy']:['crop','fringe','curly','shaggy','crop']);
       L.beard=!female&&!child&&r()<(elder?.8:.45)?pick(r,elder?['long','full','moustache']:['full','short','moustache','goatee','short']):null;
       L.height=child?.78+r()*.06:female?1.18+r()*.06:1.22+r()*.08;
-      if(elder)L.height-=.02;
+      if(elder)L.height=Math.max(1.18,L.height-.02);
       L.width=child?1:pick(r,[.94,1,1,1.05]);
       L.belly=0;L.stoop=0;
       L.eyes=pick(r,[0x2a1c16,0x2a1c16,0x1f2430,0x33261a]);
@@ -681,11 +681,12 @@
           r.box([.075*W,.03*sy,.05*W],at(.17,.628,.07),deepen(LEATHER,.25),'pelvis',[0,.7,0]);
         }
       }
-      // A kirtle laced up the front over a strip of linen chemise.
+      // A kirtle cross-laced up the front over a strip of chemise, shaded
+      // toward the cloth so it reads as lacing, not a white tag.
       function lacing(depth){
         const lo=.63,hi=.82,zAt=y=>radiusAt(shape.bodice,y)*W*depth,z0=zAt(lo),z1=zAt(hi),tilt=Math.atan2(z1-z0,(hi-lo)*sy);
-        r.add(new T.BoxGeometry(.04*W,(hi-lo)*sy,.006),L.shirt,[0,(lo+hi)/2*sy,(z0+z1)/2+.002],[tilt,0,0],[1,1,1],'pelvis',waist);
-        for(const y of [.67,.72,.77])r.add(new T.BoxGeometry(.056*W,.009,.006),STRAP,[0,y*sy,zAt(y)+.006],[tilt,0,0],[1,1,1],'pelvis',waist);
+        r.add(new T.BoxGeometry(.04*W,(hi-lo)*sy,.006),mix(L.shirt,L.bodice||L.main,.5),[0,(lo+hi)/2*sy,(z0+z1)/2+.002],[tilt,0,0],[1,1,1],'pelvis',waist);
+        for(const y of [.67,.72,.77])for(const s of [1,-1])r.add(new T.BoxGeometry(.05*W,.006,.005),STRAP,[0,y*sy,zAt(y)+.006],[tilt,0,s*.6],[1,1,1],'pelvis',waist);
       }
       // Which profile row a point sits in, so stripes follow the geometry.
       function row(y){const rows=shape.body;let i=0;while(i<rows.length-1&&y>rows[i+1][1]*sy)i++;return i;}
@@ -791,8 +792,11 @@
         const c=L.hair,shine=soften(c,.28),style=L.hairStyle;
         const paint=(x,y,z)=>{const v=(y-P.hy)/hs,w=z/hs;return mix(c,shine,Math.exp(-((v-.1)**2)/.0007)*smooth(.02,.1,w)*.55);};
         const toChest={bone:'chest',from:hd(0,-.1,0),to:hd(0,-.24,0)};
+        // A friar's ring of hair lies close round a bare crown; the bald keep
+        // theirs at the sides and back.
         if(style==='tonsure'||style==='bald'){
-          r.add(new T.TorusGeometry(.126*hs,.03*hs,4,12,style==='bald'?PI*1.25:TAU),paint,hd(0,.03,-.012),[PI/2-.32,0,style==='bald'?PI*1.375:0],[1.03,1.03,.62],'head');
+          const bald=style==='bald';
+          r.add(new T.SphereGeometry(.139*hs,16,3,bald?PI*.875:0,bald?PI*1.25:TAU,bald?1.05:.8,bald?.8:.95),paint,[0,P.hy,-.004*hs],[-.32,0,0],[1,1.04,.99],'head');
           return;
         }
         // Hairline as a polar angle from the crown, by direction round the head
@@ -908,7 +912,8 @@
           case 'kerchief':
             dome(1.45,-.78,c,.147,[1.04,1.05,1.05]);
             ball(.03*hs,hd(0,-.05,-.15),deepen(c,.1),'head',[1,1,.8],[0,0,0],6,4);
-            r.add(new T.ConeGeometry(.05*hs,.1*hs,3),c,hd(0,-.1,-.14),[PI+.3,0,0],[1,1,.35],'head');
+            // Long hair hides the tail, so only the knot shows.
+            if(L.hairStyle!=='long')r.add(new T.ConeGeometry(.05*hs,.1*hs,3),c,hd(0,-.1,-.14),[PI+.3,0,0],[1,1,.35],'head');
             break;
           case 'coif':
             // A close linen cap: a seam over the crown and a rolled edge round the face.
@@ -1028,7 +1033,8 @@
           case 'scroll':{const k=kit('handL',held.L.hand),c=fl.clone().add(V(-.05,.02,.03));
             k.rod(c.clone().add(V(-.08,0,0)),c.clone().add(V(.08,0,0)),.02,.02,0xf0e2bf,6);
             k.shape(new T.BoxGeometry(.15,.13,.004),0xf5ecd4,c.clone().add(V(0,-.07,.012)),eq(-.3,0,0));break;}
-          case 'quill':r.add(new T.ConeGeometry(.012*hs,.16*hs,4),0xf7f3ea,hd(-.14,.07,-.02),[.2,0,.5],[1,1,.35],'head');break;
+          // Tucked behind the ear, lying back along the head.
+          case 'quill':r.add(new T.ConeGeometry(.012*hs,.16*hs,4),0xf7f3ea,hd(-.14,0,-.02),[-1,0,-.25],[1,1,.35],'head');break;
         }
       }
 
@@ -1079,11 +1085,12 @@
       const f=g.userData.folk;if(!f)return;
       state=state||{};time=time||0;
       const m=motion==null?1:clamp(motion,0,1),b=f.b,L=f.look,H=f.holds,G=f.gait,ph=L.phase,act=state.activity||'';
-      const walking=!!state.moving&&m>0,sad=state.mood==='Unhappy',working=WORK.test(act),pushing=PUSHING.test(act);
-      const pel=b.pelvis,ch=b.chest,stoop=L.stoop+(sad?.1:0),lean=pushing?.26:0;
-      let headX=(sad?.22:0)-lean*.8,headY=0,headZ=0,low=-1;
+      // An unhappy villager hangs their head; a tired one droops half as much.
+      const walking=!!state.moving&&m>0,droop=state.mood==='Unhappy'?1:state.mood==='Tired'?.5:0,working=WORK.test(act),pushing=PUSHING.test(act);
+      const pel=b.pelvis,ch=b.chest,stoop=L.stoop+.1*droop,lean=pushing?.26:0;
+      let headX=.22*droop-lean*.8,headY=0,headZ=0,low=-1;
       if(walking){
-        const s=(state.stride!=null?state.stride:time*(state.speed||.9)*TAU/.95)*f.cadence,amp=G.amp*(sad?.8:1),k=amp/.42;
+        const s=(state.stride!=null?state.stride:time*(state.speed||.9)*TAU/.95)*f.cadence,amp=G.amp*(1-.2*droop),k=amp/.42;
         pel.position.set(0,f.pelvisY,0);
         pel.rotation.set(.02+lean*.3,-.1*Math.sin(s)*k,-.04*Math.cos(s));
         ch.rotation.set(stoop+.05+lean*.7,.17*Math.sin(s)*k*(pushing?.3:1),.045*Math.cos(s));
@@ -1100,7 +1107,7 @@
           const d=reach(f,th,kn,pitch)-side*f.hipX*Math.sin(pel.rotation.z);
           if(d>low)low=d;
           // Arms counter-swing, the elbow softening more on the way forward.
-          const h=pushing?PUSH[i]:H[i].stance?FREE[i]:H[i],sw=h.swing*G.arm*(sad?.5:1);
+          const h=pushing?PUSH[i]:H[i].stance?FREE[i]:H[i],sw=h.swing*G.arm*(1-.5*droop);
           b.swings[i].rotation.set(sw*sp,0,0);
           b.arms[i].rotation.set(h.sx,h.sy,h.sz+side*.03*h.swing);
           b.fores[i].rotation.set(h.fore-sw*.6*(.35+.65*Math.max(0,-Math.sin(p-.5))),h.twist,0);

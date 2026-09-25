@@ -441,8 +441,8 @@
     }
     // A Highland's fringe tumbles over its brow in three shaggy locks that
     // half hide its eyes, sun-bleached at the tips.
-    if(hl)for(const z of [-.045,0,.045])
-      put(r,sweep(T,[[.7,.925,z*.5],[.77,.905,z],[.815,.845,z*1.25],[.83,.79,z*1.4]],[[.024,.034],[.03,.04],[.024,.032],[.006,.012]],{n:5,seg:3,bump:shag(3,5,.25)}),
+    if(hl)for(const lz of [-.045,0,.045])
+      put(r,sweep(T,[[.7,.925,lz*.5],[.77,.905,lz],[.815,.845,lz*1.25],[.83,.79,lz*1.4]],[[.024,.034],[.03,.04],[.024,.032],[.006,.012]],{n:5,seg:3,bump:shag(3,5,.25)}),
         (x,y,z)=>mix(dark(base,.06),light(base,.2),clamp((x-.74)*9,0,1)),'head');
     const hoof=0x2e2622;
     const legs=hoofedLegs(r,{
