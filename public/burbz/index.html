@@ -30753,6 +30753,8 @@ function settlementAnimateDog(dog, time, motion) {
     const angles=window.BurbzSettlementLife.legAngles(foot.x,foot.y-.245,.14,.14,hip.userData.bend);
     // The body faces +X, so forward/back swing is around Z, never X.
     hip.rotation.set(0,0,angles.hip);hip.userData.knee.rotation.z=angles.knee;
+    // Paws stay flat on the ground through the whole trot.
+    hip.userData.knee.children[1].rotation.z=-(angles.hip+angles.knee);
   }
   rig.body.position.y=rig.bodyY+(moving?Math.sin(stride*Math.PI*4)*.007:0);
   rig.neck.rotation.z=moving?Math.sin(stride*Math.PI*2)*.04:Math.sin(time*1.2)*.08*motion;
