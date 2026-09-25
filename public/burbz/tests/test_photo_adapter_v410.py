@@ -89,42 +89,75 @@ def test_google_never_posts_after_connection_deadline(monkeypatch):
     assert not calls
 
 
+
+def reading(**updates):
+    """A worker reading: the ranked facts the adapter decides on."""
+    return dict(found=True, accepted=False, verified=False, policy='photo-gemini-v486',
+                model='gemini-vision', modelName='gemini-3.8-flash', reason='ranked', liveBird=True,
+                quality='clear', subjectClear=True, retryable=False, receiptId='a' * 64,
+                fieldMarks=['Orange face and breast', 'Rounded olive-brown back'],
+                candidates=[{'species': 'European Robin', 'scientificName': 'Erithacus rubecula', 'probability': .95},
+                            {'species': 'Common Redstart', 'scientificName': 'Phoenicurus phoenicurus', 'probability': .03}],
+                otherProbability=.02) | updates
+
+
 def accepted():
-    return dict(found=True, accepted=True, verified=True, policy='photo-gemini-v425',
-                model='gemini-vision', modelName='gemini-3.8-flash', confidence=.98,
-                species='European Robin', scientificName='Erithacus rubecula', receiptId='a' * 64)
+    return photo_id.decide(photo_id._validate_reading(reading())[0])
+
+
+FORM = {'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890', 'photoContract': 'merlin-v486'}
 
 
 @pytest.mark.parametrize('change', [
-    {'receiptId': ''}, {'receiptId': 'a' * 63}, {'confidence': True},
-    {'confidence': float('nan')}, {'confidence': .799}, {'verified': False},
-    {'accepted': False}, {'modelName': 'gemini-2.5-pro'}, {'policy': 'photo-local-v393'},
-    {'scientificName': 'not a binomial'},
+    {'receiptId': ''}, {'receiptId': 'a' * 63}, {'modelName': 'gemini-2.5-pro'}, {'policy': 'photo-gemini-v425'},
+    {'candidates': [{'species': 'Robin', 'scientificName': 'not a binomial', 'probability': .9}]},
+    {'candidates': [{'species': 'Robin', 'scientificName': 'Erithacus rubecula', 'probability': True}]},
+    {'candidates': [{'species': 'Robin', 'scientificName': 'Erithacus rubecula', 'probability': float('nan')}]},
+    {'candidates': [{'species': 'Robin', 'scientificName': 'Erithacus rubecula', 'probability': .8},
+                    {'species': 'Wren', 'scientificName': 'Troglodytes troglodytes', 'probability': .8}]},
+    {'retryable': True},
 ])
-def test_adapter_rejects_weak_or_unreceipted_worker_result(change):
-    result = accepted()
-    result.update(change)
-    clean = photo_id._validate_result(result)
-    assert clean['found'] is False
-    assert 'species' not in clean and 'receiptId' not in clean
+def test_adapter_rejects_malformed_or_unreceipted_worker_reading(change):
+    clean_reading, problem = photo_id._validate_reading(reading(**change))
+    assert clean_reading is None and problem['found'] is False
+    assert 'species' not in problem and 'candidates' not in problem
 
 
 def test_adapter_never_leaks_species_on_failure():
-    raw = accepted()
-    raw.update(found=False, reason='photo-budget-exhausted', retryable=True, retryAt=1234)
-    clean = photo_id._validate_result(raw)
-    assert clean['found'] is False and clean['retryAt'] == 1234
-    assert 'species' not in clean and clean['receiptId'] == raw['receiptId']
+    raw = reading(found=False, reason='photo-budget-exhausted', retryable=True, retryAt=1234)
+    clean_reading, problem = photo_id._validate_reading(raw)
+    assert clean_reading is None and problem['retryAt'] == 1234 and problem['retryable'] is True
+    assert not {'species', 'candidates', 'receiptId'} & problem.keys()
 
 
-@pytest.mark.parametrize('receipt', ['', 'a'*63, 'g'*64, None, 10**63])
-def test_adapter_drops_invalid_failure_receipt_without_species_smuggling(receipt):
-    raw = accepted()
-    raw.update(found=False, reason='photo-provider-unavailable', retryable=True, receiptId=receipt,
-               allDetections=[accepted()])
-    clean = photo_id._validate_result(raw)
-    assert clean['found'] is False and clean['accepted'] is False
-    assert not {'receiptId', 'species', 'scientificName', 'allDetections'} & clean.keys()
+def test_strong_clear_reading_is_found_and_keeps_ranked_matches():
+    result = accepted()
+    assert result['found'] and result['accepted'] and result['verified']
+    assert result['scientificName'] == 'Erithacus rubecula' and result['confidence'] == .95
+    assert [c['scientificName'] for c in result['candidates']] == ['Erithacus rubecula', 'Phoenicurus phoenicurus']
+    assert result['receiptId'] == 'a' * 64 and result['retryable'] is False and result['placeUsed'] is False
+
+
+@pytest.mark.parametrize('change', [
+    {'subjectClear': False}, {'fieldMarks': ['Orange face and breast']},
+    {'candidates': [{'species': 'European Robin', 'scientificName': 'Erithacus rubecula', 'probability': .6},
+                    {'species': 'Common Redstart', 'scientificName': 'Phoenicurus phoenicurus', 'probability': .3}]},
+    {'candidates': [{'species': 'European Robin', 'scientificName': 'Erithacus rubecula', 'probability': .79}],
+     'otherProbability': .21},
+])
+def test_weaker_readings_ask_the_player_to_pick(change):
+    result = photo_id.decide(photo_id._validate_reading(reading(**change))[0])
+    assert result['found'] is False and result['reason'] == 'pick-your-bird'
+    assert result['candidates'][0]['scientificName'] == 'Erithacus rubecula'
+    assert 'species' not in result and result['receiptId'] == 'a' * 64
+
+
+def test_no_bird_reading_names_nothing():
+    raw = reading(found=False, reason='no-bird', message='No identifiable real bird in this photo.')
+    for key in ('candidates', 'fieldMarks', 'liveBird', 'quality', 'subjectClear'):
+        raw.pop(key)
+    result = photo_id.decide(photo_id._validate_reading(raw)[0])
+    assert result['found'] is False and result['reason'] == 'no-bird' and 'candidates' not in result
 
 
 @pytest.mark.parametrize('peer,header,expected', [
@@ -135,28 +168,27 @@ def test_adapter_drops_invalid_failure_receipt_without_species_smuggling(receipt
 ])
 def test_adapter_trusts_replaced_real_ip_only_from_loopback(peer, header, expected):
     app = Flask(__name__)
-    with app.test_request_context('/burbz/api/identify/image', method='POST',
-                                 data={'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890'},
+    with app.test_request_context('/burbz/api/identify/image', method='POST', data=FORM,
                                  headers={'X-Real-IP': header}, environ_base={'REMOTE_ADDR': peer}):
-        assert photo_id._request_identity() == ('owner_01234567890', 'request_01234567890', expected)
+        assert photo_id._request_identity()[:3] == ('owner_01234567890', 'request_01234567890', expected)
 
 
-def test_adapter_missing_identity_never_reaches_worker(monkeypatch, tmp_path):
+@pytest.mark.parametrize('data', [{}, {k: v for k, v in FORM.items() if k != 'photoContract'},
+                                  FORM | {'photoContract': 'merlin-v485'}])
+def test_adapter_missing_identity_or_old_app_never_reaches_worker(monkeypatch, tmp_path, data):
     monkeypatch.setattr(photo_id, '_LocalConnection', lambda: pytest.fail('No worker request permitted'))
     app = Flask(__name__)
-    with app.test_request_context('/burbz/api/identify/image', method='POST'):
+    with app.test_request_context('/burbz/api/identify/image', method='POST', data=data):
         result = photo_id.identify_bird_from_image(str(tmp_path / 'absent.jpg'))
     assert result['reason'] == 'photo-update-required'
 
 
-def test_adapter_passes_only_image_and_internal_identity(monkeypatch, tmp_path):
-    calls = []
-
+def worker_connection(calls, body):
     class Response:
         status = 200
 
         def read(self, _):
-            return json.dumps({**accepted(), 'privateWorkerField': 'must not escape'}).encode()
+            return json.dumps(body).encode()
 
     class Connection:
         def request(self, *args, **kwargs):
@@ -167,19 +199,23 @@ def test_adapter_passes_only_image_and_internal_identity(monkeypatch, tmp_path):
 
         def close(self):
             pass
+    return Connection
 
+
+def test_adapter_without_place_sends_only_image_and_internal_identity(monkeypatch, tmp_path):
+    calls = []
     path = tmp_path / 'photo.jpg'
     path.write_bytes(b'validated-image-bytes')
-    monkeypatch.setattr(photo_id, '_LocalConnection', Connection)
+    monkeypatch.setattr(photo_id, '_LocalConnection', worker_connection(calls, {**reading(), 'privateWorkerField': 'x'}))
+    monkeypatch.setattr(photo_id, '_taxonomy_or_none', lambda: None)
     app = Flask(__name__)
-    with app.test_request_context('/burbz/api/identify/image', method='POST',
-                                 data={'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890'},
+    with app.test_request_context('/burbz/api/identify/image', method='POST', data=FORM,
                                  environ_base={'REMOTE_ADDR': '203.0.113.5'}):
         result = photo_id.identify_bird_from_image(str(path), lat=51.5, lon=-.1)
     sent = json.loads(calls[0][1]['body'])
     assert set(sent) == {'image', 'owner', 'requestId', 'caller'}
     assert base64.b64decode(sent['image']) == path.read_bytes()
-    assert result == accepted()
+    assert result == accepted() and 'privateWorkerField' not in result
 
 
 @pytest.mark.parametrize('outcome', ['success', 'normalise-error', 'worker-error', 'timeout', 'upload-save-error'])
@@ -235,13 +271,3 @@ def test_patched_live_route_deletes_photo_files_on_every_exit(monkeypatch, tmp_p
     assert not any(path.exists() for path in paths), 'Uploaded photo file escaped route cleanup'
 
 
-def test_suggestions_are_bounded_non_awarding_and_require_a_current_receipt():
-    raw = accepted() | dict(found=False, accepted=False, verified=False, retryable=False,
-                            reason='verification-disagrees', suggestions=[
-                                {'species':'Grey Wagtail','scientificName':'Motacilla cinerea'},
-                                {'species':'bad','scientificName':'not-binomial'}])
-    clean = photo_id._validate_result(raw)
-    assert not clean['found'] and 'species' not in clean
-    assert clean['suggestions'] == raw['suggestions'][:1]
-    for change in ({'receiptId':''}, {'retryable':True}, {'reason':'photo-provider-unavailable'}, {'policy':'photo-gemini-v410'}):
-        assert 'suggestions' not in photo_id._validate_result(raw | change)

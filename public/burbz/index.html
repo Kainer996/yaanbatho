@@ -3068,6 +3068,30 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .bird-crop-overlay.has-outcome .bird-crop-stage { width:min(72vw, max(48px, calc(100dvh - 330px - var(--safe-bottom))), 340px); }
 .bird-crop-overlay.analysing .bird-crop-zoom { display:none; }
 .bird-crop-overlay { overflow-y:auto; }
+/* v486 Merlin-style matches: the photo, then ranked bird cards to confirm. */
+.bird-crop-overlay.has-matches { justify-content:flex-start; }
+.bird-crop-overlay.has-matches .bird-crop-stage { width:min(52vw, max(48px, calc(34dvh - 40px)), 240px); }
+.bird-crop-overlay.no-photo .bird-crop-stage,
+.bird-crop-overlay.no-photo .bird-crop-zoom,
+.bird-crop-overlay.no-photo .bird-crop-confirm,
+.bird-crop-overlay.no-photo .bird-crop-full-photo { display:none; }
+.bird-match-list { display:grid; gap:10px; margin-top:6px; text-align:left; }
+.bird-match-list[hidden] { display:none; }
+.bird-match { display:grid; grid-template-columns:64px minmax(0,1fr); gap:10px 12px; align-items:center; padding:10px; border-radius:14px; background:var(--bg3); border:1px solid rgba(255,255,255,.1); }
+.bird-match.is-top { border-color:var(--accent2); }
+.bird-match-art { width:64px; height:64px; border-radius:12px; object-fit:contain; background:#0a1414; display:flex; align-items:center; justify-content:center; font-size:28px; }
+.bird-match-body { min-width:0; }
+.bird-match-name { margin:0; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:18px; line-height:1.15; color:var(--text); }
+.bird-match-sci { margin:2px 0 0; font-size:12px; font-style:italic; color:var(--text3); }
+.bird-match-tags { display:flex; flex-wrap:wrap; gap:4px; margin:6px 0 0; }
+.bird-match-tag { padding:2px 8px; border-radius:999px; font-size:11px; line-height:1.5; background:rgba(255,255,255,.08); color:var(--text2); }
+.bird-match-tag.is-local { color:#a6e3b0; }
+.bird-match-tag.is-far { color:#f0c38b; }
+.bird-match-pick { grid-column:1/-1; min-height:48px; border:0; border-radius:12px; cursor:pointer; background:#2f8a4a; color:#fff; font-family:'Rajdhani',sans-serif; font-weight:800; font-size:16px; letter-spacing:.03em; }
+.bird-match-pick:disabled { opacity:.5; cursor:default; }
+.comic-ui .bird-match { background:var(--comic-paper); border:2px solid var(--comic-ink); }
+.comic-ui .bird-match-name, .comic-ui .bird-match-sci, .comic-ui .bird-match-tag { color:var(--comic-ink); }
+.comic-ui .bird-match-pick { border:2px solid var(--comic-ink); }
 .bird-crop-close { position:absolute; top:max(8px, env(safe-area-inset-top)); right:10px; min-height:44px; min-width:44px; border:0; background:transparent; color:var(--text); font-size:24px; cursor:pointer; }
 .comic-ui .bird-crop-overlay { background:var(--comic-paper); }
 .comic-ui .bird-crop-actions button { border:2px solid var(--comic-ink); }
@@ -3080,6 +3104,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   .bird-crop-title { grid-column:2; grid-row:1; }
   .bird-crop-sub { grid-column:2; grid-row:2; }
   .bird-crop-analysis { grid-column:2; grid-row:3; width:100%; margin-top:0; }
+  .bird-crop-overlay.has-matches .bird-crop-analysis { max-height:calc(100dvh - 200px - var(--safe-bottom)); overflow-y:auto; }
+  .bird-crop-overlay.has-matches.show .bird-crop-stage { width:min(40vw, calc(100dvh - 48px - var(--safe-bottom))); }
   .bird-crop-zoom { grid-column:2; grid-row:4; width:100%; margin-top:8px; }
   .bird-crop-actions { grid-column:2; grid-row:5; width:100%; margin-top:10px; }
 }
@@ -4848,7 +4874,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
-        <p class="photo-privacy-note">Your framed photo is sent only for this check and is not saved on your device by Burbz. If the check cannot finish, you can retry while this screen stays open.</p>
+        <p class="photo-privacy-note">Your framed photo is sent only for this check and is not saved on your device by Burbz. With location on, your rough area and the week help pick local birds, like Merlin. The server keeps neither. If the check cannot finish, you can retry while this screen stays open.</p>
         <div class="photo-id-status" id="photoIdStatus" hidden>
           <p id="photoIdMessage" role="status" aria-live="polite"></p>
           <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
@@ -4913,6 +4939,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div class="bird-crop-analysis" id="birdCropAnalysis" hidden>
         <p id="birdCropMessage" role="status" aria-live="polite"></p>
         <progress id="birdCropProgress" aria-label="Checking your photo" hidden></progress>
+        <div class="bird-match-list" id="birdCropMatches" aria-label="Bird matches for your photo" hidden></div>
       </div>
       <div class="bird-crop-actions">
         <button class="bird-crop-retake" id="birdCropRetake" type="button">Retake</button>
@@ -5781,7 +5808,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
 <script src="scan_home_core.js?v=academy-manga-v475-20260925"></script>
 <script src="scan_home.js?v=academy-day-night-v483-20260925"></script>
-<script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
+<script src="photo_queue.js?v=photo-merlin-v486-20260925"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds.js?v=area-birds-v377-20260909"></script>
@@ -38198,7 +38225,9 @@ function showScanEncounterCard(bird, isNewDiscovery, source = 'photo') {
   card.className = 'scan-encounter-card';
   card.dataset.marker = CONTINUOUS_SOUND_DISCOVERY_MARKER;
   card.innerHTML = media + '<div><div class="scan-encounter-kicker">' +
-    (isNewDiscovery ? 'New bird heard · Always added to Birdex' : 'Bird heard again · Already in Birdex') +
+    (source === 'photo'
+      ? (isNewDiscovery ? 'New bird spotted · Added to Birdex' : 'Bird spotted again · Already in Birdex')
+      : (isNewDiscovery ? 'New bird heard · Always added to Birdex' : 'Bird heard again · Already in Birdex')) +
     '</div><div class="scan-encounter-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
     '<div class="scan-encounter-meta">' + Math.round((bird.confidence || 0) * 100) +
     (source === 'sound' ? '/100 model score · ' : '% confidence · ') +
@@ -42441,6 +42470,7 @@ async function handlePhotoSelection(input, fromLibrary = false) {
     if (error) { setPhotoIdStatus(error); return; }
   }
   photoIdRetryBlob = null;
+  startPhotoPlace(file, fromLibrary);
   setPhotoIdStatus('Preparing your photo…');
   showNativePhotoPreview(file);
   // Merlin-style: let the player frame the bird into a square before ID so the
@@ -42623,6 +42653,11 @@ function initBirdCropperControls() {
   $('birdCropRetake').addEventListener('click', () => { if (photoIdBusy || birdCrop.preparing) return; SFX.tap(); closeBirdCropper(); openNativeCamera(); });
   $('birdCropConfirm').addEventListener('click', () => { SFX.tap(); confirmBirdCrop(); });
   $('birdCropFullPhoto').addEventListener('click', () => { SFX.tap(); confirmBirdCrop(true); });
+  $('birdCropMatches').addEventListener('click', (e) => {
+    const button = e.target.closest && e.target.closest('[data-photo-match]');
+    if (!button || button.disabled) return;
+    SFX.tap(); pickPhotoMatch(Number(button.dataset.photoMatch));
+  });
   $('birdCropClose').addEventListener('click', () => { photoIdCancel?.(); closeBirdCropper(); });
   $('birdCropOverlay').addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); photoIdCancel?.(); closeBirdCropper(); }
@@ -42633,7 +42668,8 @@ function initBirdCropperControls() {
 function closeBirdCropper() {
   birdCrop.generation++;
   birdCrop.preparing = false; birdCrop.fullPhoto = false;
-  $('birdCropOverlay').classList.remove('show');
+  photoMatchState = null;
+  $('birdCropOverlay').classList.remove('show', 'no-photo', 'has-matches');
   birdCrop.pointers.clear(); birdCrop.pinch = null;
   const img = $('birdCropImg');
   if (img && img.dataset.blobUrl) { URL.revokeObjectURL(img.dataset.blobUrl); img.dataset.blobUrl = ''; img.src = ''; }
@@ -42805,6 +42841,7 @@ async function captureCameraFrame() {
 }
 
 async function getCurrentPositionForPhotoId() {
+  if (typeof soundLocationAssistEnabled === 'function' && !soundLocationAssistEnabled()) return null;
   // Photo ID may already have a player-approved GPS fix from the live map. Reuse
   // that fresh fix before falling back to the Scan screen's optional location
   // switch, so a Delamere capture actually receives Delamere's range prior.
@@ -42824,13 +42861,53 @@ async function getCurrentPositionForPhotoId() {
 let photoIdBusy = false;
 let photoIdRetryBlob = null;
 let photoIdCancel = null;
+// v486, the Merlin way. Where and when shortlist the local birds, and the
+// player confirms the match. A photo carries the player's rough place only when
+// it was taken here and now: a camera shot, or a library photo from the last
+// two days. Older library photos may be from anywhere, so they carry none.
+const PHOTO_POLICY = 'photo-gemini-v486';
+const PHOTO_CONTRACT = 'merlin-v486';
+const PHOTO_PLACE_RECENT_MS = 48 * 60 * 60 * 1000;
+let photoPlaceRequest = null;
+let photoMatchState = null;
+function birdnetWeekOf(date) {
+  return date.getMonth() * 4 + Math.min(3, Math.floor((date.getDate() - 1) / 7)) + 1;
+}
+function startPhotoPlace(file, fromLibrary = false) {
+  photoPlaceRequest = null;
+  // A camera input can still hand back an old gallery photo, so the file's own
+  // time decides for both routes; a camera shot without one is "now".
+  const now = Date.now(), stamp = Number(file?.lastModified);
+  const takenAt = Number.isFinite(stamp) && stamp > 0 ? stamp : fromLibrary ? NaN : now;
+  if (!Number.isFinite(takenAt) || now - takenAt > PHOTO_PLACE_RECENT_MS || takenAt - now > 60000) return;
+  if (typeof getCurrentPositionForPhotoId !== 'function') return;
+  photoPlaceRequest = Promise.resolve().then(() => getCurrentPositionForPhotoId()).catch(() => null).then(pos => {
+    const lat = Number(pos?.coords?.latitude), lon = Number(pos?.coords?.longitude);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    // About a kilometre is plenty; the server rounds further still.
+    return { lat: lat.toFixed(2), lon: lon.toFixed(2), week: String(birdnetWeekOf(new Date(takenAt))) };
+  });
+}
+function photoPlaceForUpload() {
+  if (!photoPlaceRequest) return Promise.resolve(null);
+  let timer;
+  const late = new Promise(resolve => { timer = setTimeout(() => resolve(null), 4000); });
+  return Promise.race([photoPlaceRequest, late]).finally(() => clearTimeout(timer));
+}
 function setBirdPhotoStage(stage, message = '') {
   const overlay = $('birdCropOverlay');
   const busy = stage === 'prepare' || stage === 'analyse';
+  const matches = stage === 'matches';
   overlay.classList.toggle('analysing', busy);
-  overlay.classList.toggle('has-outcome', stage === 'outcome');
-  $('birdCropTitle').textContent = busy ? 'Checking your bird' : stage === 'outcome' ? 'Photo check finished' : 'Frame the bird';
-  $('birdCropHint').textContent = busy ? 'Your photo stays here while we check the details.' : 'Pinch or drag to frame the bird. Use full photo keeps every edge.';
+  overlay.classList.toggle('has-outcome', stage === 'outcome' || matches);
+  overlay.classList.toggle('has-matches', matches);
+  if (!matches) {
+    photoMatchState = null;
+    const list = $('birdCropMatches');
+    if (list) { list.hidden = true; list.innerHTML = ''; }
+  }
+  $('birdCropTitle').textContent = busy ? 'Checking your bird' : matches ? 'Best matches' : stage === 'outcome' ? 'Photo check finished' : 'Frame the bird';
+  $('birdCropHint').textContent = busy ? 'Your photo stays here while we check the details.' : matches ? 'Not right? Reframe the photo and identify again, or retake it.' : 'Pinch or drag to frame the bird. Use full photo keeps every edge.';
   $('birdCropAnalysis').hidden = stage === 'frame';
   $('birdCropMessage').textContent = message;
   // The model does not report a completion percentage. Use a real waiting
@@ -42932,26 +43009,72 @@ function newPhotoRequestId() {
   const bytes=new Uint8Array(18);crypto.getRandomValues(bytes);
   return Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
 }
-function acceptedPhotoResult(result) {
-  return result?.found === true && result.accepted === true && result.verified === true &&
-    result.policy === 'photo-gemini-v425' && result.model === 'gemini-vision' &&
-    result.modelName === 'gemini-3.8-flash' && typeof result.species === 'string' &&
-    /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(result.scientificName || '') &&
-    Number.isFinite(result.confidence) && result.confidence >= .8 && result.confidence <= 1 &&
+function currentPhotoResult(result) {
+  return !!result && result.policy === PHOTO_POLICY && result.model === 'gemini-vision' &&
+    result.modelName === 'gemini-3.8-flash' && result.retryable === false &&
     /^[a-f0-9]{64}$/.test(result.receiptId || '');
 }
+function photoMatchesFrom(result) {
+  if (!currentPhotoResult(result) || !Array.isArray(result.candidates)) return [];
+  const strong = result.found === true && result.accepted === true && result.verified === true;
+  const pick = result.found === false && result.accepted === false && result.verified === false && result.reason === 'pick-your-bird';
+  if (!strong && !pick) return [];
+  const matches = result.candidates.slice(0, 5).filter(c => c && typeof c.species === 'string' &&
+    c.species.trim() && c.species.trim().length <= 100 && /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(c.scientificName || '') &&
+    Number.isFinite(c.score) && c.score >= 0 && c.score <= 1)
+    .map(c => ({ species: c.species.trim(), scientificName: c.scientificName, score: c.score,
+      local: ['likely', 'rare', 'unexpected'].includes(c.local) ? c.local : '',
+      plumage: typeof c.plumage === 'string' && /^[a-z ]{3,30}$/.test(c.plumage) ? c.plumage : '' }));
+  if (strong && matches[0]?.scientificName !== result.scientificName) return [];
+  return matches;
+}
 function photoResultMessage(result) {
-  const valid = result?.found === false && result.accepted === false && result.verified === false &&
-    result.retryable === false && result.policy === 'photo-gemini-v425' &&
-    result.model === 'gemini-vision' && result.modelName === 'gemini-3.8-flash' &&
-    /^[a-f0-9]{64}$/.test(result.receiptId || '');
-  const names = valid && Array.isArray(result.suggestions) ? result.suggestions.slice(0, 3)
-    .filter(c => c && typeof c.species === 'string' && c.species.trim().length <= 100 &&
-      /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(c.scientificName || ''))
-    .map(c => c.species.trim()).filter(Boolean) : [];
-  if (names.length) return 'Possible bird: ' + [...new Set(names)].join(' or ') +
-    '. Not confirmed or added to Birdex. Try another angle showing its head, wings and tail.';
   return typeof result?.message === 'string' ? result.message : '';
+}
+const PHOTO_MATCH_LOCAL = { likely: ['Likely here', 'is-local'], rare: ['Rare here', 'is-far'], unexpected: ['Not expected here', 'is-far'] };
+function photoMatchCardHTML(match, index, strong) {
+  const esc = value => String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  const profile = typeof findSpeciesProfile === 'function' ? (findSpeciesProfile(match.species) || findSpeciesProfile(match.scientificName)) : null;
+  const name = profile?.name || match.species;
+  const art = typeof resolveBuiltInBirdArt === 'function' ? resolveBuiltInBirdArt(name, match.species) : null;
+  const tags = [[strong && index === 0 ? 'Strong match' : match.score >= .5 ? 'Good match' : 'Possible match', '']];
+  if (PHOTO_MATCH_LOCAL[match.local]) tags.push(PHOTO_MATCH_LOCAL[match.local]);
+  if (match.plumage) tags.push([match.plumage.charAt(0).toUpperCase() + match.plumage.slice(1), '']);
+  if (!profile) tags.push(['Not in Burbz yet', 'is-far']);
+  return '<article class="bird-match' + (index === 0 ? ' is-top' : '') + '">' +
+    (art ? '<img class="bird-match-art" src="' + esc(art) + '" alt="" loading="lazy">'
+      : '<span class="bird-match-art" aria-hidden="true">&#128038;</span>') +
+    '<div class="bird-match-body"><h3 class="bird-match-name">' + esc(name) + '</h3>' +
+    '<p class="bird-match-sci">' + esc(match.scientificName) + '</p><p class="bird-match-tags">' +
+    tags.map(([text, cls]) => '<span class="bird-match-tag' + (cls ? ' ' + cls : '') + '">' + esc(text) + '</span>').join('') +
+    '</p></div><button type="button" class="bird-match-pick" data-photo-match="' + index + '"' +
+    (profile ? '' : ' disabled') + ' aria-label="This is my bird: ' + esc(name) + '">This is my bird</button></article>';
+}
+function showPhotoMatches(result, matches) {
+  const overlay = $('birdCropOverlay');
+  // A retry can finish after the cropper closed; show the matches anyway.
+  if (overlay && !overlay.classList.contains('show')) overlay.classList.add('show', 'no-photo');
+  const strong = result.found === true;
+  setBirdPhotoStage('matches', strong ? 'Strong match. Check it, then tap This is my bird.' : 'Closest matches first. Tap This is my bird on the one you saw.');
+  photoMatchState = { receiptId: result.receiptId, matches, picked: false };
+  const list = $('birdCropMatches');
+  list.innerHTML = matches.map((match, index) => photoMatchCardHTML(match, index, strong)).join('');
+  list.hidden = false;
+  if ($('photoIdStatus')) $('photoIdStatus').hidden = true;
+  if ($('photoIdRetry')) $('photoIdRetry').hidden = true;
+}
+function pickPhotoMatch(index) {
+  const state = photoMatchState, match = state?.matches?.[index];
+  if (!state || state.picked || !match || photoIdBusy) return false;
+  state.picked = true;
+  $('birdCropMatches')?.querySelectorAll?.('[data-photo-match]').forEach(button => { button.disabled = true; });
+  // The discovery is saved; the camera image is deliberately not.
+  const birds = handleBirdCandidates({ species: match.species, scientificName: match.scientificName, confidence: match.score }, [], { source: 'photo' });
+  closeBirdCropper(); photoIdRetryBlob = null;
+  if ($('photoIdStatus')) $('photoIdStatus').hidden = true;
+  if ($('photoIdRetry')) $('photoIdRetry').hidden = true;
+  if (Array.isArray(birds) && birds.length) showToast('Identified: ' + (birds[0].commonName || birds[0].species || match.species) + '. Saved in your Birdex.');
+  return true;
 }
 async function identifyImage(fileOrBlob, captureSource = 'camera', isRetry = false) {
   if (photoIdBusy) return;
@@ -42972,18 +43095,18 @@ async function identifyImage(fileOrBlob, captureSource = 'camera', isRetry = fal
     const deadline=new Promise((_,reject)=>{timeout=setTimeout(()=>{controller.abort();reject(Error('photo-timeout'));},50000);});
     const form=new FormData();
     form.append('image',fileOrBlob,'photo.jpg');form.append('captureSource',captureSource);
-    form.append('photoOwner',owner);form.append('photoRequestId',requestId);
+    form.append('photoOwner',owner);form.append('photoRequestId',requestId);form.append('photoContract',PHOTO_CONTRACT);
+    const place=await Promise.race([photoPlaceForUpload(),deadline,cancelledRequest]);
+    if(place){form.append('lat',place.lat);form.append('lon',place.lon);form.append('photoWeek',place.week);}
     const response=await Promise.race([fetch('api/identify/image',{method:'POST',body:form,signal:controller.signal}),deadline,cancelledRequest]);
     let result={};try{result=await Promise.race([response.json(),deadline,cancelledRequest]);}catch(error){if(error?.message==='photo-timeout'||error?.message==='photo-cancelled')throw error;}
     if(cancelled) return;
-    if(!response.ok || !acceptedPhotoResult(result)) {
-      const message=photoResultMessage(result) || (globalThis.navigator?.onLine===false ? 'Reconnect to check this photo.' : 'Photo checking is unavailable right now. Try this photo again.');
-      setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);showToast(message);return;
-    }
-    // The discovery is saved; the camera image is deliberately not.
-    handleBirdCandidates({species:result.species,scientificName:result.scientificName,confidence:result.confidence},[],{source:'photo'});
-    closeBirdCropper();photoIdRetryBlob=null;$('photoIdStatus').hidden=true;$('photoIdRetry').hidden=true;
-    showToast('Identified: '+result.species+'. Added to your Birdex.');
+    // A strong match (200) and a pick-your-bird answer (422) both carry ranked
+    // matches. Nothing is added until the player taps This is my bird.
+    const matches=photoMatchesFrom(result);
+    if(matches.length) { showPhotoMatches(result,matches); return; }
+    const message=photoResultMessage(result) || (globalThis.navigator?.onLine===false ? 'Reconnect to check this photo.' : 'Photo checking is unavailable right now. Try this photo again.');
+    setPhotoIdStatus(message,true);setBirdPhotoStage('outcome',message);showToast(message);
   } catch(error) {
     if(cancelled) { setBirdPhotoStage('frame','Photo check cancelled.');return; }
     const message=controller.signal.aborted ? 'Photo checking took too long. Try this photo again.' : globalThis.navigator?.onLine===false ? 'Reconnect to check this photo, then try again.' : 'Photo checking could not connect. Try this photo again.';
@@ -45559,7 +45682,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'smooth-sky-plain-plot-v485-20260925';
+const BURBZ_BUILD = 'photo-merlin-v486-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

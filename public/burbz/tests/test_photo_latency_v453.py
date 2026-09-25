@@ -5,18 +5,17 @@ from test_photo_silhouette_v452 import raven
 import photo_gemini
 
 
-def test_both_views_use_low_latency_thinking_without_skipping_verification(ledger):
+def test_one_view_gets_medium_thinking_inside_the_deadline(ledger):
+    # v486 replaced the two low-thinking views with one medium view: the
+    # player confirms the bird, so the time goes to looking harder once.
     book, _ = ledger
     provider = Provider(raven())
     result = photo_gemini.Recognizer(book, provider).identify(
         jpeg(), 'latency_owner_012345', 'latency_request_012345', 'caller')
     calls = [body for action, body in provider.calls if action == 'generateContent']
-    assert result['accepted'] and result['verified']
-    assert len(calls) == 2
-    assert all(body['generationConfig']['thinkingConfig'] ==
-               {'thinkingLevel': 'low', 'includeThoughts': False} for body in calls)
-    assert all(body['generationConfig']['maxOutputTokens'] == 8192 for body in calls)
-    assert 'Independently reassess' in calls[1]['contents'][0]['parts'][1]['text']
+    assert result['found'] and len(calls) == 1
+    assert calls[0]['generationConfig']['thinkingConfig'] == {'thinkingLevel': 'medium', 'includeThoughts': False}
+    assert calls[0]['generationConfig']['maxOutputTokens'] == 8192
 
 
 def test_response_socket_uses_remaining_absolute_deadline_not_20_second_cap(monkeypatch):

@@ -11,14 +11,19 @@ import time
 
 import requests
 
-POLICY = 'photo-gemini-v425'
+POLICY = 'photo-gemini-v486'
 MODEL = 'gemini-vision'
 MODEL_NAME = 'gemini-3.8-flash'
-VALIDATION_OWNER = 'deployment_v425_photos'
+CONTRACT = 'merlin-v486'
+VALIDATION_OWNER = 'deployment_v486_photos'
 # Three attempts fit the shared caller rate limit. Every request has a stable
-# owner/id, so another release proof replays the persistent result, never a new
-# paid attempt. This smoke proof does not claim exhaustive model accuracy.
+# owner/id and a fixed place and week, so another release proof replays the
+# persistent result, never a new paid attempt. This smoke proof does not claim
+# exhaustive model accuracy.
 SMOKE_CASES = {'robin-clear', 'carrion-crow', 'empty-scene'}
+# Both smoke birds are British. London in mid May keeps the geomodel context,
+# and so the photo digest, identical on every run.
+PROOF_PLACE = {'lat': '51.5', 'lon': '-0.1', 'photoWeek': '20'}
 ORIGINAL_CASES = {
     'robin-clear': 'Erithacus rubecula', 'great-tit-clear': 'Parus major',
     'raven-perched': 'Corvus corax', 'carrion-crow': 'Corvus corone',
@@ -39,7 +44,10 @@ PHOTO_REJECTIONS = {
     'uncertain-species', 'illustrated-bird',
     'insufficient-evidence', 'low-confidence', 'ambiguous-species',
     'unclear-subject', 'missing-diagnostic-details', 'verification-disagrees',
+    'no-bird', 'no-species',
 }
+# v486 answers: a model reading with no live bird or no species.
+NEGATIVE_REASONS = {'no-bird', 'no-species'}
 
 
 def fixture_cases(fixtures, extra_fixtures=None):
@@ -89,30 +97,70 @@ def passes_case(name, species, status, result):
             and result['message'].startswith(('Bird not found.', 'Species not confirmed.', 'Bird detected, but species not confirmed.', 'No identifiable real bird')))
 
 
-def passes_gemini_case(name, species, status, result):
-    if not passes_case(name, species, status, result) or result.get('modelName') != MODEL_NAME:
-        return False
-    return (not result.get('accepted') or
-            isinstance(result.get('receiptId'), str) and
-            re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None)
+def _receipt(result):
+    return isinstance(result.get('receiptId'), str) and re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None
 
 
-def passes_authorized_release_case(name, species, status, result):
-    if passes_gemini_case(name, species, status, result):
-        return True
-    # A crow that cannot distinguish geographically separated lookalikes is
-    # honest uncertainty, never permission to award the wrong species.
-    if name != 'carrion-crow' or not passes_gemini_case(name, None, status, result):
+def _candidates(result):
+    rows = result.get('candidates')
+    if not isinstance(rows, list) or not 1 <= len(rows) <= 5:
+        return None
+    for row in rows:
+        score = row.get('score') if isinstance(row, dict) else None
+        if (not isinstance(row, dict) or not isinstance(row.get('species'), str) or not row['species'].strip()
+                or not isinstance(row.get('scientificName'), str)
+                or not re.fullmatch(r'[A-Z][a-z]+ [a-z][a-z-]+', row['scientificName'])
+                or not isinstance(score, (int, float)) or isinstance(score, bool)
+                or not math.isfinite(score) or not 0 <= score <= 1):
+            return None
+    return rows
+
+
+def passes_merlin_case(name, species, status, result):
+    """v486: a ranked, receipted answer with the right bird where it must be.
+
+    A clear robin must lead its ranking; a crow must be among the matches and
+    never be confirmed as another species; an empty scene names no bird. A
+    provider failure, a retryable answer or a malformed body never passes.
+    """
+    if (not isinstance(result, dict) or result.get('policy') != POLICY or result.get('model') != MODEL
+            or result.get('modelName') != MODEL_NAME or result.get('retryable') is not False or not _receipt(result)):
         return False
-    return (result.get('retryable') is False
-            and isinstance(result.get('receiptId'), str)
-            and re.fullmatch(r'[a-f0-9]{64}', result['receiptId']) is not None
-            and any(isinstance(c, dict) and c.get('scientificName') == species
-                    for c in result.get('suggestions', [])))
+    if species is None:
+        return (status == 422 and result.get('found') is False and result.get('accepted') is False
+                and result.get('verified') is False and result.get('reason') in NEGATIVE_REASONS
+                and not result.get('candidates')
+                and not any(key in result for key in ('species', 'scientificName', 'allDetections'))
+                and isinstance(result.get('message'), str) and bool(result['message'].strip()))
+    rows = _candidates(result)
+    if rows is None:
+        return False
+    names = [row['scientificName'] for row in rows]
+    lead = names[0] == species
+    if status == 200:
+        score = result.get('confidence')
+        return (result.get('found') is True and result.get('accepted') is True and result.get('verified') is True
+                and result.get('scientificName') == species and lead
+                and isinstance(result.get('species'), str) and bool(result['species'].strip())
+                and isinstance(score, (int, float)) and not isinstance(score, bool)
+                and math.isfinite(score) and .80 <= score <= 1)
+    return (status == 422 and result.get('found') is False and result.get('accepted') is False
+            and result.get('verified') is False and result.get('reason') == 'pick-your-bird'
+            and not any(key in result for key in ('species', 'scientificName'))
+            and (lead if name == 'robin-clear' else species in names))
 
 
 def request_identity(path):
-    return 'v425_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return 'v486_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def post(origin, path, request_id):
+    with path.open('rb') as stream:
+        return requests.post(
+            origin.rstrip('/') + '/api/identify/image',
+            files={'image': ('photo.jpg', stream, 'image/jpeg')},
+            data={'captureSource': 'camera', 'photoOwner': VALIDATION_OWNER,
+                  'photoRequestId': request_id, 'photoContract': CONTRACT, **PROOF_PLACE}, timeout=50)
 
 
 def main():
@@ -128,20 +176,21 @@ def main():
             continue
         start = time.monotonic()
         try:
-            with path.open('rb') as stream:
-                response = requests.post(
-                    args.origin.rstrip('/') + '/api/identify/image',
-                    files={'image': ('photo.jpg', stream, 'image/jpeg')},
-                    data={'captureSource': 'camera', 'photoOwner': VALIDATION_OWNER,
-                          'photoRequestId': request_identity(path)}, timeout=50)
+            request_id = request_identity(path)
+            response = post(args.origin, path, request_id)
             result = response.json()
+            # A stored transient failure would replay forever under this stable
+            # id. Try once more under a second stable id, after the caller's
+            # three-per-minute window has passed.
+            if isinstance(result, dict) and result.get('retryable') is True:
+                time.sleep(61)
+                response = post(args.origin, path, request_id + '_r')
+                result = response.json()
             row = {'fixture': name, 'status': response.status_code,
-                   'passed': bool(passes_authorized_release_case(name, species, response.status_code, result)),
-                   'accuracyPassed': bool(passes_gemini_case(name, species, response.status_code, result)),
+                   'passed': bool(passes_merlin_case(name, species, response.status_code, result)),
                    'expectedScientificName': species,
+                   'placeUsed': result.get('placeUsed') if isinstance(result, dict) else None,
                    'result': result}
-            if row['passed'] and not row['accuracyPassed']:
-                row['knownLimitation'] = 'Crow lookalikes remain unconfirmed; the correct species appears among tentative suggestions. No discovery is awarded.'
         except (requests.RequestException, ValueError) as exc:
             row = {'fixture': name, 'status': None, 'passed': False,
                    'error': type(exc).__name__}
