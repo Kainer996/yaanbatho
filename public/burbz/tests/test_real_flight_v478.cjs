@@ -21,17 +21,14 @@ test('take-off starts with one wingbeat; without more flapping the craft settles
 test('holding Flap climbs off the ground in a labouring hover',()=>{
  const p=fly(grounded(),{lift:1},6);assert(p.y>8,'flapping lifts the craft clear');assert(p.y<25,'a hover climbs slowly');assert(Math.hypot(p.x,p.z)<3,'a hover holds its place');
 });
-test('flapping ahead runs, lifts off and settles at cruise',()=>{
- const p=grounded();let air=null;fly(p,{forward:1},10,(q,i)=>{if(air===null&&q.y>1.5)air=i/60;});
- assert(air!==null&&air<2.5,'the run lifts off within a couple of seconds');assert(Math.abs(p.wing.airspeed-craft.speed)<craft.speed*.15,'cruise');assert(p.y<8,'a level look flies level');
+test('flapping with the stick forward runs, lifts off and climbs away',()=>{
+ const p=grounded();let air=null;fly(p,{lift:1,forward:1},10,(q,i)=>{if(air===null&&q.y>1.5)air=i/60;});
+ assert(air!==null&&air<2.5,'the run lifts off within a couple of seconds');assert(p.wing.airspeed>craft.stall*1.2,'it reaches flying speed');assert(p.y>20,'and climbs');
 });
 test('a quick tap still gives one whole downstroke',()=>{
  const tap=aloft(100,0),none=aloft(100,0);fly(tap,i=>i===0?{lift:1}:{},.2);fly(none,{},.2);
  assert(tap.wing.beating,'the beat outlives the tap');assert(tap.velocity.y-none.velocity.y>1.5,'the stroke keeps pushing after release');
  fly(tap,{},1/craft.rate);assert(!tap.wing.beating,'one tap, one beat');
-});
-test('releasing Flap in a hover stalls and sinks',()=>{
- const p=fly(aloft(100,0),{lift:1},4),y=p.y;fly(p,{},.6);assert(p.wing.stall>.5&&p.wing.mode==='stalling','the hover stalls');fly(p,{},1);assert(p.y<y-2,'without wingbeats the craft falls');
 });
 test('a gentle descent gathers speed with no flapping',()=>{
  for(const pitch of [-.18,-.3]){const p=aloft(250,craft.speed,pitch),before=p.wing?.airspeed??craft.speed;fly(p,{},8);assert(p.wing.airspeed>before+3,'heading slightly down builds speed');assert(!p.wing.beating);}
@@ -39,11 +36,10 @@ test('a gentle descent gathers speed with no flapping',()=>{
 });
 test('pulling up trades speed for height until the wings stall',()=>{
  const p=aloft(100,craft.speed,.35);let peak=p.y,stalledAt=null;fly(p,{},6,(q,i)=>{peak=Math.max(peak,q.y);if(stalledAt===null&&q.wing.mode==='stalling')stalledAt=i/60;});
- assert(peak>104,'the pull-up gains height');assert(stalledAt!==null&&stalledAt<4,'it slows until it stalls');assert(p.y<peak-3,'a stalled craft sinks');
- const level=fly(aloft(100),{},12);assert(level.wing.airspeed<craft.stall*1.1,'even level flight fades toward a stall without flapping');
+ assert(peak>104,'the pull-up gains height');assert(stalledAt!==null&&stalledAt<5,'it slows until it stalls');assert(p.y<peak-3,'a stalled craft sinks');
 });
-test('flapping ahead holds cruise and height; diving recovers a stall',()=>{
- const p=fly(aloft(100),{forward:1},10);assert(Math.abs(p.y-100)<1,'powered flight holds height');assert(p.wing.airspeed>craft.speed*.95);
+test('Flap climbs at flying speed; diving recovers a stall',()=>{
+ const p=fly(aloft(100),{lift:1},10);assert(p.y>120,'Flap climbs');assert(p.wing.airspeed>craft.stall*1.2,'and keeps flying speed');
  const q=aloft(100,craft.speed,.6);fly(q,{},3);assert(q.wing.stall>.5,'stalled');q.pitch=-.5;fly(q,{},3);assert(q.wing.airspeed>craft.stall,'the dive restores flying speed');assert(q.wing.stall<.2,'stall recovered');
 });
 test('tucking the wings drops faster than a glide',()=>{

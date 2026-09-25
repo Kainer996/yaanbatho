@@ -51,14 +51,15 @@ test('missing terrain and unsafe ledges retain a verified safe body position',()
 test('geographic flight reuses Academy integrator exactly with configured metre speeds',()=>{
  const p=fresh({y:10,mode:'fly'}),reference={...p};for(let i=0;i<120;i++){const input={forward:1,side:.3,lift:.2,turn:.1,pitch:.1};C.step(p,input,1/60,flat);F.step(reference,input,1/60,flat,{speed:18,liftSpeed:6});}
  for(const axis of ['x','y','z','yaw','pitch'])near(p[axis],reference[axis]);assert(p.y>11);
- // Unconfigured flight keeps the Academy bird's scale: a 5.2 m/s cruise.
- const original=fresh({y:10});for(let i=0;i<600;i++)F.step(original,{forward:1},1/60,flat);assert(Math.abs(original.velocity.z+5.2)<.8);assert(Math.abs(original.y-10)<1);
+ // Unconfigured flight keeps the Academy bird's scale: a 5.2 m/s cruise,
+ // gliding down gently on still wings.
+ const original=fresh({y:10});for(let i=0;i<600;i++)F.step(original,{},1/60,flat);assert(Math.abs(original.wing.airspeed-5.2)<.4);assert(original.y<10-3&&original.y>10-10);
 });
 test('look pitch steers the path; flight floor, ceiling, swept obstruction and unknown tiles are physical',()=>{
  const p=fresh({y:10,mode:'fly'});for(let i=0;i<120;i++)C.step(p,{forward:1,pitch:1},1/60,flat);assert(p.y>12,'looking up climbs');near(p.pitch,1.1);
  const up=fresh({y:399.9,mode:'fly'}),down=fresh({y:.4,mode:'fly'});for(let i=0;i<120;i++){C.step(up,{lift:1},1/60,flat);C.step(down,{lift:-1},1/60,flat);}assert(up.y<=400&&down.y>=C.MIN_AGL);
  const obstacle={...flat,clear:(a,b)=>!(a.z>-.2&&b.z<=-.2)},stopped=fresh({y:10,mode:'fly'});for(let i=0;i<60;i++)C.step(stopped,{forward:1},1/60,obstacle);assert(stopped.z>-.2);
- const unknown=fresh({y:10,mode:'fly'}),world={...flat,height:(x,z)=>z<-.3?null:0};let result;for(let i=0;i<60;i++)result=C.step(unknown,{forward:1},1/60,world);assert(unknown.z>=-.3);assert.equal(result.ready,false);
+ const unknown=fresh({y:10,mode:'fly'}),world={...flat,height:(x,z)=>z<-.3?null:0};let result;for(let i=0;i<60;i++)result=C.step(unknown,{forward:1,lift:1},1/60,world);assert(unknown.z>=-.3);assert.equal(result.ready,false);
 });
 test('takeoff and landing need verified reachable ground; camera/bob does not change the body',()=>{
  const p=fresh();assert(C.takeoff(p,flat).ok);assert.equal(p.mode,'fly');near(p.y,.65);const before={...p};F.cameraMotion({},p,.02);assert.deepEqual(p,before);
