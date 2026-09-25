@@ -57,6 +57,7 @@
     campStool: 'assets/audio/camp/stool.mp3',
     rain: 'assets/audio/weather/rain-loop.mp3',
     wind: 'assets/audio/weather/wind-loop.mp3',
+    birdsong: 'assets/audio/ambience-empire-treetops.mp3',
     residentChatter: Object.freeze(Array.from({length:16}, function(_, i) {
       return 'assets/audio/little-folk/mumble-' + String(i + 1).padStart(2, '0') + '.mp3';
     }))
@@ -91,7 +92,9 @@
     campStool: 0.42,
     // Weather beds sit under everything else.
     rain: 0.42,
-    wind: 0.22
+    wind: 0.22,
+    // Treetops and birds fill the rest between songs.
+    birdsong: 0.3
   });
 
   // A button that returns the identical pitch on every press reads as a machine.
@@ -269,6 +272,7 @@
       loopTo('rain', rain, ambienceOptions);
       loopTo('wind', wind, ambienceOptions);
     }
+    function birdsong(level, birdOptions) { return loopTo('birdsong', level, birdOptions); }
     function loopLevel(name) { return loops[name] ? loops[name].target : 0; }
     function stopFootsteps() {
       active.slice().filter(function(entry){return entry.name.indexOf('footstep')===0;}).forEach(function(entry){safePause(entry.audio);removeActive(entry);});
@@ -444,6 +448,7 @@
       campfire: campfire,
       stopCampfire: stopCampfire,
       ambience: ambience,
+      birdsong: birdsong,
       loopLevel: loopLevel,
       footstep: function(surface) {
         if(active.some(function(entry){return entry.name.indexOf('footstep')===0;}))return Promise.resolve(false);
@@ -545,6 +550,14 @@
     var fadeInMs = durationOption('fadeInMs');
     var fadeOutMs = durationOption('fadeOutMs');
     var volumeRampMs = durationOption('volumeRampMs');
+    // A rest between plays. With a gap the song fades out at its end, stays
+    // silent for gapMs, then fades back in from the top instead of looping.
+    var gapMs = durationOption('gapMs');
+    var outroMs = hasOwn.call(options, 'outroMs') ? durationOption('outroMs') : fadeOutMs;
+    var onRest = typeof options.onRest === 'function' ? options.onRest : null;
+    var resting = false;
+    var outro = false;
+    var restTimer = null;
     var fadeTimer = null;
     var timerTicket = null;
     var gain = 0;
@@ -585,7 +598,7 @@
       if (!audio) return null;
       // Native looping is a fallback if a browser throttles the crossfade
       // timer. Under normal playback the outgoing deck is paused first.
-      try { audio.loop = true; } catch (_) {}
+      try { audio.loop = !gapMs; } catch (_) {}
       try { audio.preload = 'auto'; } catch (_) {}
       try { audio.volume = 0; } catch (_) {}
       return audio;
@@ -597,13 +610,15 @@
       if (!first) return tracks;
       var second = makeOneAudio();
       tracks = second ? [first, second] : [first];
+      if (gapMs) tracks = [first];
       tracks.forEach(function(track, index) {
-        var inspect = function() { maybeCrossfade(index); };
+        var inspect = function() { gapMs ? maybeOutro(index) : maybeCrossfade(index); };
         listeners[index] = inspect;
         try {
           if (typeof track.addEventListener === 'function') {
             track.addEventListener('timeupdate', inspect);
             track.addEventListener('loadedmetadata', inspect);
+            if (gapMs) track.addEventListener('ended', function() { beginRest(index); });
           }
         } catch (_) {}
       });
@@ -775,7 +790,49 @@
       return true;
     }
 
+    function setResting(value) {
+      if (resting === value) return;
+      resting = value;
+      if (onRest) { try { onRest(value); } catch (_) {} }
+    }
+
+    // Start the fade a little before the last note so the song ends in silence.
+    function maybeOutro(index) {
+      if (outro || index !== activeIndex || !playing[index] || !shouldPlay()) return false;
+      var track = tracks[index];
+      var duration = Number(track && track.duration);
+      var currentTime = Number(track && track.currentTime);
+      if (!Number.isFinite(duration) || !Number.isFinite(currentTime)) return false;
+      var left = (duration - currentTime) * 1000;
+      if (left > outroMs) return false;
+      outro = true;
+      rampTo(0, Math.max(0, left - 150));
+      return true;
+    }
+
+    function beginRest(index) {
+      if (index !== activeIndex || destroyed) return;
+      outro = false;
+      silenceTrack(tracks[index]);
+      playing[index] = false;
+      ramp = null;
+      gain = 0;
+      try { tracks[index].currentTime = 0; } catch (_) {}
+      setResting(true);
+      if (restTimer !== null && cancelSchedule) { try { cancelSchedule(restTimer); } catch (_) {} }
+      restTimer = schedule ? schedule(function() {
+        restTimer = null;
+        setResting(false);
+        sync();
+      }, gapMs) : null;
+      if (restTimer === null) setResting(false);
+    }
+
     function sync() {
+      if (resting && !destroyed) {
+        if (!shouldPlay()) stopPlayback(isSuppressed());
+        return Promise.resolve(false);
+      }
       if (!shouldPlay()) {
         stopPlayback(destroyed || isSuppressed());
         return Promise.resolve(false);
@@ -844,13 +901,15 @@
     function setVolume(value) {
       var next = Number(value);
       if (Number.isFinite(next)) volume = Math.max(0, Math.min(1, next));
-      if (shouldPlay() && playing[activeIndex]) rampTo(targetVolume(), volumeRampMs);
+      if (shouldPlay() && playing[activeIndex] && !outro) rampTo(targetVolume(), volumeRampMs);
       return volume;
     }
 
     function destroy() {
       wanted = false;
       destroyed = true;
+      if (restTimer !== null && cancelSchedule) { try { cancelSchedule(restTimer); } catch (_) {} }
+      restTimer = null;
       stopPlayback(true);
       tracks.forEach(function(track, index) {
         if (typeof track.removeEventListener !== 'function') return;
@@ -879,7 +938,8 @@
       getAudio: function() { return tracks[activeIndex] || null; },
       getAudios: function() { return tracks.slice(); },
       get volume() { return targetVolume(); },
-      get wanted() { return wanted; }
+      get wanted() { return wanted; },
+      get resting() { return resting; }
     };
   }
 

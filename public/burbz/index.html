@@ -5832,7 +5832,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=calm-camp-v463-20260924"></script>
+<script src="audio_core.js?v=music-rest-v487-20260925"></script>
 <script src="player_home_core.js?v=smooth-sky-plain-plot-v485-20260925"></script>
 <script src="player_home_scene.js?v=desk-screen-v484-20260925"></script>
 <script src="alderwing_intro.js?v=home-ground-intro-v451-20260923"></script>
@@ -5845,7 +5845,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="enemy_outposts.js?v=alderwing-flight-shores-v418-20260915"></script>
 <link rel="stylesheet" href="enemy_outposts.css?v=alderwing-followups-v417-20260914">
 <script src="exploration_core.js?v=alderwing-followups-v417-20260914"></script>
-<script src="exploration.js?v=alderwing-seamless-v482-20260925"></script>
+<script src="exploration.js?v=music-rest-v487-20260925"></script>
 <link rel="stylesheet" href="exploration.css?v=calm-camp-v463-20260924">
 <script src="geographic_settlement_scene.js?v=connected-world-v386-20260910"></script>
 <script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
@@ -6380,7 +6380,8 @@ const BURBZ_MAP_VERSION = 'flat-fast-map-terrain-reverted-v4-20260722';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
-const BURBZ_MUSIC_BASE_VOLUME = 0.2;
+// A third of the old 0.2: the song sits softly under the world.
+const BURBZ_MUSIC_BASE_VOLUME = 0.2 / 3;
 const BURBZ_MUSIC_SILENT_ZOOM = BURBZ_MAX_ZOOM - 0.1;
 // Gentler pitch curve than before: extreme pitch (70°+) forced MapLibre to
 // stream a huge wedge of far-horizon tiles every frame, which is what made the
@@ -6830,16 +6831,21 @@ function burbzWeatherAt(){
   burbzWeather.wind=.2+.3*storm+.08*Math.sin(minutes/4.3);
   return burbzWeather;
 }
-window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool')};
+window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),birdsong:(level,opts)=>SFX.birdsong?.(level,opts),musicResting:()=>burbzMusicResting,chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool')};
 
+let burbzMusicResting = false;
 const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicManager === 'function'
   ? window.BurbzAudioCore.createMusicManager({
       src: 'assets/audio/bgm-burbz-quest-v2.mp3',
-      volume: 0.2,
-      crossfadeSeconds: 5,
-      fadeInMs: 1600,
+      volume: BURBZ_MUSIC_BASE_VOLUME,
+      // Fade in slowly, fade out over the last 12 seconds, then rest for
+      // three minutes. First-person walks fill the rest with birdsong.
+      fadeInMs: 8000,
       fadeOutMs: 900,
+      outroMs: 12000,
+      gapMs: 3 * 60 * 1000,
       volumeRampMs: 450,
+      onRest: resting => { burbzMusicResting = resting; },
       getEnabled: () => musicEnabled
     })
   : null;
