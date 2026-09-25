@@ -4671,7 +4671,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=desk-screen-v484-20260925">
+<link rel="stylesheet" href="scan_home.css?v=quests-strip-v488-20260925">
 <link rel="stylesheet" href="academy_daynight.css?v=academy-day-night-v483-20260925">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
@@ -4807,7 +4807,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         </div>
       </div>
 
-      <section class="scan-home-today" aria-label="Your next quest and player equipment"><span class="desk-current-label">Quests</span><div id="scanHomeActions" class="scan-home-actions"></div><div id="deskBuildOptions" class="desk-build-options" aria-label="Available buildings"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><img src="assets/home-v399/warrior-equipment.webp" alt="" width="256" height="384"><span>Equipment</span></button></section>
+      <section class="scan-home-today" aria-label="Your next quest and player equipment"><button type="button" class="desk-current-label" data-home-action="next-quest" aria-label="Open your current quest">Quests</button><div id="scanHomeActions" class="scan-home-actions"></div><div id="deskBuildOptions" class="desk-build-options" aria-label="Available buildings"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><img src="assets/home-v399/warrior-equipment.webp" alt="" width="256" height="384"><span>Equipment</span></button></section>
       <div id="scanHomeDeskPanels" class="desk-panels">
         <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Crafting</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Crafting; open the Forge"></div></section>
         <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; open the room for all entries"></div></section>
@@ -45370,7 +45370,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'village-folk-v486-20260925';
+const BURBZ_BUILD = 'quests-strip-v488-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
