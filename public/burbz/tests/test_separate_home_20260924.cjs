@@ -3,7 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=f=>fs.readFileSync(__dirname+'/../'+f,'utf8');
 const html=read('index.html'),home=read('scan_home.js'),sw=read('sw.js');
-const rev='academy-plain-tree-v471-20260925';
+const rev='academy-manga-v475-20260925';
 const fn=name=>{const m=html.match(new RegExp('function '+name+'\\([^]*?\\n}'));assert(m,name);return m[0];};
 test('Academy navigation selects its independent screen and starts the tree, then Home returns to its desk',()=>{
  const calls=[],noop=()=>{},classes={add:noop,remove:noop};
@@ -19,11 +19,11 @@ test('Home keeps Empire first and all original care panels even for locked saves
  for(const id of ['kitchen','training','hospital'])assert.ok(html.includes('desk-'+id+'-list'));
  assert.doesNotMatch(home,/academyHomeRooms|academyHomeTree/);
 });
-test('Home stacks the four rooms left, puts a condensed Academy right, and the dock keeps only what Home lacks',()=>{
+test('Home stacks the four rooms left, puts a condensed Academy right, and the dock leads with Home, then only what Home lacks',()=>{
  assert.ok(html.includes('id="desk-academy-list"'));
  assert.match(home,/panelElement\('academy'\)\.style\.gridArea=`\$\{row\} \/ \$\{careColumns\+1\} \/ \$\{row\+careRows\} \/ \$\{columns\+1\}`/);
  const dock=html.slice(html.indexOf('id="bottomDock"'),html.indexOf('<!-- Capture Celebration Overlay -->'));
- assert.deepEqual([...dock.matchAll(/data-screen="([^"]+)"/g)].map(m=>m[1]),['map','battle','birdex','inventory','leaderboards']);
+ assert.deepEqual([...dock.matchAll(/data-screen="([^"]+)"/g)].map(m=>m[1]),['scan','map','battle','birdex','inventory','leaderboards']);
  assert.doesNotMatch(dock,/data-quick-destination/);
  assert.match(html,/id="headerHomeBtn" data-game-route data-screen="scan"/);
  assert.match(html,/target:'#screen-scan \.desk-panel-academy \.desk-panel-heading'/);
@@ -41,7 +41,9 @@ test('Restored Home uses a new coherent shell and exact cache pins',()=>{
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes(rev));
  assert.match(sw,new RegExp(html.match(/const BURBZ_BUILD = '([^']+)'/)[1]+"';"));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
-  const pin=file+'?v='+rev;assert.ok(html.includes(pin),pin);
+  // v483 re-pinned scan_home.js for the Academy's day and night; v484
+  // re-pinned scan_home.css when Merlin moved to the right in landscape.
+  const pin=file+'?v='+(file==='scan_home.css'?'desk-screen-v484-20260925':file==='scan_home.js'?'academy-day-night-v483-20260925':rev);assert.ok(html.includes(pin),pin);
   assert.equal(sw.split('./'+pin).length-1,3,pin+' in every worker list');
  }
  for(const pin of ['quest-revisit-v457-20260923','hall-music-v458-20260923','expedition-duration-v455-20260923'])assert.ok(html.includes(pin),pin+' retained');

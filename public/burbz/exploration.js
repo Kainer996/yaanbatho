@@ -46,10 +46,19 @@ function attach(s,opts,host){if(!opts.exploration)return null;const a=opts.explo
  const kindle=document.createElement('button');kindle.type='button';kindle.dataset.walkAction='camp-fire';kindle.hidden=true;s.root.append(kindle);let unlit=null;
  const seat=document.createElement('button');seat.type='button';seat.className='fp-stool-button';seat.textContent='🪑';seat.setAttribute('aria-pressed','false');seat.setAttribute('aria-label','Tripod stool');seat.title='Sit on your tripod stool';seat.hidden=true;s.root.append(seat);
  let lit=a.read().camps.some(c=>c.fire),stool=null,glow=null,sky=null,rainTime=null;
- // Rain you can see: soft streaks falling in a box around the player.
+ // Rain you can see: soft streaks falling in a box around the player. In
+ // flight the drops stream past at the craft's own speed.
  const DROPS=700,rainPos=new Float32Array(DROPS*6),rainGeo=new T.BufferGeometry();for(let i=0;i<DROPS;i++){rainPos[i*6]=rainPos[i*6+3]=(Math.random()-.5)*36;rainPos[i*6+1]=Math.random()*18;rainPos[i*6+2]=rainPos[i*6+5]=(Math.random()-.5)*36;rainPos[i*6+4]=rainPos[i*6+1]+.55;}rainGeo.setAttribute('position',new T.BufferAttribute(rainPos,3));
- const rain=new T.LineSegments(rainGeo,new T.LineBasicMaterial({color:0xb9c7d6,transparent:true,opacity:0,depthWrite:false}));rain.frustumCulled=false;rain.visible=false;s.source.scene.add(rain);
- function showRain(time,amount){const dt=rainTime===null?0:Math.min(.1,Math.max(0,time-rainTime));rainTime=time;rain.visible=amount>0&&!matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rain.visible)return;rain.material.opacity=.18+amount*.3;rain.position.set(s.player.x,s.player.y-4,s.player.z);const fall=dt*(10+amount*6),slant=dt*(sky?.wind||.2)*3;for(let i=0;i<DROPS;i++){let y=rainPos[i*6+1]-fall,x=rainPos[i*6]+slant;if(y<0){y+=18;x=(Math.random()-.5)*36;}if(x>18)x-=36;rainPos[i*6]=x;rainPos[i*6+3]=x-slant*.5;rainPos[i*6+1]=y;rainPos[i*6+4]=y+.55;}rainGeo.attributes.position.needsUpdate=true;}
+ const rain=new T.LineSegments(rainGeo,new T.LineBasicMaterial({color:0xb9c7d6,transparent:true,opacity:0,depthWrite:false}));rain.frustumCulled=false;rain.visible=false;s.source.scene.add(rain);let rainFrom=null;
+ const wrap=v=>v>18?v-36:v<-18?v+36:v;
+ function showRain(time,amount){const dt=rainTime===null?0:Math.min(.1,Math.max(0,time-rainTime));rainTime=time;rain.visible=amount>0&&!matchMedia('(prefers-reduced-motion: reduce)').matches;if(!rain.visible){rainFrom=null;return;}rain.material.opacity=.18+amount*.3;
+  // Each drop moves relative to the viewer; its streak is its path over a moment.
+  const moved=rainFrom&&dt>0,vx=moved?(s.player.x-rainFrom.x)/dt:0,vy=moved?(s.player.y-rainFrom.y)/dt:0,vz=moved?(s.player.z-rainFrom.z)/dt:0,speed=10+amount*6,wind=(sky?.wind||.2)*3,tail=.55/speed;
+  rainFrom={x:s.player.x,y:s.player.y,z:s.player.z};rain.position.set(s.player.x,s.player.y-4,s.player.z);
+  const dx=(wind-vx)*dt,dy=(speed+vy)*dt,dz=-vz*dt;
+  for(let i=0;i<DROPS;i++){let x=wrap(rainPos[i*6]+dx),y=rainPos[i*6+1]-dy,z=wrap(rainPos[i*6+2]+dz);if(y<0){y+=18;x=(Math.random()-.5)*36;z=(Math.random()-.5)*36;}else if(y>18)y-=18;
+   rainPos[i*6]=x;rainPos[i*6+1]=y;rainPos[i*6+2]=z;rainPos[i*6+3]=x-(wind-vx)*tail;rainPos[i*6+4]=y+(speed+vy)*tail;rainPos[i*6+5]=z+vz*tail;}
+  rainGeo.attributes.position.needsUpdate=true;}
  function sit(){if(stool||s.room||s.uiBusy||s.player.mode==='fly'||s.player.mode==='swim')return;const g=stoolModel(T);g.position.set(s.player.x,s.player.y,s.player.z);g.rotation.y=s.player.yaw;g.traverse(o=>{for(const mat of Array.isArray(o.material)?o.material:[o.material])host.style?.(mat);});s.source.scene.add(g);stool={g,x:s.player.x,z:s.player.z};s.seated=true;seat.setAttribute('aria-pressed','true');seat.title='Stand up';root.BurbzCalmAudio?.stool();}
  function stand(){if(!stool)return;stool.g.removeFromParent();root.BurbzPlayerHomeScene.disposeScene(stool.g);stool=null;s.seated=false;seat.setAttribute('aria-pressed','false');seat.title='Sit on your tripod stool';}
  seat.onclick=()=>stool?stand():sit();
@@ -59,7 +68,7 @@ function attach(s,opts,host){if(!opts.exploration)return null;const a=opts.explo
  function update(time){if(closed)return;const tools=s.root.querySelector('.fp-tools');if(tools&&button.parentNode!==tools)tools.append(button);if(tools&&seat.parentNode!==tools)tools.append(seat);button.hidden=!!s.room;seat.hidden=!lit||!!s.room;
  if(stool&&(s.room||s.player.mode==='fly'||s.player.mode==='swim'||Math.hypot(s.player.x-stool.x,s.player.z-stool.z)>.12))stand();
  if(s.room){enter.hidden=true;kindle.hidden=true;rain.visible=false;root.BurbzCalmAudio?.campfire(0);root.BurbzCalmAudio?.ambience((sky?.rain||0)*.3,0);return;}
- showRain(time,s.player.mode==='fly'?0:sky?.rain||0);
+ showRain(time,sky?.rain||0);
  let near=null,best=60;for(const m of models.values()){m.flick=m.update?.(time);if(m.fire&&m.group.visible){const d=Math.hypot(m.x+m.fire.x-s.player.x,m.z+m.fire.z-s.player.z);if(d<best){best=d;near=m;}}}
  // One shared warm light follows the nearest lit fire, so trees and ground around it glow.
  if(near){if(!glow){glow=new T.PointLight(0xff9a48,0,22,2);glow.castShadow=false;s.source.scene.add(glow);}glow.position.set(near.x+near.fire.x,near.fire.y,near.z+near.fire.z);glow.intensity=36*(near.flick||1);}else if(glow)glow.intensity=0;

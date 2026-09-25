@@ -1,7 +1,7 @@
 # Alderwing nature, water and craft v470
 
 Build: `alderwing-nature-v470-20260925`.
-Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, merged with main at v469. Not yet merged to main or published.
+Status: merged to main as PR #407 and live on yaanbatho.com since 25 September 2026. Its tree fades, sparse unmapped land and floating dashboard are replaced in [v472](ALDERWING_STEADY_V472.md).
 
 ## What Yaan asked for
 
