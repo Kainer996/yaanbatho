@@ -486,8 +486,6 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan.progressive-home[data-home-density="full"] .desk-equipment-control{min-height:56px;font-size:10px;padding:0}
 #screen-scan.progressive-home[data-home-density="full"] .desk-equipment-control>img{height:36px;width:24px}
 #screen-scan.progressive-home[data-home-density="full"] .home-action strong{font-size:14px}
-body:has(#screen-scan.progressive-home.active[data-home-density="full"]) #merlinPerchAssembly{top:calc(var(--safe-top) + 68px);transform:scale(.76);transform-origin:top right;animation:none}
-body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #merlinPerchAssembly{transform:scale(.9);transform-origin:top right;animation:none}
 #homeBuildingNotices{z-index:220;background:#080e09bb;padding:16px}
 #homeBuildingNotices .home-notices-card{display:flex;flex-direction:column;width:min(520px,100%);max-height:calc(100dvh - 32px);padding:10px;border:1px solid #bca36c;border-radius:12px;background:#233025;color:#fff0cf}
 #homeBuildingNotices header{display:flex;align-items:center;gap:10px;justify-content:space-between}
@@ -498,7 +496,7 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 #homeBuildingNotices .desk-panel-heading{display:none}
 #homeBuildingNotices #desk-completed-list{display:block;overflow:visible;padding:0}
 #homeBuildingNotices .desk-mini-row{margin-bottom:6px;min-height:64px}
-@media(orientation:landscape) and (max-height:550px){#screen-scan.progressive-home[data-home-density] .desk-introduction{height:100%;min-height:0}body:has(#screen-scan.progressive-home.active[data-home-density]) #merlinPerchAssembly{right:auto;left:25px;margin-right:0;top:calc(var(--safe-top) + 65px);transform:scale(.82);transform-origin:top left;animation:none}}
+@media(orientation:landscape) and (max-height:550px){#screen-scan.progressive-home[data-home-density] .desk-introduction{height:100%;min-height:0}body:has(#screen-scan.progressive-home.active[data-home-density]) #merlinPerchAssembly{right:auto;left:25px;margin-right:0;top:calc(var(--safe-top) + 65px)}}
 #screen-scan.progressive-home .home-panel-featured .scan-home-start-heading{margin-bottom:6px}
 #screen-scan.progressive-home .home-panel-featured .scan-home-start-buttons .scan-btn{min-height:60px;font-size:16px;padding-top:8px;padding-bottom:8px}
 #screen-scan.progressive-home .home-panel-featured .merlin-listener-line{display:none}
@@ -713,7 +711,7 @@ body:has(#screen-scan.progressive-home.active[data-home-density="growing"]) #mer
 
 /* Condensed Academy: every building in one scrolling box on the right.
    Built rooms open directly; unbuilt ones lead to their real build card. */
-#screen-scan.progressive-home .desk-panel-academy .desk-panel-heading { --desk-banner:url("assets/academy-tree-manga-20260806.webp"); }
+#screen-scan.progressive-home .desk-panel-academy .desk-panel-heading { --desk-banner:url("assets/academy-manga-20260925/tree.webp"); }
 #screen-scan.progressive-home .desk-panel-academy .desk-panel-heading::before { background-position:center 30%; }
 #screen-scan.progressive-home .desk-panel-academy #desk-academy-list { display:block;flex:1;min-height:0;padding:0;overflow:hidden; }
 #screen-scan .home-tree { position:relative;height:100%;min-height:96px;overflow:hidden;cursor:pointer;background:#2c3a22;border-radius:0 0 10px 10px;container-type:size;isolation:isolate; }

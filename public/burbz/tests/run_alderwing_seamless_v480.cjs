@@ -1,11 +1,11 @@
-/* Alderwing seamless v474 in the actual retained renderer with explicitly
+/* Alderwing seamless v480 in the actual retained renderer with explicitly
  * synthetic, offline map input and a fixed rainy sky. Frames are pumped by
  * hand while the craft flies north: after each frame the scene is drawn again
  * from the previous frame's camera, so every changed pixel is a pop, never
  * camera motion. Evidence, not a unit test. */
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'/root/src/gstack/node_modules/playwright'),F=require('./connected_world_fixture_v386.cjs');
-const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-alderwing-seamless-v474',report={served:{},missing:[],checks:[],errors:[],pops:[],limits:['Actual retained renderer and loader with explicitly synthetic DEM/vector input and a fixed weather report.','Software WebGL at a phone viewport: a relative proxy, not phone FPS.','Grizedale Forest and Pendle flights were measured separately against live providers.']};
+const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-alderwing-seamless-v480',report={served:{},missing:[],checks:[],errors:[],pops:[],limits:['Actual retained renderer and loader with explicitly synthetic DEM/vector input and a fixed weather report.','Software WebGL at a phone viewport: a relative proxy, not phone FPS.','Grizedale Forest and Pendle flights were measured separately against live providers.']};
 fs.mkdirSync(out,{recursive:true});const server=F.createServer({root,port:8985,report});let browser,page;
 const run=code=>page.evaluate(code=>__testEval(code),code),read=()=>page.evaluate(()=>__burbzVillageWalkDebug.state()),pass=name=>{report.checks.push(name);console.log('PASS',name);};
 const G=require('../geographic_world_core.js'),coord=(x,z)=>{const g=G.unproject(F.ANCHOR,{x,y:0,z});return[g.lon,g.lat];},ring=(x,z,w,d)=>[[x-w/2,z-d/2],[x+w/2,z-d/2],[x+w/2,z+d/2],[x-w/2,z+d/2],[x-w/2,z-d/2]].map(([a,b])=>coord(a,b));

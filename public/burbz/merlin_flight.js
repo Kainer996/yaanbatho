@@ -1,6 +1,12 @@
-/* Merlin's short, local play flight. No game, care, inventory or save state.
-   Atlas poses, paths and the DOM lifecycle live together so the preview uses
-   the exact same renderer as the game. All coordinates below are CSS pixels. */
+/* Merlin's play flight. No game, care, inventory or save state lives here.
+   The player taps anywhere; Merlin swoops, grabs the pebble in his talons and
+   drops it on a little pile under his perch. After four pebbles he lands.
+
+   v3 draws one painted side view (ElevenLabs sheet, 8-pose wing beat plus
+   reach, grab, lift and landing-flare poses) and moves with steering physics:
+   velocity turns smoothly toward a goal, so every path is a natural arc.
+   The last metres of a grab or a landing follow a Hermite curve, so the
+   talons meet the pebble exactly. All coordinates are CSS pixels. */
 (function (root, factory) {
   'use strict';
   const api = factory();
@@ -12,465 +18,376 @@
   const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
   const mix = (a, b, t) => a + (b - a) * t;
   const ease = t => t * t * (3 - 2 * t);
-  const point = (x, y, z = 0) => ({ x, y, z });
-  const DEFAULT_ATLAS = { columns: 8, rows: 8, cell: 256, pivot: [.5, .625] };
-  const depthScale = z => mix(.77, 1.05, (z + 1) / 2);
-  const angleDelta = (from, to) => Math.atan2(Math.sin(to - from), Math.cos(to - from));
-  const yawRow = yaw => clamp(Math.round(Math.acos(Math.cos(yaw)) / (Math.PI / 4)), 0, 4);
-  const distance = (a, b) => Math.hypot(b.x - a.x, b.y - a.y, (b.z - a.z) * 80);
-  const normal = v => {
-    const n = Math.hypot(v.x, v.y, v.z * 80) || 1;
-    return point(v.x / n, v.y / n, v.z / n);
-  };
-  const inside = (p, b) => point(clamp(p.x, b.left, b.right), clamp(p.y, b.top, b.bottom), clamp(p.z || 0, -1, 1));
+  const point = (x, y) => ({ x, y });
+  const length = v => Math.hypot(v.x, v.y);
+  const approach = (value, target, rate, dt) => mix(value, target, 1 - Math.exp(-rate * dt));
 
-  function flightBounds(width, height, size = 136, top = 108, bottom = 112) {
-    const radius = Math.min(size * .65, width * .24, height * .24);
-    const left = radius + 6, right = Math.max(left, width - radius - 6);
-    const y0 = Math.min(top + radius * .35, height * .36);
-    const y1 = Math.max(y0, height - bottom - radius * .35);
-    return { left, right, top: y0, bottom: y1, width, height, radius };
+  const PEBBLE_GOAL = 4;
+  const DISPLAY_LENGTH = 96;   // beak-to-tail on screen, the size of the perched Merlin
+  const CRUISE_SPEED = 215, CHASE_SPEED = 330, CARRY_SPEED = 250;
+  const ACCEL = 520;
+  const FALL = 1100;           // px/s² for a dropped pebble
+
+  function flightBounds(width, height, top = 72, bottom = 96) {
+    const margin = Math.min(56, width * .14);
+    return { left: margin, right: Math.max(margin, width - margin), top: Math.min(top, height * .3), bottom: Math.max(Math.min(top, height * .3) + 1, height - bottom), width, height };
   }
 
-  function bezier(points, t) {
-    const u = 1 - t;
-    const w = [u * u * u, 3 * u * u * t, 3 * u * t * t, t * t * t];
-    return point(...['x', 'y', 'z'].map(k => points.reduce((s, p, i) => s + (p[k] || 0) * w[i], 0)));
-  }
-
-  function tangent(points, t) {
-    const u = 1 - t;
-    return point(...['x', 'y', 'z'].map(k =>
-      3 * u * u * (points[1][k] - points[0][k]) + 6 * u * t * (points[2][k] - points[1][k]) + 3 * t * t * (points[3][k] - points[2][k])));
-  }
-
-  // Arc-length sampling keeps the centre of a tight bank from suddenly
-  // stopping while the wings continue at full power. Convex controls bound
-  // the entire path, including curves near a short landscape viewport edge.
-  function makeCurve(from, to, velocity, bounds, speed, endVelocity) {
-    const gap = distance(from, to);
-    const aim = normal(point(to.x - from.x, to.y - from.y, to.z - from.z));
-    const initial = Math.hypot(velocity.x, velocity.y, velocity.z * 80) > 1 ? normal(velocity) : aim;
-    const final = endVelocity ? normal(endVelocity) : aim;
-    const reach = clamp(gap * .34, 18, 130);
-    const points = [from,
-      inside(point(from.x + initial.x * reach, from.y + initial.y * reach, from.z + initial.z * reach), bounds),
-      inside(point(to.x - final.x * reach, to.y - final.y * reach, to.z - final.z * reach), bounds), to];
-    const table = [0];
-    let prev = from, total = 0;
-    for (let i = 1; i <= 40; i++) {
-      const p = bezier(points, i / 40);
-      total += distance(prev, p); table.push(total); prev = p;
-    }
-    return { points, table, length: total, duration: clamp(total / speed, .65, 4.2) };
-  }
-
-  function curveSample(curve, fraction) {
-    const target = clamp(fraction, 0, 1) * curve.length;
-    let i = 1;
-    while (i < curve.table.length - 1 && curve.table[i] < target) i++;
-    const before = curve.table[i - 1], span = curve.table[i] - before;
-    const t = (i - 1 + (span ? (target - before) / span : 0)) / (curve.table.length - 1);
-    return { position: bezier(curve.points, t), tangent: tangent(curve.points, t) };
-  }
-
-  function viewForVelocity(velocity, state = 'cruise') {
-    if (state === 'reach') return 6;
-    if (state === 'carry') return 7;
-    // z is camera depth, independent of screen-space height. Rear views are
-    // therefore actual turns away, not a flipped front-facing cutout.
-    const horizontal = Math.abs(velocity.x);
-    const depth = velocity.z * 170;
-    if (velocity.y < -Math.max(36, horizontal * .8)) return 5;
-    if (velocity.y > Math.max(50, horizontal * 1.15)) return 6;
-    if (Math.abs(depth) > horizontal * 1.6) return depth > 0 ? 0 : 4;
-    if (Math.abs(depth) > horizontal * .3) return depth > 0 ? 1 : 3;
-    return 2;
-  }
-
-  function wingPose(elapsed, speed, state, reduced, phase, gliding) {
-    if (reduced) return { frame: 2, powered: false };
-    // Cadence is an artistic rendering choice, not a measured biological Hz.
-    // Merlin has purposeful fast beats, with occasional short swept glides;
-    // a talon approach brakes briefly without hovering or a vertical stoop.
-    const powered = gliding == null ? state !== 'cruise' || elapsed % 4.6 < 4.16 : !gliding;
-    const hz = state === 'reach' ? 3.6 : clamp(3.6 + speed / 220, 3.8, 4.8);
-    return { frame: powered ? Math.floor((phase == null ? elapsed * hz % 1 : phase) * 8) : 5, powered };
-  }
-
-  function animationPose(model) {
-    if (!model.atlas.clips) return wingPose(model.elapsed, Math.hypot(model.velocity.x, model.velocity.y), model.state, model.reduced, model.wingPhase, model.glideRemaining > 0);
-    const direction = yawRow(model.yaw);
-    let clip = 'flap-' + direction, frame = Math.floor(model.wingPhase * 16), powered = true;
-    if (model.reduced) return { clip: 'glide-1', frame: 0, powered: false };
-    if (model.state === 'reach') {
-      clip = 'pickup-' + model.pickupView;
-      const remaining = Math.max(0, model.curve.duration - model.segmentTime);
-      frame = Math.min(5, Math.floor(clamp(1 - remaining / .6, 0, 1) * 6));
-      powered = false;
-    } else if (model.carrying && model.recoveryTime < .6) {
-      clip = 'pickup-' + model.pickupView;
-      // The exact contact pose survives the pickup boundary, then the toes
-      // close and the authored legs retract, independently of the wing clock.
-      frame = model.recoveryTime === 0 ? 5 : Math.min(11, 6 + Math.floor(model.recoveryTime / .1));
-      powered = false;
-    } else if (model.glideRemaining > 0 && model.state === 'cruise') {
-      clip = 'glide-' + (model.row === 5 ? 5 : direction);
-      frame = Math.min(7, Math.floor((1.25 - model.glideRemaining) / 1.25 * 8));
-      powered = false;
-    }
-    return { clip, frame, powered };
-  }
-
-  function openRectangles(area, obstacles) {
-    let spaces = [area];
-    for (const obstacle of obstacles) {
-      spaces = spaces.flatMap(rect => {
-        const left = Math.max(rect.left, obstacle.left), right = Math.min(rect.right, obstacle.right);
-        const top = Math.max(rect.top, obstacle.top), bottom = Math.min(rect.bottom, obstacle.bottom);
-        if (left >= right || top >= bottom) return [rect];
-        return [
-          { left: rect.left, right: rect.right, top: rect.top, bottom: top },
-          { left: rect.left, right: rect.right, top: bottom, bottom: rect.bottom },
-          { left: rect.left, right: left, top, bottom },
-          { left: right, right: rect.right, top, bottom }
-        ].filter(space => space.right - space.left > 1 && space.bottom - space.top > 1);
-      });
-    }
-    return spaces;
-  }
-
-  function spriteGeometry(view = {}, size = 136, atlas = {}) {
-    const config = { ...DEFAULT_ATLAS, ...atlas };
-    const row = clamp(Math.floor(view.row || 0), 0, config.rows - 1);
-    const clip = config.clips && (config.clips[view.clip] || config.clips['flap-' + (row < 5 ? row : 1)]);
-    const frame = clamp(Math.floor(view.frame || 0), 0, clip ? clip.length - 1 : config.columns - 1);
-    const authored = clip && config.frames[clip[frame]];
-    const pivot = config.pivot;
-    const rowTalons = config.talons && config.talons[row];
-    const anchor = authored ? authored.talon : rowTalons && (Array.isArray(rowTalons[0]) ? rowTalons[frame] : rowTalons) || [.5, .82];
-    const drawSize = size * (view.scale == null ? 1 : view.scale);
-    const localX = (anchor[0] - pivot[0]) * drawSize, localY = (anchor[1] - pivot[1]) * drawSize;
-    const facingX = view.mirror ? -localX : localX;
-    const angle = view.bank || 0, cos = Math.cos(angle), sin = Math.sin(angle);
-    const position = view.position || point(0, 0);
-    const talon = { x: position.x + facingX * cos - localY * sin, y: position.y + facingX * sin + localY * cos };
+  // Cubic Hermite: position and velocity at both ends, over T seconds.
+  function hermite(seg, t) {
+    const s = clamp(t / seg.T, 0, 1), s2 = s * s, s3 = s2 * s;
+    const h00 = 2 * s3 - 3 * s2 + 1, h10 = s3 - 2 * s2 + s, h01 = -2 * s3 + 3 * s2, h11 = s3 - s2;
+    const d00 = 6 * s2 - 6 * s, d10 = 3 * s2 - 4 * s + 1, d01 = -6 * s2 + 6 * s, d11 = 3 * s2 - 2 * s;
+    const T = seg.T;
     return {
-      row, frame, drawSize,
-      source: authored ? authored.source : [frame * config.cell, row * config.cell, config.cell, config.cell],
-      destination: [-drawSize * pivot[0], -drawSize * pivot[1], drawSize, drawSize],
-      localTalon: { x: localX, y: localY },
-      talon,
-      // A held pebble follows Merlin's closing/reorienting grip continuously
-      // across discrete painted poses. Atlas inspection still uses raw talons.
-      grip: view.gripOffset ? { x: position.x + view.gripOffset.x, y: position.y + view.gripOffset.y } : talon
+      position: point(h00 * seg.p0.x + h10 * T * seg.v0.x + h01 * seg.p1.x + h11 * T * seg.v1.x,
+        h00 * seg.p0.y + h10 * T * seg.v0.y + h01 * seg.p1.y + h11 * T * seg.v1.y),
+      velocity: point((d00 * seg.p0.x + d10 * T * seg.v0.x + d01 * seg.p1.x + d11 * T * seg.v1.x) / T,
+        (d00 * seg.p0.y + d10 * T * seg.v0.y + d01 * seg.p1.y + d11 * T * seg.v1.y) / T)
     };
   }
 
-  // The atlas inspector and game can share the exact crop, body pivot and
-  // mirror/bank transform. No state or animation loop is created by this helper.
-  function drawSprite(context, image, view, options = {}) {
-    const geometry = spriteGeometry(view, options.size || 136, options.atlas);
-    const position = view.position || point(0, 0);
-    context.save(); context.translate(position.x, position.y); context.rotate(view.bank || 0);
-    context.scale(view.mirror ? -1 : 1, 1);
-    const deltaX = geometry.grip.x - geometry.talon.x, deltaY = geometry.grip.y - geometry.talon.y;
-    if (view.carrying && !view.reducedMotion && Math.hypot(deltaX, deltaY) > .5) {
-      // Smooth the painted foot anchor between distinct authored leg poses.
-      // The new extension/retraction artwork supplies the actual anatomy;
-      // this small interpolation keeps a held pebble continuous at transitions.
-      // Shared vertices prevent the alpha seams caused by independent strips;
-      // the outer mesh stays fixed so lower wings do not shear as a whole.
-      const angle = view.bank || 0, cosine = Math.cos(angle), sine = Math.sin(angle);
-      const dx = (deltaX * cosine + deltaY * sine) * (view.mirror ? -1 : 1);
-      const dy = -deltaX * sine + deltaY * cosine;
-      const [sx, sy, cell] = geometry.source;
-      const [left, top, drawSize] = geometry.destination;
-      const sourcePivot = -top / drawSize * cell;
-      context.drawImage(image, sx, sy, cell, sourcePivot, left, top, drawSize, -top);
-      const xs = [left, geometry.localTalon.x, left + drawSize];
-      const ys = [0, geometry.localTalon.y, top + drawSize];
-      const vertices = ys.map((y, row) => xs.map((x, column) => ({
-        source: { x, y }, target: { x: x + (row === 1 && column === 1 ? dx : 0), y: y + (row === 1 && column === 1 ? dy : 0) }
-      })));
-      function triangle(vertices) {
-        const source = vertices.map(vertex => vertex.source), target = vertices.map(vertex => vertex.target);
-        const area = (target[1].x - target[0].x) * (target[2].y - target[0].y) - (target[1].y - target[0].y) * (target[2].x - target[0].x);
-        // Expand clip edges by half a CSS pixel. Adjacent triangles overlap
-        // only at their shared seam, covering subpixel clip antialiasing.
-        const expanded = target.map((vertex, i) => {
-          const prev = target[(i + 2) % 3], next = target[(i + 1) % 3];
-          const edgeA = { x: vertex.x - prev.x, y: vertex.y - prev.y }, edgeB = { x: next.x - vertex.x, y: next.y - vertex.y };
-          const lengthA = Math.hypot(edgeA.x, edgeA.y), lengthB = Math.hypot(edgeB.x, edgeB.y), sign = area > 0 ? 1 : -1;
-          const nA = { x: sign * edgeA.y / lengthA, y: -sign * edgeA.x / lengthA }, nB = { x: sign * edgeB.y / lengthB, y: -sign * edgeB.x / lengthB };
-          const nx = nA.x + nB.x, ny = nA.y + nB.y, amount = .5 / Math.max(.001, nx * nA.x + ny * nA.y);
-          return { x: vertex.x + nx * amount, y: vertex.y + ny * amount };
-        });
-        const ux = source[1].x - source[0].x, uy = source[1].y - source[0].y, vx = source[2].x - source[0].x, vy = source[2].y - source[0].y;
-        const dux = target[1].x - target[0].x, duy = target[1].y - target[0].y, dvx = target[2].x - target[0].x, dvy = target[2].y - target[0].y;
-        const determinant = ux * vy - uy * vx;
-        const a = (dux * vy - dvx * uy) / determinant, b = (duy * vy - dvy * uy) / determinant;
-        const c = (dvx * ux - dux * vx) / determinant, d = (dvy * ux - duy * vx) / determinant;
-        const e = target[0].x - a * source[0].x - c * source[0].y, f = target[0].y - b * source[0].x - d * source[0].y;
-        context.save(); context.beginPath(); context.moveTo(expanded[0].x, expanded[0].y);
-        context.lineTo(expanded[1].x, expanded[1].y); context.lineTo(expanded[2].x, expanded[2].y); context.closePath(); context.clip();
-        context.transform(a, b, c, d, e, f);
-        context.drawImage(image, ...geometry.source, ...geometry.destination); context.restore();
-      }
-      for (let row = 0; row < 2; row++) for (let column = 0; column < 2; column++) {
-        const a = vertices[row][column], b = vertices[row][column + 1], c = vertices[row + 1][column], d = vertices[row + 1][column + 1];
-        triangle([a, b, d]); triangle([a, d, c]);
-      }
-    } else context.drawImage(image, ...geometry.source, ...geometry.destination);
+  function frameFor(atlas, clip, frame = 0) {
+    const ids = atlas.clips[clip] || atlas.clips.flap;
+    return atlas.frames[ids[clamp(Math.floor(frame), 0, ids.length - 1)]];
+  }
+
+  function drawScale(atlas, displayLength = DISPLAY_LENGTH) {
+    return displayLength / (atlas.bodyLength || 216);
+  }
+
+  // Where the talons (or a held pebble) sit for a pose, relative to the body
+  // pivot, after scale, facing and pitch. Drawing uses the same transform.
+  function gripOffset(atlas, view, scale) {
+    const f = frameFor(atlas, view.clip, view.frame);
+    const [cw, ch] = atlas.cell;
+    const lx = (f.grip[0] - atlas.pivot[0]) * cw * scale * (view.facing == null ? 1 : view.facing);
+    const ly = (f.grip[1] - atlas.pivot[1]) * ch * scale;
+    const a = view.pitch || 0, c = Math.cos(a), s = Math.sin(a);
+    return point(lx * c - ly * s, lx * s + ly * c);
+  }
+
+  function drawSprite(context, image, view, atlas, scale) {
+    const f = frameFor(atlas, view.clip, view.frame);
+    const [sx, sy, cw, ch] = f.source;
+    const w = cw * scale, h = ch * scale;
+    context.save();
+    context.globalAlpha = view.opacity == null ? 1 : view.opacity;
+    context.translate(view.position.x, view.position.y + (view.bob || 0));
+    context.rotate(view.pitch || 0);
+    // Passing through zero width reads as the bird turning on the spot.
+    const facing = view.turn == null ? (view.facing || 1) : view.turn;
+    context.scale(Math.sign(facing || 1) * Math.max(.06, Math.abs(facing)), 1);
+    context.drawImage(image, sx, sy, cw, ch, -atlas.pivot[0] * w, -atlas.pivot[1] * h, w, h);
     context.restore();
-    return geometry;
+    return f;
   }
 
   class FlightModel {
     constructor(options = {}) {
       this.rng = options.rng || Math.random;
-      this.atlas = { ...DEFAULT_ATLAS, ...(options.atlas || {}) };
-      this.size = options.size || this.atlas.displaySize || 136;
-      this.bounds = options.bounds || flightBounds(390, 844, this.size);
-      this.home = options.home || point(this.bounds.right, this.bounds.top, .65);
-      this.position = { ...this.home };
-      this.velocity = point(-40, 10, -.5);
-      this.duration = (options.durationMs || 25000) / 1000;
+      this.atlas = options.atlas;
+      if (!this.atlas || !this.atlas.clips) throw new Error('Merlin flight needs the v3 atlas.');
+      this.scale = drawScale(this.atlas, options.displayLength);
+      this.bounds = options.bounds || flightBounds(390, 844);
+      this.home = options.home || point(this.bounds.width - 48, 124);
+      this.pile = options.pile || point(clamp(this.home.x - 34, 30, this.bounds.width - 30), this.home.y + 64);
+      this.goal = options.goal || PEBBLE_GOAL;
+      this.idleLimit = (options.idleMs || 25000) / 1000;
       this.reduced = !!options.reducedMotion;
-      this.elapsed = 0; this.segmentTime = 0; this.routeIndex = 0;
-      this.state = this.reduced ? 'cruise' : 'takeoff';
-      this.token = null; this.carrying = null; this.pickups = 0;
-      this.contactTarget = null;
-      this.arrivalYaw = null; this.yaw = -Math.PI / 4; this.turning = false;
-      this.gripOffset = null;
-      this.deposited = null; this.done = false; this.finishReason = 'complete';
-      this.bank = 0; this.scale = .68; this.facingRight = false;
-      this.row = 1; this.rowAge = 0; this.turnStep = 0;
-      this.wingPhase = .125; this.glideRemaining = 0; this.nextGlideAt = 4.1;
-      this.pickupView = 1; this.recoveryTime = .6;
-      this.returnPoint = this.safeContactPoint(options.returnPoint || point(this.bounds.left + 24, this.bounds.bottom - 20, .65), 7);
-      if (this.reduced) {
-        this.position = inside(point(this.home.x, this.home.y + 34, .55), this.bounds);
-        this.scale = 1;
-      } else this.route('takeoff');
+      this.position = { ...this.home };
+      const outward = this.home.x > this.bounds.width / 2 ? -1 : 1;
+      this.velocity = point(outward * 150, 60);
+      this.facing = -1; this.turn = -1; this.pitch = 0;
+      this.phase = .1; this.hz = 3.4; this.gliding = false; this.nextGlideAt = 2.2; this.glideEnds = 0;
+      this.state = 'takeoff'; this.stateTime = 0; this.elapsed = 0; this.idle = 0;
+      this.segment = null; this.token = null; this.queued = null; this.carrying = null;
+      this.grip = null; this.falling = []; this.pileStones = [];
+      this.pickups = 0; this.delivered = 0; this.orbit = this.rng() < .5 ? 1 : -1;
+      this.pose = { clip: 'flap', frame: 0 };
+      this.opacity = 1; this.done = false; this.finishReason = 'complete';
+      if (this.reduced) { this.state = 'hover'; this.position = point(this.home.x - 40, this.home.y + 40); }
     }
 
-    route(state = 'cruise') {
-      this.state = state;
-      this.contactTarget = null;
-      this.arrivalYaw = null;
-      const b = this.bounds;
-      // A circuit alternates foreground, profile, far-side and return views.
-      // Small offsets vary the routes; corners have room for the swept bank.
-      const route = [[.22, .27, -.4], [.52, .18, -1], [.84, .44, -.35], [.72, .72, .65], [.24, .64, 1], [.16, .42, .3]];
-      const target = route[this.routeIndex++ % route.length];
-      const x = clamp(target[0] + (this.rng() - .5) * .12, .08, .92);
-      const y = clamp(target[1] + (this.rng() - .5) * .13, .08, .9);
-      const destination = point(mix(b.left, b.right, x), mix(b.top, b.bottom, y), target[2]);
-      const next = route[this.routeIndex % route.length];
-      const end = point(mix(b.left, b.right, next[0]) - destination.x, mix(b.top, b.bottom, next[1]) - destination.y, next[2] - destination.z);
-      this.setCurve(destination, state === 'takeoff' ? 145 : 150 + this.rng() * 34, end);
-    }
-
-    setCurve(destination, speed, end) {
-      this.curve = makeCurve(this.position, inside(destination, this.bounds), this.velocity, this.bounds, speed, end);
-      this.segmentTime = 0;
-    }
-
-    safeContactPoint(target, row) {
-      let horizontal = 0, below = 0;
-      const poses = this.atlas.clips ? Object.entries(this.atlas.clips).flatMap(([clip, frames]) => frames.map((_, frame) => ({clip, frame}))) : Array.from({length:this.atlas.columns}, (_,frame) => ({row,frame}));
-      for (const pose of poses) {
-        const offset = spriteGeometry({ ...pose, scale: 1.05 }, this.size, this.atlas).talon;
-        horizontal = Math.max(horizontal, Math.abs(offset.x)); below = Math.max(below, offset.y);
-      }
-      return inside(target, { ...this.bounds, left: this.bounds.left + horizontal, right: this.bounds.right - horizontal, top: this.bounds.top + below });
-    }
-
+    // A tap anywhere. The pebble drops a little way and rests where the
+    // player touched. One more may wait while Merlin is busy.
     drop(x, y) {
-      if (this.done || this.state === 'landing') return false;
+      if (this.done || this.state === 'landing' || this.pickups + (this.token ? 1 : 0) + (this.queued ? 1 : 0) >= this.goal) return false;
       const b = this.bounds;
-      // The floor is an air-play boundary, never the phone dock or map HUD.
-      const safe = this.safeContactPoint(inside(point(x, y, .6), { ...b, top: b.top + this.size * .3 }), 6);
-      this.token = { x: safe.x, y: safe.y, originY: safe.y, floorY: Math.min(safe.y + 48, b.bottom), age: 0, id: (this.tokenId || 0) + 1 };
-      this.tokenId = this.token.id;
-      if (!this.carrying) {
-        if (this.reduced) {
-          // Static pose + short opacity feedback honours reduced motion.
-          this.state = 'reach'; this.segmentTime = 0; this.reducedPickupAt = this.elapsed + .22;
-        } else this.chase();
+      const rest = point(clamp(x, 12, b.width - 12), clamp(y, 12, b.height - 12));
+      const pebble = { x: rest.x, y: rest.y - 34, restY: rest.y, vy: 0, age: 0 };
+      this.idle = 0;
+      if (this.token || this.carrying || this.state === 'reach' || this.state === 'grab' || this.state === 'lift') {
+        this.queued = pebble;
+        return true;
       }
+      this.token = pebble;
+      if (this.reduced) { this.state = 'grab'; this.stateTime = 0; this.position = this.contactPoint(); return true; }
+      this.setState('chase');
       return true;
     }
 
-    chase() {
-      if (!this.token) return this.route();
-      this.state = 'chase';
-      // Talons finish above the small falling pebble. The final tangent is
-      // shallow, with forward motion carried through the pickup.
-      const arrivalMirror = this.token.x > this.position.x;
-      const sign = arrivalMirror ? 1 : -1;
-      this.arrivalYaw = sign * 1.1;
-      if (this.atlas.clips) {
-        const gap = Math.abs(this.token.x - this.position.x);
-        this.pickupView = gap < this.size * .38 ? 0 : gap > this.size * .9 ? 2 : 1;
-        this.arrivalYaw = sign * [0.08, Math.PI / 4, Math.PI / 2][this.pickupView];
-        this.glideRemaining = 0;
-      }
-      this.contactTarget = point(this.token.x, this.token.floorY, .65);
-      const offset = spriteGeometry({ row: 6, clip: 'pickup-' + this.pickupView, frame: this.atlas.clips ? 5 : 2, scale: depthScale(.65), mirror: arrivalMirror }, this.size, this.atlas).talon;
-      const destination = point(this.token.x - offset.x, this.token.floorY - offset.y, .65);
-      this.setCurve(destination, 205, point(sign * 95, 26, .2));
-      // Leave enough curved approach for an opposing heading to turn before
-      // the last third of the path reaches forward with asymmetric talons.
-      this.curve.duration = Math.max(this.curve.duration, Math.abs(angleDelta(this.yaw, this.arrivalYaw)) / (3.4 * .59) + .18);
-      if (this.atlas.clips) this.curve.duration = Math.max(this.curve.duration, 1.4);
+    setState(state) { this.state = state; this.stateTime = 0; this.segment = null; }
+
+    // Where the body must be for the reach pose's talons to close on the pebble.
+    contactPoint(facing = this.approachFacing()) {
+      const offset = gripOffset(this.atlas, { clip: 'grab', frame: 0, facing, pitch: 0 }, this.scale);
+      return point(this.token.x - offset.x, this.token.restY - offset.y);
     }
 
-    pickup() {
-      if (!this.token) return;
-      this.carrying = { ...this.token, age: 0 };
-      this.gripOffset = { x: this.token.x - this.position.x, y: this.token.y - this.position.y };
-      if (this.reduced) this.gripOffset = spriteGeometry({ row: 7, frame: 2, scale: this.scale, mirror: this.facingRight }, this.size, this.atlas).talon;
-      this.token = null; this.pickups++;
-      this.recoveryTime = 0;
-      this.departureYaw = this.yaw;
-      this.state = 'carry'; this.segmentTime = 0;
-      this.contactTarget = { ...this.returnPoint };
-      if (!this.reduced) {
-        const arrivalMirror = this.returnPoint.x > this.position.x;
-        this.arrivalYaw = (arrivalMirror ? 1 : -1) * .85;
-        const offset = spriteGeometry({ row: 7, frame: 2, scale: depthScale(.7), mirror: arrivalMirror }, this.size, this.atlas).talon;
-        this.setCurve(point(this.returnPoint.x - offset.x, this.returnPoint.y - offset.y, .7), 145, point(arrivalMirror ? 70 : -70, 18, .5));
-        this.curve.duration = Math.max(this.curve.duration, Math.abs(angleDelta(this.yaw, this.arrivalYaw)) / (3.4 * .59) + .18);
-        if (this.atlas.clips) this.curve.duration += .6;
-      }
+    approachFacing() {
+      const dx = this.token.x - this.position.x;
+      return Math.abs(dx) < 24 ? (this.facing || 1) : Math.sign(dx);
+    }
+
+    releasePoint() {
+      const offset = gripOffset(this.atlas, { clip: 'flap', frame: 2, facing: this.facing, pitch: 0 }, this.scale);
+      return point(this.pile.x - offset.x, this.pile.y - 70 - offset.y);
     }
 
     land(reason = 'complete') {
       if (this.done || this.state === 'landing') return;
       this.finishReason = reason;
-      this.token = null; this.carrying = null;
-      this.contactTarget = null;
-      this.arrivalYaw = null; this.gripOffset = null;
-      this.state = 'landing';
+      this.token = null; this.queued = null;
+      if (this.carrying) { this.falling.push({ ...this.carrying, vy: 0 }); this.carrying = null; }
       if (this.reduced) { this.done = true; return; }
-      // The perch may be closer to the viewport edge than the flight area.
-      // A shrinking landing sprite reaches its measured resting position.
-      const expanded = { ...this.bounds, left: Math.min(this.bounds.left, this.home.x), right: Math.max(this.bounds.right, this.home.x), top: Math.min(this.bounds.top, this.home.y), bottom: Math.max(this.bounds.bottom, this.home.y) };
-      this.curve = makeCurve(this.position, this.home, this.velocity, expanded, 155, point(45, 34, .6));
-      this.curve.duration = clamp(this.curve.duration, .6, 3.2);
-      this.segmentTime = 0;
+      this.setState('landing');
+      this.landingPhase = 'seek';
+    }
+
+    // Seek with a speed limit and bounded acceleration. The result is always
+    // a smooth curve; no path ever reverses on the spot.
+    steer(target, speed, dt, arrive = 0) {
+      const to = point(target.x - this.position.x, target.y - this.position.y);
+      const dist = length(to) || 1;
+      const wanted = arrive && dist < arrive ? speed * dist / arrive : speed;
+      const desired = point(to.x / dist * wanted, to.y / dist * wanted);
+      const change = point(desired.x - this.velocity.x, desired.y - this.velocity.y);
+      const limit = ACCEL * dt, size = length(change);
+      if (size > limit) { change.x *= limit / size; change.y *= limit / size; }
+      this.velocity.x += change.x; this.velocity.y += change.y;
+      this.position.x += this.velocity.x * dt; this.position.y += this.velocity.y * dt;
+      return dist;
+    }
+
+    cruiseTarget() {
+      // A lazy loop around the middle of the screen, with a gentle rise and
+      // fall. The target runs ahead of Merlin, so he banks round it.
+      const b = this.bounds;
+      const cx = (b.left + b.right) / 2, cy = mix(b.top, b.bottom, .42);
+      const rx = (b.right - b.left) * .42, ry = (b.bottom - b.top) * .26;
+      const angle = Math.atan2((this.position.y - cy) / ry, (this.position.x - cx) / rx) + this.orbit * .75;
+      return point(cx + Math.cos(angle) * rx, cy + Math.sin(angle) * ry + Math.sin(this.elapsed * .9) * 18);
+    }
+
+    follow(dt) {
+      this.segment.t += dt;
+      const sample = hermite(this.segment, this.segment.t);
+      this.position = sample.position; this.velocity = sample.velocity;
+      return this.segment.t >= this.segment.T;
+    }
+
+    beginSegment(target, endVelocity, speed, min = .4, max = 1.3) {
+      const gap = Math.hypot(target.x - this.position.x, target.y - this.position.y);
+      const T = clamp(gap / speed * 1.25, min, max);
+      this.segment = { p0: { ...this.position }, v0: { ...this.velocity }, p1: target, v1: endVelocity, T, t: 0 };
     }
 
     step(delta) {
       if (this.done) return this.snapshot();
       const dt = clamp(delta || 0, 0, .05);
-      this.elapsed += dt; this.rowAge += dt;
-      if (this.carrying) this.recoveryTime += dt;
-      // Integrate phase, rather than multiplying wall time by a changing
-      // cadence: acceleration must never jump backwards halfway through a beat.
-      if (this.glideRemaining > 0 && this.state === 'cruise') {
-        this.glideRemaining = Math.max(0, this.glideRemaining - dt); this.wingPhase = this.atlas.clips ? .25 : .625;
-      } else {
-        this.glideRemaining = 0;
-        const hz = this.atlas.clips ? clamp(2.8 + Math.hypot(this.velocity.x, this.velocity.y) / 600, 2.9, 3.4) : this.state === 'reach' ? 3.6 : clamp(3.6 + Math.hypot(this.velocity.x, this.velocity.y) / 220, 3.8, 4.8);
-        this.wingPhase = (this.wingPhase + dt * hz) % 1;
-        const glidePhase = this.atlas.clips ? .25 : .625;
-        if (this.state === 'cruise' && this.elapsed >= this.nextGlideAt && this.wingPhase >= glidePhase && this.wingPhase < glidePhase + .125) {
-          this.glideRemaining = this.atlas.clips ? 1.25 : .34; this.nextGlideAt = this.elapsed + (this.atlas.clips ? 3.8 : 4.6); this.wingPhase = glidePhase;
+      this.elapsed += dt; this.stateTime += dt; this.idle += dt;
+      this.updatePebbles(dt);
+      if (this.idle >= this.idleLimit && this.state !== 'landing' && !this.carrying && !this.token) this.land('idle');
+      if (this.reduced) return this.stepReduced(dt);
+
+      const b = this.bounds;
+      switch (this.state) {
+        case 'takeoff': {
+          // Drop off the bough and beat hard out over the screen.
+          this.steer(point(mix(b.left, b.right, .45), mix(b.top, b.bottom, .3)), CRUISE_SPEED + 30, dt);
+          if (this.stateTime > .9) this.setState('cruise');
+          break;
+        }
+        case 'cruise': this.steer(this.cruiseTarget(), CRUISE_SPEED, dt); break;
+        case 'chase': {
+          let facing = this.approachFacing();
+          const contact = this.contactPoint(facing);
+          // Line up a little behind and above, then commit to the swoop only
+          // once flying towards the pebble.
+          const setup = point(contact.x - facing * 70, contact.y - 46);
+          const toward = (contact.x - this.position.x) * this.velocity.x + (contact.y - this.position.y) * this.velocity.y;
+          const dist = this.steer(Math.hypot(setup.x - this.position.x, setup.y - this.position.y) > 60 ? setup : contact, CHASE_SPEED, dt);
+          const lined = dist < 190 && toward > 0 && Math.sign(this.velocity.x || facing) === facing;
+          if ((lined || this.stateTime > 3.5) && this.token.age > .12) {
+            if (!lined) facing = Math.sign(this.velocity.x) || facing;
+            this.setState('reach');
+            this.reachFacing = facing;
+            this.beginSegment(this.contactPoint(facing), point(facing * 90, 12), 240, .42, .9);
+          }
+          break;
+        }
+        case 'reach': {
+          // The committed swoop. Its Hermite end is the exact contact point.
+          this.segment.p1 = this.contactPoint(this.reachFacing);
+          if (this.follow(dt)) {
+            this.carrying = { x: this.token.x, y: this.token.restY };
+            this.token = null; this.pickups++;
+            this.setState('grab');
+          }
+          break;
+        }
+        case 'grab': {
+          // Talons close; momentum carries him on slowly.
+          this.velocity = point(this.reachFacing * 70, -10);
+          this.position.x += this.velocity.x * dt; this.position.y += this.velocity.y * dt;
+          if (this.stateTime > .16) { this.setState('lift'); this.velocity = point(this.reachFacing * 120, -150); }
+          break;
+        }
+        case 'lift': {
+          this.position.x += this.velocity.x * dt; this.position.y += this.velocity.y * dt;
+          this.velocity.x = approach(this.velocity.x, this.reachFacing * 200, 3, dt);
+          if (this.stateTime > .26) this.setState('carry');
+          break;
+        }
+        case 'carry': {
+          const release = this.releasePoint();
+          const dist = this.steer(release, CARRY_SPEED, dt, 90);
+          if (dist < 26 || (this.stateTime > 5)) {
+            this.falling.push({ ...this.carrying, vy: this.velocity.y * .3 });
+            this.carrying = null; this.delivered++;
+            if (this.pickups >= this.goal) this.land('complete');
+            else if (this.queued) { this.token = this.queued; this.queued = null; this.setState('chase'); }
+            else this.setState('cruise');
+          }
+          break;
+        }
+        case 'landing': {
+          const perch = this.home;
+          if (this.landingPhase === 'seek') {
+            // Come round to arrive from the left and below, like settling
+            // onto a bough, then commit to the flare.
+            const side = perch.x > this.bounds.width / 2 ? -1 : 1;
+            const setup = point(perch.x + side * 120, perch.y + 50);
+            const dist = this.steer(setup, CRUISE_SPEED, dt, 60);
+            if (dist < 70 || this.stateTime > 4) {
+              this.landingPhase = 'flare';
+              this.beginSegment(point(perch.x, perch.y), point(0, 0), 170, .7, 1.1);
+            }
+          } else if (this.follow(dt)) {
+            this.opacity = Math.max(0, this.opacity - dt / .14);
+            this.velocity = point(0, 0);
+            if (this.opacity <= 0) this.done = true;
+          }
+          break;
         }
       }
-      if (this.token) {
-        this.token.age += dt;
-        this.token.y = this.reduced ? this.token.floorY : Math.min(this.token.floorY, this.token.originY + 130 * this.token.age * this.token.age);
+      if (this.state === 'cruise' || this.state === 'takeoff' || this.state === 'carry') {
+        this.position.x = clamp(this.position.x, -20, b.width + 20);
+        this.position.y = clamp(this.position.y, 24, b.height - 40);
       }
-      if (this.deposited) {
-        this.deposited.age += dt;
-        if (this.deposited.age > .65) this.deposited = null;
-      }
-      if (this.elapsed >= this.duration && this.state !== 'landing') this.land();
-      if (this.reduced) {
-        if (this.state === 'reach' && this.elapsed >= this.reducedPickupAt) this.pickup();
-        if (this.state === 'carry' && (this.segmentTime += dt) > .7) {
-          this.deposited = { ...this.returnPoint, age: 0 };
-          this.carrying = null; this.state = 'cruise';
-          if (this.token) { this.state = 'reach'; this.reducedPickupAt = this.elapsed + .22; }
-        }
-        this.row = this.state === 'carry' ? 7 : this.state === 'reach' ? 6 : 1;
-        return this.snapshot();
-      }
-      this.segmentTime += dt;
-      const progress = clamp(this.segmentTime / this.curve.duration, 0, 1);
-      const sample = curveSample(this.curve, this.state === 'landing' ? ease(progress) : progress);
-      const nextVelocity = normal(sample.tangent);
-      const speed = this.curve.length / this.curve.duration;
-      const vx = nextVelocity.x * speed, vy = nextVelocity.y * speed;
-      const headingDelta = Math.atan2(this.velocity.x * vy - this.velocity.y * vx, this.velocity.x * vx + this.velocity.y * vy);
-      this.bank = mix(this.bank, clamp(headingDelta / Math.max(dt, .016) * .095, -.3, .3), 1 - Math.exp(-dt * 7));
-      this.velocity = point(vx, vy, nextVelocity.z * speed);
-      this.position = sample.position;
-      // Yaw is continuous. A reversal travels through a front or rear view;
-      // it can never mirror a profile, rising pose or reaching talons in place.
-      // Finish the authored grip recovery in its approach view before banking
-      // home; a quarter-view pickup must never mirror during a front-view turn.
-      const targetYaw = this.atlas.clips && this.carrying && this.recoveryTime < .6 ? this.departureYaw : this.arrivalYaw == null ? Math.atan2(vx, this.velocity.z * 170) : this.arrivalYaw;
-      this.yaw += clamp(angleDelta(this.yaw, targetYaw), -3.4 * dt, 3.4 * dt);
-      this.turning = Math.abs(angleDelta(this.yaw, targetYaw)) > .12;
-      const previousMirror = this.facingRight;
-      if (Math.sin(this.yaw) > .1) this.facingRight = true;
-      else if (Math.sin(this.yaw) < -.1) this.facingRight = false;
-      if (this.state === 'chase' && (this.atlas.clips ? this.curve.duration - this.segmentTime < .6 : progress > .64) && !this.turning) this.state = 'reach';
-      let desiredRow = yawRow(this.yaw);
-      if (!this.turning && this.state === 'reach') desiredRow = 6;
-      else if (!this.turning && this.state === 'carry') desiredRow = 7;
-      else if (!this.turning && Math.abs(Math.sin(this.yaw)) > .58) {
-        const pitched = viewForVelocity(this.velocity);
-        if (pitched === 5 || pitched === 6) desiredRow = pitched;
-      }
-      if (previousMirror !== this.facingRight) {
-        this.row = yawRow(this.yaw) < 2 ? 0 : 4; this.rowAge = 0;
-      } else if (desiredRow !== this.row && this.rowAge > .09) {
-        this.row = desiredRow; this.rowAge = 0;
-      }
-      const atDepth = depthScale(this.position.z);
-      const desiredScale = this.state === 'takeoff' ? mix(.68, atDepth, ease(progress)) : this.state === 'landing' ? mix(atDepth, .64, ease(progress)) : atDepth;
-      this.scale = mix(this.scale, desiredScale, 1 - Math.exp(-dt * 10));
-      const wing = animationPose(this);
-      if (this.carrying && this.gripOffset) {
-        const painted = spriteGeometry({ row: this.row, ...wing, scale: this.scale, bank: this.bank, mirror: this.facingRight }, this.size, this.atlas).talon;
-        const dx = painted.x - this.gripOffset.x, dy = painted.y - this.gripOffset.y;
-        const length = Math.hypot(dx, dy);
-        const amount = length ? Math.min(1, this.size * .72 * dt / length) : 1;
-        this.gripOffset.x += dx * amount; this.gripOffset.y += dy * amount;
-      }
-      if (this.contactTarget && (this.state === 'reach' || this.state === 'carry')) {
-        // The final approach uses the actual displayed frame, scale and bank.
-        // Its talons touch the pebble before it becomes attached, even with
-        // asymmetric per-frame anchors. Ease the small endpoint correction in
-        // over the approach instead of snapping the sprite on the pickup frame.
-        const strength = ease(clamp((progress - .64) / .36, 0, 1));
-        this.bank *= 1 - strength;
-        const offset = this.carrying && this.gripOffset || spriteGeometry({ row: this.row, ...wing, scale: this.scale, bank: this.bank, mirror: this.facingRight }, this.size, this.atlas).talon;
-        const endpoint = this.curve.points[3];
-        this.position.x += (this.contactTarget.x - offset.x - endpoint.x) * strength;
-        this.position.y += (this.contactTarget.y - offset.y - endpoint.y) * strength;
-        this.position = inside(this.position, this.bounds);
-      }
-      if (progress >= 1) {
-        if (this.state === 'landing') this.done = true;
-        else if (this.state === 'chase' || this.state === 'reach') this.pickup();
-        else if (this.state === 'carry') {
-          this.deposited = { ...this.returnPoint, age: 0 }; this.carrying = null;
-          if (this.token) this.chase(); else this.route();
-        } else this.route();
-      }
+      this.animate(dt);
       return this.snapshot();
     }
 
+    stepReduced(dt) {
+      // Reduced motion: no travel across the screen. A still pose appears by
+      // the pebble, then the pebble joins the pile.
+      if (this.state === 'grab' && this.stateTime > .5) {
+        this.pickups++; this.delivered++;
+        this.pileStones.push({ ...this.pile, index: this.pileStones.length });
+        this.token = null;
+        if (this.pickups >= this.goal) this.done = true;
+        else if (this.queued) { this.token = this.queued; this.queued = null; this.stateTime = 0; this.position = this.contactPoint(); }
+        else { this.state = 'hover'; this.position = point(this.home.x - 40, this.home.y + 40); }
+      }
+      this.pose = this.state === 'grab' ? { clip: 'grab', frame: 0 } : { clip: 'flap', frame: 2 };
+      this.facing = this.turn = -1; this.pitch = 0;
+      return this.snapshot();
+    }
+
+    updatePebbles(dt) {
+      if (this.token) {
+        this.token.age += dt;
+        this.token.vy += FALL * dt; this.token.y = Math.min(this.token.restY, this.token.y + this.token.vy * dt);
+      }
+      if (this.queued) { this.queued.age = (this.queued.age || 0) + dt; this.queued.vy += FALL * dt; this.queued.y = Math.min(this.queued.restY, this.queued.y + this.queued.vy * dt); }
+      for (const stone of this.falling) {
+        stone.vy += FALL * dt; stone.y += stone.vy * dt;
+        const top = this.pile.y - Math.min(this.pileStones.length, 3) * 3.2;
+        if (stone.y >= top) { stone.landed = true; this.pileStones.push({ x: this.pile.x + [0, 7, -6, 2][this.pileStones.length % 4], y: top, index: this.pileStones.length }); }
+      }
+      this.falling = this.falling.filter(stone => !stone.landed);
+    }
+
+    animate(dt) {
+      const v = this.velocity, speed = length(v);
+      // Facing follows horizontal travel, with a dead band so a pass straight
+      // up or down never flickers. The turn eases through zero width.
+      if (this.state === 'reach' || this.state === 'grab' || this.state === 'lift') this.facing = this.reachFacing;
+      else if (this.state === 'landing' && this.landingPhase === 'flare' && this.segment && this.segment.t > this.segment.T * .55) this.facing = -1;
+      else if (Math.abs(v.x) > 45) this.facing = Math.sign(v.x);
+      this.turn = clamp(this.turn + Math.sign(this.facing - this.turn) * dt / .11, -1, 1);
+      if (Math.abs(this.turn - this.facing) < .02) this.turn = this.facing;
+
+      const special = this.state === 'reach' || this.state === 'grab' || this.state === 'lift' || (this.state === 'landing' && this.landingPhase === 'flare');
+      const climb = clamp(-v.y / 220, -1, 1);
+      const pitchTarget = special ? 0 : clamp(Math.atan2(v.y, Math.max(Math.abs(v.x), 70)) * .75, -.42, .45);
+      this.pitch = approach(this.pitch, pitchTarget * this.facing, special ? 14 : 7, dt);
+
+      // Wing-beat speed rises with the climb and the load, falls in a dive.
+      let hz = 2.5 + Math.max(0, climb) * 1.3 + (this.carrying ? .5 : 0) + (this.state === 'takeoff' ? 1 : 0) + (this.state === 'chase' ? .5 : 0);
+      if (speed < 90) hz += .8;
+      this.hz = approach(this.hz, hz, 5, dt);
+      // Glides hold the level-wing frame of the beat itself, so a glide
+      // starts and ends without any change of drawing.
+      const canGlide = this.state === 'cruise' && climb < .15;
+      if (this.gliding && (!canGlide || this.elapsed > this.glideEnds)) { this.gliding = false; this.nextGlideAt = this.elapsed + 2 + this.rng() * 2.2; }
+      if (!this.gliding) {
+        const before = this.phase;
+        this.phase = (this.phase + dt * this.hz) % 1;
+        const level = 2.5 / 8;
+        const crossed = before < level && this.phase >= level;
+        if (canGlide && crossed && (this.elapsed > this.nextGlideAt || v.y > 90)) {
+          this.gliding = true; this.phase = level; this.glideEnds = this.elapsed + .7 + this.rng() * .7;
+        }
+      }
+      if (this.state === 'reach') {
+        this.pose = { clip: this.segment.T - this.segment.t < .32 ? 'reach' : 'flap', frame: this.segment.T - this.segment.t < .32 ? 0 : Math.floor(this.phase * 8) };
+      } else if (this.state === 'grab') this.pose = { clip: 'grab', frame: 0 };
+      else if (this.state === 'lift') this.pose = { clip: 'lift', frame: 0 };
+      else if (this.state === 'landing' && this.landingPhase === 'flare' && this.segment.T - this.segment.t < .45) this.pose = { clip: 'flare', frame: 0 };
+      else this.pose = { clip: 'flap', frame: this.gliding ? 2 : Math.floor(this.phase * 8) % 8 };
+
+      // A held pebble follows the painted talons, easing between poses.
+      if (this.carrying) {
+        const offset = gripOffset(this.atlas, { ...this.pose, facing: this.turn, pitch: this.pitch }, this.scale);
+        const target = point(this.position.x + offset.x, this.position.y + offset.y + this.bob());
+        if (this.state === 'grab') this.grip = null;
+        const from = this.grip || target;
+        this.grip = point(approach(from.x, target.x, 18, dt), approach(from.y, target.y, 18, dt));
+        this.carrying.x = this.grip.x; this.carrying.y = this.grip.y;
+      } else this.grip = null;
+    }
+
+    bob() {
+      // The body lifts a touch on each downstroke.
+      return this.gliding || this.pose.clip !== 'flap' ? 0 : Math.sin(this.phase * TAU) * 1.6;
+    }
+
     snapshot() {
-      const pose = animationPose(this);
-      return { position: { ...this.position }, velocity: { ...this.velocity }, state: this.state, row: this.row, ...pose, bank: this.bank, scale: this.scale, mirror: this.facingRight, yaw: this.yaw, turning: this.turning, gripOffset: this.gripOffset && { ...this.gripOffset }, token: this.token && { ...this.token }, carrying: !!this.carrying, deposited: this.deposited && { ...this.deposited }, pickups: this.pickups, elapsed: this.elapsed, done: this.done, reducedMotion: this.reduced };
+      return {
+        position: { ...this.position }, velocity: { ...this.velocity }, state: this.state,
+        clip: this.pose.clip, frame: this.pose.frame, facing: this.facing, turn: this.turn, pitch: this.pitch,
+        bob: this.bob(), opacity: this.opacity, gliding: this.gliding,
+        token: this.token && { ...this.token }, queued: this.queued && { ...this.queued },
+        carrying: this.carrying && { ...this.carrying },
+        // The painted grab and lift poses already hold a pebble.
+        paintedPebble: this.pose.clip === 'grab' || this.pose.clip === 'lift',
+        falling: this.falling.map(stone => ({ ...stone })), pile: this.pileStones.map(stone => ({ ...stone })),
+        pickups: this.pickups, delivered: this.delivered, goal: this.goal,
+        elapsed: this.elapsed, done: this.done, reducedMotion: this.reduced
+      };
     }
   }
 
@@ -495,28 +412,15 @@
     return promise;
   }
 
-  function isInteractiveTarget(target, boundary, env) {
-    for (let el = target; el && el !== boundary; el = el.parentElement) {
-      if (el.matches && el.matches('button,a,input,select,textarea,summary,label,[role="button"],[role="link"],[role="slider"],[role="dialog"],[contenteditable="true"],[tabindex],[onclick],[data-action],[data-screen],[data-game-route],canvas,.maplibregl-map,.mapboxgl-map,.leaflet-container,[data-merlin-flight-ignore]')) return true;
-      if (typeof el.onclick === 'function' || typeof el.onpointerdown === 'function' || typeof el.ontouchstart === 'function') return true;
-      if (env && env.getComputedStyle && el !== env.document.body) {
-        const style = env.getComputedStyle(el);
-        if ((/auto|scroll/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 2) || (/auto|scroll/.test(style.overflowX) && el.scrollWidth > el.clientWidth + 2)) return true;
-      }
-    }
-    return false;
-  }
-
   function create(options = {}) {
     const env = options.environment || (typeof window !== 'undefined' ? window : null);
     if (!env || !env.document) throw new Error('Merlin flight requires a browser.');
     const doc = env.document;
-    let active = false, loading = null, generation = 0, raf = 0, lastTime = null, startedAt = null;
-    let layer, canvas, ctx, pad, status, finishButton, touchField, model, atlasImage, bounds, padBox;
-    let lastHolesAt = -Infinity, holesSignature = '', originX = 0, originY = 0;
-    let tookOff = false, disposed = false, cleanups = [], previousFocus = null, pickupCount = 0;
-    const config = { ...DEFAULT_ATLAS, ...(options.atlas || {}) };
-    const size = options.size || config.displaySize || 136;
+    let active = false, loading = null, generation = 0, raf = 0, lastTime = null, lastInputAt = null;
+    let layer, canvas, ctx, pad, status, finishButton, model, atlasImage, bounds;
+    let originX = 0, originY = 0;
+    let tookOff = false, disposed = false, cleanups = [], previousFocus = null, shownPickups = 0;
+    const atlas = options.atlas;
     const media = env.matchMedia ? env.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
     const listen = (target, type, callback, settings) => {
       target.addEventListener(type, callback, settings);
@@ -525,17 +429,19 @@
     const call = (name, data) => { if (typeof options[name] === 'function') options[name](data); };
     const hostRect = () => options.getHostRect ? options.getHostRect() : options.host && options.host.getBoundingClientRect ? options.host.getBoundingClientRect() : { left: env.innerWidth - 96, top: 80, width: 88, height: 88 };
     const allowed = () => !doc.hidden && (!options.shouldContinue || options.shouldContinue());
+    const idleMs = options.durationMs || 25000;
+    const goal = options.pebbleGoal || PEBBLE_GOAL;
 
     function teardown(reason) {
       if (!active && !layer) return;
       const wasActive = active;
       active = false; generation++; loading = null;
       if (raf) env.cancelAnimationFrame(raf);
-      raf = 0; lastTime = null; startedAt = null;
+      raf = 0; lastTime = null; lastInputAt = null;
       cleanups.splice(0).forEach(remove => remove());
       const focusWasInside = layer && layer.contains(doc.activeElement);
       if (layer) layer.remove();
-      layer = canvas = ctx = pad = status = finishButton = touchField = null;
+      layer = canvas = ctx = pad = status = finishButton = null;
       if (tookOff) { tookOff = false; call('onRestore', { reason }); }
       if (focusWasInside && previousFocus && previousFocus.isConnected && previousFocus.focus) previousFocus.focus({ preventScroll: true });
       previousFocus = null;
@@ -547,14 +453,16 @@
       if (settings.immediate || !model || !layer || !allowed() || model.reduced) return teardown(reason);
       model.home = measuredHome();
       model.land(reason);
-      if (pad) { pad.classList.add('is-finishing'); pad.setAttribute('aria-disabled', 'true'); }
+      if (pad) pad.classList.add('is-finishing');
       if (finishButton) finishButton.disabled = true;
-      if (status) status.textContent = 'Merlin is returning to his perch';
+      setStatus('Merlin is flying home');
     }
 
+    // The flight body pivot sits on the perched Merlin's body, so he leaves
+    // and returns at the exact size and spot he sits on every screen.
     function measuredHome() {
       const rect = hostRect();
-      return point(clamp(rect.left + rect.width / 2 - originX, 24, bounds.width - 24), clamp(rect.top + rect.height / 2 - originY, 24, bounds.height - 24), .65);
+      return point(clamp(rect.left + rect.width * .5 - originX, 24, bounds.width - 24), clamp(rect.top + rect.height * .52 - originY, 24, bounds.height - 24));
     }
 
     function bindLifecycle() {
@@ -578,39 +486,19 @@
       }
     }
 
-    function refreshTouchHoles() {
-      if (!touchField || !doc.querySelectorAll) return;
-      const obstacles = [];
-      // Actual native controls remain native controls. Subtract their boxes
-      // from the hit surface instead of replaying synthetic clicks at them.
-      const selector = 'button,a,input,select,textarea,summary,[onclick],[role="button"],[role="link"],[role="dialog"],[data-action],[data-game-route],[data-merlin-flight-ignore],.map-area-birds-panel,.map-bird-overlay';
-      doc.querySelectorAll(selector).forEach(element => {
-        if (layer.contains(element) || !element.getClientRects().length) return;
-        const style = env.getComputedStyle(element);
-        if (style.visibility === 'hidden' || style.display === 'none' || style.pointerEvents === 'none') return;
-        const rect = element.getBoundingClientRect();
-        const box = { left: rect.left - padBox.left - originX - 4, right: rect.right - padBox.left - originX + 4, top: rect.top - padBox.top - originY - 4, bottom: rect.bottom - padBox.top - originY + 4 };
-        if (box.right > 0 && box.bottom > 0 && box.left < padBox.width && box.top < padBox.height) obstacles.push(box);
-      });
-      const spaces = openRectangles({ left: 0, top: 0, right: padBox.width, bottom: padBox.height - 62 }, obstacles);
-      const signature = JSON.stringify(spaces.map(rect => [rect.left, rect.top, rect.right, rect.bottom].map(Math.round)));
-      if (signature === holesSignature) return;
-      holesSignature = signature;
-      touchField.replaceChildren();
-      spaces.forEach(rect => {
-        const tile = doc.createElement('span'); tile.className = 'merlin-flight-hit';
-        Object.assign(tile.style, { left: rect.left + 'px', top: rect.top + 'px', width: rect.right - rect.left + 'px', height: rect.bottom - rect.top + 'px' });
-        touchField.appendChild(tile);
-      });
-    }
+    function setStatus(text) { if (status && status.textContent !== text) status.textContent = text; }
 
     function prepare() {
       const viewport = env.visualViewport;
       const width = viewport ? viewport.width : env.innerWidth, height = viewport ? viewport.height : env.innerHeight;
       originX = viewport && viewport.offsetLeft || 0; originY = viewport && viewport.offsetTop || 0;
-      bounds = flightBounds(width, height, size, options.topInset || 108, options.bottomInset || 112);
+      bounds = flightBounds(width, height, options.topInset || 72, options.bottomInset || 96);
       layer = doc.createElement('div'); layer.className = 'merlin-flight-layer'; layer.dataset.merlinFlight = 'active';
       layer.style.width = width + 'px'; layer.style.height = height + 'px'; layer.style.left = originX + 'px'; layer.style.top = originY + 'px';
+      // The whole screen is the play sky. Every tap drops a pebble; nothing
+      // underneath can be pressed by mistake while Merlin plays.
+      pad = doc.createElement('section'); pad.className = 'merlin-flight-sky'; pad.setAttribute('aria-label', "Merlin's play sky");
+      pad.tabIndex = 0; pad.setAttribute('aria-description', 'Tap anywhere to drop a pebble. Merlin fetches four, then flies home. Enter drops a pebble in the middle. Escape finishes.');
       canvas = doc.createElement('canvas'); canvas.className = 'merlin-flight-canvas'; canvas.setAttribute('aria-hidden', 'true');
       const dpr = Math.min(env.devicePixelRatio || 1, 2);
       canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
@@ -619,17 +507,10 @@
       if (!ctx) throw new Error('Merlin flight needs a canvas context.');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.imageSmoothingEnabled = true;
-      pad = doc.createElement('section'); pad.className = 'merlin-flight-sky'; pad.setAttribute('aria-label', "Merlin's play sky");
-      pad.tabIndex = 0; pad.setAttribute('aria-description', 'Tap an open spot to drop a pebble. Keyboard: Enter drops a pebble in the centre. Escape finishes.');
-      const padTop = height < 480 ? Math.max(72, height * .23) : Math.max(150, Math.min(height * .27, height - 235));
-      const padHeight = Math.max(70, Math.min(340, height - padTop - 112));
-      const padWidth = Math.min(width - 24, 620);
-      padBox = { left: (width - padWidth) / 2, top: padTop, width: padWidth, height: padHeight };
-      Object.assign(pad.style, { left: (width - padWidth) / 2 + 'px', top: padTop + 'px', width: padWidth + 'px', height: padHeight + 'px' });
-      touchField = doc.createElement('div'); touchField.className = 'merlin-flight-touchfield'; pad.appendChild(touchField);
-      const skyLabel = doc.createElement('span'); skyLabel.className = 'merlin-flight-sky-label'; skyLabel.textContent = 'PLAY SKY'; pad.appendChild(skyLabel);
+      if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'high';
       const toolbar = doc.createElement('div'); toolbar.className = 'merlin-flight-toolbar';
-      status = doc.createElement('span'); status.className = 'merlin-flight-status'; status.setAttribute('aria-live', 'polite'); status.textContent = 'Tap open space · Merlin will fetch';
+      status = doc.createElement('span'); status.className = 'merlin-flight-status'; status.setAttribute('aria-live', 'polite');
+      status.textContent = 'Tap anywhere to drop a pebble';
       finishButton = doc.createElement('button'); finishButton.type = 'button'; finishButton.className = 'merlin-flight-finish'; finishButton.textContent = 'Finish';
       const actions = doc.createElement('div'); actions.className = 'merlin-flight-actions';
       toolbar.appendChild(status); toolbar.appendChild(actions);
@@ -639,40 +520,35 @@
         listen(careButton, 'click', event => { event.stopPropagation(); call('onCare'); });
         actions.appendChild(careButton);
       }
-      actions.appendChild(finishButton); pad.appendChild(toolbar);
-      layer.appendChild(pad); layer.appendChild(canvas); doc.body.appendChild(layer);
+      actions.appendChild(finishButton);
+      layer.appendChild(pad); layer.appendChild(canvas); layer.appendChild(toolbar); doc.body.appendChild(layer);
       previousFocus = doc.activeElement;
-      const returnPoint = inside(point((width - padWidth) / 2 + 58, padTop + padHeight - 72, .7), bounds);
-      model = new FlightModel({ bounds, home: measuredHome(), returnPoint, size, atlas: config, durationMs: options.durationMs || 25000, rng: options.rng, reducedMotion: media.matches });
+      model = new FlightModel({ bounds, home: measuredHome(), atlas, rng: options.rng, reducedMotion: media.matches, idleMs, goal, displayLength: options.displayLength });
       if (media.matches) layer.classList.add('is-reduced-motion');
-      holesSignature = ''; lastHolesAt = -Infinity; refreshTouchHoles();
 
       let down = null;
+      const swallow = event => { event.stopPropagation(); if (event.cancelable && event.preventDefault) event.preventDefault(); };
       listen(pad, 'pointerdown', event => {
-        if (isInteractiveTarget(event.target, pad, env)) return;
+        swallow(event);
         if (event.button != null && event.button !== 0) return;
         down = { x: event.clientX, y: event.clientY, id: event.pointerId };
-        event.stopPropagation();
       });
       listen(pad, 'pointerup', event => {
-        if (isInteractiveTarget(event.target, pad, env)) return;
-        event.stopPropagation();
-        if (!down || event.pointerId !== down.id || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 12) { down = null; return; }
+        swallow(event);
+        if (!down || event.pointerId !== down.id || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 16) { down = null; return; }
         down = null;
         drop(event.clientX - originX, event.clientY - originY);
       });
       listen(pad, 'pointercancel', () => { down = null; });
-      // Capture is confined to this explicit play surface; no document-level
-      // pointer/touch listener steals a menu, scroll or map gesture.
-      ['touchstart', 'touchmove', 'touchend', 'click'].forEach(type => listen(pad, type, event => {
-        if (!isInteractiveTarget(event.target, pad, env)) event.stopPropagation();
-      }, { passive: true }));
-      listen(pad, 'pointermove', event => { if (!isInteractiveTarget(event.target, pad, env)) event.stopPropagation(); });
+      ['pointermove', 'click', 'contextmenu'].forEach(type => listen(pad, type, swallow));
+      ['touchstart', 'touchmove', 'touchend'].forEach(type => listen(pad, type, event => event.stopPropagation(), { passive: true }));
+      listen(toolbar, 'pointerdown', event => event.stopPropagation());
+      listen(toolbar, 'click', event => event.stopPropagation());
       listen(finishButton, 'click', event => { event.stopPropagation(); stop('finished'); });
       listen(pad, 'keydown', event => {
         if (event.target === pad && (event.key === 'Enter' || event.key === ' ')) {
           event.preventDefault(); event.stopPropagation();
-          drop(padBox.left + padBox.width / 2, padBox.top + Math.max(12, (padBox.height - 62) / 2));
+          drop(width / 2, height * .55);
         }
       });
       listen(doc, 'keydown', event => { if (event.key === 'Escape') { event.preventDefault(); stop('escape'); } });
@@ -688,21 +564,19 @@
       ctx.restore();
     }
 
+    function ring(x, y) {
+      ctx.beginPath(); ctx.ellipse(x, y + 4, 11, 3.5, 0, 0, TAU);
+      ctx.strokeStyle = 'rgba(246,223,158,.7)'; ctx.lineWidth = 1.2; ctx.stroke();
+    }
+
     function render(view) {
       if (!ctx || !atlasImage) return;
       ctx.clearRect(0, 0, bounds.width, bounds.height);
-      if (view.token) {
-        // One understated landing ring makes the tiny token legible on maps.
-        ctx.beginPath(); ctx.ellipse(view.token.x, view.token.floorY + 4, 11, 3.5, 0, 0, TAU);
-        ctx.strokeStyle = 'rgba(246,223,158,.6)'; ctx.lineWidth = 1; ctx.stroke();
-        pebble(view.token.x, view.token.y, 1, view.token.age * 2);
-      }
-      if (view.deposited) pebble(view.deposited.x, view.deposited.y, 1 - view.deposited.age / .65);
-      const behind = view.row === 3 || view.row === 4;
-      const geometry = spriteGeometry(view, size, config);
-      if (view.carrying && behind) pebble(geometry.grip.x, geometry.grip.y, 1, view.bank - .15);
-      drawSprite(ctx, atlasImage, view, { size, atlas: config });
-      if (view.carrying && !behind) pebble(geometry.grip.x, geometry.grip.y, 1, view.bank - .15);
+      for (const stone of view.pile) pebble(stone.x, stone.y, 1, stone.index * 1.3);
+      for (const stone of view.falling) pebble(stone.x, stone.y, 1, stone.y * .04);
+      for (const token of [view.token, view.queued]) if (token) { ring(token.x, token.restY); pebble(token.x, token.y, 1, token.age * 2); }
+      drawSprite(ctx, atlasImage, view, atlas, model.scale);
+      if (view.carrying && !view.paintedPebble) pebble(view.carrying.x, view.carrying.y, view.opacity, view.pitch - .2);
     }
 
     function frame(now) {
@@ -710,15 +584,17 @@
       if (!active) return;
       if (!allowed()) return teardown('unavailable');
       const delta = lastTime == null ? 0 : (now - lastTime) / 1000;
-      if (startedAt == null) startedAt = now;
       lastTime = now;
-      if (now - startedAt >= (options.durationMs || 25000)) model.land();
-      if (now - lastHolesAt > 300) { lastHolesAt = now; refreshTouchHoles(); }
+      if (lastInputAt == null) lastInputAt = now;
+      // Real time, so a slow phone still ends an idle game on schedule.
+      if (now - lastInputAt >= idleMs && model.state !== 'landing') model.land('idle');
       const view = model.step(delta);
-      if (view.pickups !== pickupCount) {
-        pickupCount = view.pickups;
-        if (status) status.textContent = 'Got it! · Tap another open spot';
+      if (view.pickups !== shownPickups) {
+        shownPickups = view.pickups;
+        call('onPebble', { pickups: view.pickups, goal: view.goal });
       }
+      if (view.state === 'landing') setStatus(view.pickups >= view.goal ? 'Four pebbles! Merlin flies home' : 'Merlin is flying home');
+      else if (view.pickups) setStatus('Pebble ' + view.pickups + ' of ' + view.goal + ' · tap anywhere');
       render(view);
       if (view.done) return teardown(model.finishReason);
       raf = env.requestAnimationFrame(frame);
@@ -727,23 +603,25 @@
     function drop(x, y) {
       if (!active || !model || !Number.isFinite(x) || !Number.isFinite(y)) return false;
       const accepted = model.drop(x, y);
-      if (accepted && status) status.textContent = model.carrying ? 'One more pebble · Merlin will return for it' : 'Watch his talons · here he comes';
+      if (accepted) {
+        lastInputAt = null;
+        if (!model.pickups) setStatus('Watch his talons · here he comes');
+      }
       return accepted;
     }
 
     function start() {
       if (active) return loading || Promise.resolve(true);
       if (disposed || !allowed()) return Promise.resolve(false);
-      active = true; model = null; pickupCount = 0;
+      if (!atlas || !atlas.clips) { call('onError', new Error('Merlin flight atlas is missing.')); return Promise.resolve(false); }
+      active = true; model = null; shownPickups = 0;
       const ticket = ++generation;
       bindLifecycle();
-      // Versioned metadata and pixels form one asset. The old shell may still
-      // supply its v1 default URL until the coordinating release updates pins.
-      loading = (options.loadAtlas ? options.loadAtlas() : loadAtlas(config.url || options.atlasUrl || '/burbz/assets/merlin-flight/merlin-flight-v1.webp', env))
+      loading = (options.loadAtlas ? options.loadAtlas() : loadAtlas(atlas.url || options.atlasUrl, env))
         .then(image => {
           if (!active || generation !== ticket || !allowed()) { if (generation === ticket) teardown('unavailable'); return false; }
           atlasImage = image;
-          if (image.naturalWidth < config.columns * config.cell || image.naturalHeight < config.rows * config.cell) throw new Error('Merlin flight artwork has the wrong dimensions.');
+          if (image.naturalWidth < atlas.width || image.naturalHeight < atlas.height) throw new Error('Merlin flight artwork has the wrong dimensions.');
           prepare();
           if (!active || generation !== ticket) return false;
           raf = env.requestAnimationFrame(frame);
@@ -764,5 +642,5 @@
     };
   }
 
-  return { create, FlightModel, flightBounds, bezier, tangent, makeCurve, curveSample, viewForVelocity, wingPose, isInteractiveTarget, openRectangles, spriteGeometry, drawSprite };
+  return { create, FlightModel, flightBounds, hermite, gripOffset, drawSprite, drawScale, frameFor, PEBBLE_GOAL, DISPLAY_LENGTH };
 });
