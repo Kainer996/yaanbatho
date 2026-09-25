@@ -19,11 +19,11 @@ test('Home keeps Empire first and all original care panels even for locked saves
  for(const id of ['kitchen','training','hospital'])assert.ok(html.includes('desk-'+id+'-list'));
  assert.doesNotMatch(home,/academyHomeRooms|academyHomeTree/);
 });
-test('Home stacks the four rooms left, puts a condensed Academy right, and the dock keeps only what Home lacks',()=>{
+test('Home stacks the four rooms left, puts a condensed Academy right, and the dock leads with Home, then only what Home lacks',()=>{
  assert.ok(html.includes('id="desk-academy-list"'));
  assert.match(home,/panelElement\('academy'\)\.style\.gridArea=`\$\{row\} \/ \$\{careColumns\+1\} \/ \$\{row\+careRows\} \/ \$\{columns\+1\}`/);
  const dock=html.slice(html.indexOf('id="bottomDock"'),html.indexOf('<!-- Capture Celebration Overlay -->'));
- assert.deepEqual([...dock.matchAll(/data-screen="([^"]+)"/g)].map(m=>m[1]),['map','battle','birdex','inventory','leaderboards']);
+ assert.deepEqual([...dock.matchAll(/data-screen="([^"]+)"/g)].map(m=>m[1]),['scan','map','battle','birdex','inventory','leaderboards']);
  assert.doesNotMatch(dock,/data-quick-destination/);
  assert.match(html,/id="headerHomeBtn" data-game-route data-screen="scan"/);
  assert.match(html,/target:'#screen-scan \.desk-panel-academy \.desk-panel-heading'/);

@@ -418,6 +418,7 @@ FILES=(
   "assets/ui/burbz-icon-set/battle.webp"
   "assets/ui/burbz-icon-set/academy.webp"
   "assets/ui/burbz-icon-set/leaderboards.webp"
+  "assets/ui/burbz-icon-set/home.webp"
   "assets/ui/burbz-icon-set/hospital.webp"
   "assets/gear/thorn_talons.webp"
   "assets/gear/bronze_spurs.webp"

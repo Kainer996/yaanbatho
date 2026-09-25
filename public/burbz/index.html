@@ -141,10 +141,22 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
 .header-diary-btn svg { width:23px; height:23px; display:block; }
+/* Back always stands top-left: it walks the screen trail, like the phone's own back. */
+.header-back-btn {
+  width:36px; height:36px; flex:0 0 36px; display:grid; place-items:center; padding:0;
+  border-radius:10px; border:1px solid rgba(214,168,79,.24);
+  background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
+  color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10); cursor:pointer;
+}
+.header-back-btn svg { width:22px; height:22px; display:block; }
+.header-back-btn:active { transform:scale(.94); }
+.woodland-ui .header-back-btn { border-color:var(--ui-edge); background:var(--ui-surface); box-shadow:inset 0 1px 0 #fff1,0 2px 4px #0006; }
+.comic-ui .header-back-btn { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:7px; box-shadow:2px 2px 0 var(--comic-ink); color:var(--comic-ink); }
 .header-diary-btn.active { color:var(--accent); border-color:rgba(240,199,103,.55); box-shadow:0 0 16px rgba(214,168,79,.24); }
 @media(max-width:480px){
   .header.distributed-hud-header{padding-inline:7px;gap:6px;}
   .header.distributed-hud-header .header-logo{width:min(20vw,78px);}
+  .header.distributed-hud-header .header-back-btn,
   .header.distributed-hud-header .header-diary-btn,
   .header.distributed-hud-header .header-profile-btn,
   .header.distributed-hud-header .header-settings{width:34px;height:34px;flex-basis:34px;}
@@ -4648,6 +4660,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 
   <!-- Header -->
   <header class="header distributed-hud-header">
+    <button type="button" class="header-back-btn" id="headerBackBtn" aria-label="Back" title="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button type="button" class="header-logo" id="headerHomeBtn" data-game-route data-screen="scan" aria-label="Home" title="Home"><img src="assets/burbz-logo-yaan-transparent-20260608.png" alt="Burbz"></button>
     <div class="header-hud">
       <div class="hud-top">
@@ -5223,10 +5236,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
        flanks the solid Empire · Scan · Academy island. Nothing scrolls. -->
   <!-- The slim dock: Home holds Kitchen, Training, Forge, Hospital, Quests,
        Empire and the Academy, so the bar keeps only the places Home does not.
-       Tap the Burbz logo to come back Home. -->
+       Home itself always leads the bar, so every screen has a way out. -->
   <div class="bottom-dock" id="bottomDock">
   <nav class="bottom-nav" id="bottomNav" aria-label="Destinations">
   <div class="dock-row dock-row-slim">
+    <button class="nav-item nav-home" data-game-route data-screen="scan" aria-label="Home">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/home.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Home</div>
+    </button>
     <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/map.webp" alt="" draggable="false"></div>
       <div class="nav-label">Map</div>
@@ -45479,7 +45496,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-living-tree-v473-20260925';
+const BURBZ_BUILD = 'home-dock-back-v474-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46823,6 +46840,8 @@ function exitBurbzGame() {
   setTimeout(() => { try { window.close(); } catch (e) {} }, 120);
   setTimeout(() => { showToast('👋 Progress saved — press back once more to leave Burbz.'); }, 700);
 }
+// The on-screen Back does exactly what the phone's back button does.
+$('headerBackBtn')?.addEventListener('click', () => { SFX.tap(); try { handleBurbzBackPress(); } catch (e) { console.warn('BURBZ back button failed', e); } });
 $('exitGameBtn')?.addEventListener('click', () => { SFX.tap(); exitBurbzGame(); });
 
 // Merlin care controls. Tapping the permanent top-right character opens
