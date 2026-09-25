@@ -5236,17 +5236,18 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
        flanks the solid Empire · Scan · Academy island. Nothing scrolls. -->
   <!-- The slim dock: Home holds Kitchen, Training, Forge, Hospital, Quests,
        Empire and the Academy, so the bar keeps only the places Home does not.
-       Home itself always leads the bar, so every screen has a way out. -->
+       Earth leads the bar, since that is where the player walks in real life.
+       Home sits beside it, so every screen has a way out. -->
   <div class="bottom-dock" id="bottomDock">
   <nav class="bottom-nav" id="bottomNav" aria-label="Destinations">
   <div class="dock-row dock-row-slim">
+    <button class="nav-item active" data-game-route data-screen="map" aria-label="Earth">
+      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/earth.webp" alt="" draggable="false"></div>
+      <div class="nav-label">Earth</div>
+    </button>
     <button class="nav-item nav-home" data-game-route data-screen="scan" aria-label="Home">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/home.webp" alt="" draggable="false"></div>
       <div class="nav-label">Home</div>
-    </button>
-    <button class="nav-item active" data-game-route data-screen="map" aria-label="Map">
-      <div class="nav-icon"><img src="assets/ui/burbz-icon-set/map.webp" alt="" draggable="false"></div>
-      <div class="nav-label">Map</div>
     </button>
     <button class="nav-item" data-game-route data-screen="battle" aria-label="Battle">
       <div class="nav-icon"><img src="assets/ui/burbz-icon-set/battle.webp" alt="" draggable="false"></div>
