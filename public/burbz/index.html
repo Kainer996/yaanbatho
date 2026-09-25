@@ -1480,7 +1480,6 @@ span.empire-tile-bird.is-vacant { opacity:.55; filter:grayscale(1) brightness(1.
 .live-map-shell.clean-cloud-map .map-area-bird-rarity { font-size:9px; }
 .live-map-shell.clean-cloud-map .map-player-ring { display:none; }
 
-.map-revisit-btn { position:absolute; right:12px; bottom:calc(292px + var(--safe-bottom)); z-index:48; min-height:44px; padding:8px 10px; border:1px solid rgba(240,199,103,.35); border-radius:12px; background:rgba(3,10,9,.86); color:#fff7d9; font:700 12px sans-serif; }
 .live-map-shell.clean-cloud-map .map-locate-btn { display:block !important; right:12px; left:auto; bottom:calc(238px + var(--safe-bottom)); width:48px; height:44px; z-index:48; }
 .live-map-shell.clean-cloud-map .map-zoom-controls { position:absolute; right:12px; bottom:calc(130px + var(--safe-bottom)); z-index:48; display:grid; gap:8px; pointer-events:auto; }
 .map-zoom-btn { width:48px; height:48px; border-radius:16px; border:1px solid rgba(240,199,103,.28); background:rgba(3,10,9,.72); color:#fff7d9; font-family:'Russo One',sans-serif; font-size:26px; line-height:1; box-shadow:0 10px 22px rgba(0,0,0,.36); backdrop-filter:blur(9px); }
@@ -4761,7 +4760,6 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div id="burbzLiveMap" aria-label="Live Burbz habitat map"></div><div class="map-fallback-grid" id="mapFallbackGrid" aria-hidden="true"></div>
         <div class="map-sky-haze"></div><div class="map-playfield-vignette"></div>
         <div class="map-hud"><div class="map-hud-card"><div class="map-eyebrow">Field map</div><div class="map-place" id="mapPlaceLabel">Finding you...</div><div class="map-sub" id="mapStatusLabel">Live conditions</div></div><div class="map-weather" id="mapWeatherIcon" title="Local field conditions">☁️</div></div>
-        <button class="map-revisit-btn" id="mapRevisitBtn" aria-pressed="false" title="Pan back to discovered stops; your real position stays unchanged">↔ Explore map</button>
         <button class="map-locate-btn" id="mapLocateBtn" title="Centre on me" aria-label="Centre map on my location">⌖</button>
         <button class="map-overlay-btn" id="mapLikelyBtn" title="Show likely birds overlay" aria-label="Show likely birds overlay">Likely birds</button>
         <button class="camp-map-control" id="campMapButton" type="button">⛺ Camps</button>
@@ -21615,7 +21613,7 @@ async function endSideQuest() {
       const claimed = await sideQuestClaimDiscovery(d.id, { quiet: true });
       if (sq.active !== active) return;
       if (!claimed && !d.claimed) {
-        showToast('Visit each new find first, then collect it here or from Explore map. Unsaved finds stay on your map.');
+        showToast('Visit each new find first, then collect it here. Unsaved finds stay on your map.');
         return;
       }
     } // nothing found is ever lost
