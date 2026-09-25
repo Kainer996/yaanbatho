@@ -96,23 +96,44 @@ function model(T,style){
  for(const s of [-1,1])hull.add(new T.SphereGeometry(.022,6,5),M(T,s*.08,stemY+.1,BOW),0x173d42);
  hull.add(feather(T,.28,.12,.01),M(T,0,stemY+.15,BOW+.1,0,Math.PI/2,.9),0xe0b458);
  const body=mesh(hull);group.add(body);
- // --- Cockpit: a low dashboard with three gauges. The pilot keeps only this
- // in first person, set below the sightline so the ground stays in view.
- // Cylinder angles run from +z; ring angles from +x. Both arcs face forward.
- const cockpit=parts(T),dashZ=-.78,dashY=.86,arc=Math.PI*.36;
- cockpit.add(new T.CylinderGeometry(.78,.78,.12,18,1,true,Math.PI-arc/2,arc),M(T,0,dashY-.06,dashZ+.78),0x5e3a1e);
- cockpit.add(new T.RingGeometry(.7,.79,18,1,Math.PI/2-arc/2,arc),M(T,0,dashY,dashZ+.78,-Math.PI/2),0x7a4a26);
- cockpit.add(new T.RingGeometry(.775,.8,18,1,Math.PI/2-arc/2,arc),M(T,0,dashY+.004,dashZ+.78,-Math.PI/2),0xd9ad4f);
- for(const x of [-.15,0,.15]){
-  cockpit.add(new T.CircleGeometry(.042,16),M(T,x,dashY+.047,dashZ+.06,-.75),0xf3ead2);
-  cockpit.add(new T.TorusGeometry(.045,.008,5,16),M(T,x,dashY+.048,dashZ+.059,-.75),0xd9ad4f);
-  cockpit.add(new T.CylinderGeometry(.01,.015,.045,5),M(T,x,dashY+.018,dashZ+.045),0xd9ad4f);
+ // --- Cockpit: a padded leather coaming curves round the pilot above a
+ // polished walnut panel. Three brass-bezelled gauges are screwed into its
+ // face. Only the pilot sees it, set below the sightline so the ground stays in
+ // view; it drops away when the pilot looks down.
+ const cockpit=parts(T),A=1.3,SEG=26,Y0=.36,Y1=.95;
+ // The panel leans back so its face looks up at the eye; it is oval, like the
+ // hull, so it stays inside the gunwales.
+ const panelAt=(a,y,inset=0)=>{const t=(y-Y0)/(Y1-Y0),rx=.5+.08*t-inset,rz=.6+.2*t-inset;return new T.Vector3(Math.sin(a)*rx,y,-Math.cos(a)*rz);};
+ function band(a0,a1,y0,y1,paint,inset=0,rows=2){const p=[],idx=[];for(let i=0;i<=SEG;i++){const a=a0+(a1-a0)*i/SEG;for(let j=0;j<=rows;j++){const v=panelAt(a,y0+(y1-y0)*j/rows,inset);p.push(v.x,v.y,v.z);}}
+  for(let i=0;i<SEG;i++)for(let j=0;j<rows;j++){const q=i*(rows+1)+j,r=q+rows+1;idx.push(q,r,q+1,q+1,r,r+1);}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));g.setIndex(idx);g.computeVertexNormals();cockpit.add(g,M(T),paint);}
+ band(-A,A,Y0,Y1,(x,y)=>y>.9?0x7a4a26:0x5e3a1e,0,3);
+ // A darker instrument plate behind the gauges, edged in brass.
+ band(-.4,.4,.775,.93,0x3b2616,.004,1);band(-.41,.41,.77,.78,0xd9ad4f,.005,1);band(-.41,.41,.925,.935,0xd9ad4f,.005,1);
+ // The padded roll along the top of the coaming, rising slightly at the sides.
+ const roll=[];for(let i=0;i<=24;i++){const a=-A-.06+(2*A+.12)*i/24,v=panelAt(a,Y1,-.012);v.y+=.02+.05*Math.pow(Math.abs(a)/A,2);roll.push(v);}
+ cockpit.add(new T.TubeGeometry(new T.CatmullRomCurve3(roll),40,.026,6,false),M(T),0x6e2a22);
+ const trim=roll.map(v=>new T.Vector3(v.x,v.y-.028,v.z));cockpit.add(new T.TubeGeometry(new T.CatmullRomCurve3(trim),40,.008,4,false),M(T),0xd9ad4f);
+ // Each gauge sits flush in the panel: face, tick ring, brass bezel, four
+ // screws and a centre cap, all square to the panel's own surface.
+ const gauges=[-.23,0,.23].map(a=>{const y=.853,at=panelAt(a,y),up=panelAt(a,y+.01).sub(panelAt(a,y-.01)).normalize(),side=panelAt(a+.01,y).sub(panelAt(a-.01,y)).normalize(),out=new T.Vector3().crossVectors(side,up).normalize();
+  if(out.z<0)out.negate();const basis=new T.Matrix4().makeBasis(side,up,out);const place=(dx,dy,dz)=>at.clone().addScaledVector(side,dx).addScaledVector(up,dy).addScaledVector(out,dz);
+  const put=(geo,dx,dy,dz,paint,turn=0)=>{const m=basis.clone().multiply(new T.Matrix4().makeRotationZ(turn));m.setPosition(place(dx,dy,dz));cockpit.add(geo,m,paint);};
+  return{a,at,basis,place,put};});
+ for(const [i,g] of gauges.entries()){
+  g.put(new T.CircleGeometry(.05,20),0,0,.006,0xf3ead2);
+  for(let k=0;k<12;k++){const t=k/12*Math.PI*2;g.put(new T.BoxGeometry(.005,k%3?.008:.015,.002),Math.sin(t)*.039,Math.cos(t)*.039,.008,i===0&&k===0?0xb8322a:0x2a2118,-t);}
+  g.put(new T.TorusGeometry(.054,.008,5,20),0,0,.009,0xd9ad4f);
+  for(let k=0;k<4;k++){const t=(k+.5)/4*Math.PI*2;g.put(new T.SphereGeometry(.006,5,3),Math.sin(t)*.068,Math.cos(t)*.068,.006,0xe0b458);}
+  g.put(new T.CylinderGeometry(.009,.009,.006,8),0,0,.014,0xd9ad4f);
  }
+ // Two brass toggles either side of the gauges, for character.
+ for(const a of [-.5,.5]){const at=panelAt(a,.85,.004);cockpit.add(new T.CylinderGeometry(.018,.018,.012,8),M(T,at.x,at.y,at.z,Math.PI/2-.3,-a,0),0xd9ad4f);cockpit.add(new T.CylinderGeometry(.005,.007,.05,5),M(T,at.x*.97,at.y+.018,at.z*.97,-.5,-a,0),0x2a2118);}
  const dash=new T.Group(),panel=mesh(cockpit,false);dash.add(panel);group.add(dash);
- // Live compass and altimeter needles on the dashboard faces.
- const needleGeo=new T.BoxGeometry(.006,.062,.004);needleGeo.translate(0,.02,0);geometries.push(needleGeo);
+ // Live compass, clock and altimeter needles, pivoting on each gauge's centre.
+ const needleGeo=new T.BoxGeometry(.006,.064,.003);needleGeo.translate(0,.022,0);geometries.push(needleGeo);
  const needleMat=new T.MeshBasicMaterial({color:0x7a1f18});needleMat.userData.craftNeedle=true;
- const needles=[-.15,.15,0].map(x=>{const holder=new T.Group();holder.position.set(x,dashY+.05,dashZ+.063);holder.rotation.x=-.75;const n=new T.Mesh(needleGeo,needleMat);holder.add(n);dash.add(holder);return n;});
+ const needles=[0,2,1].map(i=>{const g=gauges[i],holder=new T.Group();holder.quaternion.setFromRotationMatrix(g.basis);holder.position.copy(g.place(0,0,.011));const n=new T.Mesh(needleGeo,needleMat);holder.add(n);dash.add(holder);return n;});
  // --- Wings: jointed shoulder and wrist, feathered like a great bird.
  function wing(side){
   const mirror=side<0,shoulder=new T.Group();shoulder.position.set(side*.58,1.02,.12);group.add(shoulder);
@@ -139,14 +160,14 @@ function model(T,style){
   return{side,shoulder,wrist,meshes:[armMesh,handMesh]};
  }
  const wings=[wing(-1),wing(1)];
- let flap=0,lastTime=0;
+ let flap=0,lastTime=0,pilot=false;dash.visible=false;
  return {group,
   // Parked wings fold back along the hull like a resting bird; in flight they
   // beat with a lagging wrist so the primaries whip through each stroke.
   animate(time,flying,{yaw=0,altitude=0,reduced=false,pitch=0}={}){
-   // As the pilot looks down, the dashboard slides down and back out of
-   // sight, leaving a clear view of the ground below.
-   const dip=Math.max(0,Math.min(1,(-pitch-.3)/.3));dash.position.set(0,-.4*dip,.4*dip);dash.visible=dip<.98;
+   // As the pilot looks down, the cockpit sinks out of sight, leaving a
+   // clear view of the ground below.
+   const dip=Math.max(0,Math.min(1,(-pitch-.3)/.3));dash.position.set(0,-1.45*dip,0);dash.visible=pilot&&dip<.98;
    const dt=Math.max(0,Math.min(.1,time-lastTime));lastTime=time;flap=reduced?(flying?1:0):flap+((flying?1:0)-flap)*(1-Math.exp(-dt*3));
    const phase=time*5.4,beat=reduced?0:Math.sin(phase+.35*Math.sin(phase)),lag=reduced?0:Math.sin(phase-.9);
    for(const w of wings){
@@ -157,8 +178,9 @@ function model(T,style){
    // Compass to north, altimeter one turn per 40 m, and the local clock's hour.
    const now=new Date();needles[0].rotation.z=-yaw;needles[1].rotation.z=-altitude/40*Math.PI*2;needles[2].rotation.z=-(now.getHours()%12+now.getMinutes()/60)/12*Math.PI*2;
   },
-  // First person keeps only the dashboard: wings and hull never block the view.
-  view(aboard){body.visible=!aboard;for(const w of wings)for(const m of w.meshes)m.visible=!aboard;},
+  // First person keeps only the cockpit: wings and hull never block the view.
+  // From outside, the hull's own cockpit well shows instead.
+  view(aboard){pilot=aboard;dash.visible=aboard&&dash.position.y>-1.4;body.visible=!aboard;for(const w of wings)for(const m of w.meshes)m.visible=!aboard;},
   state:()=>({hull:body.visible,wings:wings.some(w=>w.meshes.some(m=>m.visible)),dashboard:dash.visible,span:+(wings[1].wrist.getWorldPosition(new T.Vector3()).distanceTo(wings[0].wrist.getWorldPosition(new T.Vector3()))).toFixed(2)}),
   dispose(){group.removeFromParent();geometries.forEach(g=>g.dispose());material.dispose();needleMat.dispose();}};
 }

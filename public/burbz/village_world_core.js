@@ -93,5 +93,30 @@ function ribbonMesh(cell,c,height,bank=false){
  }
  return {positions,uv,indices};
 }
-return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,homeHeight,sampleGround,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh};
+// The square of built chunks the detailed ground may show: grown side by side
+// from the viewer's chunk while a whole new column or row is built, at most
+// `limit` rings out. Metres; null when the viewer's own chunk is not built.
+function showTarget(built,cx,cz,limit=RINGS-1){if(!built(cx,cz))return null;
+ const column=(x,a,b)=>{for(let z=a;z<=b;z++)if(!built(x,z))return false;return true;},row=(z,a,b)=>{for(let x=a;x<=b;x++)if(!built(x,z))return false;return true;};
+ let x0=cx,x1=cx,z0=cz,z1=cz,grown=true;
+ while(grown){grown=false;
+  if(x1-cx<limit&&column(x1+1,z0,z1)){x1++;grown=true;}if(cx-x0<limit&&column(x0-1,z0,z1)){x0--;grown=true;}
+  if(z1-cz<limit&&row(z1+1,x0,x1)){z1++;grown=true;}if(cz-z0<limit&&row(z0-1,x0,x1)){z0--;grown=true;}}
+ return{x0:x0*CHUNK,z0:z0*CHUNK,x1:(x1+1)*CHUNK,z1:(z1+1)*CHUNK};}
+// Ease the shown square toward its target by at most `most` metres a side.
+// Sides that shrink move first, so the square never covers a chunk that
+// neither the old nor the new target holds. Returns the chunk-aligned cut.
+function easeSquare(shown,target,most){
+ if(!target){shown.ready=false;return{x0:0,z0:0,x1:0,z1:0};}
+ if(!shown.ready||target.x0>=shown.x1||target.x1<=shown.x0||target.z0>=shown.z1||target.z1<=shown.z0)Object.assign(shown,target,{ready:true});
+ else{const move=(from,to)=>from+Math.max(-most,Math.min(most,to-from));
+  if(shown.x0<target.x0||shown.x1>target.x1||shown.z0<target.z0||shown.z1>target.z1){if(shown.x0<target.x0)shown.x0=move(shown.x0,target.x0);if(shown.x1>target.x1)shown.x1=move(shown.x1,target.x1);if(shown.z0<target.z0)shown.z0=move(shown.z0,target.z0);if(shown.z1>target.z1)shown.z1=move(shown.z1,target.z1);}
+  else for(const side of ['x0','z0','x1','z1'])shown[side]=move(shown[side],target[side]);}
+ return{x0:Math.floor(shown.x0/CHUNK)*CHUNK,z0:Math.floor(shown.z0/CHUNK)*CHUNK,x1:Math.ceil(shown.x1/CHUNK)*CHUNK,z1:Math.ceil(shown.z1/CHUNK)*CHUNK};}
+// The three corners of the distant land's lattice triangle under a point and
+// their weights: the same split as its cells, (x0,z0)-(x0,z0+S)-(x0+S,z0)
+// and (x0+S,z0)-(x0,z0+S)-(x0+S,z0+S).
+function latticeCorners(x,z,S){const x0=Math.floor(x/S)*S,z0=Math.floor(z/S)*S,fx=(x-x0)/S,fz=(z-z0)/S;
+ return fx+fz<=1?[[x0,z0,1-fx-fz],[x0+S,z0,fx],[x0,z0+S,fz]]:[[x0+S,z0+S,fx+fz-1],[x0+S,z0,1-fz],[x0,z0+S,1-fx]];}
+return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,homeHeight,sampleGround,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh,showTarget,easeSquare,latticeCorners};
 });

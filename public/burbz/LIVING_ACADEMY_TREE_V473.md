@@ -1,6 +1,6 @@
-# Living Academy tree v472
+# Living Academy tree v473
 
-Build: `academy-living-tree-v472-20260925`
+Build: `academy-living-tree-v473-20260925`
 
 Yaan wanted Home's Academy picture to show only what the player has built, where they built it, and to feel alive.
 
