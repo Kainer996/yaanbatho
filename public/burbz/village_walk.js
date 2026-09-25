@@ -251,7 +251,7 @@
       on(canvas,'webglcontextlost',e=>{e.preventDefault();fail(Error('The graphics connection was interrupted.'));});
       resize();s.resizeObserver=new ResizeObserver(resize);s.resizeObserver.observe(el);
       if(options.flight&&!s.room){el.querySelector('.vw-title small').textContent='BIRD FLIGHT';el.querySelector('.vw-exit').textContent='← Academy';stick.setAttribute('aria-label','Fly: forward, backward and strafe');}
-      hint.textContent=s.room?'Left thumb: walk · Drag to look · E interact':options.flight?(touch?'Slide up to flap · Stick: fly on and turn · Look down to dive':'Space: flap · W: fly on · A/D: turn · Look down to dive · F: land') : touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
+      hint.textContent=s.room?'Left thumb: walk · Drag to look · E interact':options.flight?(touch?'Slide up to flap · Let go to glide · Stick: turn · Look down to dive':'Space: flap · Let go to glide · A/D: turn · Look down to dive · F: land') : touch?'Left thumb: walk · Right thumb: look':'WASD walk · Drag to look · Arrow keys look · Esc leave';
       s.rooms.startPortal?.();
       if(options.firstVillageTutorial)s.tutorial=root.BurbzFirstVillageTutorial.attachRoom(options.firstVillageTutorial,s);
       look.focus({preventScroll:true});resume();options.ready?.();return true;
