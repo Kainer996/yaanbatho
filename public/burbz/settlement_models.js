@@ -314,7 +314,7 @@
     const ROLE=new Set(['guard','fisher','bard','elder','child','vendor','builder']);
     const FEMALE={guard:.3,smith:.2,miner:.2,woodcutter:.25,friar:0,porter:.3,builder:.25,hunter:.35};
     const GREYING=new Set(['commoner','clerk','merchant','fisher','waterer']);
-    // Hats that come down over the back of the head, where a bun would sit.
+    // Hats that come down over the nape and hide a bun completely.
     const COVERS=new Set(['kettle','knit','leather','scarf','hood','jester','flatcap','chaperon','coif','kerchief']);
 
     // Arm holds, written for the left arm and mirrored on the right: shoulder
@@ -342,7 +342,7 @@
       hammer:{sh:[.02,0,.09],fore:-.4,swing:.7},
       scroll:{sh:[-.35,0,.15],fore:-1.6,twist:-.9,hand:[.3,0,0],swing:.15},
       // Both hands forward on a handcart's grips, elbows soft.
-      push:{sh:[-.95,0,.36],fore:-.42,twist:.3,hand:[.35,0,0],swing:.05},
+      push:{sh:[-.95,0,.2],fore:-.42,twist:.3,hand:[.35,0,0],swing:.05},
     };
     // A hold as one side's shoulder sees it (the right arm mirrors the left).
     function sided(h,s,stoop){
@@ -365,7 +365,8 @@
 
     // ---- Who is this? ---------------------------------------------------------
     // Neighbours in one village take turns through the dyes and hat colours,
-    // so two near-identical folk rarely stand side by side.
+    // so two near-identical folk rarely stand side by side. The hat turn slips
+    // a step every nine folk, so each dye meets every hat colour in time.
     function turnOf(id){const m=/^(.*):resident:(\d+)$/.exec(String(id));return m?hashId(m[1])%997+Number(m[2]):-1;}
     function design(person){
       const r=random(hashId(person.id)),turn=turnOf(person.id);
@@ -386,7 +387,7 @@
       L.belly=0;L.stoop=0;
       L.eyes=pick(r,[0x2a1c16,0x2a1c16,0x1f2430,0x33261a]);
       L.main=r()<.1?pick(r,RARE):turn<0?pick(r,MAIN):MAIN[turn*2%MAIN.length];
-      L.hatColour=turn<0?pick(r,HATS):HATS[turn*4%HATS.length];
+      L.hatColour=turn<0?pick(r,HATS):HATS[(turn*4+Math.floor(turn/9))%HATS.length];
       L.shirt=pick(r,SHIRT);L.legs=pick(r,LEGS);L.boots=pick(r,BOOTS);
       L.trim=pick(r,MAIN.filter(c=>c!==L.main));L.belt=pick(r,[LEATHER,0x4d3425,0x8a6a44]);L.buckle=pick(r,[BRASS,0x9a9c9e]);
       L.garment=female&&!child&&r()<.8?'dress':'tunic';
@@ -440,7 +441,7 @@
           L.main=pick(r,[DYE.oat,DYE.moss,DYE.linen,DYE.russet,DYE.ochre]);L.sleeve='rolled';L.hat='straw';L.kerchief=r()<.5?pick(r,[DYE.madder,DYE.woad]):0;
           L.props=['pitchfork'];L.hold={L:pick(r,['free','belt']),R:'pole'};L.idle='farmer';break;
         case 'woodcutter':
-          L.garment='tunic';L.main=pick(r,[DYE.madder,DYE.moss,DYE.woad]);L.plaid=true;L.hemTrim=0;L.hat='knit';L.hatColour=pick(r,[DYE.madder,DYE.moss,DYE.ochre,DYE.teal]);
+          L.garment='tunic';L.main=pick(r,[DYE.madder,DYE.moss,DYE.woad]);L.plaid=true;L.hemTrim=0;L.hat='knit';L.hatColour=pick(r,[DYE.madder,DYE.moss,DYE.teal]);
           L.jerkin=r()<.5?0x5b4030:0;L.props=['axe'];L.hold={L:'free',R:'shoulder'};L.idle='stand';break;
         case 'miner':
           L.garment='tunic';L.main=pick(r,[0x6b6258,0x5a6878,DYE.charcoal]);L.legs=DYE.walnut;L.hat='leather';L.hemTrim=0;L.kerchief=pick(r,[DYE.madder,DYE.weld,DYE.woad]);
@@ -719,7 +720,7 @@
         if(L.capelet||L.hat==='hood'){
           const c=L.capelet||L.hatColour;
           r.lathe([[.282,.68],[.278,.75],[.256,.83],[.216,.9],[.14,.95],[.075,.97]].map(([a,y])=>[a*W,y*sy]),[0,0,0],c,'chest',[1,1,.9],[0,0,0],12);
-          if(L.capelet)ball(.1*W,at(0,.86,-.2),deepen(c,.08),'chest',[1.1,.8,.6],[0,0,0],8,5);
+          if(L.capelet)ball(.1*W,at(0,.85,-.2),deepen(c,.08),'chest',[1.3,.5,.3],[-.25,0,0],8,5);
         }
         if(L.shawl)r.lathe([[.215,.74],[.215,.8],[.2,.86],[.15,.915],[.075,.945]].map(([a,y])=>[a*W,y*sy]),[0,0,0],L.shawl,'chest',[1,1,.84],[0,0,0],12);
         if(L.kerchief){
@@ -816,9 +817,12 @@
         r.add(g,L.hat?c:paint,[0,P.hy,0],[0,0,0],[1,1,1],'head');
         switch(style){
           case 'bun':
-            if(L.hat&&COVERS.has(L.hat))break;
-            ball(.058*hs,hd(0,.09,-.105),paint,'head',[1,.95,1],[0,0,0],8,6);
-            r.add(new T.TorusGeometry(.04*hs,.009*hs,3,10),deepen(c,.3),hd(0,.07,-.085),[.9,0,0],[1,1,1],'head');break;
+            // A high bun on a bare head; under a brim it is pinned low at the nape.
+            if(!L.hat){
+              ball(.058*hs,hd(0,.09,-.105),paint,'head',[1,.95,1],[0,0,0],8,6);
+              r.add(new T.TorusGeometry(.04*hs,.009*hs,3,10),deepen(c,.3),hd(0,.07,-.085),[.9,0,0],[1,1,1],'head');
+            }else if(!COVERS.has(L.hat))ball(.042*hs,hd(0,-.05,-.118),c,'head',[1.1,.9,.9],[0,0,0],8,5);
+            break;
           case 'ponytail':
             r.add(new T.TorusGeometry(.024*hs,.009*hs,3,8),L.trim,hd(0,.02,-.135),[.3,0,0],[1,1,1],'head');
             r.add(new T.TubeGeometry(new T.CatmullRomCurve3([V(...hd(0,.02,-.13)),V(...hd(0,-.06,-.19)),V(...hd(0,-.2,-.17)),V(...hd(0,-.3,-.13))]),6,.03*hs,4,false),paint,[0,0,0],[0,0,0],[1,1,1],'head',toChest);
@@ -1088,10 +1092,11 @@
           gaitLeg(G,p);
           // The foot lands heel first, stays flat while it carries weight, then
           // lifts its heel and rolls off the toe.
+          // The thigh angle is in the world, so the hip undoes the pelvis tilt.
           const th=LEG[0],kn=LEG[1],pitch=pel.rotation.x-(sp>0?.3*sp*(1-smooth(-.3,.3,-cp)):.4*sp*smooth(-.7,.1,cp));
-          b.legs[i].rotation.set(th,0,-pel.rotation.z);
+          b.legs[i].rotation.set(th-pel.rotation.x,0,-pel.rotation.z);
           b.shins[i].rotation.set(kn,0,0);
-          b.feet[i].rotation.set(pitch-pel.rotation.x-th-kn,0,0);
+          b.feet[i].rotation.set(pitch-th-kn,0,0);
           const d=reach(f,th,kn,pitch)-side*f.hipX*Math.sin(pel.rotation.z);
           if(d>low)low=d;
           // Arms counter-swing, the elbow softening more on the way forward.
@@ -1114,10 +1119,10 @@
         for(let i=0;i<2;i++){
           // Weight settles on one hip; the other knee softens.
           const side=i?-1:1,relax=Math.max(0,side*sway),kn=.05+.16*relax,th=-.064*relax,fx=.1*relax-(th+kn);
-          b.legs[i].rotation.set(th,0,.027*sway-pel.rotation.z);
+          b.legs[i].rotation.set(th-pel.rotation.x,0,.027*sway-pel.rotation.z);
           b.shins[i].rotation.set(kn,0,0);
           b.feet[i].rotation.set(fx,0,0);
-          const d=reach(f,th,kn,pel.rotation.x+th+kn+fx)-side*f.hipX*Math.sin(pel.rotation.z);
+          const d=reach(f,th,kn,th+kn+fx)-side*f.hipX*Math.sin(pel.rotation.z);
           if(d>low)low=d;
           const h=pushing?PUSH[i]:H[i];
           b.swings[i].rotation.set(.02*br*h.swing,0,0);
@@ -1140,7 +1145,7 @@
       b.head.rotation.set(headX,headY,headZ);
       if(!walking&&!pushing&&m>0)roleIdle(f,b,L,time,m,working);
       b.apron.rotation.set(.6*Math.min(0,b.legs[0].rotation.x,b.legs[1].rotation.x),0,0);
-      if(f.juggle)juggle(f,b,m>0?time:0);
+      if(f.juggle)juggle(f,b,time,m);
     }
     // Trade idles layered on the standing pose.
     function roleIdle(f,b,L,time,m,working){
@@ -1162,19 +1167,29 @@
       }
     }
     // A real hammer stroke: a slow lift with the elbow out and the wrist cocked
-    // back, a quick fall onto the work, a moment's rest, eyes on the nail.
+    // back, a quick fall onto the work, a moment's rest, eyes on the nail. The
+    // hammer peaks at shoulder height, out to the side, well clear of the face.
     function hammer(b,t,m){
       const c=t-Math.floor(t),up=c<.5?smooth(0,.5,c):c<.62?1-((c-.5)/.12)**2:0;
-      b.swings[1].rotation.x-=(.55+.6*up)*m;
+      b.swings[1].rotation.x-=(.55+.2*up)*m;
+      // The upper arm turns out, so the hammer rises beside the shoulder.
+      b.arms[1].rotation.y-=.4*up*m;
       b.arms[1].rotation.z-=.3*up*m;
-      b.fores[1].rotation.x-=(.45+1.1*up)*m;
-      b.hands[1].rotation.x+=(.9-1.4*up)*m;
+      b.fores[1].rotation.x-=(.45+.5*up)*m;
+      b.hands[1].rotation.x+=(.9-1.1*up)*m;
       b.chest.rotation.x+=(.05-.09*up)*m;
       b.head.rotation.x+=.18*m;
     }
-    // A three-ball shower between the two hands.
-    function juggle(f,b,time){
+    // A three-ball shower between the two hands. Held still, two balls wait
+    // in the right hand and one in the left.
+    function juggle(f,b,time,m){
       const J=f.juggle;
+      if(m<=0){
+        b.balls[0].position.set(J.R.x-.03,J.R.y+.03,J.R.z+.05);
+        b.balls[1].position.set(J.R.x+.03,J.R.y+.03,J.R.z+.05);
+        b.balls[2].position.set(J.L.x,J.L.y+.03,J.L.z+.05);
+        return;
+      }
       for(let i=0;i<3;i++){
         const t=(time*1.1+i/3)%1,ball=b.balls[i];
         if(t<.66){const u=t/.66;ball.position.set(J.R.x+(J.L.x-J.R.x)*u,J.R.y+.03+.95*u*(1-u),J.R.z+.05+.06*Math.sin(u*PI));}

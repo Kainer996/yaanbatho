@@ -14,6 +14,9 @@
   const smooth=(a,b,v)=>ease(clamp((v-a)/(b-a),0,1));
   // A soft twitch: mostly zero, with a short bump once per cycle of t.
   const twitch=(t,sharp)=>Math.pow(Math.max(0,Math.sin(t)),sharp);
+  // A held glance that changes once per beat b: snap runs 0..1 as the head
+  // swings from the last beat's pick to this one's.
+  const glance=(b,snap,f)=>Math.sin((b-1)*f)*(1-snap)+Math.sin(b*f)*snap;
   const STILL=Object.freeze({moving:false});
 
   // ---- Seeds and colour -----------------------------------------------------
@@ -37,7 +40,8 @@
   const fleck=(x,y,z)=>{const v=Math.sin(x*431.7+y*197.3+z*311.1)*43758.5;return v-Math.floor(v);};
 
   // ---- Shapes ---------------------------------------------------------------
-  // Every builder shares one rig and its THREE, so nothing lives at module level.
+  // Each animal gets a fresh rig that carries the caller's THREE, so the
+  // module never keeps a THREE of its own.
   function begin(T){const r=root.BurbzSettlementModels.rig(T);r.T=T;return r;}
   // A smooth tapered tube along a curve, closed with round caps: bodies,
   // necks, heads, legs, tails, horns, ears. Each radius is r or [up, side];
@@ -112,7 +116,8 @@
   // ---- Leg solver -------------------------------------------------------------
   // Two-bone IK in a leg's side plane (forward, up): ik.u and ik.l are the
   // world angles of the upper and lower segments. bend +1 folds the joint
-  // forward (a front knee), -1 folds it back (a hock).
+  // forward (a front knee), -1 folds it back (a hock). The one shared answer
+  // means a pose allocates nothing.
   const ik={u:0,l:0};
   function solve(dx,dy,a,b,bend){
     const d=clamp(Math.hypot(dx,dy),Math.abs(a-b)+1e-4,a+b-1e-4),t=Math.atan2(dy,dx);
@@ -224,9 +229,10 @@
     // Grazers tear at the grass; a resting cud-chewer grinds side to side.
     const cud=R.cud?idle*(1-graze)*smooth(-.2,.3,Math.sin(time*.17+ph*1.3)):0;
     R.jaw.rotation.set(0,cud*.08*Math.sin(time*2.6+ph),-(bite*.1+cud*(.035+.03*Math.sin(time*5.2+ph))));
-    // A slow, sleepy blink every few seconds.
-    const blink=twitch(time*1.6+ph*2.3,300)*1.25*motion;
-    R.lids[0].rotation.x=-blink;R.lids[1].rotation.x=blink;
+    // A slow, sleepy blink every few seconds. A pig's lid rests folded back
+    // under its brow, so it looks gentle, and swings further to close.
+    const tuck=R.lidTuck||0,lid=twitch(time*1.6+ph*2.3,300)*(1.25+tuck)*motion-tuck;
+    R.lids[0].rotation.x=-lid;R.lids[1].rotation.x=lid;
     for(let i=0;i<2;i++){
       const flick=twitch(time*1.3+ph*3+i*2.1,24);
       R.ears[i].rotation.set((i?1:-1)*(flick*.35+Math.sin(time*.9+i)*.05)*motion,0,flick*.25*motion-graze*.25);
@@ -251,8 +257,11 @@
   function sheep(r,h,rnd){
     const T=r.T,C=pickW(rnd,SHEEP);
     hoofedBones(r,{body:[0,.34,0],neck:[.16,.36,0],head:[.33,.47,0],jaw:[.4,.45,0],muzzle:[.49,.41,0],ear:[.335,.495,.045],tail:[-.25,.4,0]});
+    // A Jacob's big dark patches sit on both flanks and the rump.
+    const spots=[];
+    if(C.spots)for(let i=0;i<7;i++){const a=(i%2?1:-1)*(.7+rnd()*.7),x=-.24+i*.065+rnd()*.03;spots.push([x,.36+Math.cos(a)*.17,Math.sin(a)*.16,.07+rnd()*.03]);}
     const wool=(x,y,z)=>{
-      const c=C.spots&&mottle(x,y,z,19,h%89)>.5?C.spots:C.wool;
+      const c=spots.some(([sx,sy,sz,sr])=>(x-sx)**2+(y-sy)**2+(z-sz)**2<sr*sr)?C.spots:C.wool;
       return mix(dark(c,.14),light(c,.1),clamp((y-.2)/.32,0,1));
     };
     // The fleece: a deep woolly barrel, lumpy with curls, that billows into
@@ -338,16 +347,22 @@
     const pink=0xeaa596,black=0x2e2727;
     const base={pink,oldspot:pink,tamworth:0x9a5428,saddleback:black,berkshire:black}[breed];
     const lop=breed==='oldspot'||breed==='saddleback';
-    // Old Spots wear a few round seeded spots.
-    const spots=[];for(let i=0;i<5;i++){const a=(i*.37+rnd()*.25)*TURN;spots.push([-.2+i*.085+rnd()*.03,.3+Math.cos(a)*.14,Math.sin(a)*.14,.1+rnd()*.03]);}
     const paint=(x,y,z)=>{
-      if(breed==='oldspot'&&spots.some(([sx,sy,sz,sr])=>(x-sx)**2+(y-sy)**2+(z-sz)**2<sr*sr))return 0x4a3e3c;
       if(breed==='saddleback'&&x>.02&&x<.2)return 0xf0e4da;
       if(breed==='berkshire'&&(y<.07||x>.4))return 0xf0e4da;
       return mix(light(base,.05),dark(base,.12),clamp((.3-y)*2.5,0,1));
     };
     hoofedBones(r,{body:[0,.27,0],neck:[.18,.29,0],head:[.24,.3,0],jaw:[.36,.25,0],muzzle:[.44,.25,0],ear:[.29,.39,.055],tail:[-.25,.33,0]});
-    put(r,sweep(T,[[-.26,.29,0],[-.2,.285,0],[-.07,.275,0],[.07,.275,0],[.17,.28,0],[.23,.29,0]],[[.09,.08],[.165,.15],[.185,.165],[.182,.162],[.158,.142],[.1,.09]],{n:16,seg:12}),paint,'body');
+    const spine=[[-.26,.29,0],[-.2,.285,0],[-.07,.275,0],[.07,.275,0],[.17,.28,0],[.23,.29,0]],girth=[[.09,.08],[.165,.15],[.185,.165],[.182,.162],[.158,.142],[.1,.09]];
+    put(r,sweep(T,spine,girth,{n:16,seg:12}),paint,'body');
+    // Old Spots wear crisp round spots, each a thin lens laid on the hide,
+    // scattered over the back and both flanks.
+    if(breed==='oldspot')for(let i=0;i<9;i++){
+      const x=-.17+i*.036+rnd()*.02,j=spine.findIndex(p=>p[0]>x),k=(x-spine[j-1][0])/(spine[j][0]-spine[j-1][0]);
+      const at=(v,e)=>v[j-1][e]+(v[j][e]-v[j-1][e])*k,up=at(girth,0),side=at(girth,1);
+      const a=(i%2?1:-1)*(.2+rnd()*1.4),ny=Math.cos(a)/up,nz=Math.sin(a)/side,nl=Math.hypot(ny,nz);
+      r.add(new T.SphereGeometry(.03+rnd()*.022,6,2),0x3e3432,[x,at(spine,1)+Math.cos(a)*up-ny/nl*.003,Math.sin(a)*side-nz/nl*.003],[Math.atan2(nz,ny),0,0],[1,.3,1],'body');
+    }
     put(r,sweep(T,[[.14,.28,0],[.2,.29,0],[.25,.3,0]],[[.145,.13],[.13,.12],[.115,.11]],{n:10,seg:3}),paint,'body',{bone:'neck',from:[.17,.29,0],to:[.24,.3,0]});
     // Round cheeks tapering into the snout, capped by its pink disc.
     put(r,sweep(T,[[.2,.315,0],[.27,.322,0],[.335,.3,0],[.39,.277,0],[.418,.266,0]],[[.11,.11],[.112,.108],[.085,.082],[.062,.06],[.056,.056]],{n:12,seg:7,round:.2}),paint,'head');
@@ -356,7 +371,7 @@
     r.sphere(.034,[.38,.222,0],paint,'jaw',[1.25,.45,1],[0,0,-.3],6,4);
     for(const s of [-1,1]){
       r.sphere(.01,[.44,.268,s*.019],0x5a3230,'head',[.5,1.3,1],[0,0,0],4,3);
-      eye(r,'head',[.345,.338,s*.071],[.45,.35,s],.018,plainEye(s,[1,0,0],0x2a1c16,paint(.345,.355,s*.071),.14));
+      eye(r,'head',[.345,.338,s*.071],[.45,.35,s],.018,{...plainEye(s,[1,0,0],0x2a1c16,paint(.345,.355,s*.071),.32),seg:[6,4]});
       // Lop ears flop over the eyes; a Tamworth's prick ears tip forward.
       const ear=lop?[[.285,.395,s*.052],[.32,.405,s*.07],[.355,.39,s*.08],[.372,.372,s*.078]]:[[.29,.392,s*.055],[.318,.428,s*.072],[.356,.452,s*.084]];
       leaf(r,s<0?'earL':'earR',ear,lop?[.034,.052,.05,.022]:[.038,.042,.012],.009,lop?[.3,.8,s*.5]:[.8,.5,s*.4],paint,lop?null:dark(pink,.14),5);
@@ -370,7 +385,7 @@
     const curl=[];for(let i=0;i<=8;i++){const a=i/8*TURN*1.25;curl.push([-.255-.03*i/8-Math.sin(a)*.018,.33+Math.cos(a)*.018-.01*i/8,Math.sin(a*.5)*.012]);}
     put(r,sweep(T,curl,curl.map((_,i)=>.01-.004*i/8),{n:4,seg:8}),paint,'tail');
     return {name:C.name,breed,legs,reach:.45,barrel:[-.1,.2,.165],
-      gait:{sweep:.42*.64,duty:.64,lift:.035,toe:.01,flex:.7,bob:.006,roll:.045,pitch:.01,nod:.035,nodPhase:.4,grazeNeck:.75,grazeHead:.45,grazePitch:-.06}};
+      gait:{sweep:.42*.64,duty:.64,lift:.035,toe:.01,flex:.7,bob:.006,roll:.045,pitch:.01,nod:.035,nodPhase:.4,grazeNeck:.75,grazeHead:.45,grazePitch:-.06},extra:{lidTuck:.6}};
   }
 
   // ---- Cattle -------------------------------------------------------------------------
@@ -416,7 +431,7 @@
       return paint(x,y,z);
     };
     put(r,sweep(T,[[.665,.825,0],[.71,.82,0],[.775,.765,0],[.835,.695,0],[.88,.63,0],[.897,.603,0]],[[.075,.1],[.094,.106],[.08,.078],[.066,.06],[.068,.07],[.053,.058]],{n:12,seg:8,square:.18,bump:hl?(t,a)=>1+.08*Math.sin(a*9+t*30)*Math.max(0,.6-t):null}),face,'neck',{bone:'head',from:[.67,.8,0],to:[.725,.775,0]});
-    r.sphere(.042,[.87,.56,0],muzzle,'jaw',[1.15,.45,1.1],[0,0,-.4],6,4);
+    r.sphere(.042,[.868,.57,0],light(muzzle,.08),'jaw',[1.15,.45,1.1],[0,0,-.4],8,5);
     for(const s of [-1,1]){
       r.sphere(.013,[.904,.618,s*.033],0x2a1c1a,'head',[.5,1,1],[0,0,0],5,3);
       eye(r,'head',[.75,.77,s*.082],[.3,.22,s],.027,plainEye(s,[1,0,0],0x2a1a14,hf?white:paint(.75,.79,s*.082),.36));
@@ -424,8 +439,11 @@
       if(hl)put(r,sweep(T,[[.68,.81,s*.06],[.68,.825,s*.16],[.69,.87,s*.26],[.72,.94,s*.31],[.75,.98,s*.32]],[.03,.026,.02,.013,.004],{n:5,seg:6}),(x,y,z)=>mix(0xe0d4b8,0x3a3028,clamp((Math.abs(z)-.22)*9,0,1)),'head');
       else if(!je)put(r,sweep(T,[[.68,.81,s*.06],[.685,.825,s*.1],[.7,.855,s*.12]],[.019,.014,.004],{n:5,seg:3}),0xddcfb0,'head');
     }
-    // A Highland's fringe tumbles over its brow and half hides its eyes.
-    if(hl)put(r,sweep(T,[[.72,.925,0],[.805,.91,0],[.87,.85,0],[.9,.765,0]],[[.02,.08],[.035,.12],[.035,.11],[.012,.075]],{n:8,seg:5,bump:shag(5,8,.4)}),light(base,.16),'head');
+    // A Highland's fringe tumbles over its brow in three shaggy locks that
+    // half hide its eyes, sun-bleached at the tips.
+    if(hl)for(const z of [-.045,0,.045])
+      put(r,sweep(T,[[.7,.925,z*.5],[.77,.905,z],[.815,.845,z*1.25],[.83,.79,z*1.4]],[[.024,.034],[.03,.04],[.024,.032],[.006,.012]],{n:5,seg:3,bump:shag(3,5,.25)}),
+        (x,y,z)=>mix(dark(base,.06),light(base,.2),clamp((x-.74)*9,0,1)),'head');
     const hoof=0x2e2622;
     const legs=hoofedLegs(r,{
       front:{x:.33,z:.125,hip:.58,junction:[[0,.62,.7,.1],[0,.4,.092]],upper:[[0,.42,[.09,.08]],[.004,.33,[.074,.066]],[0,.25,.06]],lower:[[0,.25,.06],[0,.16,.048],[0,.08,.052],[.012,.055,.052]],fet:2,hoof:[.048,.056,.058,.018],hoofColor:hoof,cleft:1,n:[9,7],bump:shag(3,9,.1)},
@@ -454,7 +472,7 @@
     const cob=C.dun||rnd()<.2;
     const coat=(x,y,z)=>{
       if(C.grey&&mottle(x,y,z,26,h%71)>.25&&y>.5)return light(C.coat,.35);
-      if(C.dun&&y>.9&&Math.abs(z)<.03&&x<.3)return C.mane;
+      if(C.dun&&y>.9&&Math.abs(z)<.075&&x<.3)return C.mane;
       return mix(light(C.coat,.06),dark(C.coat,.14),clamp((.8-y)*2.5,0,1)*.6);
     };
     const legPaint=(x,y,z)=>{
@@ -497,14 +515,14 @@
     // Cobs and duns grow soft feathering over the hoof.
     if(cob)for(const [x,z,i] of [[.3,-.105,0],[.3,.105,1],[-.43,-.115,2],[-.43,.115,3]])
       r.sphere(.05,[x+.008,.075,z],light(C.dun?0x8a7a68:C.mane,.3),'foot'+i,[1,.75,1],[0,0,0],6,3);
-    return {name:C.name,breed:C.breed,legs,reach:.85,barrel:[-.34,.3,.2],
+    return {name:C.name,breed:C.breed,legs,reach:.87,barrel:[-.34,.3,.2],
       gait:{sweep:.95*.62,duty:.62,lift:.1,toe:.022,flex:1.1,bob:.014,roll:.025,pitch:.012,nod:.07,nodPhase:.9,grazeNeck:1.6,grazeHead:-.9,grazePitch:-.07},extra:{tailHangs:true,restHoof:true}};
   }
 
   // ---- Dog ---------------------------------------------------------------------------------
   // The game's trot solves each leg by inverse kinematics: hips at .28 swing
   // about Z only, knees .14 below, paws .14 below the knees. We build to that
-  // contract and pose the same solver here, so the studio shows the game.
+  // contract and pose the same solver here, so a posed dog matches the game's trot.
   // Legs are shaped in the solver's standing pose and carried back to the
   // straight bind pose, so a standing dog stands like a dog.
   const DOG_HIP=Math.acos(.245/.28),DOG_KNEE=PI-Math.acos(1-.245*.245/.0392);
@@ -568,7 +586,9 @@
       if(lurcher){
         if(white&&(y<.05||x>.2&&x<.33&&y<.37&&y>.18&&Math.abs(z)<.05))return white;
         if(C.mask&&x>.41)return C.mask;
-        if(C.stripe&&Math.sin(x*80+y*30+mottle(x,y,z,14,h%31)*2.5)>.3)return C.stripe;
+        // Brindle: a few upright tiger stripes over the body, wide enough for
+        // the mesh to hold, and none on the thin legs where they would smudge.
+        if(C.stripe&&y>.2&&Math.sin(x*34+Math.sin(y*20+z*9)*.8)>.55)return mix(C.base,C.stripe,.75);
         return mix(C.base,dark(C.base,.25),clamp((.36-y)*3,0,1)*.5);
       }
       if(y<.09||x>.4||Math.abs(z)<.014&&x>.3||x>.14&&y<.4&&y>.2&&x<.32||x<-.37)return white;
@@ -578,10 +598,10 @@
       return C.base;
     };
     const fluff=(t,a)=>1+.09*Math.sin(a*6+t*19)*Math.sin(t*23+a*2);
-    // A deep chest, a tuck at the loin and a rounded rump; the lurcher
-    // arches over a deeper tuck.
+    // A deep chest, a tuck at the loin and a rounded rump; the lurcher keeps
+    // a long level back over a deeper tuck.
     const body=lurcher
-      ?[[[-.3,.4,0],[-.24,.395,0],[-.12,.395,0],[0,.375,0],[.1,.345,0],[.18,.35,0],[.245,.375,0]],[[.04,.034],[.08,.066],[.064,.056],[.09,.066],[.13,.074],[.108,.07],[.055,.046]]]
+      ?[[[-.3,.393,0],[-.24,.388,0],[-.12,.393,0],[0,.372,0],[.1,.342,0],[.18,.35,0],[.245,.375,0]],[[.037,.034],[.074,.066],[.062,.056],[.086,.066],[.126,.074],[.108,.07],[.055,.046]]]
       :[[[-.3,.39,0],[-.24,.38,0],[-.13,.365,0],[0,.35,0],[.1,.335,0],[.18,.345,0],[.245,.37,0]],[[.04,.038],[.087,.076],[.09,.076],[.102,.081],[.125,.09],[.108,.08],[.055,.05]]];
     put(r,sweep(T,body[0],body[1],{n:12,seg:9,bump:collie?fluff:null}),paint,'body');
     // Neck, with a ruff for the sheepdog.
@@ -591,10 +611,11 @@
       [[.035,.035],[.07,.062*thin],[.072,.064*thin],[.052,.047*thin],[.039,.035*thin],[.031,.028*thin],[.022,.02]],{n:10,seg:6}),paint,'head');
     r.sphere(.02,[.463+snout,.498,0],0x1c1614,'head',[.85,.8,1.15],[0,0,0],6,3);
     // The lower jaw and tongue hang from the jaw bone, so the dog can pant;
-    // a dark mouth shows between them.
+    // a dark mouth shows between them. The tongue lies along the lower jaw,
+    // hidden while the mouth is shut and pink in it once the dog pants.
     put(r,sweep(T,[[.375,.474,0],[.442+snout,.474,0]],[[.011,.02*thin],[.006,.01]],{n:4,seg:1}),0x4a2226,'head');
     put(r,sweep(T,[[.37,.47,0],[.41+snout*.6,.462,0],[.443+snout,.469,0]],[[.014,.025*thin],[.012,.02*thin],[.008,.013]],{n:5,seg:2}),paint,'jaw');
-    put(r,sweep(T,[[.38,.468,0],[.42+snout*.6,.458,0],[.447+snout,.44,0]],[[.004,.012],[.005,.014],[.004,.01]],{n:4,seg:2}),0xd46874,'jaw');
+    put(r,sweep(T,[[.385,.474,0],[.42+snout*.6,.472,0],[.444+snout,.468,0]],[[.005,.013*thin],[.005,.015*thin],[.004,.011]],{n:4,seg:2}),0xd46874,'jaw');
     for(const s of [-1,1]){
       eye(r,'head',[.343,.55,s*.042*thin],[.5,.25,s],.02,{fwd:[1,0,0],iris:0x3a2214});
       const ear=s<0?'earL':'earR',z=s*earAt[2],[ex,ey]=earAt;
@@ -614,6 +635,8 @@
     [[.16,-.06,0],[.16,.06,1],[-.17,-.064,2],[-.17,.064,3]].forEach(([x,z,i])=>{
       const b=x>0?1:-1,hipA=-b*DOG_HIP,shin=b*(DOG_KNEE-DOG_HIP);
       const hip=r.bone('hip'+i,null,[x,.28,z]),knee=r.bone('knee'+i,'hip'+i,[x,.14,z]);
+      // The wrist bone carries nothing; it keeps the paw at knee.children[1],
+      // where the game's trot looks for it.
       r.bone('wrist'+i,'knee'+i,[x,.06,z]);const paw=r.bone('paw'+i,'knee'+i,[x,0,z]);
       const kx=x+.14*Math.sin(hipA),ky=.28-.14*Math.cos(hipA);
       const A={bone:'hip'+i,ang:hipA,c:[x,.28],d:[x,.28]},B={bone:'knee'+i,ang:shin,c:[x,.14],d:[kx,ky]};
@@ -623,8 +646,9 @@
         :[[x-.025,.37,z],[x-.004,.28,z],[x+.035,.2,z],[kx-.006,ky-.01,z],[x-.012,.105,z],[x-.028,.07,z],[x-.01,.036,z]];
       const radii=(b>0?[.046,.043,.04,.03,.026,.026]:[.058,.056,.047,.036,.029,.025,.025]).map(v=>v*thin);
       skinPosed(r,sweep(T,path,radii,{n:b>0?7:8,seg:b>0?5:6,up:[1,0,0]}),paint,A,B,{from:[x,.14+(b>0?.05:.04),z],to:[x,.14-.025,z]});
-      // The haunch rides the body and flows down into the thigh.
-      if(b<0)put(r,sweep(T,[[x-.035,.405,z*.45],[x-.02,.335,z*.85],[x-.003,.27,z]],[[.085*thin,.068*thin],[.074*thin,.064*thin],[.057*thin,.055*thin]],{n:7,seg:2,up:[1,0,0],bump:collie?fluff:null}),paint,'body',{bone:'hip'+i,from:[x-.03,.4,z],to:[x,.27,z]});
+      // The haunch rides the body and wraps the top of the thigh, so the leg
+      // steps out from under it without a crease.
+      if(b<0)put(r,sweep(T,[[x-.035,.405,z*.45],[x-.022,.345,z*.8],[x-.006,.275,z]],[[.085*thin,.068*thin],[.075*thin,.067*thin],[.066*thin,.062*thin]],{n:7,seg:2,up:[1,0,0],bump:collie?fluff:null}),paint,'body',{bone:'hip'+i,from:[x-.03,.4,z],to:[x-.01,.3,z]});
       r.sphere(.035*thin,[x+.013,.015-.035,z],(x2,y2,z2)=>paint(x2,.01,z2),'paw'+i,[1.35,.62,1.08],[0,0,0],5,3);
       Object.assign(hip.userData,{knee,paw,phase:(x>0)===(z<0)?0:.5,bend:b});
       legs.push(hip);
@@ -754,6 +778,10 @@
     // The rooster stands taller and prouder on longer legs.
     const lift=rooster?.035:0,Y=y=>y+lift;
     const hy=Y(.285),hz=.095;
+    // A Light Sussex and the white rooster wear a cape of black-striped
+    // hackle round the base of the neck and over the shoulders: dark
+    // streaks laced with the body colour.
+    const cape=(x,y,z,base)=>C.collar&&y>Y(.2)&&Math.hypot(x,z-.075)<.075&&fleck(x,y,z)>.35?C.collar:base;
     r.bone('body',null,[0,Y(.12),0]);r.bone('neck','body',[0,Y(.19),.06]);r.bone('head','neck',[0,Y(.27),.09]);
     r.bone('beak','head',[0,hy-.011,hz+.055]);
     r.bone('tail','body',[0,Y(.19),-.09]);
@@ -771,13 +799,14 @@
     }
     // Plump egg of a body: tail end high, breast full and forward.
     const breast=rooster?.012:0;
-    put(r,sweep(T,[[0,Y(.205),-.13],[0,Y(.175),-.085],[0,Y(.15),-.02],[0,Y(.152)+breast,.04],[0,Y(.178)+breast*2,.085],[0,Y(.2)+breast*2,.1]],[[.035,.03],[.075,.078],[.09,.092],[.086,.086],[.06,.062],[.03,.03]],{n:12,seg:7}),paint,'body');
+    put(r,sweep(T,[[0,Y(.205),-.13],[0,Y(.175),-.085],[0,Y(.15),-.02],[0,Y(.152)+breast,.04],[0,Y(.178)+breast*2,.085],[0,Y(.2)+breast*2,.1]],[[.035,.03],[.075,.078],[.09,.092],[.086,.086],[.06,.062],[.03,.03]],{n:12,seg:7}),(x,y,z)=>cape(x,y,z,paint(x,y,z)),'body');
     const hackle=C.hackle||C.body;
-    put(r,sweep(T,[[0,Y(.18),.06],[0,Y(.23),.083],[0,Y(.27),.09]],rooster?[[.05,.048],[.04,.038],[.032,.03]]:[[.046,.044],[.036,.034],[.03,.028]],{n:7,seg:4,bump:rooster?(t,a)=>1+.14*Math.max(0,Math.sin(a*9))*t:null}),(x,y,z)=>C.collar&&y<Y(.24)?mix(C.collar,C.body,clamp((y-Y(.19))*25,0,.5)):C.hackle?hackle:paint(x,y,z),'body',{bone:'neck',from:[0,Y(.19),.06],to:[0,Y(.245),.085]});
+    put(r,sweep(T,[[0,Y(.18),.06],[0,Y(.23),.083],[0,Y(.27),.09]],rooster?[[.05,.048],[.04,.038],[.032,.03]]:[[.046,.044],[.036,.034],[.03,.028]],{n:7,seg:4,bump:rooster?(t,a)=>1+.14*Math.max(0,Math.sin(a*9))*t:null}),(x,y,z)=>cape(x,y,z,C.hackle?hackle:paint(x,y,z)),'body',{bone:'neck',from:[0,Y(.19),.06],to:[0,Y(.245),.085]});
     // The rooster's saddle hackles spill over his back towards the tail.
     if(rooster)put(r,sweep(T,[[0,Y(.215),-.005],[0,Y(.225),-.05],[0,Y(.215),-.1],[0,Y(.19),-.125]],[[.024,.05],[.03,.062],[.026,.05],[.01,.02]],{n:7,seg:4,bump:(t,a)=>1+.16*Math.max(0,Math.sin(a*7+t*9))}),C.saddle,'body');
     // Head, beak, comb, wattles and a bright orange eye.
-    r.sphere(.034,[0,hy,hz],rooster||C.hackle?hackle:paint(0,hy,hz),'head',[.95,1,1.1],[0,0,0],8,6);
+    const crown=rooster||C.hackle?hackle:paint(0,hy,hz);
+    r.sphere(.034,[0,hy,hz],(x,y,z)=>y<hy-.018&&z<hz?cape(x,y,z,crown):crown,'head',[.95,1,1.1],[0,0,0],8,6);
     r.cone(.012,.032,[0,hy-.006,hz+.04],0xe2aa44,'head',[PI/2+.3,0,0],6);
     const comb=0xd02e2a;
     const peaks=rooster?[[.028,-.016,.017],[.037,.002,.02],[.04,.02,.019],[.034,.037,.016],[.024,.05,.012]]:[[.028,.004,.012],[.032,.018,.013],[.026,.032,.01]];
@@ -812,8 +841,10 @@
     // The head holds still in space while the body walks on beneath it,
     // then thrusts forward to catch up: once for every step.
     const q=cyc*2-Math.floor(cyc*2),hold=w*.27*(q<.72?.5-q/.72:(q-.72)/.28-.5);
-    // At rest it looks about in quick, stepped turns, the way a chicken does.
-    const beat=Math.floor(time*1.4+ph),look=Math.sin(beat*12.9898)*.7*still*(1-peck),tilt=Math.sin(beat*4.1)*.2*still;
+    // At rest it looks about in quick, stepped turns, the way a chicken does:
+    // each glance snaps round in a few frames, then holds.
+    const beat=time*1.4+ph,b=Math.floor(beat),snap=smooth(0,.12,beat-b);
+    const look=glance(b,snap,12.9898)*.7*still*(1-peck),tilt=glance(b,snap,4.1)*.2*still;
     R.body.position.y=R.bodyY-crouch-Math.abs(Math.sin(cyc*TURN))*.006*w+Math.sin(time*2+ph)*.0015*motion;
     R.body.rotation.set(peck*.55+.04*w,0,Math.sin(cyc*TURN)*.08*w);
     R.neck.rotation.set(peck*1.05+hold+Math.sin(time*.9+ph)*.05*still,0,0);
@@ -945,7 +976,7 @@
     const a=ux*ux+uz*uz,b=ux*vx+uz*vz,c=ux*wx+uz*wz,e=vx*vx+vz*vz,f=vx*wx+vz*wz,den=a*e-b*b;
     let s=den>1e-9?clamp((b*f-c*e)/den,0,1):0,t=(b*s+f)/e;
     if(t<0){t=0;s=clamp(-c/a,0,1);}else if(t>1){t=1;s=clamp((b-c)/a,0,1);}
-    return Math.hypot(wx+ux*s-vx*t,wz+uz*s-vz*t);
+    const x=wx+ux*s-vx*t,z=wz+uz*s-vz*t;return Math.sqrt(x*x+z*z);
   }
   // Pen-mates keep their bodies apart. Each body is a capsule along its spine
   // (userData.barrel: rump, chest and girth in model units); room() is the
@@ -956,8 +987,8 @@
     if(!A||!mates)return Infinity;
     const s=g.scale.x,c=Math.cos(yaw)*s,n=-Math.sin(yaw)*s;
     let space=Infinity;
-    for(const m of mates){
-      const B=m.userData.barrel;if(m===g||!B)continue;
+    for(let i=0;i<mates.length;i++){
+      const m=mates[i],B=m.userData.barrel;if(m===g||!B)continue;
       const k=m.scale.x,mc=Math.cos(m.rotation.y)*k,mn=-Math.sin(m.rotation.y)*k,mx=m.position.x,mz=m.position.z;
       space=Math.min(space,segments(x+A[0]*c,z+A[0]*n,x+A[1]*c,z+A[1]*n,mx+B[0]*mc,mz+B[0]*mn,mx+B[1]*mc,mz+B[1]*mn)-A[2]*s-B[2]*k);
     }
