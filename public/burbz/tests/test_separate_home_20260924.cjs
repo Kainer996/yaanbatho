@@ -3,7 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=f=>fs.readFileSync(__dirname+'/../'+f,'utf8');
 const html=read('index.html'),home=read('scan_home.js'),sw=read('sw.js');
-const rev='academy-plain-tree-v468-20260924';
+const rev='academy-plain-tree-v471-20260925';
 const fn=name=>{const m=html.match(new RegExp('function '+name+'\\([^]*?\\n}'));assert(m,name);return m[0];};
 test('Academy navigation selects its independent screen and starts the tree, then Home returns to its desk',()=>{
  const calls=[],noop=()=>{},classes={add:noop,remove:noop};
@@ -27,7 +27,7 @@ test('Home stacks the four rooms left, puts a condensed Academy right, and the d
  assert.doesNotMatch(dock,/data-quick-destination/);
  assert.match(html,/id="headerHomeBtn" data-game-route data-screen="scan"/);
  assert.match(html,/target:'#screen-scan \.desk-panel-academy \.desk-panel-heading'/);
- assert.match(html,/target:'#headerHomeBtn'/);
+ // v469 retired the "tap the logo" lesson: the player walks Home in their own time.
 });
 test('Academy tree and construction remain independent without merged intro takeover',()=>{
  assert.ok(html.includes('id="screen-academy"'));
