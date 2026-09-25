@@ -106,7 +106,7 @@ test('the night sky respects reduced motion',()=>{
 test('v483 ships together: build marker, cache, three worker lists, updater and night art',()=>{
  const BUILD='academy-day-night-v483-20260925',html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
  // Later releases ship on top under their own marker; v483 stays in the cache chain.
- const LATER=[],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ const LATER=['desk-screen-v484-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));assert(cache.includes('-'+BUILD)&&shipped.some(b=>cache.endsWith('-'+b)));
  for(const file of ['academy_daynight.js','academy_daynight.css','academy_alive_core.js','academy_3d_core.js','scan_home.js','scan_home.css']){
   assert(shipped.some(b=>sw.split("'./"+file+'?v='+b+"'").length-1===3),file+' in all three worker lists');
