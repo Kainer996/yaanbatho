@@ -121,7 +121,8 @@ test('a pilot aloft can look straight down; on foot the old head range stays',()
 
 test('v470 ships together: build marker, cache, three worker lists, loader and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
- assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));assert(/const BURBZ_CACHE = '[^']*-alderwing-nature-v470-20260925';/.test(sw));
+ // Later releases append to the cache name and move the build marker on, so check membership.
+ assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes('-alderwing-nature-v470-20260925'));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
