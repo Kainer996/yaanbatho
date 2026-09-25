@@ -1,11 +1,11 @@
 'use strict';
-// Alderwing seamless v480: nothing pops as the viewer moves. The ground bends
+// Alderwing seamless v481: nothing pops as the viewer moves. The ground bends
 // onto the distant land by distance, trees end one at a time on a round edge,
 // canopy crowns carry the woods on, shadows hold still, and rain brings clouds.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const K=require('../village_world_core.js');
-const BUILD='alderwing-seamless-v480-20260925';
+const BUILD='alderwing-seamless-v481-20260925';
 global.THREE=require('../lib/three.min.js');const T=global.THREE;
 global.document={createElement:()=>({style:{},addEventListener(){},remove(){}})};global.matchMedia=()=>({matches:false});
 global.BurbzDaylightCore=require('../daylight_core.js');
@@ -154,7 +154,7 @@ test('rain brings clouds: the sky, light and haze follow the real weather',()=>{
  assert(explore.includes('const dx=(wind-vx)*dt,dy=(speed+vy)*dt,dz=-vz*dt;'),'streaming past at the craft\'s own speed');
 });
 
-test('v480 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
+test('v481 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
  assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
