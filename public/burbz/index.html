@@ -141,6 +141,18 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10);
 }
 .header-diary-btn svg { width:23px; height:23px; display:block; }
+/* Full screen shows only in a browser tab that can hide its own bars. */
+.header-fullscreen-btn {
+  width:36px; height:36px; flex:0 0 36px; display:grid; place-items:center; padding:0;
+  border-radius:10px; border:1px solid rgba(214,168,79,.24);
+  background:linear-gradient(135deg,rgba(214,168,79,.16),rgba(255,255,255,.04));
+  color:var(--accent2); box-shadow:0 0 12px rgba(214,168,79,.10); cursor:pointer;
+}
+.header-fullscreen-btn[hidden] { display:none; }
+.header-fullscreen-btn svg { width:21px; height:21px; display:block; }
+.header-fullscreen-btn:active { transform:scale(.94); }
+.woodland-ui .header-fullscreen-btn { border-color:var(--ui-edge); background:var(--ui-surface); box-shadow:inset 0 1px 0 #fff1,0 2px 4px #0006; }
+.comic-ui .header-fullscreen-btn { background:var(--comic-paper); border:2px solid var(--comic-ink); border-radius:7px; box-shadow:2px 2px 0 var(--comic-ink); color:var(--comic-ink); }
 /* Back always stands top-left: it walks the screen trail, like the phone's own back. */
 .header-back-btn {
   width:36px; height:36px; flex:0 0 36px; display:grid; place-items:center; padding:0;
@@ -158,6 +170,7 @@ button { cursor: pointer; -webkit-user-select: none; user-select: none; }
   .header.distributed-hud-header .header-logo{width:min(20vw,78px);}
   .header.distributed-hud-header .header-back-btn,
   .header.distributed-hud-header .header-diary-btn,
+  .header.distributed-hud-header .header-fullscreen-btn,
   .header.distributed-hud-header .header-profile-btn,
   .header.distributed-hud-header .header-settings{width:34px;height:34px;flex-basis:34px;}
 }
@@ -4671,7 +4684,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=desk-screen-v484-20260925">
+<link rel="stylesheet" href="scan_home.css?v=quests-strip-v488-20260925">
 <link rel="stylesheet" href="academy_daynight.css?v=academy-day-night-v483-20260925">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
@@ -4722,6 +4735,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
     </button>
     <button class="header-diary-btn" id="headerDiaryBtn" data-game-route data-screen="diary" aria-label="Diary" title="Diary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.8 4.2c-4.6.5-8.2 2.5-10.4 6.1-1 1.7-1.6 3.6-1.8 5.7 2.1-.2 4-.8 5.7-1.8 3.6-2.2 5.6-5.8 6.1-10.4Z"/><path d="M4 20c2.8-2.8 5.6-5.6 9-9"/></svg></button>
     <button class="header-profile-btn" id="headerProfileBtn" aria-label="Profile"><img src="assets/ui/burbz-icon-set/profile.webp" alt=""></button>
+    <button type="button" class="header-fullscreen-btn" id="headerFullscreenBtn" aria-label="Full screen" title="Full screen" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     <button class="header-settings" id="settingsBtn" aria-label="Settings"><img src="assets/ui/burbz-icon-set/settings.webp" alt=""></button>
   </header>
   <div class="global-money-hud" id="globalMoneyHud" role="status" aria-live="polite" aria-label="Player money">
@@ -4807,7 +4821,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         </div>
       </div>
 
-      <section class="scan-home-today" aria-label="Your next quest and player equipment"><span class="desk-current-label">Quests</span><div id="scanHomeActions" class="scan-home-actions"></div><div id="deskBuildOptions" class="desk-build-options" aria-label="Available buildings"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><img src="assets/home-v399/warrior-equipment.webp" alt="" width="256" height="384"><span>Equipment</span></button></section>
+      <section class="scan-home-today" aria-label="Your next quest and player equipment"><button type="button" class="desk-current-label" data-home-action="next-quest" aria-label="Open your current quest">Quests</button><div id="scanHomeActions" class="scan-home-actions"></div><div id="deskBuildOptions" class="desk-build-options" aria-label="Available buildings"></div><button type="button" class="desk-equipment-control" data-home-action="player-equipment" aria-haspopup="dialog"><img src="assets/home-v399/warrior-equipment.webp" alt="" width="256" height="384"><span>Equipment</span></button></section>
       <div id="scanHomeDeskPanels" class="desk-panels">
         <section class="desk-panel desk-panel-stores" aria-labelledby="desk-stores-title"><button type="button" class="desk-panel-heading" data-home-action="panel-stores"><span id="desk-stores-title">Crafting</span><small id="desk-stores-count"></small><span aria-hidden="true">↗</span></button><div id="desk-stores-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Crafting; open the Forge"></div></section>
         <section class="desk-panel desk-panel-kitchen" aria-labelledby="desk-kitchen-title"><button type="button" class="desk-panel-heading" data-home-action="panel-kitchen"><span id="desk-kitchen-title">Kitchen</span><small id="desk-kitchen-count"></small><span aria-hidden="true">↗</span></button><div id="desk-kitchen-list" class="desk-panel-scroll" tabindex="0" role="region" aria-label="Hungry birds; open the room for all entries"></div></section>
@@ -5432,6 +5446,10 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="settings-label">Vibration</div>
         <div class="settings-toggle on" id="toggleVibration"></div>
       </div>
+      <div class="settings-row" id="fullScreenRow" hidden>
+        <div><div class="settings-label" id="fullScreenLabel">Full screen</div><small>Hide the browser bars so nothing covers the game.</small></div>
+        <button type="button" role="switch" aria-checked="false" aria-labelledby="fullScreenLabel" class="settings-toggle" id="toggleFullScreen" style="min-width:44px;min-height:44px"></button>
+      </div>
       <div class="settings-row">
         <div><div class="settings-label" id="invertLookLabel">Invert vertical look</div><small>Reverse looking up and down in first person.</small></div>
         <button type="button" role="switch" aria-checked="false" aria-labelledby="invertLookLabel" class="settings-toggle" id="toggleInvertLook" style="min-width:44px;min-height:44px"></button>
@@ -5835,7 +5853,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="audio_core.js?v=music-rest-v487-20260925"></script>
 <script src="player_home_core.js?v=smooth-sky-plain-plot-v485-20260925"></script>
 <script src="player_home_scene.js?v=desk-screen-v484-20260925"></script>
-<script src="alderwing_intro.js?v=fold-screen-v488-20260925"></script>
+<script src="alderwing_intro.js?v=fold-fullscreen-v489-20260925"></script>
 <script src="merlin_story_scenes.js?v=merlin-opening-v467-20260924"></script>
 <script src="player_home.js?v=smooth-sky-plain-plot-v485-20260925"></script>
 <script src="academy_flight_core.js?v=glide-release-v481-20260925"></script>
@@ -45370,7 +45388,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'fold-screen-v488-20260925';
+const BURBZ_BUILD = 'fold-fullscreen-v489-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -46555,6 +46573,25 @@ $('toggleVibration').addEventListener('click', () => {
   gameState.settings.vibration = el.classList.contains('on');
   saveState();
 });
+
+// Full screen hides the browser's own bars so they never cover the game.
+// The header button shows only in a browser tab; an installed app already
+// fills the screen. Settings keeps the switch wherever the phone allows it.
+function burbzFullscreenOn(){return !!(document.fullscreenElement||document.webkitFullscreenElement);}
+function burbzCanFullscreen(){const el=document.documentElement;return !!(el.requestFullscreen||el.webkitRequestFullscreen)&&document.fullscreenEnabled!==false&&document.webkitFullscreenEnabled!==false;}
+function burbzInstalledApp(){return navigator.standalone===true||['standalone','fullscreen','window-controls-overlay'].some(mode=>matchMedia('(display-mode: '+mode+')').matches);}
+function syncBurbzFullscreen(){const can=burbzCanFullscreen(),on=burbzFullscreenOn();$('headerFullscreenBtn').hidden=!can||on||burbzInstalledApp();$('fullScreenRow').hidden=!can;$('toggleFullScreen').classList.toggle('on',on);$('toggleFullScreen').setAttribute('aria-checked',String(on));}
+function toggleBurbzFullscreen(){
+  const el=document.documentElement;let change;
+  try{change=burbzFullscreenOn()?(document.exitFullscreen||document.webkitExitFullscreen).call(document):el.requestFullscreen?el.requestFullscreen({navigationUI:'hide'}):el.webkitRequestFullscreen();}catch(_){change=null;}
+  Promise.resolve(change).catch(()=>{}).then(syncBurbzFullscreen);
+  try{SFX.tap();}catch(_){}
+}
+$('headerFullscreenBtn').addEventListener('click',toggleBurbzFullscreen);
+$('toggleFullScreen').addEventListener('click',toggleBurbzFullscreen);
+document.addEventListener('fullscreenchange',syncBurbzFullscreen);
+document.addEventListener('webkitfullscreenchange',syncBurbzFullscreen);
+syncBurbzFullscreen();
 
 // Start New Game: the full restart used for testing playthroughs. Rides the
 // same ?reset flow as the reset link, so local progress is cleared while the

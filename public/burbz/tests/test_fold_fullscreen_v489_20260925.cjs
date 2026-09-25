@@ -4,7 +4,7 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const root=path.join(__dirname,'..'),read=n=>fs.readFileSync(path.join(root,n),'utf8');
 const source=process.env.TOUR_SOURCE?fs.readFileSync(process.env.TOUR_SOURCE,'utf8'):read('alderwing_intro.js');
-const build='fold-screen-v488-20260925';
+const build='fold-fullscreen-v489-20260925';
 function fixture(initial,kind,screen,view){
  let saved=initial,done=0;const events={},timers=[];
  class Node{constructor(){this.isConnected=true;this.children={};this.dataset={};this.textContent='';this.hidden=false;}setAttribute(){}append(n){n.parentElement=this;this.child=n;n.isConnected=true;}remove(){this.isConnected=false;if(this.parentElement?.child===this)this.parentElement.child=null;}set innerHTML(x){for(const k of ['p','small','button','.ai-turn-demo'])this.children[k]=new Node();}querySelector(k){return this.children[k]||null;}addEventListener(e,fn){this[e]=fn;}}
@@ -30,19 +30,32 @@ test('an open Fold whose view is taller than wide still enters the world',()=>{
  const f=fixture('landscape','world',[690,829],[690,700]);
  assert.equal(f.button.disabled,false);assert.match(f.text('p'),/already wide/);f.next();assert.equal(f.phase,'world');
 });
-test('an ordinary phone still has to tilt, and tilting still carries on by itself',()=>{
+test('an ordinary phone is asked to tilt back, and tilting still carries on by itself',()=>{
  const f=fixture('portrait','desk',[390,844],[844,390]);
- assert.equal(f.button.disabled,true);assert.match(f.text('p'),/Tilt your phone again/);assert.match(f.text('small'),/Rotate your phone/);
- f.next();assert.equal(f.phase,'portrait');f.resize(390,844);assert.equal(f.phase,'done');
+ assert.equal(f.button.disabled,false);assert.match(f.text('p'),/Tilt your phone again/);assert.match(f.text('small'),/Turn your phone upright, or tap Continue tutorial/);
+ f.resize(390,844);assert.equal(f.phase,'done');
 });
-test('a folded Fold and a small tablet still have to tilt',()=>{
- for(const screen of [[344,882],[820,1180]]){const f=fixture('portrait','desk',screen,[screen[1],screen[0]]);assert.equal(f.button.disabled,true,String(screen));}
+test('the portrait lesson never locks anyone in, whatever the phone reports',()=>{
+ for(const screen of [[390,844],[344,882],[820,1180],[0,0]]){const f=fixture('portrait','desk',screen,[900,420]);assert.equal(f.button.disabled,false,String(screen));f.next();assert.equal(f.phase,'done',String(screen));}
 });
-test('fold-screen v488 ships the intro under one new pin',()=>{
+test('a folded Fold and a small tablet still tilt into the landscape world',()=>{
+ for(const screen of [[344,882],[820,1180]]){const f=fixture('landscape','world',screen,screen);assert.equal(f.button.disabled,true,String(screen));f.next();assert.equal(f.phase,'landscape');f.resize(screen[1],screen[0]);assert.equal(f.phase,'world',String(screen));}
+});
+test('fold-fullscreen v489 ships the intro under one new pin',()=>{
  const html=read('index.html'),sw=read('sw.js');
  assert(html.includes("const BURBZ_BUILD = '"+build+"';"));
  assert(html.includes('<script src="alderwing_intro.js?v='+build+'"></script>'));
  assert.equal([...sw.matchAll(/alderwing_intro\.js\?v=([\w-]+)/g)].filter(m=>m[1]===build).length,3);
- assert.doesNotMatch(html+sw,/alderwing_intro\.js\?v=(?!fold-screen-v488)/);
+ assert.doesNotMatch(html+sw,/alderwing_intro\.js\?v=(?!fold-fullscreen-v489)/);
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes('-'+build));
+});
+test('full screen sits in the top bar and in Settings, and hides once on',()=>{
+ const html=read('index.html');
+ const header=html.slice(html.indexOf('<header class="header'),html.indexOf('</header>'));
+ assert(header.indexOf('id="headerFullscreenBtn"')>=0&&header.indexOf('id="headerFullscreenBtn"')<header.indexOf('id="settingsBtn"'));
+ assert.match(header,/id="headerFullscreenBtn"[^>]*hidden/);
+ assert.match(html,/id="fullScreenRow" hidden/);assert.match(html,/role="switch"[^>]*id="toggleFullScreen"/);
+ const sync=html.slice(html.indexOf('function syncBurbzFullscreen'),html.indexOf('function toggleBurbzFullscreen'));
+ assert.match(sync,/headerFullscreenBtn'\)\.hidden=!can\|\|on\|\|burbzInstalledApp\(\)/);
+ assert.match(html,/addEventListener\('fullscreenchange',syncBurbzFullscreen\)/);
 });
