@@ -35,7 +35,9 @@ CURRENT_BUILD = "photo-accuracy-v393-20260911"
 # magpie-market-v316 edited this core, so it ships under that tag now.
 MAGPIE_CORE_PIN = "rook-recognition-special-characters-v347-20260904"
 
-BRANCH_SPRITES = ("branch-a", "branch-b", "branch-c", "branch-d")
+# v475 repainted the tree and boughs in the bird-card manga style.
+ART_DIR = ("assets", "academy-manga-20260925")
+BRANCH_SPRITES = ("bough-a", "bough-b", "bough-c", "bough-d")
 
 
 def _run_node(script: str) -> dict:
@@ -54,9 +56,9 @@ def _run_node(script: str) -> dict:
 # ---- the new tree ------------------------------------------------------------
 
 def test_new_tree_painting_ships_and_is_referenced():
-    assert (ROOT / "assets" / "academy-tree-manga-20260806.webp").exists()
+    assert (ROOT / "assets" / "academy-manga-20260925" / "tree.webp").exists()
     rule = re.search(r"\.academy-tree-swaybg[^{]*\{([^}]*)\}", HTML)
-    assert rule and "academy-tree-manga-20260806.webp" in rule.group(1), (
+    assert rule and "academy-manga-20260925/tree.webp" in rule.group(1), (
         "the sway div must paint the new tree"
     )
     # The old painting must no longer be precached — users should not pay for
@@ -78,7 +80,7 @@ def test_the_trunk_breathes_instead_of_warping():
 
 def test_branch_sprites_ship():
     for name in BRANCH_SPRITES:
-        assert (ROOT / "assets" / "academy-branches" / f"{name}.webp").exists(), name
+        assert (ROOT.joinpath(*ART_DIR) / f"{name}.webp").exists(), name
 
 
 def test_branches_sandwich_the_buildings():
@@ -172,7 +174,7 @@ def test_release_is_pinned_and_shipped():
         assert f"{core}?v={pin}" in HTML, core
         assert f"./{core}?v={pin}" in SW, core
     for name in BRANCH_SPRITES:
-        assert f"./assets/academy-branches/{name}.webp" in SW, (
+        assert f"./assets/academy-manga-20260925/{name}.webp" in SW, (
             f"{name} must be precached for offline play"
         )
-    assert "./assets/academy-tree-manga-20260806.webp" in SW
+    assert "./assets/academy-manga-20260925/tree.webp" in SW
