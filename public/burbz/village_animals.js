@@ -78,11 +78,6 @@
   }
   const put=(r,geo,color,bone,blend)=>r.add(geo,color,[0,0,0],[0,0,0],[1,1,1],bone,blend);
   const lerp3=(a,b,t)=>[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t];
-  // Euler angles that turn local +Z to face `dir`.
-  function facing(T,dir){
-    const q=new T.Quaternion().setFromUnitVectors(new T.Vector3(0,0,1),new T.Vector3(dir[0],dir[1],dir[2]).normalize());
-    const e=new T.Euler().setFromQuaternion(q);return [e.x,e.y,e.z];
-  }
   // A storybook eye set into the head: a glossy iris, an optional pupil and
   // a bright catch-light up and forward. `fwd` is the way the animal faces.
   // An upper lid in the coat colour gives a calm, gentle look; on its own
@@ -91,7 +86,10 @@
     const T=r.T,n=new T.Vector3(out[0],out[1],out[2]).normalize(),fw=new T.Vector3(o.fwd[0],o.fwd[1],o.fwd[2]);
     const f=fw.addScaledVector(n,-n.dot(fw)).normalize(),u=new T.Vector3().crossVectors(n,f);if(u.y<0)u.negate();
     const at=(k,a,b)=>[c[0]+(n.x*k+u.x*a+f.x*b)*rad,c[1]+(n.y*k+u.y*a+f.y*b)*rad,c[2]+(n.z*k+u.z*a+f.z*b)*rad];
-    const rot=facing(T,out),[w,h]=o.seg||[7,5];
+    // Turn each part so its +Z looks out of the eye and its +Y stays up, so
+    // both eyes wear their lids on top and slit pupils lie the same way.
+    const e=new T.Euler().setFromRotationMatrix(new T.Matrix4().makeBasis(new T.Vector3().crossVectors(u,n),u,n));
+    const rot=[e.x,e.y,e.z],[w,h]=o.seg||[7,5];
     if(o.rim)r.sphere(rad*1.16,at(-.12,0,0),o.rim,bone,[1,1,.6],rot,7,4);
     r.sphere(rad,c,o.iris,bone,[1,1,.72],rot,w,h);
     if(o.pupil)r.sphere(rad*.6,at(.46,0,.04),0x0d0806,bone,o.pupil,rot,6,3);
@@ -282,7 +280,7 @@
       hind:{x:-.15,z:.08,hip:.3,junction:[[-.01,.34,.7,.055],[.01,.2,.045]],upper:[[.01,.22,.04],[-.005,.18,.031],[-.03,.14,.026]],lower:[[-.03,.14,.026],[-.022,.09,.02],[-.015,.045,.022],[-.007,.03,.021]],fet:2,hoof:[.02,.024,.032,-.005],hoofColor:0x2e2622,n:[6,6]},
     },(x,y,z)=>y>.2?wool(x,y,z):C.legs);
     put(r,sweep(T,[[-.25,.41,0],[-.295,.37,0],[-.31,.32,0]],[.042,.04,.028],{n:6,seg:2,bump:curls}),wool,'tail');
-    return {name:C.name,breed:C.breed,legs,reach:.5,gait:{sweep:.5*.62,duty:.62,lift:.045,toe:.012,flex:.9,bob:.008,roll:.035,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.38,grazeHead:-.5,grazePitch:-.08},extra:{cud:true}};
+    return {name:C.name,breed:C.breed,legs,reach:.5,barrel:[-.13,.16,.17],gait:{sweep:.5*.62,duty:.62,lift:.045,toe:.012,flex:.9,bob:.008,roll:.035,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.38,grazeHead:-.5,grazePitch:-.08},extra:{cud:true}};
   }
 
   // ---- Goat -----------------------------------------------------------------------
@@ -324,7 +322,7 @@
       hind:{x:-.17,z:.07,hip:.36,junction:[[-.01,.4,.7,.065],[.015,.25,.05]],upper:[[.015,.27,.045],[-.005,.21,.032],[-.035,.17,.027]],lower:[[-.035,.17,.027],[-.025,.1,.02],[-.015,.05,.023],[-.008,.035,.022]],fet:2,hoof:[.02,.024,.038,-.005],hoofColor:0x3a3029,n:[7,6]},
     },paint);
     put(r,sweep(T,[[-.26,.47,0],[-.28,.51,0],[-.285,.55,0]],[.02,.016,.004],{n:5,seg:2}),paint,'tail');
-    return {name:C.name,breed:coat,legs,reach:.49,gait:{sweep:.5*.62,duty:.62,lift:.05,toe:.012,flex:.9,bob:.009,roll:.025,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.55,grazeHead:-.65,grazePitch:-.07},extra:{cud:true}};
+    return {name:C.name,breed:coat,legs,reach:.49,barrel:[-.19,.22,.11],gait:{sweep:.5*.62,duty:.62,lift:.05,toe:.012,flex:.9,bob:.009,roll:.025,pitch:.012,nod:.05,nodPhase:.4,grazeNeck:1.55,grazeHead:-.65,grazePitch:-.07},extra:{cud:true}};
   }
 
   // ---- Pig --------------------------------------------------------------------------
@@ -371,7 +369,7 @@
     // A proper corkscrew tail.
     const curl=[];for(let i=0;i<=8;i++){const a=i/8*TURN*1.25;curl.push([-.255-.03*i/8-Math.sin(a)*.018,.33+Math.cos(a)*.018-.01*i/8,Math.sin(a*.5)*.012]);}
     put(r,sweep(T,curl,curl.map((_,i)=>.01-.004*i/8),{n:4,seg:8}),paint,'tail');
-    return {name:C.name,breed,legs,reach:.45,
+    return {name:C.name,breed,legs,reach:.45,barrel:[-.1,.2,.165],
       gait:{sweep:.42*.64,duty:.64,lift:.035,toe:.01,flex:.7,bob:.006,roll:.045,pitch:.01,nod:.035,nodPhase:.4,grazeNeck:.75,grazeHead:.45,grazePitch:-.06}};
   }
 
@@ -435,7 +433,7 @@
     },paint);
     put(r,sweep(T,[[-.66,.84,0],[-.7,.76,0],[-.71,.66,0],[-.71,.59,0]],[.025,.018,.015,.014],{n:6,seg:4}),paint,'tail',{bone:'tail2',from:[-.7,.68,0],to:[-.71,.6,0]});
     put(r,sweep(T,[[-.71,.61,0],[-.71,.5,0],[-.705,.41,0]],[.014,.035,.012],{n:7,seg:4,bump:(t,a)=>1+.15*Math.sin(a*5+t*9)}),hl?light(base,.1):fr||hf?white:dark(base,.4),'tail2');
-    return {name:C.name,breed,legs,reach:.95,
+    return {name:C.name,breed,legs,reach:.95,barrel:[-.4,.4,.23],
       gait:{sweep:.78*.63,duty:.63,lift:.065,toe:.02,flex:.8,bob:.01,roll:.03,pitch:.01,nod:.05,nodPhase:.4,grazeNeck:1.45,grazeHead:-.8,grazePitch:-.06},extra:{tailHangs:true,restHoof:true,cud:true}};
   }
 
@@ -499,7 +497,7 @@
     // Cobs and duns grow soft feathering over the hoof.
     if(cob)for(const [x,z,i] of [[.3,-.105,0],[.3,.105,1],[-.43,-.115,2],[-.43,.115,3]])
       r.sphere(.05,[x+.008,.075,z],light(C.dun?0x8a7a68:C.mane,.3),'foot'+i,[1,.75,1],[0,0,0],6,3);
-    return {name:C.name,breed:C.breed,legs,reach:.85,
+    return {name:C.name,breed:C.breed,legs,reach:.85,barrel:[-.34,.3,.2],
       gait:{sweep:.95*.62,duty:.62,lift:.1,toe:.022,flex:1.1,bob:.014,roll:.025,pitch:.012,nod:.07,nodPhase:.9,grazeNeck:1.6,grazeHead:-.9,grazePitch:-.07},extra:{tailHangs:true,restHoof:true}};
   }
 
@@ -890,9 +888,10 @@
       const s=HOOFED[kind](r,h,rnd),f=r.finish({name:'village-'+kind,pad:.22}),b=f.bones;g.add(f.mesh);
       const R=Object.assign({type:'hoofed',body:b.body,bodyY:b.body.position.y,neck:b.neck,head:b.head,jaw:b.jaw,ears:[b.earL,b.earR],lids:[b.lidL,b.lidR],tail:b.tail,tail2:b.tail2||null,legs:s.legs,gait:s.gait},s.extra);
       // reach: how far nose or tail stands out from the middle, so a pen can
-      // keep the whole animal inside its rails.
+      // keep the whole animal inside its rails. barrel: the body's spine from
+      // rump to chest and its girth, so pen-mates keep out of each other.
       Object.assign(g.userData,{rig:R,livestockKind:kind,animalKind:kind,animalName:s.name,breed:s.breed,neck:R.neck,head:R.head,muzzle:b.muzzle,jaw:b.jaw,legs:s.legs,
-        knees:s.legs.map(l=>l.userData.leg.knee),ears:R.ears,tail:R.tail,body:R.body,reach:s.reach,phase,baseRotationY:0});
+        knees:s.legs.map(l=>l.userData.leg.knee),ears:R.ears,tail:R.tail,body:R.body,reach:s.reach,barrel:s.barrel,phase,baseRotationY:0});
       poseHoofed(g,STILL,0,0);return g;
     }
     if(kind==='cat'){
@@ -940,41 +939,88 @@
     const off=wrap(yaw-g.rotation.y),step=Math.max(-rate*dt,Math.min(rate*dt,off));
     g.rotation.y=wrap(g.rotation.y+step);return Math.abs(off-step);
   }
-  // Pen animals amble between grazing spots inside their own fence, turn on
-  // the spot before they walk, keep out of each other's way, and put their
-  // heads right down to the grass while they wait.
+  // Closest distance between two flat segments, AB and CD; 0 when they cross.
+  function segments(ax,az,bx,bz,cx,cz,dx,dz){
+    const ux=bx-ax,uz=bz-az,vx=dx-cx,vz=dz-cz,wx=ax-cx,wz=az-cz;
+    const a=ux*ux+uz*uz,b=ux*vx+uz*vz,c=ux*wx+uz*wz,e=vx*vx+vz*vz,f=vx*wx+vz*wz,den=a*e-b*b;
+    let s=den>1e-9?clamp((b*f-c*e)/den,0,1):0,t=(b*s+f)/e;
+    if(t<0){t=0;s=clamp(-c/a,0,1);}else if(t>1){t=1;s=clamp((b-c)/a,0,1);}
+    return Math.hypot(wx+ux*s-vx*t,wz+uz*s-vz*t);
+  }
+  // Pen-mates keep their bodies apart. Each body is a capsule along its spine
+  // (userData.barrel: rump, chest and girth in model units); room() is the
+  // clear space between this animal, stood at x, z facing yaw, and its
+  // nearest mate. Below zero they touch.
+  function room(g,x,z,yaw){
+    const A=g.userData.barrel,mates=g.userData.penMates;
+    if(!A||!mates)return Infinity;
+    const s=g.scale.x,c=Math.cos(yaw)*s,n=-Math.sin(yaw)*s;
+    let space=Infinity;
+    for(const m of mates){
+      const B=m.userData.barrel;if(m===g||!B)continue;
+      const k=m.scale.x,mc=Math.cos(m.rotation.y)*k,mn=-Math.sin(m.rotation.y)*k,mx=m.position.x,mz=m.position.z;
+      space=Math.min(space,segments(x+A[0]*c,z+A[0]*n,x+A[1]*c,z+A[1]*n,mx+B[0]*mc,mz+B[0]*mn,mx+B[1]*mc,mz+B[1]*mn)-A[2]*s-B[2]*k);
+    }
+    return space;
+  }
+  // Pick the roomiest of a few spots a short amble away, so pen-mates spread
+  // out, but never trade a comfy spot for a tighter one.
+  function roam(g,L){
+    const here=room(g,L.x,L.z,g.rotation.y);let best=-Infinity;
+    for(let tries=0;tries<6;tries++){
+      const a=Math.random()*TAU,d=.3+Math.random()*.7;
+      const tx=clamp(L.x+Math.cos(a)*d,-L.pen.hw,L.pen.hw),tz=clamp(L.z+Math.sin(a)*d,-L.pen.hd,L.pen.hd);
+      const space=room(g,tx,tz,Math.atan2(L.z-tz,tx-L.x));
+      if(space>best){best=space;L.tx=tx;L.tz=tz;}
+    }
+    if(best<here&&best<.08){L.tx=L.x;L.tz=L.z;}
+  }
+  // A new pen shuffles its animals so nobody starts the day standing inside
+  // a pen-mate: each crowded one moves to the roomiest spot in its pen,
+  // turning a little if that helps. Nothing random, so a village keeps its look.
+  function settle(mates){
+    for(const g of mates){
+      const pen=g.userData.pen;let best=room(g,g.position.x,g.position.z,g.rotation.y);
+      if(!pen||best>=.05)continue;
+      let bx=g.position.x,bz=g.position.z,by=g.rotation.y;
+      for(let i=0;i<=6;i++)for(let j=0;j<=4;j++)for(let k=-1;k<=2;k++){
+        const x=(i/3-1)*pen.hw,z=(j/2-1)*pen.hd,yaw=g.rotation.y+k*PI/4,space=room(g,x,z,yaw);
+        if(space>best+1e-3){best=space;bx=x;bz=z;by=yaw;}
+      }
+      g.position.x=bx;g.position.z=bz;g.rotation.y=wrap(by);
+    }
+  }
+  // Pen animals amble between grazing spots inside their own fence, step
+  // round to face the way they go, keep out of each other's way, and put
+  // their heads right down to the grass while they wait.
   function livestock(g,t,motion){
     const u=g.userData,kind=u.livestockKind;
     if(!u.life){
       const pen=u.pen||{hw:.6,hd:.6};
-      u.life={x:g.position.x,z:g.position.z,tx:g.position.x,tz:g.position.z,wait:1.5+(u.phase||0)%3,walked:(u.phase||0)*.3,graze:0,pen,look:0};
       g.rotation.y=wrap(g.rotation.y);
+      u.life={x:g.position.x,z:g.position.z,tx:g.position.x,tz:g.position.z,wait:1.5+(u.phase||0)%3,walked:(u.phase||0)*.3,graze:0,pen,
+        state:{moving:false,stride:0,speed:0,graze:0}};
     }
     const L=u.life,dt=Math.max(0,Math.min(.12,t-(L.at??t)));L.at=t;let moving=false;
     if(motion>0){
-      if(L.wait>0){
-        L.wait-=dt;
-        if(L.wait<=0){
-          // Pick the roomiest of a few spots a short amble away, so pen-mates
-          // spread out instead of standing in each other.
-          let best=-1;
-          for(let tries=0;tries<6;tries++){
-            const a=Math.random()*TAU,d=.3+Math.random()*.7;
-            const tx=Math.max(-L.pen.hw,Math.min(L.pen.hw,L.x+Math.cos(a)*d)),tz=Math.max(-L.pen.hd,Math.min(L.pen.hd,L.z+Math.sin(a)*d));
-            let room=Infinity;for(const m of u.penMates||[])if(m!==g)room=Math.min(room,Math.hypot(m.position.x-tx,m.position.z-tz)/(m.scale.x+g.scale.x));
-            if(room>best){best=room;L.tx=tx;L.tz=tz;}
-          }
-          if(best<.3){L.tx=L.x;L.tz=L.z;}
-        }
-      }else{
+      if(L.wait>0){L.wait-=dt;if(L.wait<=0)roam(g,L);}
+      else{
         const dx=L.tx-g.position.x,dz=L.tz-g.position.z,dist=Math.hypot(dx,dz);
         if(dist<.03){L.wait=2.5+Math.random()*6;}
         else{
           // The body faces +X, so the heading is atan2(-dz, dx).
-          const off=steer(g,Math.atan2(-dz,dx),1.1,dt);
-          if(off<.2){
-            const speed=(kind==='horse'?.16:.1)*g.scale.x,step=Math.min(dist,speed*dt);
-            g.position.x+=dx/dist*step;g.position.z+=dz/dist*step;L.walked+=step/g.scale.x;moving=true;
+          const x=g.position.x,z=g.position.z,y0=g.rotation.y,before=room(g,x,z,y0),off=steer(g,Math.atan2(-dz,dx),1.1,dt);
+          const turned=Math.abs(wrap(g.rotation.y-y0)),speed=(kind==='horse'?.16:.1)*g.scale.x,step=off<.2?Math.min(dist,speed*dt):0;
+          const nx=x+dx/dist*step,nz=z+dz/dist*step,after=room(g,nx,nz,g.rotation.y);
+          if(after<.03&&after<before&&before>=0){
+            // A pen-mate is in the way: stop short and think again. One that
+            // is already squeezed may shuffle about to get free.
+            g.rotation.y=y0;L.wait=.6+Math.random();L.tx=x;L.tz=z;
+          }else if(step>0){
+            g.position.x=nx;g.position.z=nz;L.walked+=step/g.scale.x;moving=true;
+          }else if(turned>0){
+            // Turning on the spot, the hooves step round with the body.
+            L.walked+=turned*(u.reach||.5)*.45;moving=true;
           }
         }
       }
@@ -983,13 +1029,14 @@
       const want=moving?0:(L.wait>.8&&Math.sin(t*.37+(u.phase||0))>-.55?1:0);
       L.graze+=(want-L.graze)*Math.min(1,dt*1.8);
     }
-    pose(g,kind,{moving,stride:L.walked/(STRIDE[kind]||.5)*TAU,speed:moving?.1:0,graze:L.graze},t,motion);
+    const S=L.state;S.moving=moving;S.stride=L.walked/(STRIDE[kind]||.5)*TAU;S.speed=moving?.1:0;S.graze=L.graze;
+    pose(g,kind,S,t,motion);
   }
   // Hens strut a small patch of the square: a few quick steps, a look, then a
   // burst of pecks right down at the cobbles. Hens and roosters face +Z.
   function fowl(g,t,motion){
     const u=g.userData,kind=u.fowlKind||'hen';
-    if(!u.life)u.life={hx:g.position.x,hz:g.position.z,tx:g.position.x,tz:g.position.z,wait:(u.phase||0)%2,walked:0,peck:0,peckUntil:0};
+    if(!u.life)u.life={hx:g.position.x,hz:g.position.z,tx:g.position.x,tz:g.position.z,wait:(u.phase||0)%2,walked:0,peckUntil:0,state:{moving:false,stride:0,speed:0,graze:0}};
     const L=u.life,dt=Math.max(0,Math.min(.12,t-(L.at??t)));L.at=t;let moving=false,graze=0;
     if(motion>0){
       if(L.wait>0){
@@ -1006,13 +1053,14 @@
         }
       }
     }
-    pose(g,kind,{moving,stride:L.walked/(STRIDE[kind]||.16)*TAU,speed:moving?.32:0,graze},t,motion);
+    const S=L.state;S.moving=moving;S.stride=L.walked/(STRIDE[kind]||.16)*TAU;S.speed=moving?.32:0;S.graze=graze;
+    pose(g,kind,S,t,motion);
   }
   // The cat keeps its perch; the pose gives it a swishing tail and a
   // watchful head. Hens and roosters strut and peck.
   function small(g,t,motion){
-    if(g.userData.animalKind==='cat')pose(g,'cat',{moving:false,stride:0,speed:0,graze:0},t,motion);
+    if(g.userData.animalKind==='cat')pose(g,'cat',STILL,t,motion);
     else fowl(g,t,motion);
   }
-  root.BurbzVillageAnimals={make,pose,livestock,fowl,small,STRIDE};
+  root.BurbzVillageAnimals={make,pose,livestock,settle,fowl,small,STRIDE};
 })(typeof globalThis!=='undefined'?globalThis:this);

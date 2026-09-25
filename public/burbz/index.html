@@ -30761,6 +30761,11 @@ function settlementAnimateDog(dog, time, motion) {
   rig.neck.rotation.y=Math.sin(time*.8+rig.phase)*.18*motion;
   rig.ears.forEach((ear,i)=>ear.rotation.z=moving?Math.sin(stride*Math.PI*2+i)*.12:0);
   rig.tail.rotation.y=Math.sin(time*(moving?6:3))*0.4*motion;
+  // Mouth a little open on the trot, a proper pant at some stops, and the
+  // wag carries right to the tip of the tail.
+  const pant=moving?.35:Math.max(0,Math.sin(time*.23+rig.phase))*motion;
+  rig.jaw.rotation.z=-pant*(.2+.07*Math.sin(time*(moving?10:8)+rig.phase));
+  rig.tail2.rotation.y=Math.sin(time*(moving?6:3)-.8)*.3*motion;
   dog.userData.gait={moving,stride,speed:moving?.6:0};
 }
 // ---- Scene state ------------------------------------------------------------
@@ -33704,10 +33709,12 @@ function villageMakePen(r, pal, count) {
     critter.userData.penMates = mates;
     critter.position.set(Math.max(-critter.userData.pen.hw, Math.min(critter.userData.pen.hw, (r() - 0.5) * (w - 0.7))), 0, Math.max(-critter.userData.pen.hd, Math.min(critter.userData.pen.hd, (r() - 0.5) * (d - 0.7))));
     critter.rotation.y = r() * Math.PI * 2;
-    critter.userData.baseRotationY = critter.rotation.y;
     mates.push(critter);
     g.add(critter);
   }
+  // Nobody starts the day standing inside a pen-mate.
+  window.BurbzVillageAnimals.settle(mates);
+  for (const critter of mates) critter.userData.baseRotationY = critter.rotation.y;
   g.add(villageBlobShadow(Math.max(w, d) * 0.62));
   return g;
 }
@@ -36103,7 +36110,7 @@ function villageAnimatePhysicalSigns(signs, t) {
     u.hinge.rotation.z = (u.baseRotationZ || 0) + Math.sin(t * 0.72 + (u.phase || 0)) * 0.024;
   });
 }
-function villageAnimateTrafficActors(actors, t) {
+function villageAnimateTrafficActors(actors, t, motion = 1) {
   actors.forEach((actor, index) => {
     const u = actor.userData || {}, route = u.route;
     if (!route) return;
@@ -36121,10 +36128,10 @@ function villageAnimateTrafficActors(actors, t) {
     const travelled = Math.abs(t * (route.speed || 0.035)) * (rx + rz) / 2;
     (u.wheels || []).forEach((wheel, wi) => { wheel.rotation.y = -travelled / 0.34 + wi * Math.PI; });
     // The horse walks its four-beat walk, one stride for every stride of ground.
-    if (u.horse) window.BurbzVillageAnimals.pose(u.horse, 'horse', { moving:true, stride:travelled / 0.88 / window.BurbzVillageAnimals.STRIDE.horse * Math.PI * 2, speed:Math.abs(route.speed || 0.035) * (rx + rz) / 2, graze:0 }, t, 1);
+    if (u.horse) window.BurbzVillageAnimals.pose(u.horse, 'horse', { moving:true, stride:travelled / 0.88 / window.BurbzVillageAnimals.STRIDE.horse * Math.PI * 2, speed:Math.abs(route.speed || 0.035) * (rx + rz) / 2, graze:0 }, t, motion);
     if (u.pusher && u.pusher.userData.humanoidRig) {
       // The carter is scaled .9, so each stride covers a little less ground.
-      window.BurbzSettlementModels.animateResident(u.pusher, { moving:true, stride:travelled / 0.86 * Math.PI * 2, speed:Math.abs(route.speed || 0.035) * (rx + rz) / 2, activity:'Pushing' }, t, 1);
+      window.BurbzSettlementModels.animateResident(u.pusher, { moving:true, stride:travelled / 0.86 * Math.PI * 2, speed:Math.abs(route.speed || 0.035) * (rx + rz) / 2, activity:'Pushing' }, t, motion);
     }
   });
 }
@@ -36213,7 +36220,7 @@ function villageAnimateFrame(t, walking = false) {
   settlementSceneUpdateContext('village', villageCamera, villageScene);
   }
   villageAnimatePhysicalSigns(villageSigns, t);
-  villageAnimateTrafficActors(villageTraffic, t);
+  villageAnimateTrafficActors(villageTraffic, t, motion);
   villageAnimateLivestockActors(villageLivestock, t, motion);
   villageAnimateFlockActors(villageFlocks, t);
   villageAnimateConstructionActors(villageConstructionSites, t, motion);
@@ -37369,7 +37376,7 @@ function townAnimateFrame(t, walking = false) {
   settlementSceneUpdateContext('town', townCamera, townScene);
   }
   villageAnimatePhysicalSigns(townSigns, t);
-  villageAnimateTrafficActors(townTraffic, t);
+  villageAnimateTrafficActors(townTraffic, t, motion);
   villageAnimateLivestockActors(townLivestock, t, motion);
   villageAnimateFlockActors(townFlocks, t);
   villageAnimateConstructionActors(townConstructionSites, t, motion);
