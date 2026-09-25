@@ -5,6 +5,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const N=require('../world_nature_core.js'),W=require('../world_water_core.js');
 const BUILD='alderwing-nature-v470-20260925';
+// Later Alderwing releases that re-ship some of these modules under their own marker.
+const LATER=['alderwing-steady-v472-20260925'],current=build=>build===BUILD||LATER.includes(build);
 const layer=(sourceLayer,cls,subclass)=>({sourceLayer,geometry:{type:'Polygon'},properties:{class:cls,subclass}});
 const hex=rgb=>rgb.map(v=>Math.round(Math.pow(Math.max(0,v),1/2.2)*255));
 
@@ -60,7 +62,8 @@ test('mapped heath blooms purple in August and rusts after',()=>{
 
 test('unmapped land keeps authored woodland where the map records none nearby',()=>{
  const seasons=N.season(new Date('2026-06-01T12:00:00Z'),52),share=bias=>Array.from({length:1500},(_,i)=>N.sample({altitude:80,lat:52,seasons,openBias:bias,x:i*37.1,z:i*91.7})).filter(s=>s.kind==='woodland').length/1500;
- assert(share(0)>.45,'no woods mapped: a natural woodland mosaic');assert(share(1)<.1,'woods mapped nearby: unmapped ground is open country');
+ // v472 keeps close to half of it wooded even there, at Yaan's request for denser forest.
+ assert(share(0)>.45,'no woods mapped: a natural woodland mosaic');assert(share(1)<share(0)-.2,'woods mapped nearby: more unmapped ground is open country');
 });
 
 test('plant scatter is fixed in metres and never depends on the viewer',()=>{
@@ -127,10 +130,11 @@ test('v470 ships together: build marker, cache, three worker lists, loader and u
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
  const lazy=['world_nature_core.js','world_nature.js','world_horizon.js','world_water_core.js','world_water.js','shore_water.js','flight_craft.js','village_world.js'],direct=['village_walk.js','manga_render_core.js','wilderness_combat.js'];
- for(const [name,urls] of Object.entries(lists))for(const file of [...lazy,...direct])assert.equal(urls.filter(u=>u==='./'+file+'?v='+BUILD).length,1,name+': '+file);
- for(const file of lazy){assert(walk.includes("'"+file+"':'"+BUILD+"'"),'loader pin '+file);assert(fs.existsSync(path.join(root,file)));}
- for(const file of direct)assert(html.includes(file+'?v='+BUILD),'consumer '+file);
+ const pinned=(urls,file)=>urls.filter(u=>u.startsWith('./'+file+'?v=')&&current(u.slice(file.length+5)));
+ for(const [name,urls] of Object.entries(lists))for(const file of [...lazy,...direct])assert.equal(pinned(urls,file).length,1,name+': '+file);
+ for(const file of lazy){assert([BUILD,...LATER].some(b=>walk.includes("'"+file+"':'"+b+"'")),'loader pin '+file);assert(fs.existsSync(path.join(root,file)));}
+ for(const file of direct)assert([BUILD,...LATER].some(b=>html.includes(file+'?v='+b)),'consumer '+file);
  for(const file of ['world_nature_core.js','world_nature.js','world_horizon.js','world_water_core.js','world_water.js'])assert(updater.includes('"'+file+'"'),'updater '+file);
  // No stale URL identity survives for any changed module.
- for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of [...lazy,...direct]){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert.equal(m[1],BUILD,file+': stale '+mod);}}
+ for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of [...lazy,...direct]){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert(current(m[1]),file+': stale '+mod);}}
 });
