@@ -343,16 +343,19 @@ def test_worker_without_place_says_so(ledger):
     assert 'location is unknown' in prompt and 'range model' not in prompt
 
 
-def test_place_is_part_of_the_photo_identity(ledger):
+def test_a_stored_reading_replays_under_any_place_and_the_adapter_reweighs_it(ledger):
+    # A stable release-proof id must never hit request-conflict because the
+    # range model was up on one deploy and down on the next.
     book, _ = ledger
     data = jpeg()
     context = place(photo_id.Taxonomy(ROWS)).context()
-    recognizer = photo_gemini.Recognizer(book, Provider(RAVEN_JSON))
+    provider = Provider(RAVEN_JSON)
+    recognizer = photo_gemini.Recognizer(book, provider)
     first = recognizer.identify(data, 'owner_012345678901', 'request_012345678901', 'caller', context)
-    assert recognizer.identify(data, 'owner_012345678901', 'request_012345678901', 'caller', context) == first
-    elsewhere = dict(context, region='near 40.5°N, 3.5°W')
-    conflict = recognizer.identify(data, 'owner_012345678901', 'request_012345678901', 'caller', elsewhere)
-    assert conflict['reason'] == 'request-conflict'
+    assert recognizer.identify(data, 'owner_012345678901', 'request_012345678901', 'caller') == first
+    assert recognizer.identify(data, 'owner_012345678901', 'request_012345678901', 'caller',
+                               dict(context, region='near 40.5°N, 3.5°W')) == first
+    assert len(provider.calls) == 2
 
 
 def test_old_policy_results_never_replay(ledger):

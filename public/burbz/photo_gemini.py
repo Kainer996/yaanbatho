@@ -294,10 +294,12 @@ class Recognizer:
         context=clean_context(context)
         job=None
         try:
-            # Where and when change the answer, so they are part of the photo's
-            # identity: the same pixels from another place are a new check.
-            where=json.dumps(context,sort_keys=True,separators=(',',':')).encode() if context else b''
-            job,cached=self.ledger.acquire(owner,request_id,hashlib.sha256(POLICY.encode()+b"\0"+where+b"\0"+data).hexdigest(),caller)
+            # The place stays out of the photo's identity. A reading is what
+            # Gemini saw; the adapter re-weighs every reading, stored or new, by
+            # the place of the current request. A stable proof id therefore never
+            # meets request-conflict when the range model is up on one deploy
+            # and down on the next.
+            job,cached=self.ledger.acquire(owner,request_id,hashlib.sha256(POLICY.encode()+b"\0"+data).hexdigest(),caller)
             if cached is not None:
                 return cached
             # The reservation covers two counted requests; one is used. There

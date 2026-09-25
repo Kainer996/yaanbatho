@@ -3092,6 +3092,7 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 .comic-ui .bird-match { background:var(--comic-paper); border:2px solid var(--comic-ink); }
 .comic-ui .bird-match-name, .comic-ui .bird-match-sci, .comic-ui .bird-match-tag { color:var(--comic-ink); }
 .comic-ui .bird-match-pick { border:2px solid var(--comic-ink); }
+.comic-ui .bird-match-tag { background:rgba(21,40,40,.08); }
 .bird-crop-close { position:absolute; top:max(8px, env(safe-area-inset-top)); right:10px; min-height:44px; min-width:44px; border:0; background:transparent; color:var(--text); font-size:24px; cursor:pointer; }
 .comic-ui .bird-crop-overlay { background:var(--comic-paper); }
 .comic-ui .bird-crop-actions button { border:2px solid var(--comic-ink); }
@@ -42470,7 +42471,7 @@ async function handlePhotoSelection(input, fromLibrary = false) {
     if (error) { setPhotoIdStatus(error); return; }
   }
   photoIdRetryBlob = null;
-  startPhotoPlace(file, fromLibrary);
+  if (typeof startPhotoPlace === 'function') startPhotoPlace(file, fromLibrary);
   setPhotoIdStatus('Preparing your photo…');
   showNativePhotoPreview(file);
   // Merlin-style: let the player frame the bird into a square before ID so the
@@ -43042,7 +43043,7 @@ function photoMatchCardHTML(match, index, strong) {
   if (match.plumage) tags.push([match.plumage.charAt(0).toUpperCase() + match.plumage.slice(1), '']);
   if (!profile) tags.push(['Not in Burbz yet', 'is-far']);
   return '<article class="bird-match' + (index === 0 ? ' is-top' : '') + '">' +
-    (art ? '<img class="bird-match-art" src="' + esc(art) + '" alt="" loading="lazy">'
+    (art ? '<img class="bird-match-art" src="' + esc(art) + '" alt="" loading="lazy" data-fallback-emoji="&#128038;">'
       : '<span class="bird-match-art" aria-hidden="true">&#128038;</span>') +
     '<div class="bird-match-body"><h3 class="bird-match-name">' + esc(name) + '</h3>' +
     '<p class="bird-match-sci">' + esc(match.scientificName) + '</p><p class="bird-match-tags">' +
