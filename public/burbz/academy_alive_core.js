@@ -141,15 +141,14 @@
 
   var SPRITE_BOX = 112; // px — .treehouse-building-sprite is a 112×112 square
 
-  function isNightHour(h) { return h >= 19.5 || h < 6; }
-  // 0 → full daylight, 1 → deep night, with dawn/dusk ramps so the windows
-  // fade up as the real evening draws in rather than snapping on.
-  function lightBoostFor(h) {
-    if (h >= 21 || h < 5) return 1;
-    if (h >= 17.5 && h < 21) return (h - 17.5) / 3.5;
-    if (h >= 5 && h < 7) return 1 - (h - 5) / 2;
-    return 0;
+  // The Academy keeps the game's own clock (academy_daynight.js, built on
+  // daylight_core.js): night from 19:00 to 05:00, and the windows fade up as the real evening draws in
+  // rather than snapping on. 0 → full daylight, 1 → deep night.
+  function dayNight() {
+    return globalThis.BurbzAcademyDayNight || (typeof module === 'object' && module.exports ? require('./academy_daynight.js') : null);
   }
+  function isNightHour(h) { var d = dayNight(); return d ? d.isNightHour(h) : (h >= 19 || h < 5); }
+  function lightBoostFor(h) { var d = dayNight(); return d ? d.lampFactorForHour(h) : (isNightHour(h) ? 1 : 0); }
 
   function mulberry32(seed) {
     var a = seed >>> 0;
@@ -498,8 +497,9 @@
         var t = p.life / p.max;
         var fade = t < 0.15 ? t / 0.15 : (t > 0.72 ? (1 - t) / 0.28 : 1);
         if (p.kind === 'smoke') {
-          ctx.globalAlpha = p.alpha * fade;
-          ctx.drawImage(softSprite(st.night ? '198,206,224' : '236,233,226'), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+          // Moonlit smoke is a dim blue-grey wisp, not a white plume.
+          ctx.globalAlpha = p.alpha * fade * (st.night ? 0.55 : 1);
+          ctx.drawImage(softSprite(st.night ? '150,160,186' : '236,233,226'), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
           ctx.globalAlpha = 1;
         } else if (p.kind === 'leaf') {
           ctx.save();
