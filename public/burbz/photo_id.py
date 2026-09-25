@@ -248,12 +248,29 @@ def _taxonomy_or_none():
         return None  # The range model is an enhancement; photos still work.
 
 
-class Place:
-    """Occurrence per geomodel label for one rounded place and week."""
+def _season_week(week):
+    """One week per early/mid/late part of a month, as the season is told."""
+    month, part = divmod(week - 1, 4)
+    return month * 4 + (1, 2, 2, 4)[part]
 
-    def __init__(self, lat, lon, week, probabilities, taxonomy):
+
+def _coarse(value):
+    return round(value * 2) / 2
+
+
+class Place:
+    """Occurrence per geomodel label for one rounded place and week.
+
+    `probabilities` (0.1 degree, exact week) weigh the ranking here on the
+    server. `coarse` (the half-degree cell and the season's week) builds the
+    list Gemini sees, so the list reveals no more than the region and season
+    it is sent with: the geomodel is public and could be re-run.
+    """
+
+    def __init__(self, lat, lon, week, probabilities, taxonomy, coarse=None):
         self.lat, self.lon, self.week = lat, lon, week
         self.probabilities, self.taxonomy = probabilities, taxonomy
+        self.coarse = probabilities if coarse is None else coarse
 
     def occurrence(self, position):
         if position is None or position >= len(self.probabilities):
@@ -261,15 +278,15 @@ class Place:
         return float(self.probabilities[position])
 
     def checklist(self):
-        rows = [(p, float(self.probabilities[p])) for p, (_, _, bird) in enumerate(self.taxonomy.rows)
-                if bird and p < len(self.probabilities) and float(self.probabilities[p]) >= CHECKLIST_MIN]
+        rows = [(p, float(self.coarse[p])) for p, (_, _, bird) in enumerate(self.taxonomy.rows)
+                if bird and p < len(self.coarse) and float(self.coarse[p]) >= CHECKLIST_MIN]
         rows.sort(key=lambda item: -item[1])
         return [[self.taxonomy.rows[p][1], self.taxonomy.rows[p][0]] for p, _ in rows[:CHECKLIST_SIZE]
                 if self.taxonomy.rows[p][1] and SCIENTIFIC.fullmatch(self.taxonomy.rows[p][0])]
 
     def context(self):
         # Gemini gets the place to half a degree (about 50 km) and the week.
-        lat, lon = round(self.lat * 2) / 2, round(self.lon * 2) / 2
+        lat, lon = _coarse(self.lat), _coarse(self.lon)
         region = "near %.1f°%s, %.1f°%s" % (abs(lat), "N" if lat >= 0 else "S", abs(lon), "E" if lon >= 0 else "W")
         part = ("early", "mid", "mid", "late")[(self.week - 1) % 4]
         return {"region": region, "season": part + " " + MONTHS[(self.week - 1) // 4],
@@ -299,11 +316,12 @@ def _place(form, taxonomy):
         week = int(week) if week is not None else provider._birdnet_week(None)
         lat, lon = round(lat, 1), round(lon, 1)
         probabilities = provider._geo_probabilities(lat, lon, week)
+        coarse = provider._geo_probabilities(_coarse(lat), _coarse(lon), _season_week(week))
     except Exception:
         return None
-    if probabilities is None:
+    if probabilities is None or coarse is None:
         return None
-    return Place(lat, lon, week, probabilities, taxonomy)
+    return Place(lat, lon, week, probabilities, taxonomy, coarse)
 
 
 # --------------------------------------------------------------------------

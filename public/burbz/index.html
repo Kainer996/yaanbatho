@@ -4869,13 +4869,14 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
         <div class="merlin-data-note">🛡️ Mic on only while the light shows.<button type="button" class="info-dot" data-info-dot="merlinDataNote" aria-expanded="false" aria-controls="merlinDataNote" aria-label="Microphone and privacy details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.6 12 5.6 21.5 12 21.5 12 18 18.4 12 18.4 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.6" fill="currentColor" stroke="none"/></svg></button></div>
         <div class="merlin-data-note info-note" id="merlinDataNote" hidden>Microphone active only while the green listening light is shown. Sound windows are sent to the Burbz server for bird-sound analysis until you tap Stop. Audio is not stored in your game.
           <label class="merlin-location-opt"><input id="merlinLocationAssist" type="checkbox" checked> Use my location to improve local bird matches (recommended; you can turn this off)</label>
-          <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; the server does not store raw coordinates. This phone keeps where you met each bird, so Merlin can show you its home patch.</span>
+          <span class="merlin-location-opt">Your approximate area is checked against BirdNET’s seasonal range model; the server does not store raw coordinates. For photos, a rough region (about 50 km), the season and a local bird list also go to Google Gemini. This phone keeps where you met each bird, so Merlin can show you its home patch.</span>
         </div>
       </div>
 
       <!-- Image scan area -->
       <div id="imageScanArea" style="display:none;">
         <p class="photo-privacy-note">Your framed photo is sent only for this check and is not saved on your device by Burbz. With location on, your rough area and the week help pick local birds, like Merlin. The server keeps neither. If the check cannot finish, you can retry while this screen stays open.</p>
+        <label class="merlin-location-opt photo-location-opt"><input id="photoLocationAssist" type="checkbox" checked> Use my location for local bird matches. Google Gemini gets only a rough region (about 50 km), the season and a local bird list.</label>
         <div class="photo-id-status" id="photoIdStatus" hidden>
           <p id="photoIdMessage" role="status" aria-live="polite"></p>
           <button id="photoIdRetry" type="button" hidden>Try this photo again</button>
@@ -41484,7 +41485,16 @@ try {
 } catch (_) { $('merlinLocationAssist').checked = true; }
 $('merlinLocationAssist').addEventListener('change', event => {
   try { localStorage.setItem(SOUND_LOCATION_PREF_KEY, event.target.checked ? '1' : '0'); } catch (_) {}
+  if ($('photoLocationAssist')) $('photoLocationAssist').checked = event.target.checked;
 });
+// One choice for both scans: the photo screen shows the same switch.
+if ($('photoLocationAssist')) {
+  $('photoLocationAssist').checked = $('merlinLocationAssist').checked;
+  $('photoLocationAssist').addEventListener('change', event => {
+    $('merlinLocationAssist').checked = event.target.checked;
+    $('merlinLocationAssist').dispatchEvent(new Event('change'));
+  });
+}
 
 function showSoundScanMode() {
   scanMode = 'sound';
@@ -42648,20 +42658,20 @@ async function captureCameraFrame() {
 
 async function getCurrentPositionForPhotoId() {
   if (typeof soundLocationAssistEnabled === 'function' && !soundLocationAssistEnabled()) return null;
-  // Photo ID may already have a player-approved GPS fix from the live map. Reuse
-  // that fresh fix before falling back to the Scan screen's optional location
-  // switch, so a Delamere capture actually receives Delamere's range prior.
+  // "Here and now" means a fix from the last few minutes. Reuse the live map's
+  // precise fix only while it is fresh, as destination walks do; otherwise ask
+  // for a position no older than ten minutes. A saved home is not "here".
   if (liveMapHasPrecisePosition && liveMapLastPosition) {
     const lat = Number(liveMapLastPosition.lat), lon = Number(liveMapLastPosition.lon);
-    if (Number.isFinite(lat) && Number.isFinite(lon)) return { coords:{ latitude:lat, longitude:lon } };
+    const age = Date.now() - Number(liveMapLastPosition.at);
+    if (Number.isFinite(lat) && Number.isFinite(lon) && age >= 0 && age <= 5 * 60 * 1000) return { coords:{ latitude:lat, longitude:lon } };
   }
-  const home = gameState && gameState.lastKnownHome;
-  const homeAge = home ? Date.now() - Number(home.at || 0) : Infinity;
-  const homeLat = Number(home && home.lat), homeLon = Number(home && home.lon);
-  if (homeAge >= 0 && homeAge <= 6 * 60 * 60 * 1000 && Number.isFinite(homeLat) && Number.isFinite(homeLon)) {
-    return { coords:{ latitude:homeLat, longitude:homeLon } };
-  }
-  return getCurrentPositionForBirdnet();
+  const getCurrentPosition = window.__burbzSoundTestDeps?.getCurrentPosition || navigator.geolocation?.getCurrentPosition?.bind(navigator.geolocation);
+  if (!getCurrentPosition) return null;
+  return new Promise(resolve => {
+    getCurrentPosition(pos => resolve(pos), () => resolve(null),
+      { enableHighAccuracy: false, timeout: 3000, maximumAge: 10 * 60 * 1000 });
+  });
 }
 
 let photoIdBusy = false;
@@ -42679,22 +42689,53 @@ let photoMatchState = null;
 function birdnetWeekOf(date) {
   return date.getMonth() * 4 + Math.min(3, Math.floor((date.getDate() - 1) / 7)) + 1;
 }
+// The camera's own record of when a JPEG was taken (EXIF DateTimeOriginal).
+// Phones hand a picked library photo over with a fresh file time, so only this
+// can tell a holiday photo from one taken here today. NaN when absent.
+async function photoTakenAtFromExif(file) {
+  try {
+    const view = new DataView(await file.slice(0, 131072).arrayBuffer());
+    if (view.getUint16(0) !== 0xFFD8) return NaN;
+    for (let offset = 2; offset + 4 <= view.byteLength;) {
+      const marker = view.getUint16(offset), size = view.getUint16(offset + 2);
+      if ((marker & 0xFF00) !== 0xFF00 || marker === 0xFFDA || size < 2) return NaN;
+      if (marker === 0xFFE1 && view.getUint32(offset + 4) === 0x45786966) {
+        const tiff = offset + 10, little = view.getUint16(tiff) === 0x4949;
+        const u16 = at => view.getUint16(at, little), u32 = at => view.getUint32(at, little);
+        const find = (ifd, tag) => { for (let i = 0, n = u16(ifd); i < n; i++) if (u16(ifd + 2 + i * 12) === tag) return ifd + 2 + i * 12; return -1; };
+        const pointer = find(tiff + u32(tiff + 4), 0x8769);
+        const entry = pointer < 0 ? -1 : find(tiff + u32(pointer + 8), 0x9003);
+        if (entry < 0) return NaN;
+        const text = String.fromCharCode(...new Uint8Array(view.buffer, tiff + u32(entry + 8), 19));
+        const m = /^(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)$/.exec(text);
+        return m ? new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime() : NaN;
+      }
+      offset += 2 + size;
+    }
+  } catch (_) {}
+  return NaN;
+}
 function startPhotoPlace(file, fromLibrary = false) {
   photoPlaceRequest = null;
-  // A camera input can still hand back an old gallery photo, so the file's own
-  // time decides for both routes; a camera shot without one is "now".
-  const now = Date.now(), stamp = Number(file?.lastModified);
-  const takenAt = Number.isFinite(stamp) && stamp > 0 ? stamp : fromLibrary ? NaN : now;
-  if (!Number.isFinite(takenAt) || now - takenAt > PHOTO_PLACE_RECENT_MS || takenAt - now > 60000) return;
   if (typeof getCurrentPositionForPhotoId !== 'function') return;
-  photoPlaceRequest = Promise.resolve().then(() => getCurrentPositionForPhotoId()).catch(() => null).then(pos => {
+  // A camera shot is "now". A library photo needs the camera's own capture
+  // time from the last two days; without one it carries no place at all.
+  const stamp = Number(file?.lastModified);
+  const taken = fromLibrary ? photoTakenAtFromExif(file) : Promise.resolve(Number.isFinite(stamp) && stamp > 0 ? stamp : Date.now());
+  photoPlaceRequest = taken.then(async takenAt => {
+    const now = Date.now();
+    // EXIF time is local to where it was taken, so allow a time-zone's lead.
+    if (!Number.isFinite(takenAt) || now - takenAt > PHOTO_PLACE_RECENT_MS || takenAt - now > 14 * 60 * 60 * 1000) return null;
+    const pos = await Promise.resolve().then(() => getCurrentPositionForPhotoId()).catch(() => null);
     const lat = Number(pos?.coords?.latitude), lon = Number(pos?.coords?.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
     // About a kilometre is plenty; the server rounds further still.
-    return { lat: lat.toFixed(2), lon: lon.toFixed(2), week: String(birdnetWeekOf(new Date(takenAt))) };
-  });
+    return { lat: lat.toFixed(2), lon: lon.toFixed(2), week: String(birdnetWeekOf(new Date(Math.min(takenAt, now)))) };
+  }).catch(() => null);
 }
 function photoPlaceForUpload() {
+  // The switch is checked again at upload: turning it off before a retry wins.
+  if (typeof soundLocationAssistEnabled === 'function' && !soundLocationAssistEnabled()) return Promise.resolve(null);
   if (!photoPlaceRequest) return Promise.resolve(null);
   let timer;
   const late = new Promise(resolve => { timer = setTimeout(() => resolve(null), 4000); });
@@ -42862,9 +42903,16 @@ function showPhotoMatches(result, matches) {
   if (overlay && !overlay.classList.contains('show')) overlay.classList.add('show', 'no-photo');
   const strong = result.found === true;
   setBirdPhotoStage('matches', strong ? 'Strong match. Check it, then tap This is my bird.' : 'Closest matches first. Tap This is my bird on the one you saw.');
-  photoMatchState = { receiptId: result.receiptId, matches, picked: false };
+  // The ledger replays one answer for the same photo, so the answer's receipt
+  // allows one bird, ever: a second look at the same photo cannot add more.
+  const used = gameState?.photoReceipts?.[result.receiptId];
+  photoMatchState = { receiptId: result.receiptId, matches, picked: !!used };
   const list = $('birdCropMatches');
   list.innerHTML = matches.map((match, index) => photoMatchCardHTML(match, index, strong)).join('');
+  if (used) {
+    list.querySelectorAll?.('[data-photo-match]').forEach(button => { button.disabled = true; });
+    $('birdCropMessage').textContent = 'You already chose ' + (used.species || 'a bird') + ' from this photo.';
+  }
   list.hidden = false;
   if ($('photoIdStatus')) $('photoIdStatus').hidden = true;
   if ($('photoIdRetry')) $('photoIdRetry').hidden = true;
@@ -42875,7 +42923,15 @@ function pickPhotoMatch(index) {
   state.picked = true;
   $('birdCropMatches')?.querySelectorAll?.('[data-photo-match]').forEach(button => { button.disabled = true; });
   // The discovery is saved; the camera image is deliberately not.
+  if (gameState && !gameState.photoReceipts?.[state.receiptId]) {
+    // Recorded first, so the discovery's own save carries the receipt.
+    gameState.photoReceipts = { ...(gameState.photoReceipts || {}), [state.receiptId]: { at: Date.now(), species: match.species } };
+  }
   const birds = handleBirdCandidates({ species: match.species, scientificName: match.scientificName, confidence: match.score }, [], { source: 'photo' });
+  if (!(Array.isArray(birds) && birds.length) && gameState?.photoReceipts) {
+    delete gameState.photoReceipts[state.receiptId];  // nothing was added, so nothing is spent
+  }
+  if (typeof saveState === 'function') saveState();
   closeBirdCropper(); photoIdRetryBlob = null;
   if ($('photoIdStatus')) $('photoIdStatus').hidden = true;
   if ($('photoIdRetry')) $('photoIdRetry').hidden = true;

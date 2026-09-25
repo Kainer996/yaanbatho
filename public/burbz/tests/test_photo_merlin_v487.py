@@ -240,6 +240,17 @@ def test_place_context_is_coarse_and_lists_local_birds_most_likely_first(taxonom
     assert photo_gemini.clean_context(context) == context
 
 
+def test_gemini_list_reveals_only_the_region_and_season_it_is_sent_with(taxonomy):
+    fine = [CLITHEROE[s] for _, s, _ in ROWS]
+    coarse = [0.0 if s == 'Corvus corax' else p for (_, s, _), p in zip(ROWS, fine)]
+    where = photo_id.Place(53.9, -2.4, 36, fine, taxonomy, coarse)
+    names = [s for _, s in where.context()['checklist']]
+    assert 'Corvus corax' not in names                          # the list is the coarse run
+    assert where.occurrence(0) == CLITHEROE['Corvus corax']     # the ranking is the fine run
+    assert photo_id._season_week(34) == photo_id._season_week(35) == 34   # both "mid September"
+    assert [photo_id._season_week(w) for w in (33, 36, 1, 48)] == [33, 36, 1, 48]
+
+
 @pytest.mark.parametrize('week,season', [(1, 'early January'), (2, 'mid January'), (4, 'late January'),
                                          (36, 'late September'), (48, 'late December')])
 def test_birdnet_weeks_read_as_plain_seasons(taxonomy, week, season):
@@ -299,7 +310,9 @@ def identify(monkeypatch, tmp_path, form, geo=None, body=None):
 def test_place_and_week_reach_the_prompt_and_the_ranking(monkeypatch, tmp_path):
     geo = GeoProvider()
     result, calls = identify(monkeypatch, tmp_path, FORM | {'lat': '53.8712', 'lon': '-2.3911', 'photoWeek': '36'}, geo)
-    assert geo.asked == [(53.9, -2.4, 36)]            # 0.1 degree for the range model
+    # 0.1 degree and the exact week weigh the ranking here; Gemini's list comes
+    # from the half-degree cell and the season's week it is told.
+    assert geo.asked == [(53.9, -2.4, 36), (54.0, -2.5, 36)]
     context = calls[0]['context']
     assert context['region'] == 'near 54.0°N, 2.5°W'   # half a degree for Google
     assert '53.87' not in json.dumps(calls[0]) and '2.39' not in json.dumps(calls[0])
