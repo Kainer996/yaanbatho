@@ -1,6 +1,6 @@
-# Merlin flight v475
+# Merlin flight v479
 
-Build: `merlin-flight-v475-20260925`
+Build: `merlin-flight-v479-20260925`
 
 ## What Yaan asked
 

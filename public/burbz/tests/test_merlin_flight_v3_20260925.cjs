@@ -288,7 +288,7 @@ test('the game ships v3 together: pins, worker lists, updater and the Home perch
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const sw = fs.readFileSync(path.join(root, 'sw.js'), 'utf8');
   const updater = fs.readFileSync(path.join(root, '../../scripts/update-live-burbz.sh'), 'utf8');
-  const pin = 'merlin-flight-v475-20260925';
+  const pin = 'merlin-flight-v479-20260925';
   for (const file of ['merlin_flight.js', 'merlin_flight.css', 'assets/merlin-flight/atlas-config.js']) {
     assert.ok(html.includes(file + '?v=' + pin), file);
     assert.equal(sw.split("'./" + file + '?v=' + pin + "'").length - 1, 3, file + ' in all three worker lists');

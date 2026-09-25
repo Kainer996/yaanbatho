@@ -3,7 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=f=>fs.readFileSync(__dirname+'/../'+f,'utf8');
 const html=read('index.html'),home=read('scan_home.js'),sw=read('sw.js');
-const rev='academy-living-tree-v473-20260925';
+const rev='academy-manga-v475-20260925';
 const fn=name=>{const m=html.match(new RegExp('function '+name+'\\([^]*?\\n}'));assert(m,name);return m[0];};
 test('Academy navigation selects its independent screen and starts the tree, then Home returns to its desk',()=>{
  const calls=[],noop=()=>{},classes={add:noop,remove:noop};
@@ -41,8 +41,8 @@ test('Restored Home uses a new coherent shell and exact cache pins',()=>{
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes(rev));
  assert.match(sw,new RegExp(html.match(/const BURBZ_BUILD = '([^']+)'/)[1]+"';"));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
-  // v475 re-pinned scan_home.css when Merlin's perch stopped shrinking on Home.
-  const pin=file+'?v='+(file==='scan_home.css'?'merlin-flight-v475-20260925':rev);assert.ok(html.includes(pin),pin);
+  // v479 re-pinned scan_home.css when Merlin's perch stopped shrinking on Home.
+  const pin=file+'?v='+(file==='scan_home.css'?'merlin-flight-v479-20260925':rev);assert.ok(html.includes(pin),pin);
   assert.equal(sw.split('./'+pin).length-1,3,pin+' in every worker list');
  }
  for(const pin of ['quest-revisit-v457-20260923','hall-music-v458-20260923','expedition-duration-v455-20260923'])assert.ok(html.includes(pin),pin+' retained');

@@ -62,7 +62,7 @@ function takeoff(p,world){
  if(Math.abs(p.y-h)>MAX_STEP)return{ok:false,ready:true,reason:'not-grounded'};
  const next={...p,y:h+.65};
  if(!horizontalAllowed(world,p.x,p.z)||world.allowed3&&!world.allowed3(next.x,next.y,next.z)||!swept(world,p,next))return{ok:false,ready:true,reason:'blocked'};
- Object.assign(p,{mode:'fly',y:next.y,landed:null});reset(p);return{ok:true,ready:true,reason:null};
+ Object.assign(p,{mode:'fly',y:next.y,landed:null});reset(p);flight?.launch?.(p);return{ok:true,ready:true,reason:null};
 }
 function land(p,world){
  if(!localPose(p))return{ok:false,ready:false,reason:'invalid-pose'};

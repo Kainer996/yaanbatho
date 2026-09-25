@@ -35,7 +35,7 @@ async function context(){const c=await browser.newContext({viewport:{width:390,h
  await page.screenshot({path:path.join(out,'aboard.png')});
  const cdp=await c.newCDPSession(page);
  async function hold(label,condition){const b=await page.getByRole('button',{name:label,exact:true}).boundingBox();await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:b.x+b.width/2,y:b.y+b.height/2,id:3}]});try{await page.waitForFunction(condition,null,{timeout:15000});}finally{await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}}
- await hold('Climb',()=>{const d=__burbzVillageWalkDebug.state();return d.player.y-__burbzVillageWalkDebug.world().height(d.player.x,d.player.z)>9;});
+ await hold('Flap',()=>{const d=__burbzVillageWalkDebug.state();return d.player.y-__burbzVillageWalkDebug.world().height(d.player.x,d.player.z)>9;});
  const box=await page.locator('.vw-stick').boundingBox(),cx=box.x+box.width/2,cy=box.y+box.height/2;
  async function swipe(dy,cancel=false){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:cx,y:cy,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:cx,y:cy-dy,id:1}]});await cdp.send('Input.dispatchTouchEvent',{type:cancel?'touchCancel':'touchEnd',touchPoints:[]});}
  await swipe(30);assert(!(await read()).auto.latched);await swipe(box.height/2+68,true);assert(!(await read()).auto.latched);
@@ -46,7 +46,7 @@ async function context(){const c=await browser.newContext({viewport:{width:390,h
  // Return the disposable craft to its original checked berth. The cruise can
  // end above a sloped patch that correctly refuses landing; do not weaken it.
  await page.evaluate(record=>{const d=__burbzVillageWalkDebug.state(),p=BurbzGeographicWorldCore.project(d.continuity.origin,record);if(!__burbzVillageWalkDebug.place({...d.player,x:p.x,z:p.z,y:__burbzVillageWalkDebug.world().height(p.x,p.z)+10,yaw:record.yaw,mode:'fly',velocity:{x:0,y:0,z:0}}))throw Error('Original berth flight column unavailable');},first.continuity.craft.record);
- await hold('Descend',()=>{const d=__burbzVillageWalkDebug.state();return d.player.y-__burbzVillageWalkDebug.world().height(d.player.x,d.player.z)<1.7;});
+ await hold('Dive',()=>{const d=__burbzVillageWalkDebug.state();return d.player.y-__burbzVillageWalkDebug.world().height(d.player.x,d.player.z)<1.7;});
  await page.getByRole('button',{name:'Land craft',exact:true}).click();await page.waitForFunction(()=>__burbzVillageWalkDebug.state().player.mode==='walk'&&!__burbzVillageWalkDebug.state().auto.enabled);
  await page.getByRole('button',{name:'Exit craft',exact:true}).click();assert(!(await read()).continuity.craft.aboard);
  const parked=await run('gameState.flightCraft');assert.equal(parked.phase,'parked');pass('Native landing and exit clear Auto and persist the parked craft');

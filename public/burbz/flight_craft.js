@@ -122,7 +122,7 @@ function model(T,style){
   return{a,at,basis,place,put};});
  for(const [i,g] of gauges.entries()){
   g.put(new T.CircleGeometry(.05,20),0,0,.006,0xf3ead2);
-  for(let k=0;k<12;k++){const t=k/12*Math.PI*2;g.put(new T.BoxGeometry(.005,k%3?.008:.015,.002),Math.sin(t)*.039,Math.cos(t)*.039,.008,i===0&&k===0?0xb8322a:0x2a2118,-t);}
+  for(let k=0;k<12;k++){const t=k/12*Math.PI*2;g.put(new T.BoxGeometry(.005,k%3?.008:.015,.002),Math.sin(t)*.039,Math.cos(t)*.039,.008,i===0&&(k===1||k===2)?0xb8322a:0x2a2118,-t);}
   g.put(new T.TorusGeometry(.054,.008,5,20),0,0,.009,0xd9ad4f);
   for(let k=0;k<4;k++){const t=(k+.5)/4*Math.PI*2;g.put(new T.SphereGeometry(.006,5,3),Math.sin(t)*.068,Math.cos(t)*.068,.006,0xe0b458);}
   g.put(new T.CylinderGeometry(.009,.009,.006,8),0,0,.014,0xd9ad4f);
@@ -130,7 +130,9 @@ function model(T,style){
  // Two brass toggles either side of the gauges, for character.
  for(const a of [-.5,.5]){const at=panelAt(a,.85,.004);cockpit.add(new T.CylinderGeometry(.018,.018,.012,8),M(T,at.x,at.y,at.z,Math.PI/2-.3,-a,0),0xd9ad4f);cockpit.add(new T.CylinderGeometry(.005,.007,.05,5),M(T,at.x*.97,at.y+.018,at.z*.97,-.5,-a,0),0x2a2118);}
  const dash=new T.Group(),panel=mesh(cockpit,false);dash.add(panel);group.add(dash);
- // Live compass, clock and altimeter needles, pivoting on each gauge's centre.
+ // Live airspeed, clock and altimeter needles, pivoting on each gauge's centre.
+ // The heading strip above already points north, so the left dial reads
+ // airspeed; its red ticks mark the speeds too slow to stay up.
  const needleGeo=new T.BoxGeometry(.006,.064,.003);needleGeo.translate(0,.022,0);geometries.push(needleGeo);
  const needleMat=new T.MeshBasicMaterial({color:0x7a1f18});needleMat.userData.craftNeedle=true;
  const needles=[0,2,1].map(i=>{const g=gauges[i],holder=new T.Group();holder.quaternion.setFromRotationMatrix(g.basis);holder.position.copy(g.place(0,0,.011));const n=new T.Mesh(needleGeo,needleMat);holder.add(n);dash.add(holder);return n;});
@@ -164,7 +166,7 @@ function model(T,style){
  return {group,
   // Parked wings fold back along the hull like a resting bird; in flight they
   // beat with a lagging wrist so the primaries whip through each stroke.
-  animate(time,flying,{yaw=0,altitude=0,reduced=false,pitch=0}={}){
+  animate(time,flying,{altitude=0,reduced=false,pitch=0,speed=0}={}){
    // As the pilot looks down, the cockpit sinks out of sight, leaving a
    // clear view of the ground below.
    const dip=Math.max(0,Math.min(1,(-pitch-.3)/.3));dash.position.set(0,-1.45*dip,0);dash.visible=pilot&&dip<.98;
@@ -175,8 +177,9 @@ function model(T,style){
     w.shoulder.rotation.set(2.35*(1-f),-s*(1.4*(1-f)+.06*f),s*(f*(.1+.52*beat)+(1-f)*.05),'YXZ');
     w.wrist.rotation.set(0,-s*(.12*(1-f)+.08*f),s*f*.38*lag,'YXZ');
    }
-   // Compass to north, altimeter one turn per 40 m, and the local clock's hour.
-   const now=new Date();needles[0].rotation.z=-yaw;needles[1].rotation.z=-altitude/40*Math.PI*2;needles[2].rotation.z=-(now.getHours()%12+now.getMinutes()/60)/12*Math.PI*2;
+   // Airspeed sweeps ten ticks from still air to the fastest dive; the
+   // altimeter turns once per 40 m; the clock shows the local hour.
+   const now=new Date();needles[0].rotation.z=-Math.max(0,Math.min(1,speed))*Math.PI*2*10/12;needles[1].rotation.z=-altitude/40*Math.PI*2;needles[2].rotation.z=-(now.getHours()%12+now.getMinutes()/60)/12*Math.PI*2;
   },
   // First person keeps only the cockpit: wings and hull never block the view.
   // From outside, the hull's own cockpit well shows instead.
@@ -305,7 +308,8 @@ function attach(s,opts,env){
    float=C.floatPose(float,flying?'ground':sample?.kind||record.surface,time,time-lastTime,reduced);
    group.position.set(p.x,p.y+float.y,p.z);group.rotation.set(float.pitch,aboard?s.player.yaw:record.yaw,float.roll,'YXZ');
    visual.view(aboard||onDeck);
-   visual.animate(time,flying,{reduced,yaw:aboard?s.player.yaw:record.yaw,altitude:flying&&sample?Math.max(0,p.y-sample.height):0,pitch:aboard?s.player.pitch:0});
+   const wing=s.player.wing;
+   visual.animate(time,flying,{reduced,altitude:flying&&sample?Math.max(0,p.y-sample.height):0,pitch:aboard?s.player.pitch:0,speed:flying&&wing?.top?wing.airspeed/wing.top:0});
   }
   lastTime=time;sync();
  }
