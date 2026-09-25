@@ -31,7 +31,9 @@
  ];
  const TREES=Array.from({length:28},(_,i)=>{const a=i*2.399963,r=(10.8+(i%4)*1.1)*YARD_SCALE;return{id:'tree-'+i,x:Math.sin(a)*r,z:Math.cos(a)*r,r:.38+(i%3)*.07};});
  for(const [id,r] of Object.entries(ROOMS))FINDS.push({id:id+'-story',area:id,x:0,z:-2.8,name:r.activity,text:r.lore});
- const visibleTrees=s=>s.outlook?TREES.filter(t=>!(t.z>7&&Math.abs(t.x)<11)):TREES;
+ // The clearing keeps no trees round the plot. TREES stays so old saves still
+ // load their felled-tree records; timber comes from village woodland.
+ const visibleTrees=()=>[];
  const roomLayout=s=>s.tier>0?{width:9,depth:10,height:3.6,deskZ:-3.45,standZ:-1.05,spawnZ:3.8,doorZ:4.3}:{width:3.4,depth:4.6,height:2.95,deskZ:-1.45,standZ:.95,spawnZ:1.65,doorZ:2};
  const roomFixed=s=>s.tier?FIXED:[{...FIXED[0],z:roomLayout(s).deskZ}];
  const houseFootprint=s=>({x:0,z:0,w:s.tier?5.5:3.6,d:s.tier?4.5:4.8});

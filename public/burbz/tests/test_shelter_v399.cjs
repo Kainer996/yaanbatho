@@ -15,8 +15,8 @@ assert(!C.propose(h,{branches:24},location).ok);assert.equal(JSON.stringify(h),o
 const built=act(location);assert.equal(built.wallet.branches,0);assert.equal(h.tier,1);assert.equal(h.anchor.lat,location.lat);assert.equal(h.anchor.lon,location.lon);assert.equal(h.anchor.revision,2);
 assert(!C.propose(h,{branches:1000},location).ok,'a repeated build cannot pay twice or move the permanent house');
 assert.deepEqual(C.normalize(JSON.parse(JSON.stringify(h))),h,'new home and location survive restart');
-const legacy={...h};delete legacy.outlook;assert(!C.normalize(legacy).outlook,'existing gardens keep their authored trees');assert.equal(C.visibleTrees(C.normalize(legacy)).length,28);
-assert(C.visibleTrees(h).every(t=>!(t.z>7&&Math.abs(t.x)<11)),'new shelter front has a real opening');
+const legacy={...h};delete legacy.outlook;assert(!C.normalize(legacy).outlook);assert.equal(C.visibleTrees(C.normalize(legacy)).length,0,'old gardens lose their ring of trees too');
+assert.equal(C.visibleTrees(h).length,0,'a new shelter has no trees round its plot');
 const world=C.world(h,'yard',Date.now(),{connected:true});assert(world.allowed(0,16));assert(!world.allowed(-10,24),'pond is not walkable ground');assert(!world.allowed(7,18),'outlook boulder has collision');assert(world.allowed(0,40),'no finite map rim after the clearing');
 // Test the actual durable adapter, including failed-write identity restoration.
 const html=fs.readFileSync(require.resolve('../index.html'),'utf8'),start=html.indexOf('function commitPlayerHomeAction('),end=html.indexOf('\nfunction anchorPlayerHomeAt(',start);
