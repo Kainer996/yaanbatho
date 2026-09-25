@@ -1,12 +1,12 @@
 'use strict';
-// Academy garden birds v486: the Academy grows as a tree beside the built
+// Academy garden birds v490: the Academy grows as a tree beside the built
 // house, carrying only the buildings the player has built, and garden birds
 // live round it — perching, foraging, flying in bounds or straight, crabbing
 // in a side wind, facing into the wind, fleeing, roosting and singing made
 // (never recorded) songs that hush while Merlin's wand listens.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const BUILD='academy-garden-birds-v486-20260925';
+const BUILD='academy-garden-birds-v490-20260925';
 global.THREE=require('../lib/three.min.js');const T=global.THREE;
 const C=require('../player_home_core.js'),G=require('../garden_birds.js');
 
@@ -119,6 +119,8 @@ test('every song is a made ElevenLabs take on disk, listed and checksummed',()=>
 test('the game never lets Merlin\'s wand hear its own birds',()=>{
  const html=read('index.html');
  assert.match(html,/birds:\(\)=>sfxEnabled&&!burbzMicListening&&!mediaStream&&!document\.hidden/);
+ // The looping treetops ambience from v487 hushes with the microphone too.
+ assert.match(html,/birdsong:\(level,opts\)=>SFX\.birdsong\?\.\(burbzMicListening\|\|mediaStream\?0:level,opts\)/);
  assert.match(html,/if \(reason === 'sound-scan'\) \{\s*burbzMicListening = !!value;\s*if \(value\) window\.BurbzGardenBirds\?\.silence\?\.\(\);/);
  // Songs are placed in the world only; no button, card or scan plays a bird.
  const audio=read('audio_core.js');assert(!/garden-birds/.test(audio));
@@ -138,7 +140,7 @@ test('after the wand\'s hush, the birds sing again once the microphone closes',(
  f.dispose();delete global.AudioContext;delete global.fetch;
 });
 
-test('v486 ships together: build marker, cache, three worker lists, loaders and updater',()=>{
+test('v490 ships together: build marker, cache, three worker lists, loaders and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
  const LATER=[],shipped=[BUILD,...LATER],current=b=>shipped.includes(b);
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];assert(cache.includes('-'+BUILD));

@@ -67,7 +67,7 @@ function attach(s,opts,host){if(!opts.exploration)return null;const a=opts.explo
  current={session:s,place:placement,pose:host.pose};button.onclick=()=>{if(!s.uiBusy&&!s.room)sheet({session:s,place:placement,pose:host.pose});};enter.onclick=()=>{if(target&&!s.uiBusy)a.home(target.id);};
  function update(time){if(closed)return;const tools=s.root.querySelector('.fp-tools');if(tools&&button.parentNode!==tools)tools.append(button);if(tools&&seat.parentNode!==tools)tools.append(seat);button.hidden=!!s.room;seat.hidden=!lit||!!s.room;
  if(stool&&(s.room||s.player.mode==='fly'||s.player.mode==='swim'||Math.hypot(s.player.x-stool.x,s.player.z-stool.z)>.12))stand();
- if(s.room){enter.hidden=true;kindle.hidden=true;rain.visible=false;root.BurbzCalmAudio?.campfire(0);root.BurbzCalmAudio?.ambience((sky?.rain||0)*.3,0);return;}
+ if(s.room){enter.hidden=true;kindle.hidden=true;rain.visible=false;root.BurbzCalmAudio?.campfire(0);root.BurbzCalmAudio?.ambience((sky?.rain||0)*.3,0);root.BurbzCalmAudio?.birdsong(0);return;}
  showRain(time,sky?.rain||0);
  let near=null,best=60;for(const m of models.values()){m.flick=m.update?.(time);if(m.fire&&m.group.visible){const d=Math.hypot(m.x+m.fire.x-s.player.x,m.z+m.fire.z-s.player.z);if(d<best){best=d;near=m;}}}
  // One shared warm light follows the nearest lit fire, so trees and ground around it glow.
@@ -75,6 +75,8 @@ function attach(s,opts,host){if(!opts.exploration)return null;const a=opts.explo
  if(time-last<.5)return;last=time;const pose=host.pose();if(!pose)return;
  // Rain and wind follow the real sky where the player stands; a light breeze always moves.
  sky=root.BurbzCalmAudio?.weather?.(pose.lat,pose.lon)||sky;root.BurbzCalmAudio?.ambience(sky?.rain||0,Math.max(s.player.mode==='fly'?.55:.2,sky?.wind||0));
+ // Birds and treetops fill the three-minute rest between songs; rain quietens them.
+ root.BurbzCalmAudio?.birdsong(root.BurbzCalmAudio?.musicResting?.()?1-.7*(sky?.rain||0):0);
  const camps=a.read().camps.map(c=>({c,p:G.project(host.origin,c)})).filter(v=>v.p&&Math.hypot(v.p.x-s.player.x,v.p.z-s.player.z)<180).sort((a,b)=>Math.hypot(a.p.x-s.player.x,a.p.z-s.player.z)-Math.hypot(b.p.x-s.player.x,b.p.z-s.player.z)).slice(0,12),ids=new Set(camps.map(v=>v.c.id));
  for(const [id,m]of models)if(!ids.has(id)){m.dispose();models.delete(id);}
  // The fire crackles in from 14 m and is full within 4 m of the flames.
@@ -83,7 +85,7 @@ function attach(s,opts,host){if(!opts.exploration)return null;const a=opts.explo
  enter.hidden=!target||s.uiBusy;enter.textContent=target?'Enter '+target.name+' home':'';
  unlit=null;if(s.player.mode!=='fly')for(const {c,p}of camps)if(!c.fire&&Math.hypot(p.x-s.player.x,p.z-s.player.z)<=11){unlit=c;break;}kindle.hidden=!unlit||s.uiBusy;kindle.textContent=unlit?'🔥 Build campfire · 5 timber':'';
  }
- return{update,closePanel(){if(dialog?.el?.closest('#villageWalk')){close();return true;}return false;},blocked(x,y,z){for(const m of models.values()){if(Math.abs(x-m.x)<3.1&&Math.abs(z-m.z)<2.55&&(y==null||y>m.base-.3&&y<m.top+.3))return true;for(const b of m.obstacles||[])if(Math.abs(x-m.x-b.x)<b.w/2+.28&&Math.abs(z-m.z-b.z)<b.d/2+.28&&(y==null||y>b.y-.3&&y<b.y+2.5))return true;}return false;},markers(){return a.read().camps.map(c=>({...G.project(host.origin,c),name:c.name,home:!!c.home}));},diagnostics:()=>[...models.values()].map(m=>({id:m.c.id,x:m.x,z:m.z,home:!!m.c.home,meshes:m.group.children.length})),dispose(){closed=true;stand();root.BurbzCalmAudio?.campfire(0,{immediate:true});root.BurbzCalmAudio?.ambience(0,0,{immediate:true});glow?.removeFromParent();glow?.dispose?.();glow=null;rain.removeFromParent();rainGeo.dispose();rain.material.dispose();if(current?.session===s)current=null;close();button.remove();enter.remove();kindle.remove();seat.remove();for(const m of models.values())m.dispose();models.clear();}};
+ return{update,closePanel(){if(dialog?.el?.closest('#villageWalk')){close();return true;}return false;},blocked(x,y,z){for(const m of models.values()){if(Math.abs(x-m.x)<3.1&&Math.abs(z-m.z)<2.55&&(y==null||y>m.base-.3&&y<m.top+.3))return true;for(const b of m.obstacles||[])if(Math.abs(x-m.x-b.x)<b.w/2+.28&&Math.abs(z-m.z-b.z)<b.d/2+.28&&(y==null||y>b.y-.3&&y<b.y+2.5))return true;}return false;},markers(){return a.read().camps.map(c=>({...G.project(host.origin,c),name:c.name,home:!!c.home}));},diagnostics:()=>[...models.values()].map(m=>({id:m.c.id,x:m.x,z:m.z,home:!!m.c.home,meshes:m.group.children.length})),dispose(){closed=true;stand();root.BurbzCalmAudio?.campfire(0,{immediate:true});root.BurbzCalmAudio?.ambience(0,0,{immediate:true});root.BurbzCalmAudio?.birdsong(0,{immediate:true});glow?.removeFromParent();glow?.dispose?.();glow=null;rain.removeFromParent();rainGeo.dispose();rain.material.dispose();if(current?.session===s)current=null;close();button.remove();enter.remove();kindle.remove();seat.remove();for(const m of models.values())m.dispose();models.clear();}};
 }
 root.BurbzExploration={bind,sheet,close,paint,attach,model,fireFX,stoolModel,EXPLORED_REVEAL_ALPHA};
 })(globalThis);

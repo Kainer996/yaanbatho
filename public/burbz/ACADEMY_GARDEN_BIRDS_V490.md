@@ -1,7 +1,7 @@
-# Academy tree and garden birds v486
+# Academy tree and garden birds v490
 
-Build: `academy-garden-birds-v486-20260925`.
-Status: pushed on `claude/burbz-academy-tree-birds-0z4meh`, built on main at v484 and merged with main at v485 (smooth sky, plain plot). Not merged to main yet.
+Build: `academy-garden-birds-v490-20260925`.
+Status: merged to main at Yaan's word. Main shipped v486–v489 (village folk, music rest, quests strip, fold and full screen) while this was made, so it takes v490.
 
 ## What Yaan asked for
 
@@ -49,7 +49,7 @@ How they behave:
 - Ten sounds, made with ElevenLabs Sound Effects v2 in Yaan's account (flow `cBW4FEqBZuAXVPWcNMl7`): robin song, robin tick, blue tit song, great tit song, chaffinch song, goldfinch twitter, wren song, blackbird song, blackbird alarm and wing flutter. 28 files, 750 KB, in `assets/audio/garden-birds/`, each measured and mastered (see its `manifest.json`). About 350 credits.
 - Each bird sings its own species' song. Songs follow the season as the real birds do: robins and wrens sing through autumn; chaffinches and blackbirds sing mostly in spring and early summer, and only now and then in autumn. Dawn brings the most song, midday less, rain and strong wind less again. At night only a robin sometimes sings on.
 - Songs are placed in space: louder and brighter close by, softer and duller far off, and panned left or right as the player turns.
-- **Merlin's wand never hears them.** Burbz identifies wild birds by ear, so the birds go silent the moment the microphone opens and stay silent while it listens. They also stay silent with sounds off or the page hidden. No button, card or scan plays a bird; the songs live only in the garden.
+- **Merlin's wand never hears them.** Burbz identifies wild birds by ear, so the birds go silent the moment the microphone opens and stay silent while it listens. They also stay silent with sounds off or the page hidden. The looping treetops ambience that v487 plays in quiet walks now drops to silence while the microphone is open too. No button, card or scan plays a bird; the songs live only in the garden.
 
 ## Files
 
@@ -63,9 +63,9 @@ How they behave:
 
 ## Checks
 
-- `node tests/test_garden_birds_v486.cjs`: 13 groups. Tree spot and rules; the tree grows from the 3D Academy; twelve birds, seven species; perching, foraging and flights that land; bounding versus direct flight; crabbing in a side wind; facing the wind; fleeing; roosting; seasons and distance; every sound on disk and checksummed; the microphone gate; recovery after a hush; release pins.
-- Browser: `node tests/run_garden_birds_v486.cjs` (real game page, software WebGL, synthetic map), 11 checks with screenshots: the house with its tree, the tree close up, the flock, a robin on the birdbath, the Build view.
-- Node suite: the same failures as main, plus the new test passing. Five older release tests list v486 as a later build.
+- `node tests/test_garden_birds_v490.cjs`: 13 groups. Tree spot and rules; the tree grows from the 3D Academy; twelve birds, seven species; perching, foraging and flights that land; bounding versus direct flight; crabbing in a side wind; facing the wind; fleeing; roosting; seasons and distance; every sound on disk and checksummed; the microphone gate; recovery after a hush; release pins.
+- Browser: `node tests/run_garden_birds_v490.cjs` (real game page, software WebGL, synthetic map), 11 checks with screenshots: the house with its tree, the tree close up, the flock, a robin on the birdbath, the Build view.
+- Node suite: the same failures as main, plus the new test passing. Five older release tests list v490 as a later build.
 - Python suite: 324 failed, 1945 passed on both main and this branch, with the same failing tests.
 - `tests/run_home_ground_20260923.cjs` now ignores the tree's lantern glows when it checks for stray sprites. It fails on main before that check (a ground ray), with or without this change.
 

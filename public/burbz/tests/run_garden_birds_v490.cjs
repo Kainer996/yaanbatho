@@ -1,11 +1,11 @@
-/* Browser proof for the garden Academy tree and the garden birds (v486).
+/* Browser proof for the garden Academy tree and the garden birds (v490).
  * Real game page, real Three renderer; synthetic map and software WebGL, so
  * this is not a physical-phone or frame-rate claim.
- * Run: EVIDENCE_DIR=/tmp/v486 PLAYWRIGHT_MODULE=... CHROMIUM_PATH=... node tests/run_garden_birds_v486.cjs
+ * Run: EVIDENCE_DIR=/tmp/v490 PLAYWRIGHT_MODULE=... CHROMIUM_PATH=... node tests/run_garden_birds_v490.cjs
  */
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright'),F=require('./connected_world_fixture_v386.cjs');
-const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-garden-birds-v486';fs.mkdirSync(out,{recursive:true});
+const root=path.resolve(__dirname,'..'),out=process.env.EVIDENCE_DIR||'/tmp/burbz-garden-birds-v490';fs.mkdirSync(out,{recursive:true});
 const report={served:{},missing:[],checks:[],errors:[],limits:['Synthetic map and DEM; software WebGL; headless audio is never unlocked, so sound is checked by its gate, not by ear.']};
 const BUILT=['dorm','tavern','kitchen','training','hospital','library','observatory'];
 const seed=F.SEED+`\n{const f=JSON.parse(localStorage.getItem('burbz_state'));f.settings.sfx=true;Object.assign(f.playerHome,{tier:1,outlook:true,anchor:{lat:54.45,lon:-2.65,revision:1,source:'chosen'},owned:{...f.playerHome.owned,birdbath:1,feeder:1,bench:1},placed:[...f.playerHome.placed,{id:2,item:'birdbath',area:'yard',x:4,z:7,turn:0},{id:3,item:'feeder',area:'yard',x:-4,z:7,turn:0},{id:4,item:'bench',area:'yard',x:5,z:-5,turn:0}]});f.lastKnownHome={lat:54.45,lon:-2.65};localStorage.setItem('burbz_state',JSON.stringify(f));}`;
@@ -39,6 +39,8 @@ const birds=()=>page.evaluate(()=>proofYard.birds.birds.map(b=>({key:b.key,look:
  pass('Screenshots: the house with its Academy tree, and the tree up close');
 
  // The flock: twelve birds of seven species, living their lives.
+ // The game makes its own weather from the clock; birds shelter in a shower, so pin a fair day.
+ await page.evaluate(()=>{const real=BurbzGardenBirds.environment;window.__realEnv=real;BurbzGardenBirds.environment=()=>({...real(),rain:0,lamp:0,hour:10,wind:{speed:.25,x:-.93,z:-.37}});});
  const start=await birds();assert.equal(start.length,12);assert.deepEqual([...new Set(start.map(b=>b.key))].sort(),['blackbird','bluetit','chaffinch','goldfinch','greattit','robin','wren']);
  assert(await stand(0,16,0,.05));
  const seen={fly:0,perch:0,ground:0},kinds=new Set();let moved=0,prev=start;for(let i=0;i<14;i++){await page.waitForTimeout(700);const now=await birds();for(const b of now){assert(Number.isFinite(b.x+b.y+b.z),'finite bird');seen[b.state]++;if(b.kind)kinds.add(b.kind);}moved+=now.reduce((n,b,j)=>n+Math.hypot(b.x-prev[j].x,b.z-prev[j].z),0);prev=now;}
@@ -66,7 +68,7 @@ const birds=()=>page.evaluate(()=>proofYard.birds.birds.map(b=>({key:b.key,look:
  assert(files.length===28&&files.every(f=>f.ok&&f.bytes>5000));pass('Every birdsong file the flock names is served',files.length);
 
  // Wind: perched birds turn to face into it.
- await page.evaluate(()=>{const real=BurbzGardenBirds.environment;window.__realEnv=real;BurbzGardenBirds.environment=()=>({...real(),wind:{speed:.8,x:-.93,z:-.37}});});await page.waitForTimeout(6000);
+ await page.evaluate(()=>{const real=window.__realEnv;BurbzGardenBirds.environment=()=>({...real(),rain:0,lamp:0,hour:10,wind:{speed:.8,x:-.93,z:-.37}});});await page.waitForTimeout(6000);
  const windy=await birds(),into=Math.atan2(.93,.37),perched=windy.filter(b=>b.state==='perch'&&b.kind!=='twig'),off=perched.map(b=>Math.abs(Math.atan2(Math.sin(b.yaw-into),Math.cos(b.yaw-into))));
  report.wind={perched:perched.length,meanOff:off.reduce((a,b)=>a+b,0)/Math.max(1,off.length)};assert(perched.length===0||report.wind.meanOff<.7,'perched birds face the wind');pass('Perched birds face into a strong wind',report.wind);
 

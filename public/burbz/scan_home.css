@@ -835,3 +835,38 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 @media (prefers-reduced-motion:reduce) {
  #screen-scan.progressive-home #scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled) { animation:none; }
 }
+
+/* Quests strip: a gold Quests button, then the current quest in an even, glowing red frame.
+   The actions box keeps room for the glow so its clipping never cuts the frame. */
+#screen-scan.progressive-home .scan-home-today { grid-template-columns:64px minmax(0,1fr) 88px 53px!important;align-items:stretch;gap:4px;padding:3px; }
+#screen-scan.progressive-home[data-equipment-in-header="true"] .scan-home-today { grid-template-columns:64px minmax(0,1fr)!important; }
+#screen-scan.progressive-home .scan-home-today .desk-current-label {
+ box-sizing:border-box;align-self:center;height:36px;min-width:0;margin:0;padding:0 4px;
+ display:flex;align-items:center;justify-content:center;cursor:pointer;
+ border:1px solid #f6d98a;border-radius:8px;
+ background:linear-gradient(180deg,#f7dc8c 0%,#d9a93e 55%,#b9832a 100%);
+ color:#2a1b07;font:800 12px/1 Rajdhani,sans-serif;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;text-shadow:0 1px 0 #ffeebc80;
+ box-shadow:0 0 8px rgba(240,190,80,.55),inset 0 1px 0 #fff4c8;
+ animation:home-quests-label-glow 3.2s ease-in-out infinite;
+}
+#screen-scan.progressive-home .scan-home-today .desk-current-label:focus-visible { outline:2px solid #fff0c0;outline-offset:2px; }
+@keyframes home-quests-label-glow {
+ 0%,100% { box-shadow:0 0 5px rgba(240,190,80,.4),inset 0 1px 0 #fff4c8; }
+ 50% { box-shadow:0 0 11px rgba(250,205,95,.8),inset 0 1px 0 #fff4c8; }
+}
+#screen-scan.progressive-home #scanHomeActions { box-sizing:border-box;align-items:stretch;height:auto;min-height:44px;padding:4px;border:0;overflow:hidden;background:transparent; }
+#screen-scan.progressive-home #scanHomeActions .home-action { box-sizing:border-box;height:100%;min-height:36px;margin:0;padding:3px 9px;border-radius:7px;align-items:center; }
+#screen-scan.progressive-home #scanHomeActions .home-action>span { flex:1;min-width:0; }
+#screen-scan.progressive-home #scanHomeActions .home-action strong { font:700 14px/16px Rajdhani,sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:none; }
+#screen-scan.progressive-home #scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled) {
+ border:1px solid rgba(232,86,72,.85);background:#241a19;
+ box-shadow:0 0 5px rgba(232,86,72,.45),inset 0 0 6px rgba(232,86,72,.15);
+ animation:home-current-quest-glow 3.2s ease-in-out infinite;
+}
+@keyframes home-current-quest-glow {
+ 0%,100% { box-shadow:0 0 3px rgba(232,86,72,.35),inset 0 0 4px rgba(232,86,72,.1); }
+ 50% { box-shadow:0 0 6px rgba(240,96,80,.75),inset 0 0 8px rgba(232,86,72,.22); }
+}
+@media (prefers-reduced-motion:reduce) {
+ #screen-scan.progressive-home :is(.scan-home-today .desk-current-label,#scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled)) { animation:none; }
+}

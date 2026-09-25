@@ -168,9 +168,8 @@ test('the game makes its own weather, made to look good: fair skies and passing 
 
 test('v482 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
- // Later releases ship on top under their own marker and may move a module's
- // pin on; v482 stays in the cache chain and each list still pins it once.
- const LATER=['academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','academy-garden-birds-v486-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ // Later releases ship on top under their own marker; v482 stays in the cache chain.
+ const LATER=['academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925','fold-fullscreen-v489-20260925','academy-garden-birds-v490-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));assert(cache.includes('-'+BUILD+'-')||cache.endsWith('-'+BUILD));assert(shipped.some(b=>cache.endsWith('-'+b)));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
