@@ -1,7 +1,8 @@
 /* First-person bird flight, independent of rendering and saved game state.
  * Flight in miniature: gravity always pulls, wings lift only with airspeed,
- * and every wingbeat pays for height. Look down to dive and gather speed;
- * pull up to trade that speed for height until the wings stall. */
+ * and every wingbeat pays for height. Stop flapping and the bird glides down
+ * gently. Look down to dive and gather speed; pull up to trade that speed for
+ * height until the wings stall. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;root.BurbzAcademyFlightCore=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number(n)||0));
@@ -9,22 +10,27 @@ const clamp=(n,a,b)=>Math.max(a,Math.min(b,Number(n)||0));
 // the great craft over Alderwing feel alike. Gravity adds one cruise speed in
 // TIME seconds: 9.8 m/s² for the craft's 18 m/s.
 const TIME=1.84,STALL=.5,LOAD=3,TOP=2.2,PARASITE=1/16,INDUCED=1/16,SKID=1,STEER=3.5,TURN=1.1;
+// Still wings settle into a glide: the path sits GLIDE below the view at
+// cruise speed (the best glide, about 8:1), and SETTLE lower for each cruise
+// speed lost, so a slow bird noses down until the air carries it again.
+const GLIDE=Math.atan(2*Math.sqrt(PARASITE*INDUCED)),SETTLE=.5,CALM=2;
 function settings(options={}){
  const speed=Number.isFinite(options.speed)?clamp(options.speed,.1,80):5.2,climb=Number.isFinite(options.liftSpeed)?clamp(options.liftSpeed,.1,20):3.2;
  // Small birds beat fast; big wings beat slow.
  return {speed,climb,stall:speed*STALL,gravity:speed/TIME,top:speed*TOP,rate:clamp(9.4/Math.sqrt(speed),1.8,5)};
 }
-function fresh(){return {phase:0,beating:false,lift:0,ahead:0,pulse:0,airspeed:0,stall:0,grounded:false,mode:'gliding',cruise:5.2,top:5.2*TOP};}
+function fresh(){return {phase:0,beating:false,lift:0,ahead:0,pulse:0,airspeed:0,stall:0,rest:CALM,grounded:false,mode:'gliding',cruise:5.2,top:5.2*TOP};}
 // Taking off starts with one strong downstroke. Keep flapping to stay up.
-function launch(p){p.wing={...fresh(),beating:true,lift:1,grounded:true,mode:'flapping'};return p.wing;}
+function launch(p){p.wing={...fresh(),beating:true,lift:1,rest:0,grounded:true,mode:'flapping'};return p.wing;}
 // Where the bird wants to go: the way it looks.
 function view(yaw,pitch){const c=Math.cos(pitch);return {x:-Math.sin(yaw)*c,y:Math.sin(pitch),z:-Math.cos(yaw)*c};}
 function accelerate(p,w,k,c,h){
  const v=p.velocity,V=Math.hypot(v.x,v.y,v.z),x=V/k.speed,g=k.gravity;
  // A hover is slow across the ground, whatever the climb or sink.
  const across=Math.hypot(v.x,v.z),onward=Math.max(0,-Math.sin(p.yaw)*v.x-Math.cos(p.yaw)*v.z),slow=Math.max(0,1-across/k.speed),moving=Math.min(1,onward/k.stall);
- // A wingbeat, once begun, finishes: a quick tap still gives one full stroke.
- const want=Math.max(c.flap,c.ahead);
+ // Only Flap beats the wings. A wingbeat, once begun, finishes: a quick tap
+ // still gives one full stroke. Let go and the wings go still.
+ const want=c.flap;
  if(!w.beating&&want>.02){w.beating=true;w.phase=0;w.lift=c.flap;w.ahead=c.ahead;}
  let pulse=0;
  if(w.beating){
@@ -33,13 +39,20 @@ function accelerate(p,w,k,c,h){
   if(w.phase>=1){if(want>.02){w.phase-=1;w.lift=c.flap;w.ahead=c.ahead;}else{w.beating=false;w.phase=0;w.lift=w.ahead=0;}}
  }
  const flap=Math.max(w.lift,c.flap),ahead=Math.max(w.ahead,c.ahead);w.pulse=pulse*Math.max(flap,ahead);
- // Flapping hard at speed noses the path up into a climb.
- const d=view(p.yaw,clamp(p.pitch+flap*.25*moving,-1.1,1.1));
+ w.rest=w.beating?0:(w.rest??CALM)+h;
+ // Flapping at speed noses the path up into a climb; still wings trim to a
+ // glide below the view. The change eases in, so letting go tips the bird
+ // smoothly over into its glide.
+ const aim=flap*.25*moving-(w.beating?0:GLIDE+SETTLE*Math.max(0,1-x));
+ w.aim=Number.isFinite(w.aim)?w.aim+(aim-w.aim)*(1-Math.exp(-h*3)):aim;
+ const d=view(p.yaw,clamp(p.pitch+w.aim,-1.4,1.4));
  // Downstrokes drive the bird forward, and at low speed turn downward to hold
  // it up: a hover. Hovering climbs slowly; it is hard work.
  const thrust=pulse*g*.9*Math.max(ahead,flap*moving)*Math.max(0,1-x/1.25);
  const hover=pulse*g*(1.75*flap+.7*ahead)*slow*clamp(1-v.y/k.climb,0,1.5);
- let ax=d.x*thrust,ay=hover-g,az=d.z*thrust,stall=!w.grounded&&flap<.3?1:0;
+ // A stall is the wing failing a pull-up, not the drop from a hover just left.
+ const failing=!w.grounded&&flap<.3&&w.rest>CALM;
+ let ax=d.x*thrust,ay=hover-g,az=d.z*thrust,stall=failing?1:0;
  if(V>1e-4*k.speed){
   const ux=v.x/V,uy=v.y/V,uz=v.z/V,along=d.x*ux+d.y*uy+d.z*uz;
   let tx=d.x-along*ux,ty=d.y-along*uy,tz=d.z-along*uz;const tl=Math.hypot(tx,ty,tz);
@@ -51,15 +64,17 @@ function accelerate(p,w,k,c,h){
   const gy=-g*uy,steer=V*STEER*(1-flap*slow);let lx=gy*ux+steer*tx,ly=g+gy*uy+steer*ty,lz=gy*uz+steer*tz;
   const spread=1-.75*c.tuck,most=g*Math.min(LOAD,(V/k.stall)**2)*spread,need=Math.hypot(lx,ly,lz);
   if(need>most){const s=most/need;lx*=s;ly*=s;lz*=s;}
-  stall=!w.grounded&&flap<.3&&need>most*1.02&&V<k.stall*1.15?clamp((k.stall*1.15-V)/(k.stall*.6),0,1):0;
+  stall=failing&&need>most*1.02&&V<k.stall*1.15?clamp((k.stall*1.15-V)/(k.stall*.6),0,1):0;
   // Drag: streamlined air, the extra cost of lift, a skid when the view and
   // the path disagree, and airbrakes. Tucked wings slip through the air.
   const lifted=Math.min(need,most)/g,skid=along>0?1-along*along:1;
   const drag=g*(x*x*(PARASITE*(1-.45*c.tuck)+SKID*skid*spread+.35*c.brake)+INDUCED*lifted*lifted/Math.max(x*x,.01));
   ax+=lx-ux*drag;ay+=ly-uy*drag;az+=lz-uz*drag;
  }
- // A hovering bird holds its place; a grounded one does not slide far.
- const hold=flap*(1-ahead)*slow*1.5+(w.grounded?2.5*(1-.8*ahead):0);
+ // A hovering bird holds its place, but only below stall speed: flapping at
+ // flying speed climbs on instead of braking to a hover. A grounded bird
+ // does not slide far.
+ const hold=flap*(1-ahead)*Math.max(0,1-across/k.stall)*1.5+(w.grounded?2.5*(1-.8*ahead):0);
  ax-=v.x*hold;az-=v.z*hold;
  v.x+=ax*h;v.y+=ay*h;v.z+=az*h;
  const top=Math.hypot(v.x,v.y,v.z);if(top>k.top){const s=k.top/top;v.x*=s;v.y*=s;v.z*=s;}
