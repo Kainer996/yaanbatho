@@ -35007,6 +35007,8 @@ function ensureVillageRenderer(stage) {
   }
   villageCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 140); // far covers the 96-radius sky dome from max orbit
   villageRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+  // The renderer knows whether this phone can skin villagers and animals.
+  window.BurbzSettlementModels?.setSkinning(villageRenderer.capabilities.floatVertexTextures);
   settlementSceneApplyDpr('village', villageRenderer, villageSceneQuality);
   villageRenderer.shadowMap.enabled = true; // real moonlight shadows
   villageRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -36509,6 +36511,8 @@ function ensureTownRenderer(stage) {
   }
   townCamera = new THREE.PerspectiveCamera(55, 1, 0.1, 200); // far covers the sky dome from the widest orbit
   townRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  // The renderer knows whether this phone can skin villagers and animals.
+  window.BurbzSettlementModels?.setSkinning(townRenderer.capabilities.floatVertexTextures);
   settlementSceneApplyDpr('town', townRenderer, townSceneQuality);
   townRenderer.shadowMap.enabled = true;
   townRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -45268,7 +45272,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'academy-plain-tree-v471-20260925';
+const BURBZ_BUILD = 'village-folk-v472-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;

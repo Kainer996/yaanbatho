@@ -229,6 +229,7 @@ FILES=(
   "assets/quest-categories/diplomacy.webp"
   "settlement_life_core.js"
   "settlement_models.js"
+  "village_animals.js"
   "settlement_lighting.js"
   "empire_map_core.js"
   "empire_realm_core.js"

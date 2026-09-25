@@ -127,7 +127,9 @@
       geo.setIndex(new T.BufferAttribute(index,1));geo.computeBoundingBox();geo.computeBoundingSphere();
       const mesh=new T.SkinnedMesh(geo,material);mesh.name=name;
       let object=mesh;
-      if(under){object=roots.length===1?under:new T.Group();if(object!==under)roots.forEach(b=>object.add(b));under.add(mesh);under.children.unshift(under.children.pop());}
+      // Under a root bone, the mesh sits back at the model origin so its rest
+      // geometry binds exactly where it was authored.
+      if(under){object=roots.length===1?under:new T.Group();if(object!==under)roots.forEach(b=>object.add(b));under.add(mesh);under.children.unshift(under.children.pop());mesh.position.set(-under.userData.at[0],-under.userData.at[1],-under.userData.at[2]);}
       else roots.forEach(b=>mesh.add(b));
       object.updateMatrixWorld(true);
       const skeleton=new T.Skeleton(bones);mesh.bind(skeleton);

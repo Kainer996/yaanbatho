@@ -61,12 +61,16 @@
       if(L.wait>0){
         L.wait-=dt;
         if(L.wait<=0){
-          // Pick a spot a short amble away that no pen-mate is standing on.
+          // Pick the roomiest of a few spots a short amble away, so pen-mates
+          // spread out instead of standing in each other.
+          let best=-1;
           for(let tries=0;tries<6;tries++){
-            const a=Math.random()*TAU,d=.35+Math.random()*.7;
+            const a=Math.random()*TAU,d=.3+Math.random()*.7;
             const tx=Math.max(-L.pen.hw,Math.min(L.pen.hw,L.x+Math.cos(a)*d)),tz=Math.max(-L.pen.hd,Math.min(L.pen.hd,L.z+Math.sin(a)*d));
-            if((u.penMates||[]).every(m=>m===g||Math.hypot(m.position.x-tx,m.position.z-tz)>.62*(m.scale.x+g.scale.x))){L.tx=tx;L.tz=tz;break;}
+            let room=Infinity;for(const m of u.penMates||[])if(m!==g)room=Math.min(room,Math.hypot(m.position.x-tx,m.position.z-tz)/(m.scale.x+g.scale.x));
+            if(room>best){best=room;L.tx=tx;L.tz=tz;}
           }
+          if(best<.3){L.tx=L.x;L.tz=L.z;}
         }
       }else{
         const dx=L.tx-g.position.x,dz=L.tz-g.position.z,dist=Math.hypot(dx,dz);
@@ -74,7 +78,7 @@
         else{
           // The body faces +X, so the heading is atan2(-dz, dx).
           const off=steer(g,Math.atan2(-dz,dx),1.1,dt);
-          if(off<.5){
+          if(off<.2){
             const speed=(kind==='horse'?.16:.1)*g.scale.x,step=Math.min(dist,speed*dt);
             g.position.x+=dx/dist*step;g.position.z+=dz/dist*step;L.walked+=step/g.scale.x;moving=true;
           }

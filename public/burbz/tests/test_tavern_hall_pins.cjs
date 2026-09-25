@@ -5,7 +5,8 @@ const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),home
 const tag='tavern-hall-open-v450-20260923';
 const current=html.match(/const BURBZ_BUILD = '([^']+)'/)[1];
 assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith(current),'current document and worker build agree');
-for(const name of ['building_interior_core.js','settlement_models.js','building_rooms_core.js','player_home.js','village_walk.js']){
+// settlement_models.js moved to village-folk-v472; test_village_folk_v472.cjs pins it.
+for(const name of ['building_interior_core.js','building_rooms_core.js','player_home.js','village_walk.js']){
  const url=name+'?v='+tag;
  assert.equal(sw.split('./'+url).length-1,3,name+' has exact pin in each worker list');
  if(name!=='building_rooms_core.js')assert(html.includes(url),name+' consuming URL');
