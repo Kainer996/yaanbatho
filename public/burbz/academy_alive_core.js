@@ -141,14 +141,14 @@
 
   var SPRITE_BOX = 112; // px — .treehouse-building-sprite is a 112×112 square
 
-  // The Academy keeps the game's own clock (daylight_core.js): night from
-  // 19:00 to 05:00, and the windows fade up as the real evening draws in
+  // The Academy keeps the game's own clock (academy_daynight.js, built on
+  // daylight_core.js): night from 19:00 to 05:00, and the windows fade up as the real evening draws in
   // rather than snapping on. 0 → full daylight, 1 → deep night.
-  function daylight() {
-    return globalThis.BurbzDaylightCore || (typeof module === 'object' && module.exports ? require('./daylight_core.js') : null);
+  function dayNight() {
+    return globalThis.BurbzAcademyDayNight || (typeof module === 'object' && module.exports ? require('./academy_daynight.js') : null);
   }
-  function isNightHour(h) { var d = daylight(); return d ? d.isNightHour(h) : (h >= 19 || h < 5); }
-  function lightBoostFor(h) { var d = daylight(); return d ? d.lampFactorForHour(h) : (isNightHour(h) ? 1 : 0); }
+  function isNightHour(h) { var d = dayNight(); return d ? d.isNightHour(h) : (h >= 19 || h < 5); }
+  function lightBoostFor(h) { var d = dayNight(); return d ? d.lampFactorForHour(h) : (isNightHour(h) ? 1 : 0); }
 
   function mulberry32(seed) {
     var a = seed >>> 0;

@@ -150,12 +150,13 @@
   }
 
   // The same clock as the painted Academy and the rest of the game
-  // (daylight_core.js). 0 = full daylight, 1 = deep night.
-  function daylight() {
-    return globalThis.BurbzDaylightCore || (typeof module === 'object' && module.exports ? require('./daylight_core.js') : null);
+  // (academy_daynight.js, built on daylight_core.js). 0 = full daylight,
+  // 1 = deep night.
+  function dayNight() {
+    return globalThis.BurbzAcademyDayNight || (typeof module === 'object' && module.exports ? require('./academy_daynight.js') : null);
   }
-  function isNightHour(h) { var d = daylight(); return d ? d.isNightHour(h) : (h >= 19 || h < 5); }
-  function lightBoostFor(h) { var d = daylight(); return d ? d.lampFactorForHour(h) : (isNightHour(h) ? 1 : 0); }
+  function isNightHour(h) { var d = dayNight(); return d ? d.isNightHour(h) : (h >= 19 || h < 5); }
+  function lightBoostFor(h) { var d = dayNight(); return d ? d.lampFactorForHour(h) : (isNightHour(h) ? 1 : 0); }
 
   function treeLightsActiveFor(hour, requested) {
     return !!requested && isNightHour(Number(hour));

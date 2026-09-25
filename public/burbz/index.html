@@ -3707,6 +3707,10 @@ body[data-active-screen="battle"] .completion-notice-stack { display:none; }
 /* Golden hour: a warm wash over the whole scene through dusk and dawn. */
 .academy-dusk { position:absolute; inset:0; z-index:8; pointer-events:none; mix-blend-mode:soft-light; opacity:var(--dn-warm,0); background:linear-gradient(180deg, rgba(196,120,220,.42), rgba(255,150,110,.46) 45%, rgba(255,176,90,.5)); }
 .academy-treehouse:not(.dn-awake) .academy-dusk { display:none; }
+/* No night painting (offline and never cached): keep the day painting up
+   under the old moonlit shade. */
+.academy-treehouse.dn-no-night .academy-tree-swaybg { opacity:1; }
+.academy-treehouse.dn-no-night.alive-night .academy-alive-shade { opacity:.66; }
 
 /* ---- Painted canopy layers: branches that genuinely move ----------------- */
 /* Manga boughs (assets/academy-manga-20260925/bough-*.webp, cut to transparency):
@@ -4972,7 +4976,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
                wait under the day painting, which fades out as the real sun
                sets. academy_daynight.js keeps the clock. -->
           <div class="academy-night-sky" data-dn-sky aria-hidden="true"></div>
-          <div class="academy-tree-night" aria-hidden="true"></div>
+          <div class="academy-tree-night" data-dn-art aria-hidden="true"></div>
           <div class="academy-tree-swaybg" aria-hidden="true"></div>
           <!-- Manga boughs (v475), cut to transparency: they reach in from
                the edges of the frame, so their sawn ends stay out of sight.
@@ -5766,7 +5770,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="village_manager_core.js?v=manager-builds-the-village-v324-20260825"></script>
 <script src="building_interior_core.js?v=tavern-hall-open-v450-20260923"></script>
 <script src="world_level_core.js?v=conquest-world-levels-v248-20260811"></script>
-<script src="daylight_core.js?v=academy-day-night-v482-20260925"></script>
+<script src="daylight_core.js?v=real-sky-daylight-v243-20260810"></script>
 <script src="academy_daynight.js?v=academy-day-night-v482-20260925"></script>
 <script src="geographic_forest_core.js?v=continuous-world-v391-20260910"></script>
 <script src="geographic_camera_core.js?v=map-pictures-v374-20260908"></script>

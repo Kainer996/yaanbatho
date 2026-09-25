@@ -68,21 +68,6 @@
     return 4 * s * (1 - s);
   }
 
-  /* Lamplight: windows and lanterns light as the sun goes down, burn full
-     from an hour after dark, and go out through the dawn. 0 by day, 1 at night. */
-  function lampFactorForHour(hour) {
-    const h = wrapHour(hour);
-    if (h >= NIGHT_START_HOUR + 1 || h < DAWN_START_HOUR) return 1;
-    if (h >= DUSK_START_HOUR) return smooth((h - DUSK_START_HOUR) / (NIGHT_START_HOUR + 1 - DUSK_START_HOUR));
-    if (h < DAY_START_HOUR) return 1 - smooth((h - DAWN_START_HOUR) / (DAY_START_HOUR - DAWN_START_HOUR));
-    return 0;
-  }
-
-  function isNightHour(hour) {
-    const h = wrapHour(hour);
-    return h >= NIGHT_START_HOUR || h < DAWN_START_HOUR;
-  }
-
   function phaseForHour(hour) {
     const h = wrapHour(hour);
     if (h < DAWN_START_HOUR || h >= NIGHT_START_HOUR) return 'night';
@@ -151,8 +136,6 @@
     WARM_LIGHT,
     sunFactorForHour,
     warmFactorForHour,
-    lampFactorForHour,
-    isNightHour,
     phaseForHour,
     mixHex,
     daylightGradeForHour,

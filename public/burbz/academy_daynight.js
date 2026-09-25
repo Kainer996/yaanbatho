@@ -37,13 +37,36 @@
   const clamp01 = n => (n < 0 ? 0 : n > 1 ? 1 : n);
   const round = n => Number(n.toFixed(3));
   const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const smooth = t => { const k = clamp01(t); return k * k * (3 - 2 * k); };
+  const wrapHour = h => { const n = Number(h) % 24; return Number.isFinite(n) ? (n < 0 ? n + 24 : n) : 0; };
+
+  /* Night is the game's night: from nightfall (19:00) to first light (05:00). */
+  function isNightHour(hour) {
+    const core = daylight();
+    if (core) return core.phaseForHour(hour) === 'night';
+    const h = wrapHour(hour);
+    return h >= 19 || h < 5;
+  }
+
+  /* Lamplight: windows and lanterns light as the sun goes down, burn full
+     from an hour after dark, and go out through the dawn. 0 by day, 1 at night.
+     The hours are the game's own dawn, day, dusk and night hours. */
+  function lampFactorForHour(hour) {
+    const core = daylight(), h = wrapHour(hour);
+    if (!core) return isNightHour(h) ? 1 : 0;
+    const dawn = core.DAWN_START_HOUR, day = core.DAY_START_HOUR, dusk = core.DUSK_START_HOUR, night = core.NIGHT_START_HOUR;
+    if (h >= night + 1 || h < dawn) return 1;
+    if (h >= dusk) return smooth((h - dusk) / (night + 1 - dusk));
+    if (h < day) return 1 - smooth((h - dawn) / (day - dawn));
+    return 0;
+  }
 
   /* The full look of one moment of the day. Pure, so it runs under Node. */
   function gradeForHour(hour) {
     const core = daylight();
     const g = core ? core.daylightGradeForHour(hour) : { phase: 'day', sun: 1, warm: 0 };
     const sun = clamp01(g.sun), warm = clamp01(g.warm), night = 1 - sun;
-    const lamps = core && core.lampFactorForHour ? clamp01(core.lampFactorForHour(hour)) : night;
+    const lamps = lampFactorForHour(hour);
     const sky = SKY.night.map((c, i) => mix(mix(c, SKY.day[i], sun), SKY.dusk[i], warm * 0.85));
     return {
       phase: g.phase,
@@ -133,7 +156,25 @@
   let timer = 0;
   let resizeObserver = null;
 
+  // If a night painting cannot load (offline, say), the day painting stays
+  // up rather than leaving the houses floating in an empty sky.
+  const checked = new Map();
+  function checkArt(el) {
+    for (const art of el.querySelectorAll('[data-dn-art]')) {
+      const match = /url\(["']?([^"')]+)["']?\)/.exec(root.getComputedStyle ? root.getComputedStyle(art).backgroundImage : '');
+      if (!match || checked.has(match[1]) || !root.Image) {
+        if (match && checked.get(match[1]) === false) el.classList.add('dn-no-night');
+        continue;
+      }
+      const url = match[1], probe = new root.Image();
+      checked.set(url, true);
+      probe.onerror = () => { checked.set(url, false); el.classList.add('dn-no-night'); };
+      probe.src = url;
+    }
+  }
+
   function wake(el) {
+    checkArt(el);
     for (const img of el.querySelectorAll('img[data-night-src]')) {
       img.src = img.dataset.nightSrc;
       img.removeAttribute('data-night-src');
@@ -211,5 +252,5 @@
     return state;
   }
 
-  return { SKY, gradeForHour, localHour, starField, attach, refresh };
+  return { SKY, isNightHour, lampFactorForHour, gradeForHour, localHour, starField, attach, refresh };
 });

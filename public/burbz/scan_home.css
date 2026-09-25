@@ -739,6 +739,9 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan .home-tree-pool { position:absolute;left:var(--x);top:var(--y);width:46%;aspect-ratio:5/4;transform:translate(-50%,-62%);border-radius:50%;background:radial-gradient(closest-side,rgba(255,172,90,.46),rgba(255,136,56,.17) 50%,rgba(255,120,40,0)); }
 #screen-scan .home-tree-dusk { position:absolute;inset:0;display:none;pointer-events:none;mix-blend-mode:soft-light;opacity:var(--dn-warm,0);background:linear-gradient(180deg,rgba(196,120,220,.42),rgba(255,150,110,.46) 45%,rgba(255,176,90,.5)); }
 #screen-scan .dn-awake .home-tree-dusk { display:block; }
+/* No night painting (offline and never cached): the day tree stays up, dimmed. */
+#screen-scan .dn-no-night .home-tree-art, #screen-scan .dn-no-night .home-tree-bough::after { opacity:1; }
+#screen-scan .dn-no-night .home-tree-stage { filter:brightness(calc(1 - .55 * var(--dn-night,0))) saturate(.8); }
 
 /* Each bough is a soft-edged copy of the painting's outer canopy that sways on
    its own pivot near the trunk, so the branches move while the trunk holds. */
