@@ -27,6 +27,20 @@
   // each is bound to a named bone (or eased between two). finish() merges them
   // into ONE skinned mesh: a whole villager or animal costs one draw call, and
   // the animators turn real joints instead of loose blobs.
+  // Skinning needs float vertex textures. WebGL2 always has them; a rare
+  // WebGL1 phone may not, and then rig() builds rigid jointed pieces instead.
+  let skinning=null;
+  function skinningSupported(){
+    if(skinning!==null)return skinning;
+    skinning=true;
+    try{
+      const doc=root.document;if(!doc||typeof doc.createElement!=='function')return skinning;
+      const canvas=doc.createElement('canvas');let gl=canvas.getContext('webgl2');
+      if(!gl){gl=canvas.getContext('webgl');skinning=!!gl&&!!gl.getExtension('OES_texture_float')&&gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS)>0;}
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    }catch(error){skinning=true;}
+    return skinning;
+  }
   function rig(T){
     const bones=[],named={},parts=[],colour=new T.Color();
     function bone(name,parent,at){
@@ -98,22 +112,48 @@
         else for(let k=0;k<count;k++)index[i++]=v+k;
         v+=count;p.geo.dispose();
       }
+      const material=new T.MeshStandardMaterial({vertexColors:true,roughness:options.roughness??.86,metalness:0});
+      const name=options.name||'rigged-model',under=options.meshUnder?named[options.meshUnder]:null;
+      if(options.meshUnder&&(!under||under.parent))throw Error('meshUnder must name a root bone');
+      const roots=bones.filter(b=>!b.parent);
+      // Rest-pose bounds, padded for swinging limbs, keep culling and taps
+      // independent of whatever pose the first frame happens to catch.
+      const pad=Array.isArray(options.pad)?options.pad:[options.pad??.18,options.pad??.18,options.pad??.18];
+      if(!skinningSupported())return rigid();
       const geo=new T.BufferGeometry();
       geo.setAttribute('position',new T.BufferAttribute(position,3));geo.setAttribute('normal',new T.BufferAttribute(normal,3));
       geo.setAttribute('color',new T.BufferAttribute(color,3));
       geo.setAttribute('skinIndex',new T.Uint16BufferAttribute(skinIndex,4));geo.setAttribute('skinWeight',new T.BufferAttribute(skinWeight,4));
       geo.setIndex(new T.BufferAttribute(index,1));geo.computeBoundingBox();geo.computeBoundingSphere();
-      const material=new T.MeshStandardMaterial({vertexColors:true,roughness:options.roughness??.86,metalness:0});
-      const mesh=new T.SkinnedMesh(geo,material);mesh.name=options.name||'rigged-model';
-      for(const b of bones)if(!b.parent)mesh.add(b);
-      mesh.updateMatrixWorld(true);mesh.bind(new T.Skeleton(bones));
-      // Rest-pose bounds, padded for swinging limbs, keep culling and taps
-      // independent of whatever pose the first frame happens to catch.
-      const pad=options.pad??.18;
-      mesh.boundingBox=geo.boundingBox.clone().expandByScalar(pad);
-      mesh.boundingSphere=geo.boundingSphere.clone();mesh.boundingSphere.radius+=pad;
+      const mesh=new T.SkinnedMesh(geo,material);mesh.name=name;
+      let object=mesh;
+      if(under){object=roots.length===1?under:new T.Group();if(object!==under)roots.forEach(b=>object.add(b));under.add(mesh);under.children.unshift(under.children.pop());}
+      else roots.forEach(b=>mesh.add(b));
+      object.updateMatrixWorld(true);
+      const skeleton=new T.Skeleton(bones);mesh.bind(skeleton);
+      // The bone texture belongs to this model alone; free it with the mesh.
+      geo.addEventListener('dispose',()=>skeleton.dispose());
+      mesh.boundingBox=geo.boundingBox.clone().expandByVector(new T.Vector3(...pad));
+      mesh.boundingSphere=geo.boundingSphere.clone();mesh.boundingSphere.radius+=Math.max(...pad);
       mesh.castShadow=true;mesh.receiveShadow=true;
-      return {mesh,bones:named,triangles:indices/3};
+      return {mesh,object,roots,bones:named,triangles:indices/3};
+      // Devices that cannot skin still get jointed models: every bone carries
+      // its own rigid piece of the same merged colours.
+      function rigid(){
+        const object=under&&roots.length===1?under:new T.Group();
+        if(object!==under)roots.forEach(b=>object.add(b));
+        const byBone=new Map();
+        for(let k=0;k<index.length;k+=3){const b=skinIndex[index[k]*4];if(!byBone.has(b))byBone.set(b,[]);byBone.get(b).push(index[k],index[k+1],index[k+2]);}
+        for(const [b,list] of byBone){
+          const at=bones[b].userData.at,remap=new Map(),pos=[],nor=[],col=[],idx=[];
+          for(const n of list){if(!remap.has(n)){remap.set(n,remap.size);pos.push(position[n*3]-at[0],position[n*3+1]-at[1],position[n*3+2]-at[2]);nor.push(normal[n*3],normal[n*3+1],normal[n*3+2]);col.push(color[n*3],color[n*3+1],color[n*3+2]);}idx.push(remap.get(n));}
+          const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);
+          const piece=new T.Mesh(g,material);piece.name=name;piece.castShadow=piece.receiveShadow=true;bones[b].add(piece);
+          if(bones[b]===under)under.children.unshift(under.children.pop());
+        }
+        object.updateMatrixWorld(true);
+        return {mesh:object,object,roots,bones:named,triangles:indices/3,rigid:true};
+      }
     }
     return {bone,add,sphere,box,cylinder,cone,capsule,torus,lathe,limb,tube,finish,bones:named};
   }
@@ -276,5 +316,5 @@
     rig.head.rotation.x=state.mood&&state.mood!=='Content'?.24:0;
     rig.body.rotation.z=state.mood==='Unhappy'?Math.sin(time*.7+rig.phase)*.025*motion:0;
   }
-  root.BurbzSettlementModels={batch,rig,building,bird,animateBird,resident,animateResident};
+  root.BurbzSettlementModels={batch,rig,skinningSupported,setSkinning:on=>{skinning=on===null?null:!!on;},building,bird,animateBird,resident,animateResident};
 })(typeof globalThis!=='undefined'?globalThis:this);

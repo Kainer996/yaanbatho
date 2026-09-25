@@ -5746,7 +5746,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="settlement_scene_core.js?v=little-folk-residents-v350-20260905"></script>
 <script src="peep_needs_core.js?v=academy-flight-v370-20260908"></script>
 <script src="settlement_life_core.js?v=little-folk-residents-v350-20260905"></script>
-<script src="settlement_models.js?v=tavern-hall-open-v450-20260923"></script>
+<script src="settlement_models.js?v=village-folk-v472-20260925"></script>
+<script src="village_animals.js?v=village-folk-v472-20260925"></script>
 <script src="settlement_lighting.js?v=unified-alderwing-v400-20260913"></script>
 <script src="scan_economy_core.js?v=continuous-sound-discovery-v2-20260709"></script>
 <script src="sound_listener_core.js?v=birdnet-v3-accuracy-v5-20260729"></script>
@@ -30587,8 +30588,10 @@ function* settlementPopulateResidentSteps(kind, records, scene, targets, budget,
   const belongs = object => { let o=object; while(o.parent) o=o.parent; return o===scene; };
   villageNpcs = villageNpcs.filter(npc => {
     if (!belongs(npc) || ['dog','cat','chicken'].includes(npc.userData.npc?.role)) return true;
-    let o=npc.parent; while(o && !o.userData.construction) o=o.parent;
-    if(o) { npc.userData.npc.name='A visiting builder'; return true; }
+    let o=npc.parent; while(o && !o.userData.construction && !o.userData.traffic) o=o.parent;
+    if(o?.userData.construction) { npc.userData.npc.name='A visiting builder'; return true; }
+    // A handcart keeps the carter who pushes it.
+    if(o) return true;
     npc.removeFromParent(); return false;
   });
   scene.updateWorldMatrix(true,false);
@@ -30720,7 +30723,17 @@ function settlementAnimateResidents(kind, now, motion) {
       const desc=$(kind+'SceneDesc'),text=settlementResidentDescription(u);if(desc&&desc.textContent!==text)desc.textContent=text;
     }
     model.visible=!state.inside;
-    model.position.set(state.x,.015,state.z);model.rotation.y=state.yaw;
+    model.position.set(state.x,.015,state.z);
+    // Steps follow the ground actually covered, from each Peep's own starting
+    // foot, so a crowd never skates or marches in lockstep. A jump (reload,
+    // leaving a house) is not a walk. Turns ease instead of snapping.
+    const gait=u.gait||(u.gait={x:state.x,z:state.z,at:now,walked:(u.humanoidRig?.phase||0)*.3});
+    const moved=Math.hypot(state.x-gait.x,state.z-gait.z),dt=Math.max(0,Math.min(.25,(now-gait.at)/1000));
+    const turn=Math.atan2(Math.sin(state.yaw-model.rotation.y),Math.cos(state.yaw-model.rotation.y));
+    model.rotation.y=moved<.5&&gait.eased?model.rotation.y+turn*(1-Math.exp(-dt*9)):state.yaw;
+    if(moved<.5)gait.walked+=moved;
+    Object.assign(gait,{x:state.x,z:state.z,at:now,eased:true});
+    state.stride=gait.walked/.95*Math.PI*2;
     window.BurbzSettlementModels.animateResident(model,state,now/1000,motion);
   }
 }
@@ -33507,18 +33520,13 @@ function villageMakeConstructionSite(r, pal, progress, construction) {
   const crates = villageMakeCrates(r, pal); crates.position.set(-1.9, 0, 1.0); g.add(crates);
   const sand = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 6), new THREE.MeshLambertMaterial({ color: 0xb59a67 }));
   sand.scale.set(1, 0.45, 1); sand.position.set(1.6, 0.1, -1.1); g.add(sand);
-  const builder = villageMakeVillager(r, pal, 'commoner');
+  // The builder swings a real hammer at the frame, and a small material
+  // sled makes progress readable even when the shell has barely risen.
+  const builder = villageMakeVillager(r, pal, 'builder');
   builder.position.set(-0.4, 0, 1.7);
   builder.lookAt(0, 0, 0); builder.rotation.x = 0; builder.rotation.z = 0;
+  builder.userData.siteWorker = true;
   g.add(builder);
-  // A visible hammer stroke and a small material sled make progress readable
-  // even when the shell itself has only risen by a few centimetres.
-  const hammer = new THREE.Group();
-  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.025, 0.56, 5), beamMat);
-  handle.position.y = 0.28; hammer.add(handle);
-  const head = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.11, 0.11), new THREE.MeshLambertMaterial({ color:0x77746c }));
-  head.position.y = 0.57; hammer.add(head);
-  hammer.position.set(-0.12, 0.65, 1.42); hammer.rotation.z = -0.5; g.add(hammer);
   const materialSled = villageMakeCrates(r, pal);
   materialSled.scale.setScalar(0.62); materialSled.position.set(-1.6, 0, -1.38); g.add(materialSled);
   const dust = [];
@@ -33529,7 +33537,7 @@ function villageMakeConstructionSite(r, pal, progress, construction) {
     puff.userData = { base:puff.position.clone(), phase:r() * Math.PI * 2 };
     dust.push(puff); g.add(puff);
   }
-  g.userData = { constructionSite:true, construction:construction || null, progress:Math.max(0, Math.min(1, Number(progress) || 0)), shell, shellFullH, hammer, materialSled, dust, phase:r() * Math.PI * 2 };
+  g.userData = { constructionSite:true, construction:construction || null, progress:Math.max(0, Math.min(1, Number(progress) || 0)), shell, shellFullH, builder, materialSled, dust, phase:r() * Math.PI * 2 };
   villageConstructionSites.push(g);
   g.add(villageBlobShadow(2.1));
   return g;
@@ -33653,56 +33661,14 @@ function villageAmbientLifeKey(snapshot) {
   return [Math.max(0, Math.floor(Number(snapshot.pop) || 0)), Math.max(0, Math.floor(Number(snapshot.workforce && snapshot.workforce.working) || 0)), ratio('food'), ratio('water')].join('.');
 }
 
-// One low-poly farm animal with an animated neck: sheep remain, while cattle,
-// goats and pigs give prosperous pens a much clearer silhouette.
+// One farm animal from the village animal module: a rigged sheep, cow, goat,
+// pig or horse whose breed comes from the scene's seeded draw. The draw count
+// matches the old maker, so every later placement in the village stays put.
 function villageMakeLivestock(r, pal, kind, register) {
   kind = kind || ['sheep', 'cattle', 'goat', 'pig'][Math.floor(r() * 4)];
-  const g = new THREE.Group();
-  const colors = { sheep:0xe0d8c7, cattle:0x765039, goat:0xaaa08b, pig:0xc88778, horse:0x704629 };
-  const bodyMat = new THREE.MeshLambertMaterial({ color:colors[kind] || colors.sheep });
-  const darkMat = new THREE.MeshLambertMaterial({ color:kind === 'pig' ? 0x9f6158 : 0x3b2a20 });
-  const size = kind === 'cattle' || kind === 'horse' ? 1.15 : kind === 'pig' ? 0.72 : 0.78;
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 6), bodyMat);
-  body.scale.set((kind === 'pig' ? 1.55 : 1.7) * size, (kind === 'pig' ? 0.9 : 1) * size, 1.02 * size);
-  body.position.y = (kind === 'pig' ? 0.34 : 0.48) * size; g.add(body);
-  if (kind === 'sheep') {
-    for (const px of [-0.22, 0.04, 0.27]) {
-      const tuft = new THREE.Mesh(new THREE.SphereGeometry(0.24 * size, 6, 5), bodyMat);
-      tuft.position.set(px * size, 0.58 * size, 0); g.add(tuft);
-    }
-  }
-  const neck = new THREE.Group();
-  neck.position.set(0.48 * size, (kind === 'pig' ? 0.42 : 0.62) * size, 0);
-  const head = new THREE.Mesh(new THREE.SphereGeometry((kind === 'pig' ? 0.18 : 0.2) * size, 7, 6), kind === 'sheep' ? darkMat : bodyMat);
-  head.scale.set(1.08, 0.9, 0.9); neck.add(head);
-  const muzzle = new THREE.Mesh(new THREE.BoxGeometry(0.18 * size, 0.12 * size, 0.18 * size), kind === 'pig' ? bodyMat : darkMat);
-  muzzle.position.set(0.18 * size, -0.03 * size, 0); neck.add(muzzle);
-  if (kind === 'pig') {
-    for (const sz of [-1, 1]) {
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055 * size, 0.13 * size, 4), bodyMat);
-      ear.position.set(-0.02 * size, 0.19 * size, sz * 0.11 * size); ear.rotation.x = sz * 0.3; neck.add(ear);
-    }
-  } else if (kind === 'cattle' || kind === 'goat') {
-    const hornMat = new THREE.MeshLambertMaterial({ color:0xd6c8a5 });
-    for (const sz of [-1, 1]) {
-      const horn = new THREE.Mesh(new THREE.ConeGeometry(0.035 * size, (kind === 'goat' ? 0.2 : 0.16) * size, 5), hornMat);
-      horn.position.set(-0.02 * size, 0.2 * size, sz * 0.16 * size); horn.rotation.z = -0.35; horn.rotation.x = sz * 0.25; neck.add(horn);
-    }
-  }
-  g.add(neck);
-  const legY = (kind === 'pig' ? 0.16 : 0.24) * size;
-  const legs = [];
-  for (const lx of [-0.25, 0.25]) for (const lz of [-0.18, 0.18]) {
-    const hip = new THREE.Group();
-    hip.position.set(lx * size, legY * 2, lz * size);
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.035 * size, 0.045 * size, legY * 2, 5), darkMat);
-    leg.position.y = -legY; hip.add(leg);
-    hip.userData.phase = (lx > 0 ? 0 : Math.PI) + (lz < 0 ? 0 : Math.PI * 0.5);
-    g.add(hip); legs.push(hip);
-  }
-  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.012 * size, 0.025 * size, 0.25 * size, 4), darkMat);
-  tail.position.set(-0.51 * size, 0.58 * size, 0); tail.rotation.z = 0.9; g.add(tail);
-  g.userData = { livestockKind:kind, neck, legs, tail, phase:r() * Math.PI * 2, baseRotationY:0, body };
+  const roll = r();
+  const g = window.BurbzVillageAnimals.make(THREE, kind, Math.floor(roll * 1e9));
+  Object.assign(g.userData, { livestockKind:kind, phase:roll * Math.PI * 2, baseRotationY:0 });
   if (register !== false) villageLivestock.push(g);
   return g;
 }
@@ -33723,13 +33689,20 @@ function villageMakePen(r, pal, count) {
     post.position.set(sx, 0.36, sz); g.add(post);
   }
   const animalCount = Math.max(1, Math.min(4, Number(count) || (2 + Math.floor(r() * 3))));
-  const kinds = ['cattle', 'goat', 'pig', 'sheep'];
+  // Sheep lead, so even a small village pen shows the flock's namesake.
+  const kinds = ['sheep', 'cattle', 'pig', 'goat'];
+  const mates = [];
   for (let i = 0; i < animalCount; i++) {
     const critter = villageMakeLivestock(r, pal, kinds[i % kinds.length]);
     critter.scale.setScalar(i === 0 && animalCount < 3 ? 0.9 : 0.72 + r() * 0.16);
-    critter.position.set((r() - 0.5) * (w - 0.7), 0, (r() - 0.5) * (d - 0.7));
+    // Each animal roams its own pen, inside the rails, clear of its mates.
+    const margin = 0.28 + 0.42 * critter.scale.x;
+    critter.userData.pen = { hw:Math.max(0.1, w / 2 - margin), hd:Math.max(0.1, d / 2 - margin) };
+    critter.userData.penMates = mates;
+    critter.position.set(Math.max(-critter.userData.pen.hw, Math.min(critter.userData.pen.hw, (r() - 0.5) * (w - 0.7))), 0, Math.max(-critter.userData.pen.hd, Math.min(critter.userData.pen.hd, (r() - 0.5) * (d - 0.7))));
     critter.rotation.y = r() * Math.PI * 2;
     critter.userData.baseRotationY = critter.rotation.y;
+    mates.push(critter);
     g.add(critter);
   }
   g.add(villageBlobShadow(Math.max(w, d) * 0.62));
@@ -33748,9 +33721,12 @@ function villageMakeCart(r, pal) {
     wheel.rotation.x = Math.PI / 2; wheel.position.set(0.25, 0.34, sz); g.add(wheel);
     g.userData.wheels.push(wheel);
   }
+  g.userData.handles = [];
   for (const sz of [-0.3, 0.3]) {
+    // The grips rise to a carter's hands; the far ends meet the bed.
     const handle = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 0.06), woodMat);
-    handle.position.set(-1.0, 0.34, sz); handle.rotation.z = 0.28; g.add(handle);
+    handle.position.set(-1.0, 0.42, sz); handle.rotation.z = -0.12; g.add(handle);
+    g.userData.handles.push(handle);
   }
   if (r() < 0.6) {
     for (let i = 0; i < 3; i++) {
@@ -33772,16 +33748,19 @@ function villageMakeTrafficCart(r, pal, horseDrawn) {
   g.add(cart);
   let horse = null, pusher = null;
   if (horseDrawn) {
+    // A horse between two shafts that run along its flanks to the collar.
     horse = villageMakeLivestock(r, pal, 'horse', false);
     horse.scale.setScalar(0.88); horse.position.set(1.35, 0, 0); g.add(horse);
+    cart.userData.handles.forEach(handle => { handle.visible = false; });
     const shaftMat = new THREE.MeshLambertMaterial({ color:pal.timber });
-    for (const sz of [-0.25, 0.25]) {
-      const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.045, 0.045), shaftMat);
-      shaft.position.set(0.55, 0.42, sz); g.add(shaft);
+    for (const sz of [-0.3, 0.3]) {
+      const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.05, 0.05), shaftMat);
+      shaft.position.set(0.72, 0.5, sz); shaft.rotation.z = 0.08; g.add(shaft);
     }
   } else {
     pusher = villageMakeVillager(r, pal, 'commoner');
-    pusher.scale.setScalar(0.9); pusher.position.set(-1.48, 0, 0); pusher.rotation.y = Math.PI / 2; g.add(pusher);
+    pusher.scale.setScalar(0.9); pusher.position.set(-1.8, 0, 0); pusher.rotation.y = Math.PI / 2; g.add(pusher);
+    pusher.userData.carter = true;
   }
   g.userData = { traffic:true, horseDrawn:!!horseDrawn, cart, wheels:cart.userData.wheels || [], horse, pusher, phase:r() * Math.PI * 2, route:null };
   villageTraffic.push(g);
@@ -34696,103 +34675,33 @@ function villageNpcRegister(g, r, role, article) {
   return g;
 }
 
-// A villager in a hooded cloak with neatly fitted shoulders, cowl and hands.
+// A villager dressed for their role: the builder carries a hammer, the
+// carter leans into the handles. Looks come from the id, so no extra r().
 function villageMakeVillager(r, pal, role) {
-  const g = window.BurbzSettlementModels.resident(THREE, {id:'visitor:'+Math.floor(r()*100000), kind:'humanoid', name:'A visiting builder'});
+  const g = window.BurbzSettlementModels.resident(THREE, {id:'visitor:'+Math.floor(r()*100000), kind:'humanoid', name:'A visiting builder', role:role || 'commoner'});
   delete g.userData.resident;
   villageNpcRegister(g, r, role || 'commoner');
   return g;
 }
 
-// A scruffy village dog that trots its own circuit of the square — properly
-// rigged: four legs swing on hip pivots in a diagonal trot, the head bobs and
-// glances about, the ears flap with each stride and the tail sweeps wide.
-// Everything hangs off userData so the frame loop costs a handful of adds.
+// The village dog trots its own circuit of the square on a rigged body:
+// settlementAnimateDog plants each paw by inverse kinematics, so the hips,
+// knees and paws keep the shapes that solver expects (see dogRig).
 function villageMakeDog(r, pal) {
-  const g = new THREE.Group();
-  const coat = new THREE.MeshLambertMaterial({ color: [0x8a6a42, 0x4a4038, 0xb8a888, 0x6a5a4a][Math.floor(r() * 4)] });
-  const dark = new THREE.MeshLambertMaterial({ color: 0x2e2620 });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.2, 9, 7), coat);
-  body.scale.set(1.7, 1, 1); body.position.y = 0.34; g.add(body);
-  // chest ruff + haunches break the blob silhouette
-  const chest = new THREE.Mesh(new THREE.SphereGeometry(0.15, 7, 6), coat);
-  chest.position.set(0.26, 0.36, 0); chest.scale.set(0.85, 0.95, 1); g.add(chest);
-  for (const hz of [-1, 1]) {
-    const haunch = new THREE.Mesh(new THREE.SphereGeometry(0.13, 7, 6), coat);
-    haunch.position.set(-0.24, 0.32, hz * 0.11); g.add(haunch);
-  }
-  // Head on a neck pivot so it can bob and look around while trotting
-  const neck = new THREE.Group();
-  neck.position.set(0.34, 0.46, 0);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 6), coat);
-  head.position.set(0.06, 0.02, 0); neck.add(head);
-  const snout = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.09, 0.1), dark);
-  snout.position.set(0.2, -0.02, 0); neck.add(snout);
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.024, 5, 4), dark);
-  nose.position.set(0.27, 0.01, 0); neck.add(nose);
-  const ears = [];
-  for (const sz of [-1, 1]) {
-    const earPivot = new THREE.Group();
-    earPivot.position.set(0.02, 0.13, sz * 0.07);
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.048, 0.14, 4), coat);
-    ear.position.y = 0.06; ear.rotation.x = sz * 0.25; earPivot.add(ear);
-    neck.add(earPivot); ears.push(earPivot);
-  }
-  const eyes = [];
-  for (const sz of [-1, 1]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.018, 5, 4), dark);
-    eye.position.set(0.12, 0.05, sz * 0.06); neck.add(eye); eyes.push(eye);
-  }
-  g.add(neck);
-  // Four legs on hip pivots — front pair ahead, back pair behind
-  const legs = [];
-  for (const [lx, lz] of [[0.2, -0.09], [0.2, 0.09], [-0.22, -0.1], [-0.22, 0.1]]) {
-    const hip = new THREE.Group();
-    hip.position.set(lx, 0.28, lz);
-    const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.034, 0.027, 0.14, 6), coat);
-    upper.position.y = -0.07; hip.add(upper);
-    const knee = new THREE.Group(); knee.position.y = -0.14; hip.add(knee);
-    const shin = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.02, 0.14, 6), coat);
-    shin.position.y = -0.07; knee.add(shin);
-    const paw = new THREE.Mesh(new THREE.SphereGeometry(0.033, 6, 5), dark);
-    paw.scale.set(1.35,.55,1);paw.position.set(.014,-.14,0);knee.add(paw);
-    hip.userData = {knee, phase:(lx>0)===(lz<0)?0:.5, bend:lx>0?1:-1};
-    g.add(hip); legs.push(hip);
-  }
-  const tail = new THREE.Group();
-  tail.position.set(-0.36, 0.44, 0); tail.rotation.z = 0.8;
-  const tuft = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.05, 0.3, 4), coat);
-  tuft.position.y = 0.13; tail.add(tuft);
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.045, 5, 4), coat);
-  tip.position.y = 0.28; tail.add(tip);
-  g.add(tail);
-  g.userData.dogRig = { body, bodyY: 0.34, neck, legs, ears, tail, phase: r() * 6.28 };
+  const g = window.BurbzVillageAnimals.make(THREE, 'dog', Math.floor(r() * 1e9));
+  g.userData.dogRig.phase = r() * 6.28;
   g.add(villageBlobShadow(0.42));
-  villageNpcRegister(g, r, 'dog', 'a scruffy sheepdog');
+  villageNpcRegister(g, r, 'dog', g.userData.animalName || 'a scruffy sheepdog');
   return g;
 }
 
-// A cat holding court on top of a barrel (or wherever it pleases).
+// A cat holding court on top of a barrel (or wherever it pleases). It lives
+// in the small-animal list with the hens, which animates its tail and head.
 function villageMakeCat(r, pal) {
-  const g = new THREE.Group();
-  const fur = new THREE.MeshLambertMaterial({ color: [0x2c2c32, 0xc88a3a, 0x8a8a92, 0xd8d4c8][Math.floor(r() * 4)] });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 6), fur);
-  body.scale.set(1, 1.35, 0.85); body.position.y = 0.17; g.add(body);
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.09, 7, 6), fur);
-  head.position.set(0, 0.38, 0.03); g.add(head);
-  for (const sz of [-1, 1]) {
-    const ear = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.08, 4), fur);
-    ear.position.set(sz * 0.05, 0.47, 0.02); g.add(ear);
-  }
-  const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.03, 0.34, 4), fur);
-  tail.position.set(0.12, 0.14, -0.08); tail.rotation.z = -0.9;
-  tail.userData.phase = r() * 6.28; villageCloths.push(tail);
-  g.add(tail);
-  for (const ex of [-0.032, 0.032]) {
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.014, 4, 4), new THREE.MeshBasicMaterial({ color: 0xd8e858 }));
-    eye.position.set(ex, 0.4, 0.11); g.add(eye);
-  }
-  villageNpcRegister(g, r, 'cat', 'the village cat');
+  const g = window.BurbzVillageAnimals.make(THREE, 'cat', Math.floor(r() * 1e9));
+  g.userData.phase = r() * 6.28;
+  villageChickens.push(g);
+  villageNpcRegister(g, r, 'cat', g.userData.animalName || 'the village cat');
   return g;
 }
 
@@ -34820,34 +34729,17 @@ function villageMakeButterflies(r, pal, count) {
   return g;
 }
 
-// A hen pecking about the square; the head bobs in villageAnimateFrame.
+// A hen (now and then a rooster) strutting and pecking about the square.
 function villageMakeChicken(r, pal) {
-  const g = new THREE.Group();
-  const plume = new THREE.MeshLambertMaterial({ color: [0xe8e2d0, 0x9a6a3a, 0x3a342e, 0xc8b090][Math.floor(r() * 4)] });
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.13, 7, 6), plume);
-  body.scale.set(1, 0.95, 1.3); body.position.y = 0.2; g.add(body);
-  const tail = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.14, 5), plume);
-  tail.position.set(0, 0.3, -0.15); tail.rotation.x = -0.8; g.add(tail);
-  // Head on a neck pivot so the whole assembly can peck at the ground
-  const neck = new THREE.Group();
-  neck.position.set(0, 0.28, 0.1);
-  const headBall = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), plume);
-  headBall.position.set(0, 0.08, 0.04); neck.add(headBall);
-  const beak = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.06, 4), new THREE.MeshLambertMaterial({ color: 0xd8a03a }));
-  beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.08, 0.12); neck.add(beak);
-  const comb = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.05, 0.06), new THREE.MeshLambertMaterial({ color: 0xc23a2e }));
-  comb.position.set(0, 0.15, 0.03); neck.add(comb);
-  g.add(neck);
-  for (const lx of [-0.04, 0.04]) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.12, 4), new THREE.MeshLambertMaterial({ color: 0xc8a03a }));
-    leg.position.set(lx, 0.07, 0); g.add(leg);
-  }
+  const roll = r();
+  const kind = roll < 0.2 ? 'rooster' : 'hen';
+  const g = window.BurbzVillageAnimals.make(THREE, kind, Math.floor(roll * 1e9));
   g.add(villageBlobShadow(0.18));
-  g.userData.neck = neck;
+  g.userData.fowlKind = kind;
   g.userData.phase = r() * 6.28;
   g.userData.baseRot = r() * Math.PI * 2;
   villageChickens.push(g);
-  villageNpcRegister(g, r, 'chicken', 'a busy hen');
+  villageNpcRegister(g, r, 'chicken', kind === 'rooster' ? 'a proud rooster' : 'a busy hen');
   return g;
 }
 
@@ -35757,7 +35649,7 @@ function* buildVillageSceneSteps(v) {
         const fz = bankZ + Math.cos(ang) * along * Math.cos(ang) - Math.sin(ang) * 0.35 * (fi % 2 ? 1 : -1);
         const fisher = villageMakeVillager(r, pal, 'fisher');
         fisher.position.set(fx, 0, fz);
-        fisher.rotation.y = ang + Math.PI + (r() - 0.5) * 0.4; // face the water
+        fisher.rotation.y = ang + (r() - 0.5) * 0.4; // face the water (humanoids face +Z)
         fisher.userData.commuter = { home: null, work: jetty.userData.anchor.clone(), phase: r() * 6.28 };
         villageScene.add(fisher);
       }
@@ -36211,89 +36103,29 @@ function villageAnimateTrafficActors(actors, t) {
     const ph = (route.phase || 0) + t * (route.speed || 0.035);
     const rx = route.radiusX || route.rad || 7, rz = route.radiusZ || route.rad || 5;
     const cx = route.centerX || 0, cz = route.centerZ || 0;
-    actor.position.set(cx + Math.cos(ph) * rx, Math.abs(Math.sin(t * 4 + index)) * 0.018, cz + Math.sin(ph) * rz);
+    // Only the cart rattles on the cobbles; horse and carter keep their feet down.
+    actor.position.set(cx + Math.cos(ph) * rx, 0, cz + Math.sin(ph) * rz);
+    if (u.cart) u.cart.position.y = Math.abs(Math.sin(t * 4 + index)) * 0.018;
     const direction = Math.sign(route.speed || 1), vx = -Math.sin(ph) * rx * direction, vz = Math.cos(ph) * rz * direction;
     actor.rotation.y = Math.atan2(-vz, vx);
-    (u.wheels || []).forEach((wheel, wi) => { wheel.rotation.y = ph * 4.2 + wi * Math.PI; });
-    if (u.horse && u.horse.userData && u.horse.userData.neck) {
-      u.horse.userData.neck.rotation.z = Math.sin(t * 4.2 + u.phase) * 0.08;
-      // the horse actually trots: diagonal leg pairs, body bounce, tail sweep
-      const hu = u.horse.userData;
-      if (hu.legs) hu.legs.forEach((hip, li) => { hip.rotation.x = Math.sin(t * 7 + hip.userData.phase) * 0.55; });
-      if (hu.body && hu.body.userData.baseY === undefined) hu.body.userData.baseY = hu.body.position.y;
-      if (hu.body) hu.body.position.y = hu.body.userData.baseY + Math.abs(Math.sin(t * 7)) * 0.02;
-      if (hu.tail) hu.tail.rotation.y = Math.sin(t * 5 + u.phase) * 0.3;
-    }
-    if (u.pusher) {
-      u.pusher.rotation.z = Math.sin(t * 4 + u.phase) * 0.025;
-      const pu = u.pusher.userData;
-      if (pu.legs) pu.legs.forEach((hip, li) => { hip.rotation.x = Math.sin(t * 5.2 + hip.userData.phase) * 0.5; });
-      if (pu.arms) { pu.arms[0].rotation.x = Math.sin(t * 5.2) * 0.45; pu.arms[1].rotation.x = -Math.sin(t * 5.2) * 0.45; } // leaning into the load
+    // Distance travelled along the ellipse drives wheels, hooves and feet, so
+    // nothing skates. rotation.y on a wheel laid flat by rotation.x=PI/2
+    // turns its top towards -X, so forward travel is a negative spin.
+    const travelled = Math.abs(t * (route.speed || 0.035)) * (rx + rz) / 2;
+    (u.wheels || []).forEach((wheel, wi) => { wheel.rotation.y = -travelled / 0.34 + wi * Math.PI; });
+    // The horse walks its four-beat walk, one stride for every stride of ground.
+    if (u.horse) window.BurbzVillageAnimals.pose(u.horse, 'horse', { moving:true, stride:travelled / 0.88 / window.BurbzVillageAnimals.STRIDE.horse * Math.PI * 2, speed:Math.abs(route.speed || 0.035) * (rx + rz) / 2, graze:0 }, t, 1);
+    if (u.pusher && u.pusher.userData.humanoidRig) {
+      // The carter is scaled .9, so each stride covers a little less ground.
+      window.BurbzSettlementModels.animateResident(u.pusher, { moving:true, stride:travelled / 0.86 * Math.PI * 2, speed:Math.abs(route.speed || 0.035) * (rx + rz) / 2, activity:'Pushing' }, t, 1);
     }
   });
 }
-// Livestock live real lives inside their pen: they amble between grazing
-// spots, turn to face where they're going, and only put their heads down once
-// arrived. Legs swing in a diagonal walk while moving and shift weight while
-// standing. All state rides userData, so the loop stays allocation-free.
-const LIVESTOCK_AMBLE_R = { speed: 0.09 };
-function villageAnimateLivestockActors(animals, t) {
-  animals.forEach((animal, index) => {
-    const u = animal.userData || {};
-    if (!u.neck) return;
-    if (u.baseRotationY === undefined) u.baseRotationY = animal.rotation.y;
-    if (!u.amble) {
-      // Each animal owns a small home range around where it was placed.
-      u.amble = {
-        hx: animal.position.x, hz: animal.position.z,
-        tx: animal.position.x, tz: animal.position.z,
-        fx: animal.position.x, fz: animal.position.z,   // from-point
-        t0: 0, dur: 1, waiting: 1.5 + (index % 3),     // pause before first stroll
-        range: 0.45 + (index % 4) * 0.14
-      };
-    }
-    const am = u.amble;
-    let walking = false;
-    if (am.waiting > 0) {
-      am.waiting -= 1 / 60; // frame-time approximation is fine for ambling
-    } else if (am.t0 < am.dur) {
-      am.t0 += 1 / 60;
-      const k = Math.min(1, am.t0 / am.dur);
-      const e = k * k * (3 - 2 * k); // smoothstep ease-in-out
-      animal.position.x = am.fx + (am.tx - am.fx) * e;
-      animal.position.z = am.fz + (am.tz - am.fz) * e;
-      walking = e > 0.04 && e < 0.96;
-    } else {
-      am.fx = am.tx; am.fz = am.tz;
-      am.tx = am.hx + (Math.random() - 0.5) * 2 * am.range;
-      am.tz = am.hz + (Math.random() - 0.5) * 2 * am.range;
-      am.t0 = 0;
-      const dist = Math.hypot(am.tx - am.fx, am.tz - am.fz);
-      am.dur = Math.max(0.6, dist / LIVESTOCK_AMBLE_R.speed);
-      am.waiting = 2.2 + Math.random() * 6; // graze here a while
-    }
-    const ph = (u.phase || 0);
-    // Face travel direction while walking; drift back to idle facing after
-    const targetYaw = walking ? Math.atan2(am.tx - am.fx, am.tz - am.fz) : u.baseRotationY;
-    let dy = targetYaw - animal.rotation.y;
-    dy = ((dy + Math.PI) % (Math.PI * 2)) - Math.PI;
-    animal.rotation.y += dy * 0.06;
-    const graze = walking ? 0 : Math.max(0, Math.sin(t * (0.42 + (index % 3) * 0.08) + ph));
-    u.neck.rotation.z = -0.62 * graze;
-    if (u.body) {
-      if (u.body.userData.baseY === undefined) u.body.userData.baseY = u.body.position.y;
-      u.body.position.y = u.body.userData.baseY +
-        (walking ? Math.abs(Math.sin(t * 3.2 + ph)) * 0.02 : Math.sin(t * 1.1 + ph) * 0.012);
-    }
-    if (u.legs) {
-      u.legs.forEach((hip) => {
-        hip.rotation.x = walking
-          ? Math.sin(t * 6.4 + hip.userData.phase + ph) * 0.5   // proper diagonal walk
-          : Math.sin(t * 0.8 + hip.userData.phase + ph) * 0.1;  // standing weight shift
-      });
-    }
-    if (u.tail) u.tail.rotation.y = Math.sin(t * 2.5 + ph) * (walking ? 0.15 : 0.35);
-  });
+// Livestock live real lives inside their pen: the animal module walks them
+// between grazing spots, turns them before they set off, keeps them off each
+// other and inside the rails, and drops their heads to the grass.
+function villageAnimateLivestockActors(animals, t, motion = 1) {
+  animals.forEach(animal => window.BurbzVillageAnimals.livestock(animal, t, motion));
 }
 function villageAnimateFlockActors(flocks, t) {
   flocks.forEach((flock, flockIndex) => {
@@ -36321,7 +36153,7 @@ function villageAnimateConstructionActors(sites, t, motion) {
       u.shell.position.y = shellH / 2;
     }
     const active = p < 0.998 && motion > 0;
-    if (u.hammer) u.hammer.rotation.z = active ? -0.52 + Math.max(0, Math.sin(t * 7.2 + u.phase)) * 0.82 : -0.42;
+    if (u.builder) window.BurbzSettlementModels.animateResident(u.builder, { moving:false, activity:active ? 'Hammering' : 'Resting' }, t + u.phase, motion);
     if (u.materialSled) u.materialSled.position.x = -1.6 + (active ? Math.sin(t * 0.55 + u.phase) * 0.18 : 0);
     (u.dust || []).forEach((puff, index) => {
       const beat = active ? Math.max(0, Math.sin(t * 3.1 + puff.userData.phase + siteIndex)) : 0;
@@ -36375,7 +36207,7 @@ function villageAnimateFrame(t, walking = false) {
   }
   villageAnimatePhysicalSigns(villageSigns, t);
   villageAnimateTrafficActors(villageTraffic, t);
-  villageAnimateLivestockActors(villageLivestock, t);
+  villageAnimateLivestockActors(villageLivestock, t, motion);
   villageAnimateFlockActors(villageFlocks, t);
   villageAnimateConstructionActors(villageConstructionSites, t, motion);
   villageTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
@@ -36403,28 +36235,16 @@ function villageAnimateFrame(t, walking = false) {
       if (!target) return;
       const dx = target.x - wk.position.x, dz = target.z - wk.position.z;
       const dist = Math.hypot(dx, dz);
-      const stride = t * 9 + cm.phase * 10;
-      if (dist > 0.25) {
+      const walking = dist > 0.25;
+      if (walking) {
         const speed = 0.85; // world units per second — a brisk villager walk
         const step = Math.min(speed * dtFrame, dist);
         wk.position.x += (dx / dist) * step;
         wk.position.z += (dz / dist) * step;
-        wk.rotation.y = Math.atan2(-dz, dx);
-        const walkingSpeed = 1;
-        if (wk.userData.arms && !wk.rotation.x) {
-          wk.userData.arms[0].rotation.x = Math.sin(stride) * 0.55;
-          wk.userData.arms[1].rotation.x = -Math.sin(stride) * 0.55;
-        }
-        if (wk.userData.legs) wk.userData.legs.forEach(hip => { hip.rotation.x = Math.sin(stride + hip.userData.phase) * 0.72; });
-      } else {
-        // arrived: idle sway while on shift / indoors at the door
-        const br = Math.sin(t * 1.15 + wi * 1.3);
-        if (wk.userData.arms) {
-          wk.userData.arms[0].rotation.x = br * 0.06;
-          wk.userData.arms[1].rotation.x = -br * 0.06;
-        }
-        if (wk.userData.legs) wk.userData.legs.forEach(hip => { hip.rotation.x *= 0.9; });
+        cm.walked = (cm.walked || 0) + step;
+        wk.rotation.y = Math.atan2(dx, dz); // humanoids face +Z
       }
+      if (wk.userData.humanoidRig) window.BurbzSettlementModels.animateResident(wk, { moving:walking, stride:(cm.walked || 0) / 0.95 * Math.PI * 2, speed:walking ? 0.85 : 0, activity:walking ? 'Walking to work' : 'Working' }, t + wi, motion);
       return;
     }
     const u = wk.userData, rt = u.route;
@@ -36435,32 +36255,18 @@ function villageAnimateFrame(t, walking = false) {
     const walkingSpeed = Math.min(1, Math.abs(rt.speed) * 6);
     wk.position.set(x, Math.abs(Math.sin(stride)) * 0.04 * walkingSpeed, z);
     const vx = -Math.sin(ph) * Math.sign(rt.speed), vz = Math.cos(ph) * Math.sign(rt.speed);
-    wk.rotation.y = Math.atan2(-vz, vx);
-    if (u.arms && !wk.rotation.x) { // swing the arms against the stride
-      u.arms[0].rotation.x = Math.sin(stride) * 0.55 * walkingSpeed;
-      u.arms[1].rotation.x = -Math.sin(stride) * 0.55 * walkingSpeed;
-    }
-    if (u.legs) { // the stride itself: hips swing, opposite arm opposes each leg
-      u.legs.forEach((hip, li) => { hip.rotation.x = Math.sin(stride + hip.userData.phase) * 0.72 * walkingSpeed; });
-    }
-    if (u.cloak && u.cloak.userData.baseRotZ === undefined) u.cloak.userData.baseRotZ = u.cloak.rotation.z;
-    if (u.cloak) u.cloak.rotation.z = (u.cloak.userData.baseRotZ || 0) + Math.sin(stride) * 0.05 * walkingSpeed; // hem sways
+    if (u.humanoidRig) {
+      wk.position.y = 0; // the animator owns the body bob
+      wk.rotation.y = Math.atan2(vx, vz); // humanoids face +Z
+      window.BurbzSettlementModels.animateResident(wk, { moving:walkingSpeed > 0.05, stride:Math.abs(ph - rt.phase) * rt.rad / 0.95 * Math.PI * 2, speed:Math.abs(rt.speed) * rt.rad }, t, motion);
+    } else wk.rotation.y = Math.atan2(-vz, vx);
   });
-  // Idle villagers let their arms drift with an easy breathing sway
+  // Idle villagers breathe, shift their weight and look about. Site
+  // builders and carters are animated by their own site or cart.
   villageNpcs.forEach((np, ni) => {
     const u = np.userData;
-    if (!u || !u.arms || u.route || u.resident) return;
-    const br = Math.sin(t * 1.15 + ni * 1.3);
-    u.arms[0].rotation.x = br * 0.06;
-    u.arms[1].rotation.x = -br * 0.06;
-    u.arms[0].rotation.z = 0.05 + br * 0.03;
-    u.arms[1].rotation.z = -0.05 - br * 0.03;
-    if (u.legs) {
-      u.legs.forEach((hip, li) => {
-        hip.rotation.x = Math.sin(t * 1.15 + ni * 1.3 + hip.userData.phase) * 0.045; // easy weight shift
-        hip.rotation.z = li === 0 ? br * 0.03 : -br * 0.03;
-      });
-    }
+    if (!u || !u.humanoidRig || u.route || u.commuter || u.resident || u.siteWorker || u.carter) return;
+    window.BurbzSettlementModels.animateResident(np, { moving:false, activity:'Idle' }, t + ni * 1.3, motion);
   });
   // Perched birds bob, hop and glance about
   villageRoofBirds.forEach((b, i) => {
@@ -36471,14 +36277,8 @@ function villageAnimateFrame(t, walking = false) {
   });
   // Washing swings on the line (and dog/cat tails registered alongside it)
   villageCloths.forEach(c => { c.rotation.x = Math.sin(t * 1.3 + c.userData.phase) * 0.22; });
-  // Hens peck at the cobbles and glance about between mouthfuls
-  villageChickens.forEach((ch, i) => {
-    const u = ch.userData;
-    if (!u.neck) return;
-    const peck = Math.max(0, Math.sin(t * (2.1 + (i % 3) * 0.5) + u.phase) - 0.55);
-    u.neck.rotation.x = peck * 1.5;
-    ch.rotation.y = u.baseRot + Math.sin(t * 0.35 + u.phase) * 0.9;
-  });
+  // Hens strut and peck right down at the cobbles; the cat swishes its tail.
+  villageChickens.forEach(ch => window.BurbzVillageAnimals.small(ch, t, motion));
   // Butterflies flutter their figure-eights over the flower patches
   villageButterflies.forEach(cloud => {
     cloud.children.forEach(bf => {
@@ -37561,7 +37361,7 @@ function townAnimateFrame(t, walking = false) {
   }
   villageAnimatePhysicalSigns(townSigns, t);
   villageAnimateTrafficActors(townTraffic, t);
-  villageAnimateLivestockActors(townLivestock, t);
+  villageAnimateLivestockActors(townLivestock, t, motion);
   villageAnimateFlockActors(townFlocks, t);
   villageAnimateConstructionActors(townConstructionSites, t, motion);
   townTorches.forEach((l, i) => { l.intensity = (l.userData.base || 1.6) + Math.sin(t * 7 + i * 1.7) * 0.18; });
@@ -37585,16 +37385,11 @@ function townAnimateFrame(t, walking = false) {
     const wx = Math.cos(ph) * rt.rad, wz = Math.sin(ph) * rt.rad;
     wk.position.set(wx, Math.abs(Math.sin(stride)) * 0.04 * walkingSpeed, wz);
     const vx = -Math.sin(ph) * Math.sign(rt.speed), vz = Math.cos(ph) * Math.sign(rt.speed);
-    wk.rotation.y = Math.atan2(-vz, vx);
-    if (u.arms && !wk.rotation.x) {
-      u.arms[0].rotation.x = Math.sin(stride) * 0.55 * walkingSpeed;
-      u.arms[1].rotation.x = -Math.sin(stride) * 0.55 * walkingSpeed;
-    }
-    if (u.legs) {
-      u.legs.forEach((hip, li) => { hip.rotation.x = Math.sin(stride + hip.userData.phase) * 0.72 * walkingSpeed; });
-    }
-    if (u.cloak && u.cloak.userData.baseRotZ === undefined) u.cloak.userData.baseRotZ = u.cloak.rotation.z;
-    if (u.cloak) u.cloak.rotation.z = (u.cloak.userData.baseRotZ || 0) + Math.sin(stride) * 0.05 * walkingSpeed;
+    if (u.humanoidRig) {
+      wk.position.y = 0; // the animator owns the body bob
+      wk.rotation.y = Math.atan2(vx, vz); // humanoids face +Z
+      window.BurbzSettlementModels.animateResident(wk, { moving:walkingSpeed > 0.05, stride:Math.abs(ph - rt.phase) * rt.rad / 0.95 * Math.PI * 2, speed:Math.abs(rt.speed) * rt.rad }, t, motion);
+    } else wk.rotation.y = Math.atan2(-vz, vx);
   });
   townRoofBirds.forEach((b, i) => {
     if (b.userData.baseY0 === undefined) { b.userData.baseY0 = b.position.y; b.userData.baseRotY = b.rotation.y; }
@@ -37603,13 +37398,7 @@ function townAnimateFrame(t, walking = false) {
     b.rotation.y = b.userData.baseRotY + Math.sin(t * 0.7 + b.userData.phase) * 0.55;
   });
   townCloths.forEach(c => { c.rotation.x = Math.sin(t * 1.3 + c.userData.phase) * 0.22; });
-  townChickens.forEach((ch, i) => {
-    const u = ch.userData;
-    if (!u.neck) return;
-    const peck = Math.max(0, Math.sin(t * (2.1 + (i % 3) * 0.5) + u.phase) - 0.55);
-    u.neck.rotation.x = peck * 1.5;
-    ch.rotation.y = u.baseRot + Math.sin(t * 0.35 + u.phase) * 0.9;
-  });
+  townChickens.forEach(ch => window.BurbzVillageAnimals.small(ch, t, motion));
   townClouds.forEach(cl => {
     const range = cl.userData.range || 60;
     cl.position.x = ((cl.userData.baseX + t * cl.userData.speed + range) % (range * 2)) - range;
