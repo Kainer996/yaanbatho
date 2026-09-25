@@ -145,15 +145,17 @@ test('the flight clamp still lets the pilot look straight down',()=>{
 test('v472 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
  // Later releases ship on top under their own marker; v472 stays in the cache chain.
- const LATER=['academy-living-tree-v473-20260925','home-dock-back-v474-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ const LATER=['academy-living-tree-v473-20260925','home-dock-back-v474-20260925','realistic-flight-v475-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(build=>html.includes("const BURBZ_BUILD = '"+build+"';")));
  assert(cache.includes('-'+BUILD)&&shipped.some(build=>cache.endsWith('-'+build)));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
  const lazy=['world_nature_core.js','world_nature.js','world_horizon.js','flight_craft.js','village_world.js','village_world_core.js'];
- for(const [name,urls] of Object.entries(lists))for(const file of lazy)assert.equal(urls.filter(u=>u==='./'+file+'?v='+BUILD).length,1,name+': '+file);
- for(const file of lazy)assert(walk.includes("'"+file+"':'"+BUILD+"'"),'loader pin '+file);
- for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of lazy){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert.equal(m[1],BUILD,file+': stale '+mod);}}
+ // Later releases may move a module's pin on; each list still pins it once.
+ const current=build=>shipped.includes(build);
+ for(const [name,urls] of Object.entries(lists))for(const file of lazy)assert.equal(urls.filter(u=>u.startsWith('./'+file+'?v=')&&current(u.slice(file.length+5))).length,1,name+': '+file);
+ for(const file of lazy)assert(shipped.some(b=>walk.includes("'"+file+"':'"+b+"'")),'loader pin '+file);
+ for(const file of fs.readdirSync(root).filter(n=>/\.(js|html)$/.test(n))){const text=read(file);for(const mod of lazy){const escaped=mod.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');for(const m of text.matchAll(new RegExp('(?<![\\w])'+escaped+'\\?v=([\\w-]+)','g')))assert(current(m[1]),file+': stale '+mod);}}
  assert(fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8').includes('"world_horizon.js"'));
 });
