@@ -371,6 +371,7 @@ FILES=(
   "assets/audio/garden-birds/wren-song-03.mp3"
   "assets/audio/garden-birds/manifest.json"
   "audio_core.js"
+  "asmr_soundscape.js"
   "assets/academy-manga-20260925/tree.webp"
   "assets/academy-manga-20260925/tree-wide.webp"
   "assets/academy-manga-20260925/bough-a.webp"

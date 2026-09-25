@@ -60,7 +60,9 @@ test('Short landscape fits every box: rooms share one row beside a tall Academy'
 });
 
 test('v491 ships together: build marker, cache and all three Home pins in every worker list',()=>{
- assert.ok(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
+ // Later releases ship on top under their own marker; v491 stays in the cache chain.
+ const LATER=['asmr-sound-v492-20260925'];
+ assert.ok([BUILD,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
  const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];assert.ok(cache.includes('-'+BUILD));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
   const pin=file+'?v='+BUILD;assert.ok(html.includes(pin),pin);

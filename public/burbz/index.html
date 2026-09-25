@@ -5848,8 +5848,9 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="special_bird_sprites.js?v=special-card-sprites-20260907"></script>
 <script src="bird_art_release_20260901.js?v=no-arms-card-art-v340-20260901"></script>
 <script src="spain_boundary_20260715.js?v=spain-mainland-balearics-20260715"></script>
-<script src="audio_core.js?v=music-rest-v487-20260925"></script>
-<script src="garden_birds.js?v=academy-garden-birds-v490-20260925"></script>
+<script src="audio_core.js?v=asmr-sound-v492-20260925"></script>
+<script src="asmr_soundscape.js?v=asmr-sound-v492-20260925"></script>
+<script src="garden_birds.js?v=asmr-sound-v492-20260925"></script>
 <script src="player_home_core.js?v=academy-garden-birds-v490-20260925"></script>
 <script src="player_home_scene.js?v=academy-garden-birds-v490-20260925"></script>
 <script src="alderwing_intro.js?v=fold-fullscreen-v489-20260925"></script>
@@ -6397,8 +6398,10 @@ const BURBZ_MAP_VERSION = 'flat-fast-map-terrain-reverted-v4-20260722';
 const BURBZ_START_ZOOM = 16.35;
 const BURBZ_MIN_ZOOM = 4;
 const BURBZ_MAX_ZOOM = 19.1;
-// A third of the old 0.2: the song sits softly under the world.
-const BURBZ_MUSIC_BASE_VOLUME = 0.2 / 3;
+// The song sits well under the world now. Before v492 iPhones ignored this
+// number and played the music at full level; on the calm bus it is honoured,
+// and the bus also low-passes the music so it sounds like the next room.
+const BURBZ_MUSIC_BASE_VOLUME = 0.045;
 const BURBZ_MUSIC_SILENT_ZOOM = BURBZ_MAX_ZOOM - 0.1;
 // Gentler pitch curve than before: extreme pitch (70°+) forced MapLibre to
 // stream a huge wedge of far-horizon tiles every frame, which is what made the
@@ -6704,7 +6707,10 @@ window.addEventListener('unhandledrejection', e => reportClientError('promise', 
 
 function getAudioCtx() {
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Share the calm bus's context: phones allow only a few, and one clock
+    // keeps every sound in the same room.
+    const bus = window.BurbzAudioCore?.sharedBus?.();
+    audioCtx = bus ? bus.ctx : new (window.AudioContext || window.webkitAudioContext)();
   }
   return audioCtx;
 }
@@ -6828,6 +6834,12 @@ const SFX = window.BurbzAudioCore && typeof window.BurbzAudioCore.createAudioMan
   : oscillatorSfxFallback;
 window.BurbzWalkingAudio={create:()=>SFX.createFootsteps?.()};
 window.BurbzCombatAudio={play:(name,opts)=>SFX.play?.(name,opts),stop:name=>SFX.stop?.(name)};
+// The soundscape: a quiet bed of air, leaves, drips and a far wind chime
+// under every screen (asmr_soundscape.js). Same gates as the garden birds.
+const burbzSoundscape = window.BurbzSoundscapeCore && SFX && SFX.bus
+  ? window.BurbzSoundscapeCore.create({ bus: SFX.bus, allowed: () => sfxEnabled && !burbzMicListening && !mediaStream && !document.hidden, mood: () => SFX.mood?.() || 'calm' })
+  : null;
+window.BurbzSoundscape = burbzSoundscape;
 // The game's own weather, made to look good rather than copy the sky outside
 // (Yaan's choice). Fair skies with drifting cloud most of the time; now and
 // then a passing shower builds under grey cloud, rains a few minutes and
@@ -6848,7 +6860,7 @@ function burbzWeatherAt(){
   burbzWeather.wind=.2+.3*storm+.08*Math.sin(minutes/4.3);
   return burbzWeather;
 }
-window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>SFX.ambience?.(rain,wind,opts),birdsong:(level,opts)=>SFX.birdsong?.(burbzMicListening||mediaStream?0:level,opts),musicResting:()=>burbzMusicResting,chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool'),
+window.BurbzCalmAudio={weather:burbzWeatherAt,setMood:mood=>SFX.setMood?.(mood),campfire:(level,opts)=>SFX.campfire?.(level,opts),ambience:(rain,wind,opts)=>{burbzSoundscape?.outdoors(rain,wind);return SFX.ambience?.(rain,wind,opts);},birdsong:(level,opts)=>SFX.birdsong?.(burbzMicListening||mediaStream?0:level,opts),musicResting:()=>burbzMusicResting,chop:()=>SFX.play?.('campChop'),dust:()=>SFX.play?.('campDust'),eat:()=>SFX.play?.('campEat'),stool:()=>SFX.play?.('campStool'),
   // Garden birds sing only with sounds on, the page in view and the
   // microphone closed: Merlin's wand must never hear the game's own birds.
   birds:()=>sfxEnabled&&!burbzMicListening&&!mediaStream&&!document.hidden};
@@ -6866,6 +6878,8 @@ const MUSIC = window.BurbzAudioCore && typeof window.BurbzAudioCore.createMusicM
       gapMs: 3 * 60 * 1000,
       volumeRampMs: 450,
       onRest: resting => { burbzMusicResting = resting; },
+      // Through the calm bus, so the phone honours the level.
+      route: track => SFX?.bus?.routeMedia?.(track, 'music') || null,
       getEnabled: () => musicEnabled
     })
   : null;
@@ -6887,6 +6901,7 @@ function primeBurbzAudio(event) {
   if (!burbzSfxPrimed && SFX && typeof SFX.prime === 'function') {
     SFX.prime('tap').then(ok => { burbzSfxPrimed = !!ok; }).catch(() => {});
   }
+  burbzSoundscape?.start();
   if (MUSIC) {
     // Invoke BOTH deck plays synchronously in the trusted event, never after
     // awaiting another media promise. start adopts the pending active prime.
@@ -45401,7 +45416,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-hub-v491-20260925';
+const BURBZ_BUILD = 'asmr-sound-v492-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
