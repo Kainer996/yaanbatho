@@ -9,7 +9,7 @@ const path=require('node:path');
 const http=require('node:http');
 const {chromium}=require(process.env.PLAYWRIGHT_PATH || '/home/yaan/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
 const base=path.resolve(__dirname,'..');
-const accepted={found:true,accepted:true,verified:true,policy:'photo-gemini-v486',model:'gemini-vision',modelName:'gemini-3.8-flash',receiptId:'a'.repeat(64),confidence:.99,species:'European Robin',scientificName:'Erithacus rubecula'};
+const accepted={found:true,accepted:true,verified:true,policy:'photo-gemini-v487',model:'gemini-vision',modelName:'gemini-3.8-flash',receiptId:'a'.repeat(64),confidence:.99,species:'European Robin',scientificName:'Erithacus rubecula'};
 let mode='success',calls=[],paid=new Set(),release=[];
 const html=`<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/photo_queue.css"><button id="game">Keep playing</button><button id="saved">Saved photos</button><script src="/photo_queue.js"></script><script>
 window.scope='profile-a';window.messages=[];window.claims=0;window.clicks=0;window.savedBeforeFetch=[];

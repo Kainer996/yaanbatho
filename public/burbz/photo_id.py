@@ -1,6 +1,6 @@
 """Existing Flask route adapter for the capped Gemini Unix worker.
 
-v486 identifies birds the way Merlin does. The worker asks Gemini for a ranked
+v487 identifies birds the way Merlin does. The worker asks Gemini for a ranked
 list of species. This adapter adds where and when: the BirdNET Geomodel that
 already runs in this Flask process for sound says which birds live near the
 player this week. Gemini sees that local list, and its ranking is re-weighed by
@@ -23,8 +23,8 @@ import unicodedata
 
 MAX_IMAGE_PIXELS = 24_000_000
 ANALYSIS_MAX_SIDE = 2560
-PHOTO_POLICY = "photo-gemini-v486"
-PHOTO_CONTRACT = "merlin-v486"
+PHOTO_POLICY = "photo-gemini-v487"
+PHOTO_CONTRACT = "merlin-v487"
 MODEL_NAME = "gemini-3.8-flash"
 MIN_CONFIDENCE = .80
 MIN_MARGIN = .20

@@ -4,8 +4,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const BUILD='smooth-sky-plain-plot-v485-20260925';
-// Later releases move the page marker and the cache tail on; these files keep v485's own pins.
-const LATER=['photo-merlin-v486-20260925'],shipped=[BUILD,...LATER];
 
 test('the cloud shader has no seams',()=>{
  const sky=read('world_sky.js'),clouds=sky.slice(sky.indexOf('const CLOUDS='),sky.indexOf('function attach('));
@@ -24,9 +22,9 @@ test('the plot has no trees round it',()=>{
 
 test('v485 ships together: build marker, cache, worker lists and loader',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
+ const shipped=[BUILD,'village-folk-v486-20260925','photo-merlin-v487-20260925'],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
- const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
- assert(cache.includes('-'+BUILD+'-')||cache.endsWith('-'+BUILD));assert(shipped.some(b=>cache.endsWith('-'+b)));
+ assert(cache.includes('-'+BUILD)&&shipped.some(b=>cache.endsWith('-'+b)));
  for(const file of ['world_sky.js','village_walk.js','player_home_core.js','player_home.js'])assert.equal(sw.split("'./"+file+'?v='+BUILD+"'").length-1,3,file+' in all three worker lists');
  assert(walk.includes("'world_sky.js':'"+BUILD+"'"));
  for(const file of ['village_walk.js','player_home_core.js','player_home.js'])assert(html.includes(file+'?v='+BUILD),file);

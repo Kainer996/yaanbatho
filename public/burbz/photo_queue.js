@@ -5,7 +5,7 @@
   const LEASE_MS = 70000, REQUEST_MS = 50000;
   const receipt = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
   const validResult = r => r && r.found === true && r.accepted === true && r.verified === true &&
-    r.policy === 'photo-gemini-v486' && r.model === 'gemini-vision' && r.modelName === 'gemini-3.8-flash' && receipt(r.receiptId) &&
+    r.policy === 'photo-gemini-v487' && r.model === 'gemini-vision' && r.modelName === 'gemini-3.8-flash' && receipt(r.receiptId) &&
     typeof r.confidence === 'number' && Number.isFinite(r.confidence) && r.confidence >= .8 && r.confidence <= 1 &&
     typeof r.species === 'string' && typeof r.scientificName === 'string' && /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(r.scientificName);
   function open() {
@@ -148,7 +148,7 @@
             const form=new FormData();form.append('image',item.blob,'photo.jpg');form.append('captureSource','camera');
             form.append('photoOwner',scope);form.append('photoRequestId',item.requestId);
             // Saved photos were taken earlier, somewhere else: they carry no place.
-            form.append('photoContract','merlin-v486');
+            form.append('photoContract','merlin-v487');
             const response=await fetch('api/identify/image',{method:'POST',body:form,signal:controller.signal});
             const result=await response.json();
             if (controller.signal.aborted) continue;

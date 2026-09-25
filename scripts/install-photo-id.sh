@@ -45,7 +45,7 @@ for node in tree.body:
         for target in node.targets:
             if isinstance(target, ast.Name): constants[target.id] = node.value.value
 policy, model, bundle = (constants.get(key) for key in ('POLICY', 'MODEL', 'BUNDLE'))
-if policy == 'photo-gemini-v486' and model == 'gemini-3.8-flash':
+if policy == 'photo-gemini-v487' and model == 'gemini-3.8-flash':
     print(policy, model, 'gemini');sys.exit(0)
 if policy != 'photo-local-v393' or not isinstance(model, str) or not re.fullmatch(r'[a-z0-9-]+', model):
     raise ValueError('Unsupported staged photo worker contract')
