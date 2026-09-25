@@ -90,3 +90,19 @@ test('the game wires roles, carters, builders and animals into the new models',(
   assert.ok(!/\/\/ A visible hammer stroke/.test(html),'no floating hammer');
   for(const name of ['settlement_models.js','village_animals.js'])assert.ok(html.includes(`<script src="${name}?v=${BUILD}"></script>`),name+' pinned');
 });
+
+test('the new module and its pins ship together',()=>{
+  const html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.resolve(root,'../../scripts/update-live-burbz.sh'),'utf8');
+  assert.ok(fs.existsSync(path.join(root,'village_animals.js')));
+  assert.ok(html.indexOf('village_animals.js?v=')>html.indexOf('settlement_models.js?v='),'animals load after the rig they build on');
+  for(const name of ['settlement_models.js','village_animals.js']){
+    const url=name+'?v='+BUILD;
+    assert.equal(sw.split("'./"+url+"'").length-1,3,name+' once in each worker list');
+    const pins=[...sw.matchAll(new RegExp(name.replaceAll('.','\\.')+'\\?v=([^\'"\\s]+)','g'))].map(m=>m[1]);
+    assert.ok(pins.every(v=>v===BUILD),name+' has no stale worker pin');
+    assert.ok(updater.includes('"'+name+'"'),name+' is in the live updater');
+  }
+  const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1],build=html.match(/const BURBZ_BUILD = '([^']+)'/)[1];
+  assert.ok(cache.includes('-'+BUILD),'the cache generation carries this release');
+  assert.ok(cache.endsWith(build),'BURBZ_BUILD names the newest cache generation');
+});
