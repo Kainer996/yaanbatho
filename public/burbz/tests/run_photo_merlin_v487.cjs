@@ -50,15 +50,18 @@ const field=(body,name)=>{const m=body.toString('latin1').match(new RegExp('name
  assert.equal(await page.locator('.bird-match-pick').count(),3);
  assert.equal(await run('JSON.stringify({coins:gameState.player.coins,known:Object.keys(gameState.discoveredSpecies||{}).length})'),before);
  pass('Ranked cards show match strength, local status and plumage; nothing is added yet');
- for(const [name,size,comic] of [['portrait',{width:390,height:844},false],['small',{width:320,height:568},false],['landscape',{width:844,height:390},false],['comic',{width:390,height:844},true]]){
+ for(const [name,size,comic] of [['portrait',{width:390,height:844},false],['small',{width:320,height:568},false],['landscape',{width:844,height:390},false],['short-landscape',{width:740,height:360},false],['tiny-landscape',{width:640,height:320},false],['comic',{width:390,height:844},true]]){
   await page.setViewportSize(size);await page.evaluate(on=>{document.body.classList.toggle('comic-ui',on);if(on)document.documentElement.dataset.appearance='comic';else delete document.documentElement.dataset.appearance;},comic);
-  const button=page.locator('.bird-match-pick').first();await button.scrollIntoViewIfNeeded();
+  // Check again at this size: the page itself must bring the first button into view.
+  await page.locator('#birdCropConfirm').click();await page.locator('#birdCropMatches:not([hidden]) .bird-match').nth(2).waitFor();
+  await page.waitForTimeout(150);
+  const button=page.locator('.bird-match-pick').first();
   const box=await button.boundingBox();
   assert(box.height>=44&&box.x>=0&&box.x+box.width<=size.width+1&&box.y>=0&&box.y+box.height<=size.height+1,name+' button reachable '+JSON.stringify(box));
   await page.screenshot({path:path.join(out,'matches-'+name+'.png')});
  }
  await page.evaluate(()=>{document.body.classList.remove('comic-ui');delete document.documentElement.dataset.appearance;});await page.setViewportSize({width:390,height:844});
- pass('This is my bird stays reachable and at least 44 px tall in portrait, small phone, landscape and comic');
+ pass('The first This is my bird shows without scrolling, at least 44 px tall, in portrait, small phone, three landscape sizes and comic');
  await page.locator('.bird-match-pick').first().click();
  await page.locator('#birdCropOverlay.show').waitFor({state:'hidden'});
  await page.waitForFunction(()=>document.querySelector('#scanResult').classList.contains('show'));

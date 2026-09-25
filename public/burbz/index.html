@@ -3105,7 +3105,8 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
   .bird-crop-title { grid-column:2; grid-row:1; }
   .bird-crop-sub { grid-column:2; grid-row:2; }
   .bird-crop-analysis { grid-column:2; grid-row:3; width:100%; margin-top:0; }
-  .bird-crop-overlay.has-matches .bird-crop-analysis { max-height:calc(100dvh - 200px - var(--safe-bottom)); overflow-y:auto; }
+  .bird-crop-overlay.has-matches .bird-crop-analysis { max-height:calc(100dvh - 150px - var(--safe-bottom)); overflow-y:auto; }
+  .bird-crop-overlay.has-matches .bird-crop-sub { display:none; }
   .bird-crop-overlay.has-matches.show .bird-crop-stage { width:min(40vw, calc(100dvh - 48px - var(--safe-bottom))); }
   .bird-crop-zoom { grid-column:2; grid-row:4; width:100%; margin-top:8px; }
   .bird-crop-actions { grid-column:2; grid-row:5; width:100%; margin-top:10px; }
@@ -38019,7 +38020,7 @@ function showRecruitChoiceOverlay(birds, message) {
   overlay.classList.add('show');
 }
 
-function showScanEncounterCard(bird, isNewDiscovery, source = 'photo') {
+function showScanEncounterCard(bird, isNewDiscovery, source = 'photo', confirmedByPlayer = false) {
   const stack = $('scanEncounterStack');
   if (!stack || !bird) return;
   const cost = recruitCostForBird(bird);
@@ -38036,8 +38037,8 @@ function showScanEncounterCard(bird, isNewDiscovery, source = 'photo') {
       ? (isNewDiscovery ? 'New bird spotted · Added to Birdex' : 'Bird spotted again · Already in Birdex')
       : (isNewDiscovery ? 'New bird heard · Always added to Birdex' : 'Bird heard again · Already in Birdex')) +
     '</div><div class="scan-encounter-name">' + escapeHtml(bird.commonName || bird.species) + '</div>' +
-    '<div class="scan-encounter-meta">' + Math.round((bird.confidence || 0) * 100) +
-    (source === 'sound' ? '/100 model score · ' : '% confidence · ') +
+    '<div class="scan-encounter-meta">' + (confirmedByPlayer ? 'Confirmed by you · ' : Math.round((bird.confidence || 0) * 100) +
+    (source === 'sound' ? '/100 model score · ' : '% confidence · ')) +
     escapeHtml((bird.rarity || 'common').toUpperCase()) + ' · Power ' + Math.round(Number(bird.power) || 0) +
     '<div class="scan-encounter-price">Recruitment value ' + cost + ' coins' +
     (breakdown ? ' · strength +' + (breakdown.powerPremium + breakdown.statPremium + breakdown.specialistPremium) : '') +
@@ -38340,8 +38341,8 @@ function handleBirdCandidates(primary, detections = [], opts = {}) {
       $('scanResultSci').textContent = bird.scientificName || bird.species;
       $('scanResultConf').textContent = opts.source === 'sound'
         ? `${Math.round((bird.confidence || 0) * 100)}/100 model score | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`
-        : `${Math.round((bird.confidence || 0) * 100)}% confidence | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`;
-      if (isNew) showScanEncounterCard(bird, isNew, opts.source);
+        : `${opts.confirmedByPlayer ? 'Confirmed by you' : Math.round((bird.confidence || 0) * 100) + '% confidence'} | ${bird.rarity.toUpperCase()} | ${isNew ? '1' : 'Known'} discovery`;
+      if (isNew) showScanEncounterCard(bird, isNew, opts.source, !!opts.confirmedByPlayer);
     }
     try { questRegisterBirdEncounter(bird); }
     catch (err) { console.warn('BURBZ trail NPC spawn failed', err); }
@@ -42899,7 +42900,9 @@ function photoMatchCardHTML(match, index, strong) {
 }
 function showPhotoMatches(result, matches) {
   const overlay = $('birdCropOverlay');
-  // A retry can finish after the cropper closed; show the matches anyway.
+  // A retry can finish after the cropper closed, even on another screen.
+  // Matches belong on Scan, so bring the player there before showing them.
+  if (typeof currentScreen !== 'undefined' && currentScreen !== 'scan' && typeof switchScreen === 'function') switchScreen('scan');
   if (overlay && !overlay.classList.contains('show')) overlay.classList.add('show', 'no-photo');
   const strong = result.found === true;
   setBirdPhotoStage('matches', strong ? 'Strong match. Check it, then tap This is my bird.' : 'Closest matches first. Tap This is my bird on the one you saw.');
@@ -42914,6 +42917,9 @@ function showPhotoMatches(result, matches) {
     $('birdCropMessage').textContent = 'You already chose ' + (used.species || 'a bird') + ' from this photo.';
   }
   list.hidden = false;
+  if (overlay?.classList.contains('no-photo')) $('birdCropHint').textContent = 'Not right? Retake the photo.';
+  // Short landscape screens scroll the matches in their own column.
+  list.querySelector?.('.bird-match-pick')?.scrollIntoView?.({ block: 'nearest' });
   if ($('photoIdStatus')) $('photoIdStatus').hidden = true;
   if ($('photoIdRetry')) $('photoIdRetry').hidden = true;
 }
@@ -42927,7 +42933,7 @@ function pickPhotoMatch(index) {
     // Recorded first, so the discovery's own save carries the receipt.
     gameState.photoReceipts = { ...(gameState.photoReceipts || {}), [state.receiptId]: { at: Date.now(), species: match.species } };
   }
-  const birds = handleBirdCandidates({ species: match.species, scientificName: match.scientificName, confidence: match.score }, [], { source: 'photo' });
+  const birds = handleBirdCandidates({ species: match.species, scientificName: match.scientificName, confidence: match.score }, [], { source: 'photo', confirmedByPlayer: true });
   if (!(Array.isArray(birds) && birds.length) && gameState?.photoReceipts) {
     delete gameState.photoReceipts[state.receiptId];  // nothing was added, so nothing is spent
   }
@@ -46791,7 +46797,7 @@ function closeTopBurbzLayer() {
   if(document.querySelector('.pending-photo-panel[open]')){pendingPhotoQueue?.hide();return true;}
 
   if(closeDeskPlayerEquipment())return true;
-  if(currentScreen==='scan'&&$('birdCropOverlay')?.classList.contains('show')){photoIdCancel?.();closeBirdCropper();return true;}
+  if($('birdCropOverlay')?.classList.contains('show')){photoIdCancel?.();closeBirdCropper();return true;}
   const scanSession=$('scanHomeSession');if(currentScreen==='scan'&&scanSession?.open){scanSession.open=false;return true;}
   if (closeResourceQuestPrompt()) return true;
   if (window.BurbzGeographicHomePicker?.close()) return true;

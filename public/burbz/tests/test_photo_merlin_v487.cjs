@@ -21,7 +21,9 @@ test('one contract across page, queue, adapter, worker, installer and proof',()=
  for(const [name,text] of [['page',html],['queue',queue],['adapter',adapter],['worker',worker],['installer',installer],['proof',proof]])
   assert(text.includes('photo-gemini-v487'),name);
  for(const [name,text] of [['page',html],['queue',queue],['adapter',adapter],['proof',proof]])assert(text.includes('merlin-v487'),name);
- assert(!html.includes("'photo-gemini-v425'")&&!queue.includes('photo-gemini-v425'));
+ assert(!html.includes("'photo-gemini-v425'"));
+ // Only the saved-photo queue still honours v425 results already verified and paid for.
+ assert.equal(queue.split('photo-gemini-v425').length-1,1);
 });
 
 test('the page never adds a bird without the player, and never offers a catalogue picker',()=>{

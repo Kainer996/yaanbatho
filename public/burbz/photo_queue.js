@@ -4,8 +4,9 @@
   const DB = 'burbz-pending-photos', STORE = 'captures', MAX_COUNT = 20, MAX_BYTES = 80 * 1024 * 1024;
   const LEASE_MS = 70000, REQUEST_MS = 50000;
   const receipt = value => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
+  // Results saved before v487 were verified under v425 and stay claimable.
   const validResult = r => r && r.found === true && r.accepted === true && r.verified === true &&
-    r.policy === 'photo-gemini-v487' && r.model === 'gemini-vision' && r.modelName === 'gemini-3.8-flash' && receipt(r.receiptId) &&
+    (r.policy === 'photo-gemini-v487' || r.policy === 'photo-gemini-v425') && r.model === 'gemini-vision' && r.modelName === 'gemini-3.8-flash' && receipt(r.receiptId) &&
     typeof r.confidence === 'number' && Number.isFinite(r.confidence) && r.confidence >= .8 && r.confidence <= 1 &&
     typeof r.species === 'string' && typeof r.scientificName === 'string' && /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(r.scientificName);
   // Saved photos have no match cards: name the matches and send the player
