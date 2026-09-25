@@ -41,7 +41,8 @@ test('Restored Home uses a new coherent shell and exact cache pins',()=>{
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes(rev));
  assert.match(sw,new RegExp(html.match(/const BURBZ_BUILD = '([^']+)'/)[1]+"';"));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
-  const pin=file+'?v='+rev;assert.ok(html.includes(pin),pin);
+  // v479 re-pinned scan_home.css when Merlin's perch stopped shrinking on Home.
+  const pin=file+'?v='+(file==='scan_home.css'?'merlin-flight-v479-20260925':rev);assert.ok(html.includes(pin),pin);
   assert.equal(sw.split('./'+pin).length-1,3,pin+' in every worker list');
  }
  for(const pin of ['quest-revisit-v457-20260923','hall-music-v458-20260923','expedition-duration-v455-20260923'])assert.ok(html.includes(pin),pin+' retained');
