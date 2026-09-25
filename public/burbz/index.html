@@ -4621,7 +4621,7 @@ if (window.BurbzAppearanceCore) {
 </script>
 <link rel="stylesheet" href="woodland_ui.css?v=woodland-finish-v360-20260907">
 <link rel="stylesheet" href="comic_ui.css?v=appearance-v362-20260907">
-<link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v1-20260907">
+<link rel="stylesheet" href="merlin_flight.css?v=merlin-flight-v475-20260925">
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walk-shelter-controls-v427-20260920">
 <link rel="stylesheet" href="bird_patch_map.css?v=bird-patch-map-v466-20260924">
@@ -4633,7 +4633,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=academy-living-tree-v473-20260925">
+<link rel="stylesheet" href="scan_home.css?v=merlin-flight-v475-20260925">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
 <link rel="stylesheet" href="geographic_map_3d.css?v=night-quests-v376-20260908">
@@ -5804,8 +5804,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
 <script src="onboarding_gate_core.js?v=opening-home-v416-20260914"></script>
 <script src="merlin_companion_core.js?v=opening-home-v416-20260914"></script>
-<script src="merlin_flight.js?v=merlin-flight-v390-20260910"></script>
-<script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v390-20260910"></script>
+<script src="merlin_flight.js?v=merlin-flight-v475-20260925"></script>
+<script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v475-20260925"></script>
 <script src="diary_core.js?v=opening-home-v416-20260914"></script>
 <script>
 /* ============================================================================
@@ -44556,7 +44556,7 @@ function petFlyOutAndReturn() {
   if (!merlinFlightSession) {
     merlinFlightSession = window.BurbzMerlinFlight.create({
       host: sprite,
-      atlasUrl: 'assets/merlin-flight/merlin-flight-v2.webp',
+      atlasUrl: 'assets/merlin-flight/merlin-flight-v3.webp',
       atlas: window.MERLIN_FLIGHT_ATLAS,
       durationMs: 25000,
       // This eligibility check is read-only: care completion/save stays in
@@ -45496,7 +45496,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'home-dock-back-v474-20260925';
+const BURBZ_BUILD = 'merlin-flight-v475-20260925';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
