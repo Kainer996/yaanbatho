@@ -22,10 +22,12 @@ test('the plot has no trees round it',()=>{
 
 test('v485 ships together: build marker, cache, worker lists and loader',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
- const shipped=[BUILD,'village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925','fold-fullscreen-v489-20260925'],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ // Later releases ship on top under their own marker and may move a module's
+ // pin on; v485 stays in the cache chain and each list still pins it once.
+ const LATER=['village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925','fold-fullscreen-v489-20260925','academy-garden-birds-v490-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
  assert(cache.includes('-'+BUILD)&&shipped.some(b=>cache.endsWith('-'+b)));
- for(const file of ['world_sky.js','village_walk.js','player_home_core.js','player_home.js'])assert.equal(sw.split("'./"+file+'?v='+BUILD+"'").length-1,3,file+' in all three worker lists');
- assert(walk.includes("'world_sky.js':'"+BUILD+"'"));
- for(const file of ['village_walk.js','player_home_core.js','player_home.js'])assert(html.includes(file+'?v='+BUILD),file);
+ for(const file of ['world_sky.js','village_walk.js','player_home_core.js','player_home.js'])assert.equal(shipped.reduce((n,b)=>n+sw.split("'./"+file+'?v='+b+"'").length-1,0),3,file+' in all three worker lists');
+ assert(shipped.some(b=>walk.includes("'world_sky.js':'"+b+"'")));
+ for(const file of ['village_walk.js','player_home_core.js','player_home.js'])assert(shipped.some(b=>html.includes(file+'?v='+b)),file);
 });
