@@ -144,8 +144,10 @@ test('the flight clamp still lets the pilot look straight down',()=>{
 
 test('v472 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
- assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
- assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));
+ // Later releases ship on top under their own marker; v472 stays in the cache chain.
+ const LATER=['academy-living-tree-v473-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ assert(shipped.some(build=>html.includes("const BURBZ_BUILD = '"+build+"';")));
+ assert(cache.includes('-'+BUILD)&&shipped.some(build=>cache.endsWith('-'+build)));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
