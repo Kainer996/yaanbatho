@@ -22,8 +22,9 @@ test('the plot has no trees round it',()=>{
 
 test('v485 ships together: build marker, cache, worker lists and loader',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
- assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
- assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));
+ const shipped=[BUILD,'village-folk-v486-20260925'],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
+ assert(cache.includes('-'+BUILD)&&shipped.some(b=>cache.endsWith('-'+b)));
  for(const file of ['world_sky.js','village_walk.js','player_home_core.js','player_home.js'])assert.equal(sw.split("'./"+file+'?v='+BUILD+"'").length-1,3,file+' in all three worker lists');
  assert(walk.includes("'world_sky.js':'"+BUILD+"'"));
  for(const file of ['village_walk.js','player_home_core.js','player_home.js'])assert(html.includes(file+'?v='+BUILD),file);
