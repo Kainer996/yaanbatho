@@ -75,23 +75,29 @@ check('pen animals stay inside their rails',life.pens.every(a=>a.out<=1e-6),life
 check('grazing puts muzzles on the grass',life.pens.some(a=>a.low<.2),life.pens);
 check('hens wander and peck the ground',life.hens.some(h=>h.moved>.05)&&life.hens.some(h=>h.low<.08),life.hens);
 
-// Close-ups for the eye, and the whole village for the draw count.
+// Close-ups for the eye, and the whole village for the draw count. Each shot
+// finds its subject after the frame moves it, then aims at it.
 const shots=await run(()=>{
-  const list=[],p=new THREE.Vector3();
-  const tag=(o,label)=>{if(!o)return;o.getWorldPosition(p);list.push({label,x:p.x,y:p.y,z:p.z});};
-  tag((settlementResidentActors.village||[]).find(o=>o.visible),'villager');
-  tag(villageNpcs.find(o=>o.userData.npc?.role==='guard'),'guard');
-  tag(villageNpcs.find(o=>o.userData.dogRig),'dog');
-  tag(villageLivestock[0],'pen');
-  tag(villageChickens.find(o=>o.userData.animalKind!=='cat'),'hens');
-  tag(villageTraffic.find(o=>o.userData.horseDrawn),'horse-cart');
-  tag(villageTraffic.find(o=>!o.userData.horseDrawn),'handcart');
-  return list;
+  window.__folkShots={
+    villager:(settlementResidentActors.village||[]).find(o=>o.visible),
+    guard:villageNpcs.find(o=>o.userData.npc?.role==='guard'),
+    dog:villageNpcs.find(o=>o.userData.dogRig),
+    pen:villageLivestock[0],
+    hens:villageChickens.find(o=>o.userData.animalKind!=='cat'),
+    'horse-cart':villageTraffic.find(o=>o.userData.horseDrawn),
+    handcart:villageTraffic.find(o=>!o.userData.horseDrawn),
+  };
+  return Object.keys(window.__folkShots).filter(k=>window.__folkShots[k]);
 });
-for(const item of shots){
-  await run(({item})=>{Object.assign(villageCam,{tx:item.x,tz:item.z,dist:/pen|cart/.test(item.label)?4.5:/hens/.test(item.label)?2.4:3.2,polar:.9,azimuth:.6,lastInputAt:Date.now()+1e9});villageAnimateFrame(performance.now()/1000);},{item});
+for(const label of shots){
+  await run(label=>{
+    const o=window.__folkShots[label],t=performance.now()/1000,p=new THREE.Vector3();
+    villageAnimateFrame(t);o.getWorldPosition(p);
+    Object.assign(villageCam,{tx:p.x,tz:p.z,dist:/pen|cart/.test(label)?4.5:/hens/.test(label)?2.4:3.2,polar:.9,azimuth:.6,lastInputAt:Date.now()+1e9});
+    villageAnimateFrame(t);
+  },label);
   await page.waitForTimeout(250);
-  await page.screenshot({path:path.join(out,item.label+'.png'),clip:await page.locator('#villageStage canvas').boundingBox()});
+  await page.screenshot({path:path.join(out,label+'.png'),clip:await page.locator('#villageStage canvas').boundingBox()});
 }
 const draws=await run(()=>{Object.assign(villageCam,{tx:0,tz:0,dist:16,polar:.95,azimuth:.4,lastInputAt:Date.now()+1e9});villageAnimateFrame(performance.now()/1000);villageRenderer.render(villageScene,villageCamera);return villageRenderer.info.render.calls;});
 await page.screenshot({path:path.join(out,'village.png')});
