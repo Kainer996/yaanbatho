@@ -8,6 +8,13 @@
     r.policy === 'photo-gemini-v487' && r.model === 'gemini-vision' && r.modelName === 'gemini-3.8-flash' && receipt(r.receiptId) &&
     typeof r.confidence === 'number' && Number.isFinite(r.confidence) && r.confidence >= .8 && r.confidence <= 1 &&
     typeof r.species === 'string' && typeof r.scientificName === 'string' && /^[A-Z][a-z]+ [a-z][a-z-]+$/.test(r.scientificName);
+  // Saved photos have no match cards: name the matches and send the player
+  // back to the cropper, where This is my bird lives.
+  const matchNote = r => {
+    const names = Array.isArray(r?.candidates) ? r.candidates.slice(0, 3)
+      .map(c => typeof c?.species === 'string' ? c.species.trim() : '').filter(Boolean) : [];
+    return names.length ? 'Possible: ' + names.join(' or ') + '. Choose this photo again from your device to pick your bird.' : '';
+  };
   function open() {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(DB, 1);
@@ -161,7 +168,7 @@
               return { ...row,leaseUntil:0,lease:null,status:accepted?'ready':row.manual?'paused':'waiting',
                 result:accepted?result:null,networkWait:false,manual:row.manual || (!accepted && !automatic),
                 renewRequest:!accepted && (receipt(result?.receiptId) || ['request-interrupted','request-conflict'].includes(result?.reason)),retryAt,
-                message:accepted?`Ready: ${result.species}`:row.manual?row.message:String(result?.message || 'Photo not confirmed. It remains saved; choose Retry or Remove.') };
+                message:accepted?`Ready: ${result.species}`:row.manual?row.message:matchNote(result) || String(result?.message || 'Photo not confirmed. It remains saved; choose Retry or Remove.') };
             });
             if (accepted && entry && current(scope)) notify(`Photo identified: ${result.species}. Open Saved photos to view the result.`);
             if (accepted && entry && !entry.manual && options.autoClaim?.() && current(scope)) await claim(entry);

@@ -154,13 +154,25 @@ def request_identity(path):
     return 'v487_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def post(origin, path, request_id):
+def post(origin, path, request_id, owner=VALIDATION_OWNER):
     with path.open('rb') as stream:
         return requests.post(
             origin.rstrip('/') + '/api/identify/image',
             files={'image': ('photo.jpg', stream, 'image/jpeg')},
-            data={'captureSource': 'camera', 'photoOwner': VALIDATION_OWNER,
+            data={'captureSource': 'camera', 'photoOwner': owner,
                   'photoRequestId': request_id, 'photoContract': CONTRACT, **PROOF_PLACE}, timeout=50)
+
+
+def retry_identity(request_id, day=None):
+    """One fresh owner and id per UTC day.
+
+    The ledger replays a stored answer for ever: by id, and by owner plus image
+    for a found reading. A stored service failure or one unlucky reading would
+    otherwise block every later deploy. A new owner each day buys exactly one
+    fresh paid attempt per fixture per day; later runs that day replay it.
+    """
+    day = day or time.strftime('%Y%m%d', time.gmtime())
+    return VALIDATION_OWNER + '_' + day, request_id + '_' + day
 
 
 def main():
@@ -179,12 +191,11 @@ def main():
             request_id = request_identity(path)
             response = post(args.origin, path, request_id)
             result = response.json()
-            # A stored transient failure would replay forever under this stable
-            # id. Try once more under a second stable id, after the caller's
-            # three-per-minute window has passed.
-            if isinstance(result, dict) and result.get('retryable') is True:
+            if not passes_merlin_case(name, species, response.status_code, result):
+                # Wait out the caller's three-per-minute window first.
                 time.sleep(61)
-                response = post(args.origin, path, request_id + '_r')
+                owner, fresh = retry_identity(request_id)
+                response = post(args.origin, path, fresh, owner)
                 result = response.json()
             row = {'fixture': name, 'status': response.status_code,
                    'passed': bool(passes_merlin_case(name, species, response.status_code, result)),

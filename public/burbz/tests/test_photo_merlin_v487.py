@@ -107,8 +107,29 @@ def test_old_names_for_split_species_follow_the_place(taxonomy):
     assert taxonomy.match('Saxicola torquatus', 'Stonechat')[1] == 'Saxicola torquatus'
 
 
+def test_a_full_current_name_is_never_rewritten_by_the_place(taxonomy):
+    maine = place(taxonomy, MAINE, 44.0, -69.0)
+    assert taxonomy.match('Larus argentatus', 'European Herring Gull', maine)[1] == 'Larus argentatus'
+    raw = worker_reading([('European Herring Gull', 'Larus argentatus', .45),
+                          ('American Herring Gull', 'Larus smithsonianus', .40)], other=.15, quality='clear')
+    result = decide(raw, maine, taxonomy)
+    names = [c['scientificName'] for c in result['candidates']]
+    assert names == ['Larus smithsonianus', 'Larus argentatus'], names   # two rivals, never merged
+    assert result['found'] is False                                      # the model was only 40% sure
+
+
+def test_a_place_chosen_daughter_takes_its_own_name(taxonomy):
+    raw = worker_reading([('Herring Gull', 'Larus argentatus', .9)], other=.1, quality='clear')
+    result = decide(raw, place(taxonomy, MAINE, 44.0, -69.0), taxonomy)
+    assert result['candidates'][0]['species'] == 'American Herring Gull'
+    assert result['candidates'][0]['scientificName'] == 'Larus smithsonianus'
+    jackdaw = decide(worker_reading([('Western Jackdaw', 'Corvus monedula', .9)], other=.1), place(taxonomy), taxonomy)
+    assert jackdaw['candidates'][0]['species'] == 'Western Jackdaw'       # a synonym keeps the familiar name
+
+
 def test_lumped_species_keep_their_name_and_borrow_the_range(taxonomy):
-    position, scientific, _ = taxonomy.match('Acanthis cabaret', 'Lesser Redpoll', place(taxonomy))
+    position, scientific, _, split = taxonomy.match('Acanthis cabaret', 'Lesser Redpoll', place(taxonomy))
+    assert split is False
     assert scientific == 'Acanthis cabaret' and taxonomy.rows[position][0] == 'Acanthis flammea'
     raw = worker_reading([('Lesser Redpoll', 'Acanthis cabaret', .9)], other=.1, quality='clear')
     result = decide(raw, place(taxonomy), taxonomy)
@@ -119,6 +140,14 @@ def test_uk_stonechat_under_its_old_name_is_found_not_floored(taxonomy):
     raw = worker_reading([('Stonechat', 'Saxicola torquatus', .9)], other=.1, quality='clear')
     result = decide(raw, place(taxonomy), taxonomy)
     assert result['found'] and result['scientificName'] == 'Saxicola rubicola'
+
+
+def test_numeric_label_birds_sharing_a_bird_genus_count_as_birds():
+    rows = ROWS + [('465888', 'Ptyonoprogne obsoleta', 'Pale Crag-Martin'), ('crgmar1', 'Ptyonoprogne rupestris', 'Eurasian Crag-Martin'),
+                   ('99999', 'Vulpes vulpes', 'Red Fox')]
+    tax = photo_id.Taxonomy(rows)
+    assert tax.match('Ptyonoprogne obsoleta', 'Pale Crag-Martin')[1] == 'Ptyonoprogne obsoleta'
+    assert tax.match('Vulpes vulpes', 'Red Fox') is None
 
 
 def test_numeric_label_birds_count_as_birds(taxonomy):
@@ -373,11 +402,49 @@ def test_old_policy_results_never_replay(ledger):
     ({'liveBird': False, 'candidates': [{'species': 'Crow', 'scientificName': 'Corvus corone', 'probability': .9}]}, 'no-bird'),
     ({'liveBird': True, 'candidates': []}, 'no-species'),
     ({'liveBird': True, 'candidates': [{'species': 'X', 'scientificName': 'bad', 'probability': .9}]}, 'no-species'),
-    ([], 'invalid-model-result'),
 ])
 def test_worker_readings_without_a_species_name_nothing(raw, reason):
     result = photo_gemini.reading(raw, io.BytesIO(jpeg()))
     assert result['found'] is False and result['reason'] == reason and 'candidates' not in result
+
+
+@pytest.mark.parametrize('raw', [[], 'text', [{'liveBird': True}, {'liveBird': True}], None])
+def test_malformed_model_json_is_a_retryable_service_fault_not_a_verdict(raw):
+    with pytest.raises(photo_gemini.ProviderError):
+        photo_gemini.reading(raw, io.BytesIO(jpeg()))
+
+
+def test_a_one_object_list_is_unwrapped():
+    result = photo_gemini.reading([RAVEN_JSON], io.BytesIO(jpeg()))
+    assert result['found'] and result['candidates'][0]['scientificName'] == 'Corvus corax'
+
+
+@pytest.mark.parametrize('probabilities', [(.7, .2, .15), (.8, .15, .15), (.34, .33, .33, .05), (.9, .6)])
+def test_stored_probabilities_never_add_up_to_more_than_one(probabilities):
+    names = ['Corvus corone', 'Corvus frugilegus', 'Corvus corax', 'Coloeus monedula']
+    raw = {'liveBird': True, 'candidates': [{'species': 'x', 'scientificName': n, 'probability': p}
+                                           for n, p in zip(names, probabilities)]}
+    worker = photo_gemini.reading(raw, io.BytesIO(jpeg()))
+    assert sum(c['probability'] for c in worker['candidates']) <= 1
+    worker.update(retryable=False, receiptId='e' * 64)
+    clean, problem = photo_id._validate_reading(json.loads(json.dumps(worker)))
+    assert problem is None and clean['candidates']
+
+
+def test_adapter_accepts_a_tiny_rounding_overshoot_already_in_the_ledger():
+    raw = worker_reading([('Carrion Crow', 'Corvus corone', .6667), ('Rook', 'Corvus frugilegus', .1905),
+                          ('Common Raven', 'Corvus corax', .1429)])
+    clean, problem = photo_id._validate_reading(raw)
+    assert problem is None and abs(sum(c['probability'] for c in clean['candidates']) - 1) < 1e-9
+    clean, problem = photo_id._validate_reading(worker_reading([('A', 'Corvus corone', .7), ('B', 'Corvus corax', .4)]))
+    assert clean is None and problem['reason'] == 'invalid-worker-result'
+
+
+@pytest.mark.parametrize('value,expected', [('First-winter', 'first winter'), ('1st winter', 'first winter'),
+                                            ('non-breeding adult', 'non breeding adult'), ('unknown', None),
+                                            ('<b>x</b>', None), (7, None)])
+def test_plumage_becomes_plain_words(value, expected):
+    assert photo_gemini._plumage(value) == expected
 
 
 def test_worker_rescales_overconfident_probabilities():

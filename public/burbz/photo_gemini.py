@@ -170,10 +170,30 @@ def _photo_id_prompt(context=None):
         "Give the bird box in coordinates from 0 to 1000 of the whole image."
     )
 
+PLUMAGE_WORDS = {"adult", "male", "female", "juvenile", "immature", "subadult", "first", "second", "third",
+                 "winter", "summer", "breeding", "non", "eclipse", "moulting", "molting", "fledgling", "chick"}
+
+
+def _plumage(value):
+    """'First-winter', '1st winter' and 'non-breeding' become plain words."""
+    if not isinstance(value, str):
+        return None
+    text = value.strip().lower()
+    for short, word in (("1st", "first"), ("2nd", "second"), ("3rd", "third")):
+        text = text.replace(short, word)
+    words = [w for w in re.sub(r"[^a-z]+", " ", text).split() if w in PLUMAGE_WORDS]
+    text = " ".join(words)
+    return text if 3 <= len(text) <= 30 else None
+
+
 def reading(raw, path):
     """One model reading as plain facts. The adapter ranks and decides."""
+    if isinstance(raw, list) and len(raw) == 1:
+        raw = raw[0]  # JSON mode sometimes wraps the one object in a list.
     if not isinstance(raw, dict):
-        return _abstain("invalid-model-result")
+        # A malformed answer is a service fault, never a verdict on the photo:
+        # raising keeps it retryable instead of storing it as final.
+        raise ProviderError("photo-provider-unavailable")
     live = raw.get("liveBird") is True
     if not live:
         result = _abstain("no-bird", NO_BIRD)
@@ -190,9 +210,9 @@ def reading(raw, path):
             continue
         seen.add(scientific)
         entry = {"species": name, "scientificName": scientific, "probability": p}
-        plumage = _text(c.get("plumage"), 3, 30)
-        if plumage and plumage.lower() != "unknown":
-            entry["plumage"] = plumage.lower()
+        plumage = _plumage(c.get("plumage"))
+        if plumage:
+            entry["plumage"] = plumage
         candidates.append(entry)
     candidates.sort(key=lambda c: -c["probability"])
     candidates = candidates[:MAX_CANDIDATES]
@@ -203,8 +223,9 @@ def reading(raw, path):
         for c in candidates:
             c["probability"] = c["probability"] / total
     other = max(0.0, 1 - min(total, 1))
+    # Round down, so the stored values never add up to more than 1.
     for c in candidates:
-        c["probability"] = round(c["probability"], 4)
+        c["probability"] = math.floor(c["probability"] * 1e4) / 1e4
     if not candidates:
         result = _abstain("no-species")
         result["liveBird"] = True

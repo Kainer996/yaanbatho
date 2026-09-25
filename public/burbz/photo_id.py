@@ -144,9 +144,6 @@ LUMPS = {
     "ardea modesta": "Ardea alba",
     "thalasseus acuflavida": "Thalasseus sandvicensis",
 }
-# Five birds carry numeric GBIF ids in the label file, like its non-birds.
-NUMERIC_BIRDS = {"Leucocarbo atriceps", "Tyto furcata", "Chalcites minutillus",
-                 "Tyto javanica", "Poospizopsis hypochondria"}
 # The pinned label file calls Tyto alba "American Barn Owl".
 LABEL_FIXES = {"Tyto alba": "Western Barn Owl"}
 
@@ -154,36 +151,47 @@ LABEL_FIXES = {"Tyto alba": "Western Barn Owl"}
 class Taxonomy:
     """Map any model name onto one label, never by fuzzy guessing.
 
-    Order: a known split (the place picks the daughter), exact scientific
-    name, exact common name (Grey = Gray, hyphens and apostrophes ignored),
-    then a genus move: the same species epithet plus the same bird word
-    (Corvus monedula "Western Jackdaw" -> Coloeus monedula "Eurasian Jackdaw").
-    A lumped species borrows its parent's range but keeps its own name.
-    Anything else keeps its own name. Returns (position, scientific, common).
+    Order: the exact label when the model named it in full (Scopoli's
+    Shearwater, Calonectris diomedea); a known split when it used the old,
+    shared name (Herring Gull, Larus argentatus: the place picks the daughter);
+    exact scientific name; exact common name (Grey = Gray, hyphens and
+    apostrophes ignored); then a genus move: the same species epithet plus the
+    same bird word (Corvus monedula "Western Jackdaw" -> Coloeus monedula
+    "Eurasian Jackdaw"). A lumped species borrows its parent's range but keeps
+    its own name. Anything else keeps its own name.
+    Returns (position, scientific, common, split) where split is True only when
+    the place chose a different species than the model's own binomial.
     """
 
     def __init__(self, rows):
         self.rows = []
         self.by_scientific, self.by_common, self.by_stem = {}, {}, {}
+        # Most non-birds carry numeric GBIF ids, but so do 21 birds; a numeric
+        # row is a bird when its genus is also an eBird-coded bird genus.
+        bird_genera = {s.split()[0] for code, s, _ in rows if code and not code.isdigit() and len(s.split()) == 2}
         for position, (code, scientific, common) in enumerate(rows):
             common = LABEL_FIXES.get(scientific, common)
-            bird = bool(code) and (not code.isdigit() or scientific in NUMERIC_BIRDS)
+            bird = bool(code) and len(scientific.split()) == 2 and (
+                not code.isdigit() or scientific.split()[0] in bird_genera)
             self.rows.append((scientific, common, bird))
-            if not bird or len(scientific.split()) != 2:
-                continue  # Numeric GBIF ids are otherwise the geomodel's non-bird classes.
-            entry = (position, scientific, common)
+            if not bird:
+                continue
+            entry = (position, scientific, common, False)
             self.by_scientific.setdefault(scientific.lower(), entry)
             self.by_common.setdefault(_common_key(common), entry)
             self.by_stem.setdefault(_stem(scientific.split()[1]), []).append(entry)
 
     def match(self, scientific, common, place=None):
         key = (scientific or "").lower()
+        found = self.by_scientific.get(key)
+        if found and common and _common_key(common) == _common_key(found[2]):
+            return found
         options = [self.by_scientific[n.lower()] for n in SPLITS.get(key, ()) if n.lower() in self.by_scientific]
         if options:
             if place is None:
-                return self.by_scientific.get(key) or options[0]
-            return max(options, key=lambda e: place.occurrence(e[0]) or 0.0)
-        found = self.by_scientific.get(key)
+                return found or options[0]
+            best = max(options, key=lambda e: place.occurrence(e[0]) or 0.0)
+            return best[:3] + (best[1].lower() != key,)
         if found:
             return found
         found = self.by_common.get(_common_key(common or ""))
@@ -196,7 +204,7 @@ class Taxonomy:
                 return same[0]
         parent = self.by_scientific.get(LUMPS.get(key, "").lower())
         if parent:
-            return (parent[0], scientific, common)
+            return (parent[0], scientific, common, False)
         return None
 
 
@@ -326,7 +334,10 @@ def rank(reading, place=None, taxonomy=None):
         scientific = match[1] if match else c["scientificName"]
         key = scientific.lower()
         if key not in merged:
-            entry = {"species": c["species"], "scientificName": scientific, "p": 0.0,
+            # A place-chosen daughter takes its own name (Herring Gull in Maine
+            # -> American Herring Gull); synonyms keep the model's familiar one.
+            name = match[2] if match and match[3] else c["species"]
+            entry = {"species": name, "scientificName": scientific, "p": 0.0,
                      "position": match[0] if match else None}
             if c.get("plumage"):
                 entry["plumage"] = c["plumage"]
@@ -407,12 +418,18 @@ def _validate_reading(result):
                 and SCIENTIFIC.fullmatch(scientific) and isinstance(p, (int, float)) and not isinstance(p, bool)
                 and math.isfinite(p) and 0 <= p <= 1):
             entry = {"species": name.strip(), "scientificName": scientific, "probability": float(p)}
-            if isinstance(c.get("plumage"), str) and re.fullmatch(r"[a-z ]{3,30}", c["plumage"]):
+            if isinstance(c.get("plumage"), str) and re.fullmatch(r"[a-z -]{3,30}", c["plumage"]):
                 entry["plumage"] = c["plumage"]
             candidates.append(entry)
     other = result.get("otherProbability")
-    if not candidates or sum(c["probability"] for c in candidates) > 1 + 1e-6:
+    total = sum(c["probability"] for c in candidates)
+    # Stored readings replay for ever, so accept a rounding overshoot (five
+    # values at 4 dp) and renormalise, rather than refusing a paid answer.
+    if not candidates or total > 1 + 1e-3:
         return None, _abstain("invalid-worker-result")
+    if total > 1:
+        for c in candidates:
+            c["probability"] /= total
     marks = [m for m in result.get("fieldMarks", []) if isinstance(m, str)][:6] \
         if isinstance(result.get("fieldMarks"), list) else []
     reading.update(found=True, candidates=candidates, fieldMarks=marks,

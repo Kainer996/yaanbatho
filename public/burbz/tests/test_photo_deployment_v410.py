@@ -216,7 +216,7 @@ def test_proof_posts_contract_and_fixed_place_and_retries_one_stored_failure(tmp
         def json(self):
             return self.body
 
-    answers = [Response(200, dict(pick(), retryable=True, reason='photo-provider-unavailable')), Response(200, ranked())]
+    answers = [Response(422, dict(pick(), retryable=True, reason='photo-provider-unavailable')), Response(200, ranked())]
 
     def post(url, files, data, timeout):
         posts.append(dict(data))
@@ -228,4 +228,29 @@ def test_proof_posts_contract_and_fixed_place_and_retries_one_stored_failure(tmp
     assert proof.main() == 0
     first, slept, second = posts
     assert first['photoContract'] == 'merlin-v487' and first['lat'] == '51.5' and first['photoWeek'] == '20'
-    assert slept == {'slept': 61} and second['photoRequestId'] == first['photoRequestId'] + '_r'
+    owner, fresh = proof.retry_identity(first['photoRequestId'])
+    assert slept == {'slept': 61} and second['photoRequestId'] == fresh and second['photoOwner'] == owner
+    assert owner.startswith(proof.VALIDATION_OWNER + '_') and len(fresh) <= 96
+    assert proof.retry_identity('x', '20261001') == (proof.VALIDATION_OWNER + '_20261001', 'x_20261001')
+
+
+def test_a_stored_wrong_reading_gets_one_fresh_attempt_and_a_pass_needs_none(tmp_path, monkeypatch):
+    image = tmp_path / 'crow.jpg'; image.write_bytes(b'fixture')
+    wrong = pick(candidates=[{'species': 'Rook', 'scientificName': 'Corvus frugilegus', 'score': .9}])
+    posts = []
+
+    class Response:
+        def __init__(self, status, body):
+            self.status_code, self.body = status, body
+
+        def json(self):
+            return self.body
+    answers = [Response(422, wrong), Response(422, wrong)]
+    monkeypatch.setattr(proof.requests, 'post', lambda url, files, data, timeout: posts.append(data) or answers.pop(0))
+    monkeypatch.setattr(proof.time, 'sleep', lambda seconds: None)
+    monkeypatch.setattr(proof, 'fixture_cases', lambda *_: [('carrion-crow', image, 'Corvus corone')])
+    monkeypatch.setattr(sys, 'argv', ['verify-photo-id', '--fixtures', str(tmp_path)])
+    assert proof.main() == 1 and len(posts) == 2      # one fresh try, then stop spending
+    answers[:] = [Response(422, pick(candidates=[{'species': 'Carrion Crow', 'scientificName': 'Corvus corone', 'score': .9}]))]
+    posts.clear()
+    assert proof.main() == 0 and len(posts) == 1
