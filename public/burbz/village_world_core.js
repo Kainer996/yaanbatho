@@ -9,7 +9,9 @@ function hash(x,z,salt=0){let h=Math.imul(x|0,374761393)^Math.imul(z|0,668265263
 function key(x,z){return Math.floor(x/CHUNK)+','+Math.floor(z/CHUNK);}
 function chunks(x,z,rings=RINGS){const cx=Math.floor(x/CHUNK),cz=Math.floor(z/CHUNK),rows=[];for(let dx=-rings;dx<=rings;dx++)for(let dz=-rings;dz<=rings;dz++)rows.push({id:(cx+dx)+','+(cz+dz),x:(cx+dx)*CHUNK,z:(cz+dz)*CHUNK,d:Math.max(Math.abs(dx),Math.abs(dz))});return rows.sort((a,b)=>a.d-b.d||a.x-b.x||a.z-b.z);}
 function mercator(origin){return{x:(origin.lon+180)/360,z:(1-Math.log(Math.tan(Math.PI/4+origin.lat*Math.PI/360))/Math.PI)/2,scale:EARTH*Math.cos(origin.lat*Math.PI/180)};}
-function elevation(tiles,origin,x,z){const m=origin.scale?origin:mercator(origin),mx=m.x+x/m.scale,my=m.z+z/m.scale;for(const tile of tiles){const n=2**tile.z,tx=((mx*n)%n+n)%n,ty=my*n;if(Math.floor(tx)!==tile.x||Math.floor(ty)!==tile.y)continue;const d=tile.dem,fx=(tx-tile.x)*d.dim,fy=(ty-tile.y)*d.dim,ix=Math.floor(fx),iy=Math.floor(fy),dx=fx-ix,dy=fy-iy;try{const h=d.get(ix,iy)*(1-dx)*(1-dy)+d.get(ix+1,iy)*dx*(1-dy)+d.get(ix,iy+1)*(1-dx)*dy+d.get(ix+1,iy+1)*dx*dy;if(Number.isFinite(h))return h;}catch(_){}}return null;}
+function elevation(tiles,origin,x,z){return elevationSample(tiles,origin,x,z)?.h??null;}
+// The same, with the zoom of the tile it came from: the most detailed first.
+function elevationSample(tiles,origin,x,z){const m=origin.scale?origin:mercator(origin),mx=m.x+x/m.scale,my=m.z+z/m.scale;for(const tile of tiles){const n=2**tile.z,tx=((mx*n)%n+n)%n,ty=my*n;if(Math.floor(tx)!==tile.x||Math.floor(ty)!==tile.y)continue;const d=tile.dem,fx=(tx-tile.x)*d.dim,fy=(ty-tile.y)*d.dim,ix=Math.floor(fx),iy=Math.floor(fy),dx=fx-ix,dy=fy-iy;try{const h=d.get(ix,iy)*(1-dx)*(1-dy)+d.get(ix+1,iy)*dx*(1-dy)+d.get(ix,iy+1)*(1-dx)*dy+d.get(ix+1,iy+1)*dx*dy;if(Number.isFinite(h))return{h,z:tile.z};}catch(_){}}return null;}
 function joinedHeight(x,z,{radius,blend=64,authored,raw,datum}){const d=Math.hypot(x,z);if(d<=radius)return authored(x,z);const h=raw(x,z);if(!Number.isFinite(h)||!Number.isFinite(datum))return null;const t=smooth((d-radius)/blend);return authored(x,z)*(1-t)+(h-datum)*t;}
 // The home alters only its bounded plot; its terrain and scenery share this
 // function. Unknown ground remains unknown even beneath the flat foundation.
@@ -118,5 +120,12 @@ function easeSquare(shown,target,most){
 // and (x0+S,z0)-(x0,z0+S)-(x0+S,z0+S).
 function latticeCorners(x,z,S){const x0=Math.floor(x/S)*S,z0=Math.floor(z/S)*S,fx=(x-x0)/S,fz=(z-z0)/S;
  return fx+fz<=1?[[x0,z0,1-fx-fz],[x0+S,z0,fx],[x0,z0+S,fz]]:[[x0+S,z0+S,fx+fz-1],[x0+S,z0,1-fz],[x0,z0+S,1-fx]];}
-return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,joinedHeight,homeHeight,sampleGround,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh,showTarget,easeSquare,latticeCorners};
+// The sun's shadow map centre for a viewer: the nearest point of a 16m grid,
+// then moved to a whole number of shadow texels across the light. Shadow
+// edges then keep their places when the map is redrawn. d: unit vector from
+// the ground toward the light, matching the shadow camera's own axes.
+function shadowCentre(x,z,d,texel,step=16){const cx=Math.round(x/step)*step,cz=Math.round(z/step)*step,flat=Math.hypot(d.x,d.z),sx=flat>1e-6?d.z/flat:1,sz=flat>1e-6?-d.x/flat:0;
+ const ux=d.y*sz,uy=d.z*sx-d.x*sz,uz=-d.y*sx,u=Math.round((cx*sx+cz*sz)/texel)*texel,v=Math.round((cx*ux+cz*uz)/texel)*texel,w=cx*d.x+cz*d.z;
+ return{x:sx*u+ux*v+d.x*w,y:uy*v+d.y*w,z:sz*u+uz*v+d.z*w};}
+return{CHUNK,STEP,RINGS,TREE_GRID,smooth,hash,key,chunks,mercator,elevation,elevationSample,joinedHeight,homeHeight,sampleGround,trees,treeGround,habitat,rockContains,rocks,cascades,groundMesh,meshHeight,corridorWidth,corridorContains,ribbonMesh,showTarget,easeSquare,latticeCorners,shadowCentre};
 });

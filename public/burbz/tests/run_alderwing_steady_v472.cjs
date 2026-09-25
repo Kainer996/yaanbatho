@@ -36,7 +36,9 @@ const extraFeatures=[{type:'Feature',id:951,properties:{class:'wood',subclass:'f
  await page.screenshot({path:path.join(out,'cockpit.png')});pass('Aboard, the pilot sees the panelled cockpit and no hull or wings');
  await page.locator('.vw-look').focus();const samples=[];let before=null,moved=0;
  await page.keyboard.down('KeyW');
- try{for(let i=0;i<40;i++){await page.waitForTimeout(150);const now=await page.evaluate(()=>{const s=__burbzVillageWalkDebug.state();return{t:performance.now(),p:s.player,c:s.continuity};});samples.push(now);
+ // At least 40 samples, then on until 40 m are behind the craft: the flight
+ // step is capped at 80 ms, so on a busy machine wall time is not distance.
+ try{for(let i=0;i<40||(moved<=40&&i<120);i++){await page.waitForTimeout(150);const now=await page.evaluate(()=>{const s=__burbzVillageWalkDebug.state();return{t:performance.now(),p:s.player,c:s.continuity};});samples.push(now);
   check(now.c,'sample '+i);
   if(before){const dt=(now.t-before.t)/1000;for(const side of ['x0','z0','x1','z1'])// At most 80m a second, plus one frame (8m) that can straddle a sample.
    assert(Math.abs(now.c.shown[side]-before.c.shown[side])<=80*dt+10,'sample '+i+': the shown '+side+' eases, never jumps: '+before.c.shown[side]+' to '+now.c.shown[side]+' in '+dt.toFixed(2)+'s');
