@@ -60,6 +60,26 @@
         margin: 0 auto;
         border-bottom: 1px dashed var(--border);
     }
+    .hero-art {
+        margin: 0 auto 48px;
+        max-width: 1100px;
+        padding: 0 32px;
+    }
+    .hero-art .art-frame {
+        width: 100%;
+        aspect-ratio: 2 / 1;
+        background: #070707 url('/pocket-producer/hero.svg') center/cover no-repeat;
+        border: 2px solid var(--red);
+        box-shadow: 8px 8px 0 var(--red);
+    }
+    @media (max-width: 700px) {
+        .hero-art { padding: 0 16px; }
+        .hero-art .art-frame { box-shadow: 4px 4px 0 var(--red); }
+    }
+    .pattern-bg {
+        background-image: url('/pocket-producer/pattern.svg');
+        background-repeat: repeat;
+    }
     .tag-pill {
         display: inline-block;
         font-family: var(--pixel);
@@ -228,6 +248,10 @@
     </div>
 </nav>
 
+<div class="hero-art" aria-hidden="true">
+    <div class="art-frame" role="img" aria-label="Pocket Producer manga-style hero artwork"></div>
+</div>
+
 <section class="hero">
     <div class="tag-pill">MCP SERVER · AVAILABLE</div>
     <h1>POCKET <span class="red">PRODUCER</span></h1>
@@ -282,7 +306,7 @@
     </div>
 </section>
 
-<section class="section">
+<section class="section pattern-bg">
     <h2><span class="tick">▸</span>How it wires up</h2>
     <p>Pocket Producer speaks MCP over stdio. Point it at a self-hosted <a href="https://github.com/gcui-art/suno-api" target="_blank" rel="noopener">gcui-art/suno-api</a> proxy — that proxy holds your Suno cookie, so the server stays clean of credentials. Then register it with your MCP client:</p>
 <pre class="code"><span class="k">{</span>
