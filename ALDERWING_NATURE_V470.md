@@ -1,7 +1,7 @@
-# Alderwing nature, water and craft v468
+# Alderwing nature, water and craft v470
 
-Build: `alderwing-nature-v468-20260924`.
-Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, merged with main at v467. Not yet merged to main or published.
+Build: `alderwing-nature-v470-20260925`.
+Status: pushed on `claude/alderwing-world-flying-machine-6mto0l`, merged with main at v469. Not yet merged to main or published.
 
 ## What Yaan asked for
 
@@ -67,11 +67,11 @@ The new build shows about forty times more land. The cost is a modest rise in tr
 
 ## Verification
 
-- Merged with main at v467 and renumbered from v462 to v468, since main already used v462–v467.
+- Merged with main at v469 and renumbered to v470. Main had used v462–v467, then took v469 for the paced tutorial. Only the release markers clashed: `AGENTS.md` keeps both notes, and `BURBZ_CACHE` adds this marker after main's.
 - Python suite: 325 failures, all pre-existing and identical to main. No new failures.
-- Node suite: 131 pass, 32 fail. The 32 match main. The new `tests/test_alderwing_nature_v468.cjs` passes 11 tests.
+- Node suite: 132 pass, 32 fail. The 32 match main. The new `tests/test_alderwing_nature_v470.cjs` passes 11 tests.
 - `tests/test_village_walk_loading_v414.cjs` now lists the new loader modules.
-- `tests/run_alderwing_nature_v468.cjs` proves 7 checks in the real renderer with synthetic offline input: horizon and haze, plant pools, a stream falling over a 30 m crag, spray, a lake, the parked craft, and the pilot view with a straight-down look.
+- `tests/run_alderwing_nature_v470.cjs` proves 7 checks in the real renderer with synthetic offline input: horizon and haze, plant pools, a stream falling over a 30 m crag, spray, a lake, the parked craft, and the pilot view with a straight-down look.
 - Live-provider tours ran at the Lake District fells, Grasmere, Easedale and Pendle Hill.
 - `connected_world_fixture_v386.cjs` gains an optional waterway layer. Existing fixture tiles are byte-identical.
 
@@ -79,7 +79,7 @@ The new build shows about forty times more land. The cost is a modest rise in tr
 
 - New modules: `world_nature_core.js`, `world_nature.js`, `world_horizon.js`, `world_water_core.js`, `world_water.js`.
 - Changed modules: `flight_craft.js`, `shore_water.js`, `village_world.js`, `village_walk.js`, `manga_render_core.js`, `wilderness_combat.js`.
-- All eleven use `?v=alderwing-nature-v468-20260924` in their consumers and in all three worker lists. The updater lists the new files. `BURBZ_CACHE` and `BURBZ_BUILD` carry the new marker.
+- All eleven use `?v=alderwing-nature-v470-20260925` in their consumers and in all three worker lists. The updater lists the new files. `BURBZ_CACHE` and `BURBZ_BUILD` carry the new marker.
 - `open_land_core.js` still loads. Its grass and heath rules now live inside the richer nature core.
 
 ## Limits

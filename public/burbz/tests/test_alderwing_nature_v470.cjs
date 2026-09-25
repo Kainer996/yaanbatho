@@ -1,10 +1,10 @@
 'use strict';
-// Alderwing nature v468: real-cover ground, varied plants, the distant land,
+// Alderwing nature v470: real-cover ground, varied plants, the distant land,
 // flowing streams and waterfalls, the new craft and its cockpit view.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const N=require('../world_nature_core.js'),W=require('../world_water_core.js');
-const BUILD='alderwing-nature-v468-20260924';
+const BUILD='alderwing-nature-v470-20260925';
 const layer=(sourceLayer,cls,subclass)=>({sourceLayer,geometry:{type:'Polygon'},properties:{class:cls,subclass}});
 const hex=rgb=>rgb.map(v=>Math.round(Math.pow(Math.max(0,v),1/2.2)*255));
 
@@ -119,9 +119,9 @@ test('a pilot aloft can look straight down; on foot the old head range stays',()
  assert(read('flight_craft.js').includes("if(s.player.mode==='fly')s.player.pitch=pitch;"),'the flight step keeps the pilot range');
 });
 
-test('v468 ships together: build marker, cache, three worker lists, loader and updater',()=>{
+test('v470 ships together: build marker, cache, three worker lists, loader and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
- assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));assert(/const BURBZ_CACHE = '[^']*-alderwing-nature-v468-20260924';/.test(sw));
+ assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));assert(/const BURBZ_CACHE = '[^']*-alderwing-nature-v470-20260925';/.test(sw));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};
  const ctx=vm.createContext({self,URL,importScripts(){},console});vm.runInContext(sw,ctx);const lists=vm.runInContext('({BURBZ_ASSETS,BURBZ_CORE,BURBZ_INSTALL_REQUIRED})',ctx);
