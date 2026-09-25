@@ -1,7 +1,7 @@
-# Glide on release v480
+# Glide on release v481
 
-Build: `glide-release-v480-20260925`.
-Status: pushed on `claude/burbz-realistic-flight-77nufl`. It builds on main after Merlin flight v479, so this is v480.
+Build: `glide-release-v481-20260925`.
+Status: pushed on `claude/burbz-realistic-flight-77nufl`. It builds on main after Merlin flight v479 and the smoother Earth, whose cache name took v480, so this is v481.
 
 ## What Yaan asked for
 
@@ -45,7 +45,7 @@ The Academy bird follows the same rules at its own 5.2 m/s cruise.
 
 ## Checks
 
-- `node tests/test_glide_release_v480.cjs`: 9 groups.
+- `node tests/test_glide_release_v481.cjs`: 9 groups.
   - Only Flap beats the wings.
   - Letting go glides without a stall, from a climb and from a hover.
   - A level look holds a steady 8:1 glide at cruise.
@@ -54,10 +54,10 @@ The Academy bird follows the same rules at its own 5.2 m/s cruise.
   - Pull-ups stall and looking down builds speed.
   - The Academy bird glides the same way.
   - One Flap button sits on the right, with no Dive.
-  - The v480 release markers match.
+  - The v481 release markers match.
 - Updated: `test_real_flight_v478.cjs`, `test_flight_controls_v371.cjs`, `test_geographic_world_v386.cjs`, and the Alderwing release lists.
 - Node and pytest suites: the same failures as main, and no new ones.
-- Browser, real renderer (`tests/run_glide_release_v480.cjs`, 8/8):
+- Browser, real renderer (`tests/run_glide_release_v481.cjs`, 8/8):
   - Take-off settles.
   - Flap climbs clear.
   - Letting go of a hover glides on at 15 m/s with no stall.

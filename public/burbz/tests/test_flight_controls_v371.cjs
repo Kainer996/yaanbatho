@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),C=require('../academy_flight_core.js');
-// Controls drive real flight (v480): only Flap beats the wings, backward
+// Controls drive real flight (v481): only Flap beats the wings, backward
 // airbrakes, the sideways push banks into a turn, the view steers the path,
 // and the camera follows the wings. The body never strafes or reverses.
 const world={allowed3:()=>true,clear:()=>true},fresh=()=>({x:0,y:40,z:15,yaw:0,pitch:0}),advance=(p,input,n=120)=>{for(let i=0;i<n;i++)C.step(p,input,1/60,world);return p;};

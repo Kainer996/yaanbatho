@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const G=require('../geographic_world_core.js'),F=require('../academy_flight_core.js');
-// Glide on release (v480): only Flap beats the wings. Let go and the wings go
+// Glide on release (v481): only Flap beats the wings. Let go and the wings go
 // still, the craft tips over into a steady glide and loses height gently.
 // One Flap button sits by the right thumb; the Dive button is gone.
 let count=0;function test(name,fn){fn();count++;console.log('PASS '+name);}
@@ -56,9 +56,9 @@ test('one Flap button sits by the right thumb; the Dive button is gone',()=>{
  assert(/#villageWalk\.wc-ready\.fp-ready \.wc-climb\{left:auto!important;right:calc\(18px/.test(css),'portrait Flap sits on the right');
  for(const file of ['village_walk.js','building_rooms.js'])assert(read(file).includes('Let go to glide')&&!read(file).includes('fly on'),file+' teaches the glide');
 });
-test('v480 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
- const BUILD='glide-release-v480-20260925',html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(__dirname,'../../../scripts/update-live-burbz.sh'),'utf8');
- // Later releases ship on top under their own marker; v480 stays in the cache chain.
+test('v481 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
+ const BUILD='glide-release-v481-20260925',html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(__dirname,'../../../scripts/update-live-burbz.sh'),'utf8');
+ // Later releases ship on top under their own marker; v481 stays in the cache chain.
  const LATER=[],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(build=>html.includes("const BURBZ_BUILD = '"+build+"';")));assert(cache.includes('-'+BUILD)&&shipped.some(build=>cache.endsWith('-'+build)));
  const files=['academy_flight_core.js','village_world.js','wilderness_combat.js','wilderness_combat.css','first_person_hud.css','village_walk.js','building_rooms.js'];
