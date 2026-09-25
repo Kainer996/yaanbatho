@@ -1,0 +1,29 @@
+/* Burbz Academy day and night (v482): the live night sky behind both
+   Academy trees. academy_daynight.js sets the --dn-* variables on each
+   scene and fills every [data-dn-sky] box with stars and a moon. The sky
+   sits under the day painting, so by day it is hidden and costs nothing. */
+[data-dn-sky] { overflow:hidden; background:linear-gradient(180deg, var(--dn-sky-top,#05091c), var(--dn-sky-mid,#0d1536) 58%, var(--dn-sky-low,#222e5a)); }
+.dn-starlight { position:absolute; inset:0; opacity:var(--dn-stars,0); }
+.dn-stars { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.dn-twinkle { animation:dnTwinkle 3.6s ease-in-out infinite alternate; }
+@keyframes dnTwinkle { from { opacity:.2; } to { opacity:1; } }
+/* A full moon with a soft halo; the tree hides it in part, as trees do. */
+.dn-moon { position:absolute; left:var(--dn-moon-x,84%); top:var(--dn-moon-y,9%); width:var(--dn-moon-size,40px); aspect-ratio:1; transform:translate(-50%,-50%); border-radius:50%; opacity:var(--dn-stars,0);
+  background:
+    radial-gradient(circle at 62% 58%, rgba(160,150,120,.34) 0 9%, transparent 11%),
+    radial-gradient(circle at 38% 68%, rgba(160,150,120,.26) 0 6%, transparent 8%),
+    radial-gradient(circle at 66% 30%, rgba(160,150,120,.24) 0 5%, transparent 7%),
+    radial-gradient(circle at 34% 34%, #fffef6 0 32%, #f1ecd4 62%, #d6cfb2 100%);
+  box-shadow:0 0 16px 5px rgba(230,236,255,.5), 0 0 70px 28px rgba(160,184,255,.2); }
+/* Now and then a shooting star crosses the dark. */
+.dn-shooting-star { position:absolute; left:14%; top:14%; width:90px; height:1.5px; border-radius:2px; background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95)); opacity:0; transform:rotate(16deg); animation:dnShootingStar 19s linear 7s infinite; }
+@keyframes dnShootingStar {
+  0%, 93% { opacity:0; transform:rotate(16deg) translateX(-30px); }
+  94% { opacity:1; }
+  97.5% { opacity:0; transform:rotate(16deg) translateX(190px); }
+  100% { opacity:0; transform:rotate(16deg) translateX(190px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dn-twinkle { animation:none; opacity:.7; }
+  .dn-shooting-star { animation:none; display:none; }
+}

@@ -149,14 +149,13 @@
     };
   }
 
-  function isNightHour(h) { return h >= 19.5 || h < 6; }
-  // 0 = full daylight, 1 = deep night, with dawn and dusk ramps.
-  function lightBoostFor(h) {
-    if (h >= 21 || h < 5) return 1;
-    if (h >= 17.5 && h < 21) return (h - 17.5) / 3.5;
-    if (h >= 5 && h < 7) return 1 - (h - 5) / 2;
-    return 0;
+  // The same clock as the painted Academy and the rest of the game
+  // (daylight_core.js). 0 = full daylight, 1 = deep night.
+  function daylight() {
+    return globalThis.BurbzDaylightCore || (typeof module === 'object' && module.exports ? require('./daylight_core.js') : null);
   }
+  function isNightHour(h) { var d = daylight(); return d ? d.isNightHour(h) : (h >= 19 || h < 5); }
+  function lightBoostFor(h) { var d = daylight(); return d ? d.lampFactorForHour(h) : (isNightHour(h) ? 1 : 0); }
 
   function treeLightsActiveFor(hour, requested) {
     return !!requested && isNightHour(Number(hour));
