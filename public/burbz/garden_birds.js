@@ -126,14 +126,21 @@ function environment(now=Date.now()){
 // the same way twice in a row.
 const SOUNDS={'robin-song':3,'robin-tick':3,'bluetit-song':3,'greattit-song':3,'chaffinch-song':2,'goldfinch-twitter':3,'wren-song':3,'blackbird-song':3,'blackbird-alarm':3,'wing-flutter':2};
 const AUDIO={ctx:null,master:null,buffers:new Map(),loading:new Map(),voices:new Set(),unlock:false,hushed:0,base:'assets/audio/garden-birds/'};
-function audioContext(){if(AUDIO.ctx)return AUDIO.ctx;const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return null;
+function audioContext(){if(AUDIO.ctx)return AUDIO.ctx;
+ // The game's calm bus when there is one: one context, the same warm room and
+ // soft top end as every other sound, and a gain iPhones honour.
+ const bus=root.BurbzAudioCore?.sharedBus?.();
+ if(bus&&bus.ctx){try{AUDIO.ctx=bus.ctx;AUDIO.master=bus.ctx.createGain();AUDIO.master.gain.value=0;AUDIO.master.connect(bus.input('nature'));AUDIO.unlock=true;return AUDIO.ctx;}catch(_){AUDIO.ctx=null;AUDIO.master=null;}}
+ const AC=root.AudioContext||root.webkitAudioContext;if(!AC)return null;
  try{AUDIO.ctx=new AC();AUDIO.master=AUDIO.ctx.createGain();AUDIO.master.gain.value=0;AUDIO.master.connect(AUDIO.ctx.destination);}catch(_){AUDIO.ctx=null;return null;}
  if(!AUDIO.unlock&&root.addEventListener){AUDIO.unlock=true;const wake=e=>{if(e&&e.isTrusted===false)return;if(AUDIO.ctx?.state==='suspended')AUDIO.ctx.resume().catch(()=>{});};for(const type of ['pointerdown','touchend','keydown'])root.addEventListener(type,wake,{passive:true});}
  return AUDIO.ctx;}
 function soundUrl(name,take){return AUDIO.base+name+'-'+String(take).padStart(2,'0')+'.mp3';}
 function loadSound(url){const ctx=AUDIO.ctx;if(!ctx||!root.fetch)return null;if(AUDIO.buffers.has(url))return AUDIO.buffers.get(url);if(!AUDIO.loading.has(url))AUDIO.loading.set(url,root.fetch(url).then(r=>{if(!r.ok)throw Error('missing');return r.arrayBuffer();}).then(b=>new Promise((ok,no)=>ctx.decodeAudioData(b,ok,no))).then(buf=>{AUDIO.buffers.set(url,buf);return buf;}).catch(()=>{AUDIO.buffers.set(url,null);return null;}));return null;}
 // Loudness falls with distance; far birds also lose their top end in the air.
-function voiceShape(d,voice){const ref=2.5,gain=voice*(d<=ref?1:ref/(ref+(d-ref)*.9));return{gain:clamp(gain,0,1)*.7,cutoff:clamp(15000*Math.exp(-d/38),2400,15000)};}
+// The takes are the loudest files in the game (about -18 LUFS), so even a
+// bird beside you sits at half gain, level with the soundscape.
+function voiceShape(d,voice){const ref=2.5,gain=voice*(d<=ref?1:ref/(ref+(d-ref)*.9));return{gain:clamp(gain,0,1)*.5,cutoff:clamp(15000*Math.exp(-d/38),2400,15000)};}
 
 // ---- the flock ---------------------------------------------------------------
 // perches: [{x,y,z,kind}] in the host group's space. kind is one of
