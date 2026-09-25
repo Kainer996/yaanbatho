@@ -59,7 +59,7 @@ test('one Flap button sits by the right thumb; the Dive button is gone',()=>{
 test('v481 ships together: build marker, cache, three worker lists, loader and consumers',()=>{
  const BUILD='glide-release-v481-20260925',html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(__dirname,'../../../scripts/update-live-burbz.sh'),'utf8');
  // Later releases ship on top under their own marker; v481 stays in the cache chain.
- const LATER=['alderwing-seamless-v482-20260925','academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ const LATER=['alderwing-seamless-v482-20260925','academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','village-folk-v486-20260925'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(build=>html.includes("const BURBZ_BUILD = '"+build+"';")));assert(cache.includes('-'+BUILD)&&shipped.some(build=>cache.endsWith('-'+build)));
  const files=['academy_flight_core.js','village_world.js','wilderness_combat.js','wilderness_combat.css','first_person_hud.css','village_walk.js','building_rooms.js'];
  for(const file of files){assert(shipped.some(b=>sw.split("'./"+file+'?v='+b+"'").length-1===3),file+' in all three worker lists');assert(updater.includes('"'+file+'"'),file+' in updater');}
