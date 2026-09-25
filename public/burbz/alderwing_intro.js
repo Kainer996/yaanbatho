@@ -26,19 +26,24 @@
  function clear(){box?.remove();box=null;view=null;practice=null;pending=null;saveFailed=false;clearTimeout(resizeTimer);}
  function commit(p){let ok=false;try{ok=(!pending?.confirm||pending.confirm())&&api.commit(p);}catch(_){/* Keep the current earned step available for retry. */}if(!ok){saveFailed=true;render();return false;}saveFailed=false;pending=null;if(p==='done'){clear();api.done();}else render();return true;}
  function phone(){return matchMedia('(pointer:coarse)').matches&&Math.min(innerWidth,innerHeight)<900;}
- function oriented(p){return !phone()||(p==='landscape'?innerWidth>innerHeight:innerHeight>=innerWidth);}
+ // A book-style foldable opens to a near-square screen. Its view stays wide
+ // whichever way it is held, so the tilt lessons never ask it to turn.
+ function square(){const w=root.screen?.width,h=root.screen?.height;return w>0&&h>0&&Math.max(w,h)/Math.min(w,h)<1.3;}
+ function oriented(p){return !phone()||square()||(p==='landscape'?innerWidth>innerHeight:innerHeight>=innerWidth);}
  function advance(){if(!visible())return;if(pending){if(pending.from===phase()&&pending.host===view.host&&pending.kind===view.kind)commit(pending.to);return;}const p=phase();if(matchingView()&&next[p]&&ready()&&(!['landscape','portrait'].includes(p)||oriented(p)))commit(next[p]);}
  function render(){
   if(!active()||!view?.host?.isConnected){box?.remove();box=null;return;}
   syncPractice();const p=phase(),recovery=!matchingView();let text=lines[p];
   if(!phone()){if(p==='turn')text='Before we go outside, turn around. Click and drag sideways across the room. Release and drag again until you face the door.';if(p==='look')text='Click and drag across the view to look around.';if(p==='forward')text='Push the left stick forwards and backwards, or use W and S to walk both ways.';if(p==='sideways')text='Push the left stick left and right, or use A and D to move sideways.';}
+  const rotate=['landscape','portrait'].includes(p),fold=rotate&&phone()&&square();
+  if(fold)text=p==='landscape'?'Your screen is already wide. No need to tilt it.':'Your screen works either way up. No need to tilt it back.';
   if(recovery){if(view.kind==='room')text=['portrait'].includes(p)?'Sit at the command desk to finish returning to Earth.':'We’re back inside early. Step outside to continue the same lesson.';else if(view.kind==='world')text=['shelter','turn','door'].includes(p)?'Go back into the shelter to finish our first lesson.':'Go back into the shelter, then sit at the desk.';}
   if(pending)text='Your action is complete, but the next instruction could not be saved.';
   if(!box||box.parentElement!==view.host){box?.remove();box=document.createElement('aside');box.id='alderwingIntroGuide';box.setAttribute('aria-label','Merlin’s introduction');box.innerHTML='<img src="assets/merlin-tutorial.png" alt="Merlin"><div><p aria-live="polite"></p><div class="ai-turn-demo" aria-hidden="true" hidden><span class="ai-demo-screen"><span class="ai-demo-zone"></span><span class="ai-demo-arrow">↔</span><span class="ai-demo-thumb"></span></span><span class="ai-demo-caption">Right side · swipe, lift, repeat</span></div><small></small><button type="button">Next</button></div>';view.host.append(box);box.querySelector('button').addEventListener('click',advance);}
   box.dataset.phase=p;box.querySelector('p').textContent=text;
   const demo=box.querySelector('.ai-turn-demo');if(demo){demo.hidden=p!=='turn'||recovery;const caption=demo.querySelector('.ai-demo-caption');if(caption)caption.textContent=phone()?'Right side · swipe, lift, repeat':'Drag sideways · release, repeat';}
-  const rotate=['landscape','portrait'].includes(p),button=box.querySelector('button');button.hidden=!pending&&(recovery||!next[p]);button.disabled=!pending&&((rotate&&!oriented(p))||!ready());button.textContent=pending?'Retry save':p==='portrait'?'Continue tutorial':'Next';
-  box.querySelector('small').textContent=saveFailed?'Progress could not be saved. Please try again.':recovery?'Your lesson is saved; no practice has been skipped.':practiceSteps.includes(p)?progress():p==='door'?'Walk to the door and choose Step outside.':p==='return'?'Use the shelter door.':p==='chair'?'Walk to the chair and choose Sit at the command desk.':rotate&&!oriented(p)?'Rotate your phone when you’re ready.':rotate?(phone()?'Already in '+p+'.':'Continue when you’re ready.'):'';
+  const button=box.querySelector('button');button.hidden=!pending&&(recovery||!next[p]);button.disabled=!pending&&((rotate&&!oriented(p))||!ready());button.textContent=pending?'Retry save':p==='portrait'?'Continue tutorial':'Next';
+  box.querySelector('small').textContent=saveFailed?'Progress could not be saved. Please try again.':recovery?'Your lesson is saved; no practice has been skipped.':practiceSteps.includes(p)?progress():p==='door'?'Walk to the door and choose Step outside.':p==='return'?'Use the shelter door.':p==='chair'?'Walk to the chair and choose Sit at the command desk.':rotate&&!oriented(p)?'Rotate your phone when you’re ready.':rotate?(phone()&&!fold?'Already in '+p+'.':'Continue when you’re ready.'):'';
  }
  function begin(){if(!phase())return commit('shelter');return phase()==='done'?false:true;}
  // Bind the *actual* view before attempting a durable checkpoint. Failed writes
