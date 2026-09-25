@@ -27,7 +27,7 @@ test('Home stacks the four rooms left, puts a condensed Academy right, and the d
  assert.doesNotMatch(dock,/data-quick-destination/);
  assert.match(html,/id="headerHomeBtn" data-game-route data-screen="scan"/);
  assert.match(html,/target:'#screen-scan \.desk-panel-academy \.desk-panel-heading'/);
- assert.match(html,/target:'#headerHomeBtn'/);
+ // v469 retired the "tap the logo" lesson: the player walks Home in their own time.
 });
 test('Academy tree and construction remain independent without merged intro takeover',()=>{
  assert.ok(html.includes('id="screen-academy"'));

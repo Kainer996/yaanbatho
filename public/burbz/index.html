@@ -23796,6 +23796,12 @@ function scanHomeCurrentGoal() {
 function activateHomeCurrentGoal() {
   if (merlinNavigationPaused) { resumeMerlinNavigation();return; }
   if (merlinTutActive && !merlinTutAwaitingAction) { const next=$('merlinTutorialNext');if(next&&!next.disabled)next.click();return; }
+  if (!merlinTutActive && !openingObjective().complete) {
+    // The player asked for the next lesson, so Merlin's rest ends now.
+    endMerlinLessonRest();
+    const chapterId=merlinOpeningChapterFor(currentScreen);
+    if (chapterId) { startMerlinTutorial({chapterId,resume:true});if (merlinTutActive) return; }
+  }
   if (merlinTutActive || !openingObjective().complete) { activateMerlinCurrentAction();return; }
   const quest=activePlayerQuest();
   if (quest) { focusQuestFromNotice({questId:quest.id});return; }
@@ -44498,6 +44504,9 @@ function openMerlinCareMenu() {
   const menu = $('merlinCareMenu');
   const sprite = $('petSprite');
   if (!menu) return;
+  // Care ends play: Merlin lands on his perch before the menu opens, so he
+  // never flies on behind it.
+  if (merlinFlightSession?.active) merlinFlightSession.stop('care', { immediate:true });
   merlinCareReturnFocus = document.activeElement;
   renderMerlinCareMenu();
   menu.hidden = false;
@@ -44540,7 +44549,9 @@ function petFlyOutAndReturn() {
       onTakeoff: () => {
         companion.classList.add('flying', 'merlin-in-flight');
         $('petSpeech')?.classList.remove('show');
-        closeMerlinCareMenu();
+        // The play sky sits below the care menu, so an open menu would hide
+        // him mid-flight. Takeoff always clears it.
+        closeMerlinCareMenu({ force:true });
         renderMerlinCareMenu();
       },
       onRestore: () => {
@@ -44604,6 +44615,13 @@ function showMerlinBondGain(gained, leveledUp) {
 function careForMerlin(action) {
   // Further taps direct the current flight; they never buy a second care reward.
   if (action === 'play' && merlinFlightSession?.active) return false;
+  // A lesson would talk over the flight, so play waits until it ends.
+  if (action === 'play' && merlinTutActive) {
+    const wait = 'Let’s finish this lesson first. Then we can play!';
+    if ($('merlinCareNote')) $('merlinCareNote').textContent = wait;
+    petSay(wait); SFX.tap();
+    return false;
+  }
   if (merlinIsAway()) { petSay('I am out on an errand. I will be back soon!'); return false; }
   if (getMerlinCare().restEndsAt) { renderMerlinCareMenu(); return false; }
   const bondBefore = merlinBondTotal(getMerlinCare());
@@ -45461,7 +45479,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'merlin-opening-v467-20260924';
+const BURBZ_BUILD = 'paced-tutorial-v469-20260924';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
@@ -45469,18 +45487,19 @@ const BURBZ_TUTORIAL_STATE_KEY = 'burbzTutorialState:' + BURBZ_TUTORIAL_VERSION;
 const BURBZ_TUTORIAL_GIFT_KEY = 'burbzTutorialGift:' + BURBZ_TUTORIAL_VERSION;
 
 // Chapters fire once each: 'launch' right after the intro video, screen ids
-// the first time that screen is opened. The three guided-flow chapters
-// ('errand', 'academy_tour', 'explore') have no screen of their own — they
-// fire on progress: Merlin's errand claimed, The Roost built, the tour done.
+// the first time that screen is opened. The guided-flow chapters
+// ('companion', 'kitchen_need', 'errand', 'care', 'explore') have no screen
+// of their own — they fire on progress through the opening. After Alderwing
+// Merlin rests between lessons (see "Pacing" below).
 // Replaying from Settings runs everything in array order.
 const MERLIN_TUTORIAL_CHAPTERS = [
   { id:'story',        trigger:'launch' },
   { id:'quests',       trigger:'quests' },
+  { id:'companion',    trigger:'companion' },
   { id:'kitchen_need', trigger:'kitchen_need' },
   { id:'care', trigger:'care' },
   { id:'errand',       trigger:'errand' },
   { id:'academy',      trigger:'academy' },
-  { id:'academy_tour', trigger:'academy_tour' },
   { id:'explore',      trigger:'explore' },
   { id:'scan',         trigger:'scan' },
   { id:'birdex',       trigger:'birdex' },
@@ -45507,24 +45526,17 @@ const MERLIN_TUTORIAL_STEPS = [
   { chapterId:'story', progressGroup:'arrival', chapter:'Your first steps', title:'Enter Alderwing', screen:'scan', target:'#playerHomeStand', text:'Click here and I’ll show you what I mean.', action:{event:'alderwing-returned',mode:'free',hint:'Click here and I’ll show you what I mean.'}, id:'alderwing-arrival-v395' },
   { chapterId:'story', progressGroup:'arrival', chapter:'Your field desk', title:'Your world, from here', screen:'scan', target:'#scanHomeActions', text:'This is Home, where you’ll manage Alderwing. Discover birds, find your next quest and see what your villages need.', id:'alderwing-desk-v395' },
   { chapterId:'story', progressGroup:'story', chapter:'Getting started', title:'Welcome your birds', screen:'scan', target:'#screen-scan .desk-panel-academy .desk-panel-heading', text:'First, build the Birdhouse: a place to welcome the real birds you discover. Tap Academy.', action:{ event:'tab:academy', hint:'Open Academy' }, id:'lesson-12' },
-  { chapterId:'academy', chapter:'Academy', title:'Your first building', screen:'academy', target:'#academyBuildPanel', text:'The Birdhouse lets you recruit discovered birds as companions. Merlin’s gift covers this first building.', id:'lesson-19' },
-  { chapterId:'academy', chapter:'Academy', title:'Build the Birdhouse', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Build the Birdhouse, then place it on the tree. It is ready immediately.', action:{ event:'barracks-built', mode:'free', hint:'Build the Birdhouse and place it' }, id:'lesson-21' },
-  { chapterId:'academy_tour', chapter:'Discovery', title:'A home for companions', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Your Birdhouse is ready. Every real species you discover can become a companion with its own diet and abilities.', id:'lesson-22' },
-  { chapterId:'academy_tour', chapter:'Discovery', title:'Find a bird', screen:'academy', target:'#headerHomeBtn', text:'Tap the Burbz logo to return Home and discover a bird. A clear saved bird photo works too; you can keep learning with Merlin if discovery is unavailable.', action:{event:'tab:scan',hint:'Return Home to discover a bird'}, id:'lesson-25' },
-  { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'.scan-mode-toggle', text:'Use Camera or Sound, then open your identified bird’s card. Its real diet and abilities explain how it can help.', id:'lesson-29' },
-  { chapterId:'scan', chapter:'Discovery', title:'Try a discovery', screen:'scan', target:'#scanHomeActions', text:'Try a bird photo or birdsong and open the result. No connection or permissions? Continue with Merlin; real discovery stays a goal.', action:{event:'opening-discovery-reviewed',mode:'free',hint:'Discover a bird and open its card',deferLabel:'Continue with Merlin'}, id:'lesson-31' },
+  { chapterId:'academy', chapter:'Academy', title:'Build the Birdhouse', screen:'academy', target:'.academy-building-card[data-building="tavern"]', text:'Build the Birdhouse, then tap the tree to place it. Merlin’s gift covers the cost.', action:{ event:'barracks-built', mode:'free', hint:'Build the Birdhouse and place it' }, id:'lesson-21' },
+  { chapterId:'scan', chapter:'Discovery', title:'Discover real birds', screen:'scan', target:'#scanHomeActions', text:'Your Birdhouse is ready. Point Camera or Sound at a real bird, then open its card. No bird nearby? Continue with Merlin.', action:{event:'opening-discovery-reviewed',mode:'free',hint:'Discover a bird and open its card',deferLabel:'Continue with Merlin'}, id:'lesson-31' },
   { chapterId:'birdex', chapter:'Companions', title:'A useful companion', screen:'birdex', target:'#birdGrid', text:'Read a discovered bird’s diet and abilities. Recruit it when you can afford it. Merlin is already your companion and can fetch supplies.', id:'lesson-32' },
-  { chapterId:'birdex', chapter:'Companions', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin to see his food, energy and bond. Care builds friendship; the right meal keeps birds ready to help.', action:{event:'merlin-care-opened',hint:'Tap Merlin'}, id:'lesson-3' },
-  { chapterId:'birdex', chapter:'Companions', title:'Spend time together', screen:'scan', target:'#merlinPlayBtn', text:'Tap Play to spend a moment with Merlin and grow your bond.', action:{event:'merlin-played',mode:'free',hint:'Play with Merlin'}, id:'opening-companion-play' },
-  { chapterId:'kitchen_need', chapter:'Care', title:'Food for your companions', screen:'scan', target:'#merlinCareMenu', text:'Birds need their species’ food as they work. The Kitchen & Pantry brings the flock and its food together. Let’s build it now.', id:'opening-kitchen-need' },
-  { chapterId:'kitchen_need', chapter:'Care', title:'Prepare the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Try Build on the Kitchen & Pantry. Its price uses your real coins and timber; if anything is missing, Merlin can fetch supplies.', action:{event:['kitchen-shortage','kitchen-built'],mode:'free',hint:'Try building the Kitchen'}, id:'opening-kitchen-attempt' },
+  { chapterId:'companion', chapter:'Companions', title:'Meet Merlin', screen:'scan', target:'#petSprite', text:'Tap Merlin to see his food, energy and bond. Good care grows your friendship.', action:{event:'merlin-care-opened',hint:'Tap Merlin'}, id:'lesson-3' },
+  { chapterId:'kitchen_need', chapter:'Care', title:'Food for your companions', screen:'scan', target:'#merlinCareMenu', text:'Every bird needs its own kind of food. Let’s build the Kitchen & Pantry.', id:'opening-kitchen-need' },
+  { chapterId:'kitchen_need', chapter:'Care', title:'Prepare the Kitchen', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Tap Build on the Kitchen & Pantry. Short of coins or timber? Merlin can fetch them.', action:{event:['kitchen-shortage','kitchen-built'],mode:'free',hint:'Try building the Kitchen'}, id:'opening-kitchen-attempt' },
   { chapterId:'quests', chapter:'Supplies', title:'Send Merlin', screen:'quests', target:'[data-expedition-template="merlin_first_flight"]', text:'Send Merlin for Kitchen supplies: at least 130 coins, 25 timber and a falcon ration. He returns in seconds.', action:{ event:'expedition-sent:merlin_first_flight', mode:'free', overlayTarget:'#questOverlay.open [data-quest-bird-id="merlin-guide"] .quest-bird-chip-art', hint:'Send Merlin for Kitchen supplies' }, id:'lesson-15' },
-  { chapterId:'quests', chapter:'Supplies', title:'Welcome Merlin back', screen:'quests', target:'.quest-away-card', text:'Merlin returns in seconds. Claim his delivery, then put those supplies straight into the Kitchen.', action:{event:'opening-supplies-claimed',mode:'free',hint:'Claim Merlin’s supply delivery'}, id:'lesson-16' },
+  { chapterId:'quests', chapter:'Supplies', title:'Welcome Merlin back', screen:'quests', target:'.quest-away-card', text:'Merlin returns in seconds. Claim his delivery.', action:{event:'opening-supplies-claimed',mode:'free',hint:'Claim Merlin’s supply delivery'}, id:'lesson-16' },
   { chapterId:'errand', chapter:'Care', title:'Use the supplies', screen:'academy', target:'.academy-building-card[data-building="kitchen"]', text:'Your supplies are home. Build the Kitchen & Pantry and place it on the tree.', action:{ event:'kitchen-built', mode:'free', hint:'Build the Kitchen and place it' }, id:'kitchen-build-v354' },
-  { chapterId:'care', chapter:'Care', title:'The right meal', screen:'academy', target:'[data-kitchen-roster-bird="merlin"]', text:'Open the Kitchen and give hungry Merlin a small-bird prey ration. It suits a little falcon, restores fullness and grows your bond.', action:{event:'opening-meal-served',mode:'free',hint:'Open the Kitchen and feed Merlin'}, id:'lesson-6' },
-  { chapterId:'care', chapter:'Care', title:'Ready to help', screen:'academy', target:'[data-feed-result-sheet]', text:'A proper meal supports your companions; different birds need different foods. Your Birdhouse, Kitchen and earned supplies now work together.', id:'opening-care-payoff' },
-  { chapterId:'explore', chapter:'Your next discovery', title:'Your next bird', screen:'scan', target:'#scanHomeActions', text:'Find a real bird, inspect its abilities and recruit it when you can. Deferred discoveries stay waiting. Explore at your own pace.', id:'lesson-26' },
-  { chapterId:'explore', chapter:'Your next discovery', title:'Your world is open', screen:'scan', target:'#playerHomeStand', text:'Enter Alderwing whenever you like. Player Quests introduce training, equipment and villages when you are ready for them.', id:'lesson-27' },
+  { chapterId:'care', chapter:'Care', title:'The right meal', screen:'academy', target:'[data-kitchen-roster-bird="merlin"]', text:'Feed Merlin a small-bird prey ration. It’s the right meal for a little falcon.', action:{event:'opening-meal-served',mode:'free',hint:'Open the Kitchen and feed Merlin'}, id:'lesson-6' },
+  { chapterId:'explore', chapter:'Your next discovery', title:'Your world is open', screen:'scan', target:'#scanHomeActions', text:'Explore at your own pace. Your Player Quests teach training, gear and villages when you’re ready.', id:'lesson-27' },
   { chapterId:'battle', chapter:'The War', title:'Fight the Burbz', screen:'battle', target:'#leagueRival', text:'Burbz are zombie birds. A green Counter tag shows which of your birds has an advantage.', id:'lesson-35' },
   { chapterId:'battle', chapter:'The War', title:'Choose an attack', screen:'battle', target:'#battleStartBtn', text:'Select a bird and move, then a target. Attack shows the expected damage before you commit.', id:'lesson-36' },
   { chapterId:'battle', chapter:'The War', title:'Free a village', screen:'battle', target:'#battleSelect', text:'Open a village on the Map and win its Liberation Battle. Then build a sanctuary birdhouse.', id:'lesson-37' },
@@ -45836,8 +45848,11 @@ function merlinTutorialResumePosition(saved, mode, sequence) {
     if (direct >= 0) return direct;
   }
   const availableChapters = new Set(sequence.map(index => MERLIN_TUTORIAL_STEPS[index].chapterId));
+  // A retired chapter (academy_tour, v469) still held places in the old full
+  // list, so it keeps them here and its saves move on to the next lesson.
+  const liveChapters = new Set(MERLIN_TUTORIAL_STEPS.map(step => step.chapterId));
   const legacy = MERLIN_LEGACY_STEP_CHAPTERS.map((chapter, index) => ({ chapter, index }))
-    .filter(step => mode === 'full' ? availableChapters.has(step.chapter) : step.chapter === mode);
+    .filter(step => mode === 'full' ? availableChapters.has(step.chapter) || !liveChapters.has(step.chapter) : step.chapter === mode);
   let position = Math.max(0, Number(saved.currentStep) || 0);
   if (!saved.careLessonVersion && ['story', 'full'].includes(mode) && position >= 8) position += 3;
   const oldIndex = typeof saved.stepId === 'string' && /^lesson-\d+$/.test(saved.stepId)
@@ -45851,6 +45866,7 @@ function startMerlinTutorial(options = {}) {
   if(document.getElementById('alderwingIntroGuide')||introLaunchTimer||$('introCutsceneOverlay')?.classList.contains('show')||merlinSettingsPause||$('settingsModal')?.classList.contains('show'))return;
   const overlay = $('merlinTutorialOverlay');
   if (!overlay || merlinTutActive) return;
+  if (merlinPlayFlightActive()) merlinFlightSession.stop('lesson', { immediate:true });
   merlinTutMode = options.full ? 'full' : (options.chapterId || 'story');
   merlinTutSequence = options.full ? MERLIN_TUTORIAL_STEPS.map((_, index) => index) : merlinChapterStepIndices(merlinTutMode);
   // The Town Hall lesson needs a town to stand in: renderTownScreen bounces
@@ -46314,9 +46330,20 @@ function endMerlinTutorial(completed, {pause=false}={}) {
   // Guided-flow hand-off. A chapter that ends because the player tapped a nav
   // tab has already switched screens — but the chapter for that screen was
   // suppressed while this one was running, so ask again now that Merlin is
-  // quiet. The Academy tour also walks itself back to the Map for the finale.
+  // quiet — but only inside the same lesson (see Pacing).
   if (completed && merlinTutMode === 'care' && openingCareSatisfied()) commitOpeningFlow({openingCareDone:true});
-  if (completed && typeof maybeStartMerlinChapterForScreen === 'function') {
+  // Pacing: only a lesson's own next chapter follows straight on. Anything
+  // new waits for Merlin's rest, so the player gets time to play.
+  let lessonContinues = false;
+  if (!pause && merlinTutMode !== 'full') {
+    lessonContinues = merlinLessonContinues(merlinTutMode, nextOpeningChapter());
+    if (!lessonContinues) {
+      startMerlinLessonRest();
+      const openingLesson = ['story', 'academy', 'scan', 'companion', 'kitchen_need', 'quests', 'errand', 'care'].includes(merlinTutMode);
+      if (completed && openingLesson && !openingObjective().complete) showToast('Well done! Explore at your own pace. Your next goal waits on Home.');
+    }
+  }
+  if (completed && lessonContinues && typeof maybeStartMerlinChapterForScreen === 'function') {
     const handOffScreen = currentScreen;
     setTimeout(() => { if (!merlinTutActive && currentScreen === handOffScreen) maybeStartMerlinChapterForScreen(handOffScreen, {handoff:true}); }, 1200);
   }
@@ -46345,8 +46372,8 @@ function nextOpeningChapter() {
   const progress = openingProgress(), seen = merlinChaptersSeen();
   switch (progress.stage) {
     case 'birdhouse': return 'academy';
-    case 'discovery': return seen.includes('academy_tour') ? 'scan' : 'academy_tour';
-    case 'companion': return 'birdex';
+    case 'discovery': return 'scan';
+    case 'companion': return 'companion';
     case 'kitchen': return tutorialFlowState().kitchenShortageSeen ? 'errand' : 'kitchen_need';
     case 'errand': return tutorialFlowState().openingSupplyReturnClaimed ? 'errand' : 'quests';
     case 'care': return 'care';
@@ -46355,9 +46382,51 @@ function nextOpeningChapter() {
   return null;
 }
 
+// ---- Pacing: learn, practise, rest (v469) ---------------------------------
+// Raph Koster's Theory of Fun: fun is the brain learning a pattern, and too
+// many new patterns at once read as noise. So after Alderwing each lesson
+// teaches one thing, then Merlin rests while the player practises it. A
+// lesson's own chapters still flow into each other (the Kitchen needs the
+// errand that pays for it). A new lesson waits for the rest to end and for
+// the player to arrive on its screen — or starts at once from the Home goal.
+const MERLIN_LESSON_GROUPS = { story:'birdhouse', academy:'birdhouse', kitchen_need:'kitchen', quests:'kitchen', errand:'kitchen', care:'kitchen' };
+const MERLIN_LESSON_REST_MS = 2 * 60 * 1000;
+const BURBZ_TUTORIAL_REST_KEY = 'burbzTutorialRest:' + BURBZ_TUTORIAL_VERSION;
+function merlinLessonGroup(chapterId) {
+  return Object.prototype.hasOwnProperty.call(MERLIN_LESSON_GROUPS, chapterId) ? MERLIN_LESSON_GROUPS[chapterId] : chapterId;
+}
+// Does the chapter that just ended flow straight into the next one?
+function merlinLessonContinues(endedChapter, nextChapter) {
+  return !!endedChapter && !!nextChapter && merlinLessonGroup(endedChapter) === merlinLessonGroup(nextChapter);
+}
+function merlinLessonResting(now = Date.now()) {
+  let until = 0;
+  try { until = Number(localStorage.getItem(BURBZ_TUTORIAL_REST_KEY)) || 0; } catch (e) {}
+  // A clock set backwards must never stretch a short rest into days.
+  return until > now && until - now <= MERLIN_LESSON_REST_MS;
+}
+function startMerlinLessonRest(now = Date.now()) {
+  try { localStorage.setItem(BURBZ_TUTORIAL_REST_KEY, String(now + MERLIN_LESSON_REST_MS)); } catch (e) {}
+}
+function endMerlinLessonRest() {
+  try { localStorage.removeItem(BURBZ_TUTORIAL_REST_KEY); } catch (e) {}
+}
+// Merlin never talks over his own play flight.
+function merlinPlayFlightActive() {
+  return typeof merlinFlightSession !== 'undefined' && !!merlinFlightSession?.active;
+}
+// The opening lesson that would begin on this screen, if any.
+function merlinOpeningChapterFor(screenName) {
+  const chapterId = nextOpeningChapter();
+  if (!chapterId || merlinChaptersSeen().includes(chapterId)) return null;
+  const first = MERLIN_TUTORIAL_STEPS.find(step => step.chapterId === chapterId);
+  return first && first.screen === screenName ? chapterId : null;
+}
+
 function maybeStartMerlinChapterForScreen(screenName, options = {}) {
   if (typeof merlinNavigationPaused !== 'undefined' && merlinNavigationPaused) return;
   if (merlinTutActive || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
+  if (merlinPlayFlightActive() || (!options.handoff && merlinLessonResting())) return;
   const seen = merlinChaptersSeen();
   if (!seen.includes('story')) return;
   let chapterId = nextOpeningChapter();
@@ -46376,6 +46445,7 @@ function maybeStartMerlinChapterForScreen(screenName, options = {}) {
   setTimeout(() => {
     if (typeof merlinNavigationPaused !== 'undefined' && merlinNavigationPaused) return;
     if (merlinTutActive || currentScreen !== screenName || window.BurbzPlayerHome?.isOpen() || window.BurbzVillageWalk?.isOpen()) return;
+    if (merlinPlayFlightActive()) return;
     if (document.getElementById('questOverlay')?.classList.contains('open') || document.getElementById('birdEquipOverlay')?.classList.contains('show') || document.getElementById('birdInfoModal')?.classList.contains('show')) return;
     startMerlinTutorial({chapterId:startId,resume:true});
   }, 480);
@@ -46385,7 +46455,7 @@ function maybeStartMerlinChapterForScreen(screenName, options = {}) {
 // teach: the villages page once a village stands, the towns page once a
 // town does (or a merge is ready to sign).
 function maybeStartMerlinEmpirePageChapter(pageName) {
-  if (merlinTutActive || currentScreen !== 'village') return;
+  if (merlinTutActive || currentScreen !== 'village' || merlinLessonResting() || merlinPlayFlightActive()) return;
   const seen = merlinChaptersSeen();
   if (!seen.includes('story') || !seen.includes('village')) return;
   let chapterId = null;
