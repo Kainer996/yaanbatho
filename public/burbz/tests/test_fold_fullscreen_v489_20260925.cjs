@@ -44,7 +44,7 @@ test('a folded Fold and a small tablet still tilt into the landscape world',()=>
 test('fold-fullscreen v489 ships the intro under one new pin',()=>{
  const html=read('index.html'),sw=read('sw.js');
  // Later releases ship on top under their own marker; v489 stays in the cache chain.
- const LATER=['academy-garden-birds-v490-20260925','home-hub-v491-20260925','asmr-sound-v492-20260925','quest-lines-v493-20260926'];
+ const LATER=['academy-garden-birds-v490-20260925','home-hub-v491-20260925','asmr-sound-v492-20260925','quest-lines-v493-20260926','photo-merlin-v494-20260926'];
  assert([build,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
  assert(html.includes('<script src="alderwing_intro.js?v='+build+'"></script>'));
  assert.equal([...sw.matchAll(/alderwing_intro\.js\?v=([\w-]+)/g)].filter(m=>m[1]===build).length,3);

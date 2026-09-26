@@ -23,36 +23,50 @@ IDENTITY = ('owner_01234567890', 'request_01234567890', '203.0.113.5')
 
 @pytest.fixture(autouse=True)
 def trusted_route_identity(monkeypatch):
-    # The real Flask identity/proxy boundary is exercised in adapter_v410.
-    monkeypatch.setattr(photo, '_request_identity', lambda: IDENTITY)
+    # The real Flask identity/proxy boundary is exercised in adapter_v410; the
+    # empty form means no place, and no range model is loaded here.
+    monkeypatch.setattr(photo, '_request_identity', lambda: IDENTITY + ({},))
+    monkeypatch.setattr(photo, '_taxonomy_or_none', lambda: None)
 
-def accepted(**overrides):
-    return dict(found=True, accepted=True, verified=True, policy=photo.PHOTO_POLICY,
-                model='gemini-vision', modelName='gemini-2.5-flash', receiptId='a'*64, species='Common Raven',
-                scientificName='Corvus corax', confidence=.96) | overrides
+def reading(**overrides):
+    """A v494 worker reading (the adapter ranks and decides)."""
+    return dict(found=True, accepted=False, verified=False, policy=photo.PHOTO_POLICY,
+                model='gemini-vision', modelName='gemini-3.8-flash', retryable=False, receiptId='a'*64,
+                reason='ranked', liveBird=True, quality='clear', subjectClear=True,
+                fieldMarks=['Wedge-shaped tail in flight', 'Heavy bill and shaggy throat'],
+                candidates=[{'species': 'Common Raven', 'scientificName': 'Corvus corax', 'probability': .96}],
+                otherProbability=.04) | overrides
+
+def accepted():
+    return photo.decide(photo._validate_reading(reading())[0])
 
 @pytest.mark.parametrize('overrides', [
-    {'confidence': n} for n in [True, '0.99', None, .899, float('nan'), float('inf'), 1.01]
-] + [{'accepted': False}, {'verified': False}, {'found': False},
-     {'policy': 'photo-evidence-v393'}, {'model': 'bioclip25-birder-local'}, {'model': 'bioclip2-birder-local'},
-     {'modelName': 'gemini-2.5-pro'}, {'receiptId': ''}, {'receiptId': 'not-a-receipt'},
-     {'scientificName': 'raven'}, {'species': ''}])
+    {'candidates': [{'species': 'Common Raven', 'scientificName': 'Corvus corax', 'probability': p}]}
+    for p in [True, '0.99', None, float('nan'), float('inf'), 1.01]
+] + [{'retryable': True}, {'policy': 'photo-evidence-v393'}, {'model': 'bioclip25-birder-local'},
+     {'model': 'bioclip2-birder-local'}, {'modelName': 'gemini-2.5-pro'}, {'receiptId': ''},
+     {'receiptId': 'not-a-receipt'},
+     {'candidates': [{'species': 'Common Raven', 'scientificName': 'raven', 'probability': .9}]},
+     {'candidates': [{'species': '', 'scientificName': 'Corvus corax', 'probability': .9}]}])
 def test_bad_results_never_carry_species(overrides):
-    result = photo._validate_result(accepted(**overrides))
-    assert not result['found'] and not result['accepted']
-    assert 'species' not in result
+    clean, problem = photo._validate_reading(reading(**overrides))
+    assert clean is None and not problem['found'] and not problem['accepted']
+    assert 'species' not in problem and 'candidates' not in problem
 
 def test_valid_result_preserves_identity_and_score():
-    assert photo._validate_result(accepted()) == accepted()
+    result = accepted()
+    assert result['found'] and result['scientificName'] == 'Corvus corax' and result['confidence'] == .96
+    assert result['receiptId'] == 'a'*64 and result['candidates'][0]['species'] == 'Common Raven'
 
 def test_errors_cannot_smuggle_candidates():
-    result = photo._validate_result(accepted(found=False, message='Try again', allDetections=[accepted()]))
-    assert result['message'] == 'Try again'
-    assert 'species' not in result and 'allDetections' not in result
+    clean, problem = photo._validate_reading(reading(found=False, retryable=True, reason='photo-busy',
+                                                     message='Try again', allDetections=[reading()]))
+    assert clean is None and problem['message'] == 'Try again'
+    assert not {'species', 'allDetections', 'candidates'} & problem.keys()
 
 class Connection:
     status = 200
-    result = accepted()
+    result = reading()
     closed = False
     def request(self, method, path, body, headers):
         assert method == 'POST' and path == '/identify'
@@ -83,7 +97,7 @@ def test_failed_http_never_accepts_even_valid_body(tmp_path, monkeypatch, status
     connection = Connection(); connection.status = status
     monkeypatch.setattr(photo, '_LocalConnection', lambda: connection)
     result = photo.identify_bird_from_image(str(path))
-    assert not result['accepted'] and 'species' not in result
+    assert not result['accepted'] and 'species' not in result and 'candidates' not in result
     assert connection.closed
 
 def test_worker_missing_is_service_error_not_bad_photo(tmp_path, monkeypatch):

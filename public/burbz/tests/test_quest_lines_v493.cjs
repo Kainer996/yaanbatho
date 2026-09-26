@@ -7,6 +7,8 @@ const root=path.resolve(__dirname,'..'),html=fs.readFileSync(path.join(root,'ind
 const css=fs.readFileSync(path.join(root,'scan_home.css'),'utf8'),homeJs=fs.readFileSync(path.join(root,'scan_home.js'),'utf8');
 const gate=require(path.join(root,'onboarding_gate_core.js')),core=require(path.join(root,'scan_home_core.js')),home=require(path.join(root,'player_home_core.js'));
 const BUILD='quest-lines-v493-20260926';
+// Later releases move the page marker and the cache tail on.
+const LATER=['photo-merlin-v494-20260926'];
 const block=(start,end)=>html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start))+end.length);
 const fn=name=>{const m=html.match(new RegExp('function '+name+'\\([^]*?\\n}'));if(!m)throw Error(name);return m[0];};
 
@@ -86,8 +88,8 @@ test('a gold arrow reopens the listening panel while the mic is on',()=>{
 });
 
 test('v493 ships together: build marker, cache and every changed file pinned in each worker list',()=>{
- assert.ok(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
- assert.ok(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));
+ assert.ok([BUILD,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
+ const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];assert.ok(cache.includes('-'+BUILD)&&[BUILD,...LATER].some(b=>cache.endsWith('-'+b)));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js','onboarding_gate_core.js','player_home_core.js']){
   const pin=file+'?v='+BUILD;assert.ok(html.includes(pin),pin);
   assert.equal(sw.split("'./"+pin+"'").length-1,3,pin+' in every worker list');

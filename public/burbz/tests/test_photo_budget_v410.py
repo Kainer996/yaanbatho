@@ -143,16 +143,17 @@ def test_transport_failure_keeps_charge_and_no_provider_retry(ledger):
     assert r['attemptCostNanoGBP']==CALL_LIMIT
     assert len(p.calls)==2
 
-def test_two_verified_views_are_bounded_and_both_charged(ledger):
+def test_one_ranked_reading_is_bounded_and_charged_once(ledger):
     l,_=ledger
-    raw=dict(found=True,species='European Robin',scientificName='Erithacus rubecula',confidence=.98,
-      alternatives=[{'species':'Stonechat','confidence':.1}],evidence=dict(liveBird=True,quality='clear',diagnosticDetailsVisible=True,
-      diagnosticFeatures=['Orange face and breast','Distinctive rounded brown wings'],subjectBox=[20,20,980,980]))
+    raw=dict(liveBird=True,quality='clear',subjectBox=[20,20,980,980],
+      fieldMarks=['Orange face and breast','Distinctive rounded brown wings'],
+      candidates=[{'species':'European Robin','scientificName':'Erithacus rubecula','probability':.98},
+                  {'species':'Stonechat','scientificName':'Saxicola rubicola','probability':.01}],otherProbability=.01)
     p=Provider(raw);result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
-    assert result['found'] and result['verified']
-    paid=[b for a,b in p.calls if a=='generateContent'];assert len(paid)==2
-    assert all(b['generationConfig']['maxOutputTokens']==8192 and b['generationConfig']['thinkingConfig']['thinkingLevel'] == 'low' for b in paid)
-    assert result['attemptCostNanoGBP']==2*cost_for_usage(usage())
+    assert result['found'] and not result['verified'] and result['candidates'][0]['scientificName']=='Erithacus rubecula'
+    paid=[b for a,b in p.calls if a=='generateContent'];assert len(paid)==1
+    assert all(b['generationConfig']['maxOutputTokens']==8192 and b['generationConfig']['thinkingConfig']['thinkingLevel'] == 'medium' for b in paid)
+    assert result['attemptCostNanoGBP']==cost_for_usage(usage())
 
 def test_unknown_usage_trips_global_breaker_and_blocks_already_reserved_stage(ledger):
     l,_=ledger
@@ -232,25 +233,4 @@ def test_new_policy_does_not_replay_previous_model_result(ledger):
     job,_=l.acquire('owner_01234567890','old_request_012345',hashlib.sha256(data).hexdigest(),'caller')
     l.finish(job,{'found':True,'species':'Wrong cached species','policy':'photo-gemini-v410'})
     p=Provider();r=Recognizer(l,p).identify(data,'owner_01234567890','new_request_012345','caller')
-    assert not r['found'] and len(p.calls)==2 and r['policy']=='photo-gemini-v425'
-
-
-def test_original_localization_survives_crop_relative_second_coordinates(ledger):
-    from photo_gemini import _normalise_species_result
-    l,_=ledger
-    raw=dict(found=True,species='Grey Wagtail',scientificName='Motacilla cinerea',confidence=.85,
-             alternatives=[{'species':'Grey Wagtail (adult)','scientificName':'Motacilla cinerea','confidence':.85},
-                           {'species':'Yellow Wagtail','scientificName':'Motacilla flava','confidence':.65}],
-             evidence=dict(liveBird=True,quality='blurred',diagnosticDetailsVisible=True,
-                           diagnosticFeatures=['Long narrow dark tail','Yellow underparts with grey upperparts'],subjectBox=[20,20,980,980]))
-    class TwoViews(Provider):
-        def request(self, action, body, timeout):
-            if action=='generateContent' and any(a=='generateContent' for a,b in self.calls):
-                self.response=json.loads(json.dumps(raw));self.response['evidence']['subjectBox']=[0,0,1,1]
-            return super().request(action,body,timeout)
-    p=TwoViews(raw);result=Recognizer(l,p).identify(jpeg(),'owner_01234567890','request_01234567890','caller')
-    assert result['verified'] and result['scientificName']=='Motacilla cinerea'
-    paid=[b for a,b in p.calls if a=='generateContent']
-    assert len([p for p in paid[1]['contents'][0]['parts'] if 'inlineData' in p])==2
-    raw['alternatives'][0]['scientificName']='Motacilla flava'
-    assert not _normalise_species_result(raw,io.BytesIO(jpeg()))['accepted']
+    assert not r['found'] and len(p.calls)==2 and r['policy']=='photo-gemini-v494'

@@ -24,7 +24,7 @@ test('v485 ships together: build marker, cache, worker lists and loader',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js');
  // Later releases ship on top under their own marker and may move a module's
  // pin on; v485 stays in the cache chain and each list still pins it once.
- const LATER=['village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925','fold-fullscreen-v489-20260925','academy-garden-birds-v490-20260925','home-hub-v491-20260925','asmr-sound-v492-20260925','quest-lines-v493-20260926'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
+ const LATER=['village-folk-v486-20260925','music-rest-v487-20260925','quests-strip-v488-20260925','fold-fullscreen-v489-20260925','academy-garden-birds-v490-20260925','home-hub-v491-20260925','asmr-sound-v492-20260925','quest-lines-v493-20260926','photo-merlin-v494-20260926'],shipped=[BUILD,...LATER],cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
  assert(cache.includes('-'+BUILD)&&shipped.some(b=>cache.endsWith('-'+b)));
  for(const file of ['world_sky.js','village_walk.js','player_home_core.js','player_home.js'])assert.equal(shipped.reduce((n,b)=>n+sw.split("'./"+file+'?v='+b+"'").length-1,0),3,file+' in all three worker lists');

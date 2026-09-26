@@ -4,32 +4,56 @@ const start=html.includes('let photoIdBusy = false;')?html.indexOf('let photoIdB
 const fn=html.slice(start,html.indexOf('\nasync function startCamera()',start));
 const TEST_OWNER='photo_profile_test_12345',TEST_STATE=JSON.stringify({photoProfileId:TEST_OWNER});
 const testIdentity={gameState:{photoProfileId:TEST_OWNER},photoSaveBaseline:TEST_STATE,localStorage:{getItem:()=>TEST_STATE},crypto:{randomUUID:()=>TEST_OWNER+'-request-id'}};
-const accepted=(species='European Robin',scientificName='Erithacus rubecula',confidence=.98)=>({found:true,accepted:true,verified:true,policy:'photo-gemini-v425',model:'gemini-vision',modelName:'gemini-3.8-flash',receiptId:'a'.repeat(64),species,scientificName,confidence});
-async function invoke(result,ok=true){
-  const awards=[],bats=[],toasts=[],button={addEventListener(){},classList:{contains:()=>false,toggle(){}},scrollIntoView(){}};const context={...testIdentity,$:()=>button,closeBirdCropper(){},AbortController,setTimeout,clearTimeout,FormData:class{append(){}},getCurrentPositionForPhotoId:async()=>null,
-    fetch:async()=>({ok,json:async()=>result}),batLabelInIdentifyResult:r=>/bat/i.test(r.species||'')?'bat':'',looksLikeBatLabel:s=>/bat/i.test(s||''),
-    triggerBatEasterEgg:(...a)=>bats.push(a),handleBirdCandidates:(...a)=>awards.push(a),showToast:t=>toasts.push(t),console};
-  vm.createContext(context);vm.runInContext(fn,context);await context.identifyImage({});return {awards,bats,toasts,button};
+// v494: a strong match and a pick-your-bird answer both carry ranked matches.
+// Nothing reaches the Birdex until the player taps This is my bird.
+const accepted=(species='European Robin',scientificName='Erithacus rubecula',confidence=.98)=>({found:true,accepted:true,verified:true,policy:'photo-gemini-v494',model:'gemini-vision',modelName:'gemini-3.8-flash',retryable:false,receiptId:'a'.repeat(64),species,scientificName,confidence,
+  candidates:[{species,scientificName,score:confidence,local:'likely'},{species:'Common Redstart',scientificName:'Phoenicurus phoenicurus',score:.01}]});
+const pickable=(candidates)=>({found:false,accepted:false,verified:false,policy:'photo-gemini-v494',model:'gemini-vision',modelName:'gemini-3.8-flash',retryable:false,receiptId:'b'.repeat(64),reason:'pick-your-bird',message:'Bird detected. Pick your bird from the matches.',candidates});
+function element(){
+  const classes=new Set();
+  return {hidden:true,disabled:false,textContent:'',innerHTML:'',dataset:{},style:{},scrollIntoView(){},
+    classList:{add:(...n)=>n.forEach(x=>classes.add(x)),remove:(...n)=>n.forEach(x=>classes.delete(x)),contains:n=>classes.has(n),toggle:(n,on)=>on?classes.add(n):classes.delete(n)},
+    querySelectorAll(){return (this.innerHTML.match(/data-photo-match=/g)||[]).map(()=>({disabled:false}));},
+    addEventListener(type,fn){this[type]=fn;}};
 }
-test('inconclusive, legacy guesses, bad HTTP and invalid confidences never enter discovery or bat rewards',async()=>{
+async function invoke(result,ok=true){
+  const awards=[],bats=[],toasts=[],elements={};const $=id=>(elements[id]=elements[id]||element());
+  const context={...testIdentity,gameState:{photoProfileId:TEST_OWNER},$,closeBirdCropper(){},AbortController,setTimeout,clearTimeout,FormData:class{append(){}},getCurrentPositionForPhotoId:async()=>null,
+    fetch:async()=>({ok,json:async()=>result}),batLabelInIdentifyResult:r=>/bat/i.test(r.species||'')?'bat':'',looksLikeBatLabel:s=>/bat/i.test(s||''),
+    triggerBatEasterEgg:(...a)=>bats.push(a),handleBirdCandidates:(...a)=>{awards.push(a);return [{species:a[0].species}];},showToast:t=>toasts.push(t),console};
+  vm.createContext(context);vm.runInContext(fn,context);await context.identifyImage({});return {awards,bats,toasts,button:$('captureBtn'),elements,ctx:context};
+}
+test('inconclusive, legacy guesses, bad HTTP and malformed answers never offer a bird or a bat reward',async()=>{
   const clear=accepted();
-  const cases=[{found:false,message:'Bird not found. Try a closer, clearer photo.'},{found:true,species:'Kestrel',confidence:.5},{...clear,accepted:false},{...clear,confidence:.79},{...clear,confidence:Infinity},{...clear,policy:'old'},{found:false,species:'bat'}];
-  for(const raw of cases){const r=await invoke(raw);assert.equal(r.awards.length,0);assert.equal(r.bats.length,0);assert.match(r.toasts[0],/Bird not found|Photo checking/);assert.equal(r.button.disabled,false);}
-  assert.equal((await invoke(clear,false)).awards.length,0);
-  assert.equal((await invoke({...clear,verified:false})).awards.length,0);
-  assert.equal((await invoke({...clear,policy:'photo-evidence-v350'})).awards.length,0);
-  assert.equal((await invoke(clear)).awards.length,1);
+  const cases=[{found:false,message:'Bird not found. Try a closer, clearer photo.'},{found:true,species:'Kestrel',confidence:.5},{...clear,accepted:false},{...clear,policy:'photo-gemini-v425'},
+    {...clear,receiptId:''},{...clear,retryable:true},{...clear,candidates:[]},{...clear,candidates:[{species:'Robin',scientificName:'bad',score:.9}]},
+    {...clear,candidates:[{species:'Robin',scientificName:'Erithacus rubecula',score:Infinity}]},{...clear,scientificName:'Turdus merula'},{found:false,species:'bat'}];
+  for(const raw of cases){const r=await invoke(raw);assert.equal(r.awards.length,0);assert.equal(r.bats.length,0);
+    assert.match(r.toasts[0],/Bird not found|Photo checking/);assert.equal(r.button.disabled,false);assert.equal(r.elements.birdCropMatches?.hidden??true,true);
+    assert.equal(r.ctx.pickPhotoMatch(0),false);assert.equal(r.awards.length,0);}
+});
+test('a strong match waits for This is my bird, and one result gives one bird',async()=>{
+  const r=await invoke(accepted('Common Raven','Corvus corax',.93));
+  assert.equal(r.awards.length,0);assert.equal(r.toasts.length,0);
+  assert.equal(r.elements.birdCropMatches.hidden,false);
+  assert.match(r.elements.birdCropMatches.innerHTML,/Common Raven[\s\S]*Strong match[\s\S]*Likely here[\s\S]*This is my bird/);
+  assert.equal(r.elements.birdCropTitle.textContent,'Best matches');
+  assert.equal(r.ctx.pickPhotoMatch(0),true);
+  assert.equal(JSON.stringify(r.awards[0].slice(0,2)),JSON.stringify([{species:'Common Raven',scientificName:'Corvus corax',confidence:.93},[]]));
+  assert.equal(r.awards[0][2].source,'photo');assert.equal(r.awards[0][2].blob,undefined);
+  assert.equal(r.ctx.pickPhotoMatch(1),false);assert.equal(r.awards.length,1);
+  assert.match(r.toasts[0],/Identified: Common Raven/);
 });
 
 function photoHarness(fetcher, position=async()=>null) {
-  const elements=Object.fromEntries(['captureBtn','photoIdStatus','photoIdMessage','photoIdRetry','birdCropOverlay','birdCropTitle','birdCropHint','birdCropAnalysis','birdCropMessage','birdCropProgress','birdCropRetake','birdCropConfirm','birdCropFullPhoto','birdCropZoom'].map(id=>[id,{hidden:true,classList:{contains:()=>false,toggle(){}},scrollIntoView(){},addEventListener(type,fn){this[type]=fn;}}]));
-  const awards=[],timers=new Map();let serial=0;
-  const ctx={...testIdentity,$:id=>elements[id],closeBirdCropper(){},AbortController,FormData:class{append(){}},getCurrentPositionForPhotoId:position,
+  const elements=Object.fromEntries(['captureBtn','photoIdStatus','photoIdMessage','photoIdRetry','birdCropOverlay','birdCropTitle','birdCropHint','birdCropAnalysis','birdCropMessage','birdCropProgress','birdCropRetake','birdCropConfirm','birdCropFullPhoto','birdCropZoom','birdCropMatches'].map(id=>[id,element()]));
+  const awards=[],timers=new Map(),forms=[];let serial=0;
+  const ctx={...testIdentity,gameState:{photoProfileId:TEST_OWNER},$:id=>elements[id],closeBirdCropper(){},AbortController,FormData:class{constructor(){this.values=[];forms.push(this);}append(...a){this.values.push(a);}},getCurrentPositionForPhotoId:position,
     fetch:fetcher,setTimeout:fn=>{timers.set(++serial,fn);return serial;},clearTimeout:id=>timers.delete(id),
     batLabelInIdentifyResult:()=>'',looksLikeBatLabel:()=>false,triggerBatEasterEgg(){},
-    handleBirdCandidates:(...a)=>awards.push(a),showToast(){},console:{log(){}}};
+    handleBirdCandidates:(...a)=>{awards.push(a);return [{species:a[0].species}];},showToast(){},console:{log(){}}};
   vm.createContext(ctx);vm.runInContext(fn,ctx);
-  return {ctx,elements,awards,timers,expire:()=>[...timers.values()].forEach(fn=>fn())};
+  return {ctx,elements,awards,timers,forms,expire:()=>[...timers.values()].forEach(fn=>fn())};
 }
 test('failure stays visible after the toast, and retry uses the same photo through the discovery gate',async()=>{
   let calls=0;const blob={id:'original-photo'};
@@ -40,6 +64,8 @@ test('failure stays visible after the toast, and retry uses the same photo throu
   assert.equal(h.elements.photoIdRetry.hidden,false);
   assert.equal(h.awards.length,0);
   await h.ctx.identifyImage(vm.runInContext('photoIdRetryBlob',h.ctx));
+  assert.equal(h.awards.length,0);assert.equal(h.elements.birdCropMatches.hidden,false);
+  assert.equal(h.ctx.pickPhotoMatch(0),true);
   assert.equal(h.awards.length,1);assert.equal(h.awards[0][2].blob,undefined);
   assert.equal(h.elements.photoIdRetry.hidden,true);assert.equal(h.elements.captureBtn.disabled,false);
   assert.equal(h.timers.size,0);
@@ -54,7 +80,7 @@ for(const stage of ['upload','body'])test(`${stage} stalls time out and late res
   assert.equal(h.elements.photoIdRetry.hidden,false);assert.equal(h.elements.captureBtn.disabled,false);
   release({ok:true,json:async()=>accepted()});
   for(let i=0;i<8;i++)await Promise.resolve();
-  assert.equal(h.awards.length,0);assert.equal(h.timers.size,0);
+  assert.equal(h.awards.length,0);assert.equal(h.ctx.pickPhotoMatch(0),false);assert.equal(h.timers.size,0);
 });
 test('network rejection clears busy state and duplicate taps make only one request',async()=>{
   let rejectRequest,calls=0;const h=photoHarness(()=>{calls++;return new Promise((_,reject)=>rejectRequest=reject);});
@@ -78,7 +104,7 @@ test('analysis remains beside the full photo, has no invented percentage, and ca
   assert.match(h.elements.birdCropMessage.textContent,/cancelled/);
   release({ok:true,json:async()=>accepted('Raven','Corvus corax',.99)});
   for(let i=0;i<8;i++)await Promise.resolve();
-  assert.equal(h.awards.length,0);assert.equal(h.timers.size,0);
+  assert.equal(h.awards.length,0);assert.equal(h.elements.birdCropMatches.hidden,true);assert.equal(h.timers.size,0);
 });
 test('framing can pass 8x, preserves its anchor and never crops outside original pixels',()=>{
   const cropStart=html.indexOf('const birdCrop =');
@@ -102,14 +128,14 @@ test('framing can pass 8x, preserves its anchor and never crops outside original
 function cropUploadHarness({width=720,height=240,delayEncoding=false,fetcher}={}) {
   const ids=['captureBtn','photoIdStatus','photoIdMessage','photoIdRetry','birdCropOverlay',
     'birdCropTitle','birdCropHint','birdCropAnalysis','birdCropMessage','birdCropProgress',
-    'birdCropRetake','birdCropConfirm','birdCropFullPhoto','birdCropZoom','birdCropClose','birdCropStage','birdCropImg'];
+    'birdCropRetake','birdCropConfirm','birdCropFullPhoto','birdCropZoom','birdCropClose','birdCropStage','birdCropImg','birdCropMatches'];
   const elements=Object.fromEntries(ids.map(id=>{
     const classes=new Set();
     return [id,{dataset:{},style:{},disabled:false,hidden:false,textContent:'',
       classList:{add:(...names)=>names.forEach(n=>classes.add(n)),remove:(...names)=>names.forEach(n=>classes.delete(n)),
         contains:n=>classes.has(n),toggle:(n,on)=>on?classes.add(n):classes.delete(n)},
-      getBoundingClientRect:()=>({width:300,left:0,top:0}),scrollIntoView(){},
-      addEventListener(type,listener){this[type]=listener;}}];
+      getBoundingClientRect:()=>({width:300,left:0,top:0}),scrollIntoView(){},innerHTML:'',
+      querySelectorAll(){return [];},addEventListener(type,listener){this[type]=listener;}}];
   }));
   const encodings=[],uploads=[],awards=[],previews=[],canvases=[];
   const source={width,height,closed:false,close(){this.closed=true;},
@@ -124,7 +150,7 @@ function cropUploadHarness({width=720,height=240,delayEncoding=false,fetcher}={}
       }};
     canvases.push(out);return out;
   }
-  const ctx={...testIdentity,$:id=>elements[id],document:{createElement:()=>canvas()},CAPTURE_MAX_SIDE:3072,
+  const ctx={...testIdentity,gameState:{photoProfileId:TEST_OWNER},$:id=>elements[id],document:{createElement:()=>canvas()},CAPTURE_MAX_SIDE:3072,
     updateNativePreviewFromCanvas:c=>previews.push(c),showNativePhotoPreview:b=>previews.push(b),
     URL:{revokeObjectURL(){}},window:{addEventListener(){}},SFX:{tap(){}},openNativeCamera(){},
     AbortController,setTimeout,clearTimeout,FormData:class{constructor(){this.values=[];}append(...args){this.values.push(args);}},
@@ -132,7 +158,7 @@ function cropUploadHarness({width=720,height=240,delayEncoding=false,fetcher}={}
       uploads.push(options.body.values.find(row=>row[0]==='image')[1]);
       return fetcher?fetcher(url,options):{ok:true,json:async()=>accepted('European herring gull','Larus argentatus',.99)};
     },batLabelInIdentifyResult:()=>'',looksLikeBatLabel:()=>false,triggerBatEasterEgg(){},
-    handleBirdCandidates:(...args)=>awards.push(args),showToast(){},console:{log(){}}};
+    handleBirdCandidates:(...args)=>{awards.push(args);return [{species:args[0].species}];},showToast(){},console:{log(){}}};
   vm.createContext(ctx);
   const start=html.indexOf('const birdCrop =');
   const cropCode=html.slice(start,html.indexOf('\nfunction updateNativePreviewFromCanvas(',start));
@@ -153,6 +179,7 @@ test('Use full photo sends every original edge and aspect ratio through the same
   assert.equal(blob.source,h.source);
   assert.deepEqual(blob.pixel(0,0),[255,0,0,0]);
   assert.deepEqual(blob.pixel(719,239),[0,0,255,239]);
+  assert.equal(h.awards.length,0);assert.equal(h.ctx.pickPhotoMatch(0),true);
   assert.equal(h.awards.length,1);assert.equal(h.awards[0][2].blob,undefined);
   assert.equal(h.previews[0],blob);assert.equal(h.source.closed,true);
 });
@@ -195,7 +222,7 @@ test('an old full-photo encoding cannot unlock a replacement photo or upload aft
   assert.equal(h.elements.birdCropFullPhoto.disabled,true);assert.equal(h.elements.birdCropConfirm.disabled,true);
   assert.equal(h.uploads.length,0);
   h.encodings.shift()();await next;
-  assert.equal(h.uploads.length,1);assert.equal(h.uploads[0].source,replacement);assert.equal(h.awards.length,1);
+  assert.equal(h.uploads.length,1);assert.equal(h.uploads[0].source,replacement);assert.equal(h.ctx.pickPhotoMatch(0),true);assert.equal(h.awards.length,1);
 });
 
 test('full-photo cancellation during real identifyImage flow blocks a late accepted response',async()=>{
@@ -207,22 +234,100 @@ test('full-photo cancellation during real identifyImage flow blocks a late accep
   h.elements.birdCropClose.click();await pending;
   release({ok:true,json:async()=>accepted('European herring gull','Larus argentatus',.99)});
   for(let i=0;i<8;i++)await Promise.resolve();
-  assert.equal(h.awards.length,0);assert.equal(h.elements.captureBtn.disabled,false);
+  assert.equal(h.awards.length,0);assert.equal(h.ctx.pickPhotoMatch(0),false);assert.equal(h.elements.captureBtn.disabled,false);
 });
 
-test('receipt-backed tentative species remain visible without awarding a discovery',async()=>{
-  const result={...accepted('Grey Wagtail','Motacilla cinerea',.85),found:false,accepted:false,verified:false,retryable:false,reason:'verification-disagrees',suggestions:[{species:'Grey Wagtail',scientificName:'Motacilla cinerea'}]};
+test('one photo answer gives one bird, even when the same photo is checked again',async()=>{
+  const h=photoHarness(async()=>({ok:true,json:async()=>accepted('Carrion Crow','Corvus corone',.9)}));
+  await h.ctx.identifyImage({});assert.equal(h.ctx.pickPhotoMatch(0),true);assert.equal(h.awards.length,1);
+  assert.equal(h.ctx.gameState.photoReceipts['a'.repeat(64)].species,'Carrion Crow');
+  await h.ctx.identifyImage({});   // the ledger replays the same receipted answer
+  assert.equal(h.ctx.pickPhotoMatch(1),false);assert.equal(h.awards.length,1);
+  assert.match(h.elements.birdCropMessage.textContent,/already chose Carrion Crow/);
+});
+test('the location switch is checked again at upload',async()=>{
+  const position=async()=>({coords:{latitude:53.87,longitude:-2.39}});
+  const h=photoHarness(async()=>({ok:true,json:async()=>accepted()}),position);
+  let on=true;h.ctx.soundLocationAssistEnabled=()=>on;
+  h.ctx.startPhotoPlace({lastModified:Date.now()},false);on=false;await h.ctx.identifyImage({});
+  const sent=Object.fromEntries(h.forms[0].values.filter(v=>typeof v[1]==='string'));
+  assert.equal(sent.lat,undefined);assert.equal(sent.photoContract,'merlin-v494');
+});
+test('a library photo needs its camera capture time to carry a place',async()=>{
+  const position=async()=>({coords:{latitude:53.87,longitude:-2.39}});
+  const exif=(date)=>{ // minimal JPEG: SOI, APP1 Exif with IFD0 -> ExifIFD -> DateTimeOriginal
+    const b=new Uint8Array(200),v=new DataView(b.buffer);v.setUint16(0,0xFFD8);v.setUint16(2,0xFFE1);v.setUint16(4,120);
+    v.setUint32(6,0x45786966);const T=12;v.setUint16(T,0x4949);v.setUint16(T+2,42,true);v.setUint32(T+4,8,true);
+    v.setUint16(T+8,1,true);v.setUint16(T+10,0x8769,true);v.setUint16(T+12,4,true);v.setUint32(T+14,1,true);v.setUint32(T+18,26,true);
+    v.setUint16(T+26,1,true);v.setUint16(T+28,0x9003,true);v.setUint16(T+30,2,true);v.setUint32(T+32,20,true);v.setUint32(T+36,44,true);
+    const p=n=>String(n).padStart(2,'0'),s=date.getFullYear()+':'+p(date.getMonth()+1)+':'+p(date.getDate())+' '+p(date.getHours())+':'+p(date.getMinutes())+':'+p(date.getSeconds());
+    for(let i=0;i<19;i++)b[T+44+i]=s.charCodeAt(i);
+    return {lastModified:Date.now(),slice:()=>({arrayBuffer:async()=>b.buffer})};
+  };
+  const run=async file=>{const h=photoHarness(async()=>({ok:true,json:async()=>accepted()}),position);
+    h.ctx.startPhotoPlace(file,true);await h.ctx.identifyImage({});return Object.fromEntries(h.forms[0].values.filter(v=>typeof v[1]==='string'));};
+  assert.equal((await run(exif(new Date()))).lat,'53.87');
+  assert.equal((await run(exif(new Date(Date.now()-5*24*3600*1000)))).lat,undefined);   // old, though picked just now
+  assert.equal((await run({lastModified:Date.now(),slice:()=>({arrayBuffer:async()=>new ArrayBuffer(4)})})).lat,undefined);
+});
+test('a pick-your-bird answer lists local matches first and the player chooses one',async()=>{
+  const result=pickable([{species:'Common Raven',scientificName:'Corvus corax',score:.62,local:'likely',plumage:'adult'},
+    {species:'Anhinga',scientificName:'Anhinga anhinga',score:.03,local:'unexpected'},
+    {species:'Grey Heron',scientificName:'Ardea cinerea',score:.2,local:'likely'}]);
   const h=photoHarness(async()=>({ok:false,json:async()=>result}));await h.ctx.identifyImage({});
-  assert.match(h.elements.photoIdMessage.textContent,/Possible bird: Grey Wagtail.*Not confirmed or added to Birdex/);
+  const cards=h.elements.birdCropMatches.innerHTML;
+  assert.match(cards,/Common Raven[\s\S]*Good match[\s\S]*Likely here[\s\S]*Adult/);
+  assert.match(cards,/Anhinga[\s\S]*Possible match[\s\S]*Not expected here/);
+  assert.equal((cards.match(/This is my bird<\/button>/g)||[]).length,3);
+  assert.match(h.elements.birdCropMessage.textContent,/Tap This is my bird/);
   assert.equal(h.awards.length,0);
-  for(const change of [{receiptId:''},{policy:'photo-gemini-v410'},{retryable:true}])assert(!h.ctx.photoResultMessage({...result,...change}).includes('Possible bird'));
-  assert.equal((await invoke(accepted('Grey Wagtail','Motacilla cinerea',.85))).awards.length,1);
-  assert.equal((await invoke(accepted('Grey Wagtail','Motacilla cinerea',.79))).awards.length,0);
+  assert.equal(h.ctx.pickPhotoMatch(2),true);
+  assert.equal(h.awards[0][0].scientificName,'Ardea cinerea');assert.equal(h.ctx.pickPhotoMatch(0),false);
+  for(const change of [{receiptId:''},{policy:'photo-gemini-v425'},{retryable:true},{reason:'no-bird'}])
+    assert.equal(h.ctx.photoMatchesFrom({...result,...change}).length,0);
+});
+test('a renamed or US-spelled bird still finds the Burbz bird',async()=>{
+  const profiles={'Barn Owl':{name:'Barn Owl',scientificName:'Tyto alba'},'Grey Heron':{name:'Grey Heron',scientificName:'Ardea cinerea'},
+    'Australian Wood Duck':{name:'Australian Wood Duck',scientificName:''}};
+  assert.equal(vm.runInContext('(profiles=>{findSpeciesProfile=n=>profiles[n]||null;return photoMatchProfile({species:"Maned Duck",scientificName:"Chenonetta jubata"})?.name})',photoHarness(async()=>({})).ctx)(profiles),'Australian Wood Duck');
+  const h=photoHarness(async()=>({ok:false,json:async()=>pickable([
+    {species:'Eastern Barn Owl',modelSpecies:'Barn Owl',scientificName:'Tyto javanica',score:.6,local:'likely'},
+    {species:'Gray Heron',scientificName:'Ardea cinerea',score:.2,local:'likely'}])}));
+  h.ctx.findSpeciesProfile=name=>profiles[name]||null;
+  await h.ctx.identifyImage({});
+  const cards=h.elements.birdCropMatches.innerHTML;
+  assert(!cards.includes('Not in Burbz yet'));assert.match(cards,/Barn Owl[\s\S]*Grey Heron/);
+  assert.equal(h.ctx.pickPhotoMatch(0),true);
+  assert.equal(JSON.stringify(h.awards[0][0]),JSON.stringify({species:'Barn Owl',scientificName:'Tyto alba',confidence:.6}));
+  assert.equal(h.awards[0][2].confirmedByPlayer,true);
+});
+test('card text is escaped and birds outside Burbz cannot be chosen',async()=>{
+  const r=await invoke(pickable([{species:'<img src=x onerror=alert(1)>',scientificName:'Corvus corax',score:.5}]));
+  assert(!r.elements.birdCropMatches.innerHTML.includes('<img src=x'));
+  assert.match(r.elements.birdCropMatches.innerHTML,/Not in Burbz yet[\s\S]*disabled/);
+});
+test('a fresh camera photo carries a rounded place and week; an old library photo carries none',async()=>{
+  const position=async()=>({coords:{latitude:53.871234,longitude:-2.391234}});
+  const fresh=photoHarness(async()=>({ok:true,json:async()=>accepted()}),position);
+  fresh.ctx.startPhotoPlace({lastModified:Date.now()},false);await fresh.ctx.identifyImage({});
+  const sent=Object.fromEntries(fresh.forms[0].values.filter(v=>typeof v[1]==='string'));
+  assert.equal(sent.photoContract,'merlin-v494');assert.equal(sent.lat,'53.87');assert.equal(sent.lon,'-2.39');
+  assert.equal(Number(sent.photoWeek),vm.runInContext('birdnetWeekOf(new Date())',fresh.ctx));
+  const old=photoHarness(async()=>({ok:true,json:async()=>accepted()}),position);
+  old.ctx.startPhotoPlace({lastModified:Date.now()-3*24*3600*1000},true);await old.ctx.identifyImage({});
+  const oldSent=Object.fromEntries(old.forms[0].values.filter(v=>typeof v[1]==='string'));
+  assert.equal(oldSent.photoContract,'merlin-v494');assert.equal(oldSent.lat,undefined);assert.equal(oldSent.photoWeek,undefined);
+  assert.equal(vm.runInContext('birdnetWeekOf(new Date(2026,8,25))',old.ctx),36);
+  assert.equal(vm.runInContext('birdnetWeekOf(new Date(2026,0,1))',old.ctx),1);
+  assert.equal(vm.runInContext('birdnetWeekOf(new Date(2026,11,31))',old.ctx),48);
 });
 
 
 test('full-photo recognition preserves bounded original file bytes and clears them on close',async()=>{
   const h=cropUploadHarness();const original={size:2048,type:'image/jpeg',originalPixels:true};
   vm.runInContext('birdCrop.originalFile = null',h.ctx);h.ctx.original=original;vm.runInContext('birdCrop.originalFile = original',h.ctx);
-  await h.ctx.confirmBirdCrop(true);assert.equal(h.uploads[0],original);assert.equal(vm.runInContext('birdCrop.originalFile',h.ctx),null);
+  await h.ctx.confirmBirdCrop(true);assert.equal(h.uploads[0],original);
+  // The matches keep the photo open for another framing; choosing a bird closes it.
+  assert.equal(vm.runInContext('birdCrop.originalFile',h.ctx),original);
+  assert.equal(h.ctx.pickPhotoMatch(0),true);assert.equal(vm.runInContext('birdCrop.originalFile',h.ctx),null);
 });

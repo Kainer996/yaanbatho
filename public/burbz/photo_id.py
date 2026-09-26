@@ -1,4 +1,14 @@
-"""Existing Flask route adapter for the capped Gemini Unix worker."""
+"""Existing Flask route adapter for the capped Gemini Unix worker.
+
+v494 identifies birds the way Merlin does. The worker asks Gemini for a ranked
+list of species. This adapter adds where and when: the BirdNET Geomodel that
+already runs in this Flask process for sound says which birds live near the
+player this week. Gemini sees that local list, and its ranking is re-weighed by
+the same range prior, so an Anhinga cannot win in Lancashire. Names are mapped
+onto one taxonomy, so Corvus monedula and Coloeus monedula are one jackdaw.
+The player then picks the bird ("This is my bird"); a strong, local, clear
+match is also marked found for the server route and the release proof.
+"""
 from __future__ import annotations
 import base64
 import ipaddress
@@ -8,12 +18,41 @@ import math
 import os
 import re
 import socket
+import threading
+import unicodedata
 
 MAX_IMAGE_PIXELS = 24_000_000
 ANALYSIS_MAX_SIDE = 2560
-PHOTO_POLICY = "photo-gemini-v425"
+PHOTO_POLICY = "photo-gemini-v494"
+PHOTO_CONTRACT = "merlin-v494"
+MODEL_NAME = "gemini-3.8-flash"
 MIN_CONFIDENCE = .80
+MIN_MARGIN = .20
+MODEL_FLOOR = .50
+# BirdNET Geomodel occurrence for the place and week. At or above LIKELY the
+# bird is expected there (Merlin's "likely" list); below it the weight falls
+# away linearly to a floor, so a vagrant stays pickable but cannot win on a
+# model's guess alone. A weight only ever lowers a score: what the range takes
+# away goes to "something else", never onto the birds that remain.
+LIKELY = .05
+RARE = .005
+FLOOR = .15
+UNKNOWN_RANGE_WEIGHT = .5
+CHECKLIST_MIN = .03
+CHECKLIST_SIZE = 300
+MIN_SHOWN = .02
+SHOWN_BY_MODEL = .10
+# Kept and domestic birds turn up anywhere: a range map says nothing of them.
+DOMESTIC = {"gallus gallus", "anser cygnoides", "numida meleagris", "melopsittacus undulatus",
+            "nymphicus hollandicus", "cairina moschata", "pavo cristatus", "serinus canaria",
+            "meleagris gallopavo", "coturnix japonica"}
+MAX_SHOWN = 5
 INCONCLUSIVE = "Bird not found. We couldn’t confirm the species. Try a closer, clearer view of the bird."
+PICK = "Bird detected. Pick your bird from the matches, or try another angle showing its head, wings and tail."
+SCIENTIFIC = re.compile(r"[A-Z][a-z]+ [a-z][a-z-]+")
+MONTHS = ("January", "February", "March", "April", "May", "June", "July",
+          "August", "September", "October", "November", "December")
+
 
 def normalise_image_file(source_path: str, dest_path: str) -> None:
     """Validate an uploaded image, strip EXIF, and save a bounded RGB JPEG."""
@@ -39,9 +78,10 @@ def normalise_image_file(source_path: str, dest_path: str) -> None:
     except Exception as exc:
         raise ValueError("That image could not be read — try another camera capture.") from exc
 
+
 def _abstain(reason, message=None):
     return {"found": False, "accepted": False, "verified": False, "policy": PHOTO_POLICY,
-            "model": "gemini-vision", "modelName":"gemini-3.8-flash", "retryable":True, "reason": reason,
+            "model": "gemini-vision", "modelName": MODEL_NAME, "retryable": True, "reason": reason,
             "message": message or INCONCLUSIVE}
 
 
@@ -55,37 +95,394 @@ class _LocalConnection(http.client.HTTPConnection):
         self.sock.connect(os.environ.get("BURBZ_PHOTO_SOCKET", "/run/burbz-photo/recognizer.sock"))
 
 
-def _validate_result(result):
-    if not isinstance(result, dict) or result.get("policy") != PHOTO_POLICY or result.get("model") != "gemini-vision" or result.get("modelName") != "gemini-3.8-flash":
-        return _abstain("invalid-worker-result")
+# --------------------------------------------------------------------------
+# One taxonomy: the BirdNET Geomodel's Clements/eBird labels
+# --------------------------------------------------------------------------
+
+def _common_key(name):
+    text = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower()
+    text = text.replace("grey", "gray").replace("'", "").replace("-", " ")
+    return " ".join(re.findall(r"[a-z]+", text))
+
+
+def _head(name):
+    words = _common_key(name).split()
+    return words[-1] if words else ""
+
+
+def _stem(epithet):
+    # Latin gender endings move with the genus: urbica/urbicum, torquata/torquatus.
+    word = epithet.lower()
+    for ending in ("us", "um", "a", "is", "e", "i"):
+        if len(word) > 4 and word.endswith(ending):
+            return word[:-len(ending)]
+    return word
+
+
+# Old names that now cover more than one species. The place decides which one
+# the player saw, as Merlin's range data would: a "Saxicola torquatus" in
+# Lancashire is a European Stonechat, a "Larus argentatus" in Maine an American
+# Herring Gull. Without a place the model's own name stands.
+SPLITS = {
+    "saxicola torquatus": ("Saxicola rubicola", "Saxicola torquatus", "Saxicola maurus"),
+    "saxicola torquata": ("Saxicola rubicola", "Saxicola torquatus", "Saxicola maurus"),
+    "circus cyaneus": ("Circus cyaneus", "Circus hudsonius"),
+    "melanitta nigra": ("Melanitta nigra", "Melanitta americana"),
+    "melanitta fusca": ("Melanitta fusca", "Melanitta deglandi", "Melanitta stejnegeri"),
+    "calonectris diomedea": ("Calonectris diomedea", "Calonectris borealis"),
+    "hirundo daurica": ("Cecropis rufula", "Cecropis daurica"),
+    "cecropis daurica": ("Cecropis rufula", "Cecropis daurica"),
+    "larus argentatus": ("Larus argentatus", "Larus smithsonianus"),
+    "anser fabalis": ("Anser fabalis", "Anser serrirostris"),
+    "gallinago gallinago": ("Gallinago gallinago", "Gallinago delicata"),
+    "pica pica": ("Pica pica", "Pica hudsonia"),
+    "troglodytes troglodytes": ("Troglodytes troglodytes", "Troglodytes hiemalis", "Troglodytes pacificus"),
+    "certhia familiaris": ("Certhia familiaris", "Certhia americana"),
+    "lanius excubitor": ("Lanius excubitor", "Lanius borealis"),
+    "tyto alba": ("Tyto alba", "Tyto furcata", "Tyto javanica"),
+    "gallinula chloropus": ("Gallinula chloropus", "Gallinula galeata"),
+    "aphelocoma californica": ("Aphelocoma californica", "Aphelocoma woodhouseii"),
+    "cyanopica cyanus": ("Cyanopica cyanus", "Cyanopica cooki"),
+}
+# Species since merged into another: they take the parent's name and range.
+MERGED = {
+    "corvus caurinus": "Corvus brachyrhynchos",
+    "gallus domesticus": "Gallus gallus",
+}
+# Species the range model folds into another. They keep their own name (Burbz
+# lists Lesser Redpoll) but borrow the parent's range.
+LUMPS = {
+    "acanthis cabaret": "Acanthis flammea",
+    "acanthis hornemanni": "Acanthis flammea",
+    "ardea modesta": "Ardea alba",
+    "thalasseus acuflavida": "Thalasseus sandvicensis",
+}
+# The pinned label file calls Tyto alba "American Barn Owl".
+LABEL_FIXES = {"Tyto alba": "Western Barn Owl"}
+
+
+class Taxonomy:
+    """Map any model name onto one label, never by fuzzy guessing.
+
+    The model's common name is the surer half: models keep up with English
+    names better than with Latin ones, so "Rainbow Lorikeet, Trichoglossus
+    haematodus" is the Rainbow Lorikeet (T. moluccanus), not the Coconut
+    Lorikeet that now carries that binomial. Otherwise: exact scientific name,
+    a genus move (same species epithet plus the same bird word: Corvus monedula
+    "Western Jackdaw" -> Coloeus monedula), then merged and lumped species.
+    When the place says the named bird does not live there (below RARE) and a
+    sister species of the same split does (at or above LIKELY), the sister is
+    taken: Herring Gull in Maine, Stonechat in Lancashire, Cattle Egret in
+    Sydney. Sisters come from the shared eBird code stem (categr1/categr2) and
+    from SPLITS. Returns (position, scientific, common, split), where split is
+    True when the place chose another species than the model named.
+    """
+
+    def __init__(self, rows):
+        self.rows = []
+        self.by_scientific, self.by_common, self.by_stem, self.family = {}, {}, {}, {}
+        # Most non-birds carry numeric GBIF ids, but so do 21 birds; a numeric
+        # row is a bird when its genus is also an eBird-coded bird genus.
+        bird_genera = {s.split()[0] for code, s, _ in rows if code and not code.isdigit() and len(s.split()) == 2}
+        for position, (code, scientific, common) in enumerate(rows):
+            common = LABEL_FIXES.get(scientific, common)
+            bird = bool(code) and len(scientific.split()) == 2 and (
+                not code.isdigit() or scientific.split()[0] in bird_genera)
+            self.rows.append((scientific, common, bird))
+            if not bird:
+                continue
+            entry = (position, scientific, common, False)
+            self.by_scientific.setdefault(scientific.lower(), entry)
+            self.by_common.setdefault(_common_key(common), entry)
+            self.by_stem.setdefault(_stem(scientific.split()[1]), []).append(entry)
+            if not code.isdigit():
+                self.family.setdefault(re.sub(r"\d+$", "", code), []).append(entry)
+        self.stems = {e[0]: s for s, members in self.family.items() for e in members}
+
+    def _sisters(self, entry, key):
+        genus = entry[1].split()[0]
+        stem = self.stems.get(entry[0])
+        sisters = [e for e in self.family.get(stem, []) if e[1].split()[0] == genus] if stem else []
+        return sisters + [self.by_scientific[n.lower()] for n in SPLITS.get(key, ()) if n.lower() in self.by_scientific]
+
+    def match(self, scientific, common, place=None):
+        key = (scientific or "").lower()
+        by_scientific = self.by_scientific.get(key)
+        by_common = self.by_common.get(_common_key(common)) if common else None
+        base = by_common or by_scientific
+        if base is None:
+            words = (scientific or "").split()
+            if len(words) == 2 and common:
+                same = [e for e in self.by_stem.get(_stem(words[1]), []) if _head(e[2]) == _head(common)]
+                if len(same) == 1:
+                    base = same[0]
+        if base is None and key in MERGED:
+            parent = self.by_scientific.get(MERGED[key].lower())
+            return parent[:3] + (True,) if parent else None
+        if base is None:
+            parent = self.by_scientific.get(LUMPS.get(key, "").lower())
+            return (parent[0], scientific, common, False) if parent else None
+        if place is None:
+            return base
+        occurrence = lambda e: place.occurrence(e[0]) or 0.0
+        if occurrence(base) >= RARE:
+            return base
+        options = self._sisters(base, key) + ([by_scientific] if by_scientific else [])
+        best = max(options, key=occurrence, default=base)
+        if best[0] != base[0] and occurrence(best) >= LIKELY:
+            return best[:3] + (True,)
+        return base
+
+
+_taxonomy = None
+_taxonomy_lock = threading.Lock()
+
+
+def _geo_provider():
+    from sound_id import birdnet_v3_provider as provider
+    if not provider._env_flag("BURBZ_BIRDNET_V3_GEO", True) or provider._load_geo() is None:
+        return None
+    return provider
+
+
+def _load_taxonomy():
+    """Read the exact, checksummed geomodel labels once."""
+    global _taxonomy
+    if _taxonomy is not None:
+        return _taxonomy
+    with _taxonomy_lock:
+        if _taxonomy is None:
+            provider = _geo_provider()
+            if provider is None:
+                return None
+            path = provider._resolve_asset("BURBZ_BIRDNET_V3_GEO_LABELS_PATH", provider.GEO_LABELS_FILENAME, "")
+            provider._verify_asset(path, provider.GEO_LABELS_SHA256, "BirdNET V3 geomodel labels")
+            rows = []
+            with open(path, encoding="utf-8") as handle:
+                for line in handle:
+                    parts = line.rstrip("\n").split("\t")
+                    rows.append((parts[0].strip(), parts[1].strip() if len(parts) > 1 else "",
+                                 parts[2].strip() if len(parts) > 2 else ""))
+            _taxonomy = Taxonomy(rows)
+    return _taxonomy
+
+
+def _taxonomy_or_none():
+    try:
+        return _load_taxonomy()
+    except Exception:
+        return None  # The range model is an enhancement; photos still work.
+
+
+def _season_week(week):
+    """One week per early/mid/late part of a month, as the season is told."""
+    month, part = divmod(week - 1, 4)
+    return month * 4 + (1, 2, 2, 4)[part]
+
+
+def _coarse(value):
+    return round(value * 2) / 2
+
+
+class Place:
+    """Occurrence per geomodel label for one rounded place and week.
+
+    `probabilities` (0.1 degree, exact week) weigh the ranking here on the
+    server. `coarse` (the half-degree cell and the season's week) builds the
+    list Gemini sees, so the list reveals no more than the region and season
+    it is sent with: the geomodel is public and could be re-run.
+    """
+
+    def __init__(self, lat, lon, week, probabilities, taxonomy, coarse=None):
+        self.lat, self.lon, self.week = lat, lon, week
+        self.probabilities, self.taxonomy = probabilities, taxonomy
+        self.coarse = probabilities if coarse is None else coarse
+
+    def occurrence(self, position):
+        if position is None or position >= len(self.probabilities):
+            return None
+        return float(self.probabilities[position])
+
+    def checklist(self):
+        rows = [(p, float(self.coarse[p])) for p, (_, _, bird) in enumerate(self.taxonomy.rows)
+                if bird and p < len(self.coarse) and float(self.coarse[p]) >= CHECKLIST_MIN]
+        rows.sort(key=lambda item: -item[1])
+        return [[self.taxonomy.rows[p][1], self.taxonomy.rows[p][0]] for p, _ in rows[:CHECKLIST_SIZE]
+                if self.taxonomy.rows[p][1] and SCIENTIFIC.fullmatch(self.taxonomy.rows[p][0])]
+
+    def context(self):
+        # Gemini gets the place to half a degree (about 50 km) and the week.
+        lat, lon = _coarse(self.lat), _coarse(self.lon)
+        region = "near %.1f°%s, %.1f°%s" % (abs(lat), "N" if lat >= 0 else "S", abs(lon), "E" if lon >= 0 else "W")
+        part = ("early", "mid", "mid", "late")[(self.week - 1) % 4]
+        return {"region": region, "season": part + " " + MONTHS[(self.week - 1) // 4],
+                "checklist": self.checklist()}
+
+
+def _form_number(form, key, low, high):
+    try:
+        value = float(form.get(key, ""))
+    except (TypeError, ValueError):
+        return None
+    return value if math.isfinite(value) and low <= value <= high else None
+
+
+def _place(form, taxonomy):
+    """The player's place from this request only. Nothing is stored."""
+    if taxonomy is None:
+        return None
+    lat, lon = _form_number(form, "lat", -90, 90), _form_number(form, "lon", -180, 180)
+    if lat is None or lon is None:
+        return None
+    week = _form_number(form, "photoWeek", 1, 48)
+    try:
+        provider = _geo_provider()
+        if provider is None:
+            return None
+        week = int(week) if week is not None else provider._birdnet_week(None)
+        lat, lon = round(lat, 1), round(lon, 1)
+        probabilities = provider._geo_probabilities(lat, lon, week)
+        coarse = provider._geo_probabilities(_coarse(lat), _coarse(lon), _season_week(week))
+    except Exception:
+        return None
+    if probabilities is None or coarse is None:
+        return None
+    return Place(lat, lon, week, probabilities, taxonomy, coarse)
+
+
+# --------------------------------------------------------------------------
+# Ranking: the model's reading times the range prior
+# --------------------------------------------------------------------------
+
+def _weight(occurrence):
+    if occurrence is None:
+        return UNKNOWN_RANGE_WEIGHT
+    return 1.0 if occurrence >= LIKELY else max(FLOOR, occurrence / LIKELY)
+
+
+def _local(occurrence):
+    if occurrence is None:
+        return "unknown"
+    return "likely" if occurrence >= LIKELY else "rare" if occurrence >= RARE else "unexpected"
+
+
+def rank(reading, place=None, taxonomy=None):
+    """Merge synonyms and weigh each bird by its range.
+
+    score = the model's probability x the range weight (1 for a bird expected
+    here). Weights only lower a score: the mass they remove goes to "something
+    else", so ruling out an Anhinga never inflates the heron beside it.
+    Returns ranked candidates [{species, scientificName, score, modelSpecies?,
+    local?, plumage?, _model}], where _model is the model's own probability.
+    """
+    merged, order = {}, []
+    for c in reading.get("candidates", []):
+        match = taxonomy.match(c["scientificName"], c["species"], place) if taxonomy else None
+        scientific = match[1] if match else c["scientificName"]
+        key = scientific.lower()
+        if key not in merged:
+            # A place-chosen sister takes its own name (Herring Gull in Maine
+            # -> American Herring Gull); synonyms keep the model's familiar one.
+            name = match[2] if match and match[3] else c["species"]
+            entry = {"species": name, "scientificName": scientific, "p": 0.0, "model": c["species"],
+                     "position": match[0] if match else None}
+            if c.get("plumage"):
+                entry["plumage"] = c["plumage"]
+            merged[key] = entry
+            order.append(key)
+        merged[key]["p"] += c["probability"]
+    ranked = []
+    for key in order:
+        entry = merged[key]
+        occurrence = place.occurrence(entry["position"]) if place and entry["position"] is not None else None
+        domestic = key in DOMESTIC
+        weight = 1.0 if not place or domestic else _weight(occurrence)
+        candidate = {"species": entry["species"], "scientificName": entry["scientificName"],
+                     "score": round(min(1.0, entry["p"]) * weight, 3), "_model": entry["p"]}
+        if entry["model"] != entry["species"]:
+            candidate["modelSpecies"] = entry["model"]
+        if place:
+            candidate["local"] = "unknown" if domestic else _local(occurrence)
+        if entry.get("plumage"):
+            candidate["plumage"] = entry["plumage"]
+        ranked.append(candidate)
+    ranked.sort(key=lambda c: (-c["score"], -c["_model"]))
+    return ranked
+
+
+def decide(reading, place=None, taxonomy=None):
+    """Final client result from one validated worker reading."""
+    base = {"policy": PHOTO_POLICY, "model": "gemini-vision", "modelName": MODEL_NAME,
+            "retryable": False, "receiptId": reading["receiptId"], "placeUsed": place is not None}
+    if reading.get("found") is not True:
+        result = dict(base, found=False, accepted=False, verified=False,
+                      reason=reading.get("reason", "no-species"), message=reading.get("message") or INCONCLUSIVE)
+        return result
+    ranked = rank(reading, place, taxonomy)
+    model_top = ranked[0]["_model"]
+    # A bird the model gave a fair chance stays pickable however far from home.
+    shown = [c for i, c in enumerate(ranked) if i == 0 or c["score"] >= MIN_SHOWN or c["_model"] >= SHOWN_BY_MODEL][:MAX_SHOWN]
+    for candidate in ranked:
+        candidate.pop("_model", None)
+    top = shown[0]
+    second = ranked[1]["score"] if len(ranked) > 1 else 0.0
+    # "Found" needs the model's own conviction, a clear subject and, where the
+    # place is known, a bird that lives there.
+    strong = (top["score"] >= MIN_CONFIDENCE and top["score"] - second >= MIN_MARGIN - 1e-9
+              and model_top >= MODEL_FLOOR
+              and reading.get("subjectClear") is True and len(reading.get("fieldMarks", [])) >= 2
+              and top.get("local", "likely") == "likely")
+    if strong:
+        return dict(base, found=True, accepted=True, verified=True, species=top["species"],
+                    scientificName=top["scientificName"], confidence=top["score"], candidates=shown)
+    return dict(base, found=False, accepted=False, verified=False, reason="pick-your-bird",
+                message=PICK, candidates=shown)
+
+
+def _validate_reading(result):
+    """Strictly check the worker's reading before any ranking."""
+    if (not isinstance(result, dict) or result.get("policy") != PHOTO_POLICY or result.get("model") != "gemini-vision"
+            or result.get("modelName") != MODEL_NAME):
+        return None, _abstain("invalid-worker-result")
+    if result.get("retryable") is not False or not isinstance(result.get("receiptId"), str) \
+            or not re.fullmatch(r"[a-f0-9]{64}", result["receiptId"]):
+        clean = _abstain(str(result.get("reason", "photo-unavailable"))[:60],
+                         result.get("message") if isinstance(result.get("message"), str) else None)
+        clean.update(retryable=True, retryAt=result.get("retryAt", 0) if isinstance(result.get("retryAt"), (int, float)) else 0)
+        return None, clean
+    reading = {"receiptId": result["receiptId"], "found": False,
+               "reason": str(result.get("reason", "no-species"))[:60],
+               "message": result.get("message") if isinstance(result.get("message"), str) else INCONCLUSIVE}
     if result.get("found") is not True:
-        # Suggestions are an explicitly non-awarding channel, never a primary species.
-        clean=_abstain(str(result.get("reason", "uncertain-species")), result.get("message") if isinstance(result.get("message"), str) else None)
-        clean.update(retryable=result.get('retryable') is True,retryAt=result.get('retryAt',0))
-        if isinstance(result.get('receiptId'),str) and re.fullmatch(r'[a-f0-9]{64}',result['receiptId']): clean['receiptId']=result['receiptId']
-        reasons={'insufficient-evidence','low-confidence','ambiguous-species','unclear-subject',
-                 'missing-diagnostic-details','verification-disagrees'}
-        if clean['reason'] in reasons and not clean['retryable'] and 'receiptId' in clean:
-            candidates=[];seen=set()
-            raw=result.get('suggestions')
-            for c in raw[:3] if isinstance(raw,list) else []:
-                if not isinstance(c,dict): continue
-                name=c.get('species');scientific=c.get('scientificName')
-                if (isinstance(name,str) and 1<=len(name.strip())<=100 and isinstance(scientific,str)
-                        and re.fullmatch(r'[A-Z][a-z]+ [a-z][a-z-]+',scientific) and scientific not in seen):
-                    candidates.append({'species':name.strip(),'scientificName':scientific});seen.add(scientific)
-            if candidates: clean['suggestions']=candidates
-        return clean
-    score = result.get("confidence")
-    if (result.get("accepted") is not True or result.get("verified") is not True
-            or isinstance(score, bool) or not isinstance(score, (int, float))
-            or not math.isfinite(score) or not MIN_CONFIDENCE <= score <= 1
-            or not isinstance(result.get("receiptId"),str) or not re.fullmatch(r"[a-f0-9]{64}",result["receiptId"])
-            or not isinstance(result.get("species"), str) or not result["species"].strip()
-            or not isinstance(result.get("scientificName"), str)
-            or not re.fullmatch(r"[A-Z][a-z]+ [a-z][a-z-]+", result["scientificName"])):
-        return _abstain("invalid-worker-result")
-    return {key: result[key] for key in ("found", "accepted", "verified", "policy", "model", "species", "scientificName", "confidence", "modelName", "receiptId")}
+        return reading, None
+    candidates = []
+    for c in result.get("candidates", [])[:5] if isinstance(result.get("candidates"), list) else []:
+        if not isinstance(c, dict):
+            continue
+        name, scientific, p = c.get("species"), c.get("scientificName"), c.get("probability")
+        if (isinstance(name, str) and 1 <= len(name.strip()) <= 100 and isinstance(scientific, str)
+                and SCIENTIFIC.fullmatch(scientific) and isinstance(p, (int, float)) and not isinstance(p, bool)
+                and math.isfinite(p) and 0 <= p <= 1):
+            entry = {"species": name.strip(), "scientificName": scientific, "probability": float(p)}
+            if isinstance(c.get("plumage"), str) and re.fullmatch(r"[a-z -]{3,30}", c["plumage"]):
+                entry["plumage"] = c["plumage"]
+            candidates.append(entry)
+    other = result.get("otherProbability")
+    total = sum(c["probability"] for c in candidates)
+    # Stored readings replay for ever, so accept a rounding overshoot (five
+    # values at 4 dp) and renormalise, rather than refusing a paid answer.
+    if not candidates or total > 1 + 1e-3:
+        return None, _abstain("invalid-worker-result")
+    if total > 1:
+        for c in candidates:
+            c["probability"] /= total
+    marks = [m for m in result.get("fieldMarks", []) if isinstance(m, str)][:6] \
+        if isinstance(result.get("fieldMarks"), list) else []
+    reading.update(found=True, candidates=candidates, fieldMarks=marks,
+                   subjectClear=result.get("subjectClear") is True,
+                   otherProbability=float(other) if isinstance(other, (int, float)) and not isinstance(other, bool)
+                   and math.isfinite(other) and 0 <= other <= 1 else 0.0)
+    return reading, None
 
 
 def _request_identity():
@@ -101,29 +498,40 @@ def _request_identity():
     owner=request.form.get('photoOwner',''); request_id=request.form.get('photoRequestId','')
     if not all(re.fullmatch(r'[a-zA-Z0-9_-]{16,96}',v) for v in (owner,request_id)):
         raise ValueError('Photo app update required')
-    return owner,request_id,caller
+    if request.form.get('photoContract') != PHOTO_CONTRACT:
+        raise ValueError('Photo app update required')
+    return owner,request_id,caller,request.form
 
 
 def identify_bird_from_image(path, lat=None, lon=None):
     # Retain the route interface; the worker alone owns billing and egress.
-    try: owner,request_id,caller=_request_identity()
+    # The form carries this request's place and week; nothing is kept.
+    try: owner,request_id,caller,form=_request_identity()
     except (ValueError,ImportError):
         return _abstain('photo-update-required','Close and reopen Burbz to update photo identification. Then choose your photo again.')
+    taxonomy = _taxonomy_or_none()
+    place = _place(form, taxonomy)
     connection = _LocalConnection()
     try:
         with open(path, "rb") as stream:
             data = stream.read(10*1024*1024+1)
         if len(data) > 10*1024*1024:
             return _abstain("invalid-size")
-        connection.request("POST", "/identify", body=json.dumps({"image":base64.b64encode(data).decode(),"owner":owner,"requestId":request_id,"caller":caller}), headers={"Content-Type": "application/json"})
+        body = {"image":base64.b64encode(data).decode(),"owner":owner,"requestId":request_id,"caller":caller}
+        if place is not None:
+            body["context"] = place.context()
+        connection.request("POST", "/identify", body=json.dumps(body), headers={"Content-Type": "application/json"})
         response = connection.getresponse()
-        body = response.read(16385)
-        if len(body) > 16384:
+        raw = response.read(16385)
+        if len(raw) > 16384:
             return _abstain("invalid-worker-result")
         if response.status != 200:
             return _abstain("photo-busy" if response.status == 503 else "photo-unavailable",
                             "Photo checking is busy. Please try again shortly." if response.status == 503 else "Photo checking is unavailable. Please try again shortly.")
-        return _validate_result(json.loads(body))
+        reading, problem = _validate_reading(json.loads(raw))
+        if problem:
+            return problem
+        return decide(reading, place, taxonomy)
     except (OSError, ValueError, http.client.HTTPException):
         return _abstain("photo-unavailable", "Photo checking is temporarily unavailable. Please try again shortly. Your photo has not been rejected.")
     finally:
