@@ -76,6 +76,13 @@
     var master = input.masterUnlock === true || level >= MASTER_UNLOCK_LEVEL;
     var activeIndex = input.activeQuestId && chainIds.includes(input.activeQuestId)
       ? chainIds.indexOf(input.activeQuestId) : chainActiveIndex(chainIds, input.claimedIds);
+    // Parallel quest lines: each line moves on its own, so a link is reached
+    // once its own line gets there, whatever the other lines are doing.
+    var lineOf = input.lineOf && typeof input.lineOf === 'object' ? input.lineOf : null;
+    var lineReached = function (link) {
+      var line = lineOf[link], ids = chainIds.filter(function (id) { return lineOf[id] === line; });
+      return ids.indexOf(link) <= chainActiveIndex(ids, input.claimedIds);
+    };
     var open = {};
     Object.keys(FEATURE_UNLOCKS).forEach(function (feature) {
       if (feature === 'kitchen' && evidence.kitchenBuilt === false) { open[feature] = false; return; }
@@ -86,7 +93,7 @@
       var linkIndex = chainIds.indexOf(link);
       // A link the chain no longer carries must never lock its feature
       // forever — an unknown link counts as already passed.
-      open[feature] = linkIndex < 0 ? true : linkIndex <= activeIndex;
+      open[feature] = linkIndex < 0 ? true : lineOf && lineOf[link] ? lineReached(link) : linkIndex <= activeIndex;
     });
     return open;
   }

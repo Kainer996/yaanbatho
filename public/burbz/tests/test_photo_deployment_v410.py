@@ -20,7 +20,7 @@ def gemini(deployment):
     d['original_server'] = ROUTE
     dropin = d['root'].parent / 'burbz.service.d/photo-uploads.conf'
     d['dropin'] = dropin
-    (stage / 'photo_gemini.py').write_text("POLICY = 'photo-gemini-v487'\nMODEL = 'gemini-3.8-flash'\n")
+    (stage / 'photo_gemini.py').write_text("POLICY = 'photo-gemini-v494'\nMODEL = 'gemini-3.8-flash'\n")
     (stage / 'photo_budget.py').write_text('MONTH_LIMIT = 5000000000\n')
     state_dir = d['root'].parent / 'private-ledger'
     state_dir.mkdir(mode=0o700)
@@ -46,7 +46,7 @@ if args[0]=='show' and 'RestrictAddressFamilies' in args:
 if args[0]=='show':""")
     command = command.replace("if '/releases/' in unit:", """if '/photo_gemini.py' in unit:
         worker=pathlib.Path(re.search(r'ExecStart=\\S+ (\\S+)',unit).group(1))
-        state['loaded']={'ready':True,'policy':'photo-gemini-v487','model':'gemini-3.8-flash',
+        state['loaded']={'ready':True,'policy':'photo-gemini-v494','model':'gemini-3.8-flash',
             'sourceHash':hashlib.sha256(worker.read_bytes()).hexdigest(),
             'budgetHash':hashlib.sha256((worker.parent/'photo_budget.py').read_bytes()).hexdigest()}
         fault=os.environ.get('READINESS_FAULT')
@@ -167,9 +167,9 @@ def test_http_validation_owner_request_and_place_are_stable(tmp_path):
     path = tmp_path / 'bird.jpg'; path.write_bytes(b'fixture pixels')
     identity = proof.request_identity(path)
     assert identity == proof.request_identity(path)
-    assert identity == 'v487_' + hashlib.sha256(path.read_bytes()).hexdigest()
-    assert proof.VALIDATION_OWNER == 'deployment_v487_photos'
-    assert proof.CONTRACT == 'merlin-v487'
+    assert identity == 'v494_' + hashlib.sha256(path.read_bytes()).hexdigest()
+    assert proof.VALIDATION_OWNER == 'deployment_v494_photos'
+    assert proof.CONTRACT == 'merlin-v494'
     assert proof.PROOF_PLACE == {'lat': '51.5', 'lon': '-0.1', 'photoWeek': '20'}
     assert len(proof.SMOKE_CASES) == 3
 
@@ -227,7 +227,7 @@ def test_proof_posts_contract_and_fixed_place_and_retries_one_stored_failure(tmp
     monkeypatch.setattr(sys, 'argv', ['verify-photo-id', '--fixtures', str(tmp_path)])
     assert proof.main() == 0
     first, slept, second = posts
-    assert first['photoContract'] == 'merlin-v487' and first['lat'] == '51.5' and first['photoWeek'] == '20'
+    assert first['photoContract'] == 'merlin-v494' and first['lat'] == '51.5' and first['photoWeek'] == '20'
     owner, fresh = proof.retry_identity(first['photoRequestId'])
     assert slept == {'slept': 61} and second['photoRequestId'] == fresh and second['photoOwner'] == owner
     assert owner.startswith(proof.VALIDATION_OWNER + '_') and len(fresh) <= 96

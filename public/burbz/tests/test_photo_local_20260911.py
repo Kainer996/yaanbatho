@@ -29,7 +29,7 @@ def trusted_route_identity(monkeypatch):
     monkeypatch.setattr(photo, '_taxonomy_or_none', lambda: None)
 
 def reading(**overrides):
-    """A v487 worker reading (the adapter ranks and decides)."""
+    """A v494 worker reading (the adapter ranks and decides)."""
     return dict(found=True, accepted=False, verified=False, policy=photo.PHOTO_POLICY,
                 model='gemini-vision', modelName='gemini-3.8-flash', retryable=False, receiptId='a'*64,
                 reason='ranked', liveBird=True, quality='clear', subjectClear=True,

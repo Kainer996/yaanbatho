@@ -124,7 +124,7 @@ def test_encounter_banner_only_pops_on_first_hearing_of_a_species():
     assert "recordSoundSessionDiscovery(bird, isNew);" in sound_branch
     assert "if (isNew) showScanEncounterCard(bird, isNew, opts.source);" in sound_branch
     else_branch = handle[handle.index("} else {"):handle.index("try { questRegisterBirdEncounter(bird); }")]
-    # v487: a photo the player confirmed says so instead of a model percentage.
+    # v494: a photo the player confirmed says so instead of a model percentage.
     assert "if (isNew) showScanEncounterCard(bird, isNew, opts.source, !!opts.confirmedByPlayer);" in else_branch
     # No unconditional call remains after the branch.
     tail = handle[handle.index("try { questRegisterBirdEncounter(bird); }"):]

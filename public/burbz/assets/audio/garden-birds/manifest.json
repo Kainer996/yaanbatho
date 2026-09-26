@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 2,
+  "generatedDate": "2026-09-25",
+  "generator": "ElevenLabs Sound Effects v2 (eleven_text_to_sound_v2) via the project owner's ElevenLabs account",
+  "elevenLabsFlow": "cBW4FEqBZuAXVPWcNMl7",
+  "requestCreditsForWholeBatch": 340,
+  "retakeCredits": 10,
+  "processing": "Each kept take was mixed to mono, high-passed at 700 Hz (500 Hz for blackbird song and wing flutter) and gently low-passed at 11 kHz, both at 12 dB per octave. Leading and trailing silence was trimmed, keeping about 40 ms before the first note. Four takes opened mid-note (robin-tick a, b and c, and blackbird-alarm b), so their start moved to just before the first whole note. Every file has a 10 ms fade-in and a 100 ms fade-out, or 60 ms for the ticks, alarm calls and flutters. Each file was levelled so the RMS of its active part sits at -20 dBFS with sample peaks under -1.5 dBFS. The wing flutters have sharp wingbeats, so a look-ahead limiter took 2.4 and 4.6 dB off their peaks; they sit near -22 and -23 dBFS and keep their pulse depth. Files are mono 44.1 kHz MP3 (LAME VBR -q:a 5, about 52 to 86 kbps) with no tags.",
+  "selection": "Three takes were generated per sound, 30 in all. The wing flutter was then re-run with a new prompt for three more. Each take was measured for duration, peak, RMS, clipping, share of energy between 1.5 and 10 kHz, longest silent gap, envelope depth and note onsets. Every song and call take was bright (over 99% of its energy in 1.5 to 10 kHz) and made of discrete tonal notes (21 to 63 dB envelope depth, 3 to 12 onsets per second), so none looked like wind or noise. chaffinch-song-a was rejected because it clips: it decodes over full scale, peaking at +1.2 dBFS with 18 samples at or over 0 dBFS. None of the first three flutter takes was a real flutter. wing-flutter-a was a thin whirr at 9 to 11 kHz, wing-flutter-b was pure tones at 3.3 to 4.6 kHz (a chirp), and wing-flutter-c was near-silent. In the retake, wing-flutter-d and wing-flutter-f are soft, feathery noise with clear wingbeat pulses (10 to 12 a second, 21 to 23 dB deep) that survive the 500 Hz high-pass, so they replace the first batch. wing-flutter-e was rejected: most of its energy is hiss above 10 kHz, it has no wingbeat pulses, and it is near-silent after the high-pass (-47 dBFS). That leaves 28 files: three per sound, and two each for chaffinch song and wing flutter.",
+  "assets": [
+    {
+      "path": "blackbird-alarm-01.mp3",
+      "sourceTake": "blackbird-alarm-a.mp3",
+      "role": "blackbird-alarm",
+      "bytes": 10780,
+      "sha256": "bfdb84ffeacf1f08316a7c46960c2a2e52d2185a2db7e61ad0e158f005e4465a",
+      "durationSeconds": 1.39,
+      "prompt": "Common blackbird alarm call, loud repeated chink chink chink notes, one bird flying off, close field recording, no background noise"
+    },
+    {
+      "path": "blackbird-alarm-02.mp3",
+      "sourceTake": "blackbird-alarm-b.mp3",
+      "role": "blackbird-alarm",
+      "bytes": 12879,
+      "sha256": "1d1c84a409ac4f64988777551f7043a075abaf51b271bab6ac4ba1592899ecf0",
+      "durationSeconds": 1.81,
+      "prompt": "Common blackbird alarm call, loud repeated chink chink chink notes, one bird flying off, close field recording, no background noise"
+    },
+    {
+      "path": "blackbird-alarm-03.mp3",
+      "sourceTake": "blackbird-alarm-c.mp3",
+      "role": "blackbird-alarm",
+      "bytes": 10128,
+      "sha256": "eb21edf5c71525a84fb0b6d40c622ee2a368d751df657b2ab61f5bfee851b1e6",
+      "durationSeconds": 1.26,
+      "prompt": "Common blackbird alarm call, loud repeated chink chink chink notes, one bird flying off, close field recording, no background noise"
+    },
+    {
+      "path": "blackbird-song-01.mp3",
+      "sourceTake": "blackbird-song-a.mp3",
+      "role": "blackbird-song",
+      "bytes": 40109,
+      "sha256": "efe7fb33d507874394c647b72bc4d24493105c67a7cd7ec398b92b46e3ce7ff8",
+      "durationSeconds": 5.27,
+      "prompt": "Common blackbird singing, slow rich mellow fluting song phrases, one bird, close outdoor field recording, no other birds, no background noise"
+    },
+    {
+      "path": "blackbird-song-02.mp3",
+      "sourceTake": "blackbird-song-b.mp3",
+      "role": "blackbird-song",
+      "bytes": 36641,
+      "sha256": "fab6dbb8f80f1debf07ce839dc1f37294cf9d1a3689344c5e12a3638a2f2dd79",
+      "durationSeconds": 5.25,
+      "prompt": "Common blackbird singing, slow rich mellow fluting song phrases, one bird, close outdoor field recording, no other birds, no background noise"
+    },
+    {
+      "path": "blackbird-song-03.mp3",
+      "sourceTake": "blackbird-song-c.mp3",
+      "role": "blackbird-song",
+      "bytes": 35681,
+      "sha256": "028542ee76ae1c39f868f24d44b0df27a8e97ae1ed4f711e6d53c97176d0cab1",
+      "durationSeconds": 5.53,
+      "prompt": "Common blackbird singing, slow rich mellow fluting song phrases, one bird, close outdoor field recording, no other birds, no background noise"
+    },
+    {
+      "path": "bluetit-song-01.mp3",
+      "sourceTake": "bluetit-song-a.mp3",
+      "role": "bluetit-song",
+      "bytes": 28157,
+      "sha256": "f910130115aca4b3076b6bc5931849c03672d50c057e36bf7e8075493736d793",
+      "durationSeconds": 2.66,
+      "prompt": "Blue tit song, high thin tsee tsee tsu-hu-hu-hu trill, one small bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "bluetit-song-02.mp3",
+      "sourceTake": "bluetit-song-b.mp3",
+      "role": "bluetit-song",
+      "bytes": 26355,
+      "sha256": "2647bb58256a5182ed1fb24758fdeb434f1dced2e8ed929630757a4a5df9c919",
+      "durationSeconds": 2.61,
+      "prompt": "Blue tit song, high thin tsee tsee tsu-hu-hu-hu trill, one small bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "bluetit-song-03.mp3",
+      "sourceTake": "bluetit-song-c.mp3",
+      "role": "bluetit-song",
+      "bytes": 24179,
+      "sha256": "fca99d1223272d589547abdb2a7473dd01584b1a3ee636db9f8309b6add93594",
+      "durationSeconds": 2.45,
+      "prompt": "Blue tit song, high thin tsee tsee tsu-hu-hu-hu trill, one small bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "chaffinch-song-01.mp3",
+      "sourceTake": "chaffinch-song-b.mp3",
+      "role": "chaffinch-song",
+      "bytes": 25798,
+      "sha256": "177ccaac6dbc213c8215105cbabcca9f97a205fdcaf6673059207d65a8c664ad",
+      "durationSeconds": 2.67,
+      "prompt": "Chaffinch song, cheerful rattling descending run of notes ending in a flourish, one bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "chaffinch-song-02.mp3",
+      "sourceTake": "chaffinch-song-c.mp3",
+      "role": "chaffinch-song",
+      "bytes": 27099,
+      "sha256": "29c6ab78572f11db6d26e361c2287a3bf2682ccc3a0bad92a91d55db439fd578",
+      "durationSeconds": 2.75,
+      "prompt": "Chaffinch song, cheerful rattling descending run of notes ending in a flourish, one bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "goldfinch-twitter-01.mp3",
+      "sourceTake": "goldfinch-twitter-a.mp3",
+      "role": "goldfinch-twitter",
+      "bytes": 31562,
+      "sha256": "6b65d8f377ec629a4a306094cbe41b15c80dcd2f08cc24d6e808b534f65f18e9",
+      "durationSeconds": 3.5,
+      "prompt": "Goldfinch twittering, liquid tinkling chirps and bright twitters, small finch, close field recording, no background noise"
+    },
+    {
+      "path": "goldfinch-twitter-02.mp3",
+      "sourceTake": "goldfinch-twitter-b.mp3",
+      "role": "goldfinch-twitter",
+      "bytes": 33191,
+      "sha256": "83d6e91c3105e3d7135c783ecd82d035188f58e21243cc4e4108210e6e37313f",
+      "durationSeconds": 3.61,
+      "prompt": "Goldfinch twittering, liquid tinkling chirps and bright twitters, small finch, close field recording, no background noise"
+    },
+    {
+      "path": "goldfinch-twitter-03.mp3",
+      "sourceTake": "goldfinch-twitter-c.mp3",
+      "role": "goldfinch-twitter",
+      "bytes": 27151,
+      "sha256": "33320f8ab475f892afc9ea250a2152ec5f32a8c88576642dd22487569c6d1867",
+      "durationSeconds": 3.18,
+      "prompt": "Goldfinch twittering, liquid tinkling chirps and bright twitters, small finch, close field recording, no background noise"
+    },
+    {
+      "path": "greattit-song-01.mp3",
+      "sourceTake": "greattit-song-a.mp3",
+      "role": "greattit-song",
+      "bytes": 25763,
+      "sha256": "00269509db9d03f5746bdf20443e99b199aa7c64405a48758187c43fb51a4803",
+      "durationSeconds": 2.76,
+      "prompt": "Great tit song, bright ringing two-note teacher teacher teacher see-saw call, one bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "greattit-song-02.mp3",
+      "sourceTake": "greattit-song-b.mp3",
+      "role": "greattit-song",
+      "bytes": 19037,
+      "sha256": "bb418f69fdedc839dbb7094aec40f9a7d15c50c755eecf17cde1e7929d9203ce",
+      "durationSeconds": 2.5,
+      "prompt": "Great tit song, bright ringing two-note teacher teacher teacher see-saw call, one bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "greattit-song-03.mp3",
+      "sourceTake": "greattit-song-c.mp3",
+      "role": "greattit-song",
+      "bytes": 17971,
+      "sha256": "4029e50b02ab4f8ad19ee1bd734c785a496956a6bd389a72bd270f3ac0ecffcf",
+      "durationSeconds": 2.17,
+      "prompt": "Great tit song, bright ringing two-note teacher teacher teacher see-saw call, one bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "robin-song-01.mp3",
+      "sourceTake": "robin-song-a.mp3",
+      "role": "robin-song",
+      "bytes": 35387,
+      "sha256": "74e4875a31245a703311a8890b419f2b0123034bc2000dd4c445bd611d597da2",
+      "durationSeconds": 4.31,
+      "prompt": "European robin singing, clear sweet liquid warbling song phrases with thin high notes, one bird, close outdoor field recording, no other birds, no wind, no background noise"
+    },
+    {
+      "path": "robin-song-02.mp3",
+      "sourceTake": "robin-song-b.mp3",
+      "role": "robin-song",
+      "bytes": 31057,
+      "sha256": "207dd5bb5132312cbdb2f9c15fafa876948f57f0dc3835d3d1c0dbf6c7a4749d",
+      "durationSeconds": 3.61,
+      "prompt": "European robin singing, clear sweet liquid warbling song phrases with thin high notes, one bird, close outdoor field recording, no other birds, no wind, no background noise"
+    },
+    {
+      "path": "robin-song-03.mp3",
+      "sourceTake": "robin-song-c.mp3",
+      "role": "robin-song",
+      "bytes": 32536,
+      "sha256": "28c64895a694bedb4badf0412245f04a356d436794d036ec6f362e9e19f70025",
+      "durationSeconds": 3.62,
+      "prompt": "European robin singing, clear sweet liquid warbling song phrases with thin high notes, one bird, close outdoor field recording, no other birds, no wind, no background noise"
+    },
+    {
+      "path": "robin-tick-01.mp3",
+      "sourceTake": "robin-tick-a.mp3",
+      "role": "robin-tick",
+      "bytes": 14842,
+      "sha256": "869edadba13b03356946abaace007fcc1d87836668cf03e92d2187108d3037a5",
+      "durationSeconds": 1.68,
+      "prompt": "European robin alarm call, sharp dry repeated tik tik tik ticking notes, one bird, close field recording, no background noise"
+    },
+    {
+      "path": "robin-tick-02.mp3",
+      "sourceTake": "robin-tick-b.mp3",
+      "role": "robin-tick",
+      "bytes": 11171,
+      "sha256": "2f80a857ecb64c7e80de0655a628c3e628f4cb4a7e6dc269ffc02af1db56345b",
+      "durationSeconds": 1.28,
+      "prompt": "European robin alarm call, sharp dry repeated tik tik tik ticking notes, one bird, close field recording, no background noise"
+    },
+    {
+      "path": "robin-tick-03.mp3",
+      "sourceTake": "robin-tick-c.mp3",
+      "role": "robin-tick",
+      "bytes": 15364,
+      "sha256": "e80b51abd41287ed3945aa362c01793615275ce572fe7cce0bf5baac515ce0ad",
+      "durationSeconds": 1.78,
+      "prompt": "European robin alarm call, sharp dry repeated tik tik tik ticking notes, one bird, close field recording, no background noise"
+    },
+    {
+      "path": "wing-flutter-01.mp3",
+      "sourceTake": "wing-flutter-d.mp3",
+      "role": "wing-flutter",
+      "bytes": 7264,
+      "sha256": "b554b12b693a81dc287602719b57c920807f3c6f49332b79938995650e9267af",
+      "durationSeconds": 0.74,
+      "prompt": "Small bird wings flapping as it flies off a branch, soft feathery flutter of quick wingbeats, close foley, no bird call, no voice"
+    },
+    {
+      "path": "wing-flutter-02.mp3",
+      "sourceTake": "wing-flutter-f.mp3",
+      "role": "wing-flutter",
+      "bytes": 7636,
+      "sha256": "8766cba0fd0937d29c1b465fd2b0bd4767cd5f5254fbe3cf302f27c08c3f57ce",
+      "durationSeconds": 0.71,
+      "prompt": "Small bird wings flapping as it flies off a branch, soft feathery flutter of quick wingbeats, close foley, no bird call, no voice"
+    },
+    {
+      "path": "wren-song-01.mp3",
+      "sourceTake": "wren-song-a.mp3",
+      "role": "wren-song",
+      "bytes": 38460,
+      "sha256": "9391850b29b7038929d6bb30936ee573ff7a3531b394b790b2a55141dc20bf09",
+      "durationSeconds": 4.58,
+      "prompt": "Wren song, very loud fast explosive trill of high warbling notes, one tiny bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "wren-song-02.mp3",
+      "sourceTake": "wren-song-b.mp3",
+      "role": "wren-song",
+      "bytes": 30836,
+      "sha256": "19f003c3e887ed26bd782804f03bbe9162f525a38dc676d4c6a369a062ccf0c6",
+      "durationSeconds": 3.46,
+      "prompt": "Wren song, very loud fast explosive trill of high warbling notes, one tiny bird, close field recording, no other birds, no background noise"
+    },
+    {
+      "path": "wren-song-03.mp3",
+      "sourceTake": "wren-song-c.mp3",
+      "role": "wren-song",
+      "bytes": 37385,
+      "sha256": "35ae5ccccac4095122f2ec114c5ce90458ab1b79460732d6dde830b0b5c2b348",
+      "durationSeconds": 4.07,
+      "prompt": "Wren song, very loud fast explosive trill of high warbling notes, one tiny bird, close field recording, no other birds, no background noise"
+    }
+  ],
+  "notes": [
+    "These are generated sounds, not recordings.",
+    "The game mutes them while Merlin's wand listens, so the sound ID never hears them.",
+    "blackbird-song-03 keeps its natural 2 s pause between two phrases.",
+    "The wing flutters come from the retake, so their prompt differs from the first batch."
+  ]
+}

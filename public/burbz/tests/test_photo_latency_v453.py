@@ -6,7 +6,7 @@ import photo_gemini
 
 
 def test_one_view_gets_medium_thinking_inside_the_deadline(ledger):
-    # v487 replaced the two low-thinking views with one medium view: the
+    # v494 replaced the two low-thinking views with one medium view: the
     # player confirms the bird, so the time goes to looking harder once.
     book, _ = ledger
     provider = Provider(raven())

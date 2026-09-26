@@ -1,6 +1,6 @@
 """Shape-identifiable silhouettes pass the same evidence rules as other photos.
 
-v487 keeps the v452 rule: a silhouette is a picture quality, not a rejection.
+v494 keeps the v452 rule: a silhouette is a picture quality, not a rejection.
 The worker reports it; the adapter decides from the ranking and the evidence.
 """
 import hashlib

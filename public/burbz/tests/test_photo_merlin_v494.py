@@ -1,4 +1,4 @@
-"""Merlin-style photo ID v487: place, week, one taxonomy and a ranked choice."""
+"""Merlin-style photo ID v494: place, week, one taxonomy and a ranked choice."""
 import base64
 import hashlib
 import io
@@ -358,7 +358,7 @@ def test_birdnet_weeks_read_as_plain_seasons(taxonomy, week, season):
 
 # ---------------------------------------------------------------- adapter I/O
 
-FORM = {'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890', 'photoContract': 'merlin-v487'}
+FORM = {'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890', 'photoContract': 'merlin-v494'}
 
 
 class GeoProvider:
@@ -510,7 +510,7 @@ def test_old_policy_results_never_replay(ledger):
     book.finish(job, {'found': True, 'species': 'Anhinga'})
     provider = Provider(RAVEN_JSON)
     result = photo_gemini.Recognizer(book, provider).identify(data, 'owner_012345678901', 'new_request_0123456', 'caller')
-    assert result['policy'] == 'photo-gemini-v487' and len(provider.calls) == 2
+    assert result['policy'] == 'photo-gemini-v494' and len(provider.calls) == 2
 
 
 @pytest.mark.parametrize('raw,reason', [
@@ -611,7 +611,7 @@ def test_real_geomodel_ranks_the_lancashire_raven_first(monkeypatch):
 
 def load_proof():
     import importlib.util
-    spec = importlib.util.spec_from_file_location('photo_proof_v487', ROOT.parents[1] / 'scripts/verify-photo-id.py')
+    spec = importlib.util.spec_from_file_location('photo_proof_v494', ROOT.parents[1] / 'scripts/verify-photo-id.py')
     proof = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(proof)
     return proof

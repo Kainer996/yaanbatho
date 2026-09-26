@@ -17,7 +17,7 @@ import threading
 import socket
 from photo_budget import Ledger, BudgetError, INPUT_LIMIT, OUTPUT_LIMIT
 
-POLICY = "photo-gemini-v487"
+POLICY = "photo-gemini-v494"
 MODEL = "gemini-3.8-flash"
 PHOTO_POLICY = POLICY
 # One careful look per photo. v453 dropped both views to "low" thinking to fit

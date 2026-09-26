@@ -11,11 +11,11 @@ import time
 
 import requests
 
-POLICY = 'photo-gemini-v487'
+POLICY = 'photo-gemini-v494'
 MODEL = 'gemini-vision'
 MODEL_NAME = 'gemini-3.8-flash'
-CONTRACT = 'merlin-v487'
-VALIDATION_OWNER = 'deployment_v487_photos'
+CONTRACT = 'merlin-v494'
+VALIDATION_OWNER = 'deployment_v494_photos'
 # Three attempts fit the shared caller rate limit. Every request has a stable
 # owner/id and a fixed place and week, so another release proof replays the
 # persistent result, never a new paid attempt. This smoke proof does not claim
@@ -46,7 +46,7 @@ PHOTO_REJECTIONS = {
     'unclear-subject', 'missing-diagnostic-details', 'verification-disagrees',
     'no-bird', 'no-species',
 }
-# v487 answers: a model reading with no live bird or no species.
+# v494 answers: a model reading with no live bird or no species.
 NEGATIVE_REASONS = {'no-bird', 'no-species'}
 
 
@@ -117,7 +117,7 @@ def _candidates(result):
 
 
 def passes_merlin_case(name, species, status, result):
-    """v487: a ranked, receipted answer with the right bird where it must be.
+    """v494: a ranked, receipted answer with the right bird where it must be.
 
     A clear robin must lead its ranking; a crow must be among the matches and
     never be confirmed as another species; an empty scene names no bird. A
@@ -151,7 +151,7 @@ def passes_merlin_case(name, species, status, result):
 
 
 def request_identity(path):
-    return 'v487_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
+    return 'v494_' + hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def post(origin, path, request_id, owner=VALIDATION_OWNER):

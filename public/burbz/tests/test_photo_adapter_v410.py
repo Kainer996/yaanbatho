@@ -92,7 +92,7 @@ def test_google_never_posts_after_connection_deadline(monkeypatch):
 
 def reading(**updates):
     """A worker reading: the ranked facts the adapter decides on."""
-    return dict(found=True, accepted=False, verified=False, policy='photo-gemini-v487',
+    return dict(found=True, accepted=False, verified=False, policy='photo-gemini-v494',
                 model='gemini-vision', modelName='gemini-3.8-flash', reason='ranked', liveBird=True,
                 quality='clear', subjectClear=True, retryable=False, receiptId='a' * 64,
                 fieldMarks=['Orange face and breast', 'Rounded olive-brown back'],
@@ -105,7 +105,7 @@ def accepted():
     return photo_id.decide(photo_id._validate_reading(reading())[0])
 
 
-FORM = {'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890', 'photoContract': 'merlin-v487'}
+FORM = {'photoOwner': 'owner_01234567890', 'photoRequestId': 'request_01234567890', 'photoContract': 'merlin-v494'}
 
 
 @pytest.mark.parametrize('change', [

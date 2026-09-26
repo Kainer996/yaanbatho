@@ -1,15 +1,15 @@
 'use strict';
-// Photo Merlin v487 in the real page: a camera photo carries the rough place,
+// Photo Merlin v494 in the real page: a camera photo carries the rough place,
 // ranked bird cards appear beside the photo, and only This is my bird adds one.
 // Recognition answers are controlled HTTP responses, not a model accuracy test.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {chromium}=require(process.env.PLAYWRIGHT_PATH || '/opt/node22/lib/node_modules/playwright');
 const F=require('./connected_world_fixture_v386.cjs'),root=path.resolve(__dirname,'..');
-const out=process.env.EVIDENCE_DIR||'/tmp/burbz-photo-merlin-v487';fs.mkdirSync(out,{recursive:true});
+const out=process.env.EVIDENCE_DIR||'/tmp/burbz-photo-merlin-v494';fs.mkdirSync(out,{recursive:true});
 const report={checks:[],errors:[],requests:[],missing:[],served:{},limits:'Real app, cropper and Birdex on a disposable save; controlled recognition answers; Chromium phone emulation, not a physical phone.'};
 const server=F.createServer({root,port:9086,report});
 const fixture=path.join(root,'tests/fixtures/photo-v350/raven-flight.jpg');
-const raven={found:false,accepted:false,verified:false,retryable:false,policy:'photo-gemini-v487',model:'gemini-vision',modelName:'gemini-3.8-flash',
+const raven={found:false,accepted:false,verified:false,retryable:false,policy:'photo-gemini-v494',model:'gemini-vision',modelName:'gemini-3.8-flash',
   reason:'pick-your-bird',message:'Bird detected. Pick your bird from the matches.',receiptId:'c'.repeat(64),placeUsed:true,
   candidates:[{species:'Common Raven',scientificName:'Corvus corax',score:.71,local:'likely',plumage:'adult'},
     {species:'Carrion Crow',scientificName:'Corvus corone',score:.2,local:'likely'},
@@ -41,7 +41,7 @@ const field=(body,name)=>{const m=body.toString('latin1').match(new RegExp('name
  await page.locator('#birdCropConfirm').click();
  await page.locator('#birdCropMatches:not([hidden]) .bird-match').nth(2).waitFor();
  const request=report.requests[0];
- assert.equal(request.contract,'merlin-v487');assert.equal(request.lat,'53.87');assert.equal(request.lon,'-2.39');
+ assert.equal(request.contract,'merlin-v494');assert.equal(request.lat,'53.87');assert.equal(request.lon,'-2.39');
  assert(Number(request.week)>=1&&Number(request.week)<=48);
  pass('A fresh camera photo carries the contract, a two-decimal place and the BirdNET week');
  const text=await page.locator('#birdCropMatches').innerText();

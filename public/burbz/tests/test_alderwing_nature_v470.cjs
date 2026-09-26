@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..'),read=nam
 const N=require('../world_nature_core.js'),W=require('../world_water_core.js');
 const BUILD='alderwing-nature-v470-20260925';
 // Later Alderwing releases that re-ship some of these modules under their own marker.
-const LATER=['alderwing-steady-v472-20260925','realistic-flight-v478-20260925','glide-release-v481-20260925','alderwing-seamless-v482-20260925','academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','village-folk-v486-20260925','photo-merlin-v487-20260925'],current=build=>build===BUILD||LATER.includes(build);
+const LATER=['alderwing-steady-v472-20260925','realistic-flight-v478-20260925','glide-release-v481-20260925','alderwing-seamless-v482-20260925','academy-day-night-v483-20260925','desk-screen-v484-20260925','smooth-sky-plain-plot-v485-20260925','academy-garden-birds-v490-20260925'],current=build=>build===BUILD||LATER.includes(build);
 const layer=(sourceLayer,cls,subclass)=>({sourceLayer,geometry:{type:'Polygon'},properties:{class:cls,subclass}});
 const hex=rgb=>rgb.map(v=>Math.round(Math.pow(Math.max(0,v),1/2.2)*255));
 

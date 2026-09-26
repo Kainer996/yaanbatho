@@ -1,11 +1,11 @@
 'use strict';
-// Photo Merlin v487: photos are identified the Merlin way. The page sends the
+// Photo Merlin v494: photos are identified the Merlin way. The page sends the
 // rough place and week, shows ranked bird cards and waits for This is my bird.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const BUILD='photo-merlin-v487-20260925';
+const BUILD='photo-merlin-v494-20260926';
 
-test('v487 ships together: build marker, cache, worker lists and updater',()=>{
+test('v494 ships together: build marker, cache, worker lists and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
  assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));
@@ -19,8 +19,8 @@ test('one contract across page, queue, adapter, worker, installer and proof',()=
  const installer=fs.readFileSync(path.join(root,'../../scripts/install-photo-id.sh'),'utf8');
  const proof=fs.readFileSync(path.join(root,'../../scripts/verify-photo-id.py'),'utf8');
  for(const [name,text] of [['page',html],['queue',queue],['adapter',adapter],['worker',worker],['installer',installer],['proof',proof]])
-  assert(text.includes('photo-gemini-v487'),name);
- for(const [name,text] of [['page',html],['queue',queue],['adapter',adapter],['proof',proof]])assert(text.includes('merlin-v487'),name);
+  assert(text.includes('photo-gemini-v494'),name);
+ for(const [name,text] of [['page',html],['queue',queue],['adapter',adapter],['proof',proof]])assert(text.includes('merlin-v494'),name);
  assert(!html.includes("'photo-gemini-v425'"));
  // Only the saved-photo queue still honours v425 results already verified and paid for.
  assert.equal(queue.split('photo-gemini-v425').length-1,1);

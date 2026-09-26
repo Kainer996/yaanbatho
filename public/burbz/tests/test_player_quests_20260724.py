@@ -111,17 +111,18 @@ def test_player_quests_are_pinned_to_the_top_of_the_quests_tab():
 
 def test_only_the_active_link_moves_and_claims_pay_out():
     html = HTML.read_text(encoding="utf-8")
-    # Strict chain gating: progress and badges only for the active quest.
+    # Strict gating per line: progress and badges only for each line's live quest.
     assert "function activePlayerQuest()" in html
+    assert "function activePlayerQuests()" in html
     assert "function syncActivePlayerQuest()" in html
-    assert "Player quests: only the active link in the chain moves." in html
+    assert "Player quests: only the live link of each line moves." in html
     # Goals already met by real state complete when their turn comes.
     assert "Math.max(state.progress || 0, q.measure())" in html
     # Claiming pays XP plus coins/branches and arms the next link.
     assert "function claimPlayerQuest(id)" in html
     assert "if (q.coins) addCoins(q.coins);" in html
     assert "if (q.branches) addBranches(q.branches);" in html
-    assert "Next player quest: " in html
+    assert "' quest: ' + next.name" in html
     # Completion is announced wherever it happens.
     assert "Player quest complete: " in html
 

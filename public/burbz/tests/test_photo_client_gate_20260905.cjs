@@ -4,11 +4,11 @@ const start=html.includes('let photoIdBusy = false;')?html.indexOf('let photoIdB
 const fn=html.slice(start,html.indexOf('\nasync function startCamera()',start));
 const TEST_OWNER='photo_profile_test_12345',TEST_STATE=JSON.stringify({photoProfileId:TEST_OWNER});
 const testIdentity={gameState:{photoProfileId:TEST_OWNER},photoSaveBaseline:TEST_STATE,localStorage:{getItem:()=>TEST_STATE},crypto:{randomUUID:()=>TEST_OWNER+'-request-id'}};
-// v487: a strong match and a pick-your-bird answer both carry ranked matches.
+// v494: a strong match and a pick-your-bird answer both carry ranked matches.
 // Nothing reaches the Birdex until the player taps This is my bird.
-const accepted=(species='European Robin',scientificName='Erithacus rubecula',confidence=.98)=>({found:true,accepted:true,verified:true,policy:'photo-gemini-v487',model:'gemini-vision',modelName:'gemini-3.8-flash',retryable:false,receiptId:'a'.repeat(64),species,scientificName,confidence,
+const accepted=(species='European Robin',scientificName='Erithacus rubecula',confidence=.98)=>({found:true,accepted:true,verified:true,policy:'photo-gemini-v494',model:'gemini-vision',modelName:'gemini-3.8-flash',retryable:false,receiptId:'a'.repeat(64),species,scientificName,confidence,
   candidates:[{species,scientificName,score:confidence,local:'likely'},{species:'Common Redstart',scientificName:'Phoenicurus phoenicurus',score:.01}]});
-const pickable=(candidates)=>({found:false,accepted:false,verified:false,policy:'photo-gemini-v487',model:'gemini-vision',modelName:'gemini-3.8-flash',retryable:false,receiptId:'b'.repeat(64),reason:'pick-your-bird',message:'Bird detected. Pick your bird from the matches.',candidates});
+const pickable=(candidates)=>({found:false,accepted:false,verified:false,policy:'photo-gemini-v494',model:'gemini-vision',modelName:'gemini-3.8-flash',retryable:false,receiptId:'b'.repeat(64),reason:'pick-your-bird',message:'Bird detected. Pick your bird from the matches.',candidates});
 function element(){
   const classes=new Set();
   return {hidden:true,disabled:false,textContent:'',innerHTML:'',dataset:{},style:{},scrollIntoView(){},
@@ -251,7 +251,7 @@ test('the location switch is checked again at upload',async()=>{
   let on=true;h.ctx.soundLocationAssistEnabled=()=>on;
   h.ctx.startPhotoPlace({lastModified:Date.now()},false);on=false;await h.ctx.identifyImage({});
   const sent=Object.fromEntries(h.forms[0].values.filter(v=>typeof v[1]==='string'));
-  assert.equal(sent.lat,undefined);assert.equal(sent.photoContract,'merlin-v487');
+  assert.equal(sent.lat,undefined);assert.equal(sent.photoContract,'merlin-v494');
 });
 test('a library photo needs its camera capture time to carry a place',async()=>{
   const position=async()=>({coords:{latitude:53.87,longitude:-2.39}});
@@ -311,12 +311,12 @@ test('a fresh camera photo carries a rounded place and week; an old library phot
   const fresh=photoHarness(async()=>({ok:true,json:async()=>accepted()}),position);
   fresh.ctx.startPhotoPlace({lastModified:Date.now()},false);await fresh.ctx.identifyImage({});
   const sent=Object.fromEntries(fresh.forms[0].values.filter(v=>typeof v[1]==='string'));
-  assert.equal(sent.photoContract,'merlin-v487');assert.equal(sent.lat,'53.87');assert.equal(sent.lon,'-2.39');
+  assert.equal(sent.photoContract,'merlin-v494');assert.equal(sent.lat,'53.87');assert.equal(sent.lon,'-2.39');
   assert.equal(Number(sent.photoWeek),vm.runInContext('birdnetWeekOf(new Date())',fresh.ctx));
   const old=photoHarness(async()=>({ok:true,json:async()=>accepted()}),position);
   old.ctx.startPhotoPlace({lastModified:Date.now()-3*24*3600*1000},true);await old.ctx.identifyImage({});
   const oldSent=Object.fromEntries(old.forms[0].values.filter(v=>typeof v[1]==='string'));
-  assert.equal(oldSent.photoContract,'merlin-v487');assert.equal(oldSent.lat,undefined);assert.equal(oldSent.photoWeek,undefined);
+  assert.equal(oldSent.photoContract,'merlin-v494');assert.equal(oldSent.lat,undefined);assert.equal(oldSent.photoWeek,undefined);
   assert.equal(vm.runInContext('birdnetWeekOf(new Date(2026,8,25))',old.ctx),36);
   assert.equal(vm.runInContext('birdnetWeekOf(new Date(2026,0,1))',old.ctx),1);
   assert.equal(vm.runInContext('birdnetWeekOf(new Date(2026,11,31))',old.ctx),48);

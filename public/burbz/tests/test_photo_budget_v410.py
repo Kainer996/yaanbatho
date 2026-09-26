@@ -233,4 +233,4 @@ def test_new_policy_does_not_replay_previous_model_result(ledger):
     job,_=l.acquire('owner_01234567890','old_request_012345',hashlib.sha256(data).hexdigest(),'caller')
     l.finish(job,{'found':True,'species':'Wrong cached species','policy':'photo-gemini-v410'})
     p=Provider();r=Recognizer(l,p).identify(data,'owner_01234567890','new_request_012345','caller')
-    assert not r['found'] and len(p.calls)==2 and r['policy']=='photo-gemini-v487'
+    assert not r['found'] and len(p.calls)==2 and r['policy']=='photo-gemini-v494'
