@@ -8,7 +8,7 @@ const css=fs.readFileSync(path.join(root,'scan_home.css'),'utf8'),homeJs=fs.read
 const gate=require(path.join(root,'onboarding_gate_core.js')),core=require(path.join(root,'scan_home_core.js')),home=require(path.join(root,'player_home_core.js'));
 const BUILD='quest-lines-v493-20260926';
 // Later releases move the page marker and the cache tail on.
-const LATER=['photo-merlin-v494-20260926'];
+const LATER=['photo-merlin-v494-20260926','alderwing-water-v496-20260926'];
 const block=(start,end)=>html.slice(html.indexOf(start),html.indexOf(end,html.indexOf(start))+end.length);
 const fn=name=>{const m=html.match(new RegExp('function '+name+'\\([^]*?\\n}'));if(!m)throw Error(name);return m[0];};
 

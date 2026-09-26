@@ -33,7 +33,7 @@ function create(T,scene,{origin,merc,style,height,nature,signal,eye={value:new T
  const materials=LEVELS.map((level,i)=>{
   const m=new T.MeshLambertMaterial({vertexColors:true});
   const hole={value:holes[i]};
-  m.onBeforeCompile=shader=>{shader.uniforms.horizonHole=hole;shader.uniforms.horizonFine={value:i===0?1:0};shader.uniforms.horizonEye=eye;shader.uniforms.horizonEdge={value:edge};shader.uniforms.horizonCut={value:i===1?1:0};shader.uniforms.horizonBlend=blends[i];
+  m.onBeforeCompile=shader=>{const water=root.BurbzShoreWater;if(water)Object.assign(shader.uniforms,water.uniforms());shader.uniforms.horizonHole=hole;shader.uniforms.horizonFine={value:i===0?1:0};shader.uniforms.horizonEye=eye;shader.uniforms.horizonEdge={value:edge};shader.uniforms.horizonCut={value:i===1?1:0};shader.uniforms.horizonBlend=blends[i];
    shader.vertexShader='uniform vec4 horizonHole;\nuniform float horizonFine;\nuniform vec3 horizonEye;\nuniform vec4 horizonEdge;\nuniform float horizonBlend;\nattribute float horizonCanopy;\nattribute float horizonWater;\nattribute float horizonCoarse;\nattribute vec2 horizonPrev;\nattribute vec3 horizonPrevColor;\nvarying vec3 horizonWorld;\nvarying float horizonWet;\nvarying float horizonWood;\n'+shader.vertexShader.replace('#include <color_vertex>',`#include <color_vertex>
  // New map data eases in from what was drawn before, so nothing pops.
  vColor.rgb=mix(horizonPrevColor,vColor.rgb,horizonBlend);`).replace('#include <begin_vertex>',`#include <begin_vertex>
@@ -47,16 +47,17 @@ function create(T,scene,{origin,merc,style,height,nature,signal,eye={value:new T
  transformed.y=mix(horizonBase,horizonCoarse,horizonFine*max(smoothstep(${MORPH[0]}.,${MORPH[1]}.,max(abs(horizonOff.x),abs(horizonOff.y))),1.0-smoothstep(0.,32.,horizonInset)));
  transformed.y+=horizonTop*smoothstep(${RISE[0]}.,${RISE[1]}.,length(horizonOff));
  horizonWorld=(modelMatrix*vec4(transformed,1.0)).xyz;horizonWet=horizonWater;horizonWood=clamp(horizonTop/4.6,0.,1.);`);
-   shader.fragmentShader='uniform vec4 horizonHole;\nuniform float horizonCut;\nvarying vec3 horizonWorld;\nvarying float horizonWet;\nvarying float horizonWood;\n'+CANOPY+'\n'+shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+   shader.fragmentShader='uniform vec4 horizonHole;\nuniform float horizonCut;\nvarying vec3 horizonWorld;\nvarying float horizonWet;\nvarying float horizonWood;\n'+CANOPY+'\n'+shader.fragmentShader.replace('#include <fog_pars_fragment>','#include <fog_pars_fragment>\n'+(water?.CHUNK||'')).replace('#include <color_fragment>',`#include <color_fragment>
  if(horizonWood>.01)diffuseColor.rgb*=mix(1.0,canopyCrowns(horizonWorld.xz,smoothstep(260.,800.,distance(cameraPosition,horizonWorld))),horizonWood);`).replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
  if(horizonCut>.5&&horizonWorld.x>horizonHole.x&&horizonWorld.x<horizonHole.z&&horizonWorld.z>horizonHole.y&&horizonWorld.z<horizonHole.w)discard;`).replace('#include <fog_fragment>',`#ifdef USE_FOG
- // Still water mirrors the sky: brighter the flatter the view across it.
- // Blended in output space, like the fog, so it matches the real horizon.
- if(horizonWet>.5){float glance=1.0-max(normalize(cameraPosition-horizonWorld).y,0.0);float fresnel=.1+.8*pow(glance,5.0);
-  gl_FragColor.rgb=mix(gl_FragColor.rgb*.5+fogColor*.18,fogColor*1.03,fresnel);}
+ // Distant water is the same water as the lakes nearby: the same deep
+ // colour, ripples fading into a long mirror of the sky, the same glints.
+ ${water?`float horizonSheet=smoothstep(.35,.65,horizonWet);
+ if(horizonSheet>.001)gl_FragColor.rgb=mix(gl_FragColor.rgb,shoreSurface(gl_FragColor.rgb,horizonWorld,shoreStill(horizonWorld),.92,0.),horizonSheet);`:`if(horizonWet>.5){float glance=1.0-max(normalize(cameraPosition-horizonWorld).y,0.0);float fresnel=.1+.8*pow(glance,5.0);
+  gl_FragColor.rgb=mix(gl_FragColor.rgb*.5+fogColor*.18,fogColor*1.03,fresnel);}`}
  #endif
  #include <fog_fragment>`);};
-  m.customProgramCacheKey=()=> 'alderwing-horizon-v4';style(m);return m;});
+  m.customProgramCacheKey=()=> 'alderwing-horizon-v5';style(m);return m;});
  function tileKey(x,z){const m=merc,n=2**ZOOM,mx=(m.x+x/m.scale)*n,my=(m.z+z/m.scale)*n;return{tx:Math.floor(mx),ty:Math.floor(my),fx:mx-Math.floor(mx),fy:my-Math.floor(my)};}
  // Fetch the 2x2 block of zoom-11 tiles nearest the viewer: at least 5km of
  // land on every side. The service worker keeps visited tiles for offline.

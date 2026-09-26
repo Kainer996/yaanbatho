@@ -116,7 +116,7 @@ test('the game wires it up: one context, soundscape gates, quiet music routed th
 test('v492 ships together: build marker, cache, loader order, three worker lists and the updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
  // Later releases ship on top under their own marker; v492 stays in the cache chain.
- const LATER=['quest-lines-v493-20260926','photo-merlin-v494-20260926'];assert([BUILD,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));assert([BUILD,...LATER].some(b=>sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+b)));assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes('-'+BUILD));
+ const LATER=['quest-lines-v493-20260926','photo-merlin-v494-20260926','alderwing-water-v496-20260926'];assert([BUILD,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));assert([BUILD,...LATER].some(b=>sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+b)));assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes('-'+BUILD));
  const order=['audio_core.js','asmr_soundscape.js','garden_birds.js'].map(f=>html.indexOf('<script src="'+f+'?v='+BUILD+'"></script>'));
  assert(order.every(i=>i>0)&&order[0]<order[1]&&order[1]<order[2],'core, then soundscape, then birds');
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};

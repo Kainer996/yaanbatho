@@ -4,11 +4,13 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const BUILD='photo-merlin-v494-20260926';
+// Later releases move the build marker on and append to the cache name.
+const LATER=['alderwing-water-v496-20260926'];
 
 test('v494 ships together: build marker, cache, worker lists and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
- assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';"));
- assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].endsWith('-'+BUILD));
+ assert([BUILD,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
+ const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];assert(cache.includes('-'+BUILD)&&[BUILD,...LATER].some(b=>cache.endsWith('-'+b)));
  assert.equal(sw.split("'./photo_queue.js?v="+BUILD+"'").length-1,3,'photo queue in all three worker lists');
  assert(html.includes('photo_queue.js?v='+BUILD));
  for(const file of ['photo_id.py','photo_gemini.py','photo_budget.py','photo_queue.js','sound_id/birdnet_v3_provider.py'])assert(updater.includes('"'+file+'"'),file);

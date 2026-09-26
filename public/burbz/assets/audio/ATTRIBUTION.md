@@ -169,3 +169,15 @@ loop. A rain loop, a light wind loop (`weather/`) and a stool sound followed the
 same day. Prompts, hashes and processing are in each folder's `manifest.json`.
 Their use remains subject to the project owner's ElevenLabs account and
 applicable service terms.
+
+## Running water (26 September 2026)
+
+The files in `water/` were generated for Burbz with ElevenLabs Sound Effects v2
+on 26 September 2026, in the project owner's account: a babbling brook, a broad
+river and a waterfall, each asked for as a 15 s seamless loop. Alderwing plays
+them when the player is near running water, louder the closer and the bigger it
+is. Each take was filtered (70 Hz high-pass, 11 kHz low-pass), given a one-second
+crossfade from its tail into its head so it loops without a seam, and levelled
+to about -32 LUFS. Prompts, hashes and processing are in `water/manifest.json`.
+Their use remains subject to the project owner's ElevenLabs account and
+applicable service terms.
