@@ -857,7 +857,7 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 #screen-scan.progressive-home #scanHomeActions { box-sizing:border-box;align-items:stretch;height:auto;min-height:44px;padding:4px;border:0;overflow:hidden;background:transparent; }
 #screen-scan.progressive-home #scanHomeActions .home-action { box-sizing:border-box;height:100%;min-height:36px;margin:0;padding:3px 9px;border-radius:7px;align-items:center; }
 #screen-scan.progressive-home #scanHomeActions .home-action>span { flex:1;min-width:0; }
-#screen-scan.progressive-home #scanHomeActions .home-action strong { font:700 14px/16px Rajdhani,sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:none; }
+#screen-scan.progressive-home #scanHomeActions .home-action strong { font:700 12.5px/14px Rajdhani,sans-serif;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:normal;word-break:normal;hyphens:none; }
 #screen-scan.progressive-home #scanHomeActions .home-action[data-home-action="next-quest"]:not(:disabled) {
  border:1px solid rgba(232,86,72,.85);background:#241a19;
  box-shadow:0 0 5px rgba(232,86,72,.45),inset 0 0 6px rgba(232,86,72,.15);
@@ -906,3 +906,38 @@ body[data-active-screen="scan"] .completion-notice:is([data-notice-kind="empire-
 /* Merlin perches over the top right of the Academy tree here, so its
    "ready" chip moves to the left where he never covers it. */
 #screen-scan.progressive-home .scan-home-main[data-home-layout="short-landscape"] .home-tree-ready { right:auto;left:6px; }
+
+/* Listening with the panel shut: a small gold arrow on the sound tile reopens it. */
+#screen-scan .scan-home-start-buttons { position:relative; }
+#screen-scan .scan-session-reopen { position:absolute;top:50%;left:calc(50% - 44px);transform:translateY(-50%);z-index:2;box-sizing:border-box;width:36px;height:36px;min-height:36px;margin:0;padding:0;display:grid;place-items:center;border:1px solid #f6d98a;border-radius:50%;background:linear-gradient(180deg,#f7dc8c,#c8922f);color:#2a1b07;font:800 18px/1 Inter,sans-serif;box-shadow:0 0 8px rgba(240,190,80,.6);cursor:pointer; }
+#screen-scan .scan-session-reopen[hidden] { display:none; }
+#screen-scan .scan-session-reopen::after { content:'';position:absolute;inset:-4px;border-radius:50%; }
+#screen-scan .scan-session-reopen:focus-visible { outline:2px solid #fff0c0;outline-offset:2px; }
+#screen-scan .scan-home-start-buttons:has(.scan-session-reopen:not([hidden])) #scanBtn { padding-right:46px; }
+
+/* Quests strip, v493. One row while Merlin's opening runs; after it, two rows:
+   the gold Quests button (with Goal, builds and kit) above one chip per quest line. */
+#screen-scan.progressive-home .scan-home-today:has(> .prerequisite-home-resume) { grid-template-columns:64px minmax(0,1fr) 52px 88px 53px!important; }
+#screen-scan.progressive-home .scan-home-today > .prerequisite-home-resume { box-sizing:border-box;align-self:center;width:52px;height:36px;min-height:36px;margin:0;padding:0 4px;border-radius:8px;font:700 13px/1 Rajdhani,sans-serif;letter-spacing:.03em; }
+#screen-scan.progressive-home .scan-home-today .desk-current-label { flex-direction:row;gap:5px; }
+#screen-scan.progressive-home .scan-home-today .desk-current-label small { font:700 11px/1 Inter,sans-serif;letter-spacing:0;opacity:.8; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"] { grid-template-columns:64px minmax(0,1fr) 88px 53px!important;grid-template-rows:44px 56px;row-gap:4px;align-items:stretch; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"] > .desk-current-label { grid-row:1;grid-column:1 / 3;justify-self:start;width:auto;min-width:64px;padding:0 14px; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"]:has(> .prerequisite-home-resume) > .desk-current-label { grid-column:1;justify-self:stretch;padding:0 4px; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"]:has(> .prerequisite-home-resume) > .desk-current-label small { display:none; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"] > .prerequisite-home-resume { grid-row:1;grid-column:2;justify-self:start; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"] > #deskBuildOptions { grid-row:1;grid-column:3; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"] > .desk-equipment-control { grid-row:1;grid-column:4; }
+#screen-scan.progressive-home .scan-home-today[data-quest-lines="true"] > #scanHomeActions { grid-row:2;grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-height:0;height:56px;padding:4px;border:0;overflow:hidden; }
+#screen-scan .home-quest-chip {
+ box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;height:48px;min-height:44px;margin:0;padding:3px 7px;
+ text-align:left;color:#f1e7d2;background:#241a19;border:1px solid rgba(232,86,72,.85);border-radius:7px;cursor:pointer;
+ box-shadow:0 0 5px rgba(232,86,72,.45),inset 0 0 6px rgba(232,86,72,.15);animation:home-current-quest-glow 3.2s ease-in-out infinite;
+}
+#screen-scan .home-quest-chip small { display:block;overflow:hidden;white-space:nowrap;text-overflow:clip;color:#e2b95c;font:700 10px/11px Rajdhani,sans-serif;letter-spacing:.07em;text-transform:uppercase; }
+#screen-scan .home-quest-chip strong { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font:700 12.5px/14px Rajdhani,sans-serif;overflow-wrap:normal;word-break:normal; }
+#screen-scan .home-quest-chip.is-ready { border-color:#f2cf73;background:#2a2213;box-shadow:0 0 6px rgba(240,190,80,.6),inset 0 0 6px rgba(240,190,80,.18);animation:home-quests-label-glow 3.2s ease-in-out infinite; }
+#screen-scan .home-quest-chip.is-ready small { color:#ffe39a; }
+#screen-scan .home-quest-chip:disabled { cursor:default;border-color:#8d7a585c;box-shadow:none;animation:none;opacity:.75; }
+#screen-scan .home-quest-chip:focus-visible { outline:2px solid #fff0c0;outline-offset:1px; }
+@media (prefers-reduced-motion:reduce) { #screen-scan .home-quest-chip { animation:none; } }

@@ -289,6 +289,7 @@ function makeExtractedDiscoveryApi(failFirstDurable = false) {
     addCoins: amount => { gameState.player.coins += amount; },
     logDiary: () => {},
     activePlayerQuest: () => null,
+    activePlayerQuests: () => [],
     syncActivePlayerQuest: () => {},
     showToast: () => {},
     renderPlayerQuests: () => {},

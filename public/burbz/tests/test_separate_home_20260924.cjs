@@ -45,7 +45,8 @@ test('Restored Home uses a new coherent shell and exact cache pins',()=>{
   // re-pinned scan_home.css when Merlin moved to the right in landscape;
   // v488 re-pinned it for the gold Quests strip; v491 re-pinned all three
   // when every Home box began to open its own screen.
-  const pin=file+'?v=home-hub-v491-20260925';assert.ok(html.includes(pin),pin);
+  // v493 re-pinned the Home files for the quest lines.
+  const pin=file+'?v=quest-lines-v493-20260926';assert.ok(html.includes(pin),pin);
   assert.equal(sw.split('./'+pin).length-1,3,pin+' in every worker list');
  }
  for(const pin of ['quest-revisit-v457-20260923','hall-music-v458-20260923','expedition-duration-v455-20260923'])assert.ok(html.includes(pin),pin+' retained');

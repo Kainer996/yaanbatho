@@ -61,11 +61,12 @@ test('Short landscape fits every box: rooms share one row beside a tall Academy'
 
 test('v491 ships together: build marker, cache and all three Home pins in every worker list',()=>{
  // Later releases ship on top under their own marker; v491 stays in the cache chain.
- const LATER=['asmr-sound-v492-20260925'];
+ const LATER=['asmr-sound-v492-20260925','quest-lines-v493-20260926'];
  assert.ok([BUILD,...LATER].some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));
  const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];assert.ok(cache.includes('-'+BUILD));
  for(const file of ['scan_home.css','scan_home.js','scan_home_core.js']){
-  const pin=file+'?v='+BUILD;assert.ok(html.includes(pin),pin);
+  // v493 re-pinned all three Home files for the quest lines.
+  const pin=[BUILD,...LATER].map(b=>file+'?v='+b).find(p=>html.includes(p));assert.ok(pin,file);
   assert.equal(sw.split("'./"+pin+"'").length-1,3,pin+' in every worker list');
  }
  const updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');

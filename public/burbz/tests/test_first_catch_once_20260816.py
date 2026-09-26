@@ -46,6 +46,7 @@ const PLAYER_QUESTS = [];
 const saveState = () => {};
 const syncActivePlayerQuest = () => {};
 const activePlayerQuest = () => null;
+const activePlayerQuests = () => [];
 const queueQuestCompleteNotice = () => {};
 const showToast = () => {};
 const claimedExpeditionCount = () => 0;

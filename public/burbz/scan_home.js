@@ -16,7 +16,14 @@
   const headings={academy:{kind:'academy'},stores:{kind:'forge'},kitchen:{kind:'kitchen'},training:{kind:'training'},hospital:{kind:'hospital'},completed:{kind:'villages'},building:{kind:'villages'}};for(const [id,target]of Object.entries(headings))targets.set('panel-'+id,target);
   const register=(prefix,rows)=>rows.forEach(r=>targets.set(prefix+r.id,r.target));register('store-',m.stores);m.equipment.forEach(i=>targets.set('equip-'+i.slot,i.target));register('feed-',m.kitchen);register('train-',m.training);register('patient-',m.hospital);register('complete-',m.completed);register('academy-',academy.rows);register('',m.builds);
   const brief=m.actions.filter(a=>a.id==='next-quest').slice(0,1);brief.forEach(a=>targets.set(a.id,a.target));
-  update('scanHomeActions',brief,()=>brief.map(a=>`<button type="button" class="home-action" data-home-action="${escape(a.id)}" title="${escape(a.title)}">${icon(a.icon)}<span><strong>${escape(a.title)}</strong><small>${escape(a.detail)}</small></span><span class="home-action-chevron" aria-hidden="true">›</span></button>`).join('')||'<p class="desk-empty">No active player goal.</p>');
+  const today=panelElement('today'),lines=m.questLines||[],label=today?.querySelector('.desk-current-label');
+  targets.set('quest-board',{kind:'route',screen:'quests'});
+  if(today&&today.dataset.questLines!==String(!!lines.length)){today.dataset.questLines=String(!!lines.length);layoutKey='';}
+  if(label){label.dataset.homeAction=lines.length?'quest-board':'next-quest';label.setAttribute('aria-label',lines.length?'Open your quests':'Open your current quest');label.innerHTML=lines.length&&m.questProgress?.total?`Quests <small>${m.questProgress.claimed}/${m.questProgress.total}</small>`:'Quests';}
+  if(lines.length){
+   lines.forEach(l=>{if(l.target)targets.set('quest-line-'+l.line,l.target);});
+   update('scanHomeActions',{lines},()=>lines.map(l=>`<button type="button" class="home-quest-chip${l.ready?' is-ready':''}" data-home-action="quest-line-${escape(l.line)}" data-quest-line="${escape(l.line)}" title="${escape(l.label+' · '+(l.ready?'Collect reward: ':'')+l.name)}"${l.target?'':' disabled'}><small>${l.ready?'✓ Collect':escape(l.icon+' '+l.label)}</small><strong>${escape(l.name)}</strong></button>`).join(''));
+  }else update('scanHomeActions',brief,()=>brief.map(a=>`<button type="button" class="home-action" data-home-action="${escape(a.id)}" title="${escape(a.title)}">${icon(a.icon)}<span><strong>${escape(a.title)}</strong><small>${escape(a.detail)}</small></span><span class="home-action-chevron" aria-hidden="true">›</span></button>`).join('')||'<p class="desk-empty">No active player goal.</p>');
   buildOptions=m.availableBuilds;renderBuildOption();
   const empty=copy=>`<p class="desk-empty">${escape(copy)}</p>`;
   update('desk-stores-list',{ready:m.forgeReady,open:m.gates.forge},()=>row('panel-stores',m.gates.forge?'Open the Forge':'Unlock Crafting',m.gates.forge?(m.forgeReady?m.forgeReady+' ready to collect':'Weapons, armour & spells'):'Follow your Quests',picture(options.icon('forge'),'⚒️')));
@@ -89,8 +96,8 @@
   const shortLandscape=matchMedia('(orientation:landscape) and (max-height:550px)').matches,compactKit=false,kit=boundSection.querySelector('.desk-equipment-control'),kitHost=compactKit?boundSection.querySelector('.scan-home-command-bar'):panelElement('today');
   if(kit.parentElement!==kitHost)kitHost.append(kit);boundSection.dataset.equipmentInHeader=String(compactKit);
   const fullEmpire=ids.includes('building'),others=ids.filter(id=>!['building','discover','today','academy'].includes(id)),columns=shortLandscape||width>=760?4:2,careColumns=columns/2;
-  const key=[width,main.clientHeight,columns,shortLandscape,...ids,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
-  const dense=main.clientHeight<440,tinyPortrait=matchMedia('(orientation:portrait) and (max-height:650px)').matches,goalHeight=50;
+  const key=[width,main.clientHeight,columns,shortLandscape,panelElement('today')?.dataset.questLines,...ids,...ids.map(id=>!!panelElement(id).querySelector('.desk-panel-scroll button'))].join('|');if(key===layoutKey)return;layoutKey=key;
+  const dense=main.clientHeight<440,tinyPortrait=matchMedia('(orientation:portrait) and (max-height:650px)').matches,goalHeight=panelElement('today')?.dataset.questLines==='true'?110:50;
   main.dataset.homeLayout=shortLandscape?'short-landscape':'stack';main.dataset.homeCompact=String(shortLandscape||tinyPortrait);
   const scanHeight=shortLandscape?52:tinyPortrait?48:dense?56:68,careRows=shortLandscape?1:Math.ceil(others.length/careColumns);
   const fitStyle=getComputedStyle(main),fitGap=parseFloat(fitStyle.rowGap)||0,fitPadding=(parseFloat(fitStyle.paddingTop)||0)+(parseFloat(fitStyle.paddingBottom)||0),trackCount=(fullEmpire?3:2)+careRows;
@@ -168,7 +175,10 @@
    if(photo)new MutationObserver(()=>{if(!session.hidden&&!photo.hidden)session.open=true;}).observe(photo,{attributes:true,attributeFilter:['hidden']});
    section.addEventListener('click',e=>{if(e.target.closest('#captureBtn,#scanBtn,#scanImageBtn,#scanSoundBtn'))openSession();},true);
    session?.addEventListener('toggle',()=>{if(!session.open)closeSession();});
-   const stop=document.getElementById('deskSessionStop'),syncStop=()=>{if(stop)stop.hidden=!options.listening?.();};stop?.addEventListener('click',()=>{options.stopListening?.();syncStop();});new MutationObserver(syncStop).observe(document.getElementById('scanBtn'),{childList:true,subtree:true});syncStop();
+   // While the mic listens with its panel shut, a small arrow on the sound tile brings the panel back.
+   const stop=document.getElementById('deskSessionStop'),reopen=document.getElementById('soundSessionReopen'),syncStop=()=>{const on=!!options.listening?.();if(stop)stop.hidden=!on;if(reopen)reopen.hidden=!on||(!session.hidden&&session.open);};stop?.addEventListener('click',()=>{options.stopListening?.();syncStop();});new MutationObserver(syncStop).observe(document.getElementById('scanBtn'),{childList:true,subtree:true,characterData:true});
+   reopen?.addEventListener('click',()=>{options.showListening?.();openSession();syncStop();session?.scrollIntoView({block:'nearest',behavior:'smooth'});});
+   session?.addEventListener('toggle',syncStop);new MutationObserver(syncStop).observe(session,{attributes:true,attributeFilter:['hidden','open']});syncStop();
    section.addEventListener('keydown',e=>{if(e.key==='Escape'&&session?.open&&!document.getElementById('birdCropOverlay')?.classList.contains('show')){closeSession();document.getElementById('captureBtn')?.focus();e.stopPropagation();}});
 }}
  function openSession(){if(!options?.visible())return;const session=document.getElementById('scanHomeSession');session.hidden=false;session.open=true;}
