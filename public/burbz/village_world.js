@@ -3,7 +3,7 @@
  * MapLibre is a bounded, offscreen tile decoder, never a second visible view. */
 (function(root){'use strict';
 const K=()=>root.BurbzVillageWorldCore,C=()=>root.BurbzGeographicWorldCore,N=()=>root.BurbzWorldNatureCore;
-const DEM='continuous-walk-dem',MAX_TILES=32,MAX_FEATURES=1800,COVER_CELL=64,KEEP={cover:900,water:200,stream:300,road:400},LAYER_LIMIT={landcover:900,landuse:240,water:200,waterway:300,transportation:400},DETAIL=104,HAZE=[140,4300],SHADE=[70,100];
+const DEM='continuous-walk-dem',MAX_TILES=32,MAX_FEATURES=1800,COVER_CELL=64,KEEP={cover:900,water:200,stream:300,road:400},LAYER_LIMIT={landcover:900,landuse:240,water:200,waterway:300,transportation:400},DETAIL=104,PLACE_GAP=32,HAZE=[140,4300],SHADE=[70,100];
 const sleep=()=>new Promise(resolve=>requestAnimationFrame(resolve));
 function homeActions(s,opts,pose,covered){
  const button=document.createElement('button');button.type='button';button.className='cw-build-home';button.setAttribute('data-walk-action','home');button.textContent='Quest: Build your house';button.hidden=true;s.root.append(button);
@@ -138,7 +138,7 @@ async function attach(s,opts){
  host.style.cssText='position:absolute;left:-10000px;top:0;width:512px;height:512px;visibility:hidden;pointer-events:none';s.root.append(host);
  const note=document.createElement('div');note.className='vw-hint cw-status';note.setAttribute('role','status');note.style.pointerEvents='none';note.hidden=true;s.root.append(note);
  const credits=root.BurbzFieldMapUI.mountCredits(s.root,{terrain:true});
- const actualRadius=surface.radius,maskCache=new Map(),places=new Map(),preparing=new Map();let placeCentre=null,lastPlaces=0,placeChain=Promise.resolve(),placeVersion=0;
+ const actualRadius=surface.radius,maskCache=new Map(),places=new Map(),preparing=new Map(),apart=new Map();let placeCentre=null,lastPlaces=0,placeChain=Promise.resolve(),placeVersion=0;
  // The starting settlement needs the same retained-distance policy as every
  // destination. Otherwise turning toward it draws its fully fogged buildings
  // from hundreds of metres away, even after its ground has streamed out.
@@ -162,6 +162,7 @@ async function attach(s,opts){
   if(d<=actualRadius+64)return k.joinedHeight(x,z,{radius:actualRadius,authored:terrain.heightAt,raw:rawAt,datum});const h=rawAt(x,z);if(h===null||datum===null)return null;
   for(const p of places.values()){if(p.record.kind==='home')continue;const distance=Math.hypot(x-p.x,z-p.z),blend=p.content.blendRadius||p.content.radius+12;if(distance<blend){const t=k.smooth((distance-p.content.radius)/(blend-p.content.radius));return (p.base+(p.content.terrain?.heightAt(x-p.x,z-p.z)||0))*(1-t)+(h-datum)*t;}}return h-datum;
  }
+ function crowded(x,z,radius){if(Math.hypot(x,z)<actualRadius+radius+PLACE_GAP)return'origin';for(const [id,p] of places)if(Math.hypot(x-p.x,z-p.z)<p.content.radius+radius+PLACE_GAP)return id;return null;}
  function shelterGround(x,z){const h=places.get('home');return opts.getHome?.()?.tier===0&&h&&Math.hypot(x-h.x,z-h.z)<12;}
 
  function refreshPlaces(){if(!opts.records||datum===null)return;const at=C().unproject(origin,{...s.player});if(!at||placeCentre&&C().distance(at,placeCentre)<32)return;placeCentre=idle?at:null;
@@ -170,7 +171,7 @@ async function attach(s,opts){
   const wanted=rank(records).slice(0,6);if(idle&&opts.waysides)wanted.push(...rank(opts.waysides({center:at})).filter(r=>Math.hypot(r.p.x,r.p.z)>actualRadius+64&&!records.some(other=>C().distance(other,r.record)<(other.kind==='home'?100:other.tier==='village'?190:340))).slice(0,2));const ids=new Set(wanted.map(r=>r.record.id));
   for(const [id,p] of places)if(!ids.has(id)&&Math.hypot(p.x-s.player.x,p.z-s.player.z)>850){p.content.dispose();places.delete(id);placeVersion++;}
   for(const [id,p] of preparing)if(!ids.has(id)&&Math.hypot(p.x-s.player.x,p.z-s.player.z)>850){p.abort.abort();preparing.delete(id);}
-  for(const row of wanted){if(places.size+preparing.size>=12||places.has(row.record.id)||preparing.has(row.record.id)||row.record.kind!=='home'&&Math.hypot(row.p.x,row.p.z)<actualRadius+6)continue;const value=raw(row.p.x,row.p.z);if(value===null){placeCentre=null;continue;}
+  for(const row of wanted){const blocker=apart.get(row.record.id);if(blocker&&(blocker==='origin'||places.has(blocker)))continue;apart.delete(row.record.id);if(places.size+preparing.size>=12||places.has(row.record.id)||preparing.has(row.record.id)||row.record.kind!=='home'&&Math.hypot(row.p.x,row.p.z)<actualRadius+6)continue;const value=raw(row.p.x,row.p.z);if(value===null){placeCentre=null;continue;}
    if(row.record.kind==='wayside'){
     const offsets=[-13,-11,-9,-7,-5,-3,-1,0,1,3,5,7,9,11,13];let suitable=true,missing=false;for(const dx of offsets)for(const dz of offsets){const x=row.p.x+dx,z=row.p.z+dz,h=raw(x,z);if(h===null)missing=true;else if(Math.abs(h-value)>2.2||masks('water',x,z)||road(x,z))suitable=false;}
     if(missing){placeCentre=null;continue;}if(!suitable)continue;
@@ -188,7 +189,11 @@ async function attach(s,opts){
     const groundHeight=(x,z)=>k.sampleGround(row.p.x+x,row.p.z+z,shaped)-homeBase;
     const content=row.record.kind==='home'?opts.createYard?.(T,home,{groundHeight}):row.record.kind==='wayside'?await opts.createWayside?.(T,row.record,{signal:pendingPlace.abort.signal,palette:opts.waysidePalette?.(scene.userData.nightPalette)}):await opts.createSettlement?.(T,row.record,{signal:pendingPlace.abort.signal});
     if(!content)return;if(closed||pendingPlace.abort.signal.aborted){content.dispose();return;}
-    const radius=content.radius||root.BurbzPlayerHomeCore?.YARD?.ground||28;content.radius=radius;content.blendRadius=content.blendRadius||radius+16;content.group.userData.continuousTerrain=true;content.group.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material])styleFog(m);});
+    const radius=content.radius||root.BurbzPlayerHomeCore?.YARD?.ground||28;content.radius=radius;content.blendRadius=content.blendRadius||radius+16;
+    // Two settlements never share ground. A neighbour whose footprint would
+    // reach this settlement or one already standing stays unbuilt while that
+    // one stands, so their houses and squares never merge into one.
+    const crowd=row.record.kind==='home'?null:crowded(row.p.x,row.p.z,radius);if(crowd){content.dispose();apart.set(row.record.id,crowd);return;}content.group.userData.continuousTerrain=true;content.group.traverse(o=>{for(const m of Array.isArray(o.material)?o.material:[o.material])styleFog(m);});
     const p={...row.p,record:row.record,content,base:row.record.kind==='home'?homeBase:value-datum};content.group.position.set(p.x,p.base,p.z);scene.add(content.group);const cull=root.BurbzVillageWalkScene.distanceCull(T,content.group,content.movers);p.cull=cull;const disposeContent=content.dispose;content.dispose=()=>{p.cull.dispose();disposeContent();};places.set(row.record.id,p);placeVersion++;
     // Rebuild the ground it touches, in place: each old chunk stays until its
     // replacement is ready, so no hole opens and no tree stays in a building.
@@ -290,7 +295,7 @@ async function attach(s,opts){
   return true;
  }
  function rockBlocked(x,y,z){for(let ix=Math.floor((x-5)/k.CHUNK);ix<=Math.floor((x+5)/k.CHUNK);ix++)for(let iz=Math.floor((z-5)/k.CHUNK);iz<=Math.floor((z+5)/k.CHUNK);iz++)for(const r of chunks.get(ix+','+iz)?.rocks||[])if(k.rockContains(r,x,y,z))return true;return false;}
- function allowed(x,z){if(campRuntime?.blocked(x,null,z)||s.combat?.blocked?.(x,null,z))return false;if(!Number.isFinite(x+z)||height(x,z)===null)return false;if(!shelterGround(x,z)&&!baseWorld.allowedBeyond(x,z))return false;const place=inPlace(x,z);if(place?.content.world?.allowed&&!place.content.world.allowed(x-place.x,z-place.z))return false;if(Math.hypot(x,z)>actualRadius){if(rockBlocked(x,null,z))return false;if(!place&&(river(x,z)||masks('water',x,z)))return false;const ids=new Set();for(const dx of [-.8,.8])for(const dz of [-.8,.8])ids.add(k.key(x+dx,z+dz));for(const id of ids)for(const t of chunks.get(id)?.trees||[])if(Math.hypot(t.x-x,t.z-z)<.27+.24*t.size)return false;}return true;}
+ function allowed(x,z){if(campRuntime?.blocked(x,null,z)||craftRuntime?.blocked(x,z)||s.combat?.blocked?.(x,null,z))return false;if(!Number.isFinite(x+z)||height(x,z)===null)return false;if(!shelterGround(x,z)&&!baseWorld.allowedBeyond(x,z))return false;const place=inPlace(x,z);if(place?.content.world?.allowed&&!place.content.world.allowed(x-place.x,z-place.z))return false;if(Math.hypot(x,z)>actualRadius){if(rockBlocked(x,null,z))return false;if(!place&&(river(x,z)||masks('water',x,z)))return false;const ids=new Set();for(const dx of [-.8,.8])for(const dz of [-.8,.8])ids.add(k.key(x+dx,z+dz));for(const id of ids)for(const t of chunks.get(id)?.trees||[])if(Math.hypot(t.x-x,t.z-z)<.27+.24*t.size)return false;}return true;}
  // Scenery slices describe actual trunks/fences at body height. The last two
  // river segments are synthetic bridge rails, not terrain-wide landing rules.
  const physicalGround=root.BurbzVillageWalkCore.createWorld({radius:Infinity,segments:terrain.river?baseWorld.segments.slice(0,-2):baseWorld.segments});

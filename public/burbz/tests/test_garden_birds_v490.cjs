@@ -142,7 +142,7 @@ test('after the wand\'s hush, the birds sing again once the microphone closes',(
 
 test('v490 ships together: build marker, cache, three worker lists, loaders and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),walk=read('village_walk.js'),updater=fs.readFileSync(path.join(repo,'scripts/update-live-burbz.sh'),'utf8');
- const LATER=['home-hub-v491-20260925','asmr-sound-v492-20260925','quest-lines-v493-20260926','photo-merlin-v494-20260926'],shipped=[BUILD,...LATER],current=b=>shipped.includes(b);
+ const LATER=['home-hub-v491-20260925','asmr-sound-v492-20260925','quest-lines-v493-20260926','photo-merlin-v494-20260926','village-apart-v495-20260926'],shipped=[BUILD,...LATER],current=b=>shipped.includes(b);
  assert(shipped.some(b=>html.includes("const BURBZ_BUILD = '"+b+"';")));const cache=sw.match(/const BURBZ_CACHE = '([^']+)'/)[1];assert(cache.includes('-'+BUILD));
  const self={location:new URL('https://example.test/burbz/sw.js'),addEventListener(){}};
  for(const key of ['BURBZ_UK_BIRD_EXPANSION_50','BURBZ_UK_BIRD_EXPANSION_26','BURBZ_AU_BIRD_EXPANSION','BURBZ_UK_BIRD_EXPANSION_FINAL','BURBZ_AU_BIRD_EXPANSION_50'])self[key]={art:{}};

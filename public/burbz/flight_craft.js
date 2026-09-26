@@ -28,6 +28,8 @@ const M=(T,x=0,y=0,z=0,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>new T.Matrix4().compose(n
 // transom. Stations run from bow (-z) to stern (+z); the ring runs from the
 // left gunwale, under the keel, to the right gunwale.
 const BOW=-1.95,STERN=1.45,STATIONS=28,RING=18;
+// The parked footprint: half-widths across the floats and along the hull.
+const HULL={side:.84,length:1.7,centre:(BOW+STERN)/2},BODY=.27;
 function beam(t){return .64*Math.pow(Math.sin(Math.min(1,t/.56)*Math.PI/2),.8)*(t>.56?1-.4*Math.pow((t-.56)/.44,2):1);}
 function sheer(t){return .9+.24*Math.pow(1-t,2.6)+.05*Math.pow(t,3);}
 function keel(t){return .24+.34*Math.pow(1-t,3.2)+.16*Math.pow(t,3);}
@@ -287,6 +289,15 @@ function attach(s,opts,env){
   }
   return false;
  }
+ // A parked craft is solid to anyone on foot: the hull, floats and folded
+ // wings fill this oval. A walker already inside may only step outward, so a
+ // legacy or awkward exit never traps them.
+ function depth(x,z){
+  const p=local();if(!p||aboard||onDeck||closed||s.room||!['walk','swim'].includes(s.player.mode)||Math.abs(p.y-s.player.y)>2.2)return Infinity;
+  const dx=x-p.x,dz=z-p.z,c=Math.cos(record.yaw),n=Math.sin(record.yaw),u=dx*c-dz*n,v=dx*n+dz*c;
+  return Math.hypot(u/(HULL.side+BODY),(v-HULL.centre)/(HULL.length+BODY));
+ }
+ function blocked(x,z){const d=depth(x,z);return d<1&&d<=depth(s.player.x,s.player.z);}
  function save(){
   if(!record)return opts.savePose?.(env.pose())!==false;
   return commit(aboard?saved(s.player.mode==='fly'?'flying':'boarded',record.surface):record);
@@ -313,7 +324,7 @@ function attach(s,opts,env){
   }
   lastTime=time;sync();
  }
- return {initialize,control,leave,move,save,sync,update,aboard:()=>aboard,
+ return {initialize,control,leave,move,save,sync,update,blocked,aboard:()=>aboard,
   marker:()=>{const p=local();return p&&!aboard?{x:p.x,z:p.z}:null;},
   diagnostics:()=>({record:record&&{...record},aboard,onDeck,visible:group.visible,position:{...group.position},float:{...float},view:visual.state()}),
   dispose(){closed=true;exit.remove();visual.dispose();}};
