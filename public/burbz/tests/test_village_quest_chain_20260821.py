@@ -79,7 +79,9 @@ def test_a_town_charter_waits_for_three_villages_and_a_star():
     ids = [q["id"] for q in player_quests()]
     assert ids.index("pq_merge_star") > ids.index("pq_liberate_3")
     assert ids.index("pq_found_town") > ids.index("pq_merge_star")
-    assert ids[-1] == "pq_found_town"
+    # Founding a town leads on to twin towns and, last of all, a Region.
+    assert ids.index("pq_found_town_2") > ids.index("pq_found_town")
+    assert ids.index("pq_found_region") > ids.index("pq_found_town_2")
 
 
 def test_every_village_link_lands_on_the_empire_screen():

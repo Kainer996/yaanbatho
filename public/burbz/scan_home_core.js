@@ -27,6 +27,10 @@
   const add=(id,title,detail,icon,target,tone='ready')=>actions.push({id,title,detail,icon,target,tone});
   const questCount=count(input.quests?.count);
   if(input.nextQuest)add('next-quest',input.nextQuest.name||'Your next quest',input.nextQuest.detail||'Continue your next Player Quest','quests',input.nextQuest.source==='progression'?{kind:'home-goal'}:{kind:'quest',id:input.nextQuest.id},'quiet');
+  // After the opening, Home shows the live link of each quest line.
+  const questLineInput=input.questLines&&Array.isArray(input.questLines.lines)?input.questLines:null;
+  const questLines=questLineInput?questLineInput.lines.filter(l=>l&&typeof l.line==='string').map(l=>({line:l.line,label:String(l.label||''),icon:String(l.icon||''),id:typeof l.id==='string'?l.id:null,name:String(l.name||''),ready:l.ready===true,target:typeof l.id==='string'?{kind:'player-quest',id:l.id}:null})):[];
+  const questProgress=questLineInput?{claimed:count(questLineInput.claimed),total:count(questLineInput.total)}:null;
   if(questCount)add('quests',questCount+' '+(questCount===1?'reward ready':'rewards ready'),input.quests.first?.name||'Open your quests to collect','quests',{kind:'quest',id:input.quests.first?.id});
   if(g.kitchen&&input.kitchenBuilt===false)add('kitchen','Build the Kitchen','A place to feed your birds','kitchen',{kind:'kitchen'},'quiet');
   else if(g.kitchen&&count(n.kitchen))add('kitchen','Kitchen',count(n.kitchen)+' '+(count(n.kitchen)===1?'bird would like a meal':'birds would like a meal'),'kitchen',{kind:'kitchen'},'care');
@@ -51,7 +55,7 @@
   playableGates.village=g.village===true&&villageDesk.length>0;
   const empire=empireColumns(g.village?input.empireDesk:null,builds);
   const panels=progressivePanels(input,{g:playableGates,completed});
-  return {panels,empire,villageDesk,equipment,availableBuilds,forgeReady:count(input.forgeReady),gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
+  return {questLines,questProgress,panels,empire,villageDesk,equipment,availableBuilds,forgeReady:count(input.forgeReady),gates:playableGates,stores,kitchen,training,hospital,completed,actions,routes,walk,player,builds,villages:villages.slice(0,3),villageCount:villages.length,flockCount:count(input.flockCount),discovered:count(input.discovered),readyCount:questCount+count(n.training)*(g.training?1:0)+count(input.forgeReady)*(g.forge?1:0)};
  }
  function empireColumns(input,builds=[]) {
   return ['villages','towns','regions'].map(id=>({id,title:{villages:'Villages',towns:'Towns',regions:'Regions'}[id],rows:(Array.isArray(input?.[id])?input[id]:[]).filter(r=>r&&typeof r.id==='string'&&typeof r.name==='string'&&r.target).map(r=>{

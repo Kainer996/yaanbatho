@@ -2896,6 +2896,9 @@ button.bench-row { width:100%; font:inherit; color:inherit; text-align:left; cur
 }
 /* Player Quests — the guided chain pinned to the top of the Quests tab */
 .player-quest-card { border-color: rgba(214,168,79,.45); background: linear-gradient(180deg, rgba(214,168,79,.10), rgba(0,0,0,.18)); }
+.player-quest-card + .player-quest-card { margin-top: 8px; }
+.player-quest-line { margin-bottom: 2px; color: #e2b95c; font: 700 11px/1.2 Rajdhani, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
+.player-quest-line-done { opacity: .75; }
 .player-quest-count { margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: rgba(214,168,79,.16); border: 1px solid rgba(214,168,79,.3); font-size: 11px; color: var(--accent); }
 .quest-go-btn {
   flex-shrink: 0; padding: 8px 14px; border: 1px solid rgba(240,199,103,.5);
@@ -3266,12 +3269,7 @@ body:has(#questClaimCelebration) .merlin-tutorial-overlay :is(.merlin-tutorial-s
 .prerequisite-guide-footer { display:flex; gap:8px; margin-top:12px; }
 .prerequisite-guide-footer button { flex:1; font-size:12px; }
 .prerequisite-home-resume { position:static; min-width:44px; min-height:44px; width:52px; align-self:stretch; padding:4px; border:1px solid #8d7a585c; border-radius:9px; background:#211c15; color:#f5e6c4; font:600 13px/1.25 Inter,sans-serif; text-align:center; }
-#screen-scan #scanHomeActions:has(.prerequisite-home-resume) { display:grid; grid-template-columns:minmax(0,1fr) 52px; gap:4px; }
-#screen-scan #scanHomeActions:has(.prerequisite-home-resume) > :is(.home-action,.desk-empty) { grid-column:1; grid-row:1; min-width:0; width:100%; margin:0; }
-#screen-scan #scanHomeActions > .prerequisite-home-resume { grid-column:2; grid-row:1; }
-#screen-scan #scanHomeActions:has(.prerequisite-home-resume) > .desk-empty { display:none; }
-#screen-scan #scanHomeActions:has(.desk-empty):has(.prerequisite-home-resume) { grid-template-columns:minmax(0,1fr); }
-#screen-scan #scanHomeActions:has(.desk-empty) > .prerequisite-home-resume { grid-column:1; width:100%; }
+/* The Goal button sits in the Quests strip beside the quest box (scan_home.css places it). */
 .prerequisite-home-resume:focus-visible { outline:3px solid #fff; outline-offset:2px; }
 .prerequisite-target { outline:3px solid #f6d66c !important; outline-offset:3px; scroll-margin:20px; }
 
@@ -4683,7 +4681,7 @@ if (window.BurbzAppearanceCore) {
 <link rel="stylesheet" href="landscape_ui.css?v=landscape-v388-20260910">
 <link rel="stylesheet" href="player_home.css?v=home-ground-intro-v451-20260923">
 <link rel="stylesheet" href="geographic_world.css?v=home-countryside-v387-20260910">
-<link rel="stylesheet" href="scan_home.css?v=home-hub-v491-20260925">
+<link rel="stylesheet" href="scan_home.css?v=quest-lines-v493-20260926">
 <link rel="stylesheet" href="academy_daynight.css?v=academy-day-night-v483-20260925">
 <link rel="stylesheet" href="photo_queue.css?v=gemini-photos-v410-20260914">
 <link rel="stylesheet" href="area_birds.css?v=area-birds-v377-20260909">
@@ -4812,7 +4810,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
       <div class="scan-home-main">
       <section id="scanHomeWalkSection" class="scan-home-walk" hidden></section>
       <div class="scan-home-start"><div class="scan-home-start-heading"><h2>Discover a bird</h2><span>Listen or take a photo</span></div>
-        <div class="scan-home-start-buttons"><button class="scan-btn scan-btn-lead" id="scanBtn" aria-describedby="merlinDataNote">START SOUND SCAN</button><button class="scan-btn" id="captureBtn">OPEN CAMERA</button></div>
+        <div class="scan-home-start-buttons"><button class="scan-btn scan-btn-lead" id="scanBtn" aria-describedby="merlinDataNote">START SOUND SCAN</button><button class="scan-btn" id="captureBtn">OPEN CAMERA</button><button type="button" id="soundSessionReopen" class="scan-session-reopen" hidden aria-label="Open the listening screen" title="Open the listening screen">↗</button></div>
         <div class="merlin-listener-line" id="merlinListenerLine">
           <div class="merlin-listener-status" id="merlinListenStatus" aria-live="polite">Ready to listen</div>
           <div class="merlin-listener-activity" id="merlinListenActivity">Ready for a sound scan</div>
@@ -5795,8 +5793,8 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_surfaces.js?v=map-pictures-v374-20260908"></script>
 <link rel="stylesheet" href="geographic_places.css?v=quest-buildings-v402-20260913">
 <script src="geographic_places_core.js?v=quest-revisit-v457-20260923"></script>
-<script src="scan_home_core.js?v=home-hub-v491-20260925"></script>
-<script src="scan_home.js?v=home-hub-v491-20260925"></script>
+<script src="scan_home_core.js?v=quest-lines-v493-20260926"></script>
+<script src="scan_home.js?v=quest-lines-v493-20260926"></script>
 <script src="photo_queue.js?v=bird-photo-recognition-v425-20260918"></script>
 <script src="area_birds_taxonomy.js?v=area-birds-v377-20260909"></script>
 <script src="area_birds_core.js?v=area-birds-v377-20260909"></script>
@@ -5851,7 +5849,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="audio_core.js?v=asmr-sound-v492-20260925"></script>
 <script src="asmr_soundscape.js?v=asmr-sound-v492-20260925"></script>
 <script src="garden_birds.js?v=asmr-sound-v492-20260925"></script>
-<script src="player_home_core.js?v=academy-garden-birds-v490-20260925"></script>
+<script src="player_home_core.js?v=quest-lines-v493-20260926"></script>
 <script src="player_home_scene.js?v=academy-garden-birds-v490-20260925"></script>
 <script src="alderwing_intro.js?v=fold-fullscreen-v489-20260925"></script>
 <script src="merlin_story_scenes.js?v=merlin-opening-v467-20260924"></script>
@@ -5869,7 +5867,7 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="geographic_home_picker.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="geographic_world.js?v=hands-on-world-tutorial-v429-20260920"></script>
 <script src="action_badge_core.js?v=barracks-tutorial-callout-v354-20260906"></script>
-<script src="onboarding_gate_core.js?v=opening-home-v416-20260914"></script>
+<script src="onboarding_gate_core.js?v=quest-lines-v493-20260926"></script>
 <script src="merlin_companion_core.js?v=opening-home-v416-20260914"></script>
 <script src="merlin_flight.js?v=merlin-flight-v479-20260925"></script>
 <script src="assets/merlin-flight/atlas-config.js?v=merlin-flight-v479-20260925"></script>
@@ -23922,6 +23920,16 @@ function scanHomeCurrentGoal() {
   if (quest) return {...quest,source:'progression',name:(Number(gameState.quests?.[quest.id]?.progress)>=quest.target?'Collect reward: ':'')+quest.name};
   return {id:'next-discovery',name:opening.label,source:'progression'};
 }
+// Once Merlin's opening is over, Home shows the live link of all three lines.
+function scanHomeQuestLines() {
+  if (merlinNavigationPaused || merlinTutActive || !openingObjective().complete) return null;
+  const actives = activePlayerQuests();
+  const claimed = PLAYER_QUESTS.filter(q => gameState.quests?.[q.id]?.claimed).length;
+  return {claimed,total:PLAYER_QUESTS.length,lines:PLAYER_QUEST_LINES.map((line, i) => {
+    const q = actives[i];
+    return {line:line.id,label:line.label,icon:line.icon,id:q?.id||null,name:q?q.name:'All done',ready:!!q&&Number(gameState.quests?.[q.id]?.progress)>=q.target};
+  })};
+}
 function activateHomeCurrentGoal() {
   if (merlinNavigationPaused) { resumeMerlinNavigation();return; }
   if (merlinTutActive && !merlinTutAwaitingAction) { const next=$('merlinTutorialNext');if(next&&!next.disabled)next.click();return; }
@@ -23959,7 +23967,7 @@ function scanHomeAcademySnapshot() {
 function renderScanHome(snapshot, counts) {
   if (currentScreen !== 'scan' || !window.BurbzScanHome || !gameState) return;
   if (!scanHomeBound) {
-    BurbzScanHome.bind({visible:()=>currentScreen==='scan',icon:key=>key==='kitchen'?'assets/academy-manga-20260925/kitchen.webp':key==='training'?'assets/academy-manga-20260925/training.webp':'assets/ui/burbz-icon-set/'+(key==='village'?'empire':key)+'.webp',open:openScanHomeTarget,closeSession:showSoundScanMode,listening:()=>continuousSoundScanWanted,stopListening:()=>stopContinuousSoundListening({userStop:true})});
+    BurbzScanHome.bind({visible:()=>currentScreen==='scan',icon:key=>key==='kitchen'?'assets/academy-manga-20260925/kitchen.webp':key==='training'?'assets/academy-manga-20260925/training.webp':'assets/ui/burbz-icon-set/'+(key==='village'?'empire':key)+'.webp',open:openScanHomeTarget,closeSession:showSoundScanMode,showListening:showSoundScanMode,listening:()=>continuousSoundScanWanted,stopListening:()=>stopContinuousSoundListening({userStop:true})});
     scanHomeBound = true;
   }
   snapshot = snapshot || normalizeActionBadgeState(Date.now());
@@ -23977,7 +23985,7 @@ function renderScanHome(snapshot, counts) {
     const waiting=(sideWalk.discoveries||[]).filter(d=>!d.claimed).length;
     walk={name:sideWalk.name||'Your side quest',detail:(Math.max(0,Number(sideWalk.distanceM)||0)/1000).toFixed(2)+' km explored'+(waiting?' · '+waiting+' finds waiting':' · Keep exploring')};
   }else if(savedWalk)walk={name:savedWalk.name||'Your saved walk',detail:'Progress saved · Resume whenever you choose'};
-  BurbzScanHome.render({...scanHomeDeskSnapshot(),academy:scanHomeAcademySnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:scanHomeCurrentGoal(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
+  BurbzScanHome.render({...scanHomeDeskSnapshot(),academy:scanHomeAcademySnapshot(),gates:{...Object.fromEntries(['map','quests','birdex','academy','battle','village','inventory','leaderboards','diary','kitchen','hospital','training','forge'].map(key=>[key,featureGateOpen(key)])),profile:true,settings:true},player:{name:gameState.player.name,level:gameState.player.level,coins:gameState.player.coins,showCoins:!merlinTutActive},counts,kitchenBuilt:isAcademyRoomBuilt('kitchen'),quests:{count:counts.quests,first:completed[0]},nextQuest:scanHomeCurrentGoal(),questLines:scanHomeQuestLines(),builds:scanHomeBuildOpportunities(),forgeReady:snapshot.forge,walk,notice:notice?{id:notice.id,title:notice.title,sub:notice.sub,seed:notice.target.seed}:null,villages,flockCount:gameState.flock?.length||0,discovered:discoveredSpeciesSet().size});
   if(typeof refreshPrerequisiteGoalBanner==='function')refreshPrerequisiteGoalBanner();
 }
 function openScanHomeTarget(target) {
@@ -23988,6 +23996,12 @@ function openScanHomeTarget(target) {
   if (gate&&!featureGateOpen(gate)) { if(!prerequisiteGuideGoal({type:'feature',args:[gate]}))showToast(featureUnlockHint(gate));return; }
   SFX.tap();
   if(target.kind==='home-goal'){activateHomeCurrentGoal();return;}
+  if(target.kind==='player-quest'){
+    // A finished link opens its card to claim; an open one goes where it is played.
+    const q=PLAYER_QUESTS.find(x=>x.id===target.id),state=q&&gameState.quests?.[q.id];if(!q)return;
+    if(Number(state?.progress)>=q.target||(q.go&&!featureGateOpen(q.go)))focusQuestFromNotice({questId:q.id});else playerQuestGo(q);
+    return;
+  }
   if(target.kind==='player-equipment')openDeskPlayerEquipment(target.slot);
   else if(target.kind==='feed-bird'){const entry=kitchenRosterEntryByKey(target.id);if(entry){if(entry.bird&&birdHasActiveExpedition(entry.bird.id)){showToast('This bird is away on a quest.');return;}openFeedSheet(entry.key);}}
   else if(target.kind==='stores-gear'){storesState.tab='armoury';switchScreen('inventory');requestAnimationFrame(()=>document.getElementById('stores-gear-'+target.id)?.scrollIntoView({block:'center'}));}
@@ -24125,6 +24139,7 @@ function applyFeatureGates() {
   try {
     map = core.unlockedFeatures({
       chainIds: PLAYER_QUESTS.map(q => q.id),
+      lineOf: Object.fromEntries(PLAYER_QUESTS.map(q => [q.id, q.line])),
       claimedIds: PLAYER_QUESTS.filter(q => gameState.quests && gameState.quests[q.id] && gameState.quests[q.id].claimed).map(q => q.id),
       evidence: featureGateEvidence(),
       playerLevel: gameState.player && gameState.player.level
@@ -39868,7 +39883,7 @@ function startPrerequisiteRecipe(id) { return showPrerequisiteGuide(id); }
 function refreshPrerequisiteGoalBanner() {
   const tracked=prerequisiteTrackedGoal(),plan=tracked&&prerequisiteCurrentPlan();
   let homeResume=$('prerequisiteHomeResume');
-  if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());$('scanHomeActions')?.append(homeResume);}homeResume.textContent='Goal';homeResume.title='Your goal · '+plan.facts.recipe.label;homeResume.setAttribute('aria-label',homeResume.title);}else homeResume?.remove();
+  if(tracked&&plan){if(!homeResume){homeResume=document.createElement('button');homeResume.type='button';homeResume.id='prerequisiteHomeResume';homeResume.className='prerequisite-home-resume';homeResume.addEventListener('click',()=>showPrerequisiteGuide());$('scanHomeActions')?.after(homeResume);}homeResume.textContent='Goal';homeResume.title='Your goal · '+plan.facts.recipe.label;homeResume.setAttribute('aria-label',homeResume.title);}else homeResume?.remove();
   // Retire legacy banners on every screen; the quiet Home control resumes saved intent.
   document.querySelectorAll('.prerequisite-goal-banner').forEach(el=>el.remove());
 }
@@ -44795,7 +44810,132 @@ const PLAYER_QUESTS = [
     measure:() => villageEconomies().filter(eco => eco.mergeStarSeen).length },
   { id:'pq_found_town',     name:'Found a Town', desc:'Merge three starred villages into one Town', type:'town_founded', target:1, reward:200, coins:120, branches:50, icon:'\u{1F3D8}\u{FE0F}', go:'village',
     measure:() => ((gameState.empire && gameState.empire.townCharters) || []).length },
+  // ── Earth: the real map, its birds and your Empire ──
+  { id:'pq_species_3', line:'earth', name:'Three of a feather', desc:'Discover 3 different bird species', type:'discover', target:3, reward:50, coins:30, icon:'🐦', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_village_levels_5', line:'earth', name:'Busy builders', desc:'Reach 5 building levels across your villages', type:'village_levels', target:5, reward:70, coins:40, branches:10, icon:'🏗️', go:'village',
+    measure:() => villageBuildingLevels() },
+  { id:'pq_village_pop_8', line:'earth', name:'A growing village', desc:'Grow one village to 8 folk', type:'village_population', target:8, reward:70, coins:40, icon:'👪', go:'village',
+    measure:() => Math.max(0, ...villageEconomies().map(eco => Number(eco?.population) || 0)) },
+  { id:'pq_ruins_1', line:'earth', name:'Clear the ruins', desc:'Clear a ruin in one of your villages', type:'ruin_cleared', target:1, reward:60, coins:30, branches:10, icon:'🪨', go:'village',
+    measure:() => villageEconomies().reduce((sum, eco) => sum + ((eco?.ruins || []).filter(r => r && r.cleared).length), 0) },
+  { id:'pq_liberate_2', line:'earth', name:'Two flags flying', desc:'Liberate 2 real villages', type:'town_liberated', target:2, reward:100, coins:60, branches:20, icon:'🚩', go:'map',
+    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_shop_find', line:'earth', name:'Find a village shop', desc:'Discover a shop on a real walk through one of your villages', type:'shop_found', target:1, reward:60, coins:40, icon:'🛍️', go:'map',
+    measure:() => Object.values(shopDiscoveryState() || {}).reduce((sum, list) => sum + (Array.isArray(list) ? list.length : 0), 0) },
+  { id:'pq_walk_3', line:'earth', name:'Seasoned walker', desc:'Complete 3 walks or Side Quests on the live map', type:'walk_completed', target:3, reward:90, coins:50, icon:'🥾', go:'map',
+    measure:() => playerWalkCount() },
+  { id:'pq_outpost', line:'earth', name:'Break an outpost', desc:'Clear an evil Burbz outpost from the wild', type:'outpost_cleared', target:1, reward:90, coins:50, branches:15, icon:'🏴', go:'map',
+    measure:() => (window.BurbzEnemyOutpostsCore ? BurbzEnemyOutpostsCore.receipts(gameState.enemyOutposts).length : 0) },
+  { id:'pq_village_happy', line:'earth', name:'Happy folk', desc:'Make one village 75% happy', type:'village_happy', target:1, reward:90, coins:50, icon:'😊', go:'village',
+    measure:() => empireVillages().some(rec => (Number(villageEconomySnapshot(rec)?.happiness) || 0) >= 0.75) ? 1 : 0 },
+  { id:'pq_village_story', line:'earth', name:'Village storyteller', desc:'Finish a village story on a real walk', type:'village_story', target:1, reward:90, coins:50, icon:'📜', go:'map',
+    measure:() => Object.values((gameState.villageDiscoveries && gameState.villageDiscoveries.villages) || {}).filter(v => v && v.completed).length },
+  { id:'pq_tax_5', line:'earth', name:'Tax season', desc:'Collect your taxes 5 times', type:'tribute_collected', target:5, reward:100, coins:0, branches:30, icon:'💰', go:'village',
+    measure:() => Number(gameState.player && gameState.player.tributeCollections) || 0 },
+  { id:'pq_species_20', line:'earth', name:'Keen birder', desc:'Discover 20 different bird species', type:'discover', target:20, reward:120, coins:80, icon:'🔭', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_walk_km_10', line:'earth', name:'Ten-kilometre boots', desc:'Walk 10 km in total on walks and Side Quests', type:'walk_distance', target:10, reward:120, coins:70, icon:'👣', go:'map',
+    measure:() => Math.floor(playerWalkKm()) },
+  { id:'pq_trade_route', line:'earth', name:'Open a trade road', desc:'Open a trade route between two of your settlements', type:'trade_route', target:1, reward:120, coins:70, branches:30, icon:'🛤️', go:'village',
+    measure:() => Object.keys((gameState.empire && gameState.empire.tradeRoutes) || {}).length },
+  { id:'pq_town_hall_2', line:'earth', name:'Raise the town hall', desc:'Upgrade a town hall to level 2', type:'town_hall', target:2, reward:140, coins:80, branches:30, icon:'🏛️', go:'village',
+    measure:() => Math.max(0, ...Object.values((gameState.empire && gameState.empire.towns) || {}).map(t => Number(t && t.hallLevel) || 0)) },
+  { id:'pq_liberate_6', line:'earth', name:'Liberator', desc:'Liberate 6 real villages', type:'town_liberated', target:6, reward:180, coins:120, branches:50, icon:'⚔️', go:'map',
+    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_realm_pop_60', line:'earth', name:'A thriving realm', desc:'Have 60 folk living across your villages', type:'realm_population', target:60, reward:160, coins:100, icon:'🏘️', go:'village',
+    measure:() => villageEconomies().reduce((sum, eco) => sum + (Number(eco?.population) || 0), 0) },
+  { id:'pq_complete_village_3', line:'earth', name:'Three fine villages', desc:'Finish 3 villages with every kind of building', type:'village_completed', target:3, reward:180, coins:110, branches:40, icon:'🏡', go:'village',
+    measure:() => completedVillageCount() },
+  { id:'pq_merge_star_3', line:'earth', name:'Star-studded', desc:'Earn 3 merge stars', type:'merge_star', target:3, reward:180, coins:110, branches:40, icon:'🌟', go:'village',
+    measure:() => villageEconomies().filter(eco => eco && eco.mergeStarSeen).length },
+  { id:'pq_found_town_2', line:'earth', name:'Twin towns', desc:'Found a second Town', type:'town_founded', target:2, reward:220, coins:140, branches:60, icon:'🏙️', go:'village',
+    measure:() => ((gameState.empire && gameState.empire.townCharters) || []).length },
+  { id:'pq_species_40', line:'earth', name:'Master birder', desc:'Discover 40 different bird species', type:'discover', target:40, reward:220, coins:150, icon:'🦅', go:'scan',
+    measure:() => discoveredSpeciesSet().size },
+  { id:'pq_trade_routes_3', line:'earth', name:'Merchant roads', desc:'Open 3 trade routes', type:'trade_route', target:3, reward:200, coins:140, branches:50, icon:'🐎', go:'village',
+    measure:() => Object.keys((gameState.empire && gameState.empire.tradeRoutes) || {}).length },
+  { id:'pq_liberate_10', line:'earth', name:'Free the shire', desc:'Liberate 10 real villages', type:'town_liberated', target:10, reward:260, coins:180, branches:80, icon:'🛡️', go:'map',
+    measure:() => Object.keys((gameState.empire && gameState.empire.liberationVictories) || {}).length },
+  { id:'pq_walk_km_42', line:'earth', name:'Marathon boots', desc:'Walk 42 km in total on walks and Side Quests', type:'walk_distance', target:42, reward:260, coins:180, icon:'🏅', go:'map',
+    measure:() => Math.floor(playerWalkKm()) },
+  { id:'pq_found_region', line:'earth', name:'Found a Region', desc:'Join your towns under one Region', type:'region_founded', target:1, reward:300, coins:200, branches:100, icon:'👑', go:'village',
+    measure:() => ((gameState.empire && gameState.empire.regionCharters) || []).length },
+
+  // ── Alderwing: your own home, garden and camps ──
+  { id:'pq_alder_arrive', line:'alderwing', name:'Step into Alderwing', desc:'Enter Alderwing and look around your little shelter', type:'alderwing_arrived', target:1, reward:30, coins:20, branches:10, icon:'🏰', go:'alderwing',
+    measure:() => alderwingHome()?.arrival === 'done' ? 1 : 0 },
+  { id:'pq_home_find', line:'alderwing', name:'A hidden find', desc:'Discover one of the secrets round your home', type:'home_find', target:1, reward:40, coins:20, branches:5, icon:'🔍', go:'alderwing',
+    measure:() => (alderwingHome()?.finds || []).length },
+  { id:'pq_camp_pitch', line:'alderwing', name:'Pitch a camp', desc:'Open Camps & homes and pitch your first camp', type:'camp_pitched', target:1, reward:40, coins:20, branches:10, icon:'⛺', go:'camps',
+    measure:() => (explorationState().camps || []).length },
+  { id:'pq_home_decor', line:'alderwing', name:'Make it cosy', desc:'Place a piece of furniture in your home or garden', type:'home_decor', target:1, reward:40, coins:20, branches:10, icon:'🪑', go:'alderwing',
+    measure:() => (alderwingHome()?.placed || []).length },
+  { id:'pq_farm_plot', line:'alderwing', name:'Dig a garden plot', desc:'Dig a growing plot beside your cottage', type:'farm_plot', target:1, reward:40, coins:20, branches:5, icon:'🟫', go:'alderwing',
+    measure:() => (alderwingHome()?.farm?.plots || []).length },
+  { id:'pq_farm_plant', line:'alderwing', name:'Sow your first seeds', desc:'Plant and water a crop in your garden', type:'farm_planted', target:1, reward:40, coins:20, icon:'🌱', go:'alderwing',
+    measure:() => (alderwingHome()?.farm?.plots || []).filter(p => p && p.crop && p.wateredAt).length + (Number(alderwingHome()?.farm?.harvests) || 0) },
+  { id:'pq_farm_harvest', line:'alderwing', name:'First harvest', desc:'Bring in a ripe crop from your garden', type:'farm_harvest', target:1, reward:60, coins:30, branches:10, icon:'🌾', go:'alderwing',
+    measure:() => Number(alderwingHome()?.farm?.harvests) || 0 },
+  { id:'pq_camp_fire', line:'alderwing', name:'Light a campfire', desc:'Build a fire at one of your camps', type:'camp_fire', target:1, reward:50, coins:25, icon:'🔥', go:'camps',
+    measure:() => (explorationState().camps || []).filter(c => c && c.fire).length },
+  { id:'pq_home_craft', line:'alderwing', name:'Make something new', desc:'Make a new decoration for your home', type:'home_craft', target:1, reward:60, coins:30, icon:'🪚', go:'alderwing',
+    measure:() => Math.max(0, Object.values(alderwingHome()?.owned || {}).reduce((sum, n) => sum + (Number(n) || 0), 0) - 3) },
+  { id:'pq_home_room', line:'alderwing', name:'Add a room', desc:'Build a library, conservatory or workshop onto your home', type:'home_room', target:1, reward:80, coins:40, branches:10, icon:'🚪', go:'alderwing',
+    measure:() => Object.keys(alderwingHome()?.rooms || {}).length },
+  { id:'pq_home_finds_4', line:'alderwing', name:'Curious keeper', desc:'Discover 4 secrets round your home', type:'home_find', target:4, reward:70, coins:40, branches:10, icon:'🗝️', go:'alderwing',
+    measure:() => (alderwingHome()?.finds || []).length },
+  { id:'pq_farm_plots_6', line:'alderwing', name:'Market garden', desc:'Have 6 growing plots in your garden', type:'farm_plot', target:6, reward:80, coins:40, icon:'🥕', go:'alderwing',
+    measure:() => (alderwingHome()?.farm?.plots || []).length },
+  { id:'pq_home_decor_8', line:'alderwing', name:'Lived-in', desc:'Place 8 pieces of furniture round your home', type:'home_decor', target:8, reward:80, coins:40, branches:15, icon:'🛋️', go:'alderwing',
+    measure:() => (alderwingHome()?.placed || []).length },
+  { id:'pq_farm_harvest_10', line:'alderwing', name:'Bumper crop', desc:'Bring in 10 harvests', type:'farm_harvest', target:10, reward:100, coins:60, branches:15, icon:'🧺', go:'alderwing',
+    measure:() => Number(alderwingHome()?.farm?.harvests) || 0 },
+  { id:'pq_camps_3', line:'alderwing', name:'Three camps', desc:'Pitch 3 camps', type:'camp_pitched', target:3, reward:90, coins:50, branches:15, icon:'🏕️', go:'camps',
+    measure:() => (explorationState().camps || []).length },
+  { id:'pq_home_hearth', line:'alderwing', name:'Build the hearthhome', desc:'Grow your cottage into an Alderwing hearthhome', type:'home_tier', target:2, reward:150, coins:80, icon:'🏠', go:'alderwing',
+    measure:() => Number(alderwingHome()?.tier) || 0 },
+  { id:'pq_camp_visit', line:'alderwing', name:'Sleep under real stars', desc:'Visit one of your camps in real life', type:'camp_visit', target:1, reward:150, coins:80, branches:20, icon:'🌌', go:'camps',
+    measure:() => (explorationState().camps || []).filter(c => c && c.visitedAt).length },
+  { id:'pq_home_rooms_3', line:'alderwing', name:'A house of rooms', desc:'Build all 3 extra rooms onto your home', type:'home_room', target:3, reward:160, coins:90, branches:20, icon:'🏡', go:'alderwing',
+    measure:() => Object.keys(alderwingHome()?.rooms || {}).length },
+  { id:'pq_home_decor_24', line:'alderwing', name:'Home sweet home', desc:'Place 24 pieces of furniture round your home', type:'home_decor', target:24, reward:160, coins:90, branches:20, icon:'🖼️', go:'alderwing',
+    measure:() => (alderwingHome()?.placed || []).length },
+  { id:'pq_home_finds_all', line:'alderwing', name:'Every secret', desc:'Discover all 11 secrets of your home', type:'home_find', target:11, reward:180, coins:100, icon:'✨', go:'alderwing',
+    measure:() => (alderwingHome()?.finds || []).length },
+  { id:'pq_farm_harvest_50', line:'alderwing', name:'Harvest festival', desc:'Bring in 50 harvests', type:'farm_harvest', target:50, reward:220, coins:140, branches:40, icon:'🎃', go:'alderwing',
+    measure:() => Number(alderwingHome()?.farm?.harvests) || 0 },
 ];
+
+// Every player quest belongs to one of the three lines. Order inside a line
+// is the order of PLAYER_QUESTS.
+function assignPlayerQuestLines() {
+  const PLAYER_QUEST_LINE_OF = {
+    earth: ['pq_first_bird','pq_open_empire','pq_liberate','pq_village_build','pq_village_levels_5','pq_village_food','pq_village_pop_8','pq_ruins_1','pq_walk_adventure','pq_species_3','pq_village_tax','pq_liberate_2','pq_shop_find','pq_species_10','pq_walk_3','pq_outpost','pq_complete_village','pq_village_happy','pq_village_story','pq_village_steward','pq_liberate_3','pq_tax_5','pq_merge_star','pq_species_20','pq_walk_km_10','pq_found_town','pq_trade_route','pq_town_hall_2','pq_liberate_6','pq_realm_pop_60','pq_complete_village_3','pq_merge_star_3','pq_found_town_2','pq_species_40','pq_trade_routes_3','pq_liberate_10','pq_walk_km_42','pq_found_region'],
+    academy: ['pq_build_barracks','pq_recruit','pq_preen','pq_expedition','pq_claim_errand','pq_build_kitchen','pq_true_diet','pq_build_training','pq_training_drill','pq_build_quest_roost','pq_build_market','pq_market_trade','pq_equip_gear','pq_first_win','pq_meal','pq_diet_badge','pq_build_hospital','pq_hospital_rest','pq_win_3','pq_quiz','pq_craft_gear','pq_build_manager_office','pq_build_crowbar','pq_build_workshop'],
+    alderwing: ['pq_alder_arrive','pq_home_find','pq_camp_pitch','pq_build_home','pq_home_decor','pq_farm_plot','pq_farm_plant','pq_farm_harvest','pq_camp_fire','pq_home_craft','pq_home_room','pq_home_finds_4','pq_farm_plots_6','pq_home_decor_8','pq_farm_harvest_10','pq_camps_3','pq_home_hearth','pq_camp_visit','pq_home_rooms_3','pq_home_decor_24','pq_home_finds_all','pq_farm_harvest_50']
+  };
+  PLAYER_QUESTS.forEach(q => { q.line = q.line || Object.keys(PLAYER_QUEST_LINE_OF).find(line => PLAYER_QUEST_LINE_OF[line].includes(q.id)) || 'academy'; });
+  // Inside each line the list above sets the order; each line keeps its slots.
+  Object.entries(PLAYER_QUEST_LINE_OF).forEach(([line, ids]) => {
+    const slots = PLAYER_QUESTS.map((q, i) => q.line === line ? i : -1).filter(i => i >= 0);
+    const rank = id => { const i = ids.indexOf(id); return i < 0 ? ids.length : i; };
+    const ordered = slots.map(i => PLAYER_QUESTS[i]).sort((a, b) => rank(a.id) - rank(b.id));
+    slots.forEach((slot, i) => { PLAYER_QUESTS[slot] = ordered[i]; });
+  });
+}
+assignPlayerQuestLines();
+
+// Quest measures for walks and Alderwing. Every read tolerates an old save.
+function playerWalkCount() {
+  return ((gameState.walkingQuests && gameState.walkingQuests.history) || []).length + ((gameState.sideQuest && gameState.sideQuest.history) || []).length;
+}
+function playerWalkKm() {
+  const walks = ((gameState.walkingQuests && gameState.walkingQuests.history) || []).reduce((sum, w) => sum + (Number(w && (w.distanceKm ?? w.km)) || 0), 0);
+  const side = ((gameState.sideQuest && gameState.sideQuest.history) || []).reduce((sum, w) => sum + (Number(w && w.distanceM) || 0) / 1000, 0);
+  return walks + side;
+}
+function alderwingHome() { return gameState.playerHome && typeof gameState.playerHome === 'object' ? gameState.playerHome : null; }
 
 // How many times the player has opened the Empire map. The first open is the
 // first link in the player quest chain, so it is recorded on the save.
@@ -44810,36 +44950,61 @@ function markEmpireMapOpened() {
   if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
 }
 
-function activePlayerQuest() {
+// Three quest lines run side by side: Earth (the real map, birds and your
+// Empire), the Academy (buildings and companions) and Alderwing (your own
+// kingdom). Each line keeps its own order; the lines never wait on each other.
+const PLAYER_QUEST_LINES = [
+  { id:'earth', label:'Earth', icon:'\u{1F30D}' },
+  { id:'academy', label:'Academy', icon:'\u{1F3DB}\u{FE0F}' },
+  { id:'alderwing', label:'Alderwing', icon:'\u{1F3F0}' }
+];
+function playerQuestLine(q) { return PLAYER_QUEST_LINES.find(line => line.id === q?.line) || PLAYER_QUEST_LINES[1]; }
+function openingGuidedQuestId(opening) {
+  const openingQuestIds = {birdhouse:'pq_build_barracks',discovery:'pq_first_bird',companion:'pq_recruit',kitchen:'pq_build_kitchen',errand:gameState.birdExpeditions?.some(q=>q.templateId==='merlin_first_flight'&&q.status!=='claimed')?'pq_claim_errand':'pq_expedition',care:'pq_meal'};
+  return openingQuestIds[opening.stage] || null;
+}
+// The live link of every line, in line order. A line that is finished reads null.
+function activePlayerQuests() {
   const opening = openingProgress();
   const flow = tutorialFlowState();
-  const openingQuestIds = {birdhouse:'pq_build_barracks',discovery:'pq_first_bird',companion:'pq_recruit',kitchen:'pq_build_kitchen',errand:gameState.birdExpeditions?.some(q=>q.templateId==='merlin_first_flight'&&q.status!=='claimed')?'pq_claim_errand':'pq_expedition',care:'pq_meal'};
-  const guided = PLAYER_QUESTS.find(q => q.id === openingQuestIds[opening.stage]);
+  const guided = PLAYER_QUESTS.find(q => q.id === openingGuidedQuestId(opening));
+  return PLAYER_QUEST_LINES.map(line => {
+    if (guided && guided.line === line.id && !gameState.quests?.[guided.id]?.claimed) return guided;
+    return PLAYER_QUESTS.find(q => {
+      if (q.line !== line.id || gameState.quests?.[q.id]?.claimed) return false;
+      // Deferral keeps the actual discovery/recruitment goal and its reward intact.
+      if (opening.stage !== 'done' && flow.discoveryDeferred && ['pq_first_bird','pq_recruit','pq_preen'].includes(q.id)) return false;
+      if (['pq_expedition','pq_claim_errand'].includes(q.id) && !opening.errands && opening.stage !== 'done') return false;
+      return true;
+    }) || null;
+  });
+}
+// The one quest older callers point at: the opening's guided link, else the
+// earliest live link of the three lines.
+function activePlayerQuest() {
+  const guided = PLAYER_QUESTS.find(q => q.id === openingGuidedQuestId(openingProgress()));
   if (guided && !gameState.quests?.[guided.id]?.claimed) return guided;
-  return PLAYER_QUESTS.find(q => {
-    if (gameState.quests?.[q.id]?.claimed) return false;
-    // Deferral keeps the actual discovery/recruitment goal and its reward intact.
-    if (opening.stage !== 'done' && flow.discoveryDeferred && ['pq_first_bird','pq_recruit','pq_preen'].includes(q.id)) return false;
-    if (['pq_expedition','pq_claim_errand'].includes(q.id) && !opening.errands && opening.stage !== 'done') return false;
-    return true;
-  }) || null;
+  const live = activePlayerQuests().filter(Boolean);
+  return PLAYER_QUESTS.find(q => live.includes(q)) || null;
 }
 
 // Only the active link in the chain accepts progress, so a later goal can
 // never complete (or badge the nav) before its turn.
 function syncActivePlayerQuest() {
-  const q = activePlayerQuest();
-  if (!q) return;
   if (!gameState.quests) gameState.quests = {};
-  if (!gameState.quests[q.id]) gameState.quests[q.id] = { progress: 0, claimed: false };
-  const state = gameState.quests[q.id];
-  if (typeof q.measure === 'function') {
-    try { state.progress = Math.min(q.target, Math.max(state.progress || 0, q.measure())); } catch (e) {}
-  }
+  activePlayerQuests().forEach(q => {
+    if (!q) return;
+    if (!gameState.quests[q.id]) gameState.quests[q.id] = { progress: 0, claimed: false };
+    const state = gameState.quests[q.id];
+    if (typeof q.measure === 'function') {
+      try { state.progress = Math.min(q.target, Math.max(state.progress || 0, q.measure())); } catch (e) {}
+    }
+  });
 }
 
 function playerQuestGo(q) {
-  if(q.id==='pq_build_home'){switchScreen('scan');$('playerHomeStand')?.click();return;}
+  if(q.id==='pq_build_home'||q.go==='alderwing'){switchScreen('scan');$('playerHomeStand')?.click();return;}
+  if(q.go==='camps'){switchScreen('scan');$('campHomeButton')?.click();return;}
   if (q.id === 'pq_liberate') { startVillageLiberationBattle(currentVillage()); return; }
   academyQuestGuidanceRoom = q.focusRoom || null;
   if (q.go === 'academy' && q.focusRoom && !isAcademyBuildingBuilt(q.focusRoom)) {
@@ -44879,23 +45044,12 @@ function claimPlayerQuest(id) {
   announcePlayerLevelUps(previousLevel);
   updateHeader();
   playQuestClaimCelebration({ coins: q.coins || 0, xp: q.reward, items: {} });
-  const next = activePlayerQuest();
-  if (next) showToast('\u{1F9ED} Next player quest: ' + next.name);
+  const line = playerQuestLine(q), next = activePlayerQuests()[PLAYER_QUEST_LINES.indexOf(line)];
+  if (next) showToast(line.icon + ' Next ' + line.label + ' quest: ' + next.name);
   renderQuests();
 }
 
-function renderPlayerQuests() {
-  const host = $('playerQuestsList');
-  if (!host) return;
-  syncActivePlayerQuest();
-  const total = PLAYER_QUESTS.length;
-  const claimed = PLAYER_QUESTS.filter(q => gameState.quests[q.id] && gameState.quests[q.id].claimed).length;
-  const active = activePlayerQuest();
-  if (!active) {
-    host.innerHTML = '<div class="quest-section-title">Player Quests</div>' +
-      '<div class="quest-all-done">\u{1F451} All ' + total + ' player quests complete — the Kingdom of Alderwing flies with you!</div>';
-    return;
-  }
+function playerQuestCardHTML(active, line) {
   const state = gameState.quests[active.id] || { progress: 0 };
   const complete = (state.progress || 0) >= active.target;
   const pct = Math.min(100, ((state.progress || 0) / active.target) * 100);
@@ -44906,10 +45060,10 @@ function renderPlayerQuests() {
     const item = window.BurbzLootCore ? lootCore().gearById(id) : null;
     if (item) rewardBits.push(item.icon + ' ' + item.label);
   });
-  host.innerHTML = '<div class="quest-section-title">Player Quests <span class="player-quest-count">' + claimed + '/' + total + '</span></div>' +
-    '<div class="quest-card player-quest-card" data-quest-card="' + active.id + '">' +
+  return '<div class="quest-card player-quest-card" data-quest-card="' + active.id + '" data-quest-line="' + line.id + '">' +
       '<div class="quest-icon">' + active.icon + '</div>' +
       '<div class="quest-info">' +
+        '<div class="player-quest-line">' + line.icon + ' ' + line.label + '</div>' +
         '<div class="quest-name">' + escapeHtml(active.name) + '</div>' +
         '<div class="quest-desc">' + escapeHtml(active.desc) + '</div>' +
         '<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:' + pct + '%"></div></div>' +
@@ -44919,8 +45073,32 @@ function renderPlayerQuests() {
         ? '<button class="quest-claim-btn pulse" data-player-quest-claim="' + active.id + '">CLAIM</button>'
         : '<button class="quest-go-btn" data-player-quest-go="' + active.id + '">GO ›</button>') +
     '</div>';
-  host.querySelector('[data-player-quest-go]')?.addEventListener('click', () => { SFX.tap(); playerQuestGo(active); });
-  host.querySelector('[data-player-quest-claim]')?.addEventListener('click', () => claimPlayerQuest(active.id));
+}
+
+function renderPlayerQuests() {
+  const host = $('playerQuestsList');
+  if (!host) return;
+  syncActivePlayerQuest();
+  const total = PLAYER_QUESTS.length;
+  const claimed = PLAYER_QUESTS.filter(q => gameState.quests[q.id] && gameState.quests[q.id].claimed).length;
+  const actives = activePlayerQuests();
+  if (!actives.some(Boolean)) {
+    host.innerHTML = '<div class="quest-section-title">Player Quests</div>' +
+      '<div class="quest-all-done">\u{1F451} All ' + total + ' player quests complete — the Kingdom of Alderwing flies with you!</div>';
+    return;
+  }
+  host.innerHTML = '<div class="quest-section-title">Player Quests <span class="player-quest-count">' + claimed + '/' + total + '</span></div>' +
+    PLAYER_QUEST_LINES.map((line, i) => {
+      const active = actives[i];
+      if (active) return playerQuestCardHTML(active, line);
+      const done = PLAYER_QUESTS.filter(q => q.line === line.id).length;
+      return '<div class="quest-card player-quest-card player-quest-line-done" data-quest-line="' + line.id + '"><div class="quest-icon">\u{1F451}</div><div class="quest-info"><div class="player-quest-line">' + line.icon + ' ' + line.label + '</div><div class="quest-name">Every ' + line.label + ' quest done</div><div class="quest-desc">All ' + done + ' of them. Well flown!</div></div></div>';
+    }).join('');
+  host.querySelectorAll('[data-player-quest-go]').forEach(button => button.addEventListener('click', () => {
+    const q = PLAYER_QUESTS.find(x => x.id === button.dataset.playerQuestGo);
+    SFX.tap(); if (q) playerQuestGo(q);
+  }));
+  host.querySelectorAll('[data-player-quest-claim]').forEach(button => button.addEventListener('click', () => claimPlayerQuest(button.dataset.playerQuestClaim)));
 }
 
 function initQuests() {
@@ -45012,9 +45190,9 @@ function updateQuestProgress(type, amount, deferredEffects) {
       }
     });
   }
-  // Player quests: only the active link in the chain moves.
-  const activePq = activePlayerQuest();
-  if (activePq) {
+  // Player quests: only the live link of each line moves.
+  activePlayerQuests().forEach(activePq => {
+    if (!activePq) return;
     if (!gameState.quests[activePq.id]) gameState.quests[activePq.id] = { progress: 0, claimed: false };
     const pqState = gameState.quests[activePq.id];
     const before = pqState.progress || 0;
@@ -45027,7 +45205,7 @@ function updateQuestProgress(type, amount, deferredEffects) {
       const redraw = () => { if (currentScreen === 'quests') { try { renderPlayerQuests(); } catch (e) {} } };
       if (deferredEffects) deferredEffects.push(redraw); else redraw();
     }
-  }
+  });
   if (!deferredEffects) {
     if (typeof queueActionBadgeUpdate === 'function') queueActionBadgeUpdate();
     saveState();
@@ -45416,7 +45594,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'asmr-sound-v492-20260925';
+const BURBZ_BUILD = 'quest-lines-v493-20260926';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
