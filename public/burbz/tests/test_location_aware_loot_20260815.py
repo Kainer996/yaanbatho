@@ -326,3 +326,21 @@ console.log(JSON.stringify({ count: pickups.length, maxDist: Math.max(...dists) 
     out = json.loads(result.stdout)
     assert out["count"] > 0
     assert out["maxDist"] <= 80  # the shoal floats on the river, not the towpath
+
+
+def test_water_only_gives_water_finds():
+    html = HTML.read_text(encoding="utf-8")
+    wet = {"minnow", "trout", "sandeel", "shoresnails", "pondweed", "midges", "dragonflies",
+           "frog", "reed", "driftwood", "gritbank", "chest"}
+    for habitat in ("water", "coast", "wetland"):
+        ids = _roll(html, habitat)
+        assert ids <= wet, (habitat, ids - wet)
+    # No worms, lizards or rations on the lake.
+    assert not {"wormcast", "lizard", "preyration", "mealworms"} & _roll(html, "water")
+
+
+def test_fish_and_water_insects_stay_by_the_water():
+    html = HTML.read_text(encoding="utf-8")
+    water_only = {"minnow", "trout", "sandeel", "midges", "dragonflies", "frog"}
+    for habitat in (None, "woodland", "urban", "park", "farmland", "grassland", "heath", "hills"):
+        assert not water_only & _roll(html, habitat), habitat
