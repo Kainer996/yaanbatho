@@ -7,7 +7,7 @@ const BUILD='photo-merlin-v494-20260926';
 
 test('v494 ships together: build marker, cache, worker lists and updater',()=>{
  const html=read('index.html'),sw=read('sw.js'),updater=fs.readFileSync(path.join(root,'../../scripts/update-live-burbz.sh'),'utf8');
- assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';")||html.includes("const BURBZ_BUILD = 'village-apart-v495-20260926';"));
+ assert(html.includes("const BURBZ_BUILD = '"+BUILD+"';")||html.includes("const BURBZ_BUILD = 'village-apart-v497-20260926';"));
  assert(sw.match(/const BURBZ_CACHE = '([^']+)'/)[1].includes('-'+BUILD));
  assert.equal(sw.split("'./photo_queue.js?v="+BUILD+"'").length-1,3,'photo queue in all three worker lists');
  assert(html.includes('photo_queue.js?v='+BUILD));

@@ -1,5 +1,5 @@
 'use strict';
-// v495: neighbouring settlements never share ground, and a parked craft is
+// v497: neighbouring settlements never share ground, and a parked craft is
 // solid to anyone on foot.
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 const read=name=>fs.readFileSync(require.resolve('../'+name),'utf8');
