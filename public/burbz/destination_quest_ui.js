@@ -7,6 +7,7 @@
 
   const VERSION = 'destination-quest-ui-v431-20260921';
   const PIN = 'gold-trail-raven-v454-20260923';
+  const MAX_CHECKPOINTS = 8;
   const DEFAULT_ROUTE_OPTIONS = {
     timeoutMs: 5000,
     totalTimeoutMs: 12000,
@@ -106,6 +107,7 @@
       end: null,
       startSource: null,
       endSource: null,
+      via: [],
       preview: null,
       error: null,
       generation: 0,
@@ -133,6 +135,7 @@
         end: state.end && Object.assign({}, state.end),
         startSource: state.startSource,
         endSource: state.endSource,
+        via: state.via.map(point => Object.assign({}, point)),
         preview: state.preview,
         error: state.error,
         generation: state.generation,
@@ -194,6 +197,23 @@
       }
       emit(kind + '-selected', { point });
       return { ok: true, point: Object.assign({}, point) };
+    }
+    // Checkpoints sit between the start and the destination, in the order placed.
+    function addCheckpoint(lat, lon, source) {
+      const point = normalizedPoint(lat, lon, { source: source || 'map-tap' });
+      if (!point) return { ok: false, error: { code: 'invalid-coordinate', message: 'That checkpoint has no valid position.' } };
+      if (state.via.length >= MAX_CHECKPOINTS) return { ok: false, error: { code: 'checkpoint-limit', message: 'A walk can have ' + MAX_CHECKPOINTS + ' checkpoints.' } };
+      invalidate('checkpoint-added');
+      state.via.push(point);
+      emit('checkpoint-added', { point, count: state.via.length });
+      return { ok: true, point: Object.assign({}, point), count: state.via.length };
+    }
+    function removeCheckpoint(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= state.via.length) return { ok: false };
+      invalidate('checkpoint-removed');
+      state.via.splice(index, 1);
+      emit('checkpoint-removed', { count: state.via.length });
+      return { ok: true, count: state.via.length };
     }
     function contextStatus(context) {
       if (!context) return 'stale-preview';
@@ -286,8 +306,9 @@
       state.abort = controller;
       const owner = rootStateFrom(options);
       state.previewContext = { rootState: owner, profileId: profileFrom(options, owner), revision: revisionFrom(options, owner) };
-      emit('preview-started', { start: state.start, end: state.end });
+      emit('preview-started', { start: state.start, end: state.end, checkpoints: state.via.length });
       const routeOptions = Object.assign({}, DEFAULT_ROUTE_OPTIONS, state.routeOptions, extra && extra.routeOptions || {});
+      if (state.via.length) routeOptions.via = state.via.map(point => ({ lat: point.lat, lon: point.lon }));
       if (controller) routeOptions.signal = controller.signal;
 
       routeOptions.onProgress = progress => {if(generation!==state.generation)return;state.providerProgress=progress;emit('provider-progress');};
@@ -438,7 +459,7 @@
     }
     function setPreciseStart(position) {
       if (!position || position.precise !== true || !validCoordinate(position)) {
-        state.error = { code: 'gps-unavailable', message: 'Precise GPS is not available. Enter a start manually or pick it on the map.' };
+        state.error = { code: 'gps-unavailable', message: 'Your location is not ready yet. Allow location, or tap the map instead.' };
         state.phase = 'input-error';
         emit('gps-unavailable');
         return { ok: false, error: state.error };
@@ -453,6 +474,9 @@
       setMapStart: (lat, lon) => setPoint('start', lat, lon, 'map-tap'),
       setMapEnd: (lat, lon) => setPoint('end', lat, lon, 'map-tap'),
       setPreciseStart,
+      addCheckpoint,
+      removeCheckpoint,
+      clearCheckpoints: () => { invalidate('checkpoints-cleared'); state.via = []; emit('checkpoints-cleared', { count: 0 }); return { ok: true }; },
       setRouteOptions,
       preview,
       begin,
@@ -672,6 +696,7 @@
     if (!doc || !doc.body) return null;
     const controller = createPlannerController(Object.assign({}, options, {
       onPreview: function(value) {
+        editing = false;
         drawPreview(value);
         if (typeof options.onPreview === 'function') options.onPreview(value);
       },
@@ -694,7 +719,7 @@
     let mapPick = null;
     let nativeHandlers = null;
     let archiveViewId = null;
-    let disposed = false, mainButton = null, mainHandler = null, markerKey = '', manualCoordinates = false;
+    let disposed = false, mainButton = null, mainHandler = null, markerKey = '', manualCoordinates = false, editing = false, locating = false;
     const timelineController = createTimelineController(Object.assign({}, options, {
       nativeHandlers: () => nativeHandlers || {},
       onStatus: function(status) {
@@ -781,14 +806,15 @@
         }))
       };
     }
-    function makeMarker(point, label, className) {
+    function makeMarker(point, label, className, badge) {
       const map = getMap();
       if (!map || !point || !validCoordinate(point)) return;
       const el = doc.createElement('div');
       el.className = 'destination-route-marker ' + className;
       el.dataset.latitude = String(point.lat); el.dataset.longitude = String(point.lon);
       el.setAttribute('role','img');
-      el.innerHTML = '<strong>' + (className === 'start' ? '1' : '2') + '</strong><span>' + (className === 'start' ? 'START' : 'DESTINATION') + '</span>';
+      // Badge and label are fixed strings from this file, never player text.
+      el.innerHTML = '<strong>' + badge + '</strong>' + (className === 'checkpoint' ? '' : '<span>' + label.toUpperCase() + '</span>');
       el.setAttribute('aria-label', 'Destination ' + label + ' marker');
       try {
         const factory = typeof options.createMarker === 'function' ? options.createMarker : (root.maplibregl && root.maplibregl.Marker ? cfg => new root.maplibregl.Marker(cfg) : null);
@@ -799,11 +825,13 @@
     }
     function syncSelectionMarkers(route) {
       const current = controller.state();
-      const s = route ? {start:route.selectedStart || route.points?.[0],end:route.selectedEnd || route.points?.at(-1)} : current;
-      const key = JSON.stringify([s.start,s.end]);
+      const s = route ? {start:route.selectedStart || route.points?.[0],end:route.selectedEnd || route.points?.at(-1),via:Array.isArray(route.checkpoints) ? route.checkpoints : []} : {start:current.start,end:current.end,via:current.via || []};
+      const key = JSON.stringify([s.start,s.end,s.via]);
       if (key === markerKey) return;
       markers.splice(0).forEach(m=>m.remove());
-      makeMarker(s.start,'Start','start'); makeMarker(s.end,'Destination','end');
+      makeMarker(s.start,'Start','start','▶');
+      s.via.forEach((point, index) => makeMarker(point,'Checkpoint ' + (index + 1),'checkpoint',String(index + 1)));
+      makeMarker(s.end,'Destination','end','⚑');
       markerKey=key;
     }
     function syncEncounterMarkers(entries) {
@@ -873,42 +901,129 @@
       else { clearPreviewLayer(); if(sheet?.classList.contains('open'))syncSelectionMarkers(); }
     }
     function onMapStyleLoad() { renderedRouteKey = ''; refreshMapRoute(); }
+    // Walk planner v495 wears the Home look: charcoal boxes, muted gold edges,
+    // a glowing gold main button. A chosen button stays lit so the player knows.
+    const ART = {
+      head: 'assets/ui/burbz-icon-set/map.webp',
+      start: 'assets/walking-quests/lantern-post.webp',
+      checkpoints: 'assets/ui/map-landmark-field.webp',
+      end: 'assets/walking-quests/wayfarer-rest.webp'
+    };
+    function fromGps(source) { return !!source && source !== 'manual' && source !== 'map-tap'; }
+    function coordsText(point) { return validCoordinate(point) ? Number(point.lat).toFixed(5) + ', ' + Number(point.lon).toFixed(5) : ''; }
+    function pointSourceText(point, source, short) {
+      if (!point) return '';
+      if (short) return fromGps(source) ? 'My location' : source === 'map-tap' ? 'On the map' : 'Coordinates';
+      return fromGps(source) ? 'Your location' : source === 'map-tap' ? 'Picked on the map' : 'Typed coordinates';
+    }
+    function lootText(loot) {
+      if (!Array.isArray(loot) || !loot.length) return 'No loot';
+      return loot.map(item => {
+        const name = text(item && item.id, 'loot').replace(/_/g, ' ');
+        return name.charAt(0).toUpperCase() + name.slice(1) + ' ×' + Math.max(1, Number(item && item.qty) || 1);
+      }).join(', ');
+    }
+    function dateText(value) {
+      const at = new Date(value);
+      if (!value || !Number.isFinite(at.getTime())) return '';
+      try { return at.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (_) { return at.toISOString().slice(0, 10); }
+    }
+    function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+    function choiceHTML(attrs, icon, label, chosen, extra) {
+      return '<button type="button" class="dq-choice' + (chosen ? ' is-chosen' : '') + (extra ? ' ' + extra : '') + '" ' + attrs + ' aria-pressed="' + (chosen ? 'true' : 'false') + '">' +
+        '<span class="dq-choice-icon" aria-hidden="true">' + icon + '</span><span class="dq-choice-label">' + escapeHtml(label) + '</span>' +
+        (chosen ? '<span class="dq-choice-tick" aria-hidden="true">✓</span>' : '') + '</button>';
+    }
+    function stepHTML(step, art, title, value, detail, done, body) {
+      return '<section class="dq-step" data-step="' + step + '" data-done="' + (done ? 'true' : 'false') + '">' +
+        '<div class="dq-step-head"><img src="' + art + '" alt="" loading="lazy" decoding="async"><div class="dq-step-copy"><small>' + escapeHtml(title) + '</small><strong>' + escapeHtml(value) + '</strong>' +
+        (detail ? '<em>' + escapeHtml(detail) + '</em>' : '') + '</div></div>' +
+        body + '</section>';
+    }
+    function coordinateInputs(prefix, point) {
+      return '<div class="dq-manual"><label>Latitude<input id="destination' + prefix + 'Lat" name="' + prefix.toLowerCase() + 'Lat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(point && point.lat != null ? point.lat : '') + '"></label>' +
+        '<label>Longitude<input id="destination' + prefix + 'Lon" name="' + prefix.toLowerCase() + 'Lon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(point && point.lon != null ? point.lon : '') + '"></label></div>';
+    }
+    function planStepsHTML(current) {
+      const picking = mapPick && mapPick.kind;
+      const startGps = !!current.start && fromGps(current.startSource);
+      const startMap = !!current.start && current.startSource === 'map-tap';
+      const endMap = !!current.end && current.endSource === 'map-tap';
+      const via = current.via || [];
+      const full = via.length >= MAX_CHECKPOINTS;
+      const start = stepHTML('start', ART.start, 'Start',
+        current.start ? pointSourceText(current.start, current.startSource) : 'Press a button to set your start',
+        coordsText(current.start), !!current.start,
+        '<div class="dq-choice-row">' +
+          choiceHTML('data-destination-gps', '📍', locating ? 'Finding you…' : 'My location', startGps || locating, locating ? 'is-waiting' : '') +
+          choiceHTML('data-destination-pick="start"', '🗺️', picking === 'start' ? 'Tap the map now' : 'Tap the map', startMap || picking === 'start', picking === 'start' ? 'is-waiting' : '') +
+        '</div>' + coordinateInputs('Start', current.start));
+      const checkpoints = stepHTML('checkpoints', ART.checkpoints, 'Checkpoints · optional',
+        via.length ? plural(via.length, 'checkpoint', 'checkpoints') : 'Add stops on the way',
+        'Footpaths first, then pavements and roads.', via.length > 0,
+        (via.length ? '<ol class="dq-checkpoints">' + via.map((point, index) => '<li><b>' + (index + 1) + '</b><span>' + escapeHtml(coordsText(point)) + '</span>' +
+          '<button type="button" data-destination-remove-checkpoint="' + index + '" aria-label="Remove checkpoint ' + (index + 1) + '">✕</button></li>').join('') + '</ol>' : '') +
+        '<div class="dq-choice-row">' + choiceHTML('data-destination-pick="checkpoint"' + (full ? ' disabled' : ''), '＋', full ? 'All ' + MAX_CHECKPOINTS + ' placed' : picking === 'checkpoint' ? 'Tap the map now' : 'Add checkpoint', picking === 'checkpoint', picking === 'checkpoint' ? 'is-waiting' : '') + '</div>');
+      const end = stepHTML('end', ART.end, 'Destination',
+        current.end ? pointSourceText(current.end, current.endSource) : 'Tap the map where your walk ends',
+        coordsText(current.end), !!current.end,
+        '<div class="dq-choice-row">' + choiceHTML('data-destination-pick="end"', '⚑', picking === 'end' ? 'Tap the map now' : 'Tap the map', endMap || picking === 'end', picking === 'end' ? 'is-waiting' : current.start && !current.end ? 'is-next' : '') + '</div>' +
+        coordinateInputs('End', current.end));
+      return '<div class="dq-steps">' + start + checkpoints + end + '</div>' +
+        '<button type="button" class="destination-coordinate-toggle" data-destination-coordinates aria-pressed="' + manualCoordinates + '">' + (manualCoordinates ? 'Hide coordinates' : 'Type coordinates instead') + '</button>';
+    }
+    function planStripHTML(current) {
+      const via = current.via || [];
+      const chip = (attrs, label, value, chosen) => '<button type="button" class="dq-chip' + (chosen ? ' is-chosen' : '') + '" ' + attrs + '><small>' + label + '</small><strong>' + escapeHtml(value) + '</strong></button>';
+      return '<div class="dq-strip">' +
+        chip('data-destination-edit', '▶ Start', pointSourceText(current.start, current.startSource, true), true) +
+        chip('data-destination-pick="checkpoint"' + (via.length >= MAX_CHECKPOINTS ? ' disabled' : ''), '◆ Checkpoints', via.length ? plural(via.length, 'stop', 'stops') + ' ＋' : '＋ Add', via.length > 0) +
+        chip('data-destination-edit', '⚑ Destination', pointSourceText(current.end, current.endSource, true), true) +
+        '</div>';
+    }
+    function statusText(current, planning, preview, error) {
+      if (planning) return current.providerProgress?.alternative ? 'One map service is busy. Trying another…' : 'Finding footpaths for your walk…';
+      if (error) return error.message;
+      if (preview) return 'Your walk is ready. Press Start walk to play.';
+      if (current.start && current.end) return 'Both points are set. Press Preview route.';
+      if (current.start) return 'Start set. Now tap the map where your walk ends.';
+      return 'Press a button to set your start.';
+    }
     function routeMetricHTML(preview) {
       if (!preview || !preview.route || !preview.quote) return '';
+      const route = preview.route;
       const elevation = preview.quote.elevation || preview.elevation || {};
-      const elevationCopy = elevation.status === 'measured'
-        ? 'Elevation measured: ' + Math.round(Number(elevation.ascentM) || 0) + ' m ascent'
-        : 'Elevation unavailable: neutral reward multiplier';
-      const loot = Array.isArray(preview.quote.loot) && preview.quote.loot.length
-        ? preview.quote.loot.map(item => escapeHtml(item.id) + ' x' + Math.max(1, Number(item.qty) || 1)).join(', ')
-        : 'No loot';
+      const climb = elevation.status === 'measured' ? Math.round(Number(elevation.ascentM) || 0) + ' m climb' : 'Flat reward';
+      const paths = Math.round(Math.max(0, Math.min(1, Number(route.pathShare) || 0)) * 100);
+      const mapped = route.routeSchemaVersion === 1 || (route.routeEvidence && Array.isArray(route.routeEvidence.parts) && route.routeEvidence.parts.some(part => part.kind === 'mapped'));
+      const stops = preview.record && Array.isArray(preview.record.entries) ? preview.record.entries.length : 0;
       return '<div class="destination-preview-card" data-destination-preview="ready">' +
         '<div class="destination-preview-grid">' +
-        '<div><span>Distance</span><b>' + distanceLabel(routeLength(preview.route)) + '</b></div>' +
-        '<div><span>Difficulty</span><b>' + escapeHtml(preview.quote.difficulty && preview.quote.difficulty.label || 'normal') + '</b></div>' +
+        '<div><span>Distance</span><b>' + distanceLabel(routeLength(route)) + '</b></div>' +
         '<div><span>XP</span><b>+' + Math.round(Number(preview.quote.xp) || 0) + '</b></div>' +
         '<div><span>Coins</span><b>+' + Math.round(Number(preview.quote.coins) || 0) + '</b></div>' +
+        (mapped ? '<div><span>Footpaths</span><b>' + paths + '%</b></div>' : '<div><span>Stops</span><b>' + stops + '</b></div>') +
         '</div>' +
-        '<p>' + escapeHtml(elevationCopy) + '</p>' +
-        '<p>Loot: ' + escapeHtml(loot) + '</p>' +
-        '<p>' + escapeHtml(preview.route.routeDataNote || 'Any route to your destination counts; follow local access and conditions.') + '</p>' +
+        '<p class="dq-route-line">' + escapeHtml(lootText(preview.quote.loot) + ' · ' + climb + (Array.isArray(route.checkpoints) && route.checkpoints.length ? ' · ' + plural(route.checkpoints.length, 'checkpoint', 'checkpoints') : '')) + '</p>' +
+        '<p class="dq-route-note">' + escapeHtml(route.routeDataNote || 'Any route to your destination counts. Follow local signs and conditions.') + '</p>' +
         '</div>';
     }
-    function activeSummaryHTML() {
-      const active = timelineController.activeQuest() || (typeof options.activeQuest === 'function' ? options.activeQuest() : null);
-      if (!active) return '';
-      const entries = Array.isArray(active.entries) ? active.entries : [];
-      return '<div class="destination-active-card" data-destination-active="' + escapeHtml(active.id || '') + '">' +
-        '<div><b>' + escapeHtml(active.phase === 'review' ? 'Destination story review' : 'Destination walk active') + '</b><span>' + entries.length + ' banked stops saved before departure</span></div>' +
-        '<button type="button" data-destination-open-active>View Plan</button>' +
-        '</div>';
+    function entryState(entry) {
+      const core = options.stateCore || root.BurbzDestinationStateCore;
+      const found = core && typeof core.encounterGate === 'function' ? core.encounterGate(rootStateFrom(options), entry.id, null).ready : false;
+      if (!found) return { key: 'locked', label: 'Not reached yet' };
+      return entry.receipt || entry.receiptId ? { key: 'saved', label: 'Saved · open' } : { key: 'found', label: 'Found · open' };
     }
-    function renderActiveTimeline(active) {
+    function entryRowHTML(entry, attr, stateInfo) {
+      const icon = ({ building: '🏠', character: '💬', bird: '🐦' })[entry.kind] || '✦';
+      return '<button type="button" class="destination-entry-row" ' + attr + '="' + escapeHtml(entry.id) + '" data-state="' + stateInfo.key + '">' +
+        '<span class="dq-entry-icon" aria-hidden="true">' + icon + '</span><b>' + escapeHtml(entry.label || entry.name || entry.commonName || entry.species || 'Walk stop') + '</b>' +
+        '<em>' + escapeHtml(stateInfo.label) + '</em></button>';
+    }
+    function renderActiveTimeline() {
       const entries = timelineController.entries();
-      return entries.map(entry => '<button type="button" class="destination-entry-row" data-destination-entry="' + escapeHtml(entry.id) + '">' +
-        '<span>' + escapeHtml(entry.kind) + '</span><b>' + escapeHtml(entry.label || entry.name || entry.commonName || entry.species || 'Destination stop') + '</b>' +
-        '<em>' + escapeHtml((options.stateCore || root.BurbzDestinationStateCore).encounterGate(rootStateFrom(options),entry.id,null).ready ? (entry.receipt || entry.receiptId ? 'Saved · revisit' : 'Discovered · revisit') : 'Not reached') + '</em></button>').join('') ||
-        '<p>No banked entries found. Reopen after the saved plan reloads.</p>';
+      return entries.map(entry => entryRowHTML(entry, 'data-destination-entry', entryState(entry))).join('') ||
+        '<p class="destination-guidance">No saved stops yet. Reopen once your walk reloads.</p>';
     }
     function renderArchiveTimeline() {
       const archive = timelineController.archive();
@@ -916,63 +1031,112 @@
       if (archiveViewId) {
         const record = archive.find(item => item.id === archiveViewId);
         if (record) {
-          const rows = timelineController.entries({ questId: archiveViewId }).map(entry => '<button type="button" class="destination-entry-row" data-destination-archive-entry="' + escapeHtml(entry.id) + '">' +
-            '<span>' + escapeHtml(entry.kind) + '</span><b>' + escapeHtml(entry.label || entry.name || entry.commonName || entry.species || 'Destination stop') + '</b>' +
-            '<em>' + escapeHtml(entry.outcome || entry.receiptId ? 'Archived' : distanceLabel(entry.route && entry.route.distanceM)) + '</em></button>').join('');
-          return '<section class="destination-active-panel destination-archive-panel"><h3>Completed destination walk</h3>' +
-            '<p class="destination-guidance">This archive keeps the saved route order and outcomes. Opening a stop here never pays the quest again.</p>' +
-            '<button type="button" class="destination-archive-back" data-destination-archive-list>Back to completed walks</button>' +
+          const rows = timelineController.entries({ questId: archiveViewId }).map(entry => entryRowHTML(entry, 'data-destination-archive-entry', { key: 'saved', label: entry.outcome || entry.receiptId ? 'Archived' : distanceLabel(entry.route && entry.route.distanceM) })).join('');
+          return '<section class="destination-active-panel destination-archive-panel"><h3>Finished walk · ' + escapeHtml(dateText(record.completedAt || record.updatedAt)) + '</h3>' +
+            '<p class="destination-guidance">Every stop stays in walk order. Opening one here never pays twice.</p>' +
+            '<button type="button" class="destination-archive-back" data-destination-archive-list>‹ All finished walks</button>' +
             rows + '</section>';
         }
       }
-      return '<section class="destination-active-panel destination-archive-panel"><h3>Completed destination walks</h3>' +
-        archive.slice(0, 6).map(record => '<button type="button" class="destination-entry-row" data-destination-archive="' + escapeHtml(record.id || '') + '">' +
-        '<span>archive</span><b>' + escapeHtml((record.entries && record.entries.length || 0) + ' saved stops') + '</b><em>' + escapeHtml(record.completedAt || record.updatedAt || '') + '</em></button>').join('') +
+      return '<section class="destination-active-panel destination-archive-panel"><h3>Finished walks</h3>' +
+        archive.slice(0, 6).map(record => {
+          const stops = record.entries && record.entries.length || 0;
+          const length = record.route ? routeLength(record.route) : 0;
+          return '<button type="button" class="destination-entry-row dq-archive-row" data-destination-archive="' + escapeHtml(record.id || '') + '">' +
+            '<span class="dq-entry-icon" aria-hidden="true">📜</span><b>' + escapeHtml(dateText(record.completedAt || record.updatedAt) || 'Finished walk') + '</b>' +
+            '<em>' + escapeHtml(plural(stops, 'stop', 'stops') + (length ? ' · ' + distanceLabel(length) : '')) + '</em></button>';
+        }).join('') +
         '</section>';
     }
     function renderDestinationTimeline(active) {
-      if (!active) return renderArchiveTimeline();
+      if (!active) return '';
       const isReview = active.phase === 'review';
       const quote = active.quote || {};
-      const loot = Array.isArray(quote.loot) && quote.loot.length ? quote.loot.map(item => escapeHtml(item.id) + ' x' + Math.max(1, Number(item.qty) || 1)).join(', ') : 'No loot';
-      return '<section class="destination-active-panel" data-destination-phase="' + escapeHtml(active.phase || '') + '">' +
-        '<h3>' + escapeHtml(isReview ? 'Story review' : 'Pocket walk plan') + '</h3>' +
-        '<p class="destination-guidance">' + escapeHtml(isReview ? 'Review every saved stop in route order. You can leave and come back; completion only happens when you choose it.' : 'Pocket your phone: nearby loot is gathered automatically inside your yellow circle. Keep location active; if your phone pauses it, gathering resumes when you reopen. You can revisit discovered stops from this list. Unseen stops still need a nearby GPS visit.') + '</p>' +
-        '<div class="destination-preview-grid destination-payment-grid"><div><span>XP</span><b>+' + Math.round(Number(quote.xp) || 0) + '</b></div><div><span>Coins</span><b>+' + Math.round(Number(quote.coins) || 0) + '</b></div><div><span>Loot</span><b>' + escapeHtml(loot) + '</b></div></div>' +
+      return '<section class="destination-active-panel dq-walk" data-destination-phase="' + escapeHtml(active.phase || '') + '">' +
+        '<div class="destination-preview-grid destination-payment-grid">' +
+        '<div><span>Distance</span><b>' + distanceLabel(routeLength(active.route)) + '</b></div>' +
+        '<div><span>XP</span><b>+' + Math.round(Number(quote.xp) || 0) + '</b></div>' +
+        '<div><span>Coins</span><b>+' + Math.round(Number(quote.coins) || 0) + '</b></div></div>' +
+        '<p class="dq-route-line">' + escapeHtml(lootText(quote.loot)) + '</p>' +
+        '<p class="destination-guidance">' + escapeHtml(isReview ? 'Look back over every stop. Claim your reward when you are ready.' : 'Pocket your phone. Loot inside your yellow circle comes to you while location is on. Walk near a stop to find it, then open it here any time.') + '</p>' +
         '<div class="destination-actions destination-timeline-actions">' +
-        (isReview ? '<button type="button" data-destination-complete>Complete & claim</button>' : '<button type="button" data-destination-finish>Finish my walk</button>') +
+        (isReview ? '<button type="button" class="dq-go" data-destination-complete>Complete &amp; claim</button>' : '<button type="button" class="dq-go" data-destination-finish>Finish my walk</button>') +
         '</div>' +
-        renderActiveTimeline(active) +
-        '</section>' + renderArchiveTimeline();
+        '<h3>Stops on the way</h3>' +
+        renderActiveTimeline() +
+        '</section>';
     }
     function render() {
       refreshMapRoute();
       if (!sheet || !sheet.classList.contains('open')) return;
       const current = controller.state();
-      if (!timelineController.activeQuest()) syncSelectionMarkers();
+      const active = timelineController.activeQuest() || (typeof options.activeQuest === 'function' ? options.activeQuest() : null);
+      if (!active) syncSelectionMarkers();
       sheet.classList.toggle('show-coordinates',manualCoordinates);
       const planning = current.phase === 'planning' || current.pending;
       const preview = current.preview;
       const error = current.error;
-      const active = timelineController.activeQuest() || (typeof options.activeQuest === 'function' ? options.activeQuest() : null);
-      const activeHTML = renderDestinationTimeline(active);
-      sheet.dataset.selectionReady = String(!!current.start && !!current.end && !active && !manualCoordinates);
-      sheet.innerHTML = '<div class="destination-quest-panel">' +
-        '<button type="button" class="destination-sheet-close" data-destination-close aria-label="Close Main Quests">x</button>' +
-        '<header class="destination-sheet-head"><div><span>Main Quests</span><h2 id="destinationQuestTitle">Plan a destination walk</h2></div>' +
-        '<p>' + (mapPick ? (mapPick.kind === 'start' ? '1. Tap the map to place your START.' : '2. Start set. Tap the map to place your DESTINATION.') : 'Choose your start, choose a destination, then preview the walk.') + '</p></header>' +
-        '<button type="button" class="destination-coordinate-toggle" data-destination-coordinates aria-pressed="' + manualCoordinates + '">' + (manualCoordinates ? 'Hide coordinates' : current.start && current.end ? 'Change points' : 'Enter coordinates manually') + '</button>' +
-        activeHTML +
-        '<form class="destination-coordinate-form" data-destination-form>' +
-        '<fieldset><legend>1 · Start</legend><label>Latitude<input id="destinationStartLat" name="startLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lat != null ? current.start.lat : '') + '"></label><label>Longitude<input id="destinationStartLon" name="startLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.start && current.start.lon != null ? current.start.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.start ? 'Start selected' : 'Choose a start') + '</div><div class="destination-button-row"><button type="button" data-destination-gps>Use precise GPS</button><button type="button" data-destination-pick="start">Tap start on map</button></div></fieldset>' +
-        '<fieldset><legend>2 · Destination</legend><label>Latitude<input id="destinationEndLat" name="endLat" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lat != null ? current.end.lat : '') + '"></label><label>Longitude<input id="destinationEndLon" name="endLon" inputmode="decimal" autocomplete="off" value="' + escapeHtml(current.end && current.end.lon != null ? current.end.lon : '') + '"></label><div class="destination-point-line">' + escapeHtml(current.end ? 'Destination selected' : 'Choose a destination') + '</div><div class="destination-button-row"><button type="button" data-destination-pick="end">Tap destination on map</button></div></fieldset>' +
-        '<div class="destination-status" role="status" data-destination-status>' + escapeHtml(planning ? (current.providerProgress?.alternative ? 'First map service unavailable. Checking another public map source...' : 'Checking the public walking network...') : error ? error.message : preview ? 'Route ready. Begin saves your walk and rewards.' : current.start && current.end ? 'Both points are set. Preview your walk.' : 'Choose both points to preview.') + '</div>' +
-        routeMetricHTML(preview) +
-        '<div class="destination-actions"><button type="submit" data-destination-preview ' + (planning ? 'disabled' : '') + '>' + (preview ? 'Preview Again' : 'Preview Route') + '</button><button type="button" data-destination-begin ' + (!preview || planning ? 'disabled' : '') + '>Begin</button><button type="button" data-destination-cancel>Cancel</button></div>' +
-        '</form>' +
-        activeSummaryHTML() +
-        '</div>';
+      const ready = !!current.start && !!current.end && !active && !manualCoordinates && !editing;
+      sheet.dataset.selectionReady = String(ready);
+      sheet.dataset.mode = active ? 'walk' : 'plan';
+      const hint = mapPick ? ({ start: 'Tap the map where your walk starts.', end: 'Tap the map where your walk ends.', checkpoint: 'Tap the map to drop checkpoint ' + ((current.via || []).length + 1) + '.' })[mapPick.kind] : '';
+      const head = '<header class="destination-sheet-head"><img class="dq-head-art" src="' + ART.head + '" alt=""><div class="dq-head-copy"><span>Main Quests</span><h2 id="destinationQuestTitle">' + (active ? (active.phase === 'review' ? 'Story review' : 'Your walk') : 'Plan a walk') + '</h2></div></header>';
+      const close = '<button type="button" class="destination-sheet-close" data-destination-close aria-label="Close Main Quests">✕</button>';
+      let body;
+      if (active) {
+        body = renderDestinationTimeline(active) + renderArchiveTimeline();
+      } else {
+        body = (hint ? '<p class="dq-lead" data-destination-hint>' + escapeHtml(hint) + '</p>' : '') +
+          '<form class="destination-coordinate-form" data-destination-form>' +
+          (ready ? planStripHTML(current) : planStepsHTML(current)) +
+          '<div class="destination-status" role="status" data-destination-status data-tone="' + (planning ? 'busy' : error ? 'error' : preview ? 'ready' : 'idle') + '">' + escapeHtml(statusText(current, planning, preview, error)) + '</div>' +
+          routeMetricHTML(preview) +
+          '<div class="destination-actions">' +
+            '<button type="button" class="dq-go" data-destination-begin ' + (!preview || planning ? 'disabled' : '') + '><span aria-hidden="true">▶</span> Start walk</button>' +
+            '<div class="dq-quiet-row"><button type="submit" data-destination-preview ' + (planning ? 'disabled' : '') + '>' + (preview ? 'Preview again' : 'Preview route') + '</button>' +
+            '<button type="button" data-destination-cancel>Cancel</button></div>' +
+          '</div>' +
+          '</form>' + renderArchiveTimeline();
+      }
+      sheet.innerHTML = '<div class="destination-quest-panel" data-mode="' + (active ? 'walk' : 'plan') + '">' + close + head + '<div class="dq-body">' + body + '</div></div>';
       bindSheet();
+    }
+    function useMyLocation() {
+      const pos = typeof options.getPrecisePosition === 'function' ? options.getPrecisePosition() : null;
+      if (pos || typeof options.requestPrecisePosition !== 'function') {
+        const result = controller.setPreciseStart(pos);
+        if (!result.ok) showToast(result.error.message);
+        else afterPointSet();
+        render();
+        return;
+      }
+      if (locating) return;
+      locating = true;
+      render();
+      Promise.resolve().then(() => options.requestPrecisePosition()).then(fix => {
+        locating = false;
+        if (disposed) return;
+        const result = controller.setPreciseStart(fix);
+        if (!result.ok) showToast('We could not find you. Allow location, or tap the map instead.');
+        else afterPointSet();
+        render();
+      }, () => {
+        locating = false;
+        if (disposed) return;
+        showToast('We could not find you. Allow location, or tap the map instead.');
+        render();
+      });
+    }
+    // Once both ends are set the game fills the route. A start tapped on the
+    // map asks for the destination next; My location stays lit on screen first.
+    function afterPointSet(chainEnd) {
+      const current = controller.state();
+      if (current.start && current.end) {
+        options.fitRoute?.([current.start, ...(current.via || []), current.end]);
+        controller.preview().then(render);
+      } else if (chainEnd && current.start && !current.end && sheet?.classList.contains('open')) {
+        queueMicrotask(() => { if (sheet?.classList.contains('open') && !mapPick && !controller.state().end) beginMapPick('end'); });
+      }
     }
     function bindSheet() {
       if (!sheet) return;
@@ -982,19 +1146,23 @@
       const endLat = sheet.querySelector('#destinationEndLat');
       const endLon = sheet.querySelector('#destinationEndLon');
       sheet.querySelector('[data-destination-coordinates]')?.addEventListener('click',()=>{manualCoordinates=!manualCoordinates;render();});
+      sheet.querySelectorAll('[data-destination-edit]').forEach(button => button.addEventListener('click', () => { editing = true; render(); }));
       sheet.querySelector('[data-destination-close]')?.addEventListener('click', () => closePlanner());
       sheet.querySelector('[data-destination-cancel]')?.addEventListener('click', () => {
         controller.cancel('user-cancel');
         closePlanner();
       });
-      sheet.querySelector('[data-destination-gps]')?.addEventListener('click', () => {
-        const pos = typeof options.getPrecisePosition === 'function' ? options.getPrecisePosition() : null;
-        const result = controller.setPreciseStart(pos);
-        if (!result.ok) showToast(result.error.message);
-        render();
-      });
+      sheet.querySelector('[data-destination-gps]')?.addEventListener('click', useMyLocation);
       sheet.querySelectorAll('[data-destination-pick]').forEach(button => {
         button.addEventListener('click', () => beginMapPick(button.getAttribute('data-destination-pick')));
+      });
+      sheet.querySelectorAll('[data-destination-remove-checkpoint]').forEach(button => {
+        button.addEventListener('click', () => {
+          controller.removeCheckpoint(Number(button.getAttribute('data-destination-remove-checkpoint')));
+          const current = controller.state();
+          if (current.start && current.end) controller.preview().then(render);
+          render();
+        });
       });
       form?.addEventListener('submit', ev => {
         ev.preventDefault();
@@ -1005,19 +1173,19 @@
       });
       sheet.querySelector('[data-destination-begin]')?.addEventListener('click', () => {
         const result = controller.begin();
-        if (result && result.status !== 'committed') showToast('Destination was not saved: ' + (result.status || 'begin failed'));
+        if (result && result.status !== 'committed') showToast('Your walk was not saved: ' + (result.status || 'begin failed'));
         render();
       });
       sheet.querySelector('[data-destination-finish]')?.addEventListener('click', () => {
-        if (!confirmAction('Finish this destination walk by honor confirmation? Any route you took counts; GPS checkpoints are not required.')) return;
+        if (!confirmAction('Finish this walk? Any route you took counts. You do not need every checkpoint.')) return;
         const result = timelineController.finishWalk({ confirmed: true, gpsTicks: 0, usedSuggestedTrack: false });
-        if (result && result.status !== 'committed') showToast('Walk finish could not save: ' + (result.status || 'failed'));
+        if (result && result.status !== 'committed') showToast('Your walk could not finish: ' + (result.status || 'failed'));
         render();
       });
       sheet.querySelector('[data-destination-complete]')?.addEventListener('click', () => {
-        if (!confirmAction('Complete this destination story and claim the saved reward?')) return;
+        if (!confirmAction('Complete this story and claim your reward?')) return;
         const result = timelineController.completeQuest({ confirmed: true });
-        if (result && !['committed', 'duplicate'].includes(result.status)) showToast('Destination completion could not save: ' + (result.status || 'failed'));
+        if (result && !['committed', 'duplicate'].includes(result.status)) showToast('Your reward could not save: ' + (result.status || 'failed'));
         render();
       });
       sheet.querySelectorAll('[data-destination-entry]').forEach(button => {
@@ -1035,10 +1203,6 @@
       });
       sheet.querySelectorAll('[data-destination-archive-entry]').forEach(button => {
         button.addEventListener('click', () => openArchivedEntry(button.getAttribute('data-destination-archive-entry')));
-      });
-      sheet.querySelector('[data-destination-open-active]')?.addEventListener('click', () => {
-        const active = typeof options.activeQuest === 'function' ? options.activeQuest() : null;
-        if (active) render();
       });
     }
     function beginMapPick(kind) {
@@ -1060,19 +1224,18 @@
           showToast('That map tap did not have coordinates. Try again or use the inputs.');
           return;
         }
-        if (kind === 'start') controller.setMapStart(lat, lon);
+        if (kind === 'checkpoint') {
+          const added = controller.addCheckpoint(lat, lon);
+          if (!added.ok) showToast(added.error.message);
+        } else if (kind === 'start') controller.setMapStart(lat, lon);
         else controller.setMapEnd(lat, lon);
         render();
-        if(controller.state().start && controller.state().end) {
-          options.fitRoute?.([controller.state().start,controller.state().end]);
-          controller.preview().then(render);
-        }
-        if(kind === 'start' && !controller.state().end) queueMicrotask(()=>{if(sheet?.classList.contains('open'))beginMapPick('end');});
+        afterPointSet(kind === 'start');
       };
       mapPick = { map, handler, kind };
       map.on('click', handler);
       render();
-      showToast('Tap the map to choose the ' + (kind === 'start' ? 'start' : 'destination') + '. You can still pan and zoom first.');
+      showToast(kind === 'checkpoint' ? 'Tap the map to drop a checkpoint. You can still pan and zoom first.' : 'Tap the map to choose the ' + (kind === 'start' ? 'start' : 'destination') + '. You can still pan and zoom first.');
     }
     async function openNativeEntry(entryId, choice) {
       const result = await timelineController.openEntry(entryId, choice || { choiceId: 'open' });
@@ -1177,6 +1340,7 @@
     return Object.assign(controller, {
       openPlanner,
       closePlanner,
+      useMyLocation,
       dispose,
       render,
       drawPreview,

@@ -37,6 +37,9 @@
   const PUBLIC_DESIGNATION = /^(public_footpath|public_bridleway|restricted_byway|byway_open_to_all_traffic)$/;
   const DENY = /^(no|private|customers|destination|delivery|agricultural|forestry|permit|military|discouraged|unknown|variable|use_sidepath)$/;
   const EARTH_M = 6371000;
+  const MAX_CHECKPOINTS = 8;
+  const MIN_CHECKPOINT_GAP_M = 10;
+  const CHECKPOINT_SNAP_M = 40;
 
   function tryWalkingCore() {
     if (root && root.BurbzWalkingRouteCore) return root.BurbzWalkingRouteCore;
@@ -537,19 +540,42 @@
       routeDataNote: gaps.length ? 'Dashed gaps show direction only, not a mapped path. Choose your own accessible way; any route to your destination counts.' : 'Suggested public paths and roads. Any route to your destination counts.'
     }};
   }
-  function directGuidance(start, end, reason) {
-    return guidanceRoute(start, end, [{kind:'guidance',points:[point(start),point(end)]}], reason);
+  function directGuidance(start, end, reason, via) {
+    const stops = [point(start), ...viaPoints(via), point(end)];
+    const parts = [];
+    for (let i = 1; i < stops.length; i++) parts.push({kind:'guidance',points:[stops[i - 1],stops[i]]});
+    return withCheckpoints(guidanceRoute(start, end, parts, reason), via);
   }
-  function planDestinationRoute(json, startInput, endInput, opts) {
-    if (opts && opts.requireMappedRoute) return planMappedDestinationRoute(json, startInput, endInput, opts);
-    const start = point(startInput), end = point(endInput);
-    if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Choose valid start and destination coordinates.');
-    const limits = Object.assign({}, DEFAULTS, opts || {}, {minRouteM:0,maxRouteM:Infinity,maxEndpointSnapM:Infinity,maxAirDistanceM:Infinity});
-    if (distance(start,end) > DEFAULTS.maxAirDistanceM) return directGuidance(start,end,'selection-outside-map-search');
-    const graph = buildGraph(json,limits);
-    if (graph.error) return directGuidance(start,end,graph.error);
-    const a = projectEndpoint(graph,start,'start',limits), b = projectEndpoint(graph,end,'end',limits);
-    if (a.error || b.error) return directGuidance(start,end,'no-mapped-connection');
+  // Checkpoints: players may add stops between the start and the destination.
+  // Close duplicates are dropped so no leg is zero length.
+  function viaPoints(via) {
+    const out = [];
+    for (const raw of Array.isArray(via) ? via : []) {
+      const p = point(raw);
+      if (!validPoint(p)) continue;
+      if (out.length && distance(out[out.length - 1], p) < MIN_CHECKPOINT_GAP_M) continue;
+      out.push(p);
+      if (out.length >= MAX_CHECKPOINTS) break;
+    }
+    return out;
+  }
+  function withCheckpoints(result, via) {
+    const stops = viaPoints(via);
+    if (result && result.ok && result.route && stops.length) result.route.checkpoints = stops;
+    return result;
+  }
+  function allStops(start, end, via) {
+    return [point(start), ...viaPoints(via), point(end)];
+  }
+  function spanM(stops) {
+    let best = 0;
+    for (let i = 0; i < stops.length; i++) for (let j = i + 1; j < stops.length; j++) best = Math.max(best, distance(stops[i], stops[j]));
+    return best;
+  }
+  // One leg over the shared graph. Separate map pieces are joined by heavily
+  // penalised dashed gaps, so real public paths and roads win whenever they connect.
+  function legArcs(graph, a, b, start, end) {
+    if (distance(a.point, b.point) < 1) return [];
     const work = cloneSearchGraph(graph,a,b);
     let arcs = shortestPath(graph,work);
     if (!arcs) {
@@ -577,16 +603,48 @@
       }
       arcs=shortestPath(graph,work);
     }
-    if (!arcs || !arcs.length) return directGuidance(start,end,'no-mapped-connection');
+    return arcs && arcs.length ? arcs : null;
+  }
+  function legParts(graph, json, arcs, a, b, limits) {
     const parts=[];let block=[];
     const flush=()=>{if(!block.length)return;const r=routeFromArcs(graph,block,a,b,limits,{sourceTimestamp:json.osm3s?.timestamp_osm_base});if(r.ok)parts.push({kind:'mapped',route:r.route});block=[];};
-    if(distance(start,a.point)>0)parts.push({kind:'guidance',points:[start,a.point]});
     for(const arc of arcs){if(arc.guidance){flush();parts.push({kind:'guidance',points:[arc.pa,arc.pb]});}else block.push(arc);}
     flush();
-    if(distance(b.point,end)>0)parts.push({kind:'guidance',points:[b.point,end]});
-    if(parts.length===1 && parts[0].kind==='mapped')return {ok:true,route:parts[0].route};
-    const result=guidanceRoute(start,end,parts);
-    return validateDestinationRoute(result.route).valid ? result : directGuidance(start,end,'map-gap');
+    return parts;
+  }
+  function planDestinationRoute(json, startInput, endInput, opts) {
+    if (opts && opts.requireMappedRoute) return planMappedDestinationRoute(json, startInput, endInput, opts);
+    const start = point(startInput), end = point(endInput), via = viaPoints(opts && opts.via);
+    if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Choose valid start and destination coordinates.');
+    const limits = Object.assign({}, DEFAULTS, opts || {}, {minRouteM:0,maxRouteM:Infinity,maxEndpointSnapM:Infinity,maxAirDistanceM:Infinity});
+    const stops = allStops(start, end, via);
+    if (spanM(stops) > DEFAULTS.maxAirDistanceM) return directGuidance(start,end,'selection-outside-map-search',via);
+    const graph = buildGraph(json,limits);
+    if (graph.error) return directGuidance(start,end,graph.error,via);
+    const last = stops.length - 1;
+    const projections = stops.map((p, i) => projectEndpoint(graph, p, i === 0 ? 'start' : i === last ? 'end' : 'via' + i, limits));
+    if (projections.some(p => p.error)) return directGuidance(start,end,'no-mapped-connection',via);
+    // A checkpoint near a path sits on it; one far from any path is visited by
+    // a dashed side trip. The start and destination keep their exact spots.
+    const snapped = projections.map((p, i) => i > 0 && i < last && p.snapDistanceM <= CHECKPOINT_SNAP_M);
+    const joint = i => snapped[i] ? projections[i].point : stops[i];
+    const parts = [];
+    for (let i = 0; i < last; i++) {
+      const a = projections[i], b = projections[i + 1];
+      const arcs = legArcs(graph, a, b, stops[i], stops[i + 1]);
+      if (!arcs || !arcs.length) {
+        if (!via.length) return directGuidance(start,end,'no-mapped-connection');
+        if (distance(joint(i), joint(i + 1)) > 0) parts.push({kind:'guidance',points:[joint(i),joint(i + 1)]});
+        continue;
+      }
+      if (!snapped[i] && distance(stops[i], a.point) > 0) parts.push({kind:'guidance',points:[stops[i],a.point]});
+      parts.push(...legParts(graph, json, arcs, a, b, limits));
+      if (!snapped[i + 1] && distance(b.point, stops[i + 1]) > 0) parts.push({kind:'guidance',points:[b.point,stops[i + 1]]});
+    }
+    if (!parts.length) return directGuidance(start,end,'no-mapped-connection',via);
+    if (!via.length && parts.length===1 && parts[0].kind==='mapped')return {ok:true,route:parts[0].route};
+    const result=withCheckpoints(guidanceRoute(start,end,parts),via);
+    return validateDestinationRoute(result.route).valid ? result : directGuidance(start,end,'map-gap',via);
   }
   function validateGuidanceRoute(value) {
     const invalid=reason=>({valid:false,certified:false,reason});
@@ -656,14 +714,17 @@
     const opts2 = Object.assign({}, DEFAULTS, opts || {});
     const start = point(startInput), end = point(endInput);
     if (!validPoint(start) || !validPoint(end)) throw new Error('invalid-coordinate');
-    const midLat = (start.lat + end.lat) / 2;
+    // The map data covers every checkpoint too, so each leg routes on real paths.
+    const stops = allStops(start, end, opts2.via);
+    const lats = stops.map(p => p.lat), lons = stops.map(p => p.lon);
+    const midLat = (Math.min(...lats) + Math.max(...lats)) / 2;
     const padLat = opts2.queryPaddingM / 111320;
     const padLon = opts2.queryPaddingM / (111320 * Math.max(0.05, Math.cos(midLat * Math.PI / 180)));
     return {
-      south: Math.max(-90, Math.min(start.lat, end.lat) - padLat),
-      west: Math.max(-180, Math.min(start.lon, end.lon) - padLon),
-      north: Math.min(90, Math.max(start.lat, end.lat) + padLat),
-      east: Math.min(180, Math.max(start.lon, end.lon) + padLon)
+      south: Math.max(-90, Math.min(...lats) - padLat),
+      west: Math.max(-180, Math.min(...lons) - padLon),
+      north: Math.min(90, Math.max(...lats) + padLat),
+      east: Math.min(180, Math.max(...lons) + padLon)
     };
   }
 
@@ -746,15 +807,17 @@
     const opts2 = Object.assign({}, DEFAULTS, opts || {});
     if (!validPoint(start) || !validPoint(end)) return fail('invalid-coordinate', 'Start and destination must be finite latitude/longitude coordinates.');
     if (opts2.signal && opts2.signal.aborted) return fail('provider-cancelled', 'Route request was cancelled.');
-    const airM = distance(start, end);
-    if (airM > opts2.maxAirDistanceM) return opts2.requireMappedRoute ? fail('selection-too-wide', 'Selected endpoints are outside the supported bounded search area.') : directGuidance(start,end,'selection-outside-map-search');
+    const via = opts2.requireMappedRoute ? [] : viaPoints(opts2.via);
+    opts2.via = via; // The map box and the planner see the same clean stops.
+    const airM = spanM(allStops(start, end, via));
+    if (airM > opts2.maxAirDistanceM) return opts2.requireMappedRoute ? fail('selection-too-wide', 'Selected endpoints are outside the supported bounded search area.') : directGuidance(start,end,'selection-outside-map-search',via);
     const query = buildDestinationOverpassQuery(start, end, opts2);
     const endpoints = (opts2.endpoints || DEFAULT_ENDPOINTS).map(endpoint=>({endpoint}));
     const mapApi = (!opts2.endpoints || opts2.mapApiFallback === true) && opts2.mapApiFallback !== false ? mapApiEndpoint(start,end,opts2) : null;
     if(mapApi) endpoints.splice(1,0,{endpoint:mapApi,method:'GET'});
     const fetchFn = opts2.fetchFn || (root && typeof root.fetch === 'function' ? root.fetch.bind(root) : null);
-    if (!fetchFn) return opts2.requireMappedRoute ? fail('provider-unavailable', 'No fetch implementation is available.') : directGuidance(start,end,'provider-unavailable');
-    if (root?.navigator?.onLine === false && !opts2.fetchFn && !opts2.requireMappedRoute) return directGuidance(start,end,'offline');
+    if (!fetchFn) return opts2.requireMappedRoute ? fail('provider-unavailable', 'No fetch implementation is available.') : directGuidance(start,end,'provider-unavailable',via);
+    if (root?.navigator?.onLine === false && !opts2.fetchFn && !opts2.requireMappedRoute) return directGuidance(start,end,'offline',via);
     const deadline=Date.now()+opts2.totalTimeoutMs;
     let last = null; const attempts=[];
     for (let index=0;index<endpoints.length;index++) {
@@ -801,7 +864,7 @@
       }
     }
     if (opts2.signal?.aborted) return fail('provider-cancelled','Route request was cancelled.');
-    return opts2.requireMappedRoute ? (last || fail('provider-unavailable', 'No routing provider could be reached.')) : directGuidance(start,end,last?.error?.code || 'provider-unavailable');
+    return opts2.requireMappedRoute ? (last || fail('provider-unavailable', 'No routing provider could be reached.')) : directGuidance(start,end,last?.error?.code || 'provider-unavailable',via);
   }
 
   const api = {

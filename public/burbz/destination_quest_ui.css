@@ -1,3 +1,5 @@
+/* Walk planner (v495) wears the Home look: charcoal boxes, muted gold edges,
+   Rajdhani titles and the glowing gold main button. A chosen button stays lit. */
 .destination-quest-sheet {
   position: fixed;
   inset: auto 10px 74px 10px;
@@ -10,274 +12,436 @@
   pointer-events: auto;
 }
 .destination-quest-panel {
+  position: relative;
+  box-sizing: border-box;
   width: min(440px, calc(100vw - 20px));
-  max-height: min(78vh, 680px);
+  max-height: min(76vh, 680px);
   overflow: auto;
-  border: 1px solid #9a7742;
-  border-radius: 8px;
-  background: linear-gradient(180deg, #322516 0%, #19120b 100%);
-  box-shadow: 0 18px 48px #000a, inset 0 1px 0 #f1c86b24;
-  color: #f5ead2;
-  padding: 14px;
+  overscroll-behavior: contain;
+  border: 1px solid #9d895c;
+  border-radius: 14px;
+  background: #141517;
+  box-shadow: 0 18px 44px #000b, inset 0 1px #ffffff08;
+  color: #e5dfd0;
+  font-family: Inter, sans-serif;
+  scrollbar-width: thin;
+  scrollbar-color: #756647 transparent;
 }
-.destination-sheet-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  border: 1px solid #9a7742;
-  background: #21170d;
-  color: #f5ead2;
-  font-weight: 800;
-}
+.destination-quest-panel button { font-family: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.destination-quest-panel button:focus-visible { outline: 2px solid #fff0c0; outline-offset: 2px; }
+
+/* Heading bar: the same strip as a Home box title. */
 .destination-sheet-head {
-  display: grid;
-  gap: 6px;
-  padding-right: 44px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
+  padding: 7px 62px 7px 12px;
+  background: #282725;
+  border-bottom: 1px solid #75664766;
+  border-radius: 13px 13px 0 0;
 }
+.dq-head-art { width: 40px; height: 40px; object-fit: contain; flex: none; filter: drop-shadow(0 2px 3px #0009); }
+.dq-head-copy { min-width: 0; }
 .destination-sheet-head span {
   display: block;
-  color: #f2c86a;
-  font-size: 12px;
-  font-weight: 900;
-  letter-spacing: .08em;
+  color: #e2b95c;
+  font: 700 10px/12px Rajdhani, sans-serif;
+  letter-spacing: .12em;
   text-transform: uppercase;
 }
 .destination-sheet-head h2 {
-  margin: 0;
-  font-size: 24px;
-  line-height: 1.05;
+  margin: 1px 0 0;
+  color: #f1e7d2;
+  font: 800 22px/1.05 Rajdhani, sans-serif;
+  letter-spacing: .01em;
 }
-.destination-sheet-head p,
-.destination-preview-card p,
-.destination-status,
-.destination-point-line {
-  margin: 0;
-  color: #d9c8a7;
-  font-size: 13px;
-  line-height: 1.35;
-}
-.destination-coordinate-form {
+.destination-sheet-close {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
   display: grid;
-  gap: 12px;
-  margin-top: 12px;
+  place-items: center;
+  border: 1px solid #756647;
+  border-radius: 10px;
+  background: #262627;
+  color: #d6c59e;
+  font: 700 17px/1 Inter, sans-serif;
+  box-shadow: inset 0 1px #d2c29511;
 }
-.destination-coordinate-form fieldset {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
+.dq-body { display: grid; gap: 10px; padding: 10px 10px 12px; }
+.dq-lead {
   margin: 0;
-  padding: 10px;
-  border: 1px solid #7d6139;
-  border-radius: 8px;
-}
-.destination-coordinate-form legend {
-  padding: 0 4px;
-  color: #f2c86a;
-  font-weight: 900;
-}
-.destination-coordinate-form label {
-  display: grid;
-  gap: 4px;
-  color: #f4e2bb;
-  font-size: 12px;
-  font-weight: 800;
-}
-.destination-coordinate-form input {
-  min-width: 0;
-  height: 42px;
-  border: 1px solid #8e6d40;
-  border-radius: 8px;
-  background: #120e09;
-  color: #fff5dd;
-  padding: 0 10px;
-  font-size: 16px;
-}
-.destination-point-line {
-  grid-column: 1 / -1;
-}
-.destination-button-row,
-.destination-actions {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.destination-button-row button,
-.destination-actions button,
-.destination-active-card button,
-.destination-entry-row {
   min-height: 44px;
-  border: 1px solid #9a7742;
+  display: flex;
+  align-items: center;
+  color: #ffe39a;
+  font: 700 17px/1.25 Rajdhani, sans-serif;
+}
+
+/* Steps: Start, Checkpoints, Destination. Each is a Home box. */
+.destination-coordinate-form { display: grid; gap: 10px; margin: 0; }
+.dq-steps { display: grid; gap: 8px; }
+.dq-step {
+  display: grid;
+  gap: 8px;
+  padding: 8px 10px 10px;
+  border: 1px solid #75664780;
+  border-radius: 12px;
+  background: #1d1e20;
+  box-shadow: inset 0 1px #ffffff06, 0 3px 8px #0003;
+}
+.dq-step[data-done="true"] { border-color: #9d895c; background: #202123; }
+.dq-step-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dq-step-head > img { width: 32px; height: 36px; object-fit: contain; flex: none; filter: drop-shadow(0 2px 2px #0008); }
+.dq-step-copy { min-width: 0; flex: 1; }
+.dq-step-copy small {
+  display: block;
+  color: #e2b95c;
+  font: 700 10px/12px Rajdhani, sans-serif;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+.dq-step-copy strong { display: block; color: #f1e7d2; font: 700 17px/1.2 Rajdhani, sans-serif; }
+.dq-step-copy em {
+  display: block;
+  margin-top: 1px;
+  color: #b5aea0;
+  font: 500 11px/1.35 Inter, sans-serif;
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Choice buttons. The chosen one stays lit with a gold edge and a tick. */
+.dq-choice-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; }
+.dq-choice {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 46px;
+  margin: 0;
+  padding: 6px 12px;
+  border: 1px solid #756647;
+  border-radius: 10px;
+  background: #262627;
+  color: #ded4bc;
+  font: 700 16px/1.1 Rajdhani, sans-serif;
+  letter-spacing: .02em;
+  box-shadow: inset 0 1px #d2c29511, 0 2px 0 #101112;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease, transform .12s ease;
+}
+.destination-quest-panel .dq-choice { font-family: Rajdhani, sans-serif; }
+.dq-choice-icon { font-size: 17px; line-height: 1; }
+.dq-choice:active { transform: scale(.97); }
+.dq-choice:disabled { cursor: default; opacity: .55; }
+.dq-choice.is-chosen {
+  border-color: #f2cf73;
+  background: #2a2213;
+  color: #ffe39a;
+  box-shadow: 0 0 0 1px #d6a84f55, 0 0 12px #f0be5066, inset 0 0 8px #f0be502e;
+}
+.dq-choice-tick {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #f6d98a;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f7dc8c, #c8922f);
+  color: #2a1b07;
+  font: 900 12px/1 Inter, sans-serif;
+  box-shadow: 0 0 6px #f0be5099;
+}
+.dq-choice.is-waiting, .dq-choice.is-next { animation: dq-glow 1.8s ease-in-out infinite; }
+.dq-choice.is-next { border-color: #d6a84f; }
+@keyframes dq-glow {
+  0%, 100% { box-shadow: 0 0 3px #f0be5055, inset 0 0 4px #f0be501a; }
+  50% { box-shadow: 0 0 13px #fac85fcc, inset 0 0 9px #f0be5038; }
+}
+
+/* Checkpoint list: numbered gold coins that match the map pins. */
+.dq-checkpoints { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.dq-checkpoints li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 0 0 8px;
+  border: 1px solid #75664766;
+  border-radius: 9px;
+  background: #262422;
+}
+.dq-checkpoints b {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #f7dc8c, #c8922f);
+  color: #2a1b07;
+  font: 800 13px/1 Rajdhani, sans-serif;
+}
+.dq-checkpoints span { flex: 1; min-width: 0; color: #d6c59e; font: 500 12px/1.3 Inter, sans-serif; font-variant-numeric: tabular-nums; }
+.dq-checkpoints button {
+  flex: none;
+  width: 44px;
+  height: 42px;
+  border: 0;
+  border-left: 1px solid #75664755;
+  border-radius: 0 9px 9px 0;
+  background: transparent;
+  color: #cdbc93;
+  font: 700 15px/1 Inter, sans-serif;
+}
+
+/* Typed coordinates stay tucked away until asked for. */
+.dq-manual { display: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+.show-coordinates .dq-manual { display: grid; }
+.dq-manual label { display: grid; gap: 4px; color: #cdbc93; font: 700 11px/1.2 Inter, sans-serif; }
+.dq-manual input {
+  box-sizing: border-box;
+  min-width: 0;
+  height: 44px;
+  border: 1px solid #756647;
+  border-radius: 9px;
+  background: #111214;
+  color: #f1e7d2;
+  padding: 0 10px;
+  font: 500 16px/1 Inter, sans-serif;
+}
+.destination-coordinate-toggle {
+  justify-self: center;
+  min-height: 44px;
+  margin: -6px 0;
+  padding: 6px 12px;
+  border: 0;
+  background: transparent;
+  color: #cdbc93;
+  font: 600 12px/1.2 Inter, sans-serif;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Once both ends are set: one row of chips, like the Home quest lines. */
+.dq-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.dq-chip {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 52px;
+  margin: 0;
+  padding: 4px 8px;
+  text-align: left;
+  border: 1px solid #756647;
   border-radius: 8px;
-  background: linear-gradient(180deg, #684d27, #2c2114);
-  color: #fff2d4;
-  font-weight: 900;
+  background: #1d1e20;
+  color: #f1e7d2;
 }
-.destination-actions button {
-  flex: 1 1 120px;
-  padding: 0 12px;
+.dq-chip small {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #e2b95c;
+  font: 700 10px/11px Rajdhani, sans-serif;
+  letter-spacing: .07em;
+  text-transform: uppercase;
 }
-.destination-actions button:disabled {
-  opacity: .48;
-}
+.dq-chip strong { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font: 700 13px/15px Rajdhani, sans-serif; }
+.dq-chip.is-chosen { border-color: #f2cf73; background: #2a2213; box-shadow: 0 0 6px #f0be5066, inset 0 0 6px #f0be502e; }
+.dq-chip.is-chosen small { color: #ffe39a; }
+.dq-chip:disabled { cursor: default; opacity: .6; }
+
+/* Status line and the route card. */
 .destination-status {
-  padding: 10px;
-  border: 1px solid #654c2d;
-  border-radius: 8px;
-  background: #130f0acc;
+  margin: 0;
+  padding: 9px 11px;
+  border: 1px solid #75664755;
+  border-radius: 9px;
+  background: #1a1b1d;
+  color: #d8cfb9;
+  font: 500 13px/1.35 Inter, sans-serif;
 }
+.destination-status[data-tone="ready"] { border-color: #9d895c; color: #ffe39a; }
+.destination-status[data-tone="error"] { border-color: #936e65; color: #e6d4cc; background: #252123; }
+.destination-status[data-tone="busy"] { color: #cdbc93; }
 .destination-preview-card,
-.destination-active-panel,
-.destination-active-card {
-  border: 1px solid #7d6139;
-  border-radius: 8px;
-  background: #120e09d9;
+.destination-active-panel {
+  display: grid;
+  gap: 7px;
   padding: 10px;
+  border: 1px solid #75664780;
+  border-radius: 12px;
+  background: #1d1e20;
+  box-shadow: inset 0 1px #ffffff06;
 }
 .destination-preview-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 0;
+  padding: 2px 0;
 }
-.destination-payment-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.destination-preview-grid div {
-  min-width: 0;
-}
-.destination-preview-grid span {
-  display: block;
-  color: #baa884;
-  font-size: 11px;
-  font-weight: 800;
-}
+.destination-payment-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.destination-preview-grid div { min-width: 0; padding: 0 6px; text-align: center; border-right: 1px solid #d3ba7730; }
+.destination-preview-grid div:last-child { border-right: 0; }
+.destination-preview-grid span { display: block; color: #b5aea0; font: 500 9px/1.4 Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase; }
 .destination-preview-grid b {
   display: block;
-  color: #fff0c9;
-  font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #ffebac;
+  font: 800 19px/1.1 Rajdhani, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
-.destination-provider-line {
-  word-break: break-word;
-}
-.destination-route-marker {
-  min-width: 44px;
-  min-height: 44px;
-  border-radius: 50%;
-  border: 2px solid #1b140b;
-  background: #f5c466;
-  color: #1b140b;
-  font-size: 11px;
-  font-weight: 900;
-  box-shadow: 0 4px 14px #0008;
-}
-.destination-route-marker.end {
-  background: #78d6bd;
-}
-.destination-active-card {
+.dq-route-line, .dq-route-note, .destination-guidance { margin: 0; }
+.dq-route-line { color: #d6c59e; font: 600 12px/1.35 Inter, sans-serif; text-align: center; }
+.dq-route-note, .destination-guidance { color: #b5aea0; font: 400 11.5px/1.4 Inter, sans-serif; }
+
+/* Actions: one gold Start walk button, quiet helpers beneath it. */
+.destination-actions { display: grid; gap: 6px; }
+.dq-go {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 12px;
-}
-.destination-active-card span {
-  display: block;
-  color: #d9c8a7;
-  font-size: 12px;
-}
-.destination-active-panel {
-  display: grid;
+  justify-content: center;
   gap: 8px;
-  margin-top: 12px;
-}
-.destination-guidance {
+  width: 100%;
+  min-height: 52px;
   margin: 0;
-  color: #d9c8a7;
-  font-size: 13px;
-  line-height: 1.35;
+  border: 1px solid #f6d98a;
+  border-radius: 11px;
+  background: linear-gradient(180deg, #f7dc8c 0%, #d9a93e 55%, #b9832a 100%);
+  color: #2a1b07;
+  font: 800 19px/1 Rajdhani, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #ffeebc80;
+  box-shadow: 0 0 8px rgba(240,190,80,.55), inset 0 1px 0 #fff4c8;
+  animation: dq-go-glow 3.2s ease-in-out infinite;
 }
-.destination-timeline-actions {
-  margin: 0 0 2px;
+.destination-quest-panel .dq-go { font-family: Rajdhani, sans-serif; }
+.dq-go:active { transform: scale(.98); }
+.dq-go:disabled {
+  cursor: default;
+  border-color: #75664780;
+  background: #262627;
+  color: #8f877a;
+  text-shadow: none;
+  box-shadow: none;
+  animation: none;
 }
-.destination-archive-back {
+@keyframes dq-go-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(240,190,80,.4), inset 0 1px 0 #fff4c8; }
+  50% { box-shadow: 0 0 11px rgba(250,205,95,.8), inset 0 1px 0 #fff4c8; }
+}
+.dq-quiet-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.dq-quiet-row button {
   min-height: 44px;
-  border: 1px solid #9a7742;
-  border-radius: 8px;
-  background: #21170d;
-  color: #fff2d4;
-  font-weight: 900;
-}
-.destination-active-panel h3 {
   margin: 0;
-  color: #f2c86a;
-  font-size: 15px;
+  border: 1px solid #756647;
+  border-radius: 9px;
+  background: #262627;
+  color: #ded4bc;
+  font: 700 15px/1 Rajdhani, sans-serif;
+  letter-spacing: .03em;
 }
+.dq-quiet-row button:disabled { cursor: default; opacity: .5; }
+
+/* The walk under way: stats, the Finish button and the stops. */
+.destination-active-panel h3 {
+  margin: 4px 0 0;
+  color: #e2b95c;
+  font: 700 11px/13px Rajdhani, sans-serif;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.destination-timeline-actions { margin: 0; }
 .destination-entry-row {
+  box-sizing: border-box;
   display: grid;
-  grid-template-columns: 72px 1fr auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 6px 10px;
   text-align: left;
-  padding: 8px 10px;
+  border: 1px solid #75664766;
+  border-radius: 9px;
+  background: #262627;
+  color: #f1e7d2;
 }
-.destination-entry-row span {
-  color: #f2c86a;
-  text-transform: uppercase;
-  font-size: 11px;
+.dq-entry-icon { font-size: 18px; line-height: 1; text-align: center; }
+.destination-entry-row b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 15px/1.2 Rajdhani, sans-serif; }
+.destination-entry-row em { color: #b5aea0; font: 500 11px/1.2 Inter, sans-serif; font-style: normal; white-space: nowrap; }
+.destination-entry-row[data-state="found"] { border-color: #9d895c; }
+.destination-entry-row[data-state="found"] em, .destination-entry-row[data-state="saved"] em { color: #ffe39a; }
+.destination-entry-row[data-state="locked"] { opacity: .78; }
+.destination-archive-back {
+  justify-self: start;
+  min-height: 44px;
+  margin: 0;
+  padding: 0 12px;
+  border: 1px solid #756647;
+  border-radius: 9px;
+  background: #262627;
+  color: #ded4bc;
+  font: 700 14px/1 Rajdhani, sans-serif;
 }
-.destination-entry-row em {
-  color: #d9c8a7;
-  font-style: normal;
-  font-size: 12px;
-}
-.destination-map-picking #burbzLiveMap {
-  cursor: crosshair;
-}
-@media (max-width: 520px) {
-  .destination-quest-sheet {
-    inset: auto 8px 64px 8px;
-  }
-  .destination-quest-panel {
-    width: calc(100vw - 16px);
-    max-height: 74vh;
-    padding: 12px;
-  }
-  .destination-preview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .destination-entry-row {
-    grid-template-columns: 1fr;
-  }
-}
-/* Keep both taps on the map, with immediate labelled geographic pins. */
-.destination-map-picking .destination-quest-panel > :not(.destination-sheet-close):not(.destination-sheet-head) {display:none;}
-.destination-map-picking .destination-sheet-head h2,.destination-map-picking .destination-sheet-head span {display:none;}
-.destination-map-picking .destination-sheet-head p {font-size:16px;font-weight:800;min-height:44px;display:flex;align-items:center;}
-.destination-sheet-close {width:44px;height:44px;}
-.destination-coordinate-form label {display:none;}
-.show-coordinates .destination-coordinate-form label {display:grid;}
-.destination-coordinate-toggle {min-height:44px;margin-top:8px;background:transparent;color:#efd9ad;border:1px solid #7d6139;border-radius:6px;padding:6px 10px;}
-.destination-coordinate-form {gap:8px;margin-top:8px;}
-.destination-coordinate-form fieldset {padding:6px 8px;gap:4px;}
-.destination-route-marker,.destination-route-marker.end {width:24px;height:24px;min-width:24px;min-height:24px;border:1.5px solid #f1dfb5;background:#967b4c;color:#fff8e8;box-shadow:0 2px 5px #0005;pointer-events:none;z-index:1200;display:grid;place-items:center;}
-.destination-route-marker.end {background:#746249;}
-.destination-route-marker strong {font-size:12px;line-height:1;}
-.destination-route-marker span {position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:#332b20cc;color:#f4e7cb;font-size:9px;font-weight:600;}
+
+/* Map pins: small and calm. Start, numbered checkpoints and the destination flag. */
+.destination-route-marker,.destination-route-marker.end {width:24px;height:24px;min-width:24px;min-height:24px;border-radius:50%;border:1.5px solid #f6d98a;background:#b9832a;color:#2a1b07;box-shadow:0 2px 5px #0006;pointer-events:none;z-index:1200;display:grid;place-items:center;font-family:Rajdhani,sans-serif;}
+.destination-route-marker.end {background:#282725;color:#ffe39a;}
+.destination-route-marker.checkpoint {width:20px;height:20px;min-width:20px;min-height:20px;border-color:#fff4c8;background:linear-gradient(180deg,#f7dc8c,#c8922f);z-index:1150;}
+.destination-route-marker strong {font-size:12px;line-height:1;font-weight:800;}
+.destination-route-marker.checkpoint strong {font-size:11px;}
+.destination-route-marker span {position:absolute;top:calc(100% + 3px);left:50%;transform:translateX(-50%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:#282725dd;color:#f1e7d2;font:700 9px/1.2 Rajdhani,sans-serif;letter-spacing:.06em;}
 .destination-encounter-marker {width:28px;height:28px;display:grid;place-items:center;border-radius:10px;border:1px solid #c6a966;background:#29251ee8;box-shadow:0 2px 5px #0004;font-size:18px;pointer-events:none;z-index:1100;}
 .destination-encounter-marker.is-visited {opacity:.55;}
+.destination-map-picking #burbzLiveMap {cursor:crosshair;}
 
-/* Selected points and the real route stay visible above a compact decision panel. */
-.destination-quest-sheet[data-selection-ready="true"]:not(.show-coordinates) .destination-coordinate-form fieldset,
-.destination-quest-sheet[data-selection-ready="true"] .destination-sheet-head h2,
-.destination-quest-sheet[data-selection-ready="true"] .destination-sheet-head p,
-.destination-quest-sheet[data-selection-ready="true"] [data-destination-cancel] {display:none;}
-.destination-map-picking .destination-quest-sheet[data-selection-ready="true"] .destination-sheet-head p {display:flex;}
-.destination-quest-sheet[data-selection-ready="true"] .destination-preview-grid {grid-template-columns:repeat(3,minmax(0,1fr));}
-.destination-quest-sheet[data-selection-ready="true"] .destination-preview-grid>div:nth-child(2) {display:none;}
-.destination-quest-sheet[data-selection-ready="true"] .destination-preview-card {padding:6px;}
-.destination-quest-sheet[data-selection-ready="true"] .destination-preview-card p {font-size:11px;}
+/* Picking on the map: only the heading and the hint stay, so the map is free. */
+.destination-map-picking .dq-body > :not(.dq-lead) {display:none;}
+.destination-map-picking .destination-sheet-head h2 {font-size:18px;}
+/* With both ends set, the chips row keeps the route visible above a compact panel. */
+.destination-quest-sheet[data-selection-ready="true"] .destination-archive-panel {display:none;}
+.destination-quest-sheet[data-selection-ready="true"] .dq-route-note {font-size:10.5px;}
 .destination-quest-open #mapQuestShowBtn,.destination-quest-open #mapSideQuestBtn {visibility:hidden;}
+
+@media (max-width: 520px) {
+  .destination-quest-sheet { inset: auto 8px 64px 8px; }
+  .destination-quest-panel { width: calc(100vw - 16px); max-height: 74vh; }
+}
+@media (max-height: 560px) {
+  .destination-quest-panel { max-height: calc(100vh - 150px); }
+}
+/* Short landscape: the dock sits on the right, so the panel may use the bottom strip. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .destination-quest-sheet { inset: auto 10px 12px 10px; }
+  .destination-quest-panel { max-height: calc(100vh - 100px); }
+  .destination-sheet-head { min-height: 48px; }
+  .dq-head-art { width: 32px; height: 32px; }
+}
+@media (hover: hover) {
+  .destination-quest-panel :is(.dq-choice,.dq-chip,.destination-entry-row,.dq-quiet-row button):not(:disabled):hover { border-color: #b9a16b; filter: brightness(1.07); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dq-go, .dq-choice.is-waiting, .dq-choice.is-next { animation: none; }
+  .dq-choice, .dq-go { transition: none; }
+}

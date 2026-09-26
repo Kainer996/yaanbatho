@@ -143,8 +143,8 @@ test('destination UI modules are registered as the Main Quest surface', () => {
     'destination_quest_ui.js',
     'destination_quest_ui.css'
   ]) {
-    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_state_core.js'].includes(file)?'quest-revisit-v457-20260923':file==='destination_quest_ui.css'?'gold-trail-raven-v454-20260923':file==='destination_route_core.js'?'red-gold-pocket-v437-20260921':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
-    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_state_core.js'].includes(file)?'quest-revisit-v457-20260923':file==='destination_quest_ui.css'?'gold-trail-raven-v454-20260923':file==='destination_route_core.js'?'red-gold-pocket-v437-20260921':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
+    assert.ok(new RegExp(file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_quest_ui.css','destination_route_core.js'].includes(file)?'walk-planner-v495-20260926':file==='destination_state_core.js'?'quest-revisit-v457-20260923':'destination-cleanup-v434-20260921')).test(INDEX), file + ' index pin');
+    assert.ok(new RegExp('\\./' + file.replace('.', '\\.') + '\\?v=' + (['destination_quest_ui.js','destination_quest_ui.css','destination_route_core.js'].includes(file)?'walk-planner-v495-20260926':file==='destination_state_core.js'?'quest-revisit-v457-20260923':'destination-cleanup-v434-20260921')).test(SW), file + ' service worker pin');
     assert.ok(UPDATER.includes('"' + file + '"'), file + ' updater pin');
   }
   assert.ok(/id="mapQuestShowBtn"[\s\S]*Main Quests/.test(INDEX), 'map primary quest entry should say Main Quests');

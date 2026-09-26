@@ -4701,7 +4701,7 @@ if (window.BurbzAppearanceCore) {
 
 <link rel="stylesheet" href="walking_quest_ui.css?v=walk-shelter-controls-v427-20260920">
 <link rel="stylesheet" href="bird_patch_map.css?v=bird-patch-map-v466-20260924">
-<link rel="stylesheet" href="destination_quest_ui.css?v=gold-trail-raven-v454-20260923">
+<link rel="stylesheet" href="destination_quest_ui.css?v=walk-planner-v495-20260926">
 <link rel="stylesheet" href="appearance_ui.css?v=appearance-v362-20260907">
 <link rel="stylesheet" href="field_map_ui.css?v=alderwing-intro-desk-v420-20260917">
 <link rel="stylesheet" href="illustrated_world.css?v=alderwing-intro-desk-v420-20260917">
@@ -5838,11 +5838,11 @@ if (window.BurbzAppearanceCore) BurbzAppearanceCore.apply(document.documentEleme
 <script src="walking_route_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_encounter_core.js?v=walking-quests-v361-20260907"></script>
 <script src="walking_quest_ui.js?v=walk-shelter-controls-v427-20260920"></script>
-<script src="destination_route_core.js?v=red-gold-pocket-v437-20260921"></script>
+<script src="destination_route_core.js?v=walk-planner-v495-20260926"></script>
 <script src="destination_elevation_core.js?v=destination-cleanup-v434-20260921"></script>
 <script src="destination_reward_core.js?v=destination-cleanup-v434-20260921"></script>
 <script src="destination_state_core.js?v=quest-revisit-v457-20260923"></script>
-<script src="destination_quest_ui.js?v=quest-revisit-v457-20260923"></script>
+<script src="destination_quest_ui.js?v=walk-planner-v495-20260926"></script>
 <script src="field_map_ui.js?v=alderwing-intro-desk-v420-20260917"></script>
 <script src="landscape_ui.js?v=desk-screen-v484-20260925"></script>
 <script src="quest_core.js?v=landscape-atlas-v394-20260913"></script>
@@ -22413,6 +22413,18 @@ function destinationPrecisePosition() {
   if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 80) return null;
   return { lat, lon, accuracy, at, precise:true, source:liveMapLastPosition.source || 'Your live position' };
 }
+// My location: when the last fix is stale, ask the phone for a fresh one.
+function destinationRequestPrecisePosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('location-unavailable')); return; }
+    navigator.geolocation.getCurrentPosition(pos => {
+      handleLivePosition(pos, false);
+      const lat = Number(pos.coords.latitude), lon = Number(pos.coords.longitude), accuracy = Number(pos.coords.accuracy);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || !Number.isFinite(accuracy) || accuracy > 150) { reject(new Error('location-imprecise')); return; }
+      resolve({ lat, lon, accuracy, at:Number(pos.timestamp) || Date.now(), precise:true, source:'Your live position' });
+    }, reject, { enableHighAccuracy:true, timeout:12000, maximumAge:0 });
+  });
+}
 function destinationCataloguePool() {
   return (Array.isArray(BURBZ_SPECIES_PROFILES) ? BURBZ_SPECIES_PROFILES : [])
     .map(profile => ({
@@ -22518,6 +22530,7 @@ function ensureDestinationQuestController() {
     content:destinationContentPools,
     catalogue:destinationCataloguePool,
     getPrecisePosition:destinationPrecisePosition,
+    requestPrecisePosition:destinationRequestPrecisePosition,
     getMap:() => liveMap,
     createMarker:createGeographicMarker,
     setMapInspectionMode:setQuestMapInspectionMode,
@@ -45808,7 +45821,7 @@ function maybeShowIntroCutscene() {
 // Human-readable build tag, shown at the bottom of Settings so a player (or
 // a developer on the phone) can always tell WHICH deployed build is running.
 // Keep it equal to the newest marker appended to BURBZ_CACHE in sw.js.
-const BURBZ_BUILD = 'photo-merlin-v494-20260926';
+const BURBZ_BUILD = 'walk-planner-v495-20260926';
 const BURBZ_TUTORIAL_VERSION = 'merlin-interactive-flow-v7-20260728';
 const BURBZ_PREVIOUS_TUTORIAL_VERSION = 'merlin-guided-flow-v6-20260728';
 const BURBZ_TUTORIAL_CHAPTERS_KEY = 'burbzTutorialChapters:' + BURBZ_TUTORIAL_VERSION;
