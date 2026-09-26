@@ -6,7 +6,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const painting = '/burbz/bird-art-cache/raven_burbz_cloaked_mountain_20260923.webp';
+const painting = '/burbz/bird-art-cache/raven_burbz_cloaked_mountain_20260926.webp';
 const warrior = '/burbz/bird-art-cache/raven_burbz_manga_warrior_20260802.png';
 const sprite = '/burbz/bird-art-cache/cutouts/raven_burbz_manga_warrior_20260802_cutout.png';
 const context = { window: {}, UK50:{art:{}}, UK26:{art:{}}, AU_EXP:{art:{}}, UK_FINAL:{art:{}}, AU50:{art:{}}, UK4:{art:{}}, findSpeciesProfile: name => name === 'Corvus corax' ? {name:'Raven',aliases:['Common Raven']} : null,
